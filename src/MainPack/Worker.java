@@ -3,6 +3,9 @@ package MainPack;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Worker extends Thread {
     /*  Name: Worker()
@@ -75,6 +78,8 @@ public class Worker extends Thread {
 
         byte[] buffer = new byte[this.chunkSize];
         int byteCount;
+        String partialNextChangeID = "";
+        Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
 
         // Sleep for 0.5 seconds. Any less and we'll get timed out by the API
         try{Thread.sleep(this.pullDelay);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
@@ -98,7 +103,6 @@ public class Worker extends Thread {
 
             // Define the stream
             InputStream stream = connection.getInputStream();
-            int counter = 0;
 
             while(true){
                 // Stream data, count bytes
@@ -107,18 +111,20 @@ public class Worker extends Thread {
                 // Transmission has finished
                 if (byteCount == -1) break;
 
-                if(counter < 2) {
-                    System.out.println(new String(buffer));
-                }
+                //Run until we get the first 128** bytes in string format
+                if(this.nextChangeID.equals("") && partialNextChangeID.length() < this.chunkSize) {
+                    partialNextChangeID += this.convertPartialBufferToString(buffer, byteCount);
 
-                counter++;
+                    // Seriously this was a headache
+                    Matcher matcher = pattern.matcher(partialNextChangeID);
+                    if (matcher.find())
+                        this.nextChangeID = matcher.group();
+                }
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        this.nextChangeID = lastJob;
     }
 
     public void stopWorker(){
@@ -145,5 +151,22 @@ public class Worker extends Thread {
 
         // I could just do worker.job = "....", but I might need to implement some extra checks later
         this.job = job;
+    }
+
+    private String convertPartialBufferToString(byte[] buffer, int length) {
+        /*  Name: convertPartialBufferToString()
+        *   Date created: 22.11.2017
+        *   Last modified: 22.11.2017
+        *   Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
+        *   into string. Reason: first iteration of get reply returns 26 bytes instead of 128
+        */
+
+        byte[] bufferBuffer = new byte[length];
+
+        for (int i = 0; i < length; i++) {
+            bufferBuffer[i] = buffer[i];
+        }
+
+        return new String(bufferBuffer);
     }
 }
