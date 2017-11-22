@@ -29,7 +29,7 @@ public class Worker extends Thread {
         *   Date created: 21.11.2017
         *   Last modified: 21.11.2017
         *   Description: Contains the main loop of the thread.
-        *   Child functions:
+        *   Child methods:
         *       downloadMyData()
         */
 
@@ -55,7 +55,7 @@ public class Worker extends Thread {
         *   Date created: 21.11.2017
         *   Last modified: 21.11.2017
         *   Description: Contains the method that downloads data from the API and then parses it
-        *   Parent functions:
+        *   Parent methods:
         *       run()
         */
 

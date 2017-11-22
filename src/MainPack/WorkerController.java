@@ -59,4 +59,17 @@ public class WorkerController {
         this.workerList.clear();
 
     }
+
+    public void listAllWorkers(){
+        /*  Name: listAllWorkers()
+        *   Date created: 22.11.2017
+        *   Last modified: 22.11.2017
+        *   Description: Prints out all active workers
+        */
+
+        // Loop though every worker and call the stop function
+        for (Worker workerObject: this.workerList) {
+            System.out.println("    " + workerObject.workerIndex + ": " + workerObject.job);
+        }
+    }
 }
