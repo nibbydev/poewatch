@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class WorkerController {
     /*  Name: WorkerController()
     *   Date created: 21.11.2017
-    *   Last modified: 21.11.2017
+    *   Last modified: 22.11.2017
     *   Description: Object that's used to manage various worker-related tasks
     */
 
@@ -19,7 +19,7 @@ public class WorkerController {
     public void spawnWorkers(int workerCount){  // TODO: clean up for loop
         /*  Name: spawnWorkers()
         *   Date created: 21.11.2017
-        *   Last modified: 21.11.2017
+        *   Last modified: 22.11.2017
         *   Description: Used to spawn x amount of new threads.
         */
 
@@ -47,7 +47,7 @@ public class WorkerController {
     public void stopAllWorkers(){
         /*  Name: stopAllWorkers()
         *   Date created: 21.11.2017
-        *   Last modified: 21.11.2017
+        *   Last modified: 22.11.2017
         *   Description: Used to stop all running workers
         */
 
@@ -55,6 +55,8 @@ public class WorkerController {
         for (Worker workerObject: this.workerList) {
             workerObject.stopThisNonsense();
         }
+
+        this.workerList.clear();
 
     }
 }

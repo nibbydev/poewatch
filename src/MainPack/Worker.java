@@ -3,12 +3,13 @@ package MainPack;
 public class Worker extends Thread {
     /*  Name: Worker()
     *   Date created: 21.11.2017
-    *   Last modified: 21.11.2017
+    *   Last modified: 22.11.2017
     *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
     *   Example usage: *to be added*
     */
 
     private boolean flagLocalRun;
+    private boolean flagLocalStop;
     public int workerIndex;
     public String job;
 
@@ -46,10 +47,10 @@ public class Worker extends Thread {
             // Somehow sleep for 0.1 seconds
             try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
         }
-
+        this.flagLocalStop = true;
     }
 
-    private void downloadMyData(String lastChangeId){
+    private void downloadMyData(String lastJob){
         /*  Name: downloadMyData()
         *   Date created: 21.11.2017
         *   Last modified: 21.11.2017
@@ -59,17 +60,22 @@ public class Worker extends Thread {
         */
 
         // TODO: this
-        System.out.println(lastChangeId);
+        System.out.println(lastJob);
     }
 
     public void stopThisNonsense(){
         /*  Name: stopThisNonsense()
         *   Date created: 21.11.2017
-        *   Last modified: 21.11.2017
+        *   Last modified: 22.11.2017
         *   Description: Method used to stop the worker safely
         */
 
         this.flagLocalRun = false;
+
+        // Wait until process finishes safely
+        while(!flagLocalStop){
+            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
+        }
     }
 
 }
