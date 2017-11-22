@@ -18,7 +18,7 @@ public class Main {
         // Spawn x amount of workers
         workerController.spawnWorkers(workerCount);
 
-        // Placeholder "while" loop
+        // Allow user to have some control over the flow of the program
         commandLoop(workerController);
 
         // Stop workers on exit
@@ -45,9 +45,7 @@ public class Main {
 
             if(userInput > 10)
                 System.out.print("That is way too many threads, pick something reasonable!\n> ");
-
         }
-
         return userInput;
     }
 
@@ -60,23 +58,26 @@ public class Main {
         *       main()
         */
 
-        String userInput;
+        String userInputString;
+        int userInputInt;
+        System.out.println("[INFO] Enter command (type \"help\" for help):");
 
         while(true){
-            System.out.print("Enter command: ");
-            userInput = TextIO.getlnString();
+            userInputString = TextIO.getlnString();
 
-            switch (userInput) {
+            switch (userInputString) {
                 case "help":
                     String helpString = "[INFO] Available commands include:\n";
                     helpString += "    help - display this help page\n";
                     helpString += "    exit - exit the script safely\n";
                     helpString += "    lw - list all workers";
+                    helpString += "    fire - fire 1 worker";
+                    helpString += "    hire - hire 1 worker";
                     System.out.println(helpString);
                     break;
 
                 case "exit":
-                    System.out.println("[INFO] Shutting down...");
+                    System.out.println("[INFO] Shutting down..");
                     return;
 
                 case "lw":
@@ -84,8 +85,24 @@ public class Main {
                     workerController.listAllWorkers();
                     break;
 
+                case "fire":
+                    System.out.println("[INFO] How many to remove?");
+                    userInputInt = TextIO.getlnInt();
+
+                    System.out.println("[INFO] Removing " + userInputInt + " worker..");
+                    workerController.fireWorkers(userInputInt);
+                    break;
+
+                case "hire":
+                    System.out.println("[INFO] How many to remove?");
+                    userInputInt = TextIO.getlnInt();
+
+                    System.out.println("[INFO] Adding " + userInputInt + " worker..");
+                    workerController.spawnWorkers(userInputInt);
+                    break;
+
                 default:
-                    System.out.println("[ERROR] Unknown command: \"" + userInput + "\". Use \"help\" for help");
+                    System.out.println("[ERROR] Unknown command: \"" + userInputString + "\". Use \"help\" for help");
                     break;
             }
         }

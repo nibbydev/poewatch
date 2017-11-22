@@ -16,11 +16,12 @@ public class Worker extends Thread {
     public void inizilize(int workerIndex){
         /*  Name: inizilize()
         *   Date created: 21.11.2017
-        *   Last modified: 21.11.2017
+        *   Last modified: 22.11.2017
         *   Description: Method used to pass arguments to the thread before execution
         */
 
         this.flagLocalRun = true;
+        this.flagLocalStop = false;
         this.workerIndex = workerIndex;
     }
 
@@ -77,5 +78,4 @@ public class Worker extends Thread {
             try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
         }
     }
-
 }

@@ -16,7 +16,7 @@ public class WorkerController {
 
     }
 
-    public void spawnWorkers(int workerCount){  // TODO: clean up for loop
+    public void spawnWorkers(int workerCount){
         /*  Name: spawnWorkers()
         *   Date created: 21.11.2017
         *   Last modified: 22.11.2017
@@ -70,6 +70,33 @@ public class WorkerController {
         // Loop though every worker and call the stop function
         for (Worker workerObject: this.workerList) {
             System.out.println("    " + workerObject.workerIndex + ": " + workerObject.job);
+        }
+    }
+
+    public void fireWorkers(int workerCount){
+        /*  Name: fireWorkers()
+        *   Date created: 22.11.2017
+        *   Last modified: 22.11.2017
+        *   Description: Used to remove x amount running threads.
+        */
+
+        Worker lastWorker;
+
+        // Get the last available index
+        int lastWorkerIndex = this.workerList.size() - 1;
+
+        // Can't remove what's not there
+        if(lastWorkerIndex <= 0 || lastWorkerIndex - workerCount <= 0){
+            System.out.println("[Error] Not enough active workers");
+            return;
+        }
+
+        // TODO: refine this. A normal remove() should also work now
+        // Loop through removal
+        for (int i = lastWorkerIndex; i > lastWorkerIndex - workerCount; i--) {
+            lastWorker = workerList.get(i);
+            lastWorker.stopThisNonsense();
+            workerList.remove(lastWorker);
         }
     }
 }
