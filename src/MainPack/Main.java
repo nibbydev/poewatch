@@ -18,12 +18,17 @@ public class Main {
         // Spawn x amount of workers
         workerController.spawnWorkers(workerCount);
 
+        // Start the "job office"
+        workerController.initialize();
+        workerController.setDaemon(true);
+        workerController.start();
+
         // Allow user to have some control over the flow of the program
         commandLoop(workerController);
 
         // Stop workers on exit
         workerController.stopAllWorkers();
-
+        workerController.stopWorkerController();
     }
 
     private static int askUserForIntInputWithValidation(){
@@ -60,6 +65,7 @@ public class Main {
 
         String userInputString;
         int userInputInt;
+
         System.out.println("[INFO] Enter command (type \"help\" for help):");
 
         while(true){
@@ -70,9 +76,9 @@ public class Main {
                     String helpString = "[INFO] Available commands include:\n";
                     helpString += "    help - display this help page\n";
                     helpString += "    exit - exit the script safely\n";
-                    helpString += "    lw - list all workers";
-                    helpString += "    fire - fire 1 worker";
-                    helpString += "    hire - hire 1 worker";
+                    helpString += "    lw - list all workers\n";
+                    helpString += "    fire - fire 1 worker\n";
+                    helpString += "    hire - hire 1 worker\n";
                     System.out.println(helpString);
                     break;
 

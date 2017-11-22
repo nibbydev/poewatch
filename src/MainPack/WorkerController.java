@@ -2,7 +2,7 @@ package MainPack;
 
 import java.util.ArrayList;
 
-public class WorkerController {
+public class WorkerController extends Thread {
     /*  Name: WorkerController()
     *   Date created: 21.11.2017
     *   Last modified: 22.11.2017
@@ -10,38 +10,77 @@ public class WorkerController {
     */
 
     private ArrayList<Worker> workerList;
+    private int maxNrOfWorkers;
+    private boolean flagLocalRun;
+    private String nextChangeID;
+    private boolean flagLocalStop;
 
     public WorkerController() {
         this.workerList = new ArrayList<>();
-
+        this.maxNrOfWorkers = 10;
     }
 
-    public void spawnWorkers(int workerCount){
-        /*  Name: spawnWorkers()
-        *   Date created: 21.11.2017
+    public void initialize() {
+        this.flagLocalRun = true;
+        this.flagLocalStop = false;
+        this.nextChangeID = "";
+    }
+
+    public void run(){
+        /*  Name: run()
+        *   Date created: 22.11.2017
         *   Last modified: 22.11.2017
-        *   Description: Used to spawn x amount of new threads.
+        *   Description: Main loop that assigns jobs to workers
         */
 
-        // Get the next available index
-        int nextWorkerIndex = this.workerList.size();
+        // Run main loop while flag is up
+        while(this.flagLocalRun){
+            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
 
-        // Loop through creation
-        for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker newWorkerObject = new Worker();
-
-            // Set some worker properties
-            newWorkerObject.setDaemon(true);
-            newWorkerObject.inizilize(i);
-            newWorkerObject.job = "";
-
-            // Start the worker
-            newWorkerObject.start();
-
-            // Add worker to list
-            this.workerList.add(newWorkerObject);
+            // this.nextChangeID has a value if one of the workers found a new job
+            if(this.nextChangeID.equals("")) {
+                // Loop through every worker
+                for (Worker worker: this.workerList) {
+                    // Check if a worker has a job available
+                    if (!worker.nextChangeID.equals("")) {
+                        // If yes, copy it over to the local variable, which will be assigned to a worker on the next
+                        // iteration of the upper while loop
+                        this.nextChangeID = worker.nextChangeID;
+                        worker.nextChangeID = "";
+                        break;
+                    }
+                }
+            } else {
+                // Loop through every worker
+                for (Worker worker: this.workerList) {
+                    // Check if the worker has no job
+                    if (worker.job.equals("")){
+                        // Give the worker the job
+                        worker.addJob(this.nextChangeID);
+                        // Clear the variable, indicating no free jobs
+                        this.nextChangeID = "";
+                        break;
+                    }
+                }
+            }
         }
 
+        // If we got to this point, that means we should exit the WorkerController
+        this.flagLocalStop = true;
+    }
+
+    public void stopWorkerController(){
+        /*  Name: stopWorkerController()
+        *   Date created: 22.11.2017
+        *   Last modified: 22.11.2017
+        *   Description: Method used to stop the worker controller safely
+        */
+
+        this.flagLocalRun = false;
+
+        // Wait until process finishes safely
+        while(!this.flagLocalStop)
+            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
     }
 
     public void stopAllWorkers(){
@@ -53,7 +92,7 @@ public class WorkerController {
 
         // Loop though every worker and call the stop function
         for (Worker workerObject: this.workerList) {
-            workerObject.stopThisNonsense();
+            workerObject.stopWorker();
         }
 
         this.workerList.clear();
@@ -73,6 +112,42 @@ public class WorkerController {
         }
     }
 
+    public void spawnWorkers(int workerCount){
+        /*  Name: spawnWorkers()
+        *   Date created: 21.11.2017
+        *   Last modified: 22.11.2017
+        *   Description: Used to spawn x amount of new threads.
+        */
+
+        // Get the next available index
+        int nextWorkerIndex = this.workerList.size();
+
+        // Forbid spawning more than our max
+        if(nextWorkerIndex + workerCount > 10){
+            System.out.println("[ERROR] Maximum amount of workers is: " + this.maxNrOfWorkers);
+            return;
+        }
+
+        // Loop through creation
+        for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
+            Worker newWorkerObject = new Worker();
+
+            // Set some worker properties
+            newWorkerObject.setDaemon(true);
+            newWorkerObject.inizilize(i);
+
+            // Start the worker
+            newWorkerObject.start();
+
+            // Add worker to list
+            this.workerList.add(newWorkerObject);
+        }
+
+        // DEV. add a job TODO: remove this!!
+        this.workerList.get(0).addJob("109126551-114436306-107382034-123748225-115727580");
+
+    }
+
     public void fireWorkers(int workerCount){
         /*  Name: fireWorkers()
         *   Date created: 22.11.2017
@@ -87,15 +162,14 @@ public class WorkerController {
 
         // Can't remove what's not there
         if(lastWorkerIndex <= 0 || lastWorkerIndex - workerCount <= 0){
-            System.out.println("[Error] Not enough active workers");
+            System.out.println("[ERROR] Not enough active workers");
             return;
         }
 
-        // TODO: refine this. A normal remove() should also work now
         // Loop through removal
         for (int i = lastWorkerIndex; i > lastWorkerIndex - workerCount; i--) {
             lastWorker = workerList.get(i);
-            lastWorker.stopThisNonsense();
+            lastWorker.stopWorker();
             workerList.remove(lastWorker);
         }
     }
