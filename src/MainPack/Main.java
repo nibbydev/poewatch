@@ -6,34 +6,38 @@ import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-        /*  Name: main()
-        *   Date created: 21.11.2017
-        *   Last modified: 23.11.2017
-        *   Description: The main main main. Run this to run the script
-        */
+        /*   Name: main()
+         *   Date created: 21.11.2017
+         *   Last modified: 23.11.2017
+         *   Description: The main main main. Run this to run the script
+         */
 
         ArrayList<String> searchParameters = new ArrayList<>();
-        WorkerController workerController = new WorkerController(searchParameters);
+        WorkerController workerController = new WorkerController();
         int workerCount;
 
-        // Ask the user how many workers should we spawn
-        workerCount = askUserForIntInputWithValidation(workerController);
-        // Spawn x amount of workers
-        workerController.spawnWorkers(workerCount);
-
-        // Start the "job office"
+        // Set default values and start the controller
+        workerController.setSearchParameters(searchParameters);
+        workerController.setWorkerLimit(7);
         workerController.setDaemon(true);
         workerController.start();
+
+        // Ask the user how many workers should be spawned
+        workerCount = askUserForIntInputWithValidation(workerController);
+        workerController.spawnWorkers(workerCount);
+
+        // Dev option for testing // TODO: remove this
+        workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
 
         // Allow user to have some control over the flow of the program
         commandLoop(workerController, searchParameters);
 
         // Stop workers on exit
         workerController.stopAllWorkers();
-        workerController.stopWorkerController();
+        workerController.setFlagLocalRun(false);
     }
 
-    private static int askUserForIntInputWithValidation(WorkerController workerController){
+    private static int askUserForIntInputWithValidation(WorkerController workerController) {
         /*  Name: askUserForIntInputWithValidation()
         *   Date created: 21.11.2017
         *   Last modified: 22.11.2017
@@ -46,17 +50,17 @@ public class Main {
 
         int userInput = -1;
 
-        System.out.println("How many workers should be spawned (1 - " + workerController.maxNrOfWorkers + ")?");
-        while(userInput <= 0 || userInput > workerController.maxNrOfWorkers){
+        System.out.println("How many workers should be spawned (1 - " + workerController.getWorkerLimit() + ")?");
+        while (userInput <= 0 || userInput > workerController.getWorkerLimit()) {
             userInput = TextIO.getlnInt();
 
-            if(userInput > workerController.maxNrOfWorkers)
+            if (userInput > workerController.getWorkerLimit())
                 System.out.println("That is way too many workers!");
         }
         return userInput;
     }
 
-    private static void commandLoop(WorkerController workerController, ArrayList searchParameters){
+    private static void commandLoop(WorkerController workerController, ArrayList searchParameters) {
         /*  Name: commandLoop()
         *   Date created: 22.11.2017
         *   Last modified: 23.11.2017
@@ -81,7 +85,7 @@ public class Main {
 
         System.out.println(helpString.toString());
 
-        while(true){
+        while (true) {
             userInputString = TextIO.getlnString();
 
             switch (userInputString) {
@@ -118,7 +122,7 @@ public class Main {
                     System.out.println("[INFO] Enter search string (leave empty to cancel)");
                     userInputString = TextIO.getlnString();
 
-                    if(userInputString.equals("")) {
+                    if (userInputString.equals("")) {
                         System.out.println("[INFO] Cancelling");
                     } else {
                         searchParameters.add(userInputString);
@@ -128,17 +132,17 @@ public class Main {
 
                 case "search list":
                     System.out.println("[INFO] Current search parameters:");
-                    searchParameters.forEach(i -> System.out.println("["+searchParameters.indexOf(i)+"] \"" + i + "\""));
+                    searchParameters.forEach(i -> System.out.println("[" + searchParameters.indexOf(i) + "] \"" + i + "\""));
                     break;
 
                 case "search del":
                     System.out.println("[INFO] Current searches:");
-                    searchParameters.forEach(i -> System.out.println("["+searchParameters.indexOf(i)+"] \"" + i + "\""));
+                    searchParameters.forEach(i -> System.out.println("[" + searchParameters.indexOf(i) + "] \"" + i + "\""));
 
                     System.out.println("[INFO] Insert index to remove");
                     userInputInt = TextIO.getlnInt();
 
-                    if (searchParameters.size() == 0 || userInputInt > searchParameters.size() || userInputInt < 0){
+                    if (searchParameters.size() == 0 || userInputInt > searchParameters.size() || userInputInt < 0) {
                         System.out.println("[INFO] Invalid input");
                         break;
                     }

@@ -12,195 +12,189 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Worker extends Thread {
-    /*  Name: Worker
-    *   Date created: 21.11.2017
-    *   Last modified: 23.11.2017
-    *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
-    *   Example usage: *to be added*
-    */
+    /*   Name: Worker
+     *   Date created: 21.11.2017
+     *   Last modified: 23.11.2017
+     *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
+     */
 
-    private boolean flagLocalRun;
-    private boolean flagLocalStop;
-    private String baseAPIURL;
-    private int chunkSize;
-    private long pullDelay;
+    private boolean flagLocalRun = true;
+    private int index;
     private ArrayList<String> searchParameters;
+    private String nextChangeID = "";
+    private String job = "";
 
-    public int workerIndex;
-    public String nextChangeID;
-    public String job;
+    /*
+     * Methods that get/set values from outside the class
+     */
 
-    public Worker(int workerIndex, ArrayList<String> searchParameters){
-        this.flagLocalRun = true;
-        this.flagLocalStop = false;
-        this.pullDelay = 500;
-        this.workerIndex = workerIndex;
-        this.chunkSize = 128;
-        this.baseAPIURL = "http://www.pathofexile.com/api/public-stash-tabs?id=";
-        this.nextChangeID = "";
-        this.job = "";
+    public void setNextChangeID(String nextChangeID) {
+        this.nextChangeID = nextChangeID;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+
+    public void setSearchParameters(ArrayList<String> searchParameters) {
         this.searchParameters = searchParameters;
     }
 
-    public void stopWorker(){
-        /*  Name: stopWorker()
-        *   Date created: 21.11.2017
-        *   Last modified: 22.11.2017
-        *   Description: Method used to stop the worker safely
-        */
-
-        this.flagLocalRun = false;
-
-        // Wait until process finishes safely
-        while(!this.flagLocalStop)
-            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
-
+    public void setIndex(int index) {
+        this.index = index;
     }
 
-    public void addJob(String job){
-        /*  Name: addJob()
-        *   Date created: 22.11.2017
-        *   Last modified: 22.11.2017
-        *   Description: Method used to add a job to the worker
-        */
-
-        // I could just do worker.job = "....", but I might need to implement some extra checks later
-        this.job = job;
+    public void setFlagLocalRun(boolean flagLocalRun) {
+        this.flagLocalRun = flagLocalRun;
     }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public String getNextChangeID() {
+        return nextChangeID;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    /*
+     * Methods that actually do something
+     */
 
     public void run() {
         /*  Name: run()
         *   Date created: 21.11.2017
         *   Last modified: 23.11.2017
-        *   Description: Contains the main loop of the thread.
-        *   Child methods:
-        *       manageTheDownload()
-        */
-
-        // Run until stop flag is raised
-        while(this.flagLocalRun){
-            // Check for new jobs
-            if(!this.job.equals("")) {
-                this.manageTheDownload();
-
-                // Empty the job string, indicating this worker is ready for another job
-                this.job = "";
-            }
-            // Somehow sleep for 0.1 seconds
-            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
-        }
-        this.flagLocalStop = true;
-    }
-
-    private void manageTheDownload(){
-        /*  Name: manageTheDownload()
-        *   Date created: 23.11.2017
-        *   Last modified: 23.11.2017
-        *   Description: Contains functions that control the flow of downloaded data
-        *   Parent methods:
-        *       run()
+        *   Description: Contains the main loop of the worker
         *   Child methods:
         *       downloadData()
-        *       deSerializeDownloadedJSON()
+        *       deSerializeJSONString()
         *       parseItems()
         */
 
-        String stringBuffer;
+        String replyJSONString;
         APIReply reply;
 
-        // Download and parse data according to the changeID.
-        stringBuffer = downloadData(this.job);
+        // Run while flag is true
+        while (this.flagLocalRun) {
+            // Check for new jobs
+            if (!this.job.equals("")) {
+                // Download and parse data according to the changeID.
+                replyJSONString = this.downloadData();
 
-        // If download was unsuccessful, stop
-        if(stringBuffer.equals(""))
-            return;
+                // If download was unsuccessful, stop
+                if (replyJSONString.equals(""))
+                    return;
 
-        // Once everything has downloaded, turn that into a java object
-        reply = this.deSerializeDownloadedJSON(stringBuffer);
+                // Seems good, deserialize the JSON string
+                reply = this.deSerializeJSONString(replyJSONString);
 
-        // Check if object has info in it
-        if(reply.getNext_change_id().equals(""))
-            return;
+                // Check if object has info in it
+                if (reply.getNext_change_id().equals(""))
+                    return;
 
-        parseItems(reply);
+                // Parse the deserialized JSON
+                this.parseItems(reply);
+
+                // Clear the job
+                this.job = "";
+            }
+
+            // Sleep for 100ms
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
-    private String downloadData(String lastJob){ //TODO: get rid of parameter lastJob
+    private String downloadData() {
         /*  Name: downloadData()
         *   Date created: 21.11.2017
         *   Last modified: 23.11.2017
-        *   Description: Contains the method that downloads data from the API and then parses it
+        *   Description: Contains the method that downloads data from the API
         *   Parent methods:
-        *       manageTheDownload()
+        *       run()
         *   Child methods:
         *       trimPartialByteBuffer()
         */
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[this.chunkSize];
+        int chunkSize = 128;
+        byte[] byteBuffer = new byte[chunkSize];
+        boolean regexLock = true;
         int byteCount;
-        String partialNextChangeID = "";
-        Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
 
-        // Sleep for 0.5 seconds. Any less and we'll get timed out by the API
-        try{Thread.sleep(this.pullDelay);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
+        // Sleep for 500ms
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
 
         try {
             // Define the request
-            URL request = new URL(this.baseAPIURL + lastJob);
-            HttpURLConnection connection = (HttpURLConnection)request.openConnection();
-
-            if (connection.getResponseCode() == 429) {
-                // We got timed out
-                System.out.println("[ERROR] Client was timed out");
-                try{Thread.sleep(5000);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
-                this.nextChangeID = lastJob;
-                return "";
-            } else if (connection.getResponseCode() != 200) {
-                // When request was bad, put job back into the job pool
-                this.nextChangeID = lastJob;
-                return "";
-            }
-
-            // Define the stream
+            URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
+            HttpURLConnection connection = (HttpURLConnection) request.openConnection();
             InputStream stream = connection.getInputStream();
 
-            while(true){
-                // Check if need to quit
-                if(!this.flagLocalRun)
-                    return "";
-
-                // Stream data, count bytes
-                byteCount = stream.read(byteBuffer, 0, this.chunkSize);
-
-                // Transmission has finished
-                if (byteCount == -1) break;
-
-                // Run until we get the first 128** bytes in string format
-                if(this.nextChangeID.equals("") && partialNextChangeID.length() < this.chunkSize) {
-                    partialNextChangeID += new String(this.trimPartialByteBuffer(byteBuffer, byteCount));
-
-                    // Seriously this was a headache
-                    Matcher matcher = pattern.matcher(partialNextChangeID);
-                    if (matcher.find())
-                        this.nextChangeID = matcher.group();
+            // Handle a bad response
+            if (connection.getResponseCode() != 200) {
+                if (connection.getResponseCode() == 429) {
+                    System.out.println("[ERROR] Client was timed out");
+                    // Sleep for 5000ms
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
 
-                // Trim the byteBuffer, turn it into a string, add string to buffer
-                stringBuilderBuffer.append(new String(trimPartialByteBuffer(byteBuffer, byteCount)));
+                // Set uncompleted job as new job, allowing another worker to finish it
+                this.nextChangeID = this.job;
+                // Return empty value
+                return "";
             }
 
+            // The loop that downloads data in chunks
+            while (true) {
+                // Stream data and count bytes
+                byteCount = stream.read(byteBuffer, 0, chunkSize);
+                // Check if run flag is lowered
+                if (!this.flagLocalRun)
+                    return "";
+                // Transmission has finished
+                if (byteCount == -1)
+                    break;
+
+                // Trim the byteBuffer, convert it into string and add to string buffer
+                stringBuilderBuffer.append(trimPartialByteBuffer(byteBuffer, byteCount));
+
+                // Try to find new job number using regex
+                if (regexLock) {
+                    Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+                    Matcher matcher = pattern.matcher(stringBuilderBuffer.toString());
+                    if (matcher.find()) {
+                        this.nextChangeID = matcher.group();
+                        regexLock = false;
+                    }
+                }
+            }
             // Return the downloaded mess of a JSON string
             return stringBuilderBuffer.toString();
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
+        // If the script reached this point, something probably went wrong
         return "";
     }
 
-    private byte[] trimPartialByteBuffer(byte[] buffer, int length) {
+    private String trimPartialByteBuffer(byte[] buffer, int length) {
         /*  Name: trimPartialByteBuffer()
         *   Date created: 22.11.2017
         *   Last modified: 22.11.2017
@@ -216,58 +210,53 @@ public class Worker extends Thread {
             bufferBuffer[i] = buffer[i];
         }
 
-        return bufferBuffer;
+        return new String(bufferBuffer);
     }
 
-    private APIReply deSerializeDownloadedJSON(String stringBuffer) {
-        /*  Name: deSerializeDownloadedJSON()
+    private APIReply deSerializeJSONString(String stringBuffer) {
+        /*  Name: deSerializeJSONString()
         *   Date created: 22.11.2017
         *   Last modified: 23.11.2017
-        *   Description: Turns JSON string into java object
+        *   Description: Map a JSON string to an object
         *   Parent methods:
-        *       manageTheDownload()
+        *       run()
         */
 
         APIReply reply;
 
         try {
+            // Define the mapper
             ObjectMapper mapper = new ObjectMapper();
-            // Since we have no control over the generation of the JSON, this must be allowed
             mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
 
-            // Turn the string into an object and return it
+            // Map the JSON string to an object
             reply = mapper.readValue(stringBuffer, APIReply.class);
-
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("exception");
-            reply =  new APIReply();
+            return new APIReply();
         }
 
         return reply;
 
     }
 
-    private void parseItems(APIReply reply){
+    private void parseItems(APIReply reply) {
         /*  Name: parseItems()
         *   Date created: 23.11.2017
         *   Last modified: 23.11.2017
-        *   Description: Checks ever item the script has found against preset filters
+        *   Description: Checks every item the script has found against preset filters
         *   Parent methods:
         *       run()
-        *   Child methods:
-        *       downloadData()
-        *       deSerializeDownloadedJSON()
         */
 
         String parameterConstructor;
 
         // Loop through every single item, checking every single one of them
-        for (Stash stash: reply.getStashes()) {
-            for (Item item: stash.getItems()) {
-                parameterConstructor = item.getLeague() + "|" +  item.getFrameType() + "|" + item.getName();
-                for (String parameter: searchParameters) {
-                    if (parameter.equalsIgnoreCase(parameterConstructor)){
+        for (Stash stash : reply.getStashes()) {
+            for (Item item : stash.getItems()) {
+                parameterConstructor = item.getLeague() + "|" + item.getFrameType() + "|" + item.getName();
+                for (String parameter : searchParameters) {
+                    if (parameter.equalsIgnoreCase(parameterConstructor)) {
                         System.out.println("(" + stash.getAccountName() + ") - " + parameterConstructor);
                     }
                 }
