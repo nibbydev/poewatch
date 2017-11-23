@@ -49,7 +49,12 @@ public class Item {
     public void setIdentified(boolean identified) { this.identified = identified; }
     public void setIlvl(int ilvl) { this.ilvl = ilvl; }
     public void setLeague(String league) { this.league = league; }
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        if(name.contains("<<set:MS>><<set:M>><<set:S>>"))
+            this.name = name.replace("<<set:MS>><<set:M>><<set:S>>", "");
+        else
+            this.name = name;
+    }
     public void setNote(String note) { this.note = note; }
     public void setTypeLine(String typeLine) { this.typeLine = typeLine; }
     public void setW(int w) { this.w = w; }

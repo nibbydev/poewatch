@@ -2,15 +2,18 @@ package MainPack;
 
 import NotMadeByMe.TextIO;
 
+import java.util.ArrayList;
+
 public class Main {
     public static void main(String[] args) {
         /*  Name: main()
         *   Date created: 21.11.2017
-        *   Last modified: 22.11.2017
+        *   Last modified: 23.11.2017
         *   Description: The main main main. Run this to run the script
         */
 
-        WorkerController workerController = new WorkerController();
+        ArrayList<String> searchParameters = new ArrayList<>();
+        WorkerController workerController = new WorkerController(searchParameters);
         int workerCount;
 
         // Ask the user how many workers should we spawn
@@ -23,7 +26,7 @@ public class Main {
         workerController.start();
 
         // Allow user to have some control over the flow of the program
-        commandLoop(workerController);
+        commandLoop(workerController, searchParameters);
 
         // Stop workers on exit
         workerController.stopAllWorkers();
@@ -53,44 +56,49 @@ public class Main {
         return userInput;
     }
 
-    private static void commandLoop(WorkerController workerController){
+    private static void commandLoop(WorkerController workerController, ArrayList searchParameters){
         /*  Name: commandLoop()
         *   Date created: 22.11.2017
-        *   Last modified: 22.11.2017
+        *   Last modified: 23.11.2017
         *   Description: Command loop method. Allows the user some interaction with the script as it is running.
         *   Parent methods:
         *       main()
         */
 
+        StringBuilder helpString = new StringBuilder();
         String userInputString;
         int userInputInt;
 
-        System.out.println("[INFO] Enter command (type \"help\" for help):");
+        helpString.append("[INFO] Available commands include:\n");
+        helpString.append("    'help' - display this help page\n");
+        helpString.append("    'exit' - exit the script safely\n");
+        helpString.append("    'w list' - list all workers\n");
+        helpString.append("    'w hire' - hire 1 worker\n");
+        helpString.append("    'w fire' - fire 1 worker\n");
+        helpString.append("    'search list' - list all active searches\n");
+        helpString.append("    'search add' - add new search string\n");
+        helpString.append("    'search del' - remove existing search string\n");
+
+        System.out.println(helpString.toString());
 
         while(true){
             userInputString = TextIO.getlnString();
 
             switch (userInputString) {
                 case "help":
-                    String helpString = "[INFO] Available commands include:\n";
-                    helpString += "    help - display this help page\n";
-                    helpString += "    exit - exit the script safely\n";
-                    helpString += "    lw - list all workers\n";
-                    helpString += "    fire - fire 1 worker\n";
-                    helpString += "    hire - hire 1 worker\n";
-                    System.out.println(helpString);
+                    System.out.println(helpString.toString());
                     break;
 
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
                     return;
 
-                case "lw":
+                case "w list":
                     System.out.println("[INFO] List of active Workers:");
                     workerController.listAllWorkers();
                     break;
 
-                case "fire":
+                case "w fire":
                     System.out.println("[INFO] How many to remove?");
                     userInputInt = TextIO.getlnInt();
 
@@ -98,12 +106,45 @@ public class Main {
                     workerController.fireWorkers(userInputInt);
                     break;
 
-                case "hire":
+                case "w hire":
                     System.out.println("[INFO] How many to employ?");
                     userInputInt = TextIO.getlnInt();
 
                     System.out.println("[INFO] Adding " + userInputInt + " worker..");
                     workerController.spawnWorkers(userInputInt);
+                    break;
+
+                case "search add":
+                    System.out.println("[INFO] Enter search string (leave empty to cancel)");
+                    userInputString = TextIO.getlnString();
+
+                    if(userInputString.equals("")) {
+                        System.out.println("[INFO] Cancelling");
+                    } else {
+                        searchParameters.add(userInputString);
+                        System.out.println("[INFO] Added \"" + userInputString + "\" to the list");
+                    }
+                    break;
+
+                case "search list":
+                    System.out.println("[INFO] Current search parameters:");
+                    searchParameters.forEach(i -> System.out.println("["+searchParameters.indexOf(i)+"] \"" + i + "\""));
+                    break;
+
+                case "search del":
+                    System.out.println("[INFO] Current searches:");
+                    searchParameters.forEach(i -> System.out.println("["+searchParameters.indexOf(i)+"] \"" + i + "\""));
+
+                    System.out.println("[INFO] Insert index to remove");
+                    userInputInt = TextIO.getlnInt();
+
+                    if (searchParameters.size() == 0 || userInputInt > searchParameters.size() || userInputInt < 0){
+                        System.out.println("[INFO] Invalid input");
+                        break;
+                    }
+
+                    searchParameters.remove(userInputInt);
+                    System.out.println("[INFO] Removed [" + userInputString + "] from the list");
                     break;
 
                 default:

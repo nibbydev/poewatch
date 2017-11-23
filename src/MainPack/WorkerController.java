@@ -14,13 +14,15 @@ public class WorkerController extends Thread {
     private boolean flagLocalRun;
     private String nextChangeID;
     private boolean flagLocalStop;
+    private ArrayList<String> searchParameters;
 
-    public WorkerController() {
+    public WorkerController(ArrayList<String> searchParameters) {
         this.workerList = new ArrayList<>();
         this.maxNrOfWorkers = 7;
         this.flagLocalRun = true;
         this.flagLocalStop = false;
         this.nextChangeID = "";
+        this.searchParameters = searchParameters;
     }
 
     public void run(){
@@ -127,7 +129,7 @@ public class WorkerController extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker newWorkerObject = new Worker(i);
+            Worker newWorkerObject = new Worker(i, this.searchParameters);
 
             // Set some worker properties and start
             newWorkerObject.setDaemon(true);

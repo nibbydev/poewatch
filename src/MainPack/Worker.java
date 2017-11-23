@@ -7,11 +7,12 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Worker extends Thread {
-    /*  Name: Worker()
+    /*  Name: Worker
     *   Date created: 21.11.2017
     *   Last modified: 23.11.2017
     *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
@@ -23,12 +24,13 @@ public class Worker extends Thread {
     private String baseAPIURL;
     private int chunkSize;
     private long pullDelay;
+    private ArrayList<String> searchParameters;
 
     public int workerIndex;
     public String nextChangeID;
     public String job;
 
-    public Worker(int workerIndex){
+    public Worker(int workerIndex, ArrayList<String> searchParameters){
         this.flagLocalRun = true;
         this.flagLocalStop = false;
         this.pullDelay = 500;
@@ -37,6 +39,7 @@ public class Worker extends Thread {
         this.baseAPIURL = "http://www.pathofexile.com/api/public-stash-tabs?id=";
         this.nextChangeID = "";
         this.job = "";
+        this.searchParameters = searchParameters;
     }
 
     public void stopWorker(){
@@ -99,13 +102,11 @@ public class Worker extends Thread {
         *   Child methods:
         *       downloadData()
         *       deSerializeDownloadedJSON()
+        *       parseItems()
         */
 
         String stringBuffer;
         APIReply reply;
-        int unique = 0;
-        int rare = 0;
-        int other = 0;
 
         // Download and parse data according to the changeID.
         stringBuffer = downloadData(this.job);
@@ -121,21 +122,7 @@ public class Worker extends Thread {
         if(reply.getNext_change_id().equals(""))
             return;
 
-        // Loop through every single item and do basically nothing.
-        for (Stash stash: reply.getStashes()) {
-            for (Item item: stash.getItems()) {
-                if(item.getFrameType() == 3){
-                    unique++;
-                } else if (item.getFrameType() == 2) {
-                    rare++;
-                } else {
-                    other++;
-                }
-            }
-        }
-
-        System.out.println("ChangeID [" + this.job + "] Uniques: " + unique + "; Rares: " + rare + "; Others: " + other);
-
+        parseItems(reply);
     }
 
     private String downloadData(String lastJob){ //TODO: get rid of parameter lastJob
@@ -261,5 +248,30 @@ public class Worker extends Thread {
 
     }
 
+    private void parseItems(APIReply reply){
+        /*  Name: parseItems()
+        *   Date created: 23.11.2017
+        *   Last modified: 23.11.2017
+        *   Description: Checks ever item the script has found against preset filters
+        *   Parent methods:
+        *       run()
+        *   Child methods:
+        *       downloadData()
+        *       deSerializeDownloadedJSON()
+        */
 
+        String parameterConstructor;
+
+        // Loop through every single item, checking every single one of them
+        for (Stash stash: reply.getStashes()) {
+            for (Item item: stash.getItems()) {
+                parameterConstructor = item.getLeague() + "|" +  item.getFrameType() + "|" + item.getName();
+                for (String parameter: searchParameters) {
+                    if (parameter.equalsIgnoreCase(parameterConstructor)){
+                        System.out.println("(" + stash.getAccountName() + ") - " + parameterConstructor);
+                    }
+                }
+            }
+        }
+    }
 }

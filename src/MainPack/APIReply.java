@@ -23,4 +23,6 @@ public class APIReply {
     // Set Methods
     public void setStashes(List<Stash> stashes) { this.stashes = stashes; }
     public void setNext_change_id(String next_change_id) { this.next_change_id = next_change_id; }
+
+
 }
