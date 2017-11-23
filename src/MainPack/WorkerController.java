@@ -10,17 +10,14 @@ public class WorkerController extends Thread {
     */
 
     private ArrayList<Worker> workerList;
-    private int maxNrOfWorkers;
+    public int maxNrOfWorkers;
     private boolean flagLocalRun;
     private String nextChangeID;
     private boolean flagLocalStop;
 
     public WorkerController() {
         this.workerList = new ArrayList<>();
-        this.maxNrOfWorkers = 10;
-    }
-
-    public void initialize() {
+        this.maxNrOfWorkers = 7;
         this.flagLocalRun = true;
         this.flagLocalStop = false;
         this.nextChangeID = "";
@@ -130,13 +127,10 @@ public class WorkerController extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker newWorkerObject = new Worker();
+            Worker newWorkerObject = new Worker(i);
 
-            // Set some worker properties
+            // Set some worker properties and start
             newWorkerObject.setDaemon(true);
-            newWorkerObject.inizilize(i);
-
-            // Start the worker
             newWorkerObject.start();
 
             // Add worker to list
@@ -144,7 +138,7 @@ public class WorkerController extends Thread {
         }
 
         // DEV. add a job TODO: remove this!!
-        this.workerList.get(0).addJob("109126551-114436306-107382034-123748225-115727580");
+        this.workerList.get(0).addJob("109146384-114458199-107400880-123773152-115750588");
 
     }
 

@@ -14,12 +14,11 @@ public class Main {
         int workerCount;
 
         // Ask the user how many workers should we spawn
-        workerCount = askUserForIntInputWithValidation();
+        workerCount = askUserForIntInputWithValidation(workerController);
         // Spawn x amount of workers
         workerController.spawnWorkers(workerCount);
 
         // Start the "job office"
-        workerController.initialize();
         workerController.setDaemon(true);
         workerController.start();
 
@@ -31,7 +30,7 @@ public class Main {
         workerController.stopWorkerController();
     }
 
-    private static int askUserForIntInputWithValidation(){
+    private static int askUserForIntInputWithValidation(WorkerController workerController){
         /*  Name: askUserForIntInputWithValidation()
         *   Date created: 21.11.2017
         *   Last modified: 22.11.2017
@@ -44,12 +43,12 @@ public class Main {
 
         int userInput = -1;
 
-        System.out.print("How many threads should be spawned?\n> ");
-        while(userInput < 0 || userInput > 10){
+        System.out.println("How many workers should be spawned (1 - " + workerController.maxNrOfWorkers + ")?");
+        while(userInput <= 0 || userInput > workerController.maxNrOfWorkers){
             userInput = TextIO.getlnInt();
 
-            if(userInput > 10)
-                System.out.print("That is way too many threads, pick something reasonable!\n> ");
+            if(userInput > workerController.maxNrOfWorkers)
+                System.out.println("That is way too many workers!");
         }
         return userInput;
     }
@@ -100,7 +99,7 @@ public class Main {
                     break;
 
                 case "hire":
-                    System.out.println("[INFO] How many to remove?");
+                    System.out.println("[INFO] How many to employ?");
                     userInputInt = TextIO.getlnInt();
 
                     System.out.println("[INFO] Adding " + userInputInt + " worker..");

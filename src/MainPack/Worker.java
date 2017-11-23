@@ -1,8 +1,12 @@
 package MainPack;
 
+import NotMadeByMe.TextIO;
+import jdk.nashorn.internal.objects.NativeJSON;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,19 +23,13 @@ public class Worker extends Thread {
     private boolean flagLocalStop;
     private String baseAPIURL;
     private int chunkSize;
+    private long pullDelay;
 
-    public String nextChangeID;
-    public long pullDelay;
     public int workerIndex;
+    public String nextChangeID;
     public String job;
 
-    public void inizilize(int workerIndex){
-        /*  Name: inizilize()
-        *   Date created: 21.11.2017
-        *   Last modified: 22.11.2017
-        *   Description: Method used to pass arguments to the thread before execution
-        */
-
+    public Worker(int workerIndex){
         this.flagLocalRun = true;
         this.flagLocalStop = false;
         this.pullDelay = 1000;
@@ -76,7 +74,8 @@ public class Worker extends Thread {
         *       run()
         */
 
-        byte[] buffer = new byte[this.chunkSize];
+        ArrayList<Byte> largeBuffer = new ArrayList<>();
+        byte[] byteBuffer = new byte[this.chunkSize];
         int byteCount;
         String partialNextChangeID = "";
         Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
@@ -106,21 +105,27 @@ public class Worker extends Thread {
 
             while(true){
                 // Stream data, count bytes
-                byteCount = stream.read(buffer, 0, this.chunkSize);
+                byteCount = stream.read(byteBuffer, 0, this.chunkSize);
 
                 // Transmission has finished
                 if (byteCount == -1) break;
 
-                //Run until we get the first 128** bytes in string format
+                // Run until we get the first 128** bytes in string format
                 if(this.nextChangeID.equals("") && partialNextChangeID.length() < this.chunkSize) {
-                    partialNextChangeID += this.convertPartialBufferToString(buffer, byteCount);
+                    partialNextChangeID += new String(this.trimPartialByteBuffer(byteBuffer, byteCount));
 
                     // Seriously this was a headache
                     Matcher matcher = pattern.matcher(partialNextChangeID);
                     if (matcher.find())
                         this.nextChangeID = matcher.group();
                 }
+
+                // Add data to large buffer
+                for (Byte i: byteBuffer)
+                    largeBuffer.add(i);
             }
+
+            this.parseDownloadedData(largeBuffer);
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -153,8 +158,8 @@ public class Worker extends Thread {
         this.job = job;
     }
 
-    private String convertPartialBufferToString(byte[] buffer, int length) {
-        /*  Name: convertPartialBufferToString()
+    private byte[] trimPartialByteBuffer(byte[] buffer, int length) {
+        /*  Name: trimPartialByteBuffer()
         *   Date created: 22.11.2017
         *   Last modified: 22.11.2017
         *   Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
@@ -167,6 +172,17 @@ public class Worker extends Thread {
             bufferBuffer[i] = buffer[i];
         }
 
-        return new String(bufferBuffer);
+        return bufferBuffer;
+    }
+
+    private void parseDownloadedData(ArrayList largeBuffer) {
+        /*  Name: parseDownloadedData()
+        *   Date created: 22.11.2017
+        *   Last modified: 22.11.2017
+        *   Description: Parses the downloaded JSON data
+        */
+
+        System.out.println(largeBuffer.size());
+
     }
 }
