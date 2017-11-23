@@ -1,20 +1,19 @@
 package MainPack;
 
-import NotMadeByMe.TextIO;
-import jdk.nashorn.internal.objects.NativeJSON;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Worker extends Thread {
     /*  Name: Worker()
     *   Date created: 21.11.2017
-    *   Last modified: 22.11.2017
+    *   Last modified: 23.11.2017
     *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
     *   Example usage: *to be added*
     */
@@ -32,104 +31,12 @@ public class Worker extends Thread {
     public Worker(int workerIndex){
         this.flagLocalRun = true;
         this.flagLocalStop = false;
-        this.pullDelay = 1000;
+        this.pullDelay = 500;
         this.workerIndex = workerIndex;
         this.chunkSize = 128;
         this.baseAPIURL = "http://www.pathofexile.com/api/public-stash-tabs?id=";
         this.nextChangeID = "";
         this.job = "";
-    }
-
-    public void run() {
-        /*  Name: run()
-        *   Date created: 21.11.2017
-        *   Last modified: 21.11.2017
-        *   Description: Contains the main loop of the thread.
-        *   Child methods:
-        *       downloadData()
-        */
-
-        // Run until stop flag is raised
-        while(this.flagLocalRun){
-            // Check for new jobs
-            if(!this.job.equals("")) {
-                // Download and parse data according to the changeID.
-                downloadData(this.job);
-
-                // Empty the job string, indicating this worker is ready for another job
-                this.job = "";
-            }
-            // Somehow sleep for 0.1 seconds
-            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
-        }
-        this.flagLocalStop = true;
-    }
-
-    private void downloadData(String lastJob){
-        /*  Name: downloadData()
-        *   Date created: 21.11.2017
-        *   Last modified: 22.11.2017
-        *   Description: Contains the method that downloads data from the API and then parses it
-        *   Parent methods:
-        *       run()
-        */
-
-        ArrayList<Byte> largeBuffer = new ArrayList<>();
-        byte[] byteBuffer = new byte[this.chunkSize];
-        int byteCount;
-        String partialNextChangeID = "";
-        Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
-
-        // Sleep for 0.5 seconds. Any less and we'll get timed out by the API
-        try{Thread.sleep(this.pullDelay);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
-
-        try {
-            // Define the request
-            URL request = new URL(this.baseAPIURL + lastJob);
-            HttpURLConnection connection = (HttpURLConnection)request.openConnection();
-
-            if (connection.getResponseCode() == 429) {
-                // We got timed out
-                System.out.println("[ERROR] Client was timed out");
-                try{Thread.sleep(5000);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
-                this.nextChangeID = lastJob;
-                return;
-            } else if (connection.getResponseCode() != 200) {
-                // When request was bad, put job back into the job pool
-                this.nextChangeID = lastJob;
-                return;
-            }
-
-            // Define the stream
-            InputStream stream = connection.getInputStream();
-
-            while(true){
-                // Stream data, count bytes
-                byteCount = stream.read(byteBuffer, 0, this.chunkSize);
-
-                // Transmission has finished
-                if (byteCount == -1) break;
-
-                // Run until we get the first 128** bytes in string format
-                if(this.nextChangeID.equals("") && partialNextChangeID.length() < this.chunkSize) {
-                    partialNextChangeID += new String(this.trimPartialByteBuffer(byteBuffer, byteCount));
-
-                    // Seriously this was a headache
-                    Matcher matcher = pattern.matcher(partialNextChangeID);
-                    if (matcher.find())
-                        this.nextChangeID = matcher.group();
-                }
-
-                // Add data to large buffer
-                for (Byte i: byteBuffer)
-                    largeBuffer.add(i);
-            }
-
-            this.parseDownloadedData(largeBuffer);
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
     public void stopWorker(){
@@ -158,12 +65,162 @@ public class Worker extends Thread {
         this.job = job;
     }
 
+    public void run() {
+        /*  Name: run()
+        *   Date created: 21.11.2017
+        *   Last modified: 23.11.2017
+        *   Description: Contains the main loop of the thread.
+        *   Child methods:
+        *       manageTheDownload()
+        */
+
+        // Run until stop flag is raised
+        while(this.flagLocalRun){
+            // Check for new jobs
+            if(!this.job.equals("")) {
+                this.manageTheDownload();
+
+                // Empty the job string, indicating this worker is ready for another job
+                this.job = "";
+            }
+            // Somehow sleep for 0.1 seconds
+            try{Thread.sleep(100);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
+        }
+        this.flagLocalStop = true;
+    }
+
+    private void manageTheDownload(){
+        /*  Name: manageTheDownload()
+        *   Date created: 23.11.2017
+        *   Last modified: 23.11.2017
+        *   Description: Contains functions that control the flow of downloaded data
+        *   Parent methods:
+        *       run()
+        *   Child methods:
+        *       downloadData()
+        *       deSerializeDownloadedJSON()
+        */
+
+        String stringBuffer;
+        APIReply reply;
+        int unique = 0;
+        int rare = 0;
+        int other = 0;
+
+        // Download and parse data according to the changeID.
+        stringBuffer = downloadData(this.job);
+
+        // If download was unsuccessful, stop
+        if(stringBuffer.equals(""))
+            return;
+
+        // Once everything has downloaded, turn that into a java object
+        reply = this.deSerializeDownloadedJSON(stringBuffer);
+
+        // Check if object has info in it
+        if(reply.getNext_change_id().equals(""))
+            return;
+
+        // Loop through every single item and do basically nothing.
+        for (Stash stash: reply.getStashes()) {
+            for (Item item: stash.getItems()) {
+                if(item.getFrameType() == 3){
+                    unique++;
+                } else if (item.getFrameType() == 2) {
+                    rare++;
+                } else {
+                    other++;
+                }
+            }
+        }
+
+        System.out.println("ChangeID [" + this.job + "] Uniques: " + unique + "; Rares: " + rare + "; Others: " + other);
+
+    }
+
+    private String downloadData(String lastJob){ //TODO: get rid of parameter lastJob
+        /*  Name: downloadData()
+        *   Date created: 21.11.2017
+        *   Last modified: 23.11.2017
+        *   Description: Contains the method that downloads data from the API and then parses it
+        *   Parent methods:
+        *       manageTheDownload()
+        *   Child methods:
+        *       trimPartialByteBuffer()
+        */
+
+        StringBuilder stringBuilderBuffer = new StringBuilder();
+        byte[] byteBuffer = new byte[this.chunkSize];
+        int byteCount;
+        String partialNextChangeID = "";
+        Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+
+        // Sleep for 0.5 seconds. Any less and we'll get timed out by the API
+        try{Thread.sleep(this.pullDelay);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
+
+        try {
+            // Define the request
+            URL request = new URL(this.baseAPIURL + lastJob);
+            HttpURLConnection connection = (HttpURLConnection)request.openConnection();
+
+            if (connection.getResponseCode() == 429) {
+                // We got timed out
+                System.out.println("[ERROR] Client was timed out");
+                try{Thread.sleep(5000);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
+                this.nextChangeID = lastJob;
+                return "";
+            } else if (connection.getResponseCode() != 200) {
+                // When request was bad, put job back into the job pool
+                this.nextChangeID = lastJob;
+                return "";
+            }
+
+            // Define the stream
+            InputStream stream = connection.getInputStream();
+
+            while(true){
+                // Check if need to quit
+                if(!this.flagLocalRun)
+                    return "";
+
+                // Stream data, count bytes
+                byteCount = stream.read(byteBuffer, 0, this.chunkSize);
+
+                // Transmission has finished
+                if (byteCount == -1) break;
+
+                // Run until we get the first 128** bytes in string format
+                if(this.nextChangeID.equals("") && partialNextChangeID.length() < this.chunkSize) {
+                    partialNextChangeID += new String(this.trimPartialByteBuffer(byteBuffer, byteCount));
+
+                    // Seriously this was a headache
+                    Matcher matcher = pattern.matcher(partialNextChangeID);
+                    if (matcher.find())
+                        this.nextChangeID = matcher.group();
+                }
+
+                // Trim the byteBuffer, turn it into a string, add string to buffer
+                stringBuilderBuffer.append(new String(trimPartialByteBuffer(byteBuffer, byteCount)));
+            }
+
+            // Return the downloaded mess of a JSON string
+            return stringBuilderBuffer.toString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return "";
+    }
+
     private byte[] trimPartialByteBuffer(byte[] buffer, int length) {
         /*  Name: trimPartialByteBuffer()
         *   Date created: 22.11.2017
         *   Last modified: 22.11.2017
         *   Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
-        *   into string. Reason: first iteration of get reply returns 26 bytes instead of 128
+        *       into string. Reason: first iteration of get reply returns 26 bytes instead of 128
+        *   Parent methods:
+        *       downloadData()
         */
 
         byte[] bufferBuffer = new byte[length];
@@ -175,14 +232,34 @@ public class Worker extends Thread {
         return bufferBuffer;
     }
 
-    private void parseDownloadedData(ArrayList largeBuffer) {
-        /*  Name: parseDownloadedData()
+    private APIReply deSerializeDownloadedJSON(String stringBuffer) {
+        /*  Name: deSerializeDownloadedJSON()
         *   Date created: 22.11.2017
-        *   Last modified: 22.11.2017
-        *   Description: Parses the downloaded JSON data
+        *   Last modified: 23.11.2017
+        *   Description: Turns JSON string into java object
+        *   Parent methods:
+        *       manageTheDownload()
         */
 
-        System.out.println(largeBuffer.size());
+        APIReply reply;
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            // Since we have no control over the generation of the JSON, this must be allowed
+            mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+
+            // Turn the string into an object and return it
+            reply = mapper.readValue(stringBuffer, APIReply.class);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("exception");
+            reply =  new APIReply();
+        }
+
+        return reply;
 
     }
+
+
 }
