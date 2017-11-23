@@ -26,8 +26,7 @@ public class Main {
         workerCount = askUserForIntInputWithValidation(workerController);
         workerController.spawnWorkers(workerCount);
 
-        // Dev option for testing // TODO: remove this
-        workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
+        // Ask the user a start ChangeID
 
         // Allow user to have some control over the flow of the program
         commandLoop(workerController, searchParameters);
@@ -82,6 +81,7 @@ public class Main {
         helpString.append("    'search list' - list all active searches\n");
         helpString.append("    'search add' - add new search string\n");
         helpString.append("    'search del' - remove existing search string\n");
+        helpString.append("    'id add' - add a start changeID\n");
 
         System.out.println(helpString.toString());
 
@@ -96,6 +96,18 @@ public class Main {
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
                     return;
+
+                case "id add":
+                    System.out.println("[INFO] Enter start ChangeID (leave empty to input the default):");
+                    userInputString = TextIO.getlnString();
+
+                    if (userInputString.equals("")) {
+                        workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
+                    } else {
+                        workerController.setNextChangeID(userInputString);
+                        System.out.println("[INFO] Added \"" + userInputString + "\" to the list");
+                    }
+                    break;
 
                 case "w list":
                     System.out.println("[INFO] List of active Workers:");
