@@ -1,5 +1,8 @@
 package MainPack;
 
+import MainPack.MapperClasses.APIReply;
+import MainPack.MapperClasses.Item;
+import MainPack.MapperClasses.Stash;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 

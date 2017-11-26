@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         /*   Name: main()
          *   Date created: 21.11.2017
-         *   Last modified: 23.11.2017
+         *   Last modified: 26.11.2017
          *   Description: The main main main. Run this to run the script
          */
 
@@ -18,8 +18,7 @@ public class Main {
 
         // Set default values and start the controller
         workerController.setSearchParameters(searchParameters);
-        workerController.setWorkerLimit(7);
-        workerController.setDaemon(true);
+        workerController.setWorkerLimit(5);
         workerController.start();
 
         // Ask the user how many workers should be spawned

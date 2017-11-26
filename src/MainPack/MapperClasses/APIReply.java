@@ -1,4 +1,4 @@
-package MainPack;
+package MainPack.MapperClasses;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
