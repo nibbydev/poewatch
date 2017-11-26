@@ -3,6 +3,8 @@ package MainPack;
 import MainPack.MapperClasses.APIReply;
 import MainPack.MapperClasses.Item;
 import MainPack.MapperClasses.Stash;
+import MainPack.StatClasses.League;
+import MainPack.StatClasses.StatController;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -17,7 +19,7 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     /*   Name: Worker
      *   Date created: 21.11.2017
-     *   Last modified: 23.11.2017
+     *   Last modified: 26.11.2017
      *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
      */
 
@@ -26,6 +28,7 @@ public class Worker extends Thread {
     private ArrayList<String> searchParameters;
     private String nextChangeID = "";
     private String job = "";
+    private StatController statController;
 
     /*
      * Methods that get/set values from outside the class
@@ -61,6 +64,10 @@ public class Worker extends Thread {
 
     public String getJob() {
         return job;
+    }
+
+    public void setStatController(StatController statController) {
+        this.statController = statController;
     }
 
     /*
@@ -246,13 +253,14 @@ public class Worker extends Thread {
     private void parseItems(APIReply reply) {
         /*  Name: parseItems()
         *   Date created: 23.11.2017
-        *   Last modified: 23.11.2017
+        *   Last modified: 26.11.2017
         *   Description: Checks every item the script has found against preset filters
         *   Parent methods:
         *       run()
         */
 
         String parameterConstructor;
+        League leagueStats;
 
         // Loop through every single item, checking every single one of them
         for (Stash stash : reply.getStashes()) {
@@ -263,6 +271,40 @@ public class Worker extends Thread {
                         System.out.println("(" + stash.getAccountName() + ") - " + parameterConstructor);
                     }
                 }
+
+                // Get the statistics object
+                leagueStats = statController.getLeague(item.getLeague());
+
+                // Increment item frame type stats
+                switch (item.getFrameType()) {
+                    case 0:
+                        leagueStats.incNormalCount();
+                        break;
+                    case 1:
+                        leagueStats.incMagicCount();
+                        break;
+                    case 2:
+                        leagueStats.incRareCount();
+                        break;
+                    case 3:
+                        leagueStats.incUniqueCount();
+                        break;
+                    case 4:
+                        leagueStats.incGemCount();
+                        break;
+                    case 5:
+                        leagueStats.incCurrencyCount();
+                        break;
+                    default:
+                        leagueStats.incOtherCount();
+                }
+
+                // Check item properties
+                if(item.isCorrupted())
+                    leagueStats.incCorruptedCount();
+                if(!item.isIdentified())
+                    leagueStats.incUnidentifiedCount();
+
             }
         }
     }

@@ -1,11 +1,13 @@
 package MainPack;
 
+import MainPack.StatClasses.StatController;
+
 import java.util.ArrayList;
 
 public class WorkerController extends Thread {
     /*   Name: WorkerController()
      *   Date created: 21.11.2017
-     *   Last modified: 23.11.2017
+     *   Last modified: 26.11.2017
      *   Description: Object that's used to manage various worker-related tasks
      */
 
@@ -14,6 +16,7 @@ public class WorkerController extends Thread {
     private boolean flagLocalRun = true;
     private String nextChangeID = "";
     private ArrayList<String> searchParameters;
+    private StatController statController;
 
     /*
      * Methods that get/set values from outside the class
@@ -37,6 +40,10 @@ public class WorkerController extends Thread {
 
     public int getWorkerLimit() {
         return workerLimit;
+    }
+
+    public void setStatController(StatController statController) {
+        this.statController = statController;
     }
 
     /*
@@ -120,7 +127,7 @@ public class WorkerController extends Thread {
     public void spawnWorkers(int workerCount) {
         /*  Name: spawnWorkers()
         *   Date created: 21.11.2017
-        *   Last modified: 23.11.2017
+        *   Last modified: 26.11.2017
         *   Description: Used to create x amount of new workers
         */
 
@@ -139,6 +146,7 @@ public class WorkerController extends Thread {
 
             // Set some worker properties and start
             worker.setSearchParameters(this.searchParameters);
+            worker.setStatController(this.statController);
             worker.setIndex(i);
             worker.start();
 
@@ -160,7 +168,7 @@ public class WorkerController extends Thread {
         int lastWorkerIndex = this.workerList.size() - 1;
 
         // Can't remove what's not there
-        if (lastWorkerIndex <= 0 || lastWorkerIndex - workerCount <= 0) {
+        if (lastWorkerIndex <= 0 || lastWorkerIndex - workerCount < 0) {
             System.out.println("[ERROR] Not enough active workers");
             return;
         }

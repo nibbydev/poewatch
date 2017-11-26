@@ -1,5 +1,7 @@
 package MainPack;
 
+import MainPack.StatClasses.League;
+import MainPack.StatClasses.StatController;
 import NotMadeByMe.TextIO;
 
 import java.util.ArrayList;
@@ -14,10 +16,12 @@ public class Main {
 
         ArrayList<String> searchParameters = new ArrayList<>();
         WorkerController workerController = new WorkerController();
+        StatController statController = new StatController();
         int workerCount;
 
         // Set default values and start the controller
         workerController.setSearchParameters(searchParameters);
+        workerController.setStatController(statController);
         workerController.setWorkerLimit(5);
         workerController.start();
 
@@ -28,7 +32,7 @@ public class Main {
         // Ask the user a start ChangeID
 
         // Allow user to have some control over the flow of the program
-        commandLoop(workerController, searchParameters);
+        commandLoop(workerController, searchParameters, statController);
 
         // Stop workers on exit
         workerController.stopAllWorkers();
@@ -58,7 +62,7 @@ public class Main {
         return userInput;
     }
 
-    private static void commandLoop(WorkerController workerController, ArrayList searchParameters) {
+    private static void commandLoop(WorkerController workerController, ArrayList<String> searchParameters, StatController statController) {
         /*  Name: commandLoop()
         *   Date created: 22.11.2017
         *   Last modified: 23.11.2017
@@ -81,6 +85,7 @@ public class Main {
         helpString.append("    'search add' - add new search string\n");
         helpString.append("    'search del' - remove existing search string\n");
         helpString.append("    'id add' - add a start changeID\n");
+        helpString.append("    'stats' - print out all collected statistics\n");
 
         System.out.println(helpString.toString());
 
@@ -160,6 +165,12 @@ public class Main {
 
                     searchParameters.remove(userInputInt);
                     System.out.println("[INFO] Removed [" + userInputString + "] from the list");
+                    break;
+
+                case "stats":
+                    for (League l: statController.getLeagues()) {
+                        System.out.println(l.toString());
+                    }
                     break;
 
                 default:

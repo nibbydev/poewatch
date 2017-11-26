@@ -18,8 +18,8 @@ public class Item {
     private String id;
     private String name;
     private String typeLine;
-    private boolean identified;
-    private boolean corrupted;
+    private boolean identified = true;
+    private boolean corrupted = false;
     private String note;
     private int frameType;
     private int x;
@@ -75,6 +75,14 @@ public class Item {
 
     public int getY() {
         return y;
+    }
+
+    public boolean isCorrupted() {
+        return corrupted;
+    }
+
+    public boolean isIdentified() {
+        return identified;
     }
 
     /*
