@@ -70,116 +70,166 @@ public class Main {
         *       main()
         */
 
-        StringBuilder helpString = new StringBuilder();
-        String userInputString;
-        int userInputInt;
+        String helpString = "[INFO] Available commands include:\n";
+        String[] userInput;
 
-        helpString.append("[INFO] Available commands include:\n");
-        helpString.append("    'help' - display this help page\n");
-        helpString.append("    'exit' - exit the script safely\n");
-        helpString.append("    'w list' - list all workers\n");
-        helpString.append("    'w hire' - hire 1 worker\n");
-        helpString.append("    'w fire' - fire 1 worker\n");
-        helpString.append("    'search list' - list all active searches\n");
-        helpString.append("    'search add' - add new search string\n");
-        helpString.append("    'search del' - remove existing search string\n");
-        helpString.append("    'id add' - add a start changeID\n");
-        helpString.append("    'stats print' - print out all collected statistics\n");
-        helpString.append("    'stats clear' - zero all collected statistics\n");
+        helpString += "    help - display this help page\n";
+        helpString += "    exit - exit the script safely\n";
+        helpString += "    worker - manage workers\n";
+        helpString += "    search - manage search parameters \n";
+        helpString += "    id - add a start changeID\n";
+        helpString += "    stats - manage statistical information\n";
 
-        System.out.println(helpString.toString());
+        System.out.println(helpString);
 
         while (true) {
-            userInputString = TextIO.getlnString();
+            userInput = TextIO.getlnString().split(" ");
 
-            switch (userInputString) {
+            switch (userInput[0]) {
                 case "help":
-                    System.out.println(helpString.toString());
+                    System.out.println(helpString);
                     break;
 
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
                     return;
 
-                case "id add":
-                    System.out.println("[INFO] Enter start ChangeID (leave empty to input the default):");
-                    userInputString = TextIO.getlnString();
-
-                    if (userInputString.equals("")) {
-                        workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
-                    } else {
-                        workerController.setNextChangeID(userInputString);
-                        System.out.println("[INFO] Added \"" + userInputString + "\" to the list");
-                    }
+                case "id":
+                    commandIdAdd(workerController, userInput);
                     break;
 
-                case "w list":
-                    System.out.println("[INFO] List of active Workers:");
-                    workerController.listAllWorkers();
+                case "worker":
+                    commandWorker(workerController, userInput);
                     break;
 
-                case "w fire":
-                    System.out.println("[INFO] How many to remove?");
-                    userInputInt = TextIO.getlnInt();
-
-                    System.out.println("[INFO] Removing " + userInputInt + " worker..");
-                    workerController.fireWorkers(userInputInt);
+                case "search":
+                    commandSearch(searchParameters, userInput);
                     break;
 
-                case "w hire":
-                    System.out.println("[INFO] How many to employ?");
-                    userInputInt = TextIO.getlnInt();
-
-                    System.out.println("[INFO] Adding " + userInputInt + " worker..");
-                    workerController.spawnWorkers(userInputInt);
-                    break;
-
-                case "search add":
-                    System.out.println("[INFO] Enter search string (leave empty to cancel)");
-                    userInputString = TextIO.getlnString();
-
-                    if (userInputString.equals("")) {
-                        System.out.println("[INFO] Cancelling");
-                    } else {
-                        searchParameters.add(userInputString);
-                        System.out.println("[INFO] Added \"" + userInputString + "\" to the list");
-                    }
-                    break;
-
-                case "search list":
-                    System.out.println("[INFO] Current search parameters:");
-                    searchParameters.forEach(i -> System.out.println("[" + searchParameters.indexOf(i) + "] \"" + i + "\""));
-                    break;
-
-                case "search del":
-                    System.out.println("[INFO] Current searches:");
-                    searchParameters.forEach(i -> System.out.println("[" + searchParameters.indexOf(i) + "] \"" + i + "\""));
-
-                    System.out.println("[INFO] Insert index to remove");
-                    userInputInt = TextIO.getlnInt();
-
-                    if (searchParameters.size() == 0 || userInputInt > searchParameters.size() || userInputInt < 0) {
-                        System.out.println("[INFO] Invalid input");
-                        break;
-                    }
-
-                    searchParameters.remove(userInputInt);
-                    System.out.println("[INFO] Removed [" + userInputInt + "] from the list");
-                    break;
-
-                case "stats print":
-                    statController.printStats();
-                    break;
-
-                case "stats clear":
-                    statController.clearStats();
-                    System.out.println("[INFO] Statistical info cleared");
+                case "stats":
+                    commandStats(statController, userInput);
                     break;
 
                 default:
-                    System.out.println("[ERROR] Unknown command: \"" + userInputString + "\". Use \"help\" for help");
+                    System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
                     break;
             }
+        }
+    }
+
+    /*
+     * Methods extracted from commandLoop
+     */
+
+    private static void commandIdAdd(WorkerController workerController, String[] userInput){
+        /*  Name: commandIdAdd()
+        *   Date created: 27.11.2017
+        *   Last modified: 27.11.2017
+        *   Description: Adds a ChangeID to the queue
+        */
+
+
+        String helpString = "[INFO] Available changeID commands:\n";
+        helpString += "    'id <string/'default'>' - Add string to job queue\n";
+
+        if (userInput.length < 2) {
+            System.out.println(helpString);
+            return;
+        }
+
+        if (userInput[1].equalsIgnoreCase("default")) {
+            workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
+        } else {
+            workerController.setNextChangeID(userInput[1]);
+        }
+
+    }
+
+    private static void commandWorker(WorkerController workerController, String[] userInput){
+        /*  Name: commandWorker()
+        *   Date created: 27.11.2017
+        *   Last modified: 27.11.2017
+        *   Description: Holds commands that have something to do with worker operation
+        */
+
+        String helpString = "[INFO] Available worker commands:\n";
+        helpString += "    'worker list' - List all active workers\n";
+        helpString += "    'worker del <count>' - Remove <count> amount of workers\n";
+        helpString += "    'worker add <count>' - Add <count> amount of workers\n";
+
+        if (userInput.length < 2) {
+            System.out.println(helpString);
+            return;
+        }
+
+        if (userInput[1].equalsIgnoreCase("list")) {
+            System.out.println("[INFO] List of active Workers:");
+            workerController.listAllWorkers();
+        } else if (userInput[1].equalsIgnoreCase("del")) {
+            System.out.println("[INFO] Removing " + userInput[2] + " worker..");
+            workerController.fireWorkers(Integer.parseInt(userInput[2]));
+        } else if (userInput[1].equalsIgnoreCase("add")) {
+            System.out.println("[INFO] Adding " + userInput[2] + " worker..");
+            workerController.spawnWorkers(Integer.parseInt(userInput[2]));
+        } else {
+            System.out.println(helpString);
+        }
+    }
+
+    private static void commandSearch(ArrayList<String> searchParameters, String[] userInput){
+        /*  Name: commandSearch()
+        *   Date created: 27.11.2017
+        *   Last modified: 27.11.2017
+        *   Description: Holds commands that have something to do with search parameters
+        */
+
+        String helpString = "[INFO] Available search commands:\n";
+        helpString += "    'search list' - List all active search parameters\n";
+        helpString += "    'search del <index>' - Remove search parameter at index <index>\n";
+        helpString += "    'search add <string>' - Add search parameter <string> to the list\n";
+
+        if (userInput.length < 2) {
+            System.out.println(helpString);
+            return;
+        }
+
+        if (userInput[1].equalsIgnoreCase("list")) {
+            System.out.println("[INFO] Current search parameters:");
+            searchParameters.forEach(i -> System.out.println("[" + searchParameters.indexOf(i) + "] \"" + i + "\""));
+        } else if (userInput[1].equalsIgnoreCase("del")) {
+            searchParameters.remove(Integer.parseInt(userInput[2]));
+            System.out.println("[INFO] Removed [" + Integer.parseInt(userInput[2]) + "] from the list");
+        } else if (userInput[1].equalsIgnoreCase("add")) {
+            searchParameters.add(userInput[2]);
+            System.out.println("[INFO] Added \"" + userInput[2] + "\" to the list");
+        } else {
+            System.out.println(helpString);
+        }
+    }
+
+    private static void commandStats(StatController statController, String[] userInput){
+        /*  Name: commandStats()
+        *   Date created: 27.11.2017
+        *   Last modified: 27.11.2017
+        *   Description: Holds commands that have something to do with statistics
+        */
+
+        String helpString = "[INFO] Available statistics commands:\n";
+        helpString += "    'stats list' - List all statistics\n";
+        helpString += "    'stats clear' - Zero all gathered statistics\n";
+
+        if (userInput.length < 2) {
+            System.out.println(helpString);
+            return;
+        }
+
+        if (userInput[1].equalsIgnoreCase("list")) {
+            statController.printStats();
+        } else if (userInput[1].equalsIgnoreCase("clear")) {
+            statController.clearStats();
+            System.out.println("[INFO] Statistical info cleared");
+        } else {
+            System.out.println(helpString);
         }
     }
 }
