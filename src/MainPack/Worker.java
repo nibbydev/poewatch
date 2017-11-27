@@ -217,7 +217,7 @@ public class Worker extends Thread {
     private String trimPartialByteBuffer(byte[] buffer, int length) {
         /*  Name: trimPartialByteBuffer()
         *   Date created: 22.11.2017
-        *   Last modified: 22.11.2017
+        *   Last modified: 27.11.2017
         *   Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
         *       into string. Reason: first iteration of get reply returns 26 bytes instead of 128
         *   Parent methods:
@@ -226,6 +226,7 @@ public class Worker extends Thread {
 
         byte[] bufferBuffer = new byte[length];
 
+        // TODO: improve this
         for (int i = 0; i < length; i++) {
             bufferBuffer[i] = buffer[i];
         }

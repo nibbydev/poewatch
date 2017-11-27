@@ -9,14 +9,13 @@ public class Main {
     public static void main(String[] args) {
         /*   Name: main()
          *   Date created: 21.11.2017
-         *   Last modified: 26.11.2017
+         *   Last modified: 27.11.2017
          *   Description: The main main main. Run this to run the script
          */
 
         ArrayList<String> searchParameters = new ArrayList<>();
         WorkerController workerController = new WorkerController();
         StatController statController = new StatController();
-        int workerCount;
 
         // Set default values and start the controller
         workerController.setSearchParameters(searchParameters);
@@ -25,10 +24,8 @@ public class Main {
         workerController.start();
 
         // Ask the user how many workers should be spawned
-        workerCount = askUserForIntInputWithValidation(workerController);
+        int workerCount = askUserForIntInputWithValidation(workerController);
         workerController.spawnWorkers(workerCount);
-
-        // Ask the user a start ChangeID
 
         // Allow user to have some control over the flow of the program
         commandLoop(workerController, searchParameters, statController);
@@ -41,12 +38,10 @@ public class Main {
     private static int askUserForIntInputWithValidation(WorkerController workerController) {
         /*  Name: askUserForIntInputWithValidation()
         *   Date created: 21.11.2017
-        *   Last modified: 22.11.2017
+        *   Last modified: 27.11.2017
         *   Description: Asks the user for an input, has validation so that the input is actually valid
         *   Parent methods:
         *       main()
-        *
-        *   :return: Integer indicating how many threads/workers will be spawned
         */
 
         int userInput = -1;
@@ -89,27 +84,21 @@ public class Main {
                 case "help":
                     System.out.println(helpString);
                     break;
-
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
                     return;
-
                 case "id":
                     commandIdAdd(workerController, userInput);
                     break;
-
                 case "worker":
                     commandWorker(workerController, userInput);
                     break;
-
                 case "search":
                     commandSearch(searchParameters, userInput);
                     break;
-
                 case "stats":
                     commandStats(statController, userInput);
                     break;
-
                 default:
                     System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
                     break;
@@ -143,6 +132,7 @@ public class Main {
             workerController.setNextChangeID(userInput[1]);
         }
 
+        System.out.println("[INFO] New ChangeID added");
     }
 
     private static void commandWorker(WorkerController workerController, String[] userInput){
