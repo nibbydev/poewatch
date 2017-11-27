@@ -158,7 +158,7 @@ public class WorkerController extends Thread {
     public void fireWorkers(int workerCount) {
         /*  Name: fireWorkers()
         *   Date created: 22.11.2017
-        *   Last modified: 22.11.2017
+        *   Last modified: 26.11.2017
         *   Description: Used to remove x amount running threads.
         */
 

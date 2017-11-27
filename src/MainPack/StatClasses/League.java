@@ -3,7 +3,7 @@ package MainPack.StatClasses;
 public class League {
     /*   Name: League
      *   Date created: 26.11.2017
-     *   Last modified: 26.11.2017
+     *   Last modified: 27.11.2017
      *   Description: Contains statistical data of a certain league
      */
 
@@ -67,13 +67,18 @@ public class League {
     }
 
     /*
-     * Methods that get values from outside the class
+     * Methods that actually do something
      */
 
-    @Override
-    public String toString() {
+    public String buildString() {
+        /*  Name: buildString()
+        *   Date created: 26.11.2017
+        *   Last modified: 27.11.2017
+        *   Description: Returns a string containing statistical info
+        */
+
         String returnString = "";
-        returnString += "[Stats] " + name + ":\n";
+        returnString += "[Item stats] " + name + ":\n";
         returnString += "    Normal items: " + normalCount + "\n";
         returnString += "    Magic items: " + magicCount + "\n";
         returnString += "    Rare items: " + rareCount + "\n";
@@ -82,9 +87,27 @@ public class League {
         returnString += "    Currency: " + currencyCount + "\n";
         returnString += "    Other items: " + otherCount + "\n";
         returnString += "    Corrupted: " + corruptedCount + "\n";
-        returnString += "    Unidentified: " + unidentifiedCount;
+        returnString += "    Unidentified: " + unidentifiedCount + "\n";
 
         return returnString;
+    }
+
+    public void clearStats() {
+        /*  Name: clearStats()
+        *   Date created: 27.11.2017
+        *   Last modified: 27.11.2017
+        *   Description: Replaces all statistical values with 0
+        */
+
+        normalCount = 0;
+        magicCount = 0;
+        rareCount = 0;
+        uniqueCount = 0;
+        gemCount = 0;
+        currencyCount = 0;
+        otherCount = 0;
+        corruptedCount = 0;
+        unidentifiedCount = 0;
     }
 }
 

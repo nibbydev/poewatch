@@ -1,6 +1,5 @@
 package MainPack;
 
-import MainPack.StatClasses.League;
 import MainPack.StatClasses.StatController;
 import NotMadeByMe.TextIO;
 
@@ -65,7 +64,7 @@ public class Main {
     private static void commandLoop(WorkerController workerController, ArrayList<String> searchParameters, StatController statController) {
         /*  Name: commandLoop()
         *   Date created: 22.11.2017
-        *   Last modified: 23.11.2017
+        *   Last modified: 27.11.2017
         *   Description: Command loop method. Allows the user some interaction with the script as it is running.
         *   Parent methods:
         *       main()
@@ -85,7 +84,8 @@ public class Main {
         helpString.append("    'search add' - add new search string\n");
         helpString.append("    'search del' - remove existing search string\n");
         helpString.append("    'id add' - add a start changeID\n");
-        helpString.append("    'stats' - print out all collected statistics\n");
+        helpString.append("    'stats print' - print out all collected statistics\n");
+        helpString.append("    'stats clear' - zero all collected statistics\n");
 
         System.out.println(helpString.toString());
 
@@ -164,13 +164,16 @@ public class Main {
                     }
 
                     searchParameters.remove(userInputInt);
-                    System.out.println("[INFO] Removed [" + userInputString + "] from the list");
+                    System.out.println("[INFO] Removed [" + userInputInt + "] from the list");
                     break;
 
-                case "stats":
-                    for (League l: statController.getLeagues()) {
-                        System.out.println(l.toString());
-                    }
+                case "stats print":
+                    statController.printStats();
+                    break;
+
+                case "stats clear":
+                    statController.clearStats();
+                    System.out.println("[INFO] Statistical info cleared");
                     break;
 
                 default:

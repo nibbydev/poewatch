@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     /*   Name: Worker
      *   Date created: 21.11.2017
-     *   Last modified: 26.11.2017
+     *   Last modified: 27.11.2017
      *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
      */
 
@@ -125,7 +125,7 @@ public class Worker extends Thread {
     private String downloadData() {
         /*  Name: downloadData()
         *   Date created: 21.11.2017
-        *   Last modified: 23.11.2017
+        *   Last modified: 27.11.2017
         *   Description: Contains the method that downloads data from the API
         *   Parent methods:
         *       run()
@@ -145,6 +145,9 @@ public class Worker extends Thread {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
+
+        // Add to statistics
+        statController.incTotalPullCount();
 
         try {
             // Define the request
@@ -178,8 +181,11 @@ public class Worker extends Thread {
                 if (!this.flagLocalRun)
                     return "";
                 // Transmission has finished
-                if (byteCount == -1)
+                else if (byteCount == -1)
                     break;
+
+                // Add to statistics
+                statController.addBytesDownloaded(byteCount);
 
                 // Trim the byteBuffer, convert it into string and add to string buffer
                 stringBuilderBuffer.append(trimPartialByteBuffer(byteBuffer, byteCount));
@@ -194,6 +200,10 @@ public class Worker extends Thread {
                     }
                 }
             }
+
+            // Add to statistics
+            statController.incSuccessfulPullCount();
+
             // Return the downloaded mess of a JSON string
             return stringBuilderBuffer.toString();
         } catch (Exception ex) {
@@ -265,6 +275,7 @@ public class Worker extends Thread {
         // Loop through every single item, checking every single one of them
         for (Stash stash : reply.getStashes()) {
             for (Item item : stash.getItems()) {
+                // Check search parameters
                 parameterConstructor = item.getLeague() + "|" + item.getFrameType() + "|" + item.getName();
                 for (String parameter : searchParameters) {
                     if (parameter.equalsIgnoreCase(parameterConstructor)) {
@@ -272,7 +283,7 @@ public class Worker extends Thread {
                     }
                 }
 
-                // Get the statistics object
+                // Get the league-based statistics object
                 leagueStats = statController.getLeague(item.getLeague());
 
                 // Increment item frame type stats
