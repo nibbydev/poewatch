@@ -173,7 +173,7 @@ public class PricerController extends Thread {
             database.buildItemDatabase();
             flagPause = false;
 
-            database.devPrintData();
+            database.devPrintData(); // TODO: remove this (enabled in experimental branch)
         }
     }
 
@@ -388,22 +388,19 @@ public class PricerController extends Thread {
         */
 
         int lvl = -1;
-        int quality = -1;
+        int quality = 0;
 
         // Attempt to extract lvl and quality from item info
-        try {
-            for (Properties prop : item.getProperties()) {
-                if (prop.getName().equals("Level"))
-                    lvl = Integer.getInteger(prop.getValues().get(0).get(0).split(" ")[0]);
-                else if (prop.getName().equals("Quality"))
-                    quality = Integer.getInteger(prop.getValues().get(0).get(0).replace("+", "").replace("%", ""));
+        for (Properties prop : item.getProperties()) {
+            if (prop.getName().equals("Level")) {
+                lvl = Integer.parseInt(prop.getValues().get(0).get(0).split(" ")[0]);
+            } else if (prop.getName().equals("Quality")) {
+                quality = Integer.parseInt(prop.getValues().get(0).get(0).replace("+", "").replace("%", ""));
             }
-        } catch (NullPointerException e){
-            // TODO: do something?
         }
 
         // If quality or lvl was not found, return
-        if(lvl + quality == -2) { //TODO: take a look at this
+        if(lvl == -1) {
             item.setDiscard();
             return;
         }
