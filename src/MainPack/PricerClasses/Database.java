@@ -16,8 +16,57 @@ public class Database {
     private static Map<String, Map<String, Map<String, ArrayList<Double>>>> itemDatabase = new HashMap<>();
     private static Map<String, Map<String, ArrayList<Double>>> currencyDatabase = new HashMap<>();
 
-    private ArrayList<String> skippedItemDatabaseTypes; // TODO: add values ["Currency", "Gems", "VaalGems", "Support"]
+    private static ArrayList<String> skippedItemDatabaseTypes;
+    private static Map<String, String> baseReverseCurrencyIndexes;
 
+    public Database () {
+        /*  Name: Database()
+        *   Date created: 28.11.2017
+        *   Last modified: 28.11.2017
+        *   Description: Method used to set initial default values
+        */
+
+        // Has the base indexes, more will be added later
+        baseReverseCurrencyIndexes = new HashMap<>(){{
+            put("1", "Chaos Orb");
+            put("2", "Exalted Orb");
+            put("3", "Divine Orb");
+            put("4", "Orb of Alchemy");
+            put("5", "Orb of Fusing");
+            put("6", "Orb of Alteration");
+            put("7", "Regal Orb");
+            put("8", "Vaal Orb");
+            put("9", "Orb of Regret");
+            put("10", "Cartographer's Chisel");
+            put("11", "Jeweller's Orb");
+            put("12", "Silver Coin");
+            put("13", "Perandus Coin");
+            put("14", "Orb of Scouring");
+            put("15", "Gemcutter's Prism");
+            put("16", "Orb of Chance");
+            put("17", "Chromatic Orb");
+            put("18", "Blessed Orb");
+            put("19", "Glassblower's Bauble");
+            put("20", "Orb of Augmentation");
+            put("21", "Orb of Transmutation");
+            put("22", "Mirror of Kalandra");
+            put("23", "Scroll of Wisdom");
+            put("24", "Portal Scroll");
+            put("25", "Blacksmith's Whetstone");
+            put("26", "Armourer's Scrap");
+            put("27", "Apprentice Cartographer's Sextant");
+            put("28", "Journeyman Cartographer's Sextant");
+            put("29", "Master Cartographer's Sextant");
+        }};
+
+        // These itemclasses should be skipped when dealing with item database
+        skippedItemDatabaseTypes = new ArrayList<>(){{
+            add("Currency");
+            add("Gems");
+            add("VaalGems");
+            add("Support");
+        }};
+    }
 
     public void rawDataAddEntry(String league, String itemType, String itemKey, double value, String currencyType) {
         /*  Name: addEntry()
@@ -33,6 +82,7 @@ public class Database {
 
         // Add values to database (in string format)
         rawData.get(league).get(itemType).get(itemKey).add(new String[]{Double.toString(value), currencyType});
+
     }
 
     /*
@@ -153,6 +203,19 @@ public class Database {
     /*
      * Methods used to manage gem-related databases
      */
+
+    public void devPrintData(){
+        // TODO: for development
+        for (String league: rawData.keySet()) {
+            System.out.println("[LEAGUE] " + league);
+            for (String itemType : rawData.get(league).keySet()) {
+                System.out.println("  [TYPE] " + itemType);
+                for (String name : rawData.get(league).get(itemType).keySet()) {
+                    System.out.println("    [KEY] " + name + ": " + rawData.get(league).get(itemType).get(name).size());
+                }
+            }
+        }
+    }
 
 
 }

@@ -13,6 +13,7 @@ public class PricerController extends Thread {
     private boolean flagLocalRun = true;
     private boolean flagPause = false; // TODO: add controller methods
     private static Map<String, String> currencyShorthands;
+    private static Map<String, String> baseCurrencyIndexes;
     private static ArrayList<String> specialGems;
     private static ArrayList<String> potentialSixLinkItems;
     private static Database database;
@@ -80,6 +81,39 @@ public class PricerController extends Thread {
             put("mirror", "Mirror of Kalandra");
         }};
 
+        // Index currency, will take up less space overall
+        baseCurrencyIndexes = new HashMap<>(){{
+            put("Chaos Orb", "1");
+            put("Exalted Orb", "2");
+            put("Divine Orb", "3");
+            put("Orb of Alchemy", "4");
+            put("Orb of Fusing", "5");
+            put("Orb of Alteration", "6");
+            put("Regal Orb", "7");
+            put("Vaal Orb", "8");
+            put("Orb of Regret", "9");
+            put("Cartographer's Chisel", "10");
+            put("Jeweller's Orb", "11");
+            put("Silver Coin", "12");
+            put("Perandus Coin", "13");
+            put("Orb of Scouring", "14");
+            put("Gemcutter's Prism", "15");
+            put("Orb of Chance", "16");
+            put("Chromatic Orb", "17");
+            put("Blessed Orb", "18");
+            put("Glassblower's Bauble", "19");
+            put("Orb of Augmentation", "20");
+            put("Orb of Transmutation", "21");
+            put("Mirror of Kalandra", "22");
+            put("Scroll of Wisdom", "23");
+            put("Portal Scroll", "24");
+            put("Blacksmith's Whetstone", "25");
+            put("Armourer's Scrap", "26");
+            put("Apprentice Cartographer's Sextant", "27");
+            put("Journeyman Cartographer's Sextant", "28");
+            put("Master Cartographer's Sextant", "29");
+        }};
+
         // These items have special values. They need to be analyzed differently
         specialGems = new ArrayList<>(){{
             add("Empower Support");
@@ -111,7 +145,13 @@ public class PricerController extends Thread {
         */
 
         while(true) {
-            sleepWhile(10 * 60);
+            sleepWhile(10);
+
+            // Break if run flag has been lowered
+            if(!flagLocalRun)
+                break;
+
+            System.out.println("Building da database");
 
             // Prepare for database building
             flagPause = true;
@@ -119,11 +159,8 @@ public class PricerController extends Thread {
             database.buildItemDatabase();
             flagPause = false;
 
-            // Break if run flag has been lowered
-            if(!flagLocalRun)
-                break;
+            database.devPrintData();
         }
-
     }
 
     private void sleepWhile(int howLongInSeconds){
@@ -270,9 +307,9 @@ public class PricerController extends Thread {
         // Try to figure out if price is numeric
         try {
             if (priceArray.length == 1)
-                item.setPrice(Integer.getInteger(priceArray[0]));
+                item.setPrice(Double.parseDouble(priceArray[0]));
             else
-                item.setPrice(Integer.getInteger(priceArray[0]) / Integer.getInteger(priceArray[1]));
+                item.setPrice(Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]));
         } catch (Exception ex){ // TODO more specific exceptions
             item.setDiscard();
             return;
@@ -285,7 +322,7 @@ public class PricerController extends Thread {
         }
 
         // Add currency type to item
-        item.setPriceType(currencyShorthands.get(noteList[2])); // TODO: indexes[shorthands[note[2]]]
+        item.setPriceType(baseCurrencyIndexes.get(currencyShorthands.get(noteList[2])));
     }
 
     private void formatNameAndItemType(Item item) {
