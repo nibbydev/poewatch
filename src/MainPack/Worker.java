@@ -270,7 +270,7 @@ public class Worker extends Thread {
     private void parseItems(APIReply reply) {
         /*  Name: parseItems()
         *   Date created: 23.11.2017
-        *   Last modified: 26.11.2017
+        *   Last modified: 28.11.2017
         *   Description: Checks every item the script has found against preset filters
         *   Parent methods:
         *       run()
@@ -281,8 +281,8 @@ public class Worker extends Thread {
 
         // Loop through every single item, checking every single one of them
         for (Stash stash : reply.getStashes()) {
-            for (Item item : stash.getItems()) {
-
+            for (Item item : stash.getItems()) {// TODO: improve this clause
+                // Run through pricing service
                 pricerController.checkItem(item);
 
                 // Check search parameters

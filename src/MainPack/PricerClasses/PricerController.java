@@ -111,22 +111,41 @@ public class PricerController extends Thread {
         */
 
         while(true) {
-            try { // TODO: add sleep in cycles for flagLocalRun
-                Thread.sleep(10 * 60 * 1000);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-            flagPause = true;
+            sleepWhile(10 * 60);
 
+            // Prepare for database building
+            flagPause = true;
             database.buildCurrencyDatabase();
             database.buildItemDatabase();
-
             flagPause = false;
 
+            // Break if run flag has been lowered
             if(!flagLocalRun)
                 break;
         }
 
+    }
+
+    private void sleepWhile(int howLongInSeconds){
+        /*  Name: sleepWhile()
+        *   Date created: 28.11.2017
+        *   Last modified: 28.11.2017
+        *   Description: Sleeps for <howLongInSeconds> seconds
+        *   Parent methods:
+        *       run()
+        */
+
+        for (int i = 0; i < howLongInSeconds; i++) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            // Break if run flag has been lowered
+            if(!flagLocalRun)
+                break;
+        }
     }
 
     /*
