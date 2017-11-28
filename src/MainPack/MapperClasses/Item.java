@@ -6,7 +6,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 public class Item {
     /*   Name: Item
      *   Date created: 23.11.2017
-     *   Last modified: 23.11.2017
+     *   Last modified: 28.11.2017
      *   Description: Class used for deserializing a JSON string
      */
 
@@ -18,12 +18,17 @@ public class Item {
     private String id;
     private String name;
     private String typeLine;
+    private String enchantMods;
     private boolean identified = true;
     private boolean corrupted = false;
     private String note;
     private int frameType;
     private int x;
     private int y;
+
+    private boolean discard = false;
+    private double price;
+    private String priceType;
 
     /*
      * Methods that get values from outside the class
@@ -67,6 +72,10 @@ public class Item {
 
     public String getTypeLine() {
         return typeLine;
+    }
+
+    public String getEnchantMods() {
+        return enchantMods;
     }
 
     public int getX() {
@@ -136,6 +145,10 @@ public class Item {
         this.typeLine = typeLine;
     }
 
+    public void setEnchantMods(String enchantMods) {
+        this.enchantMods = enchantMods;
+    }
+
     public void setW(int w) {
         this.w = w;
     }
@@ -148,4 +161,31 @@ public class Item {
         this.y = y;
     }
 
+    /*
+     * These will be used later
+     */
+
+    public boolean isDiscard() {
+        return discard;
+    }
+
+    public void setDiscard(boolean discard) {
+        this.discard = discard;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public String getPriceType() {
+        return priceType;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setPriceType(String priceType) {
+        this.priceType = priceType;
+    }
 }
