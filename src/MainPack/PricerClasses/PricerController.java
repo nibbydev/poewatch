@@ -153,7 +153,7 @@ public class PricerController extends Thread {
     public void run() {
         /*  Name: run()
         *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
+        *   Last modified: 29.11.2017
         *   Description: Contains the main loop of the pricing service
         *   Child methods:
         */
@@ -171,6 +171,7 @@ public class PricerController extends Thread {
             flagPause = true;
             database.buildCurrencyDatabase();
             database.buildItemDatabase();
+            database.buildGemDatabase();
             flagPause = false;
 
             database.devPrintData(); // TODO: remove this (enabled in experimental branch)

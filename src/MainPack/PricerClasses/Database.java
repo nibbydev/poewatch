@@ -7,7 +7,7 @@ import java.util.Map;
 public class Database {
     /*   Name: PriceDatabase
      *   Date created: 28.11.2017
-     *   Last modified: 28.11.2017
+     *   Last modified: 29.11.2017
      *   Description: Class used to store data? I can't do SQL
      */
 
@@ -15,9 +15,11 @@ public class Database {
     private static Map<String, Map<String, Map<String, ArrayList<String[]>>>> rawData = new HashMap<>();
     private static Map<String, Map<String, Map<String, ArrayList<Double>>>> itemDatabase = new HashMap<>();
     private static Map<String, Map<String, ArrayList<Double>>> currencyDatabase = new HashMap<>();
+    private static Map<String, Map<String, Map<String, Map<String, ArrayList<Double>>>>> gemDatabase = new HashMap<>();
 
     private static ArrayList<String> skippedItemDatabaseTypes;
     private static Map<String, String> baseReverseCurrencyIndexes;
+    private static ArrayList<String> gemItemDataBaseItemTypes;
 
     public Database () {
         /*  Name: Database()
@@ -65,6 +67,13 @@ public class Database {
             add("Gems");
             add("VaalGems");
             add("Support");
+        }};
+
+        // To separate out gems from other items
+        gemItemDataBaseItemTypes = new ArrayList<>() {{
+            add("Gems");
+            add("Support");
+            add("VaalGems");
         }};
     }
 
@@ -210,7 +219,66 @@ public class Database {
      * Methods used to manage gem-related databases
      */
 
-    // TODO: buildGemDatabase
+    public void buildGemDatabase() {
+        /*  Name: buildGemDatabase()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Method that adds entries to gem database
+        */
+
+        double value;
+        int index;
+        String gemInfo;
+        String gemName;
+
+        // Loop through leagues
+        for (String league: rawData.keySet()) {
+            gemDatabase.putIfAbsent(league, new HashMap<>());
+
+            for (String gemType : rawData.get(league).keySet()) {
+                gemDatabase.get(league).putIfAbsent(gemType, new HashMap<>());
+
+                if (!gemItemDataBaseItemTypes.contains(gemType))
+                    continue;
+
+                for (String name : rawData.get(league).get(gemType).keySet()) {
+                    gemName = name.split("\\|")[0];
+                    gemInfo = name.replace(gemName + "|", "");
+
+                    gemDatabase.get(league).get(gemType).putIfAbsent(gemName, new HashMap<>());
+                    gemDatabase.get(league).get(gemType).get(gemName).putIfAbsent(gemInfo, new ArrayList<>());
+
+                    // Loop through [value, index] currency entries
+                    for (String[] entry : rawData.get(league).get(gemType).get(name)) {
+                        value = Double.parseDouble(entry[0]);
+                        index = Integer.parseInt(entry[1]);
+
+                        // Skip everything that isn't base value
+                        if (index != 1) {
+                            continue; // TODO: Get price from gem statistics
+                        }
+
+                        // Add gem to new database
+                        gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).add(value);
+                    }
+                    if(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() > 100)
+                        gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(0);
+                    else if (gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() < 1)
+                        gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).clear();
+                    else if (gemDatabase.get(league).get(gemType).get(gemName).size() < 1)
+                        gemDatabase.get(league).get(gemType).get(gemName).clear();
+                }
+                if (gemDatabase.get(league).get(gemType).size() < 1)
+                    gemDatabase.get(league).get(gemType).clear();
+            }
+            if (gemDatabase.get(league).size() < 1)
+                gemDatabase.get(league).clear();
+        }
+        if (gemDatabase.size() < 1)
+            gemDatabase.clear();
+    }
+
+
     // TODO: buildGemStatistics
     // TODO: purgeGemDatabase
 
