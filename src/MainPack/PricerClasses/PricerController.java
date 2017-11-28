@@ -16,6 +16,9 @@ public class PricerController extends Thread {
     private static Map<String, String> baseCurrencyIndexes;
     private static ArrayList<String> specialGems;
     private static ArrayList<String> potentialSixLinkItems;
+    private static ArrayList<Integer> allowedFrameTypes;
+
+    // Large data storage class
     private static Database database;
 
     public PricerController() {
@@ -131,6 +134,17 @@ public class PricerController extends Thread {
             add("TwoHandAxes");
             add("Bows");
         }};
+
+        // Skip anything that doesn't match these frametypes
+        allowedFrameTypes = new ArrayList<>(){{
+            add(0);
+            add(3);
+            add(4);
+            add(5);
+            add(6);
+            add(8);
+        }};
+
 
         // Base database that holds all found price data
         database = new Database();
@@ -265,7 +279,7 @@ public class PricerController extends Thread {
         if (item.getNote().equals("")) {
             // Filter out items without prices
             item.setDiscard();
-        } else if (item.getFrameType() != 5) { // TODO: add more frameTypes
+        } else if (!allowedFrameTypes.contains(item.getFrameType())) {
             // Filter out unpriceable items
             item.setDiscard();
         } else if (!item.isIdentified()) {
@@ -341,12 +355,12 @@ public class PricerController extends Thread {
             // Get rid of unnecessary formatting (this might've gotten removed in JSON deserialization)
             item.addKey(item.getName().replace("<<set:MS>><<set:M>><<set:S>>", ""));
             if(!item.getTypeLine().equals(""))
-                item.addKey(item.getName() + "|" + item.getTypeLine());
+                item.addKey("|" + item.getTypeLine());
         }
 
         // Add frameType to key if it isn't currency or gem-related
         if (item.getFrameType() != 4 && item.getFrameType() != 5) // TODO: add more frameTypes
-            item.addKey(item.getName() + "|" + item.getTypeLine());
+            item.addKey("|" + item.getFrameType());
 
         // Get the item's type
         String[] splitItemType = item.getIcon().split("/");
@@ -377,15 +391,19 @@ public class PricerController extends Thread {
         int quality = -1;
 
         // Attempt to extract lvl and quality from item info
-        for (Properties prop: item.getProperties()) {
-            if (prop.getName().equals("Level"))
-                lvl = Integer.getInteger(prop.getValues().get(0).get(0).split(" ")[0]);
-            else if (prop.getName().equals("Quality"))
-                quality = Integer.getInteger(prop.getValues().get(0).get(0).replace("+", "").replace("%", ""));
+        try {
+            for (Properties prop : item.getProperties()) {
+                if (prop.getName().equals("Level"))
+                    lvl = Integer.getInteger(prop.getValues().get(0).get(0).split(" ")[0]);
+                else if (prop.getName().equals("Quality"))
+                    quality = Integer.getInteger(prop.getValues().get(0).get(0).replace("+", "").replace("%", ""));
+            }
+        } catch (NullPointerException e){
+            // TODO: do something?
         }
 
         // If quality or lvl was not found, return
-        if(lvl + quality == -2) {
+        if(lvl + quality == -2) { //TODO: take a look at this
             item.setDiscard();
             return;
         }

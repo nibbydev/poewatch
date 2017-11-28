@@ -142,6 +142,9 @@ public class Database {
             currencyDatabase.clear();
     }
 
+    // TODO: buildCurrencyStatistics
+    // TODO: purgeCurrencyDatabase
+
     /*
      * Methods used to manage item-related databases
      */
@@ -200,9 +203,16 @@ public class Database {
             itemDatabase.clear();
     }
 
+    // TODO: buildItemStatistics
+    // TODO: purgeItemDatabase
+
     /*
      * Methods used to manage gem-related databases
      */
+
+    // TODO: buildGemDatabase
+    // TODO: buildGemStatistics
+    // TODO: purgeGemDatabase
 
     public void devPrintData(){
         // TODO: for development
