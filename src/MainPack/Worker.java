@@ -3,6 +3,7 @@ package MainPack;
 import MainPack.MapperClasses.APIReply;
 import MainPack.MapperClasses.Item;
 import MainPack.MapperClasses.Stash;
+import MainPack.PricerClasses.PricerController;
 import MainPack.StatClasses.League;
 import MainPack.StatClasses.StatController;
 import org.codehaus.jackson.JsonParser;
@@ -29,6 +30,7 @@ public class Worker extends Thread {
     private String nextChangeID = "";
     private String job = "";
     private StatController statController;
+    private PricerController pricerController;
 
     /*
      * Methods that get/set values from outside the class
@@ -68,6 +70,10 @@ public class Worker extends Thread {
 
     public void setStatController(StatController statController) {
         this.statController = statController;
+    }
+
+    public void setPricerController(PricerController pricerController) {
+        this.pricerController = pricerController;
     }
 
     /*
@@ -276,6 +282,9 @@ public class Worker extends Thread {
         // Loop through every single item, checking every single one of them
         for (Stash stash : reply.getStashes()) {
             for (Item item : stash.getItems()) {
+
+                pricerController.checkItem(item);
+
                 // Check search parameters
                 parameterConstructor = item.getLeague() + "|" + item.getFrameType() + "|" + item.getName();
                 for (String parameter : searchParameters) {
@@ -316,7 +325,6 @@ public class Worker extends Thread {
                     leagueStats.incCorruptedCount();
                 if(!item.isIdentified())
                     leagueStats.incUnidentifiedCount();
-
             }
         }
     }

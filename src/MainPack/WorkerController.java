@@ -1,5 +1,6 @@
 package MainPack;
 
+import MainPack.PricerClasses.PricerController;
 import MainPack.StatClasses.StatController;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class WorkerController extends Thread {
     private String nextChangeID = "";
     private ArrayList<String> searchParameters;
     private StatController statController;
+    private PricerController pricerController;
 
     /*
      * Methods that get/set values from outside the class
@@ -44,6 +46,10 @@ public class WorkerController extends Thread {
 
     public void setStatController(StatController statController) {
         this.statController = statController;
+    }
+
+    public void setPricerController(PricerController pricerController) {
+        this.pricerController = pricerController;
     }
 
     /*
@@ -145,8 +151,9 @@ public class WorkerController extends Thread {
             Worker worker = new Worker();
 
             // Set some worker properties and start
-            worker.setSearchParameters(this.searchParameters);
-            worker.setStatController(this.statController);
+            worker.setSearchParameters(searchParameters);
+            worker.setStatController(statController);
+            worker.setPricerController(pricerController);
             worker.setIndex(i);
             worker.start();
 

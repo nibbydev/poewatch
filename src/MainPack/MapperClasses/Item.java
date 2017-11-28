@@ -2,6 +2,8 @@ package MainPack.MapperClasses;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Item {
     /*   Name: Item
@@ -18,17 +20,20 @@ public class Item {
     private String id;
     private String name;
     private String typeLine;
-    private String enchantMods;
     private boolean identified = true;
     private boolean corrupted = false;
-    private String note;
+    private String note = "";
     private int frameType;
     private int x;
     private int y;
+    private List<Properties> properties;
+    private List<Socket> sockets;
 
     private boolean discard = false;
     private double price;
     private String priceType;
+    private String itemType;
+    private String key = "";
 
     /*
      * Methods that get values from outside the class
@@ -74,10 +79,6 @@ public class Item {
         return typeLine;
     }
 
-    public String getEnchantMods() {
-        return enchantMods;
-    }
-
     public int getX() {
         return x;
     }
@@ -92,6 +93,14 @@ public class Item {
 
     public boolean isIdentified() {
         return identified;
+    }
+
+    public List<Properties> getProperties() {
+        return properties;
+    }
+
+    public List<Socket> getSockets() {
+        return sockets;
     }
 
     /*
@@ -145,10 +154,6 @@ public class Item {
         this.typeLine = typeLine;
     }
 
-    public void setEnchantMods(String enchantMods) {
-        this.enchantMods = enchantMods;
-    }
-
     public void setW(int w) {
         this.w = w;
     }
@@ -161,6 +166,14 @@ public class Item {
         this.y = y;
     }
 
+    public void setProperties(List<Properties> properties) {
+        this.properties = properties;
+    }
+
+    public void setSockets(List<Socket> sockets) {
+        this.sockets = sockets;
+    }
+
     /*
      * These will be used later
      */
@@ -169,8 +182,8 @@ public class Item {
         return discard;
     }
 
-    public void setDiscard(boolean discard) {
-        this.discard = discard;
+    public void setDiscard () {
+        this.discard = true;
     }
 
     public double getPrice() {
@@ -187,5 +200,21 @@ public class Item {
 
     public void setPriceType(String priceType) {
         this.priceType = priceType;
+    }
+
+    public String getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(String itemType) {
+        this.itemType = itemType;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void addKey(String buffer) {
+        this.key += buffer;
     }
 }

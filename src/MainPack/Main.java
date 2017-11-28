@@ -1,5 +1,6 @@
 package MainPack;
 
+import MainPack.PricerClasses.PricerController;
 import MainPack.StatClasses.StatController;
 import NotMadeByMe.TextIO;
 
@@ -16,12 +17,17 @@ public class Main {
         ArrayList<String> searchParameters = new ArrayList<>();
         WorkerController workerController = new WorkerController();
         StatController statController = new StatController();
+        PricerController pricerController = new PricerController();
 
-        // Set default values and start the controller
+        // Set default values and start the worker controller
         workerController.setSearchParameters(searchParameters);
         workerController.setStatController(statController);
+        workerController.setPricerController(pricerController);
         workerController.setWorkerLimit(5);
         workerController.start();
+
+        // Set default values and start the pricer controller
+        pricerController.start();
 
         // Ask the user how many workers should be spawned
         int workerCount = askUserForIntInputWithValidation(workerController);
@@ -33,6 +39,7 @@ public class Main {
         // Stop workers on exit
         workerController.stopAllWorkers();
         workerController.setFlagLocalRun(false);
+        pricerController.setFlagLocalRun(false);
     }
 
     private static int askUserForIntInputWithValidation(WorkerController workerController) {
