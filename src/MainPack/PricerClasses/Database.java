@@ -176,7 +176,7 @@ public class Database {
         for (String key : rawData.keySet()) {
             System.out.print("[" + key + "]: ");
 
-            for(String[] info : rawData.get(key)){
+            for (String[] info : rawData.get(key)) {
                 System.out.print(Arrays.toString(info) + ",");
             }
 

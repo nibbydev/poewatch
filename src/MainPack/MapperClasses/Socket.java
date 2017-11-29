@@ -4,14 +4,17 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Socket {
-    /*   Name: Sockets
-     *   Date created: 28.11.2017
-     *   Last modified: 28.11.2017
-     *   Description: Class used for deserializing a JSON string
-     */
+    //  Name: Socket
+    //  Date created: 28.11.2017
+    //  Last modified: 29.11.2017
+    //  Description: Class used for deserializing a JSON string
 
     private int group;
     private String attr;
+
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
 
     public int getGroup() {
         return group;

@@ -19,6 +19,7 @@ public class Main {
         workerController.start();
 
         // Set default values and start the pricer controller
+        pricerController.setSleepLength(1);
         pricerController.start();
 
         // Ask the user how many workers should be spawned
@@ -101,7 +102,7 @@ public class Main {
     // Methods extracted from commandLoop //
     ////////////////////////////////////////
 
-    private static void commandIdAdd(WorkerController workerController, String[] userInput){
+    private static void commandIdAdd(WorkerController workerController, String[] userInput) {
         /*  Name: commandIdAdd()
         *   Date created: 27.11.2017
         *   Last modified: 27.11.2017
@@ -126,7 +127,7 @@ public class Main {
         System.out.println("[INFO] New ChangeID added");
     }
 
-    private static void commandWorker(WorkerController workerController, String[] userInput){
+    private static void commandWorker(WorkerController workerController, String[] userInput) {
         /*  Name: commandWorker()
         *   Date created: 27.11.2017
         *   Last modified: 27.11.2017

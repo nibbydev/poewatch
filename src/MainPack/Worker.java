@@ -131,7 +131,7 @@ public class Worker extends Thread {
                 // Check if run flag is lowered
                 if (!this.flagLocalRun)
                     return "";
-                // Transmission has finished
+                    // Transmission has finished
                 else if (byteCount == -1)
                     break;
 

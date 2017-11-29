@@ -6,11 +6,10 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Item {
-    /*   Name: Item
-     *   Date created: 23.11.2017
-     *   Last modified: 28.11.2017
-     *   Description: Class used for deserializing a JSON string
-     */
+    //  Name: Item
+    //  Date created: 23.11.2017
+    //  Last modified: 29.11.2017
+    //  Description: Class used for deserializing a JSON string
 
     private int w;
     private int h;
@@ -36,9 +35,53 @@ public class Item {
     private String itemType;
     private String key = "";
 
-    /*
-     * Methods that get values from outside the class
-     */
+    ////////////////////////////////////////////////////////////////////////////////
+    // Getters / Setters that do not have anything to do with the deserialization //
+    ////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isDiscard() {
+        return discard;
+    }
+
+    public void setDiscard() {
+        this.discard = true;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public String getPriceType() {
+        return priceType;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setPriceType(String priceType) {
+        this.priceType = priceType;
+    }
+
+    public String getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(String itemType) {
+        this.itemType = itemType;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void addKey(String buffer) {
+        this.key += buffer;
+    }
+
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
 
     public String getId() {
         return id;
@@ -107,10 +150,6 @@ public class Item {
     public List<String> getExplicitMods() {
         return explicitMods;
     }
-
-    /*
-     * Methods that set values from outside the class
-     */
 
     public void setId(String id) {
         this.id = id;
@@ -183,47 +222,4 @@ public class Item {
         this.explicitMods = explicitMods;
     }
 
-    /*
-     * These will be used later
-     */
-
-    public boolean isDiscard() {
-        return discard;
-    }
-
-    public void setDiscard () {
-        this.discard = true;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public String getPriceType() {
-        return priceType;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public void setPriceType(String priceType) {
-        this.priceType = priceType;
-    }
-
-    public String getItemType() {
-        return itemType;
-    }
-
-    public void setItemType(String itemType) {
-        this.itemType = itemType;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void addKey(String buffer) {
-        this.key += buffer;
-    }
 }

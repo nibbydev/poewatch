@@ -14,16 +14,14 @@ public class PricerController extends Thread {
     //  Last modified: 29.11.2017
     //  Description: A threaded object that manages databases
 
+    private int sleepLength = 10;
     private boolean flagLocalRun = true;
-    private boolean flagPause = false; // TODO: add controller methods
+    private boolean flagPause = false;
     private static Map<String, String> currencyShorthands;
     private static Map<String, String> baseCurrencyIndexes;
-    private static ArrayList<String> specialGems;
     private static ArrayList<String> potentialSixLinkItems;
-    private static ArrayList<Integer> allowedFrameTypes;
     private static Map<String, Map<String, String>> itemVariants;
-    private static Database database;
-
+    private static Database database = new Database();
 
     public PricerController() {
         //  Name: PricerController()
@@ -33,7 +31,7 @@ public class PricerController extends Thread {
 
         // Suggested solution for putting a lot of values in at once
         // https://stackoverflow.com/questions/8261075/adding-multiple-entries-to-a-hashmap-at-once-in-one-statement
-        currencyShorthands = new HashMap<>(){{
+        currencyShorthands = new HashMap<>() {{
             put("exalt", "Exalted Orb");
             put("regret", "Orb of Regret");
             put("divine", "Divine Orb");
@@ -88,7 +86,7 @@ public class PricerController extends Thread {
         }};
 
         // Index currency, will take up less space overall
-        baseCurrencyIndexes = new HashMap<>(){{
+        baseCurrencyIndexes = new HashMap<>() {{
             put("Chaos Orb", "1");
             put("Exalted Orb", "2");
             put("Divine Orb", "3");
@@ -120,16 +118,9 @@ public class PricerController extends Thread {
             put("Master Cartographer's Sextant", "29");
         }};
 
-        // These items have special values. They need to be analyzed differently
-        specialGems = new ArrayList<>(){{
-            add("Empower Support");
-            add("Enlighten Support");
-            add("Enhance Support");
-        }};
-
         // These items can have up to six links. This could mean a lot higher price. Hence, we give them a separate
         // database key
-        potentialSixLinkItems = new ArrayList<>(){{
+        potentialSixLinkItems = new ArrayList<>() {{
             add("Staves");
             add("BodyArmours");
             add("TwoHandSwords");
@@ -138,46 +129,33 @@ public class PricerController extends Thread {
             add("Bows");
         }};
 
-        // Skip anything that doesn't match these frametypes
-        allowedFrameTypes = new ArrayList<>(){{
-            add(0);
-            add(3);
-            add(4);
-            add(5);
-            add(6);
-            add(8);
-        }};
-
         // Since some itmes have special variants with the same name, they need to be split up
-        itemVariants = new HashMap<>(){{
+        itemVariants = new HashMap<>() {{
             put("Atziri's Splendour", new HashMap<>());
-            put("Vessel of Vinktar", new HashMap<>(){{
+            put("Vessel of Vinktar", new HashMap<>() {{
                 put("spells", "Lightning Damage to Spells");
                 put("attacks", "Lightning Damage to Attacks");
                 put("conversion", "Converted to Lightning");
                 put("penetration", "Damage Penetrates");
             }});
-            put("Doryani's Invitation", new HashMap<>(){{
+            put("Doryani's Invitation", new HashMap<>() {{
                 put("lightning", "increased Lightning Damage");
                 put("fire", "increased Fire Damage");
                 put("cold", "increased Cold Damage");
                 put("physical", "increased Physical Damage");
             }});
-            put("Yriel's Fostering", new HashMap<>(){{
+            put("Yriel's Fostering", new HashMap<>() {{
                 put("chaos", "Chaos Damage to Attacks");
                 put("physical", "Physical Damage to Attack");
                 put("speed", "increased Attack and Movement Speed");
             }});
-            put("Volkuur's Guidance", new HashMap<>(){{
+            put("Volkuur's Guidance", new HashMap<>() {{
                 put("fire", "Fire Damage to Spells");
                 put("cold", "Cold Damage to Spells");
                 put("lightning", "Lightning Damage to Spells");
             }});
 
         }};
-
-        // Base database that holds all found price data
-        database = new Database();
     }
 
     public void run() {
@@ -186,14 +164,12 @@ public class PricerController extends Thread {
         //  Last modified: 29.11.2017
         //  Description: Contains the main loop of the pricing service
 
-        while(true) {
-            sleepWhile(15); // TODO: increase this value
+        while (true) {
+            sleepWhile(sleepLength * 60);
 
             // Break if run flag has been lowered
-            if(!flagLocalRun)
+            if (!flagLocalRun)
                 break;
-
-            System.out.println("Building da database");
 
             // Prepare for database building
             flagPause = true;
@@ -203,7 +179,8 @@ public class PricerController extends Thread {
             database.purgeDatabases();
             database.buildStatistics();
 
-            database.devPrintData(); // TODO: remove this (enabled in experimental branch)
+            // TODO: remove this (enabled in experimental branch)
+            database.devPrintData();
 
             // Clear raw data
             database.clearRawData();
@@ -211,7 +188,7 @@ public class PricerController extends Thread {
         }
     }
 
-    private void sleepWhile(int howLongInSeconds){
+    private void sleepWhile(int howLongInSeconds) {
         //  Name: sleepWhile()
         //  Date created: 28.11.2017
         //  Last modified: 29.11.2017
@@ -227,7 +204,7 @@ public class PricerController extends Thread {
             }
 
             // Break if run flag has been lowered
-            if(!flagLocalRun)
+            if (!flagLocalRun)
                 break;
         }
     }
@@ -236,14 +213,14 @@ public class PricerController extends Thread {
     // Check and parse items //
     ///////////////////////////
 
-    public void checkItem(Item item){
+    public void checkItem(Item item) {
         //  Name: checkItem()
         //  Date created: 28.11.2017
         //  Last modified: 29.11.2017
         //  Description: Method that's used to add entries to the databases
 
         // Pause during I/O operations
-        while(flagPause){
+        while (flagPause) {
             // Sleep for 100ms
             try {
                 Thread.sleep(100);
@@ -266,14 +243,14 @@ public class PricerController extends Thread {
         formatNameAndItemType(item);
 
         // Filter out white base types (but allow maps)
-        if (item.getFrameType() == 0 && item.getItemType().contains("maps"))
-            return; // TODO: verify this works as intended
+        if (item.getFrameType() == 0 && !item.getItemType().contains("maps"))
+            return;
 
-        // Check gem info
-        if(item.getFrameType() == 4){
-            // Check gem info (checks gem info)
+        // Check gem info or check links and variants
+        if (item.getFrameType() == 4) {
             checkGemInfo(item);
-            if(item.isDiscard())
+
+            if (item.isDiscard())
                 return;
         } else {
             checkSixLink(item);
@@ -287,7 +264,7 @@ public class PricerController extends Thread {
     private void basicChecks(Item item) {
         //  Name: basicChecks()
         //  Date created: 28.11.2017
-        //  Last modified: 28.11.2017
+        //  Last modified: 29.11.2017
         //  Description: Method that does a few basic checks on items
         //  Parent methods:
         //      checkItem()
@@ -295,7 +272,7 @@ public class PricerController extends Thread {
         if (item.getNote().equals("")) {
             // Filter out items without prices
             item.setDiscard();
-        } else if (!allowedFrameTypes.contains(item.getFrameType())) {
+        } else if (item.getFrameType() == 1 || item.getFrameType() == 2 || item.getFrameType() == 7) {
             // Filter out unpriceable items
             item.setDiscard();
         } else if (!item.isIdentified()) {
@@ -304,7 +281,7 @@ public class PricerController extends Thread {
         } else if (item.isCorrupted() && item.getFrameType() != 4) {
             // Filter out corrupted items besides gems
             item.setDiscard();
-        } else if (item.getLeague().contains("SSF")){
+        } else if (item.getLeague().contains("SSF")) {
             // Filter out SSF leagues as trading there is disabled
             item.setDiscard();
         }
@@ -339,7 +316,7 @@ public class PricerController extends Thread {
                 item.setPrice(Double.parseDouble(priceArray[0]));
             else
                 item.setPrice(Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]));
-        } catch (Exception ex){ // TODO more specific exceptions
+        } catch (Exception ex) { // TODO more specific exceptions
             item.setDiscard();
             return;
         }
@@ -387,7 +364,7 @@ public class PricerController extends Thread {
         } else {
             // Get rid of unnecessary formatting (this might've gotten removed in JSON deserialization)
             item.addKey("|" + item.getName().replace("<<set:MS>><<set:M>><<set:S>>", ""));
-            if(!item.getTypeLine().equals(""))
+            if (!item.getTypeLine().equals(""))
                 item.addKey("|" + item.getTypeLine());
         }
 
@@ -397,7 +374,7 @@ public class PricerController extends Thread {
 
     }
 
-    private void checkGemInfo(Item item){
+    private void checkGemInfo(Item item) {
         //  Name: checkGemInfo()
         //  Date created: 28.11.2017
         //  Last modified: 29.11.2017
@@ -418,22 +395,22 @@ public class PricerController extends Thread {
         }
 
         // If quality or lvl was not found, return
-        if(lvl == -1) {
+        if (lvl == -1) {
             item.setDiscard();
             return;
         }
 
         // Begin the long block that filters out gems based on a number of properties
-        if(specialGems.contains(item.getName())){
-            if(item.isCorrupted()){
-                if(lvl == 4 || lvl == 3)
+        if (item.getName().equals("Empower Support") || item.getName().equals("Enlighten Support") || item.getName().equals("Enhance Support")) {
+            if (item.isCorrupted()) {
+                if (lvl == 4 || lvl == 3)
                     quality = 0;
                 else {
                     item.setDiscard();
                     return;
                 }
             } else {
-                if(quality < 10)
+                if (quality < 10)
                     quality = 0;
                 else if (quality > 17)
                     quality = 20;
@@ -443,8 +420,8 @@ public class PricerController extends Thread {
                 }
             }
         } else {
-            if(item.isCorrupted()){
-                if(item.getItemType().equals("VaalGems")) {
+            if (item.isCorrupted()) {
+                if (item.getItemType().equals("VaalGems")) {
                     if (lvl < 10 && quality == 20)
                         lvl = 0;
                     else if (lvl == 20 && quality == 20)
@@ -500,22 +477,22 @@ public class PricerController extends Thread {
         //      checkItem()
 
         // Filter out items that can't have 6 links
-        if(!potentialSixLinkItems.contains(item.getItemType())) {
+        if (!potentialSixLinkItems.contains(item.getItemType())) {
             item.setDiscard();
             return;
         }
 
         // Group links together
-        Integer[] links = new Integer[]{0,0,0,0,0,0};
-        for (Socket socket: item.getSockets()) {
+        Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};
+        for (Socket socket : item.getSockets()) {
             //links.set(socket.getGroup(), links.get(socket.getGroup()) + 1);
             links[socket.getGroup()]++;
         }
 
         // Find largest single link
         int maxLinks = 0;
-        for (Integer link: links) {
-            if(link > maxLinks)
+        for (Integer link : links) {
+            if (link > maxLinks)
                 maxLinks = link;
         }
 
@@ -544,7 +521,7 @@ public class PricerController extends Thread {
 
         // Atziri's Splendour is the base of my existence. Try to determine the type of Atziri's Splendour by looking
         // at the item properties
-        if(item.getName().equals("Atziri's Splendour")) {
+        if (item.getName().equals("Atziri's Splendour")) {
             int armour = 0;
             int evasion = 0;
             int energy = 0;
@@ -566,7 +543,7 @@ public class PricerController extends Thread {
 
             // Run them through this massive IF block to determine the variant
             // Values taken from https://pathofexile.gamepedia.com/Atziri%27s_Splendour (at 29.11.2017)
-            if(1052 <= armour && armour <= 1118) {
+            if (1052 <= armour && armour <= 1118) {
                 if (energy == 76) {
                     keySuffix = "|var(ar/ev/li)";
                 } else if (204 <= energy && energy <= 217) {
@@ -592,12 +569,12 @@ public class PricerController extends Thread {
         } else {
             String mod;
             // Go through preset item mods
-            for (String key: itemVariants.get(item.getName()).keySet()) {
+            for (String key : itemVariants.get(item.getName()).keySet()) {
                 mod = itemVariants.get(item.getName()).get(key);
                 // Go through item mods
-                for (String itemMod: item.getExplicitMods()) {
+                for (String itemMod : item.getExplicitMods()) {
                     // Attempt to match preset mod with item mod
-                    if(itemMod.contains(mod)){
+                    if (itemMod.contains(mod)) {
                         keySuffix = "|var(" + key + ")";
                         break; // TODO: exit upper-level for loop
                     }
@@ -617,4 +594,15 @@ public class PricerController extends Thread {
         this.flagLocalRun = flagLocalRun;
     }
 
+    public void setSleepLength(int sleepLength) {
+        this.sleepLength = sleepLength;
+    }
+
+    public void setFlagPause(boolean flagPause) {
+        this.flagPause = flagPause;
+    }
+
+    public boolean isFlagPause() {
+        return flagPause;
+    }
 }
