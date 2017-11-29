@@ -140,10 +140,22 @@ public class Database {
                     value = Double.parseDouble(entry[0]);
                     index = Integer.parseInt(entry[1]);
 
-                    // Skip everything that isn't base value
+                    // If we have the median price, use that
                     if (index != 1){
-                        // TODO: Get price from currency statistics
-                        continue;
+                        Double chaosValue = .0;
+
+                        // If there's a value in the statistics database, use that
+                        if (currencyStatistics.containsKey(league)){
+                            if(currencyStatistics.get(league).containsKey(name)){
+                                chaosValue = currencyStatistics.get(league).get(name).getMedian();
+                            }
+                        }
+
+                        if(chaosValue > .0) {
+                            value = value * chaosValue;
+                        } else {
+                            continue;
+                        }
                     }
 
                     // Add currency to new database
@@ -152,13 +164,13 @@ public class Database {
                 // Make sure the database doesn't get too many values
                 if (currencyDatabase.get(league).get(name).size() > 100)
                     currencyDatabase.get(league).get(name).remove(0);
-                else if (currencyDatabase.get(league).get(name).size() < 1)
+                else if (currencyDatabase.get(league).get(name).isEmpty())
                     currencyDatabase.get(league).get(name).clear();
             }
-            if (currencyDatabase.get(league).size() < 1)
+            if (currencyDatabase.get(league).isEmpty())
                 currencyDatabase.get(league).clear();
         }
-        if (currencyDatabase.size() < 1)
+        if (currencyDatabase.isEmpty())
             currencyDatabase.clear();
     }
 
@@ -237,7 +249,7 @@ public class Database {
         */
 
         double value;
-        int index;
+        String index;
 
         // Loop through leagues
         for (String league: rawData.keySet()) {
@@ -255,12 +267,25 @@ public class Database {
                     // Loop through [value, index] currency entries
                     for (String[] entry: rawData.get(league).get(itemType).get(name)) {
                         value = Double.parseDouble(entry[0]);
-                        index = Integer.parseInt(entry[1]);
+                        index = entry[1];
 
-                        // Skip everything that isn't base value
-                        if (index != 1){
-                            // TODO: Get price from currency statistics
-                            continue;
+                        // If we have the median price, use that
+                        if (!index.equals("1")){
+                            Double chaosValue = .0;
+
+                            // If there's a value in the statistics database, use that
+                            if (currencyStatistics.containsKey(league)){
+                                if(currencyStatistics.get(league).containsKey(name)){
+                                    chaosValue = currencyStatistics.get(league).get(baseReverseCurrencyIndexes.get(index)).getMedian();
+                                }
+                            }
+
+                            // Replace value with baseCurrency value
+                            if(chaosValue > .0) {
+                                value = value * chaosValue;
+                            } else {
+                                continue;
+                            }
                         }
 
                         // Add currency to new database
@@ -270,16 +295,16 @@ public class Database {
                     // Make sure the database doesn't get too many values
                     if (itemDatabase.get(league).get(itemType).get(name).size() > 100)
                         itemDatabase.get(league).get(itemType).get(name).remove(0);
-                    else if (itemDatabase.get(league).get(itemType).get(name).size() < 1)
+                    else if (itemDatabase.get(league).get(itemType).get(name).isEmpty())
                         itemDatabase.get(league).get(itemType).get(name).clear();
                 }
-                if (itemDatabase.get(league).get(itemType).size() < 1)
+                if (itemDatabase.get(league).get(itemType).isEmpty())
                     itemDatabase.get(league).get(itemType).clear();
             }
-            if (itemDatabase.get(league).size() < 1)
+            if (itemDatabase.get(league).isEmpty())
                 itemDatabase.get(league).clear();
         }
-        if (itemDatabase.size() < 1)
+        if (itemDatabase.isEmpty())
             itemDatabase.clear();
     }
 
@@ -367,7 +392,7 @@ public class Database {
         */
 
         double value;
-        int index;
+        String index;
         String gemInfo;
         String gemName;
 
@@ -391,11 +416,24 @@ public class Database {
                     // Loop through [value, index] currency entries
                     for (String[] entry : rawData.get(league).get(gemType).get(name)) {
                         value = Double.parseDouble(entry[0]);
-                        index = Integer.parseInt(entry[1]);
+                        index = entry[1];
 
-                        // Skip everything that isn't base value
-                        if (index != 1) {
-                            continue; // TODO: Get price from gem statistics
+                        // If we have the median price, use that
+                        if (!index.equals("1")){
+                            Double chaosValue = .0;
+
+                            // If there's a value in the statistics database, use that
+                            if (currencyStatistics.containsKey(league)){
+                                if(currencyStatistics.get(league).containsKey(name)){
+                                    chaosValue = currencyStatistics.get(league).get(baseReverseCurrencyIndexes.get(index)).getMedian();
+                                }
+                            }
+
+                            if(chaosValue > .0) {
+                                value = value * chaosValue;
+                            } else {
+                                continue;
+                            }
                         }
 
                         // Add gem to new database
@@ -403,18 +441,18 @@ public class Database {
                     }
                     if(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() > 100)
                         gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(0);
-                    else if (gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() < 1)
+                    else if (gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).isEmpty())
                         gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).clear();
-                    else if (gemDatabase.get(league).get(gemType).get(gemName).size() < 1)
+                    else if (gemDatabase.get(league).get(gemType).get(gemName).isEmpty())
                         gemDatabase.get(league).get(gemType).get(gemName).clear();
                 }
-                if (gemDatabase.get(league).get(gemType).size() < 1)
+                if (gemDatabase.get(league).get(gemType).isEmpty())
                     gemDatabase.get(league).get(gemType).clear();
             }
-            if (gemDatabase.get(league).size() < 1)
+            if (gemDatabase.get(league).isEmpty())
                 gemDatabase.get(league).clear();
         }
-        if (gemDatabase.size() < 1)
+        if (gemDatabase.isEmpty())
             gemDatabase.clear();
     }
 
@@ -514,32 +552,32 @@ public class Database {
         // TODO: for development
         System.out.println("[CURRENCY]");
         for (String league: currencyDatabase.keySet()) {
-            System.out.println("    [LEAGUE] " + league);
+            System.out.println("    [" + league + "] ");
             for (String name : currencyDatabase.get(league).keySet()) {
-                System.out.println("        [KEY] " + name + ": " + currencyDatabase.get(league).get(name).size());
+                System.out.println("        [" + name + "] " + currencyDatabase.get(league).get(name).size());
             }
         }
 
         System.out.println("[ITEMS]");
         for (String league: itemDatabase.keySet()) {
-            System.out.println("    [LEAGUE] " + league);
+            System.out.println("    [" + league + "]");
             for (String itemType : itemDatabase.get(league).keySet()) {
-                System.out.println("        [TYPE] " + itemType);
+                System.out.println("        [" + itemType + "] ");
                 for (String name : itemDatabase.get(league).get(itemType).keySet()) {
-                    System.out.println("            [KEY] " + name + ": " + itemDatabase.get(league).get(itemType).get(name).size());
+                    System.out.println("            [" + name + "] " + itemDatabase.get(league).get(itemType).get(name).size());
                 }
             }
         }
 
         System.out.println("[GEMS]");
         for (String league: gemDatabase.keySet()) {
-            System.out.println("    [LEAGUE] " + league);
+            System.out.println("    [" + league + "]");
             for (String itemType : gemDatabase.get(league).keySet()) {
-                System.out.println("        [TYPE] " + itemType);
+                System.out.println("        [" + itemType + "]");
                 for (String name : gemDatabase.get(league).get(itemType).keySet()) {
-                    System.out.println("            [NAME] " + name);
+                    System.out.println("            [" + name + "]");
                     for (String info: gemDatabase.get(league).get(itemType).get(name).keySet()) {
-                        System.out.println("                [INFO] " + info + ": " + gemDatabase.get(league).get(itemType).get(name).get(info).size());
+                        System.out.println("                [" + info + "] " + gemDatabase.get(league).get(itemType).get(name).get(info).size());
                     }
                 }
             }
