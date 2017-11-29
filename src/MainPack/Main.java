@@ -22,12 +22,11 @@ public class Main {
         pricerController.setSleepLength(1);
         pricerController.start();
 
-        // Ask the user how many workers should be spawned
-        int workerCount = askUserForIntInputWithValidation(workerController);
-        workerController.spawnWorkers(workerCount);
+        // Ask the user how many workers should be spawned and spawn tem
+        workerController.spawnWorkers(askUserForIntInputWithValidation(workerController));
 
-        // Allow user to have some control over the flow of the program
-        commandLoop(workerController);
+        // Initiate main command loop, allowing user some control over the program
+        commandLoop(workerController, pricerController);
 
         // Stop workers on exit
         workerController.stopAllWorkers();
@@ -57,7 +56,7 @@ public class Main {
         return userInput;
     }
 
-    private static void commandLoop(WorkerController workerController) {
+    private static void commandLoop(WorkerController workerController, PricerController pricerController) {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
         //  Last modified: 29.11.2017
@@ -70,6 +69,7 @@ public class Main {
 
         helpString += "    help - display this help page\n";
         helpString += "    exit - exit the script safely\n";
+        helpString += "    pause - pause item parsing\n";
         helpString += "    worker - manage workers\n";
         helpString += "    id - add a start changeID\n";
 
@@ -85,6 +85,9 @@ public class Main {
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
                     return;
+                case "pause":
+                    commandPause(pricerController);
+                    break;
                 case "id":
                     commandIdAdd(workerController, userInput);
                     break;
@@ -103,11 +106,10 @@ public class Main {
     ////////////////////////////////////////
 
     private static void commandIdAdd(WorkerController workerController, String[] userInput) {
-        /*  Name: commandIdAdd()
-        *   Date created: 27.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Adds a ChangeID to the queue
-        */
+        //  Name: commandIdAdd()
+        //  Date created: 27.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Adds a ChangeID to the queue
 
 
         String helpString = "[INFO] Available changeID commands:\n";
@@ -128,11 +130,10 @@ public class Main {
     }
 
     private static void commandWorker(WorkerController workerController, String[] userInput) {
-        /*  Name: commandWorker()
-        *   Date created: 27.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Holds commands that have something to do with worker operation
-        */
+        //  Name: commandWorker()
+        //  Date created: 27.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Holds commands that have something to do with worker operation
 
         String helpString = "[INFO] Available worker commands:\n";
         helpString += "    'worker list' - List all active workers\n";
@@ -155,6 +156,21 @@ public class Main {
             workerController.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
+        }
+    }
+
+    private static void commandPause(PricerController pricerController) {
+        //  Name: commandIdAdd()
+        //  Date created: 27.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Pauses or resumes the script
+
+        if(pricerController.isFlagPause()){
+            pricerController.setFlagPause(false);
+            System.out.println("[INFO] Resumed");
+        } else {
+            pricerController.setFlagPause(true);
+            System.out.println("[INFO] Paused");
         }
     }
 

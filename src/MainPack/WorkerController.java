@@ -143,7 +143,7 @@ public class WorkerController extends Thread {
             workerList.remove(lastWorker);
         }
     }
-
+    
     ///////////////////////
     // Getters / Setters //
     ///////////////////////
