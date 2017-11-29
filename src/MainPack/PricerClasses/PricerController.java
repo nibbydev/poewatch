@@ -192,7 +192,7 @@ public class PricerController extends Thread {
         */
 
         while(true) {
-            sleepWhile(10);
+            sleepWhile(10); // TODO: increase this value
 
             // Break if run flag has been lowered
             if(!flagLocalRun)
@@ -218,8 +218,13 @@ public class PricerController extends Thread {
             database.clearRawData();
             flagPause = false;
 
-            //database.devPrintRawData(); // TODO: remove this (enabled in experimental branch)
+            // TODO: remove this (enabled in experimental branch)
+            System.out.println("[=================================================== RAW DATA ===================================================]");
+            database.devPrintRawData();
+            System.out.println("[=================================================== DATABASES ===================================================]");
             database.devPrintDatabaseData();
+            System.out.println("[=================================================== STATISTICS ===================================================]");
+            database.devPrintStatistics();
         }
     }
 

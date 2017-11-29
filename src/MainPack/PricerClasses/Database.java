@@ -1,9 +1,6 @@
 package MainPack.PricerClasses;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Database {
     /*   Name: PriceDatabase
@@ -623,25 +620,48 @@ public class Database {
      */
 
     public void devPrintRawData(){
-        // TODO: for development
+        /*  Name: devPrintRawData()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Prints out database. Used for development
+        */
+
         for (String league: rawData.keySet()) {
             System.out.println("[LEAGUE] " + league);
             for (String itemType : rawData.get(league).keySet()) {
-                System.out.println("  [TYPE] " + itemType);
+                System.out.println("    [" + itemType + "] ");
                 for (String name : rawData.get(league).get(itemType).keySet()) {
-                    System.out.println("    [KEY] " + name + ": " + rawData.get(league).get(itemType).get(name).size());
+
+                    System.out.print("        [" + name + "] ");
+
+                    for (String[] test: rawData.get(league).get(itemType).get(name)) {
+                        System.out.print(Arrays.toString(test));
+                    }
+
+                    System.out.println();
                 }
             }
         }
     }
 
     public void devPrintDatabaseData(){
-        // TODO: for development
+        /*  Name: devPrintDatabaseData()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Prints out database. Used for development
+        */
+
         System.out.println("[CURRENCY]");
         for (String league: currencyDatabase.keySet()) {
             System.out.println("    [" + league + "] ");
             for (String name : currencyDatabase.get(league).keySet()) {
-                System.out.println("        [" + name + "] " + currencyDatabase.get(league).get(name).size());
+                System.out.print("        [" + name + "] ");
+
+                for (Double test: currencyDatabase.get(league).get(name)) {
+                    System.out.print(test + ", ");
+                }
+
+                System.out.println();
             }
         }
 
@@ -651,7 +671,13 @@ public class Database {
             for (String itemType : itemDatabase.get(league).keySet()) {
                 System.out.println("        [" + itemType + "] ");
                 for (String name : itemDatabase.get(league).get(itemType).keySet()) {
-                    System.out.println("            [" + name + "] " + itemDatabase.get(league).get(itemType).get(name).size());
+                    System.out.print("            [" + name + "] ");
+
+                    for (Double test: itemDatabase.get(league).get(itemType).get(name)) {
+                        System.out.print(test + ", ");
+                    }
+
+                    System.out.println();
                 }
             }
         }
@@ -664,12 +690,64 @@ public class Database {
                 for (String name : gemDatabase.get(league).get(itemType).keySet()) {
                     System.out.println("            [" + name + "]");
                     for (String info: gemDatabase.get(league).get(itemType).get(name).keySet()) {
-                        System.out.println("                [" + info + "] " + gemDatabase.get(league).get(itemType).get(name).get(info).size());
+                        System.out.print("                [" + info + "] ");
+
+                        for (Double test: gemDatabase.get(league).get(itemType).get(name).get(info)) {
+                            System.out.print(test + ", ");
+                        }
+
+                        System.out.println();
                     }
                 }
             }
         }
     }
 
+    public void devPrintStatistics(){
+        /*  Name: devPrintStatistics()
+         *  Date created: 29.11.2017
+         *  Last modified: 29.11.2017
+         *  Description: Prints out database. Used for development
+         */
+
+        System.out.println("[CURRENCY]");
+        for (String league: currencyStatistics.keySet()) {
+            System.out.println("    [" + league + "] ");
+            for (String name : currencyStatistics.get(league).keySet()) {
+                System.out.println("        [" + name + "] count:  " + currencyStatistics.get(league).get(name).getCount());
+                System.out.println("        [" + name + "] mean:   " + currencyStatistics.get(league).get(name).getMean());
+                System.out.println("        [" + name + "] median: " + currencyStatistics.get(league).get(name).getMedian());
+            }
+        }
+
+        System.out.println("[ITEMS]");
+        for (String league: itemStatistics.keySet()) {
+            System.out.println("    [" + league + "]");
+            for (String itemType : itemStatistics.get(league).keySet()) {
+                System.out.println("        [" + itemType + "] ");
+                for (String name : itemStatistics.get(league).get(itemType).keySet()) {
+                    System.out.println("            [" + name + "] count:  " + itemStatistics.get(league).get(itemType).get(name).getCount());
+                    System.out.println("            [" + name + "] mean :  " + itemStatistics.get(league).get(itemType).get(name).getMean());
+                    System.out.println("            [" + name + "] median: " + itemStatistics.get(league).get(itemType).get(name).getMedian());
+                }
+            }
+        }
+
+        System.out.println("[GEMS]");
+        for (String league: gemStatistics.keySet()) {
+            System.out.println("    [" + league + "]");
+            for (String itemType : gemStatistics.get(league).keySet()) {
+                System.out.println("        [" + itemType + "]");
+                for (String name : gemStatistics.get(league).get(itemType).keySet()) {
+                    System.out.println("            [" + name + "]");
+                    for (String info: gemStatistics.get(league).get(itemType).get(name).keySet()) {
+                        System.out.println("                [" + info + "] count:  " + gemStatistics.get(league).get(itemType).get(name).get(info).getCount());
+                        System.out.println("                [" + info + "] mean:   " + gemStatistics.get(league).get(itemType).get(name).get(info).getMean());
+                        System.out.println("                [" + info + "] median: " + gemStatistics.get(league).get(itemType).get(name).get(info).getMedian());
+                    }
+                }
+            }
+        }
+    }
 
 }
