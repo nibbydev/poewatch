@@ -214,9 +214,6 @@ public class PricerController extends Thread {
             database.buildGemDatabase();
             database.purgeGemDatabase();
             database.buildGemStatistics();
-            // Clear raw data
-            database.clearRawData();
-            flagPause = false;
 
             // TODO: remove this (enabled in experimental branch)
             System.out.println("[=================================================== RAW DATA ===================================================]");
@@ -225,6 +222,10 @@ public class PricerController extends Thread {
             database.devPrintDatabaseData();
             System.out.println("[=================================================== STATISTICS ===================================================]");
             database.devPrintStatistics();
+
+            // Clear raw data
+            database.clearRawData();
+            flagPause = false;
         }
     }
 

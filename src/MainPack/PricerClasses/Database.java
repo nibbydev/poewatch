@@ -1,6 +1,7 @@
 package MainPack.PricerClasses;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class Database {
     /*   Name: PriceDatabase
@@ -257,7 +258,7 @@ public class Database {
                 // Find the median
                 median = currencyStatistics.get(league).get(currencyName).getMedian();
                 // Remove values that are 200% larger/smaller than the median
-                for (Double value : currencyDatabase.get(league).get(currencyName)) {
+                for (Double value : new ArrayList<>(currencyDatabase.get(league).get(currencyName))) {
                     if(value > median * 2.0 || value < median / 2.0) {
                         currencyDatabase.get(league).get(currencyName).remove(value);
                     }
@@ -424,7 +425,7 @@ public class Database {
                     // Find the median
                     median = itemStatistics.get(league).get(itemType).get(itemName).getMedian();
                     // Remove values that are 200% larger/smaller than the median
-                    for (Double value : itemDatabase.get(league).get(itemType).get(itemName)) {
+                    for (Double value : new ArrayList<>(itemDatabase.get(league).get(itemType).get(itemName))) {
                         if(value > median * 2.0 || value < median / 2.0) {
                             itemDatabase.get(league).get(itemType).get(itemName).remove(value);
                         }
@@ -604,7 +605,7 @@ public class Database {
                         // Find the median
                         median = gemStatistics.get(league).get(gemType).get(gemName).get(gemInfo).getMedian();
                         // Remove values that are 200% larger/smaller than the median
-                        for (Double value : gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo)) {
+                        for (Double value : new ArrayList<>(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo))) {
                             if(value > median * 2.0 || value < median / 2.0) {
                                 gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(value);
                             }
