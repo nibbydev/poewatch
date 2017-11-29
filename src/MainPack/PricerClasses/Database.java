@@ -5,66 +5,24 @@ import MainPack.MapperClasses.Item;
 import java.util.*;
 
 public class Database {
-    /*   Name: PriceDatabase
-     *   Date created: 28.11.2017
-     *   Last modified: 29.11.2017
-     *   Description: Class used to store data? I can't do SQL
-     */
+    //  Name: Database
+    //  Date created: 28.11.2017
+    //  Last modified: 29.11.2017
+    //  Description: Class used to store data, manage data and save data
 
     private static Map<String, ArrayList<String[]>> rawData = new HashMap<>();
     private static Map<String, ArrayList<Double>> baseDatabase = new HashMap<>();
     private static Map<String, StatsObject> statistics = new HashMap<>();
 
-    private static Map<String, String> baseReverseCurrencyIndexes;
-
-    public Database() {
-        /*  Name: Database()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Method used to set initial default values
-        */
-
-        // Has the base indexes, more will be added later
-        baseReverseCurrencyIndexes = new HashMap<>() {{
-            put("1", "Chaos Orb");
-            put("2", "Exalted Orb");
-            put("3", "Divine Orb");
-            put("4", "Orb of Alchemy");
-            put("5", "Orb of Fusing");
-            put("6", "Orb of Alteration");
-            put("7", "Regal Orb");
-            put("8", "Vaal Orb");
-            put("9", "Orb of Regret");
-            put("10", "Cartographer's Chisel");
-            put("11", "Jeweller's Orb");
-            put("12", "Silver Coin");
-            put("13", "Perandus Coin");
-            put("14", "Orb of Scouring");
-            put("15", "Gemcutter's Prism");
-            put("16", "Orb of Chance");
-            put("17", "Chromatic Orb");
-            put("18", "Blessed Orb");
-            put("19", "Glassblower's Bauble");
-            put("20", "Orb of Augmentation");
-            put("21", "Orb of Transmutation");
-            put("22", "Mirror of Kalandra");
-            put("23", "Scroll of Wisdom");
-            put("24", "Portal Scroll");
-            put("25", "Blacksmith's Whetstone");
-            put("26", "Armourer's Scrap");
-            put("27", "Apprentice Cartographer's Sextant");
-            put("28", "Journeyman Cartographer's Sextant");
-            put("29", "Master Cartographer's Sextant");
-        }};
-
-    }
+    /////////////////////////////////////////////
+    // Methods used to add values to databases //
+    /////////////////////////////////////////////
 
     public void rawDataAddEntry(Item item) {
-        /*  Name: addEntry()
-        *   Date created: 28.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that adds entries to raw data database. Also makes sure entries exist in hashmaps
-        */
+        //  Name: addEntry()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that adds entries to raw data database
 
         // Add value to database (in string format)
         if (rawData.containsKey(item.getKey())) {
@@ -76,26 +34,24 @@ public class Database {
         }
     }
 
+    //////////////////////////////////////
+    // Methods used to manage databases //
+    //////////////////////////////////////
+
     public void clearRawData() {
-        /*  Name: clearRawData()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method used for clearing rawData database
-        */
+        //  Name: clearRawData()
+        //  Date created: 29.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method used for clearing rawData HashMap
 
         rawData.clear();
     }
 
-    /*
-     * Methods used to manage databases
-     */
-
     public void buildDatabases() {
-        /*  Name: buildDatabases()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that generates a table of "key: [chaos value]" entries
-        */
+        //  Name: buildDatabases()
+        //  Date created: 29.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that adds values from rawData HashMap to baseDatabase HashMap
 
         Double value;
         String index;
@@ -129,11 +85,10 @@ public class Database {
     }
 
     public void buildStatistics() {
-        /*  Name: buildStatistics()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that adds entries to statistics database
-        */
+        //  Name: buildStatistics()
+        //  Date created: 29.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that adds entries to statistics HashMap
 
         Double mean;
         Double median;
@@ -182,11 +137,11 @@ public class Database {
     }
 
     public void purgeDatabases() {
-        /*  Name: purgeDatabases()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that removes entries like "50 000" from items that would otherwise interfere with statistics
-        */
+        //  Name: purgeDatabases()
+        //  Date created: 29.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that removes entries from baseDatabase HashMap (based on statistics HashMap) depending
+        //               whether there's a 200% or larger difference between the two values
 
         double median;
 
@@ -206,16 +161,15 @@ public class Database {
         }
     }
 
-    /*
-     * Methods used for development, they print data
-     */
+    //////////////////////////////////
+    // Methods used for development //
+    //////////////////////////////////
 
     public void devPrintData() {
-        /*  Name: devPrintRawData()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Prints out database. Used for development
-        */
+        //  Name: devPrintData()
+        //  Date created: 29.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Used for development. Prints out every single database entry
 
         System.out.println("\n[=================================================== RAW DATA ===================================================]");
 

@@ -1,70 +1,33 @@
 package MainPack;
 
 import MainPack.PricerClasses.PricerController;
-import MainPack.StatClasses.StatController;
 
 import java.util.ArrayList;
 
 public class WorkerController extends Thread {
-    /*   Name: WorkerController()
-     *   Date created: 21.11.2017
-     *   Last modified: 26.11.2017
-     *   Description: Object that's used to manage various worker-related tasks
-     */
+    //   Name: WorkerController
+    //   Date created: 21.11.2017
+    //   Last modified: 29.11.2017
+    //   Description: Object that's used to manage worker objects
 
     private ArrayList<Worker> workerList = new ArrayList<>();
     private int workerLimit = 5;
     private boolean flagLocalRun = true;
     private String nextChangeID = "";
-    private ArrayList<String> searchParameters;
-    private StatController statController;
     private PricerController pricerController;
 
-    /*
-     * Methods that get/set values from outside the class
-     */
-
-    public void setFlagLocalRun(boolean flagLocalRun) {
-        this.flagLocalRun = flagLocalRun;
-    }
-
-    public void setWorkerLimit(int workerLimit) {
-        this.workerLimit = workerLimit;
-    }
-
-    public void setNextChangeID(String nextChangeID) {
-        this.nextChangeID = nextChangeID;
-    }
-
-    public void setSearchParameters(ArrayList<String> searchParameters) {
-        this.searchParameters = searchParameters;
-    }
-
-    public int getWorkerLimit() {
-        return workerLimit;
-    }
-
-    public void setStatController(StatController statController) {
-        this.statController = statController;
-    }
-
-    public void setPricerController(PricerController pricerController) {
-        this.pricerController = pricerController;
-    }
-
-    /*
-     * Methods that actually do something
-     */
+    /////////////////////////////
+    // Actually useful methods //
+    /////////////////////////////
 
     public void run() {
-        /*  Name: run()
-        *   Date created: 22.11.2017
-        *   Last modified: 23.11.2017
-        *   Description: Main loop that assigns jobs to workers
-        */
+        //  Name: run()
+        //  Date created: 22.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Assigns jobs to workers
 
         // Run main loop while flag is up
-        while (this.flagLocalRun) {
+        while (flagLocalRun) {
             // Sleep for 100ms
             try {
                 Thread.sleep(100);
@@ -73,27 +36,27 @@ public class WorkerController extends Thread {
             }
 
             // Check if nextChangeID has a value
-            if (this.nextChangeID.equals("")) {
+            if (nextChangeID.equals("")) {
                 // Loop through every worker as there's a new job to be given out
-                for (Worker worker : this.workerList) {
+                for (Worker worker : workerList) {
                     // Check if a worker has a job available
                     if (!worker.getNextChangeID().equals("")) {
                         // Copy the new job over to the local variable, which will be assigned to a worker on the next
                         // iteration of the while loop
-                        this.nextChangeID = worker.getNextChangeID();
+                        nextChangeID = worker.getNextChangeID();
                         worker.setNextChangeID("");
                         break;
                     }
                 }
             } else {
                 // Loop through every worker to check if any of them have found a new job
-                for (Worker worker : this.workerList) {
+                for (Worker worker : workerList) {
                     // Check if the current worker has no active job
                     if (worker.getJob().equals("")) {
                         // Give the job to the worker
-                        worker.setJob(this.nextChangeID);
+                        worker.setJob(nextChangeID);
                         // Remove the job that was just given out
-                        this.nextChangeID = "";
+                        nextChangeID = "";
                         break;
                     }
                 }
@@ -102,47 +65,43 @@ public class WorkerController extends Thread {
     }
 
     public void stopAllWorkers() {
-        /*  Name: stopAllWorkers()
-        *   Date created: 21.11.2017
-        *   Last modified: 22.11.2017
-        *   Description: Used to stop all running workers
-        */
+        //  Name: stopAllWorkers()
+        //  Date created: 21.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Stops all running workers
 
         // Loop though every worker and raise the stop flag
-        for (Worker workerObject : this.workerList) {
+        for (Worker workerObject : workerList) {
             workerObject.setFlagLocalRun(false);
         }
 
-        this.workerList.clear();
-
+        workerList.clear();
     }
 
     public void listAllWorkers() {
-        /*  Name: listAllWorkers()
-        *   Date created: 22.11.2017
-        *   Last modified: 23.11.2017
-        *   Description: Prints out all active workers and their active jobs
-        */
+        //  Name: listAllWorkers()
+        //  Date created: 22.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Prints out all active workers and their active jobs
 
         // Loop though every worker and print out its job
-        for (Worker workerObject : this.workerList) {
+        for (Worker workerObject : workerList) {
             System.out.println("    " + workerObject.getIndex() + ": " + workerObject.getJob());
         }
     }
 
     public void spawnWorkers(int workerCount) {
-        /*  Name: spawnWorkers()
-        *   Date created: 21.11.2017
-        *   Last modified: 26.11.2017
-        *   Description: Used to create x amount of new workers
-        */
+        //  Name: spawnWorkers()
+        //  Date created: 21.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Creates <workerCount> amount of new workers
 
         // Get the next available index
-        int nextWorkerIndex = this.workerList.size();
+        int nextWorkerIndex = workerList.size();
 
         // Forbid spawning over limit
-        if (nextWorkerIndex + workerCount > this.workerLimit) {
-            System.out.println("[ERROR] Maximum amount of workers is " + this.workerLimit);
+        if (nextWorkerIndex + workerCount > workerLimit) {
+            System.out.println("[ERROR] Maximum amount of workers is " + workerLimit);
             return;
         }
 
@@ -151,23 +110,20 @@ public class WorkerController extends Thread {
             Worker worker = new Worker();
 
             // Set some worker properties and start
-            worker.setSearchParameters(searchParameters);
-            worker.setStatController(statController);
             worker.setPricerController(pricerController);
             worker.setIndex(i);
             worker.start();
 
             // Add worker to local list
-            this.workerList.add(worker);
+            workerList.add(worker);
         }
     }
 
     public void fireWorkers(int workerCount) {
-        /*  Name: fireWorkers()
-        *   Date created: 22.11.2017
-        *   Last modified: 26.11.2017
-        *   Description: Used to remove x amount running threads.
-        */
+        //  Name: fireWorkers()
+        //  Date created: 22.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Removes <workerCount> amount running workers
 
         Worker lastWorker;
 
@@ -187,4 +143,29 @@ public class WorkerController extends Thread {
             workerList.remove(lastWorker);
         }
     }
+
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
+
+    public void setFlagLocalRun(boolean flagLocalRun) {
+        this.flagLocalRun = flagLocalRun;
+    }
+
+    public void setWorkerLimit(int workerLimit) {
+        this.workerLimit = workerLimit;
+    }
+
+    public void setNextChangeID(String nextChangeID) {
+        this.nextChangeID = nextChangeID;
+    }
+
+    public int getWorkerLimit() {
+        return workerLimit;
+    }
+
+    public void setPricerController(PricerController pricerController) {
+        this.pricerController = pricerController;
+    }
+
 }

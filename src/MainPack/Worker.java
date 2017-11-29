@@ -4,8 +4,6 @@ import MainPack.MapperClasses.APIReply;
 import MainPack.MapperClasses.Item;
 import MainPack.MapperClasses.Stash;
 import MainPack.PricerClasses.PricerController;
-import MainPack.StatClasses.League;
-import MainPack.StatClasses.StatController;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -13,110 +11,61 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Worker extends Thread {
-    /*   Name: Worker
-     *   Date created: 21.11.2017
-     *   Last modified: 27.11.2017
-     *   Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
-     */
+    //  Name: Worker
+    //  Date created: 21.11.2017
+    //  Last modified: 29.11.2017
+    //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private boolean flagLocalRun = true;
     private int index;
-    private ArrayList<String> searchParameters;
     private String nextChangeID = "";
     private String job = "";
-    private StatController statController;
     private PricerController pricerController;
 
-    /*
-     * Methods that get/set values from outside the class
-     */
-
-    public void setNextChangeID(String nextChangeID) {
-        this.nextChangeID = nextChangeID;
-    }
-
-    public void setJob(String job) {
-        this.job = job;
-    }
-
-    public void setSearchParameters(ArrayList<String> searchParameters) {
-        this.searchParameters = searchParameters;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
-    }
-
-    public void setFlagLocalRun(boolean flagLocalRun) {
-        this.flagLocalRun = flagLocalRun;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public String getNextChangeID() {
-        return nextChangeID;
-    }
-
-    public String getJob() {
-        return job;
-    }
-
-    public void setStatController(StatController statController) {
-        this.statController = statController;
-    }
-
-    public void setPricerController(PricerController pricerController) {
-        this.pricerController = pricerController;
-    }
-
-    /*
-     * Methods that actually do something
-     */
+    /////////////////////////////
+    // Actually useful methods //
+    /////////////////////////////
 
     public void run() {
-        /*  Name: run()
-        *   Date created: 21.11.2017
-        *   Last modified: 23.11.2017
-        *   Description: Contains the main loop of the worker
-        *   Child methods:
-        *       downloadData()
-        *       deSerializeJSONString()
-        *       parseItems()
-        */
+        //  Name: run()
+        //  Date created: 21.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Contains the main loop of the worker
+        //  Child methods:
+        //      downloadData()
+        //      deSerializeJSONString()
+        //      parseItems()
 
         String replyJSONString;
         APIReply reply;
 
         // Run while flag is true
-        while (this.flagLocalRun) {
+        while (flagLocalRun) {
             // Check for new jobs
-            if (!this.job.equals("")) {
+            if (!job.equals("")) {
                 // Download and parse data according to the changeID.
-                replyJSONString = this.downloadData();
+                replyJSONString = downloadData();
 
                 // If download was unsuccessful, stop
                 if (replyJSONString.equals(""))
                     return;
 
                 // Seems good, deserialize the JSON string
-                reply = this.deSerializeJSONString(replyJSONString);
+                reply = deSerializeJSONString(replyJSONString);
 
                 // Check if object has info in it
                 if (reply.getNext_change_id().equals(""))
                     return;
 
                 // Parse the deserialized JSON
-                this.parseItems(reply);
+                parseItems(reply);
 
                 // Clear the job
-                this.job = "";
+                setJob("");
             }
 
             // Sleep for 100ms
@@ -129,15 +78,14 @@ public class Worker extends Thread {
     }
 
     private String downloadData() {
-        /*  Name: downloadData()
-        *   Date created: 21.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Contains the method that downloads data from the API
-        *   Parent methods:
-        *       run()
-        *   Child methods:
-        *       trimPartialByteBuffer()
-        */
+        //  Name: downloadData()
+        //  Date created: 21.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that downloads data from the API
+        //  Parent methods:
+        //      run()
+        //  Child methods:
+        //      trimPartialByteBuffer()
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
         int chunkSize = 128;
@@ -151,9 +99,6 @@ public class Worker extends Thread {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
-
-        // Add to statistics
-        statController.incTotalPullCount();
 
         try {
             // Define the request
@@ -190,9 +135,6 @@ public class Worker extends Thread {
                 else if (byteCount == -1)
                     break;
 
-                // Add to statistics
-                statController.addBytesDownloaded(byteCount);
-
                 // Trim the byteBuffer, convert it into string and add to string buffer
                 stringBuilderBuffer.append(trimPartialByteBuffer(byteBuffer, byteCount));
 
@@ -207,9 +149,6 @@ public class Worker extends Thread {
                 }
             }
 
-            // Add to statistics
-            statController.incSuccessfulPullCount();
-
             // Return the downloaded mess of a JSON string
             return stringBuilderBuffer.toString();
         } catch (Exception ex) {
@@ -221,14 +160,13 @@ public class Worker extends Thread {
     }
 
     private String trimPartialByteBuffer(byte[] buffer, int length) {
-        /*  Name: trimPartialByteBuffer()
-        *   Date created: 22.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
-        *       into string. Reason: first iteration of get reply returns 26 bytes instead of 128
-        *   Parent methods:
-        *       downloadData()
-        */
+        //  Name: trimPartialByteBuffer()
+        //  Date created: 22.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
+        //      into string. Reason: first iteration of get reply returns 26 bytes instead of 128
+        //  Parent methods:
+        //      downloadData()
 
         byte[] bufferBuffer = new byte[length];
 
@@ -241,13 +179,12 @@ public class Worker extends Thread {
     }
 
     private APIReply deSerializeJSONString(String stringBuffer) {
-        /*  Name: deSerializeJSONString()
-        *   Date created: 22.11.2017
-        *   Last modified: 23.11.2017
-        *   Description: Map a JSON string to an object
-        *   Parent methods:
-        *       run()
-        */
+        //  Name: deSerializeJSONString()
+        //  Date created: 22.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Maps a JSON string to an object
+        //  Parent methods:
+        //      run()
 
         APIReply reply;
 
@@ -264,68 +201,59 @@ public class Worker extends Thread {
         }
 
         return reply;
-
     }
 
     private void parseItems(APIReply reply) {
-        /*  Name: parseItems()
-        *   Date created: 23.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Checks every item the script has found against preset filters
-        *   Parent methods:
-        *       run()
-        */
-
-        String parameterConstructor;
-        League leagueStats;
+        //  Name: parseItems()
+        //  Date created: 23.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Checks every item the script has found against preset filters
+        //  Parent methods:
+        //      run()
 
         // Loop through every single item, checking every single one of them
         for (Stash stash : reply.getStashes()) {
-            for (Item item : stash.getItems()) {// TODO: improve this clause
+            for (Item item : stash.getItems()) {
                 // Run through pricing service
                 pricerController.checkItem(item);
-
-                // Check search parameters
-                parameterConstructor = item.getLeague() + "|" + item.getFrameType() + "|" + item.getName();
-                for (String parameter : searchParameters) {
-                    if (parameter.equalsIgnoreCase(parameterConstructor)) {
-                        System.out.println("(" + stash.getAccountName() + ") - " + parameterConstructor);
-                    }
-                }
-
-                // Get the league-based statistics object
-                leagueStats = statController.getLeague(item.getLeague());
-
-                // Increment item frame type stats
-                switch (item.getFrameType()) {
-                    case 0:
-                        leagueStats.incNormalCount();
-                        break;
-                    case 1:
-                        leagueStats.incMagicCount();
-                        break;
-                    case 2:
-                        leagueStats.incRareCount();
-                        break;
-                    case 3:
-                        leagueStats.incUniqueCount();
-                        break;
-                    case 4:
-                        leagueStats.incGemCount();
-                        break;
-                    case 5:
-                        leagueStats.incCurrencyCount();
-                        break;
-                    default:
-                        leagueStats.incOtherCount();
-                }
-
-                // Check item properties
-                if(item.isCorrupted())
-                    leagueStats.incCorruptedCount();
-                if(!item.isIdentified())
-                    leagueStats.incUnidentifiedCount();
             }
         }
     }
+
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
+
+    public void setNextChangeID(String nextChangeID) {
+        this.nextChangeID = nextChangeID;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public void setFlagLocalRun(boolean flagLocalRun) {
+        this.flagLocalRun = flagLocalRun;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public String getNextChangeID() {
+        return nextChangeID;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    public void setPricerController(PricerController pricerController) {
+        this.pricerController = pricerController;
+    }
+
 }

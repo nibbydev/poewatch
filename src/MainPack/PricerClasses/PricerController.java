@@ -9,11 +9,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PricerController extends Thread {
-    /*   Name: PricerController
-     *   Date created: 28.11.2017
-     *   Last modified: 29.11.2017
-     *   Description: A threaded object that manages databases
-     */
+    //  Name: PricerController
+    //  Date created: 28.11.2017
+    //  Last modified: 29.11.2017
+    //  Description: A threaded object that manages databases
 
     private boolean flagLocalRun = true;
     private boolean flagPause = false; // TODO: add controller methods
@@ -23,16 +22,14 @@ public class PricerController extends Thread {
     private static ArrayList<String> potentialSixLinkItems;
     private static ArrayList<Integer> allowedFrameTypes;
     private static Map<String, Map<String, String>> itemVariants;
-
-    // Large data storage class
     private static Database database;
 
+
     public PricerController() {
-        /*  Name: PricerController()
-        *   Date created: 28.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that sets default values to the class's static variables
-        */
+        //  Name: PricerController()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that sets default values to the class's static variables
 
         // Suggested solution for putting a lot of values in at once
         // https://stackoverflow.com/questions/8261075/adding-multiple-entries-to-a-hashmap-at-once-in-one-statement
@@ -184,15 +181,13 @@ public class PricerController extends Thread {
     }
 
     public void run() {
-        /*  Name: run()
-        *   Date created: 28.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Contains the main loop of the pricing service
-        *   Child methods:
-        */
+        //  Name: run()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Contains the main loop of the pricing service
 
         while(true) {
-            sleepWhile(10); // TODO: increase this value
+            sleepWhile(15); // TODO: increase this value
 
             // Break if run flag has been lowered
             if(!flagLocalRun)
@@ -217,13 +212,12 @@ public class PricerController extends Thread {
     }
 
     private void sleepWhile(int howLongInSeconds){
-        /*  Name: sleepWhile()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Sleeps for <howLongInSeconds> seconds
-        *   Parent methods:
-        *       run()
-        */
+        //  Name: sleepWhile()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Sleeps for <howLongInSeconds> seconds
+        //  Parent methods:
+        //      run()
 
         for (int i = 0; i < howLongInSeconds; i++) {
             try {
@@ -238,25 +232,15 @@ public class PricerController extends Thread {
         }
     }
 
-    /*
-     * Get/set values outside method
-     */
-
-    public void setFlagLocalRun(boolean flagLocalRun) {
-        this.flagLocalRun = flagLocalRun;
-    }
-
-    /*
-     * Check and parse items
-     */
+    ///////////////////////////
+    // Check and parse items //
+    ///////////////////////////
 
     public void checkItem(Item item){
-        /*  Name: checkItem()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Method that's used to add entries to the databases
-        *   Child methods:
-        */
+        //  Name: checkItem()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that's used to add entries to the databases
 
         // Pause during I/O operations
         while(flagPause){
@@ -301,13 +285,12 @@ public class PricerController extends Thread {
     }
 
     private void basicChecks(Item item) {
-        /*  Name: basicChecks()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Method that does a few basic checks on items
-        *   Parent methods:
-        *       checkItem()
-        */
+        //  Name: basicChecks()
+        //  Date created: 28.11.2017
+        //  Last modified: 28.11.2017
+        //  Description: Method that does a few basic checks on items
+        //  Parent methods:
+        //      checkItem()
 
         if (item.getNote().equals("")) {
             // Filter out items without prices
@@ -329,13 +312,12 @@ public class PricerController extends Thread {
     }
 
     private void parseNote(Item item) {
-        /*  Name: parseNote()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Method that checks and formats items notes
-        *   Parent methods:
-        *       checkItem()
-        */
+        //  Name: parseNote()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Method that checks and formats items notes
+        //  Parent methods:
+        //      checkItem()
 
         String[] noteList = item.getNote().split(" ");
 
@@ -373,13 +355,12 @@ public class PricerController extends Thread {
     }
 
     private void formatNameAndItemType(Item item) {
-        /*  Name: formatNameAndItemType()
-        *   Date created: 28.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Format the item's full name and find the item type
-        *   Parent methods:
-        *       checkItem()
-        */
+        //  Name: formatNameAndItemType()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Format the item's full name and find the item type
+        //  Parent methods:
+        //      checkItem()
 
         // Start key with league
         item.addKey(item.getLeague());
@@ -417,13 +398,12 @@ public class PricerController extends Thread {
     }
 
     private void checkGemInfo(Item item){
-        /*  Name: checkGemInfo()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Checks gem-specific information
-        *   Parent methods:
-        *       checkItem()
-        */
+        //  Name: checkGemInfo()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Checks gem-specific information
+        //  Parent methods:
+        //      checkItem()
 
         int lvl = -1;
         int quality = 0;
@@ -512,13 +492,12 @@ public class PricerController extends Thread {
     }
 
     private void checkSixLink(Item item) {
-        /*  Name: checkSixLink()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Since 6-links are naturally more expensive, assign them a separate database key
-        *   Parent methods:
-        *       checkItem()
-        */
+        //  Name: checkSixLink()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Since 6-links are naturally more expensive, assign them a separate database key
+        //  Parent methods:
+        //      checkItem()
 
         // Filter out items that can't have 6 links
         if(!potentialSixLinkItems.contains(item.getItemType())) {
@@ -550,13 +529,12 @@ public class PricerController extends Thread {
     }
 
     private void checkSpecialItemVariant(Item item) {
-        /*  Name: checkSpecialItemVariant()
-        *   Date created: 28.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Check if the item has a special variant, eg vessel of vinktar
-        *   Parent methods:
-        *       checkItem()
-        */
+        //  Name: checkSpecialItemVariant()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Check if the item has a special variant, eg vessel of vinktar
+        //  Parent methods:
+        //      checkItem()
 
         // Skip non-special items
         if (!itemVariants.containsKey(item.getName()))
@@ -630,4 +608,13 @@ public class PricerController extends Thread {
         // Add new key suffix to existing key
         item.addKey(keySuffix);
     }
+
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
+
+    public void setFlagLocalRun(boolean flagLocalRun) {
+        this.flagLocalRun = flagLocalRun;
+    }
+
 }
