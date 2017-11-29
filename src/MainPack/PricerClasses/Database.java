@@ -102,6 +102,16 @@ public class Database {
 
     }
 
+    public void clearRawData(){
+        /*  Name: clearRawData()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Method used for clearing rawData database
+        */
+
+        rawData.clear();
+    }
+
     /*
      * Methods used to manage currency-related databases
      */
@@ -231,7 +241,33 @@ public class Database {
         }
     }
 
-    // TODO: purgeCurrencyDatabase
+    public void purgeCurrencyDatabase() {
+        /*  Name: purgeItemDatabase()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Method that removes entries like "50 000" from currency that would interfere with statistics
+        */
+
+        double median;
+
+        // Loop entries
+        for (String league: currencyStatistics.keySet()) {
+            if(!currencyDatabase.containsKey(league))
+                continue;
+            for (String currencyName : currencyStatistics.get(league).keySet()) {
+                if(!currencyDatabase.get(league).containsKey(currencyName))
+                    continue;
+                // Find the median
+                median = currencyStatistics.get(league).get(currencyName).getMedian();
+                // Remove values that are 200% larger/smaller than the median
+                for (Double value : currencyDatabase.get(league).get(currencyName)) {
+                    if(value > median * 2.0 || value < median / 2.0) {
+                        currencyDatabase.get(league).get(currencyName).remove(value);
+                    }
+                }
+            }
+        }
+    }
 
     /*
      * Methods used to manage item-related databases
@@ -369,8 +405,37 @@ public class Database {
         }
     }
 
+    public void purgeItemDatabase() {
+        /*  Name: purgeItemDatabase()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Method that removes entries like "50 000" from items that would interfere with statistics
+        */
 
-    // TODO: purgeItemDatabase
+        double median;
+
+        // Loop entries
+        for (String league: itemStatistics.keySet()) {
+            if(!itemDatabase.containsKey(league))
+                continue;
+            for (String itemType : itemStatistics.get(league).keySet()) {
+                if(!itemDatabase.get(league).containsKey(itemType))
+                    continue;
+                for (String itemName : itemStatistics.get(league).get(itemType).keySet()) {
+                    if(!itemDatabase.get(league).get(itemType).containsKey(itemName))
+                        continue;
+                    // Find the median
+                    median = itemStatistics.get(league).get(itemType).get(itemName).getMedian();
+                    // Remove values that are 200% larger/smaller than the median
+                    for (Double value : itemDatabase.get(league).get(itemType).get(itemName)) {
+                        if(value > median * 2.0 || value < median / 2.0) {
+                            itemDatabase.get(league).get(itemType).get(itemName).remove(value);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     /*
      * Methods used to manage gem-related databases
@@ -517,7 +582,41 @@ public class Database {
         }
     }
 
-    // TODO: purgeGemDatabase
+    public void purgeGemDatabase() {
+        /*  Name: purgeGemDatabase()
+        *   Date created: 29.11.2017
+        *   Last modified: 29.11.2017
+        *   Description: Method that removes entries like "50 000" from gems that would interfere with statistics
+        */
+
+        double median;
+
+        // Loop entries
+        for (String league: gemStatistics.keySet()) {
+            if(!gemDatabase.containsKey(league))
+                continue;
+            for (String gemType : gemStatistics.get(league).keySet()) {
+                if(!gemDatabase.get(league).containsKey(gemType))
+                    continue;
+                for (String gemName : gemStatistics.get(league).get(gemType).keySet()) {
+                    if(!gemDatabase.get(league).get(gemType).containsKey(gemName))
+                        continue;
+                    for (String gemInfo : gemStatistics.get(league).get(gemType).get(gemName).keySet()) {
+                        if(!gemDatabase.get(league).get(gemType).get(gemName).containsKey(gemInfo))
+                            continue;
+                        // Find the median
+                        median = gemStatistics.get(league).get(gemType).get(gemName).get(gemInfo).getMedian();
+                        // Remove values that are 200% larger/smaller than the median
+                        for (Double value : gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo)) {
+                            if(value > median * 2.0 || value < median / 2.0) {
+                                gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     /*
      * Methods that are for testing databases

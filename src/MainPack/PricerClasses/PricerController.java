@@ -202,13 +202,20 @@ public class PricerController extends Thread {
 
             // Prepare for database building
             flagPause = true;
+            // Build currency databases
             database.buildCurrencyDatabase();
-            database.buildItemDatabase();
-            database.buildGemDatabase();
-
+            database.purgeCurrencyDatabase();
             database.buildCurrencyStatistics();
+            // Build item databases
+            database.buildItemDatabase();
+            database.purgeItemDatabase();
             database.buildItemStatistics();
+            // Build gem databases
+            database.buildGemDatabase();
+            database.purgeGemDatabase();
             database.buildGemStatistics();
+            // Clear raw data
+            database.clearRawData();
             flagPause = false;
 
             //database.devPrintRawData(); // TODO: remove this (enabled in experimental branch)
