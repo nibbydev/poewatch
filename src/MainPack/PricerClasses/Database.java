@@ -164,14 +164,12 @@ public class Database {
                 // Make sure the database doesn't get too many values
                 if (currencyDatabase.get(league).get(name).size() > 100)
                     currencyDatabase.get(league).get(name).remove(0);
-                else if (currencyDatabase.get(league).get(name).isEmpty())
-                    currencyDatabase.get(league).get(name).clear();
+                else if (currencyDatabase.get(league).get(name).size() < 1)
+                    currencyDatabase.get(league).remove(name);
             }
-            if (currencyDatabase.get(league).isEmpty())
-                currencyDatabase.get(league).clear();
+            if (currencyDatabase.get(league).size() < 1)
+                currencyDatabase.remove(league);
         }
-        if (currencyDatabase.isEmpty())
-            currencyDatabase.clear();
     }
 
     public void buildCurrencyStatistics() {
@@ -228,11 +226,9 @@ public class Database {
                 // Turn that into a statistics object and put it in the database
                 currencyStatistics.get(league).put(name,  new StatsObject(count, mean, median));
             }
-            if (currencyStatistics.get(league).isEmpty())
-                currencyStatistics.get(league).clear();
+            if (currencyStatistics.get(league).size() < 1)
+                currencyStatistics.remove(league);
         }
-        if (currencyStatistics.isEmpty())
-            currencyStatistics.clear();
     }
 
     // TODO: purgeCurrencyDatabase
@@ -295,17 +291,15 @@ public class Database {
                     // Make sure the database doesn't get too many values
                     if (itemDatabase.get(league).get(itemType).get(name).size() > 100)
                         itemDatabase.get(league).get(itemType).get(name).remove(0);
-                    else if (itemDatabase.get(league).get(itemType).get(name).isEmpty())
-                        itemDatabase.get(league).get(itemType).get(name).clear();
+                    else if (itemDatabase.get(league).get(itemType).get(name).size() < 1)
+                        itemDatabase.get(league).get(itemType).remove(name);
                 }
-                if (itemDatabase.get(league).get(itemType).isEmpty())
-                    itemDatabase.get(league).get(itemType).clear();
+                if (itemDatabase.get(league).get(itemType).size() < 1)
+                    itemDatabase.get(league).remove(itemType);
             }
-            if (itemDatabase.get(league).isEmpty())
-                itemDatabase.get(league).clear();
+            if (itemDatabase.get(league).size() < 1)
+                itemDatabase.remove(league);
         }
-        if (itemDatabase.isEmpty())
-            itemDatabase.clear();
     }
 
     public void buildItemStatistics() {
@@ -367,14 +361,12 @@ public class Database {
                     // Turn that into a statistics object and put it in the database
                     itemStatistics.get(league).get(itemType).put(itemName, new StatsObject(count, mean, median));
                 }
-                if(itemStatistics.get(league).get(itemType).isEmpty())
-                    itemStatistics.get(league).get(itemType).clear();
+                if(itemStatistics.get(league).get(itemType).size() < 1)
+                    itemStatistics.get(league).remove(itemType);
             }
-            if(itemStatistics.get(league).isEmpty())
-                itemStatistics.get(league).clear();
+            if(itemStatistics.get(league).size() < 1)
+                itemStatistics.remove(league);
         }
-        if(itemStatistics.isEmpty())
-            itemStatistics.clear();
     }
 
 
@@ -441,19 +433,17 @@ public class Database {
                     }
                     if(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() > 100)
                         gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(0);
-                    else if (gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).isEmpty())
-                        gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).clear();
-                    else if (gemDatabase.get(league).get(gemType).get(gemName).isEmpty())
-                        gemDatabase.get(league).get(gemType).get(gemName).clear();
+                    else if (gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() < 1)
+                        gemDatabase.get(league).get(gemType).get(gemName).remove(gemInfo);
+                    else if (gemDatabase.get(league).get(gemType).get(gemName).size() < 1)
+                        gemDatabase.get(league).get(gemType).remove(gemName);
                 }
-                if (gemDatabase.get(league).get(gemType).isEmpty())
-                    gemDatabase.get(league).get(gemType).clear();
+                if (gemDatabase.get(league).get(gemType).size() < 1)
+                    gemDatabase.get(league).remove(gemType);
             }
-            if (gemDatabase.get(league).isEmpty())
-                gemDatabase.get(league).clear();
+            if (gemDatabase.get(league).size() < 1)
+                gemDatabase.remove(league);
         }
-        if (gemDatabase.isEmpty())
-            gemDatabase.clear();
     }
 
     public void buildGemStatistics() {
@@ -516,17 +506,15 @@ public class Database {
                         // Turn that into a statistics object and put it in the database
                         gemStatistics.get(league).get(gemType).get(gemName).put(gemInfo, new StatsObject(count, mean, median));
                     }
-                    if (gemStatistics.get(league).get(gemType).get(gemName).isEmpty())
-                        gemStatistics.get(league).get(gemType).get(gemName).clear();
+                    if (gemStatistics.get(league).get(gemType).get(gemName).size() < 1)
+                        gemStatistics.get(league).get(gemType).remove(gemName);
                 }
-                if (gemStatistics.get(league).get(gemType).isEmpty())
-                    gemStatistics.get(league).get(gemType).clear();
+                if (gemStatistics.get(league).get(gemType).size() < 1)
+                    gemStatistics.get(league).remove(gemType);
             }
-            if (gemStatistics.get(league).isEmpty())
-                gemStatistics.get(league).clear();
+            if (gemStatistics.get(league).size() < 1)
+                gemStatistics.remove(league);
         }
-        if (gemStatistics.isEmpty())
-            gemStatistics.clear();
     }
 
     // TODO: purgeGemDatabase
