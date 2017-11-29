@@ -205,9 +205,14 @@ public class PricerController extends Thread {
             database.buildCurrencyDatabase();
             database.buildItemDatabase();
             database.buildGemDatabase();
+
+            database.buildCurrencyStatistics();
+            database.buildItemStatistics();
+            database.buildGemStatistics();
             flagPause = false;
 
-            database.devPrintData(); // TODO: remove this (enabled in experimental branch)
+            //database.devPrintRawData(); // TODO: remove this (enabled in experimental branch)
+            database.devPrintDatabaseData();
         }
     }
 
