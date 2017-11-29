@@ -1,7 +1,8 @@
 package MainPack.PricerClasses;
 
+import MainPack.MapperClasses.Item;
+
 import java.util.*;
-import java.util.function.Predicate;
 
 public class Database {
     /*   Name: PriceDatabase
@@ -10,24 +11,13 @@ public class Database {
      *   Description: Class used to store data? I can't do SQL
      */
 
-    // MFW "Harbinger -> BodyArmours|3|Yriel's Fostering|6L|var(speed) -> [[345, 2], [24.234, ], []]"
-    private static Map<String, Map<String, Map<String, ArrayList<String[]>>>> rawData = new HashMap<>();
-    // Currency-related databases
-    private static Map<String, Map<String, ArrayList<Double>>> currencyDatabase = new HashMap<>();
-    private static Map<String, Map<String, StatsObject>> currencyStatistics = new HashMap<>();
-    // Item-related databases
-    private static Map<String, Map<String, Map<String, ArrayList<Double>>>> itemDatabase = new HashMap<>();
-    private static Map<String, Map<String, Map<String, StatsObject>>> itemStatistics = new HashMap<>();
-    // Gem-related databases
-    private static Map<String, Map<String, Map<String, Map<String, ArrayList<Double>>>>> gemDatabase = new HashMap<>();
-    private static Map<String, Map<String, Map<String, Map<String, StatsObject>>>> gemStatistics = new HashMap<>();
+    private static Map<String, ArrayList<String[]>> rawData = new HashMap<>();
+    private static Map<String, ArrayList<Double>> baseDatabase = new HashMap<>();
+    private static Map<String, StatsObject> statistics = new HashMap<>();
 
-
-    private static ArrayList<String> skippedItemDatabaseTypes;
-    private static ArrayList<String> gemItemDataBaseItemTypes;
     private static Map<String, String> baseReverseCurrencyIndexes;
 
-    public Database () {
+    public Database() {
         /*  Name: Database()
         *   Date created: 28.11.2017
         *   Last modified: 28.11.2017
@@ -35,7 +25,7 @@ public class Database {
         */
 
         // Has the base indexes, more will be added later
-        baseReverseCurrencyIndexes = new HashMap<>(){{
+        baseReverseCurrencyIndexes = new HashMap<>() {{
             put("1", "Chaos Orb");
             put("2", "Exalted Orb");
             put("3", "Divine Orb");
@@ -67,40 +57,26 @@ public class Database {
             put("29", "Master Cartographer's Sextant");
         }};
 
-        // These itemclasses should be skipped when dealing with item database
-        skippedItemDatabaseTypes = new ArrayList<>(){{
-            add("Currency");
-            add("Gems");
-            add("VaalGems");
-            add("Support");
-        }};
-
-        // To separate out gems from other items
-        gemItemDataBaseItemTypes = new ArrayList<>() {{
-            add("Gems");
-            add("Support");
-            add("VaalGems");
-        }};
     }
 
-    public void rawDataAddEntry(String league, String itemType, String itemKey, double value, String currencyType) {
+    public void rawDataAddEntry(Item item) {
         /*  Name: addEntry()
         *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
+        *   Last modified: 29.11.2017
         *   Description: Method that adds entries to raw data database. Also makes sure entries exist in hashmaps
         */
 
-        // Make sure hashmap has the correct tree
-        rawData.putIfAbsent(league, new HashMap<>());
-        rawData.get(league).putIfAbsent(itemType, new HashMap<>());
-        rawData.get(league).get(itemType).putIfAbsent(itemKey, new ArrayList<>());
-
-        // Add values to database (in string format)
-        rawData.get(league).get(itemType).get(itemKey).add(new String[]{Double.toString(value), currencyType});
-
+        // Add value to database (in string format)
+        if (rawData.containsKey(item.getKey())) {
+            rawData.get(item.getKey()).add(new String[]{Double.toString(item.getPrice()), item.getPriceType()});
+        } else {
+            rawData.put(item.getKey(), new ArrayList<>() {{
+                add(new String[]{Double.toString(item.getPrice()), item.getPriceType()});
+            }});
+        }
     }
 
-    public void clearRawData(){
+    public void clearRawData() {
         /*  Name: clearRawData()
         *   Date created: 29.11.2017
         *   Last modified: 29.11.2017
@@ -111,643 +87,160 @@ public class Database {
     }
 
     /*
-     * Methods used to manage currency-related databases
+     * Methods used to manage databases
      */
 
-    public void buildCurrencyDatabase() {
-        /*  Name: buildCurrencyDatabase()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Method that adds entries to currency database
-        */
-
-        double value;
-        int index;
-
-        // Loop through leagues
-        for (String league: rawData.keySet()) {
-            currencyDatabase.putIfAbsent(league, new HashMap<>());
-
-            // Make sure rawData has next hashMap
-            if (!rawData.get(league).containsKey("Currency"))
-                continue;
-
-            // Loop through currency names
-            for (String name: rawData.get(league).get("Currency").keySet()) {
-                if(name.equals("Chaos Orb"))
-                    continue;
-
-                currencyDatabase.get(league).putIfAbsent(name, new ArrayList<>());
-
-                // Make sure rawData has next hashMap
-                if (!rawData.get(league).get("Currency").containsKey(name))
-                    continue;
-
-                // Loop through [value, index] currency entries
-                for (String[] entry: rawData.get(league).get("Currency").get(name)) {
-                    value = Double.parseDouble(entry[0]);
-                    index = Integer.parseInt(entry[1]);
-
-                    // If we have the median price, use that
-                    if (index != 1){
-                        Double chaosValue = .0;
-
-                        // If there's a value in the statistics database, use that
-                        if (currencyStatistics.containsKey(league)){
-                            if(currencyStatistics.get(league).containsKey(name)){
-                                chaosValue = currencyStatistics.get(league).get(name).getMedian();
-                            }
-                        }
-
-                        if(chaosValue > .0) {
-                            value = value * chaosValue;
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    // Add currency to new database
-                    currencyDatabase.get(league).get(name).add(value);
-                }
-                // Make sure the database doesn't get too many values
-                if (currencyDatabase.get(league).get(name).size() > 100)
-                    currencyDatabase.get(league).get(name).remove(0);
-                else if (currencyDatabase.get(league).get(name).size() < 1)
-                    currencyDatabase.get(league).remove(name);
-            }
-            if (currencyDatabase.get(league).size() < 1)
-                currencyDatabase.remove(league);
-        }
-    }
-
-    public void buildCurrencyStatistics() {
-        /*  Name: buildCurrencyStatistics()
+    public void buildDatabases() {
+        /*  Name: buildDatabases()
         *   Date created: 29.11.2017
         *   Last modified: 29.11.2017
-        *   Description: Method that adds entries to currency statistics database that holds mean/median values
+        *   Description: Method that generates a table of "key: [chaos value]" entries
         */
 
-        int count;
-
-        // Loop through leagues
-        for (String league: currencyDatabase.keySet()) {
-            currencyStatistics.putIfAbsent(league, new HashMap<>());
-
-            for (String name : currencyDatabase.get(league).keySet()) {
-                // Skip entries with a small number of elements as they're hard to base statistics on
-                count = currencyDatabase.get(league).get(name).size();
-                if(count < 20)
-                    continue;
-
-                // Make a copy so the original order persists
-                ArrayList<Double> tempCurrencyData = new ArrayList<>();
-                tempCurrencyData.addAll(currencyDatabase.get(league).get(name));
-                // Sort the entries in growing order
-                Collections.sort(tempCurrencyData);
-
-                // Slice sorted copy to get more precision
-                if (count < 30)
-                    tempCurrencyData.subList(2, count - 10).clear();
-                else if (count < 60)
-                    tempCurrencyData.subList(3, count - 15).clear();
-                else if (count < 80)
-                    tempCurrencyData.subList(4, count - 20).clear();
-                else if (count < 100)
-                    tempCurrencyData.subList(5, count - 30).clear();
-
-                // Set new count value
-                count = tempCurrencyData.size();
-
-                Double mean = 0.0;
-                Double median;
-
-                // Add up values to calculate mean
-                for (Double i: tempCurrencyData) {
-                    mean += i;
-                }
-
-                // Calculate mean and median values
-                mean = mean / count;
-                median = count / 2.0;
-                median = tempCurrencyData.get(median.intValue());
-
-                // Turn that into a statistics object and put it in the database
-                currencyStatistics.get(league).put(name,  new StatsObject(count, mean, median));
-            }
-            if (currencyStatistics.get(league).size() < 1)
-                currencyStatistics.remove(league);
-        }
-    }
-
-    public void purgeCurrencyDatabase() {
-        /*  Name: purgeItemDatabase()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that removes entries like "50 000" from currency that would interfere with statistics
-        */
-
-        double median;
-
-        // Loop entries
-        for (String league: currencyStatistics.keySet()) {
-            if(!currencyDatabase.containsKey(league))
-                continue;
-            for (String currencyName : currencyStatistics.get(league).keySet()) {
-                if(!currencyDatabase.get(league).containsKey(currencyName))
-                    continue;
-                // Find the median
-                median = currencyStatistics.get(league).get(currencyName).getMedian();
-                // Remove values that are 200% larger/smaller than the median
-                for (Double value : new ArrayList<>(currencyDatabase.get(league).get(currencyName))) {
-                    if(value > median * 2.0 || value < median / 2.0) {
-                        currencyDatabase.get(league).get(currencyName).remove(value);
-                    }
-                }
-            }
-        }
-    }
-
-    /*
-     * Methods used to manage item-related databases
-     */
-
-    public void buildItemDatabase() {
-        /*  Name: buildItemDatabase()
-        *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Method that adds entries to item database
-        */
-
-        double value;
+        Double value;
         String index;
+        Double chaosValue;
 
-        // Loop through leagues
-        for (String league: rawData.keySet()) {
-            itemDatabase.putIfAbsent(league, new HashMap<>());
+        // Loop through entries
+        for (String key : rawData.keySet()) {
+            for (String[] entry : rawData.get(key)) {
+                value = Double.parseDouble(entry[0]);
+                index = entry[1];
 
-            for (String itemType : rawData.get(league).keySet()) {
-                if (skippedItemDatabaseTypes.contains(itemType))
-                    continue;
+                // If we have the median price, use that
+                if (!index.equals("1")) {
+                    // Set initial value
+                    chaosValue = 0.0;
 
-                itemDatabase.get(league).putIfAbsent(itemType, new HashMap<>());
+                    // If there's a value in the statistics database, use that
+                    if (statistics.containsKey(key))
+                        chaosValue = statistics.get(key).getMedian();
 
-                for (String name: rawData.get(league).get(itemType).keySet()) {
-                    itemDatabase.get(league).get(itemType).putIfAbsent(name, new ArrayList<>());
-
-                    // Loop through [value, index] currency entries
-                    for (String[] entry: rawData.get(league).get(itemType).get(name)) {
-                        value = Double.parseDouble(entry[0]);
-                        index = entry[1];
-
-                        // If we have the median price, use that
-                        if (!index.equals("1")){
-                            Double chaosValue = .0;
-
-                            // If there's a value in the statistics database, use that
-                            if (currencyStatistics.containsKey(league)){
-                                if(currencyStatistics.get(league).containsKey(name)){
-                                    chaosValue = currencyStatistics.get(league).get(baseReverseCurrencyIndexes.get(index)).getMedian();
-                                }
-                            }
-
-                            // Replace value with baseCurrency value
-                            if(chaosValue > .0) {
-                                value = value * chaosValue;
-                            } else {
-                                continue;
-                            }
-                        }
-
-                        // Add currency to new database
-                        itemDatabase.get(league).get(itemType).get(name).add(value);
-                    }
-
-                    // Make sure the database doesn't get too many values
-                    if (itemDatabase.get(league).get(itemType).get(name).size() > 100)
-                        itemDatabase.get(league).get(itemType).get(name).remove(0);
-                    else if (itemDatabase.get(league).get(itemType).get(name).size() < 1)
-                        itemDatabase.get(league).get(itemType).remove(name);
+                    if (chaosValue > 0.0)
+                        value = value * chaosValue;
+                    else
+                        continue;
                 }
-                if (itemDatabase.get(league).get(itemType).size() < 1)
-                    itemDatabase.get(league).remove(itemType);
+
+                baseDatabase.putIfAbsent(key, new ArrayList<>());
+                baseDatabase.get(key).add(value);
             }
-            if (itemDatabase.get(league).size() < 1)
-                itemDatabase.remove(league);
         }
     }
 
-    public void buildItemStatistics() {
-        /*  Name: buildItemStatistics()
+    public void buildStatistics() {
+        /*  Name: buildStatistics()
         *   Date created: 29.11.2017
         *   Last modified: 29.11.2017
-        *   Description: Method that adds entries to item statistics database that holds mean/median values
+        *   Description: Method that adds entries to statistics database
         */
 
+        Double mean;
+        Double median;
         int count;
 
-        // Loop through leagues
-        for (String league: itemDatabase.keySet()) {
-            itemStatistics.putIfAbsent(league, new HashMap<>());
+        // Loop through currency entries
+        for (String key : baseDatabase.keySet()) {
+            // Skip entries with a small number of elements as they're hard to base statistics on
+            count = baseDatabase.get(key).size();
+            if (count < 20)
+                continue;
 
-            for (String itemType: itemDatabase.get(league).keySet()) {
-                itemStatistics.get(league).putIfAbsent(itemType, new HashMap<>());
+            // Make a copy so the original order persists
+            ArrayList<Double> tempValueList = new ArrayList<>();
+            tempValueList.addAll(baseDatabase.get(key));
+            // Sort the entries in growing order
+            Collections.sort(tempValueList);
 
-                for (String itemName: itemDatabase.get(league).get(itemType).keySet()) {
-                    // Skip entries with a small number of elements as they're hard to base statistics on
-                    count = itemDatabase.get(league).get(itemType).get(itemName).size();
-                    if(count < 30)
-                        continue;
+            // Slice sorted copy for more precision
+            if (count < 30)
+                tempValueList.subList(2, count - 10).clear();
+            else if (count < 60)
+                tempValueList.subList(3, count - 15).clear();
+            else if (count < 80)
+                tempValueList.subList(4, count - 20).clear();
+            else if (count < 100)
+                tempValueList.subList(5, count - 30).clear();
 
-                    // Make a copy so the original order persists
-                    ArrayList<Double> tempItemData = new ArrayList<>();
-                    tempItemData.addAll(itemDatabase.get(league).get(itemType).get(itemName));
-                    // Sort the entries in growing order
-                    Collections.sort(tempItemData);
+            // Reassign count
+            count = tempValueList.size();
 
-                    // Slice sorted copy to get more precision
-                    if (count < 40)
-                        tempItemData.subList(0, count - 15).clear();
-                    else if (count < 50)
-                        tempItemData.subList(3, count - 20).clear();
-                    else if (count < 70)
-                        tempItemData.subList(4, count - 20).clear();
-                    else if (count < 80)
-                        tempItemData.subList(5, count - 25).clear();
-                    else if (count < 100)
-                        tempItemData.subList(5, count - 30).clear();
-
-                    // Set new count value
-                    count = tempItemData.size();
-
-                    Double mean = 0.0;
-                    Double median;
-
-                    // Add up values to calculate mean
-                    for (Double i: tempItemData) {
-                        mean += i;
-                    }
-
-                    // Calculate mean and median values
-                    mean = mean / count;
-                    median = count / 2.0;
-                    median = tempItemData.get(median.intValue());
-
-                    // Turn that into a statistics object and put it in the database
-                    itemStatistics.get(league).get(itemType).put(itemName, new StatsObject(count, mean, median));
-                }
-                if(itemStatistics.get(league).get(itemType).size() < 1)
-                    itemStatistics.get(league).remove(itemType);
+            mean = 0.0;
+            // Add up values to calculate mean
+            for (Double i : tempValueList) { // TODO: replace with lambda
+                mean += i;
             }
-            if(itemStatistics.get(league).size() < 1)
-                itemStatistics.remove(league);
+
+            // Calculate mean and median values
+            mean = mean / count;
+            median = count / 2.0;
+            median = tempValueList.get(median.intValue());
+
+            // Turn that into a statistics object and put it in the database
+            statistics.put(key, new StatsObject(count, mean, median));
         }
     }
 
-    public void purgeItemDatabase() {
-        /*  Name: purgeItemDatabase()
+    public void purgeDatabases() {
+        /*  Name: purgeDatabases()
         *   Date created: 29.11.2017
         *   Last modified: 29.11.2017
-        *   Description: Method that removes entries like "50 000" from items that would interfere with statistics
+        *   Description: Method that removes entries like "50 000" from items that would otherwise interfere with statistics
         */
 
         double median;
 
-        // Loop entries
-        for (String league: itemStatistics.keySet()) {
-            if(!itemDatabase.containsKey(league))
+        for (String key : statistics.keySet()) {
+            if (!baseDatabase.containsKey(key))
                 continue;
-            for (String itemType : itemStatistics.get(league).keySet()) {
-                if(!itemDatabase.get(league).containsKey(itemType))
-                    continue;
-                for (String itemName : itemStatistics.get(league).get(itemType).keySet()) {
-                    if(!itemDatabase.get(league).get(itemType).containsKey(itemName))
-                        continue;
-                    // Find the median
-                    median = itemStatistics.get(league).get(itemType).get(itemName).getMedian();
-                    // Remove values that are 200% larger/smaller than the median
-                    for (Double value : new ArrayList<>(itemDatabase.get(league).get(itemType).get(itemName))) {
-                        if(value > median * 2.0 || value < median / 2.0) {
-                            itemDatabase.get(league).get(itemType).get(itemName).remove(value);
-                        }
-                    }
+
+            // Get the median
+            median = statistics.get(key).getMedian();
+
+            // Remove values that are 200% larger/smaller than the median
+            for (Double value : new ArrayList<>(baseDatabase.get(key))) {
+                if (value > median * 2.0 || value < median / 2.0) {
+                    baseDatabase.get(key).remove(value);
                 }
             }
         }
     }
 
     /*
-     * Methods used to manage gem-related databases
+     * Methods used for development, they print data
      */
 
-    public void buildGemDatabase() {
-        /*  Name: buildGemDatabase()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that adds entries to gem database
-        */
-
-        double value;
-        String index;
-        String gemInfo;
-        String gemName;
-
-        // Loop through leagues
-        for (String league: rawData.keySet()) {
-            gemDatabase.putIfAbsent(league, new HashMap<>());
-
-            for (String gemType : rawData.get(league).keySet()) {
-                if (!gemItemDataBaseItemTypes.contains(gemType))
-                    continue;
-
-                gemDatabase.get(league).putIfAbsent(gemType, new HashMap<>());
-
-                for (String name : rawData.get(league).get(gemType).keySet()) {
-                    gemName = name.split("\\|")[0];
-                    gemInfo = name.replace(gemName + "|", "");
-
-                    gemDatabase.get(league).get(gemType).putIfAbsent(gemName, new HashMap<>());
-                    gemDatabase.get(league).get(gemType).get(gemName).putIfAbsent(gemInfo, new ArrayList<>());
-
-                    // Loop through [value, index] currency entries
-                    for (String[] entry : rawData.get(league).get(gemType).get(name)) {
-                        value = Double.parseDouble(entry[0]);
-                        index = entry[1];
-
-                        // If we have the median price, use that
-                        if (!index.equals("1")){
-                            Double chaosValue = .0;
-
-                            // If there's a value in the statistics database, use that
-                            if (currencyStatistics.containsKey(league)){
-                                if(currencyStatistics.get(league).containsKey(name)){
-                                    chaosValue = currencyStatistics.get(league).get(baseReverseCurrencyIndexes.get(index)).getMedian();
-                                }
-                            }
-
-                            if(chaosValue > .0) {
-                                value = value * chaosValue;
-                            } else {
-                                continue;
-                            }
-                        }
-
-                        // Add gem to new database
-                        gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).add(value);
-                    }
-                    if(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() > 100)
-                        gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(0);
-                    else if (gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size() < 1)
-                        gemDatabase.get(league).get(gemType).get(gemName).remove(gemInfo);
-                    else if (gemDatabase.get(league).get(gemType).get(gemName).size() < 1)
-                        gemDatabase.get(league).get(gemType).remove(gemName);
-                }
-                if (gemDatabase.get(league).get(gemType).size() < 1)
-                    gemDatabase.get(league).remove(gemType);
-            }
-            if (gemDatabase.get(league).size() < 1)
-                gemDatabase.remove(league);
-        }
-    }
-
-    public void buildGemStatistics() {
-        /*  Name: buildItemStatistics()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that adds entries to item statistics database that holds mean/median values
-        */
-
-        int count;
-
-        // Loop through leagues
-        for (String league: gemDatabase.keySet()) {
-            gemStatistics.putIfAbsent(league, new HashMap<>());
-
-            for (String gemType : gemDatabase.get(league).keySet()) {
-                gemStatistics.get(league).putIfAbsent(gemType, new HashMap<>());
-
-                for (String gemName : gemDatabase.get(league).get(gemType).keySet()) {
-                    gemStatistics.get(league).get(gemType).putIfAbsent(gemName, new HashMap<>());
-
-                    for (String gemInfo : gemDatabase.get(league).get(gemType).get(gemName).keySet()) {
-                        // Skip entries with a small number of elements as they're hard to base statistics on
-                        count = gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).size();
-                        if(count < 20)
-                            continue;
-
-                        // Make a copy so the original order persists
-                        ArrayList<Double> tempGemData = new ArrayList<>();
-                        tempGemData.addAll(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo));
-                        // Sort the entries in growing order
-                        Collections.sort(tempGemData);
-
-                        // Slice sorted copy to get more precision
-                        if (count < 40)
-                            tempGemData.subList(2, count - 10).clear();
-                        else if (count < 60)
-                            tempGemData.subList(3, count - 15).clear();
-                        else if (count < 80)
-                            tempGemData.subList(5, count - 20).clear();
-                        else if (count < 100)
-                            tempGemData.subList(5, count - 30).clear();
-
-                        // Set new count value
-                        count = tempGemData.size();
-
-                        Double mean = 0.0;
-                        Double median;
-
-                        // Add up values to calculate mean
-                        for (Double i: tempGemData) {
-                            mean += i;
-                        }
-
-                        // Calculate mean and median values
-                        mean = mean / count;
-                        median = count / 2.0;
-                        median = tempGemData.get(median.intValue());
-
-                        // Turn that into a statistics object and put it in the database
-                        gemStatistics.get(league).get(gemType).get(gemName).put(gemInfo, new StatsObject(count, mean, median));
-                    }
-                    if (gemStatistics.get(league).get(gemType).get(gemName).size() < 1)
-                        gemStatistics.get(league).get(gemType).remove(gemName);
-                }
-                if (gemStatistics.get(league).get(gemType).size() < 1)
-                    gemStatistics.get(league).remove(gemType);
-            }
-            if (gemStatistics.get(league).size() < 1)
-                gemStatistics.remove(league);
-        }
-    }
-
-    public void purgeGemDatabase() {
-        /*  Name: purgeGemDatabase()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Method that removes entries like "50 000" from gems that would interfere with statistics
-        */
-
-        double median;
-
-        // Loop entries
-        for (String league: gemStatistics.keySet()) {
-            if(!gemDatabase.containsKey(league))
-                continue;
-            for (String gemType : gemStatistics.get(league).keySet()) {
-                if(!gemDatabase.get(league).containsKey(gemType))
-                    continue;
-                for (String gemName : gemStatistics.get(league).get(gemType).keySet()) {
-                    if(!gemDatabase.get(league).get(gemType).containsKey(gemName))
-                        continue;
-                    for (String gemInfo : gemStatistics.get(league).get(gemType).get(gemName).keySet()) {
-                        if(!gemDatabase.get(league).get(gemType).get(gemName).containsKey(gemInfo))
-                            continue;
-                        // Find the median
-                        median = gemStatistics.get(league).get(gemType).get(gemName).get(gemInfo).getMedian();
-                        // Remove values that are 200% larger/smaller than the median
-                        for (Double value : new ArrayList<>(gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo))) {
-                            if(value > median * 2.0 || value < median / 2.0) {
-                                gemDatabase.get(league).get(gemType).get(gemName).get(gemInfo).remove(value);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /*
-     * Methods that are for testing databases
-     */
-
-    public void devPrintRawData(){
+    public void devPrintData() {
         /*  Name: devPrintRawData()
         *   Date created: 29.11.2017
         *   Last modified: 29.11.2017
         *   Description: Prints out database. Used for development
         */
 
-        for (String league: rawData.keySet()) {
-            System.out.println("[LEAGUE] " + league);
-            for (String itemType : rawData.get(league).keySet()) {
-                System.out.println("    [" + itemType + "] ");
-                for (String name : rawData.get(league).get(itemType).keySet()) {
+        System.out.println("\n[=================================================== RAW DATA ===================================================]");
 
-                    System.out.print("        [" + name + "] ");
+        for (String key : rawData.keySet()) {
+            System.out.print("[" + key + "]: ");
 
-                    for (String[] test: rawData.get(league).get(itemType).get(name)) {
-                        System.out.print(Arrays.toString(test));
-                    }
-
-                    System.out.println();
-                }
+            for(String[] info : rawData.get(key)){
+                System.out.print(Arrays.toString(info) + ",");
             }
-        }
-    }
 
-    public void devPrintDatabaseData(){
-        /*  Name: devPrintDatabaseData()
-        *   Date created: 29.11.2017
-        *   Last modified: 29.11.2017
-        *   Description: Prints out database. Used for development
-        */
-
-        System.out.println("[CURRENCY]");
-        for (String league: currencyDatabase.keySet()) {
-            System.out.println("    [" + league + "] ");
-            for (String name : currencyDatabase.get(league).keySet()) {
-                System.out.print("        [" + name + "] ");
-
-                for (Double test: currencyDatabase.get(league).get(name)) {
-                    System.out.print(test + ", ");
-                }
-
-                System.out.println();
-            }
+            System.out.println();
         }
 
-        System.out.println("[ITEMS]");
-        for (String league: itemDatabase.keySet()) {
-            System.out.println("    [" + league + "]");
-            for (String itemType : itemDatabase.get(league).keySet()) {
-                System.out.println("        [" + itemType + "] ");
-                for (String name : itemDatabase.get(league).get(itemType).keySet()) {
-                    System.out.print("            [" + name + "] ");
+        System.out.println("\n[=================================================== DATABASES ===================================================]");
 
-                    for (Double test: itemDatabase.get(league).get(itemType).get(name)) {
-                        System.out.print(test + ", ");
-                    }
-
-                    System.out.println();
-                }
-            }
+        for (String key : baseDatabase.keySet()) {
+            System.out.println("[" + key + "]: " + Arrays.toString(baseDatabase.get(key).toArray()));
         }
 
-        System.out.println("[GEMS]");
-        for (String league: gemDatabase.keySet()) {
-            System.out.println("    [" + league + "]");
-            for (String itemType : gemDatabase.get(league).keySet()) {
-                System.out.println("        [" + itemType + "]");
-                for (String name : gemDatabase.get(league).get(itemType).keySet()) {
-                    System.out.println("            [" + name + "]");
-                    for (String info: gemDatabase.get(league).get(itemType).get(name).keySet()) {
-                        System.out.print("                [" + info + "] ");
+        System.out.println("\n[=================================================== STATISTICS ===================================================]");
 
-                        for (Double test: gemDatabase.get(league).get(itemType).get(name).get(info)) {
-                            System.out.print(test + ", ");
-                        }
-
-                        System.out.println();
-                    }
-                }
-            }
-        }
-    }
-
-    public void devPrintStatistics(){
-        /*  Name: devPrintStatistics()
-         *  Date created: 29.11.2017
-         *  Last modified: 29.11.2017
-         *  Description: Prints out database. Used for development
-         */
-
-        System.out.println("[CURRENCY]");
-        for (String league: currencyStatistics.keySet()) {
-            System.out.println("    [" + league + "] ");
-            for (String name : currencyStatistics.get(league).keySet()) {
-                System.out.println("        [" + name + "] count:  " + currencyStatistics.get(league).get(name).getCount());
-                System.out.println("        [" + name + "] mean:   " + currencyStatistics.get(league).get(name).getMean());
-                System.out.println("        [" + name + "] median: " + currencyStatistics.get(league).get(name).getMedian());
-            }
-        }
-
-        System.out.println("[ITEMS]");
-        for (String league: itemStatistics.keySet()) {
-            System.out.println("    [" + league + "]");
-            for (String itemType : itemStatistics.get(league).keySet()) {
-                System.out.println("        [" + itemType + "] ");
-                for (String name : itemStatistics.get(league).get(itemType).keySet()) {
-                    System.out.println("            [" + name + "] count:  " + itemStatistics.get(league).get(itemType).get(name).getCount());
-                    System.out.println("            [" + name + "] mean :  " + itemStatistics.get(league).get(itemType).get(name).getMean());
-                    System.out.println("            [" + name + "] median: " + itemStatistics.get(league).get(itemType).get(name).getMedian());
-                }
-            }
-        }
-
-        System.out.println("[GEMS]");
-        for (String league: gemStatistics.keySet()) {
-            System.out.println("    [" + league + "]");
-            for (String itemType : gemStatistics.get(league).keySet()) {
-                System.out.println("        [" + itemType + "]");
-                for (String name : gemStatistics.get(league).get(itemType).keySet()) {
-                    System.out.println("            [" + name + "]");
-                    for (String info: gemStatistics.get(league).get(itemType).get(name).keySet()) {
-                        System.out.println("                [" + info + "] count:  " + gemStatistics.get(league).get(itemType).get(name).get(info).getCount());
-                        System.out.println("                [" + info + "] mean:   " + gemStatistics.get(league).get(itemType).get(name).get(info).getMean());
-                        System.out.println("                [" + info + "] median: " + gemStatistics.get(league).get(itemType).get(name).get(info).getMedian());
-                    }
-                }
-            }
+        for (String key : statistics.keySet()) {
+            System.out.println("[" + key + "] Median: " + statistics.get(key).getMedian());
+            System.out.println("[" + key + "] Mean: " + statistics.get(key).getMean());
+            System.out.println("[" + key + "] Count: " + statistics.get(key).getCount());
         }
     }
 

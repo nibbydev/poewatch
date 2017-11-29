@@ -202,26 +202,13 @@ public class PricerController extends Thread {
 
             // Prepare for database building
             flagPause = true;
-            // Build currency databases
-            database.buildCurrencyDatabase();
-            database.purgeCurrencyDatabase();
-            database.buildCurrencyStatistics();
-            // Build item databases
-            database.buildItemDatabase();
-            database.purgeItemDatabase();
-            database.buildItemStatistics();
-            // Build gem databases
-            database.buildGemDatabase();
-            database.purgeGemDatabase();
-            database.buildGemStatistics();
 
-            // TODO: remove this (enabled in experimental branch)
-            System.out.println("[=================================================== RAW DATA ===================================================]");
-            database.devPrintRawData();
-            System.out.println("[=================================================== DATABASES ===================================================]");
-            database.devPrintDatabaseData();
-            System.out.println("[=================================================== STATISTICS ===================================================]");
-            database.devPrintStatistics();
+            // Build databases
+            database.buildDatabases();
+            database.purgeDatabases();
+            database.buildStatistics();
+
+            database.devPrintData(); // TODO: remove this (enabled in experimental branch)
 
             // Clear raw data
             database.clearRawData();
@@ -310,13 +297,7 @@ public class PricerController extends Thread {
         }
 
         // Add item to database
-        database.rawDataAddEntry(
-                item.getLeague(),
-                item.getItemType(),
-                item.getKey(),
-                item.getPrice(),
-                item.getPriceType()
-        );
+        database.rawDataAddEntry(item);
     }
 
     private void basicChecks(Item item) {
@@ -394,29 +375,18 @@ public class PricerController extends Thread {
     private void formatNameAndItemType(Item item) {
         /*  Name: formatNameAndItemType()
         *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
+        *   Last modified: 29.11.2017
         *   Description: Format the item's full name and find the item type
         *   Parent methods:
         *       checkItem()
         */
 
-        // Format the name that will serve as the database key
-        if (item.getName().equals("")) {
-            item.addKey(item.getTypeLine());
-        } else {
-            // Get rid of unnecessary formatting (this might've gotten removed in JSON deserialization)
-            item.addKey(item.getName().replace("<<set:MS>><<set:M>><<set:S>>", ""));
-            if(!item.getTypeLine().equals(""))
-                item.addKey("|" + item.getTypeLine());
-        }
-
-        // Add frameType to key if it isn't currency or gem-related
-        if (item.getFrameType() != 4 && item.getFrameType() != 5) // TODO: add more frameTypes
-            item.addKey("|" + item.getFrameType());
+        // Start key with league
+        item.addKey(item.getLeague());
 
         // Get the item's type
         String[] splitItemType = item.getIcon().split("/");
-        String itemType = splitItemType[splitItemType.length - 2]; // TODO: verify this is correct (ie not -3)
+        String itemType = splitItemType[splitItemType.length - 2];
 
         // Make sure even the weird items get a correct item type
         if (splitItemType[splitItemType.length - 1].equals("Item.png")) {
@@ -428,6 +398,22 @@ public class PricerController extends Thread {
 
         // Set the value in the item object
         item.setItemType(itemType);
+        item.addKey("|" + itemType);
+
+        // Format the name that will serve as the database key
+        if (item.getName().equals("")) {
+            item.addKey("|" + item.getTypeLine());
+        } else {
+            // Get rid of unnecessary formatting (this might've gotten removed in JSON deserialization)
+            item.addKey("|" + item.getName().replace("<<set:MS>><<set:M>><<set:S>>", ""));
+            if(!item.getTypeLine().equals(""))
+                item.addKey("|" + item.getTypeLine());
+        }
+
+        // Add frameType to key if it isn't currency or gem-related
+        if (item.getFrameType() != 4 && item.getFrameType() != 5) // TODO: add more frameTypes
+            item.addKey("|" + item.getFrameType());
+
     }
 
     private void checkGemInfo(Item item){
