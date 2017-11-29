@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PricerController extends Thread {
+    /*   Name: PricerController
+     *   Date created: 28.11.2017
+     *   Last modified: 29.11.2017
+     *   Description: A threaded object that manages databases
+     */
 
     private boolean flagLocalRun = true;
     private boolean flagPause = false; // TODO: add controller methods
@@ -17,6 +22,7 @@ public class PricerController extends Thread {
     private static ArrayList<String> specialGems;
     private static ArrayList<String> potentialSixLinkItems;
     private static ArrayList<Integer> allowedFrameTypes;
+    private static Map<String, Map<String, String>> itemVariants;
 
     // Large data storage class
     private static Database database;
@@ -24,7 +30,7 @@ public class PricerController extends Thread {
     public PricerController() {
         /*  Name: PricerController()
         *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
+        *   Last modified: 29.11.2017
         *   Description: Method that sets default values to the class's static variables
         */
 
@@ -145,6 +151,33 @@ public class PricerController extends Thread {
             add(8);
         }};
 
+        // Since some itmes have special variants with the same name, they need to be split up
+        itemVariants = new HashMap<>(){{
+            put("Atziri's Splendour", new HashMap<>());
+            put("Vessel of Vinktar", new HashMap<>(){{
+                put("spells", "Lightning Damage to Spells");
+                put("attacks", "Lightning Damage to Attacks");
+                put("conversion", "Converted to Lightning");
+                put("penetration", "Damage Penetrates");
+            }});
+            put("Doryani's Invitation", new HashMap<>(){{
+                put("lightning", "increased Lightning Damage");
+                put("fire", "increased Fire Damage");
+                put("cold", "increased Cold Damage");
+                put("physical", "increased Physical Damage");
+            }});
+            put("Yriel's Fostering", new HashMap<>(){{
+                put("chaos", "Chaos Damage to Attacks");
+                put("physical", "Physical Damage to Attack");
+                put("speed", "increased Attack and Movement Speed");
+            }});
+            put("Volkuur's Guidance", new HashMap<>(){{
+                put("fire", "Fire Damage to Spells");
+                put("cold", "Cold Damage to Spells");
+                put("lightning", "Lightning Damage to Spells");
+            }});
+
+        }};
 
         // Base database that holds all found price data
         database = new Database();
@@ -512,21 +545,85 @@ public class PricerController extends Thread {
             item.addKey("|0L");
     }
 
-    // TODO: add this
     private void checkSpecialItemVariant(Item item) {
         /*  Name: checkSpecialItemVariant()
         *   Date created: 28.11.2017
-        *   Last modified: 28.11.2017
-        *   Description: Placeholder method. Will be used to differentiate between different item types
+        *   Last modified: 29.11.2017
+        *   Description: Check if the item has a special variant, eg vessel of vinktar
         *   Parent methods:
         *       checkItem()
         */
 
+        // Skip non-special items
+        if (!itemVariants.containsKey(item.getName()))
+            return;
 
+        String keySuffix = "";
+
+        // Atziri's Splendour is the base of my existence. Try to determine the type of Atziri's Splendour by looking
+        // at the item properties
+        if(item.getName().equals("Atziri's Splendour")) {
+            int armour = 0;
+            int evasion = 0;
+            int energy = 0;
+
+            // Find each property's amount
+            for (Properties prop : item.getProperties()) {
+                switch (prop.getName()) {
+                    case "Armour":
+                        armour = Integer.parseInt(prop.getValues().get(0).get(0));
+                        break;
+                    case "Evasion Rating":
+                        evasion = Integer.parseInt(prop.getValues().get(0).get(0));
+                        break;
+                    case "Energy Shield":
+                        energy = Integer.parseInt(prop.getValues().get(0).get(0));
+                        break;
+                }
+            }
+
+            // Run them through this massive IF block to determine the variant
+            // Values taken from https://pathofexile.gamepedia.com/Atziri%27s_Splendour (at 29.11.2017)
+            if(1052 <= armour && armour <= 1118) {
+                if (energy == 76) {
+                    keySuffix = "|var(ar/ev/li)";
+                } else if (204 <= energy && energy <= 217) {
+                    keySuffix = "|var(ar/es/li)";
+                } else if (428 <= energy && energy <= 489) {
+                    keySuffix = "|var(ar/es)";
+                }
+            } else if (armour > 1600) {
+                keySuffix = "|var(ar)";
+            } else if (evasion > 1600) {
+                keySuffix = "|var(ev)";
+            } else if (energy > 500) {
+                keySuffix = "|var(es)";
+            } else if (1283 <= armour && armour <= 1513) {
+                keySuffix = "|var(ar/ev/es)";
+            } else if (1052 <= evasion && evasion <= 1118) {
+                if (energy > 400) {
+                    keySuffix = "|var(ev/es)";
+                } else {
+                    keySuffix = "|var(ev/es/li)";
+                }
+            }
+        } else {
+            String mod;
+            // Go through preset item mods
+            for (String key: itemVariants.get(item.getName()).keySet()) {
+                mod = itemVariants.get(item.getName()).get(key);
+                // Go through item mods
+                for (String itemMod: item.getExplicitMods()) {
+                    // Attempt to match preset mod with item mod
+                    if(itemMod.contains(mod)){
+                        keySuffix = "|var(" + key + ")";
+                        break; // TODO: exit upper-level for loop
+                    }
+                }
+            }
+        }
+
+        // Add new key suffix to existing key
+        item.addKey(keySuffix);
     }
-
-
-
-
-
 }

@@ -28,6 +28,7 @@ public class Item {
     private int y;
     private List<Properties> properties;
     private List<Socket> sockets;
+    private List<String> explicitMods;
 
     private boolean discard = false;
     private double price;
@@ -103,6 +104,10 @@ public class Item {
         return sockets;
     }
 
+    public List<String> getExplicitMods() {
+        return explicitMods;
+    }
+
     /*
      * Methods that set values from outside the class
      */
@@ -172,6 +177,10 @@ public class Item {
 
     public void setSockets(List<Socket> sockets) {
         this.sockets = sockets;
+    }
+
+    public void setExplicitMods(List<String> explicitMods) {
+        this.explicitMods = explicitMods;
     }
 
     /*
