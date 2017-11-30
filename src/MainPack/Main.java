@@ -113,17 +113,24 @@ public class Main {
 
 
         String helpString = "[INFO] Available changeID commands:\n";
-        helpString += "    'id <string/'default'>' - Add string to job queue\n";
+        helpString += "    'id <string>' - Add optional string to job queue\n";
+        helpString += "    'id default - Add middle-ground string to job queue\n";
+        helpString += "    'id new - Add newest string to job queue (recommended)\n";
 
         if (userInput.length < 2) {
             System.out.println(helpString);
             return;
         }
 
-        if (userInput[1].equalsIgnoreCase("default")) {
-            workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
-        } else {
-            workerController.setNextChangeID(userInput[1]);
+        switch (userInput[1]){
+            case "default":
+                workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
+                break;
+            case "new":
+                workerController.setNextChangeID(workerController.getLatestChangeID());
+                break;
+            default:
+                workerController.setNextChangeID(userInput[1]);
         }
 
         System.out.println("[INFO] New ChangeID added");

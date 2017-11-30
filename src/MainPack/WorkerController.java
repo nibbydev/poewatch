@@ -1,13 +1,21 @@
 package MainPack;
 
+import MainPack.MapperClasses.ChangeID;
 import MainPack.PricerClasses.PricerController;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class WorkerController extends Thread {
     //   Name: WorkerController
     //   Date created: 21.11.2017
-    //   Last modified: 29.11.2017
+    //   Last modified: 30.11.2017
     //   Description: Object that's used to manage worker objects
 
     private ArrayList<Worker> workerList = new ArrayList<>();
@@ -143,7 +151,79 @@ public class WorkerController extends Thread {
             workerList.remove(lastWorker);
         }
     }
-    
+
+    //////////////////////////////////////////////////////
+    // Getting a working ChangeID from external sources //
+    //////////////////////////////////////////////////////
+
+    public String getLatestChangeID(){
+        //  Name: getLatestChangeID()
+        //  Date created: 29.11.2017
+        //  Last modified: 30.11.2017
+        //  Description: Get a changeID that's close to the stack top
+
+        String idOne = downloadData("http://api.poe.ninja/api/Data/GetStats");
+        String idTwo = downloadData("http://poe-rates.com/actions/getLastChangeId.php");
+
+        return compareChangeIDs(idOne, idTwo);
+    }
+
+    private String downloadData(String url) {
+        //  Name: downloadData()
+        //  Date created: 30.11.2017
+        //  Last modified: 30.11.2017
+        //  Description: Downloads content of <url> and returns it as String
+
+        String response;
+
+        // Download data
+        try {
+            URL request = new URL(url);
+            InputStream input = request.openStream();
+
+            response = new String(input.readAllBytes());
+        } catch (Exception ex) {
+            response = "0-0-0-0-0";
+        }
+
+        // Map data
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+
+            // Map the JSON string to an object
+            response = mapper.readValue(response, ChangeID.class).getNext_change_id();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return response;
+    }
+
+    private String compareChangeIDs(String idOne, String idTwo){
+        //  Name: compareChangeIDs()
+        //  Date created: 30.11.2017
+        //  Last modified: 30.11.2017
+        //  Description: Compares changeIDs and returns the newest
+
+        int countOne = 0;
+        int countTwo = 0;
+
+        // I'd rather do lambda at this point but I couldn't understand the syntax for it
+        for (String s : idOne.split("-")) {
+            countOne += Integer.parseInt(s);
+        }
+
+        for (String s : idTwo.split("-")) {
+            countOne += Integer.parseInt(s);
+        }
+
+        if (countOne > countTwo)
+            return idOne;
+        else
+            return idTwo;
+    }
+
     ///////////////////////
     // Getters / Setters //
     ///////////////////////
