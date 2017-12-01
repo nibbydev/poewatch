@@ -7,7 +7,7 @@ import java.util.*;
 public class Database {
     //  Name: Database
     //  Date created: 28.11.2017
-    //  Last modified: 29.11.2017
+    //  Last modified: 01.12.2017
     //  Description: Class used to store data, manage data and save data
 
     private static Map<String, ArrayList<String[]>> rawData = new HashMap<>();
@@ -50,7 +50,7 @@ public class Database {
     public void buildDatabases() {
         //  Name: buildDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 01.12.2017
         //  Description: Method that adds values from rawData HashMap to baseDatabase HashMap
 
         Double value;
@@ -78,6 +78,9 @@ public class Database {
                         continue;
                 }
 
+                // Round it up
+                value = Math.round(value * 1000) / 1000.0;
+
                 baseDatabase.putIfAbsent(key, new ArrayList<>());
                 baseDatabase.get(key).add(value);
             }
@@ -87,7 +90,7 @@ public class Database {
     public void buildStatistics() {
         //  Name: buildStatistics()
         //  Date created: 29.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 01.12.2017
         //  Description: Method that adds entries to statistics HashMap
 
         Double mean;
@@ -108,14 +111,19 @@ public class Database {
             Collections.sort(tempValueList);
 
             // Slice sorted copy for more precision
-            if (count < 30)
-                tempValueList.subList(2, count - 10).clear();
-            else if (count < 60)
-                tempValueList.subList(3, count - 15).clear();
-            else if (count < 80)
-                tempValueList.subList(4, count - 20).clear();
-            else if (count < 100)
-                tempValueList.subList(5, count - 30).clear();
+            if (count < 30) {
+                tempValueList.subList(count - 11, count - 1).clear();
+                tempValueList.subList(0, 2).clear();
+            } else if (count < 60) {
+                tempValueList.subList(count - 16, count - 1).clear();
+                tempValueList.subList(0, 3).clear();
+            } else if (count < 80) {
+                tempValueList.subList(count - 21, count - 1).clear();
+                tempValueList.subList(0, 4).clear();
+            } else if (count < 100) {
+                tempValueList.subList(count - 31, count - 1).clear();
+                tempValueList.subList(0, 5).clear();
+            }
 
             // Reassign count
             count = tempValueList.size();
@@ -126,10 +134,10 @@ public class Database {
                 mean += i;
             }
 
-            // Calculate mean and median values
-            mean = mean / count;
+            // Calculate mean and median values and round them to 3 digits
+            mean = Math.round(mean / count * 1000) / 1000.0;
             median = count / 2.0;
-            median = tempValueList.get(median.intValue());
+            median = Math.round(tempValueList.get(median.intValue()) * 1000) / 1000.0;
 
             // Turn that into a statistics object and put it in the database
             statistics.put(key, new StatsObject(count, mean, median));
@@ -139,7 +147,7 @@ public class Database {
     public void purgeDatabases() {
         //  Name: purgeDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 01.12.2017
         //  Description: Method that removes entries from baseDatabase HashMap (based on statistics HashMap) depending
         //               whether there's a 200% or larger difference between the two values
 
@@ -152,9 +160,9 @@ public class Database {
             // Get the median
             median = statistics.get(key).getMedian();
 
-            // Remove values that are 200% larger/smaller than the median
+            // Remove values that are larger/smaller than the median
             for (Double value : new ArrayList<>(baseDatabase.get(key))) {
-                if (value > median * 2.0 || value < median / 2.0) {
+                if (value > median * 2.0 || value < median / 4.0) {
                     baseDatabase.get(key).remove(value);
                 }
             }

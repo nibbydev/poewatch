@@ -3,14 +3,11 @@ package MainPack;
 import MainPack.MapperClasses.ChangeID;
 import MainPack.PricerClasses.PricerController;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class WorkerController extends Thread {
     //   Name: WorkerController
