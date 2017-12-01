@@ -10,9 +10,19 @@ public class Database {
     //  Last modified: 01.12.2017
     //  Description: Class used to store data, manage data and save data
 
-    private static Map<String, ArrayList<String[]>> rawData = new HashMap<>();
-    private static Map<String, ArrayList<Double>> baseDatabase = new HashMap<>();
-    private static Map<String, StatsObject> statistics = new HashMap<>();
+    private static Map<String, ArrayList<String[]>> rawData = new TreeMap<>();
+    private static Map<String, ArrayList<Double>> baseDatabase = new TreeMap<>();
+    private static Map<String, StatsObject> statistics = new TreeMap<>();
+
+    /* TODO: implement this
+    1) values continuously added to [RAW DATA]
+    2) after 5 minutes, [DATABASE] and [STATISTICS] are loaded from file into memory
+    3) values from [RAW DATA] are converted to baseValues using [STATISTICS] and appended to [DATABASE]
+    4) values in [DATABASE] are compared to [STATISTICS] and irregularities in [DATABASE] are removed
+    5) [STATISTICS] is rebuilt using values from [DATABASE]
+    6) [DATABASE] and [STATISTICS] are written to file and cleared from memory
+    7) all values in [RAW DATA] are removed
+     */
 
     /////////////////////////////////////////////
     // Methods used to add values to databases //
