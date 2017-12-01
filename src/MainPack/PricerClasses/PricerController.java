@@ -161,7 +161,7 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 30.11.2017
         //  Description: Contains the main loop of the pricing service
 
         while (true) {
@@ -178,9 +178,6 @@ public class PricerController extends Thread {
             database.buildDatabases();
             database.purgeDatabases();
             database.buildStatistics();
-
-            // TODO: remove this (enabled in experimental branch)
-            database.devPrintData();
 
             // Clear raw data
             database.clearRawData();
@@ -207,6 +204,15 @@ public class PricerController extends Thread {
             if (!flagLocalRun)
                 break;
         }
+    }
+
+    public void devPrintData() {
+        //  Name: devPrintData()
+        //  Date created: 30.11.2017
+        //  Last modified: 30.11.2017
+        //  Description: Roundabout method for printing out whole database
+
+        database.devPrintData();
     }
 
     ///////////////////////////

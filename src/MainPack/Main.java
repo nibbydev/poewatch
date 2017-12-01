@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 30.11.2017
         //  Description: The main class. Run this to run the program
 
         WorkerController workerController = new WorkerController();
@@ -59,7 +59,7 @@ public class Main {
     private static void commandLoop(WorkerController workerController, PricerController pricerController) {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 30.11.2017
         //  Description: Command loop method. Allows the user some interaction with the script as it is running.
         //  Parent methods:
         //      main()
@@ -72,6 +72,7 @@ public class Main {
         helpString += "    pause - pause item parsing\n";
         helpString += "    worker - manage workers\n";
         helpString += "    id - add a start changeID\n";
+        helpString += "    data - prints out all gathered data\n";
 
         System.out.println(helpString);
 
@@ -93,6 +94,9 @@ public class Main {
                     break;
                 case "worker":
                     commandWorker(workerController, userInput);
+                    break;
+                case "data":
+                    pricerController.devPrintData();
                     break;
                 default:
                     System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
