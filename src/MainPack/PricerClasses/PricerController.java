@@ -11,7 +11,7 @@ import java.util.Map;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 29.11.2017
+    //  Last modified: 01.12.2017
     //  Description: A threaded object that manages databases
 
     private int sleepLength = 10;
@@ -297,12 +297,13 @@ public class PricerController extends Thread {
     private void parseNote(Item item) {
         //  Name: parseNote()
         //  Date created: 28.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 01.12.2017
         //  Description: Method that checks and formats items notes
         //  Parent methods:
         //      checkItem()
 
         String[] noteList = item.getNote().split(" ");
+        Double price;
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
         if (noteList.length < 3) {
@@ -319,13 +320,16 @@ public class PricerController extends Thread {
         // Try to figure out if price is numeric
         try {
             if (priceArray.length == 1)
-                item.setPrice(Double.parseDouble(priceArray[0]));
+                price = Double.parseDouble(priceArray[0]);
             else
-                item.setPrice(Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]));
+                price = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
         } catch (Exception ex) { // TODO more specific exceptions
             item.setDiscard();
             return;
         }
+
+        // Assign price to item
+        item.setPrice(Math.round(price * 1000) / 1000.0);
 
         // See if the currency type listed is valid currency type
         if (!currencyShorthands.containsKey(noteList[2])) {
