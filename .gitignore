@@ -2,6 +2,8 @@
 *.class
 /.idea/
 /data/
+/out/
+/src/META-INF/MANIFEST.MF
 
 # Log file
 *.log

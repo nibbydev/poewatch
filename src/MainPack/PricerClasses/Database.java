@@ -107,6 +107,10 @@ public class Database {
                 baseDatabase.putIfAbsent(key, new ArrayList<>());
                 baseDatabase.get(key).add(value);
             }
+            if(baseDatabase.containsKey(key)) {
+                if (baseDatabase.get(key).size() > 100)
+                    baseDatabase.get(key).subList(0, baseDatabase.get(key).size() - 100).clear();
+            }
         }
     }
 
@@ -274,7 +278,7 @@ public class Database {
 
         // Writes values from statistics to file
         try {
-            File fFile = new File("./out/data/stats.txt");
+            File fFile = new File("./data/stats.txt");
             OutputStream fOut = new FileOutputStream(fFile);
 
             for (String key : statistics.keySet()) {
@@ -308,7 +312,7 @@ public class Database {
         ArrayList<Double> values;
 
         try {
-            File fFile = new File("./out/data/base.txt");
+            File fFile = new File("./data/base.txt");
             BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
 
             while ((line = bufferedReader.readLine()) != null) {
@@ -324,13 +328,14 @@ public class Database {
 
 
         } catch (IOException e) { // TODO: file not found
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("[ERROR] Could not read base.text");
         }
 
         StatsObject stats;
 
         try {
-            File fFile = new File("./out/data/stats.txt");
+            File fFile = new File("./data/stats.txt");
             BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
 
             while ((line = bufferedReader.readLine()) != null) {
@@ -341,7 +346,8 @@ public class Database {
             }
 
         } catch (IOException e) { // TODO: file not found
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("[ERROR] Could not read stats.text");
         }
 
     }

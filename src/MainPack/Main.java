@@ -24,6 +24,8 @@ public class Main {
 
         // Ask the user how many workers should be spawned and spawn tem
         workerController.spawnWorkers(askUserForIntInputWithValidation(workerController));
+        //workerController.spawnWorkers(3);
+        //workerController.setNextChangeID(workerController.getLatestChangeID());
 
         // Initiate main command loop, allowing user some control over the program
         commandLoop(workerController, pricerController);
