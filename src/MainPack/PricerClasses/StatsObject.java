@@ -16,6 +16,17 @@ public class StatsObject {
         this.median = median;
     }
 
+    @Override
+    public String toString() {
+        return count + "," + mean + "," + median;
+    }
+
+    public void fromString(String line) {
+        count = Integer.parseInt(line.split(",")[0]);
+        mean = Double.parseDouble(line.split(",")[1]);
+        median = Double.parseDouble(line.split(",")[2]);
+    }
+
     ///////////////////////
     // Getters / Setters //
     ///////////////////////

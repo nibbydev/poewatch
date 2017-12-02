@@ -2,27 +2,18 @@ package MainPack.PricerClasses;
 
 import MainPack.MapperClasses.Item;
 
+import java.io.*;
 import java.util.*;
 
 public class Database {
     //  Name: Database
     //  Date created: 28.11.2017
-    //  Last modified: 01.12.2017
+    //  Last modified: 02.12.2017
     //  Description: Class used to store data, manage data and save data
 
     private static Map<String, ArrayList<String[]>> rawData = new TreeMap<>();
     private static Map<String, ArrayList<Double>> baseDatabase = new TreeMap<>();
     private static Map<String, StatsObject> statistics = new TreeMap<>();
-
-    /* TODO: implement this
-    1) values continuously added to [RAW DATA]
-    2) after 5 minutes, [DATABASE] and [STATISTICS] are loaded from file into memory
-    3) values from [RAW DATA] are converted to baseValues using [STATISTICS] and appended to [DATABASE]
-    4) values in [DATABASE] are compared to [STATISTICS] and irregularities in [DATABASE] are removed
-    5) [STATISTICS] is rebuilt using values from [DATABASE]
-    6) [DATABASE] and [STATISTICS] are written to file and cleared from memory
-    7) all values in [RAW DATA] are removed
-     */
 
     /////////////////////////////////////////////
     // Methods used to add values to databases //
@@ -48,19 +39,41 @@ public class Database {
     // Methods used to manage databases //
     //////////////////////////////////////
 
-    public void clearRawData() {
-        //  Name: clearRawData()
-        //  Date created: 29.11.2017
-        //  Last modified: 29.11.2017
-        //  Description: Method used for clearing rawData HashMap
+    public void mainLoop() {
+        //  Name: mainLoop()
+        //  Date created: 02.12.2017
+        //  Last modified: 02.12.2017
+        //  Description: Initiates methods used to read/write/manage data
 
+        // Legend:
+        // [RAW DATA]   - rawData      - Contains values in the format of "key: [[5, dollars], [1, euro], [15, rubles]]"
+        // [BASEDATA]   - baseDatabase - Contains values from [RAW DATA] but converted to a base currency (eg euro) in
+        //                               in the format of "key: [4.4, 1, 0.23]"
+        // [STATISTICS] - statistics   - Contains conversion rates for currencies and average prices of items in the
+        //                               format of "key: StatsObject"
+
+        // 1. [BASEDATA] and [STATISTICS] are loaded in from file
+        readFromFile();
+        // 2. Currency values from [RAW DATA] are converted to base currency with the conversion rates in [STATISTICS]
+        //    and then are appended to [BASEDATA]
+        buildDatabases();
+        // 3. All values are removed from [RAW DATA]
         rawData.clear();
+        // 4. Values in [BASEDATA] are compared to median values in [STATISTICS] and irregularities are removed
+        purgeDatabases();
+        // 5. Values from [BASEDATA] are used to rebuild [STATISTICS] from the ground up
+        buildStatistics();
+        // 6. Updated [BASEDATA] and [STATISTICS] are written to file
+        writeToFile();
+        // 7. All values are cleared from [BASEDATA] and [STATISTICS]
+        baseDatabase.clear();
+        statistics.clear();
     }
 
-    public void buildDatabases() {
+    private void buildDatabases() {
         //  Name: buildDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 01.12.2017
+        //  Last modified: 02.12.2017
         //  Description: Method that adds values from rawData HashMap to baseDatabase HashMap
 
         Double value;
@@ -97,10 +110,10 @@ public class Database {
         }
     }
 
-    public void buildStatistics() {
+    private void buildStatistics() {
         //  Name: buildStatistics()
         //  Date created: 29.11.2017
-        //  Last modified: 01.12.2017
+        //  Last modified: 02.12.2017
         //  Description: Method that adds entries to statistics HashMap
 
         Double mean;
@@ -137,6 +150,8 @@ public class Database {
 
             // Reassign count
             count = tempValueList.size();
+            if (count < 20)
+                continue;
 
             mean = 0.0;
             // Add up values to calculate mean
@@ -154,10 +169,10 @@ public class Database {
         }
     }
 
-    public void purgeDatabases() {
+    private void purgeDatabases() {
         //  Name: purgeDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 01.12.2017
+        //  Last modified: 02.12.2017
         //  Description: Method that removes entries from baseDatabase HashMap (based on statistics HashMap) depending
         //               whether there's a 200% or larger difference between the two values
 
@@ -214,6 +229,121 @@ public class Database {
             System.out.println("[" + key + "] Mean: " + statistics.get(key).getMean());
             System.out.println("[" + key + "] Count: " + statistics.get(key).getCount());
         }
+
+    }
+
+    public void writeToFile() {
+        //  Name: writeToFile()
+        //  Date created: 02.12.2017
+        //  Last modified: 02.12.2017
+        //  Description: Stores (writes) baseDatabase and statistics to files
+
+        // Make sure folder exists
+        new File("./data").mkdir();
+
+        StringBuilder line;
+
+        // Writes values from baseDatabase to file
+        try {
+            File fFile = new File("./data/base.txt");
+            OutputStream fOut = new FileOutputStream(fFile);
+
+            for (String key : baseDatabase.keySet()) {
+                line = new StringBuilder();
+
+                line.append(key);
+                line.append("::");
+
+                for (Double d : baseDatabase.get(key)) {
+                    line.append(d);
+                    line.append(",");
+                }
+
+                line.deleteCharAt(line.lastIndexOf(","));
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+
+            fOut.flush();
+            fOut.close();
+
+        } catch (IOException e) { // TODO: finally close
+            e.printStackTrace();
+        }
+
+        // Writes values from statistics to file
+        try {
+            File fFile = new File("./out/data/stats.txt");
+            OutputStream fOut = new FileOutputStream(fFile);
+
+            for (String key : statistics.keySet()) {
+                line = new StringBuilder();
+                line.append(key);
+                line.append("::");
+                line.append(statistics.get(key).toString());
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+
+            fOut.flush();
+            fOut.close();
+
+        } catch (IOException e) { // TODO: finally close
+            e.printStackTrace();
+        }
+    }
+
+    public void readFromFile() {
+        //  Name: readFromFile()
+        //  Date created: 02.12.2017
+        //  Last modified: 02.12.2017
+        //  Description: Makes folder
+
+        // TODO: quit when no files found
+
+        String line;
+        String[] splitLine;
+        ArrayList<Double> values;
+
+        try {
+            File fFile = new File("./out/data/base.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                values = new ArrayList<>();
+                splitLine = line.split("::");
+
+                for (String value : splitLine[1].split(",")) {
+                    values.add(Double.parseDouble(value));
+                }
+
+                baseDatabase.put(splitLine[0], values);
+            }
+
+
+        } catch (IOException e) { // TODO: file not found
+            e.printStackTrace();
+        }
+
+        StatsObject stats;
+
+        try {
+            File fFile = new File("./out/data/stats.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                splitLine = line.split("::");
+                stats = new StatsObject(0, 0.0, 0.0);
+                stats.fromString(splitLine[1]);
+                statistics.put(splitLine[0], stats);
+            }
+
+        } catch (IOException e) { // TODO: file not found
+            e.printStackTrace();
+        }
+
     }
 
 }

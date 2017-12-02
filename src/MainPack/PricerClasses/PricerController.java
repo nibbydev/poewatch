@@ -11,7 +11,7 @@ import java.util.Map;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 01.12.2017
+    //  Last modified: 02.12.2017
     //  Description: A threaded object that manages databases
 
     private int sleepLength = 10;
@@ -161,11 +161,12 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 30.11.2017
+        //  Last modified: 02.12.2017
         //  Description: Contains the main loop of the pricing service
 
         while (true) {
             sleepWhile(sleepLength * 60);
+            System.out.println("[INFO] Generating databases");
 
             // Break if run flag has been lowered
             if (!flagLocalRun)
@@ -174,13 +175,9 @@ public class PricerController extends Thread {
             // Prepare for database building
             flagPause = true;
 
-            // Build databases
-            database.buildDatabases();
-            database.purgeDatabases();
-            database.buildStatistics();
+            // Read/manage/write data
+            database.mainLoop();
 
-            // Clear raw data
-            database.clearRawData();
             flagPause = false;
         }
     }
