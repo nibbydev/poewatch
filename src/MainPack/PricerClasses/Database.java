@@ -14,6 +14,9 @@ public class Database {
     private static Map<String, ArrayList<String[]>> rawData = new TreeMap<>();
     private static Map<String, ArrayList<Double>> baseDatabase = new TreeMap<>();
     private static Map<String, StatsObject> statistics = new TreeMap<>();
+    private static Map<String, ArrayList<Double>> hourly = new TreeMap<>();
+
+    private static Integer loopCounter = 0;
 
     /////////////////////////////////////////////
     // Methods used to add values to databases //
@@ -42,8 +45,10 @@ public class Database {
     public void mainLoop() {
         //  Name: mainLoop()
         //  Date created: 02.12.2017
-        //  Last modified: 02.12.2017
+        //  Last modified: 03.12.2017
         //  Description: Initiates methods used to read/write/manage data
+
+        String hourlyJSON;
 
         // Legend:
         // [RAW DATA]   - rawData      - Contains values in the format of "key: [[5, dollars], [1, euro], [15, rubles]]"
@@ -51,27 +56,43 @@ public class Database {
         //                               in the format of "key: [4.4, 1, 0.23]"
         // [STATISTICS] - statistics   - Contains conversion rates for currencies and average prices of items in the
         //                               format of "key: StatsObject"
+        // [HOURLY]     - hourly       - Contains the median values from [STATISTICS], added to it every cycle. Is used
+        //                               to build a JSON-encoded statistical output file
 
-        // 0. Make sure base folder exists
+        // 0. Increase loopCounter
+        loopCounter++;
+        // 1. Make sure base folder exists
         new File("./data").mkdir();
-        // 1. [BASEDATA] and [STATISTICS] are loaded in from file
+        // 2. [BASEDATA] and [STATISTICS] are loaded in from file
         readBaseFromFile();
         readStatsFromFile();
-        // 2. Currency values from [RAW DATA] are converted to base currency with the conversion rates in [STATISTICS]
+        // 3. Currency values from [RAW DATA] are converted to base currency with the conversion rates in [STATISTICS]
         //    and then are appended to [BASEDATA]
         buildDatabases();
-        // 3. All values are removed from [RAW DATA]
+        // 4. All values are removed from [RAW DATA]
         rawData.clear();
-        // 4. Values in [BASEDATA] are compared to median values in [STATISTICS] and irregularities are removed
+        // 5. Values in [BASEDATA] are compared to median values in [STATISTICS] and irregularities are removed
         purgeDatabases();
-        // 5. Values from [BASEDATA] are used to rebuild [STATISTICS] from the ground up
+        // 6. [HOURLY] is loaded in from file
+        readHourlyFromFile();
+        // 7. Values from [BASEDATA] are used to rebuild [STATISTICS] from the ground up.
+        //    Median values from [STATISTICS] are added to [HOURLY] in the same fashion as [BASEDATA]
         buildStatistics();
-        // 6. Updated [BASEDATA] and [STATISTICS] are written to file
+        // 8. Cleaned [BASEDATA] is written to file
         writeBaseToFile();
-        writeStatsToFile();
-        // 7. All values are cleared from [BASEDATA] and [STATISTICS]
+        // 9. All values are cleared from [BASEDATA]
         baseDatabase.clear();
+        // 10. Updated [STATISTICS] is written to file
+        writeStatsToFile();
+        // 11. All values are cleared from [STATISTICS]
         statistics.clear();
+        // 12. If 1 hour has passed, make JSON-encoded stats out of [HOURLY] and write it to file
+        hourlyJSON = buildHourlyReport();
+        writeHourlyReportToFile(hourlyJSON);
+        // 13. Updated [HOURLY] is written to file
+        writeHourlyToFile();
+        // 14. All values are cleared from [HOURLY]
+        hourly.clear();
     }
 
     // Creating databases
@@ -79,8 +100,8 @@ public class Database {
     private void buildDatabases() {
         //  Name: buildDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 02.12.2017
-        //  Description: Method that adds values from rawData HashMap to baseDatabase HashMap
+        //  Last modified: 03.12.2017
+        //  Description: Method that adds values from rawData to baseDatabase
 
         Double value;
         String index;
@@ -123,8 +144,8 @@ public class Database {
     private void buildStatistics() {
         //  Name: buildStatistics()
         //  Date created: 29.11.2017
-        //  Last modified: 02.12.2017
-        //  Description: Method that adds entries to statistics HashMap
+        //  Last modified: 03.12.2017
+        //  Description: Method that adds entries to statistics
 
         Double mean;
         Double median;
@@ -176,15 +197,20 @@ public class Database {
 
             // Turn that into a statistics object and put it in the database
             statistics.put(key, new StatsObject(count, mean, median));
+
+            // Add values to hourly database
+            if(!hourly.containsKey(key))
+                hourly.put(key, new ArrayList<>());
+            hourly.get(key).add(median);
         }
     }
 
     private void purgeDatabases() {
         //  Name: purgeDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 02.12.2017
-        //  Description: Method that removes entries from baseDatabase HashMap (based on statistics HashMap) depending
-        //               whether there's a 200% or larger difference between the two values
+        //  Last modified: 03.12.2017
+        //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
+        //               whether there's a large difference between the two
 
         double median;
 
@@ -206,7 +232,7 @@ public class Database {
 
     // I/O
 
-    public void readBaseFromFile() {
+    private void readBaseFromFile() {
         //  Name: readBaseFromFile()
         //  Date created: 02.12.2017
         //  Last modified: 03.12.2017
@@ -238,7 +264,7 @@ public class Database {
 
     }
 
-    public void readStatsFromFile() {
+    private void readStatsFromFile() {
         //  Name: readStatsFromFile()
         //  Date created: 03.12.2017
         //  Last modified: 03.12.2017
@@ -267,7 +293,7 @@ public class Database {
 
     }
 
-    public void writeBaseToFile() {
+    private void writeBaseToFile() {
         //  Name: writeBaseToFile()
         //  Date created: 02.12.2017
         //  Last modified: 03.12.2017
@@ -304,7 +330,7 @@ public class Database {
         }
     }
 
-    public void writeStatsToFile() {
+    private void writeStatsToFile() {
         //  Name: writeStatsToFile()
         //  Date created: 03.12.2017
         //  Last modified: 03.12.2017
@@ -330,6 +356,153 @@ public class Database {
             fOut.flush();
             fOut.close();
 
+        } catch (IOException e) { // TODO: finally close
+            e.printStackTrace();
+        }
+    }
+
+    // Hourly
+
+    private void readHourlyFromFile(){
+        //  Name: readHourlyFromFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Reads and parses hourly data from file
+
+        String line;
+        String[] splitLine;
+        ArrayList<Double> values;
+
+        try {
+            File fFile = new File("./data/hourly.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                values = new ArrayList<>();
+                splitLine = line.split("::");
+
+                for (String value : splitLine[1].split(",")) {
+                    values.add(Double.parseDouble(value));
+                }
+
+                hourly.put(splitLine[0], values);
+            }
+        } catch (IOException e) {
+            System.out.println("[ERROR] Could not read hourly.txt");
+        }
+    }
+
+    private void writeHourlyToFile() {
+        //  Name: writeHourlyToFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Stores (writes) hourly to file
+
+        StringBuilder line;
+
+        try {
+            File fFile = new File("./data/hourly.txt");
+            OutputStream fOut = new FileOutputStream(fFile);
+
+            for (String key : hourly.keySet()) {
+                line = new StringBuilder();
+
+                line.append(key);
+                line.append("::");
+
+                for (Double d : hourly.get(key)) {
+                    line.append(d);
+                    line.append(",");
+                }
+
+                line.deleteCharAt(line.lastIndexOf(","));
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+
+            fOut.flush();
+            fOut.close();
+
+        } catch (IOException e) { // TODO: finally close
+            e.printStackTrace();
+        }
+    }
+
+    private String buildHourlyReport(){
+        //  Name: buildHourlyReport()
+        //  Date created: 03.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Creates a JSON-encoded string of hourly medians
+
+        // Run every x cycles
+        if(loopCounter < 3) // TODO: inc/dec this value
+            return "";
+
+        Double mean;
+        Double median;
+        int count;
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("{");
+
+        for (String key : hourly.keySet()) {
+            // Make a copy so the original order persists
+            ArrayList<Double> tempValueList = new ArrayList<>();
+            tempValueList.addAll(hourly.get(key));
+            // Sort the entries in growing order
+            Collections.sort(tempValueList);
+
+            count = tempValueList.size();
+
+            mean = 0.0;
+            // Add up values to calculate mean
+            for (Double i : tempValueList) {
+                mean += i;
+            }
+
+            mean = Math.round(mean / count * 10000) / 10000.0;
+            median = count / 2.0;
+            median = Math.round(tempValueList.get(median.intValue()) * 10000) / 10000.0;
+
+            // Reassign count
+            count = baseDatabase.get(key).size();
+
+            // Add JSON-encoded string
+            stringBuilder.append("\"");
+            stringBuilder.append(key);
+            stringBuilder.append("\": ");
+            stringBuilder.append("{\"median\": ");
+            stringBuilder.append(median);
+            stringBuilder.append(", \"mean\": ");
+            stringBuilder.append(mean);
+            stringBuilder.append(", \"count\": ");
+            stringBuilder.append(count);
+            stringBuilder.append("},");
+        }
+
+        stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+        stringBuilder.append("}");
+
+        return stringBuilder.toString();
+    }
+
+    private void writeHourlyReportToFile(String hourlyJSON){
+        //  Name: writeHourlyReportToFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Just writes a string to file, pretty much
+
+        if(hourlyJSON.equals(""))
+            return;
+
+        try {
+            File fFile = new File("./data/report.json");
+            OutputStream fOut = new FileOutputStream(fFile);
+
+            fOut.write(hourlyJSON.getBytes());
+            fOut.flush();
+            fOut.close();
         } catch (IOException e) { // TODO: finally close
             e.printStackTrace();
         }
