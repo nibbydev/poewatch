@@ -8,7 +8,7 @@ import java.util.*;
 public class Database {
     //  Name: Database
     //  Date created: 28.11.2017
-    //  Last modified: 02.12.2017
+    //  Last modified: 03.12.2017
     //  Description: Class used to store data, manage data and save data
 
     private static Map<String, ArrayList<String[]>> rawData = new TreeMap<>();
@@ -52,8 +52,11 @@ public class Database {
         // [STATISTICS] - statistics   - Contains conversion rates for currencies and average prices of items in the
         //                               format of "key: StatsObject"
 
+        // 0. Make sure base folder exists
+        new File("./data").mkdir();
         // 1. [BASEDATA] and [STATISTICS] are loaded in from file
-        readFromFile();
+        readBaseFromFile();
+        readStatsFromFile();
         // 2. Currency values from [RAW DATA] are converted to base currency with the conversion rates in [STATISTICS]
         //    and then are appended to [BASEDATA]
         buildDatabases();
@@ -64,11 +67,14 @@ public class Database {
         // 5. Values from [BASEDATA] are used to rebuild [STATISTICS] from the ground up
         buildStatistics();
         // 6. Updated [BASEDATA] and [STATISTICS] are written to file
-        writeToFile();
+        writeBaseToFile();
+        writeStatsToFile();
         // 7. All values are cleared from [BASEDATA] and [STATISTICS]
         baseDatabase.clear();
         statistics.clear();
     }
+
+    // Creating databases
 
     private void buildDatabases() {
         //  Name: buildDatabases()
@@ -198,6 +204,137 @@ public class Database {
         }
     }
 
+    // I/O
+
+    public void readBaseFromFile() {
+        //  Name: readBaseFromFile()
+        //  Date created: 02.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Reads and parses baseDatabase data from file
+
+        // TODO: quit when no files found
+
+        String line;
+        String[] splitLine;
+        ArrayList<Double> values;
+
+        try {
+            File fFile = new File("./data/base.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                values = new ArrayList<>();
+                splitLine = line.split("::");
+
+                for (String value : splitLine[1].split(",")) {
+                    values.add(Double.parseDouble(value));
+                }
+
+                baseDatabase.put(splitLine[0], values);
+            }
+        } catch (IOException e) { // TODO: file not found
+            System.out.println("[ERROR] Could not read base.text");
+        }
+
+    }
+
+    public void readStatsFromFile() {
+        //  Name: readStatsFromFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Reads and parses statistics data from file
+
+        // TODO: quit when no files found
+
+        String line;
+        String[] splitLine;
+        StatsObject stats;
+
+        try {
+            File fFile = new File("./data/stats.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                splitLine = line.split("::");
+                stats = new StatsObject(0, 0.0, 0.0);
+                stats.fromString(splitLine[1]);
+                statistics.put(splitLine[0], stats);
+            }
+
+        } catch (IOException e) { // TODO: file not found
+            System.out.println("[ERROR] Could not read stats.text");
+        }
+
+    }
+
+    public void writeBaseToFile() {
+        //  Name: writeBaseToFile()
+        //  Date created: 02.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Stores (writes) baseDatabase to file
+
+        StringBuilder line;
+
+        try {
+            File fFile = new File("./data/base.txt");
+            OutputStream fOut = new FileOutputStream(fFile);
+
+            for (String key : baseDatabase.keySet()) {
+                line = new StringBuilder();
+
+                line.append(key);
+                line.append("::");
+
+                for (Double d : baseDatabase.get(key)) {
+                    line.append(d);
+                    line.append(",");
+                }
+
+                line.deleteCharAt(line.lastIndexOf(","));
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+
+            fOut.flush();
+            fOut.close();
+
+        } catch (IOException e) { // TODO: finally close
+            e.printStackTrace();
+        }
+    }
+
+    public void writeStatsToFile() {
+        //  Name: writeStatsToFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 03.12.2017
+        //  Description: Stores (writes) statistics to files
+
+        StringBuilder line;
+
+        // Writes values from statistics to file
+        try {
+            File fFile = new File("./data/stats.txt");
+            OutputStream fOut = new FileOutputStream(fFile);
+
+            for (String key : statistics.keySet()) {
+                line = new StringBuilder();
+                line.append(key);
+                line.append("::");
+                line.append(statistics.get(key).toString());
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+
+            fOut.flush();
+            fOut.close();
+
+        } catch (IOException e) { // TODO: finally close
+            e.printStackTrace();
+        }
+    }
+
     //////////////////////////////////
     // Methods used for development //
     //////////////////////////////////
@@ -232,122 +369,6 @@ public class Database {
             System.out.println("[" + key + "] Median: " + statistics.get(key).getMedian());
             System.out.println("[" + key + "] Mean: " + statistics.get(key).getMean());
             System.out.println("[" + key + "] Count: " + statistics.get(key).getCount());
-        }
-
-    }
-
-    public void writeToFile() {
-        //  Name: writeToFile()
-        //  Date created: 02.12.2017
-        //  Last modified: 02.12.2017
-        //  Description: Stores (writes) baseDatabase and statistics to files
-
-        // Make sure folder exists
-        new File("./data").mkdir();
-
-        StringBuilder line;
-
-        // Writes values from baseDatabase to file
-        try {
-            File fFile = new File("./data/base.txt");
-            OutputStream fOut = new FileOutputStream(fFile);
-
-            for (String key : baseDatabase.keySet()) {
-                line = new StringBuilder();
-
-                line.append(key);
-                line.append("::");
-
-                for (Double d : baseDatabase.get(key)) {
-                    line.append(d);
-                    line.append(",");
-                }
-
-                line.deleteCharAt(line.lastIndexOf(","));
-                line.append("\n");
-
-                fOut.write(line.toString().getBytes());
-            }
-
-            fOut.flush();
-            fOut.close();
-
-        } catch (IOException e) { // TODO: finally close
-            e.printStackTrace();
-        }
-
-        // Writes values from statistics to file
-        try {
-            File fFile = new File("./data/stats.txt");
-            OutputStream fOut = new FileOutputStream(fFile);
-
-            for (String key : statistics.keySet()) {
-                line = new StringBuilder();
-                line.append(key);
-                line.append("::");
-                line.append(statistics.get(key).toString());
-                line.append("\n");
-
-                fOut.write(line.toString().getBytes());
-            }
-
-            fOut.flush();
-            fOut.close();
-
-        } catch (IOException e) { // TODO: finally close
-            e.printStackTrace();
-        }
-    }
-
-    public void readFromFile() {
-        //  Name: readFromFile()
-        //  Date created: 02.12.2017
-        //  Last modified: 02.12.2017
-        //  Description: Makes folder
-
-        // TODO: quit when no files found
-
-        String line;
-        String[] splitLine;
-        ArrayList<Double> values;
-
-        try {
-            File fFile = new File("./data/base.txt");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
-
-            while ((line = bufferedReader.readLine()) != null) {
-                values = new ArrayList<>();
-                splitLine = line.split("::");
-
-                for (String value : splitLine[1].split(",")) {
-                    values.add(Double.parseDouble(value));
-                }
-
-                baseDatabase.put(splitLine[0], values);
-            }
-
-
-        } catch (IOException e) { // TODO: file not found
-            //e.printStackTrace();
-            System.out.println("[ERROR] Could not read base.text");
-        }
-
-        StatsObject stats;
-
-        try {
-            File fFile = new File("./data/stats.txt");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
-
-            while ((line = bufferedReader.readLine()) != null) {
-                splitLine = line.split("::");
-                stats = new StatsObject(0, 0.0, 0.0);
-                stats.fromString(splitLine[1]);
-                statistics.put(splitLine[0], stats);
-            }
-
-        } catch (IOException e) { // TODO: file not found
-            //e.printStackTrace();
-            System.out.println("[ERROR] Could not read stats.text");
         }
 
     }
