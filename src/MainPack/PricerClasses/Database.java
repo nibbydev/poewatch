@@ -16,7 +16,7 @@ public class Database {
     private static Map<String, StatsObject> statistics = new TreeMap<>();
     private static Map<String, ArrayList<Double>> hourly = new TreeMap<>();
 
-    private static Integer loopCounter = 0;
+    private static Integer loopCounter = 4;
 
     /////////////////////////////////////////////
     // Methods used to add values to databases //
@@ -439,14 +439,48 @@ public class Database {
         if(loopCounter < 3) // TODO: inc/dec this value
             return "";
 
+        loopCounter = 0;
+
         Double mean;
         Double median;
         int count;
         StringBuilder stringBuilder = new StringBuilder();
+        String league = "";
+        String type = "";
+        String[] splitKey;
+        ArrayList<String> partialKey;
 
         stringBuilder.append("{");
 
         for (String key : hourly.keySet()) {
+            splitKey = key.split("\\|");
+
+            if (league.equals("")) {
+                league = splitKey[0];
+                stringBuilder.append("\"");
+                stringBuilder.append(league);
+                stringBuilder.append("\": {");
+            } else if (!league.equals(splitKey[0])) {
+                league = splitKey[0];
+                stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+                type = "";
+                stringBuilder.append("}},\"");
+                stringBuilder.append(league);
+                stringBuilder.append("\": {");
+            }
+
+            if (type.equals("")) {
+                type = splitKey[1];
+                stringBuilder.append("\"");
+                stringBuilder.append(type);
+                stringBuilder.append("\": {");
+            } else if (!type.equals(splitKey[1])) {
+                type = splitKey[1];
+                stringBuilder.append("},\"");
+                stringBuilder.append(type);
+                stringBuilder.append("\": {");
+            }
+
             // Make a copy so the original order persists
             ArrayList<Double> tempValueList = new ArrayList<>();
             tempValueList.addAll(hourly.get(key));
@@ -466,7 +500,19 @@ public class Database {
             median = Math.round(tempValueList.get(median.intValue()) * 10000) / 10000.0;
 
             // Reassign count
-            count = baseDatabase.get(key).size();
+            //count = baseDatabase.get(key).size();
+
+            // Reassign key (remove the league and type)
+            key = ""; // TODO: simplify whateverthefuck this is supposed to be
+            for (int i = 0; i < splitKey.length; i++) {
+                if (i > 1)
+                    key += splitKey[i] + "|";
+            }
+
+            // Reassign key, removing league and type fields
+            partialKey = new ArrayList<>(Arrays.asList(splitKey));
+            partialKey.subList(0, 2).clear();
+            key = String.join("|", partialKey);
 
             // Add JSON-encoded string
             stringBuilder.append("\"");
