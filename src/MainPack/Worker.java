@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 29.11.2017
+    //  Last modified: 02.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private boolean flagLocalRun = true;
@@ -33,12 +33,13 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 02.12.2017
         //  Description: Contains the main loop of the worker
         //  Child methods:
         //      downloadData()
         //      deSerializeJSONString()
         //      parseItems()
+        //      sleep()
 
         String replyJSONString;
         APIReply reply;
@@ -52,14 +53,14 @@ public class Worker extends Thread {
 
                 // If download was unsuccessful, stop
                 if (replyJSONString.equals(""))
-                    return;
+                    continue;
 
                 // Seems good, deserialize the JSON string
                 reply = deSerializeJSONString(replyJSONString);
 
                 // Check if object has info in it
                 if (reply.getNext_change_id().equals(""))
-                    return;
+                    continue;
 
                 // Parse the deserialized JSON
                 parseItems(reply);
@@ -67,25 +68,20 @@ public class Worker extends Thread {
                 // Clear the job
                 setJob("");
             }
-
-            // Sleep for 100ms
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+            sleep(100);
         }
     }
 
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 02.12.2017
         //  Description: Method that downloads data from the API
         //  Parent methods:
         //      run()
         //  Child methods:
         //      trimPartialByteBuffer()
+        //      sleep()
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
         int chunkSize = 128;
@@ -94,11 +90,7 @@ public class Worker extends Thread {
         int byteCount;
 
         // Sleep for 500ms
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
+        sleep(500);
 
         try {
             // Define the request
@@ -110,12 +102,7 @@ public class Worker extends Thread {
             if (connection.getResponseCode() != 200) {
                 if (connection.getResponseCode() == 429) {
                     System.out.println("[ERROR] Client was timed out");
-                    // Sleep for 5000ms
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    }
+                    sleep(5000);
                 }
 
                 // Set uncompleted job as new job, allowing another worker to finish it
@@ -124,16 +111,11 @@ public class Worker extends Thread {
                 return "";
             }
 
-            // The loop that downloads data in chunks
-            while (true) {
-                // Stream data and count bytes
-                byteCount = stream.read(byteBuffer, 0, chunkSize);
+            // Stream data and count bytes
+            while ((byteCount = stream.read(byteBuffer, 0, chunkSize)) != -1) {
                 // Check if run flag is lowered
                 if (!this.flagLocalRun)
                     return "";
-                    // Transmission has finished
-                else if (byteCount == -1)
-                    break;
 
                 // Trim the byteBuffer, convert it into string and add to string buffer
                 stringBuilderBuffer.append(trimPartialByteBuffer(byteBuffer, byteCount));
@@ -149,14 +131,16 @@ public class Worker extends Thread {
                 }
             }
 
-            // Return the downloaded mess of a JSON string
-            return stringBuilderBuffer.toString();
         } catch (Exception ex) {
+            System.out.println("[ERROR] Caught worker download error:");
             ex.printStackTrace();
+            this.nextChangeID = this.job;
+            return "";
         }
 
+        // Return the downloaded mess of a JSON string
         // If the script reached this point, something probably went wrong
-        return "";
+        return stringBuilderBuffer.toString();
     }
 
     private String trimPartialByteBuffer(byte[] buffer, int length) {
@@ -217,6 +201,22 @@ public class Worker extends Thread {
                 // Run through pricing service
                 pricerController.checkItem(item);
             }
+        }
+    }
+
+    private void sleep(int timeMS) {
+        //  Name: sleep()
+        //  Date created: 02.12.2017
+        //  Last modified: 02.12.2017
+        //  Description: Sleeps for <timeMS> ms
+        //  Parent methods:
+        //      run()
+        //      downloadData()
+
+        try {
+            Thread.sleep(timeMS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 
