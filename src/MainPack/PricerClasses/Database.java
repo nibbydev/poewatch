@@ -8,7 +8,7 @@ import java.util.*;
 public class Database {
     //  Name: Database
     //  Date created: 28.11.2017
-    //  Last modified: 03.12.2017
+    //  Last modified: 05.12.2017
     //  Description: Class used to store data, manage data and save data
 
     private static Map<String, ArrayList<String[]>> rawData = new TreeMap<>();
@@ -16,7 +16,7 @@ public class Database {
     private static Map<String, StatsObject> statistics = new TreeMap<>();
     private static Map<String, ArrayList<Double>> hourly = new TreeMap<>();
 
-    private static Integer loopCounter = 4;
+    private static Integer loopCounter = 0;
 
     /////////////////////////////////////////////
     // Methods used to add values to databases //
@@ -45,7 +45,7 @@ public class Database {
     public void mainLoop() {
         //  Name: mainLoop()
         //  Date created: 02.12.2017
-        //  Last modified: 03.12.2017
+        //  Last modified: 04.12.2017
         //  Description: Initiates methods used to read/write/manage data
 
         String hourlyJSON;
@@ -75,8 +75,8 @@ public class Database {
         purgeDatabases();
         // 6. [HOURLY] is loaded in from file
         readHourlyFromFile();
-        // 7. Values from [BASEDATA] are used to rebuild [STATISTICS] from the ground up.
-        //    Median values from [STATISTICS] are added to [HOURLY] in the same fashion as [BASEDATA]
+        // 7. Values from [BASEDATA] are used to rebuild [STATISTICS] from the ground up. Median values from
+        //    [STATISTICS] are added to [HOURLY] in the same fashion as [BASEDATA]
         buildStatistics();
         // 8. Cleaned [BASEDATA] is written to file
         writeBaseToFile();
@@ -134,7 +134,7 @@ public class Database {
                 baseDatabase.putIfAbsent(key, new ArrayList<>());
                 baseDatabase.get(key).add(value);
             }
-            if(baseDatabase.containsKey(key)) {
+            if (baseDatabase.containsKey(key)) {
                 if (baseDatabase.get(key).size() > 100)
                     baseDatabase.get(key).subList(0, baseDatabase.get(key).size() - 100).clear();
             }
@@ -186,7 +186,7 @@ public class Database {
 
             mean = 0.0;
             // Add up values to calculate mean
-            for (Double i : tempValueList) { // TODO: replace with lambda
+            for (Double i : tempValueList) {
                 mean += i;
             }
 
@@ -199,16 +199,19 @@ public class Database {
             statistics.put(key, new StatsObject(count, mean, median));
 
             // Add values to hourly database
-            if(!hourly.containsKey(key))
+            if (!hourly.containsKey(key))
                 hourly.put(key, new ArrayList<>());
             hourly.get(key).add(median);
+
+            if (hourly.get(key).size() > 24)
+                hourly.get(key).remove(0);
         }
     }
 
     private void purgeDatabases() {
         //  Name: purgeDatabases()
         //  Date created: 29.11.2017
-        //  Last modified: 03.12.2017
+        //  Last modified: 04.12.2017
         //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
         //               whether there's a large difference between the two
 
@@ -223,220 +226,21 @@ public class Database {
 
             // Remove values that are larger/smaller than the median
             for (Double value : new ArrayList<>(baseDatabase.get(key))) {
-                if (value > median * 2.0 || value < median / 4.0) {
+                if (value > median * 2.0 || value < median / 2.0) {
                     baseDatabase.get(key).remove(value);
                 }
             }
         }
     }
 
-    // I/O
-
-    private void readBaseFromFile() {
-        //  Name: readBaseFromFile()
-        //  Date created: 02.12.2017
-        //  Last modified: 03.12.2017
-        //  Description: Reads and parses baseDatabase data from file
-
-        // TODO: quit when no files found
-
-        String line;
-        String[] splitLine;
-        ArrayList<Double> values;
-
-        try {
-            File fFile = new File("./data/base.txt");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
-
-            while ((line = bufferedReader.readLine()) != null) {
-                values = new ArrayList<>();
-                splitLine = line.split("::");
-
-                for (String value : splitLine[1].split(",")) {
-                    values.add(Double.parseDouble(value));
-                }
-
-                baseDatabase.put(splitLine[0], values);
-            }
-        } catch (IOException e) { // TODO: file not found
-            System.out.println("[ERROR] Could not read base.text");
-        }
-
-    }
-
-    private void readStatsFromFile() {
-        //  Name: readStatsFromFile()
-        //  Date created: 03.12.2017
-        //  Last modified: 03.12.2017
-        //  Description: Reads and parses statistics data from file
-
-        // TODO: quit when no files found
-
-        String line;
-        String[] splitLine;
-        StatsObject stats;
-
-        try {
-            File fFile = new File("./data/stats.txt");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
-
-            while ((line = bufferedReader.readLine()) != null) {
-                splitLine = line.split("::");
-                stats = new StatsObject(0, 0.0, 0.0);
-                stats.fromString(splitLine[1]);
-                statistics.put(splitLine[0], stats);
-            }
-
-        } catch (IOException e) { // TODO: file not found
-            System.out.println("[ERROR] Could not read stats.text");
-        }
-
-    }
-
-    private void writeBaseToFile() {
-        //  Name: writeBaseToFile()
-        //  Date created: 02.12.2017
-        //  Last modified: 03.12.2017
-        //  Description: Stores (writes) baseDatabase to file
-
-        StringBuilder line;
-
-        try {
-            File fFile = new File("./data/base.txt");
-            OutputStream fOut = new FileOutputStream(fFile);
-
-            for (String key : baseDatabase.keySet()) {
-                line = new StringBuilder();
-
-                line.append(key);
-                line.append("::");
-
-                for (Double d : baseDatabase.get(key)) {
-                    line.append(d);
-                    line.append(",");
-                }
-
-                line.deleteCharAt(line.lastIndexOf(","));
-                line.append("\n");
-
-                fOut.write(line.toString().getBytes());
-            }
-
-            fOut.flush();
-            fOut.close();
-
-        } catch (IOException e) { // TODO: finally close
-            e.printStackTrace();
-        }
-    }
-
-    private void writeStatsToFile() {
-        //  Name: writeStatsToFile()
-        //  Date created: 03.12.2017
-        //  Last modified: 03.12.2017
-        //  Description: Stores (writes) statistics to files
-
-        StringBuilder line;
-
-        // Writes values from statistics to file
-        try {
-            File fFile = new File("./data/stats.txt");
-            OutputStream fOut = new FileOutputStream(fFile);
-
-            for (String key : statistics.keySet()) {
-                line = new StringBuilder();
-                line.append(key);
-                line.append("::");
-                line.append(statistics.get(key).toString());
-                line.append("\n");
-
-                fOut.write(line.toString().getBytes());
-            }
-
-            fOut.flush();
-            fOut.close();
-
-        } catch (IOException e) { // TODO: finally close
-            e.printStackTrace();
-        }
-    }
-
-    // Hourly
-
-    private void readHourlyFromFile(){
-        //  Name: readHourlyFromFile()
-        //  Date created: 03.12.2017
-        //  Last modified: 03.12.2017
-        //  Description: Reads and parses hourly data from file
-
-        String line;
-        String[] splitLine;
-        ArrayList<Double> values;
-
-        try {
-            File fFile = new File("./data/hourly.txt");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(fFile));
-
-            while ((line = bufferedReader.readLine()) != null) {
-                values = new ArrayList<>();
-                splitLine = line.split("::");
-
-                for (String value : splitLine[1].split(",")) {
-                    values.add(Double.parseDouble(value));
-                }
-
-                hourly.put(splitLine[0], values);
-            }
-        } catch (IOException e) {
-            System.out.println("[ERROR] Could not read hourly.txt");
-        }
-    }
-
-    private void writeHourlyToFile() {
-        //  Name: writeHourlyToFile()
-        //  Date created: 03.12.2017
-        //  Last modified: 03.12.2017
-        //  Description: Stores (writes) hourly to file
-
-        StringBuilder line;
-
-        try {
-            File fFile = new File("./data/hourly.txt");
-            OutputStream fOut = new FileOutputStream(fFile);
-
-            for (String key : hourly.keySet()) {
-                line = new StringBuilder();
-
-                line.append(key);
-                line.append("::");
-
-                for (Double d : hourly.get(key)) {
-                    line.append(d);
-                    line.append(",");
-                }
-
-                line.deleteCharAt(line.lastIndexOf(","));
-                line.append("\n");
-
-                fOut.write(line.toString().getBytes());
-            }
-
-            fOut.flush();
-            fOut.close();
-
-        } catch (IOException e) { // TODO: finally close
-            e.printStackTrace();
-        }
-    }
-
-    private String buildHourlyReport(){
+    private String buildHourlyReport() {
         //  Name: buildHourlyReport()
         //  Date created: 03.12.2017
-        //  Last modified: 03.12.2017
+        //  Last modified: 05.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles
-        if(loopCounter < 3) // TODO: inc/dec this value
+        if (loopCounter < 6)
             return "";
 
         loopCounter = 0;
@@ -533,24 +337,267 @@ public class Database {
         return stringBuilder.toString();
     }
 
-    private void writeHourlyReportToFile(String hourlyJSON){
+    // I/O
+
+    private void readBaseFromFile() {
+        //  Name: readBaseFromFile()
+        //  Date created: 02.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Reads and parses baseDatabase data from file
+
+        String line;
+        String[] splitLine;
+        ArrayList<Double> values;
+        BufferedReader bufferedReader = null;
+
+        try {
+            File fFile = new File("./data/base.txt");
+            bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                values = new ArrayList<>();
+                splitLine = line.split("::");
+
+                for (String value : splitLine[1].split(",")) {
+                    values.add(Double.parseDouble(value));
+                }
+
+                baseDatabase.put(splitLine[0], values);
+            }
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not read baseData:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void readStatsFromFile() {
+        //  Name: readStatsFromFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Reads and parses statistics data from file
+
+        String line;
+        String[] splitLine;
+        StatsObject stats;
+        BufferedReader bufferedReader = null;
+
+        try {
+            File fFile = new File("./data/stats.txt");
+            bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                splitLine = line.split("::");
+                stats = new StatsObject(0, 0.0, 0.0);
+                stats.fromString(splitLine[1]);
+                statistics.put(splitLine[0], stats);
+            }
+
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not read stats:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void readHourlyFromFile() {
+        //  Name: readHourlyFromFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Reads and parses hourly data from file
+
+        String line;
+        String[] splitLine;
+        ArrayList<Double> values;
+        BufferedReader bufferedReader = null;
+
+        try {
+            File fFile = new File("./data/hourly.txt");
+            bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                values = new ArrayList<>();
+                splitLine = line.split("::");
+
+                for (String value : splitLine[1].split(",")) {
+                    values.add(Double.parseDouble(value));
+                }
+
+                hourly.put(splitLine[0], values);
+            }
+
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not read hourly:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void writeBaseToFile() {
+        //  Name: writeBaseToFile()
+        //  Date created: 02.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Stores (writes) baseDatabase to file
+
+        StringBuilder line;
+        OutputStream fOut = null;
+
+        try {
+            File fFile = new File("./data/base.txt");
+            fOut = new FileOutputStream(fFile);
+
+            for (String key : baseDatabase.keySet()) {
+                line = new StringBuilder();
+
+                line.append(key);
+                line.append("::");
+
+                if (baseDatabase.get(key).size() < 1)
+                    continue;
+
+                for (Double d : baseDatabase.get(key)) {
+                    line.append(d);
+                    line.append(",");
+                }
+
+                line.deleteCharAt(line.lastIndexOf(","));
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write base:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (fOut != null) {
+                    fOut.flush();
+                    fOut.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void writeStatsToFile() {
+        //  Name: writeStatsToFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Stores (writes) statistics to files
+
+        StringBuilder line;
+        OutputStream fOut = null;
+
+        // Writes values from statistics to file
+        try {
+            File fFile = new File("./data/stats.txt");
+            fOut = new FileOutputStream(fFile);
+
+            for (String key : statistics.keySet()) {
+                line = new StringBuilder();
+                line.append(key);
+                line.append("::");
+                line.append(statistics.get(key).toString());
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write stats:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (fOut != null) {
+                    fOut.flush();
+                    fOut.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void writeHourlyToFile() {
+        //  Name: writeHourlyToFile()
+        //  Date created: 03.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Stores (writes) hourly to file
+
+        StringBuilder line;
+        OutputStream fOut = null;
+
+        try {
+            File fFile = new File("./data/hourly.txt");
+            fOut = new FileOutputStream(fFile);
+
+            for (String key : hourly.keySet()) {
+                line = new StringBuilder();
+
+                line.append(key);
+                line.append("::");
+
+                for (Double d : hourly.get(key)) {
+                    line.append(d);
+                    line.append(",");
+                }
+
+                line.deleteCharAt(line.lastIndexOf(","));
+                line.append("\n");
+
+                fOut.write(line.toString().getBytes());
+            }
+
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write hourly:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (fOut != null) {
+                    fOut.flush();
+                    fOut.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void writeHourlyReportToFile(String hourlyJSON) {
         //  Name: writeHourlyReportToFile()
         //  Date created: 03.12.2017
-        //  Last modified: 03.12.2017
+        //  Last modified: 05.12.2017
         //  Description: Just writes a string to file, pretty much
 
-        if(hourlyJSON.equals(""))
+        if (hourlyJSON.equals(""))
             return;
+
+        OutputStream fOut = null;
 
         try {
             File fFile = new File("./data/report.json");
-            OutputStream fOut = new FileOutputStream(fFile);
-
+            fOut = new FileOutputStream(fFile);
             fOut.write(hourlyJSON.getBytes());
-            fOut.flush();
-            fOut.close();
-        } catch (IOException e) { // TODO: finally close
+
+        } catch (IOException e) {
+            System.out.println("[ERROR] Could not write report:");
             e.printStackTrace();
+        } finally {
+            try {
+                if (fOut != null) {
+                    fOut.flush();
+                    fOut.close();
+                }
+            } catch (IOException e) { }
         }
     }
 

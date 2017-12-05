@@ -19,7 +19,7 @@ public class Main {
         workerController.start();
 
         // Set default values and start the pricer controller
-        pricerController.setSleepLength(1);
+        pricerController.setSleepLength(10);
         pricerController.start();
 
         // Ask the user how many workers should be spawned and spawn tem

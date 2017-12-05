@@ -11,7 +11,7 @@ import java.util.Map;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 02.12.2017
+    //  Last modified: 03.12.2017
     //  Description: A threaded object that manages databases
 
     private int sleepLength = 10;
