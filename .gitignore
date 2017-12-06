@@ -1,6 +1,10 @@
 # Compiled class file
 *.class
 /.idea/
+/data/
+/out/
+/src/META-INF/MANIFEST.MF
+/data.txt
 
 # Log file
 *.log

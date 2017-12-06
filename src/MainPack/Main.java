@@ -1,79 +1,79 @@
 package MainPack;
 
-import MainPack.StatClasses.StatController;
+import MainPack.PricerClasses.PricerController;
 import NotMadeByMe.TextIO;
-
-import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-        /*   Name: main()
-         *   Date created: 21.11.2017
-         *   Last modified: 27.11.2017
-         *   Description: The main main main. Run this to run the script
-         */
+        //  Name: main()
+        //  Date created: 21.11.2017
+        //  Last modified: 06.12.2017
+        //  Description: The main class. Run this to run the program
 
-        ArrayList<String> searchParameters = new ArrayList<>();
         WorkerController workerController = new WorkerController();
-        StatController statController = new StatController();
+        PricerController pricerController = new PricerController();
 
-        // Set default values and start the controller
-        workerController.setSearchParameters(searchParameters);
-        workerController.setStatController(statController);
+        // Set default values and start the worker controller
+        workerController.setPricerController(pricerController);
         workerController.setWorkerLimit(5);
         workerController.start();
 
-        // Ask the user how many workers should be spawned
-        int workerCount = askUserForIntInputWithValidation(workerController);
-        workerController.spawnWorkers(workerCount);
+        // Set default values and start the pricer controller
+        pricerController.start();
 
-        // Allow user to have some control over the flow of the program
-        commandLoop(workerController, searchParameters, statController);
+        // Ask the user how many workers should be spawned and spawn tem
+        workerController.spawnWorkers(askUserForIntInputWithValidation(workerController));
+        //workerController.spawnWorkers(3);
+        //workerController.setNextChangeID(workerController.getLatestChangeID());
+
+        // Initiate main command loop, allowing user some control over the program
+        commandLoop(workerController, pricerController);
 
         // Stop workers on exit
         workerController.stopAllWorkers();
         workerController.setFlagLocalRun(false);
+        pricerController.setFlagLocalRun(false);
     }
 
     private static int askUserForIntInputWithValidation(WorkerController workerController) {
-        /*  Name: askUserForIntInputWithValidation()
-        *   Date created: 21.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Asks the user for an input, has validation so that the input is actually valid
-        *   Parent methods:
-        *       main()
-        */
+        //  Name: askUserForIntInputWithValidation()
+        //  Date created: 21.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Asks the user for an input, has validation so that the input is actually valid
+        //  Parent methods:
+        //      main()
 
         int userInput = -1;
 
         System.out.println("How many workers should be spawned (1 - " + workerController.getWorkerLimit() + ")?");
+
         while (userInput <= 0 || userInput > workerController.getWorkerLimit()) {
             userInput = TextIO.getlnInt();
 
             if (userInput > workerController.getWorkerLimit())
                 System.out.println("That is way too many workers!");
         }
+
         return userInput;
     }
 
-    private static void commandLoop(WorkerController workerController, ArrayList<String> searchParameters, StatController statController) {
-        /*  Name: commandLoop()
-        *   Date created: 22.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Command loop method. Allows the user some interaction with the script as it is running.
-        *   Parent methods:
-        *       main()
-        */
+    private static void commandLoop(WorkerController workerController, PricerController pricerController) {
+        //  Name: commandLoop()
+        //  Date created: 22.11.2017
+        //  Last modified: 06.12.2017
+        //  Description: Command loop method. Allows the user some interaction with the script as it is running.
+        //  Parent methods:
+        //      main()
 
         String helpString = "[INFO] Available commands include:\n";
         String[] userInput;
 
         helpString += "    help - display this help page\n";
         helpString += "    exit - exit the script safely\n";
+        helpString += "    pause - pause item parsing\n";
         helpString += "    worker - manage workers\n";
-        helpString += "    search - manage search parameters \n";
         helpString += "    id - add a start changeID\n";
-        helpString += "    stats - manage statistical information\n";
+        helpString += "    data - prints out all gathered data\n";
 
         System.out.println(helpString);
 
@@ -87,17 +87,17 @@ public class Main {
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
                     return;
+                case "pause":
+                    commandPause(pricerController);
+                    break;
                 case "id":
                     commandIdAdd(workerController, userInput);
                     break;
                 case "worker":
                     commandWorker(workerController, userInput);
                     break;
-                case "search":
-                    commandSearch(searchParameters, userInput);
-                    break;
-                case "stats":
-                    commandStats(statController, userInput);
+                case "data":
+                    //pricerController.devPrintData();
                     break;
                 default:
                     System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -106,41 +106,46 @@ public class Main {
         }
     }
 
-    /*
-     * Methods extracted from commandLoop
-     */
+    ////////////////////////////////////////
+    // Methods extracted from commandLoop //
+    ////////////////////////////////////////
 
-    private static void commandIdAdd(WorkerController workerController, String[] userInput){
-        /*  Name: commandIdAdd()
-        *   Date created: 27.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Adds a ChangeID to the queue
-        */
+    private static void commandIdAdd(WorkerController workerController, String[] userInput) {
+        //  Name: commandIdAdd()
+        //  Date created: 27.11.2017
+        //  Last modified: 01.12.2017
+        //  Description: Adds a ChangeID to the queue
 
 
         String helpString = "[INFO] Available changeID commands:\n";
-        helpString += "    'id <string/'default'>' - Add string to job queue\n";
+        helpString += "    'id <string>' - Add optional string to job queue\n";
+        helpString += "    'id default' - Add middle-ground string to job queue\n";
+        helpString += "    'id new' - Add newest string to job queue (recommended)\n";
 
         if (userInput.length < 2) {
             System.out.println(helpString);
             return;
         }
 
-        if (userInput[1].equalsIgnoreCase("default")) {
-            workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
-        } else {
-            workerController.setNextChangeID(userInput[1]);
+        switch (userInput[1]) {
+            case "default":
+                workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
+                break;
+            case "new":
+                workerController.setNextChangeID(workerController.getLatestChangeID());
+                break;
+            default:
+                workerController.setNextChangeID(userInput[1]);
         }
 
         System.out.println("[INFO] New ChangeID added");
     }
 
-    private static void commandWorker(WorkerController workerController, String[] userInput){
-        /*  Name: commandWorker()
-        *   Date created: 27.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Holds commands that have something to do with worker operation
-        */
+    private static void commandWorker(WorkerController workerController, String[] userInput) {
+        //  Name: commandWorker()
+        //  Date created: 27.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Holds commands that have something to do with worker operation
 
         String helpString = "[INFO] Available worker commands:\n";
         helpString += "    'worker list' - List all active workers\n";
@@ -166,60 +171,19 @@ public class Main {
         }
     }
 
-    private static void commandSearch(ArrayList<String> searchParameters, String[] userInput){
-        /*  Name: commandSearch()
-        *   Date created: 27.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Holds commands that have something to do with search parameters
-        */
+    private static void commandPause(PricerController pricerController) {
+        //  Name: commandIdAdd()
+        //  Date created: 27.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Pauses or resumes the script
 
-        String helpString = "[INFO] Available search commands:\n";
-        helpString += "    'search list' - List all active search parameters\n";
-        helpString += "    'search del <index>' - Remove search parameter at index <index>\n";
-        helpString += "    'search add <string>' - Add search parameter <string> to the list\n";
-
-        if (userInput.length < 2) {
-            System.out.println(helpString);
-            return;
-        }
-
-        if (userInput[1].equalsIgnoreCase("list")) {
-            System.out.println("[INFO] Current search parameters:");
-            searchParameters.forEach(i -> System.out.println("[" + searchParameters.indexOf(i) + "] \"" + i + "\""));
-        } else if (userInput[1].equalsIgnoreCase("del")) {
-            searchParameters.remove(Integer.parseInt(userInput[2]));
-            System.out.println("[INFO] Removed [" + Integer.parseInt(userInput[2]) + "] from the list");
-        } else if (userInput[1].equalsIgnoreCase("add")) {
-            searchParameters.add(userInput[2]);
-            System.out.println("[INFO] Added \"" + userInput[2] + "\" to the list");
+        if (pricerController.isFlagPause()) {
+            pricerController.setFlagPause(false);
+            System.out.println("[INFO] Resumed");
         } else {
-            System.out.println(helpString);
+            pricerController.setFlagPause(true);
+            System.out.println("[INFO] Paused");
         }
     }
 
-    private static void commandStats(StatController statController, String[] userInput){
-        /*  Name: commandStats()
-        *   Date created: 27.11.2017
-        *   Last modified: 27.11.2017
-        *   Description: Holds commands that have something to do with statistics
-        */
-
-        String helpString = "[INFO] Available statistics commands:\n";
-        helpString += "    'stats list' - List all statistics\n";
-        helpString += "    'stats clear' - Zero all gathered statistics\n";
-
-        if (userInput.length < 2) {
-            System.out.println(helpString);
-            return;
-        }
-
-        if (userInput[1].equalsIgnoreCase("list")) {
-            statController.printStats();
-        } else if (userInput[1].equalsIgnoreCase("clear")) {
-            statController.clearStats();
-            System.out.println("[INFO] Statistical info cleared");
-        } else {
-            System.out.println(helpString);
-        }
-    }
 }

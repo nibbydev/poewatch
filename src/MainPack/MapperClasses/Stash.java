@@ -6,11 +6,10 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Stash {
-    /*   Name: Stash
-     *   Date created: 23.11.2017
-     *   Last modified: 23.11.2017
-     *   Description: Class used for deserializing a JSON string
-     */
+    //  Name: Stash
+    //  Date created: 23.11.2017
+    //  Last modified: 29.11.2017
+    //  Description: Class used for deserializing a JSON string
 
     private String id;
     private String accountName;
@@ -18,9 +17,9 @@ public class Stash {
     private String lastCharacterName;
     private List<Item> items;
 
-    /*
-     * Methods that set values from outside the class
-     */
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
 
     public void setAccountName(String accountName) {
         this.accountName = accountName;
@@ -42,10 +41,6 @@ public class Stash {
         this.stash = stash;
     }
 
-    /*
-     * Methods that get values from outside the class
-     */
-
     public List<Item> getItems() {
         return items;
     }
@@ -65,5 +60,4 @@ public class Stash {
     public String getStash() {
         return stash;
     }
-
 }
