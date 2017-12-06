@@ -4,14 +4,16 @@ import MainPack.MapperClasses.Item;
 import MainPack.MapperClasses.Properties;
 import MainPack.MapperClasses.Socket;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 03.12.2017
+    //  Last modified: 06.12.2017
     //  Description: A threaded object that manages databases
 
     private int sleepLength = 10;
@@ -21,7 +23,7 @@ public class PricerController extends Thread {
     private static Map<String, String> baseCurrencyIndexes;
     private static ArrayList<String> potentialSixLinkItems;
     private static Map<String, Map<String, String>> itemVariants;
-    private static Database database = new Database();
+    private static Map<String, DataEntry> data = new TreeMap<>();
 
     public PricerController() {
         //  Name: PricerController()
@@ -161,8 +163,10 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 02.12.2017
+        //  Last modified: 06.12.2017
         //  Description: Contains the main loop of the pricing service
+
+        readDataFromFile();
 
         while (true) {
             sleepWhile(sleepLength * 60);
@@ -175,8 +179,15 @@ public class PricerController extends Thread {
             // Prepare for database building
             flagPause = true;
 
-            // Read/manage/write data
-            database.mainLoop();
+            // manage+write data
+            data.forEach((String key, DataEntry entry) -> {
+                entry.buildBaseData(data);
+                entry.purgeBaseData();
+                entry.buildStatistics();
+                entry.clearRawData();
+            });
+
+            writeDataToFile();
 
             flagPause = false;
         }
@@ -203,15 +214,6 @@ public class PricerController extends Thread {
         }
     }
 
-    public void devPrintData() {
-        //  Name: devPrintData()
-        //  Date created: 30.11.2017
-        //  Last modified: 30.11.2017
-        //  Description: Roundabout method for printing out whole database
-
-        database.devPrintData();
-    }
-
     ///////////////////////////
     // Check and parse items //
     ///////////////////////////
@@ -219,7 +221,7 @@ public class PricerController extends Thread {
     public void checkItem(Item item) {
         //  Name: checkItem()
         //  Date created: 28.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 06.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Pause during I/O operations
@@ -261,7 +263,8 @@ public class PricerController extends Thread {
         }
 
         // Add item to database
-        database.rawDataAddEntry(item);
+        data.putIfAbsent(item.getKey(), new DataEntry());
+        data.get(item.getKey()).addRaw(item.getKey(), item.getPrice(), item.getPriceType());
     }
 
     private void basicChecks(Item item) {
@@ -593,6 +596,69 @@ public class PricerController extends Thread {
         item.addKey(keySuffix);
     }
 
+    //////////////////////////////////////
+    // Methods used to manage databases //
+    //////////////////////////////////////
+
+    public void readDataFromFile(){
+        //  Name: readDataFromFile()
+        //  Date created: 06.12.2017
+        //  Last modified: 06.12.2017
+        //  Description: Reads and parses database data from file
+
+        String line;
+        BufferedReader bufferedReader = null;
+
+        try {
+            File fFile = new File("./data.txt");
+            bufferedReader = new BufferedReader(new FileReader(fFile));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                String[] splitLine = line.split("::");
+                data.put(splitLine[0], new DataEntry());
+                data.get(splitLine[0]).parseIOLine(splitLine);
+            }
+
+        } catch (IOException ex) { } finally {
+            try {
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
+    private void writeDataToFile(){
+        //  Name: writeDataToFile()
+        //  Date created: 06.12.2017
+        //  Last modified: 06.12.2017
+        //  Description: Writes database data to file
+
+        OutputStream fOut = null;
+
+        // Writes values from statistics to file
+        try {
+            File fFile = new File("./data.txt");
+            fOut = new FileOutputStream(fFile);
+
+            for (String key : data.keySet()) {
+                if(!data.get(key).isEmpty())
+                    fOut.write(data.get(key).makeIOLine().getBytes());
+            }
+
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write data:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (fOut != null) {
+                    fOut.flush();
+                    fOut.close();
+                }
+            } catch (IOException ex) {}
+        }
+    }
+
     ///////////////////////
     // Getters / Setters //
     ///////////////////////
@@ -612,4 +678,145 @@ public class PricerController extends Thread {
     public boolean isFlagPause() {
         return flagPause;
     }
+
+    /*
+    public void devPrintData() {
+        //  Name: devPrintData()
+        //  Date created: 29.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Used for development. Prints out every single database entry
+
+        System.out.println("\n[=================================================== RAW DATA ===================================================]");
+
+        for (String key : rawData.keySet()) {
+            System.out.print("[" + key + "]: ");
+
+            for (String[] info : rawData.get(key)) {
+                System.out.print(Arrays.toString(info) + ",");
+            }
+
+            System.out.println();
+        }
+
+        System.out.println("\n[=================================================== DATABASES ===================================================]");
+
+        for (String key : baseDatabase.keySet()) {
+            System.out.println("[" + key + "]: " + Arrays.toString(baseDatabase.get(key).toArray()));
+        }
+
+        System.out.println("\n[=================================================== STATISTICS ===================================================]");
+
+        for (String key : statistics.keySet()) {
+            System.out.println("[" + key + "] Median: " + statistics.get(key).getMedian());
+            System.out.println("[" + key + "] Mean: " + statistics.get(key).getMean());
+            System.out.println("[" + key + "] Count: " + statistics.get(key).getCount());
+        }
+
+    }
+
+    /*
+    private String buildHourlyReport() {
+        //  Name: buildHourlyReport()
+        //  Date created: 03.12.2017
+        //  Last modified: 05.12.2017
+        //  Description: Creates a JSON-encoded string of hourly medians
+
+        // Run every x cycles
+        if (loopCounter < 6)
+            return "";
+
+        loopCounter = 0;
+
+        Double mean;
+        Double median;
+        int count;
+        StringBuilder stringBuilder = new StringBuilder();
+        String league = "";
+        String type = "";
+        String[] splitKey;
+        ArrayList<String> partialKey;
+
+        stringBuilder.append("{");
+
+        for (String key : hourly.keySet()) {
+            splitKey = key.split("\\|");
+
+            if (league.equals("")) {
+                league = splitKey[0];
+                stringBuilder.append("\"");
+                stringBuilder.append(league);
+                stringBuilder.append("\": {");
+            } else if (!league.equals(splitKey[0])) {
+                league = splitKey[0];
+                stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+                type = "";
+                stringBuilder.append("}},\"");
+                stringBuilder.append(league);
+                stringBuilder.append("\": {");
+            }
+
+            if (type.equals("")) {
+                type = splitKey[1];
+                stringBuilder.append("\"");
+                stringBuilder.append(type);
+                stringBuilder.append("\": {");
+            } else if (!type.equals(splitKey[1])) {
+                type = splitKey[1];
+                stringBuilder.append("},\"");
+                stringBuilder.append(type);
+                stringBuilder.append("\": {");
+            }
+
+            // Make a copy so the original order persists
+            ArrayList<Double> tempValueList = new ArrayList<>();
+            tempValueList.addAll(hourly.get(key));
+            // Sort the entries in growing order
+            Collections.sort(tempValueList);
+
+            count = tempValueList.size();
+
+            mean = 0.0;
+            // Add up values to calculate mean
+            for (Double i : tempValueList) {
+                mean += i;
+            }
+
+            mean = Math.round(mean / count * 10000) / 10000.0;
+            median = count / 2.0;
+            median = Math.round(tempValueList.get(median.intValue()) * 10000) / 10000.0;
+
+            // Reassign count
+            //count = baseDatabase.get(key).size();
+
+            // Reassign key (remove the league and type)
+            key = ""; // TODO: simplify whateverthefuck this is supposed to be
+            for (int i = 0; i < splitKey.length; i++) {
+                if (i > 1)
+                    key += splitKey[i] + "|";
+            }
+
+            // Reassign key, removing league and type fields
+            partialKey = new ArrayList<>(Arrays.asList(splitKey));
+            partialKey.subList(0, 2).clear();
+            key = String.join("|", partialKey);
+
+            // Add JSON-encoded string
+            stringBuilder.append("\"");
+            stringBuilder.append(key);
+            stringBuilder.append("\": ");
+            stringBuilder.append("{\"median\": ");
+            stringBuilder.append(median);
+            stringBuilder.append(", \"mean\": ");
+            stringBuilder.append(mean);
+            stringBuilder.append(", \"count\": ");
+            stringBuilder.append(count);
+            stringBuilder.append("},");
+        }
+
+        stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+        stringBuilder.append("}");
+
+        return stringBuilder.toString();
+    }
+    */
 }

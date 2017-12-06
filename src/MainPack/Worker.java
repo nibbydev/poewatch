@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 02.12.2017
+    //  Last modified: 05.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private boolean flagLocalRun = true;
@@ -75,7 +75,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 02.12.2017
+        //  Last modified: 05.12.2017
         //  Description: Method that downloads data from the API
         //  Parent methods:
         //      run()
@@ -134,6 +134,7 @@ public class Worker extends Thread {
         } catch (Exception ex) {
             System.out.println("[ERROR] Caught worker download error:");
             ex.printStackTrace();
+            sleep(5000);
             this.nextChangeID = this.job;
             return "";
         }

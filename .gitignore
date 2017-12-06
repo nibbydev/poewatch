@@ -4,6 +4,7 @@
 /data/
 /out/
 /src/META-INF/MANIFEST.MF
+/data.txt
 
 # Log file
 *.log

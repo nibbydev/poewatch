@@ -61,7 +61,7 @@ public class Main {
     private static void commandLoop(WorkerController workerController, PricerController pricerController) {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
-        //  Last modified: 30.11.2017
+        //  Last modified: 06.12.2017
         //  Description: Command loop method. Allows the user some interaction with the script as it is running.
         //  Parent methods:
         //      main()
@@ -98,7 +98,7 @@ public class Main {
                     commandWorker(workerController, userInput);
                     break;
                 case "data":
-                    pricerController.devPrintData();
+                    //pricerController.devPrintData();
                     break;
                 default:
                     System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
