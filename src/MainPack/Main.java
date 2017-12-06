@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 30.11.2017
+        //  Last modified: 06.12.2017
         //  Description: The main class. Run this to run the program
 
         WorkerController workerController = new WorkerController();
@@ -19,7 +19,6 @@ public class Main {
         workerController.start();
 
         // Set default values and start the pricer controller
-        pricerController.setSleepLength(10);
         pricerController.start();
 
         // Ask the user how many workers should be spawned and spawn tem

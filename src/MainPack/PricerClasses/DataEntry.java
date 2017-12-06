@@ -8,7 +8,9 @@ public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
     //  Last modified: 06.12.2017
-    //  Description: An object that
+    //  Description: An object that stores an item's price data
+
+    private static int CYCLE_COUNT = 60;
 
     private int count = 0;
     private double mean = 0.0;
@@ -126,6 +128,9 @@ public class DataEntry {
         // Calculate mean and median values and round them to 3 digits
         this.mean = Math.round(mean / count * 10000) / 10000.0;
         this.median = Math.round(tempValueList.get((int) (count / 2.0)) * 10000) / 10000.0;
+
+        // Add value to hourly
+        hourlyData.add(this.median);
     }
 
     public void clearRawData() {
@@ -137,17 +142,37 @@ public class DataEntry {
         rawData.clear();
     }
 
-    ///////////////////////
-    // I/O helpers
-    ///////////////////////
+    /////////////////
+    // I/O helpers //
+    /////////////////
 
-    public String makeJSON() {
-        //  Name: makeJSON
-        //  Date created: 05.12.2017
-        //  Last modified: 05.12.2017
-        //  Description:
+    public String buildJSONPackage() {
+        //  Name: buildJSONPackage()
+        //  Date created: 06.12.2017
+        //  Last modified: 06.12.2017
+        //  Description: Creates a JSON-encoded string of hourly medians
 
-        return "{\"median\":" + median + ",\"mean\":" + mean + ",\"count\":" + count;
+        // Run every x cycles
+        if (hourlyData.size() < CYCLE_COUNT)
+            return "";
+
+        // Sort the entries in growing order
+        Collections.sort(hourlyData);
+        int count = hourlyData.size();
+
+        // Add up values to calculate mean
+        Double mean = 0.0;
+        for (Double i : hourlyData) {
+            mean += i;
+        }
+
+        mean = Math.round(mean / count * 10000) / 10000.0;
+        Double median = Math.round(hourlyData.get((int) (count / 2.0)) * 10000) / 10000.0;
+
+        // Clear hourly statistics values
+        hourlyData.clear();
+
+        return "{\"median\": " + median + ", \"mean\": " + mean + ", \"count\": " + count + "},";
     }
 
     public void parseIOLine(String[] splitLine) {
@@ -242,5 +267,7 @@ public class DataEntry {
         return baseData.isEmpty();
     }
 
-
+    public String getKey() {
+        return key;
+    }
 }
