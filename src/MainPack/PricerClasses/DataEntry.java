@@ -20,15 +20,24 @@ public class DataEntry {
     private ArrayList<String[]> rawData = new ArrayList<>();
     private ArrayList<Double> baseData = new ArrayList<>();
     private ArrayList<Double> hourlyData = new ArrayList<>();
+    private ArrayList<String> duplicates = new ArrayList<>();
 
-    public void addRaw (String key, Double value, String type) {
+    public void addRaw (String key, Double value, String type, String id) {
         //  Name: addRaw
         //  Date created: 05.12.2017
-        //  Last modified: 05.12.2017
+        //  Last modified: 06.12.2017
         //  Description: Method that adds entries to raw data database
+
+        // Skip duplicate items
+        if(duplicates.contains(id))
+            return;
 
         this.key = key;
         rawData.add(new String[]{Double.toString(value), type});
+
+        duplicates.add(id);
+        if(duplicates.size() > 64)
+            duplicates.subList(0, duplicates.size() - 64).clear();
     }
 
     public void buildBaseData(Map<String, DataEntry> statistics) {
@@ -55,7 +64,7 @@ public class DataEntry {
             }
 
             // Round it up
-            value = Math.round(value * 10000) / 10000.0;
+            value = Math.round(value * 1000) / 1000.0;
 
             if (value > 0.01)
                 baseData.add(value);
@@ -197,11 +206,16 @@ public class DataEntry {
             }
         }
 
-        // get stats
+        // get duplicates
         if(!splitLine[3].equals(" ")) {
-            count = Integer.parseInt(splitLine[3].split(",")[0]);
-            mean = Double.parseDouble(splitLine[3].split(",")[1]);
-            median = Double.parseDouble(splitLine[3].split(",")[2]);
+            Collections.addAll(duplicates, splitLine[3].split(","));
+        }
+
+        // get stats
+        if(!splitLine[4].equals(" ")) {
+            count = Integer.parseInt(splitLine[4].split(",")[0]);
+            mean = Double.parseDouble(splitLine[4].split(",")[1]);
+            median = Double.parseDouble(splitLine[4].split(",")[2]);
         }
     }
 
@@ -211,7 +225,7 @@ public class DataEntry {
         //  Last modified: 06.12.2017
         //  Description: Turns this object's values into a special string
 
-        StringBuilder stringBuilder = new StringBuilder();;
+        StringBuilder stringBuilder = new StringBuilder();
 
         // add base data
         stringBuilder.append(key);
@@ -225,6 +239,7 @@ public class DataEntry {
             }
             stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
         }
+
         // add hourly data
         stringBuilder.append("::");
         if(hourlyData.isEmpty()) {
@@ -232,6 +247,18 @@ public class DataEntry {
         } else {
             for (Double d : hourlyData) {
                 stringBuilder.append(d);
+                stringBuilder.append(",");
+            }
+            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+        }
+
+        // add duplicate IDs
+        stringBuilder.append("::");
+        if(duplicates.isEmpty()) {
+            stringBuilder.append(" ");
+        } else {
+            for (String s : duplicates) {
+                stringBuilder.append(s);
                 stringBuilder.append(",");
             }
             stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));

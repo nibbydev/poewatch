@@ -13,7 +13,7 @@ public class PricerController extends Thread {
     //  Last modified: 06.12.2017
     //  Description: A threaded object that manages databases
 
-    private static int SLEEP_CYCLE = 1;
+    private static int SLEEP_CYCLE = 60;
     private boolean flagLocalRun = true;
     private boolean flagPause = false;
     private static Map<String, String> currencyShorthands;
@@ -22,7 +22,6 @@ public class PricerController extends Thread {
     private static Map<String, Map<String, String>> itemVariants;
     private static Map<String, DataEntry> data = new TreeMap<>();
     private static StringBuilder JSONBuilder = new StringBuilder();
-    private static Calendar calendar = Calendar.getInstance();
 
     private static String lastLeague = "";
     private static String lastType = "";
@@ -171,7 +170,7 @@ public class PricerController extends Thread {
         readDataFromFile();
 
         while (true) {
-            sleepWhile(SLEEP_CYCLE * 60);
+            sleepWhile(SLEEP_CYCLE);
             System.out.println(timeStamp() + " Generating databases");
 
             // Break if run flag has been lowered
@@ -192,13 +191,15 @@ public class PricerController extends Thread {
                 packageJSON(entry);
             });
 
-            JSONBuilder.append("}");
+            JSONBuilder.append("}}}");
 
             writeDataToFile();
             writeJSONToFile();
 
             // Clear string builder
             JSONBuilder.setLength(0);
+            lastType = "";
+            lastLeague = "";
 
             flagPause = false;
         }
@@ -227,12 +228,12 @@ public class PricerController extends Thread {
 
     private String timeStamp(){
         //  Name: sleepWhile()
-        //  Date created: 28.11.2017
-        //  Last modified: 29.11.2017
+        //  Date created: 06.12.2017
+        //  Last modified: 06.12.2017
         //  Description: Returns time in the format of [15:21]
 
         // This is a bug with Calendar
-        calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance();
 
         return "[" + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + "]";
     }
@@ -287,7 +288,7 @@ public class PricerController extends Thread {
 
         // Add item to database
         data.putIfAbsent(item.getKey(), new DataEntry());
-        data.get(item.getKey()).addRaw(item.getKey(), item.getPrice(), item.getPriceType());
+        data.get(item.getKey()).addRaw(item.getKey(), item.getPrice(), item.getPriceType(), item.getId());
     }
 
     private void basicChecks(Item item) {
@@ -737,7 +738,7 @@ public class PricerController extends Thread {
         }
 
         // Generate and add statistical data to the JSON skeleton
-        //JSONBuilder.append("{");
+        //JSONBuilder.append("}");
         JSONBuilder.append("\"");
         JSONBuilder.append(key);
         JSONBuilder.append("\": ");
