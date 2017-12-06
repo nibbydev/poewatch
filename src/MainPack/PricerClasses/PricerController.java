@@ -13,7 +13,7 @@ public class PricerController extends Thread {
     //  Last modified: 06.12.2017
     //  Description: A threaded object that manages databases
 
-    private static int SLEEP_CYCLE = 10;
+    private static int SLEEP_CYCLE = 1;
     private boolean flagLocalRun = true;
     private boolean flagPause = false;
     private static Map<String, String> currencyShorthands;
@@ -22,6 +22,7 @@ public class PricerController extends Thread {
     private static Map<String, Map<String, String>> itemVariants;
     private static Map<String, DataEntry> data = new TreeMap<>();
     private static StringBuilder JSONBuilder = new StringBuilder();
+    private static Calendar calendar = Calendar.getInstance();
 
     private static String lastLeague = "";
     private static String lastType = "";
@@ -167,12 +168,11 @@ public class PricerController extends Thread {
         //  Last modified: 06.12.2017
         //  Description: Contains the main loop of the pricing service
 
-        Calendar calendar = Calendar.getInstance();
         readDataFromFile();
 
         while (true) {
             sleepWhile(SLEEP_CYCLE * 60);
-            System.out.println("[" + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + "] Generating databases");
+            System.out.println(timeStamp() + " Generating databases");
 
             // Break if run flag has been lowered
             if (!flagLocalRun)
@@ -223,6 +223,18 @@ public class PricerController extends Thread {
             if (!flagLocalRun)
                 break;
         }
+    }
+
+    private String timeStamp(){
+        //  Name: sleepWhile()
+        //  Date created: 28.11.2017
+        //  Last modified: 29.11.2017
+        //  Description: Returns time in the format of [15:21]
+
+        // This is a bug with Calendar
+        calendar = Calendar.getInstance();
+
+        return "[" + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + "]";
     }
 
     ///////////////////////////
@@ -740,11 +752,10 @@ public class PricerController extends Thread {
         //  Last modified: 06.12.2017
         //  Description: Basically writes JSON string to file
 
-        if(JSONBuilder.length() < 1)
+        if(JSONBuilder.length() < 10)
             return;
 
-        Calendar calendar = Calendar.getInstance();
-        System.out.println("[" + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + "] Building JSON");
+        System.out.println(timeStamp() + " Building JSON");
 
         OutputStream fOut = null;
 
