@@ -1,5 +1,7 @@
 package MainPack.PricerClasses;
 
+import MainPack.MapperClasses.Item;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
@@ -11,7 +13,7 @@ public class DataEntry {
     //  Description: An object that stores an item's price data
 
     private static int CYCLE_COUNT = 0;
-    private static int CYCLE_LIMIT = 60;
+    private static int CYCLE_LIMIT = 5;
 
     private int count = 0;
     private double mean = 0.0;
@@ -23,24 +25,24 @@ public class DataEntry {
     private ArrayList<Double> hourlyData = new ArrayList<>();
     private ArrayList<String> duplicates = new ArrayList<>();
 
-    public void addRaw (String key, Double value, String type, String id) {
+    public void addRaw (Item item) {
         //  Name: addRaw
         //  Date created: 05.12.2017
         //  Last modified: 08.12.2017
         //  Description: Method that adds entries to raw data database
 
         // Skip duplicate items
-        if(duplicates.contains(id))
+        if(duplicates.contains(item.getId()))
             return;
 
         // Assign key and add value to raw data array
-        this.key = key;
-        rawData.add(new String[]{Double.toString(value), type});
+        this.key = item.getKey();
+        rawData.add(new String[]{Double.toString(item.getPrice()), item.getPriceType()});
 
         // Add item ID to duplicate list
-        duplicates.add(id);
+        duplicates.add(item.getId());
         if(duplicates.size() > 60)
-            duplicates.subList(0, duplicates.size() - 64).clear();
+            duplicates.subList(0, duplicates.size() - 60).clear();
     }
 
     public void buildBaseData(Map<String, DataEntry> statistics) {
@@ -169,9 +171,7 @@ public class DataEntry {
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
-        if (CYCLE_COUNT < CYCLE_LIMIT)
-            return "";
-        else if (hourlyData.size() < 60)
+        if (CYCLE_COUNT < CYCLE_LIMIT || hourlyData.size() < CYCLE_LIMIT)
             return "";
         else
             CYCLE_COUNT = 0;
@@ -200,7 +200,7 @@ public class DataEntry {
         //  Name: parseIOLine()
         //  Date created: 06.12.2017
         //  Last modified: 08.12.2017
-        //  Description: Turns a string array into values
+        //  Description: Reads values from a string and adds them to the lists
 
         key = splitLine[0];
 
@@ -213,13 +213,13 @@ public class DataEntry {
 
         // get basedata
         if(!splitLine[2].equals("-")) {
-            for (String value : splitLine[1].split(",")) {
+            for (String value : splitLine[2].split(",")) {
                 baseData.add(Double.parseDouble(value));
             }
         }
 
         // get duplicates
-        if(!splitLine[2].equals("-")) {
+        if(!splitLine[3].equals("-")) {
             Collections.addAll(duplicates, splitLine[3].split(","));
         }
     }
@@ -228,11 +228,12 @@ public class DataEntry {
         //  Name: makeIOLine()
         //  Date created: 06.12.2017
         //  Last modified: 08.12.2017
-        //  Description: Turns this object's values into a special string
+        //  Description: Converts this object's values into a string
 
         StringBuilder stringBuilder = new StringBuilder();
 
         // add stats
+        stringBuilder.append(key);
         stringBuilder.append("::");
         if(median + mean > 0) {
             stringBuilder.append(count);
@@ -245,7 +246,6 @@ public class DataEntry {
         }
 
         // add base data
-        stringBuilder.append(key);
         stringBuilder.append("::");
         if(baseData.isEmpty()) {
             stringBuilder.append("-");
