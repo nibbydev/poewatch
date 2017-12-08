@@ -3,6 +3,8 @@ package MainPack;
 import MainPack.PricerClasses.PricerController;
 import NotMadeByMe.TextIO;
 
+import java.util.Calendar;
+
 public class Main {
     public static void main(String[] args) {
         //  Name: main()
@@ -98,6 +100,33 @@ public class Main {
                     break;
             }
         }
+    }
+
+    public static String timeStamp(){
+        //  Name: timeStamp()
+        //  Date created: 06.12.2017
+        //  Last modified: 08.12.2017
+        //  Description: Returns time in the format of [HH:MM]
+
+        String hour, minute;
+
+        // Refresh calendar (this is a bug with Calendar)
+        Calendar calendar = Calendar.getInstance();
+
+        // Format hour
+        if (calendar.get(Calendar.HOUR_OF_DAY) < 10)
+            hour = "0" + calendar.get(Calendar.HOUR_OF_DAY);
+        else
+            hour = "" + calendar.get(Calendar.HOUR_OF_DAY);
+
+        // Format minute
+        if (calendar.get(Calendar.MINUTE) < 10)
+            minute = "0" + calendar.get(Calendar.MINUTE);
+        else
+            minute = "" + calendar.get(Calendar.MINUTE);
+
+        // Return [HH:MM]
+        return "[" + hour + ":" + minute + "]";
     }
 
     ////////////////////////////////////////

@@ -7,10 +7,12 @@ import MainPack.MapperClasses.Socket;
 import java.io.*;
 import java.util.*;
 
+import static MainPack.Main.timeStamp;
+
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 06.12.2017
+    //  Last modified: 08.12.2017
     //  Description: A threaded object that manages databases
 
     private static int SLEEP_CYCLE = 60;
@@ -164,9 +166,10 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Contains the main loop of the pricing service
 
+        // Load data in on initial script launch
         readDataFromFile();
 
         while (true) {
@@ -181,6 +184,9 @@ public class PricerController extends Thread {
             flagPause = true;
 
             JSONBuilder.append("{");
+
+            // Increase DataEntry's static cycle count
+            DataEntry.incCycleCount();
 
             // manage+write data
             data.forEach((String key, DataEntry entry) -> {
@@ -224,18 +230,6 @@ public class PricerController extends Thread {
             if (!flagLocalRun)
                 break;
         }
-    }
-
-    private String timeStamp(){
-        //  Name: sleepWhile()
-        //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
-        //  Description: Returns time in the format of [15:21]
-
-        // This is a bug with Calendar
-        Calendar calendar = Calendar.getInstance();
-
-        return "[" + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + "]";
     }
 
     ///////////////////////////
@@ -753,7 +747,7 @@ public class PricerController extends Thread {
         //  Last modified: 06.12.2017
         //  Description: Basically writes JSON string to file
 
-        if(JSONBuilder.length() < 10)
+        if(JSONBuilder.length() < 30)
             return;
 
         System.out.println(timeStamp() + " Building JSON");

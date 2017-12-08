@@ -14,10 +14,12 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static MainPack.Main.timeStamp;
+
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 05.12.2017
+    //  Last modified: 08.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private boolean flagLocalRun = true;
@@ -75,7 +77,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 05.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Method that downloads data from the API
         //  Parent methods:
         //      run()
@@ -98,19 +100,6 @@ public class Worker extends Thread {
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
             InputStream stream = connection.getInputStream();
 
-            // Handle a bad response
-            if (connection.getResponseCode() != 200) {
-                if (connection.getResponseCode() == 429) {
-                    System.out.println("[ERROR] Client was timed out");
-                    sleep(5000);
-                }
-
-                // Set uncompleted job as new job, allowing another worker to finish it
-                this.nextChangeID = this.job;
-                // Return empty value
-                return "";
-            }
-
             // Stream data and count bytes
             while ((byteCount = stream.read(byteBuffer, 0, chunkSize)) != -1) {
                 // Check if run flag is lowered
@@ -132,11 +121,16 @@ public class Worker extends Thread {
             }
 
         } catch (Exception ex) {
-            System.out.println("[ERROR] Caught worker download error:");
-            ex.printStackTrace();
-            sleep(5000);
-            this.nextChangeID = this.job;
-            return "";
+            System.out.println("[" + timeStamp() + "] Caught worker download error: " + ex.getMessage());
+
+            // Add old changeID to the pool only if a new one hasn't been found
+            if(regexLock) {
+                sleep(5000);
+                this.nextChangeID = this.job;
+            }
+
+            // Clear the buffer so that an empty string will be returned instead
+            stringBuilderBuffer.setLength(0);
         }
 
         // Return the downloaded mess of a JSON string

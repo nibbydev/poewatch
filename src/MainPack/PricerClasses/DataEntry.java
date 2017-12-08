@@ -7,10 +7,11 @@ import java.util.Map;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 06.12.2017
+    //  Last modified: 08.12.2017
     //  Description: An object that stores an item's price data
 
-    private static int CYCLE_COUNT = 60;
+    private static int CYCLE_COUNT = 0;
+    private static int CYCLE_LIMIT = 60;
 
     private int count = 0;
     private double mean = 0.0;
@@ -25,18 +26,20 @@ public class DataEntry {
     public void addRaw (String key, Double value, String type, String id) {
         //  Name: addRaw
         //  Date created: 05.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Method that adds entries to raw data database
 
         // Skip duplicate items
         if(duplicates.contains(id))
             return;
 
+        // Assign key and add value to raw data array
         this.key = key;
         rawData.add(new String[]{Double.toString(value), type});
 
+        // Add item ID to duplicate list
         duplicates.add(id);
-        if(duplicates.size() > 64)
+        if(duplicates.size() > 60)
             duplicates.subList(0, duplicates.size() - 64).clear();
     }
 
@@ -99,7 +102,7 @@ public class DataEntry {
     public void buildStatistics() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Method that adds entries to statistics
 
         Double mean  = 0.0;
@@ -140,6 +143,10 @@ public class DataEntry {
 
         // Add value to hourly
         hourlyData.add(this.median);
+
+        // Limit hourly to 60 values
+        if (hourlyData.size() > 60)
+            hourlyData.subList(0, hourlyData.size() - 24).clear();
     }
 
     public void clearRawData() {
@@ -158,111 +165,72 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
-        // Run every x cycles
-        if (hourlyData.size() < CYCLE_COUNT)
+        // Run every x cycles AND if there's enough data
+        if (CYCLE_COUNT < CYCLE_LIMIT)
             return "";
+        else if (hourlyData.size() < 60)
+            return "";
+        else
+            CYCLE_COUNT = 0;
 
-        // Sort the entries in growing order
-        Collections.sort(hourlyData);
-        int count = hourlyData.size();
+        // Make a copy so the original order persists and sort the entries in growing order
+        ArrayList<Double> tempValueList = new ArrayList<>();
+        tempValueList.addAll(hourlyData);
+        Collections.sort(tempValueList);
+
+        // TODO: This *should* be 60 every single time
+        int count = tempValueList.size();
 
         // Add up values to calculate mean
         Double mean = 0.0;
-        for (Double i : hourlyData) {
+        for (Double i : tempValueList) {
             mean += i;
         }
 
         mean = Math.round(mean / count * 10000) / 10000.0;
-        Double median = Math.round(hourlyData.get((int) (count / 2.0)) * 10000) / 10000.0;
+        Double median = Math.round(tempValueList.get((int) (count / 2.0)) * 10000) / 10000.0;
 
-        // Clear hourly statistics values
-        hourlyData.clear();
-
-        return "{\"median\": " + median + ", \"mean\": " + mean + ", \"count\": " + count + "},";
+        return "{\"median\": " + median + ", \"mean\": " + mean + ", \"count\": " + baseData.size() + "},";
     }
 
     public void parseIOLine(String[] splitLine) {
         //  Name: parseIOLine()
         //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Turns a string array into values
 
         key = splitLine[0];
 
+        // get stats
+        if(!splitLine[1].equals("-")) {
+            count = Integer.parseInt(splitLine[1].split(",")[0]);
+            mean = Double.parseDouble(splitLine[1].split(",")[1]);
+            median = Double.parseDouble(splitLine[1].split(",")[2]);
+        }
+
         // get basedata
-        if(!splitLine[1].equals(" ")) {
+        if(!splitLine[2].equals("-")) {
             for (String value : splitLine[1].split(",")) {
                 baseData.add(Double.parseDouble(value));
             }
         }
 
-        // get hourly
-        if(!splitLine[2].equals(" ")) {
-            for (String value : splitLine[2].split(",")) {
-                hourlyData.add(Double.parseDouble(value));
-            }
-        }
-
         // get duplicates
-        if(!splitLine[3].equals(" ")) {
+        if(!splitLine[2].equals("-")) {
             Collections.addAll(duplicates, splitLine[3].split(","));
-        }
-
-        // get stats
-        if(!splitLine[4].equals(" ")) {
-            count = Integer.parseInt(splitLine[4].split(",")[0]);
-            mean = Double.parseDouble(splitLine[4].split(",")[1]);
-            median = Double.parseDouble(splitLine[4].split(",")[2]);
         }
     }
 
     public String makeIOLine() {
         //  Name: makeIOLine()
         //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Turns this object's values into a special string
 
         StringBuilder stringBuilder = new StringBuilder();
-
-        // add base data
-        stringBuilder.append(key);
-        stringBuilder.append("::");
-        if(baseData.isEmpty()) {
-            stringBuilder.append(" ");
-        } else {
-            for (Double d : baseData) {
-                stringBuilder.append(d);
-                stringBuilder.append(",");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
-        }
-
-        // add hourly data
-        stringBuilder.append("::");
-        if(hourlyData.isEmpty()) {
-            stringBuilder.append(" ");
-        } else {
-            for (Double d : hourlyData) {
-                stringBuilder.append(d);
-                stringBuilder.append(",");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
-        }
-
-        // add duplicate IDs
-        stringBuilder.append("::");
-        if(duplicates.isEmpty()) {
-            stringBuilder.append(" ");
-        } else {
-            for (String s : duplicates) {
-                stringBuilder.append(s);
-                stringBuilder.append(",");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
-        }
 
         // add stats
         stringBuilder.append("::");
@@ -273,12 +241,36 @@ public class DataEntry {
             stringBuilder.append(",");
             stringBuilder.append(median);
         } else {
-            stringBuilder.append(" ");
+            stringBuilder.append("-");
         }
 
-        // add newline
-        stringBuilder.append("\n");
+        // add base data
+        stringBuilder.append(key);
+        stringBuilder.append("::");
+        if(baseData.isEmpty()) {
+            stringBuilder.append("-");
+        } else {
+            for (Double d : baseData) {
+                stringBuilder.append(d);
+                stringBuilder.append(",");
+            }
+            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+        }
 
+        // add duplicate IDs
+        stringBuilder.append("::");
+        if(duplicates.isEmpty()) {
+            stringBuilder.append("-");
+        } else {
+            for (String s : duplicates) {
+                stringBuilder.append(s);
+                stringBuilder.append(",");
+            }
+            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+        }
+
+        // add newline and return
+        stringBuilder.append("\n");
         return stringBuilder.toString();
     }
 
@@ -296,5 +288,9 @@ public class DataEntry {
 
     public String getKey() {
         return key;
+    }
+
+    public static void incCycleCount() {
+        CYCLE_COUNT++;
     }
 }
