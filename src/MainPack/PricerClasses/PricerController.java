@@ -1,6 +1,8 @@
 package MainPack.PricerClasses;
 
+import MainPack.MapperClasses.APIReply;
 import MainPack.MapperClasses.Item;
+import MainPack.MapperClasses.Stash;
 
 import java.io.*;
 import java.util.*;
@@ -13,7 +15,7 @@ public class PricerController extends Thread {
     //  Last modified: 08.12.2017
     //  Description: A threaded object that manages databases
 
-    private static int SLEEP_CYCLE = 60;
+    private static final int SLEEP_CYCLE = 60;
     private boolean flagLocalRun = true;
     private boolean flagPause = false;
     private static Map<String, DataEntry> data = new TreeMap<>();
@@ -56,7 +58,7 @@ public class PricerController extends Thread {
                 packageJSON(entry);
             });
 
-            JSONBuilder.append("}}}");
+            JSONBuilder.append("}");
 
             writeDataToFile();
             writeJSONToFile();
@@ -65,7 +67,6 @@ public class PricerController extends Thread {
             JSONBuilder.setLength(0);
             lastType = "";
             lastLeague = "";
-
             flagPause = false;
         }
     }
@@ -91,30 +92,35 @@ public class PricerController extends Thread {
         }
     }
 
-    public void checkItem(Item item) {
-        //  Name: checkItem()
+    public void parseItems(APIReply reply) {
+        //  Name: parseItems()
         //  Date created: 28.11.2017
         //  Last modified: 08.12.2017
         //  Description: Method that's used to add entries to the databases
 
-        // Pause during I/O operations
-        while (flagPause) {
-            // Sleep for 100ms
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
+        // Loop through every single item, checking every single one of them
+        for (Stash stash : reply.getStashes()) {
+            for (Item item : stash.getItems()) {
+                // Pause during I/O operations
+                while (flagPause) {
+                    // Sleep for 100ms
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
+                // Parse item data
+                item.parseItem();
+                if(item.isDiscard())
+                    return;
+
+                // Add item to database
+                data.putIfAbsent(item.getKey(), new DataEntry());
+                data.get(item.getKey()).addRaw(item);
             }
         }
-
-        // Parse item data
-        item.parseItem();
-        if(item.isDiscard())
-            return;
-
-        // Add item to database
-        data.putIfAbsent(item.getKey(), new DataEntry());
-        data.get(item.getKey()).addRaw(item);
     }
 
     //////////////////////////////////////
@@ -186,7 +192,7 @@ public class PricerController extends Thread {
     private void packageJSON(DataEntry entry) {
         //  Name: packageJSON()
         //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Packages JSON and writes to file
 
         String JSONPacket = entry.buildJSONPackage();
@@ -212,13 +218,16 @@ public class PricerController extends Thread {
             JSONBuilder.append("\"");
             JSONBuilder.append(lastLeague);
             JSONBuilder.append("\": {");
-        } else if (!lastLeague.equals(splitKey[0])) {
-            lastLeague = splitKey[0];
-            JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf(","));
-            JSONBuilder.append("}},\"");
-            JSONBuilder.append(lastLeague);
-            JSONBuilder.append("\": {");
-            lastType = "";
+        } else {
+            if (lastLeague.equals(splitKey[0])) {
+                JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
+            } else {
+                lastLeague = splitKey[0];
+                JSONBuilder.append(",\"");
+                JSONBuilder.append(lastLeague);
+                JSONBuilder.append("\": {");
+                lastType = "";
+            }
         }
 
         // Check if key (item type) has been changed
@@ -227,21 +236,24 @@ public class PricerController extends Thread {
             JSONBuilder.append("\"");
             JSONBuilder.append(lastType);
             JSONBuilder.append("\": {");
-        } else if (!lastType.equals(splitKey[1])) {
-            lastType = splitKey[1];
-            JSONBuilder.append("},\"");
-            JSONBuilder.append(lastType);
-            JSONBuilder.append("\": {");
+        } else {
+            if (lastType.equals(splitKey[1])) {
+                JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
+                JSONBuilder.append(",");
+            } else {
+                lastType = splitKey[1];
+                JSONBuilder.append(",\"");
+                JSONBuilder.append(lastType);
+                JSONBuilder.append("\": {");
+            }
         }
 
         // Generate and add statistical data to the JSON skeleton
-        //JSONBuilder.append("}");
         JSONBuilder.append("\"");
         JSONBuilder.append(key);
         JSONBuilder.append("\": ");
         JSONBuilder.append(JSONPacket);
-        JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf(","));
-        //JSONBuilder.append("}");
+        JSONBuilder.append("}}");
     }
 
     private void writeJSONToFile() {
@@ -252,6 +264,9 @@ public class PricerController extends Thread {
 
         if(JSONBuilder.length() < 5)
             return;
+
+        // Zero DataEntry's static cycle count
+        DataEntry.zeroCycleCount();
 
         System.out.println(timeStamp() + " Building JSON");
 

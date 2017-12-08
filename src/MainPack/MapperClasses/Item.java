@@ -376,10 +376,9 @@ public class Item {
         //      checkItem()
 
         // This is bad and I'm bad
-        if(itemType.equals("Staves") || itemType.equals("BodyArmours") || itemType.equals("TwoHandSwords"))
-            return;
-        else if (itemType.equals("TwoHandMaces") || itemType.equals("TwoHandAxes") || itemType.equals("Bows"))
-            return;
+        if(!itemType.equals("Staves") && !itemType.equals("BodyArmours") && !itemType.equals("TwoHandSwords"))
+            if (!itemType.equals("TwoHandMaces") && !itemType.equals("TwoHandAxes") && !itemType.equals("Bows"))
+                return;
 
         // Group links together
         Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};

@@ -35,12 +35,11 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 02.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Contains the main loop of the worker
         //  Child methods:
         //      downloadData()
         //      deSerializeJSONString()
-        //      parseItems()
         //      sleep()
 
         String replyJSONString;
@@ -65,7 +64,7 @@ public class Worker extends Thread {
                     continue;
 
                 // Parse the deserialized JSON
-                parseItems(reply);
+                pricerController.parseItems(reply);
 
                 // Clear the job
                 setJob("");
@@ -180,23 +179,6 @@ public class Worker extends Thread {
         }
 
         return reply;
-    }
-
-    private void parseItems(APIReply reply) {
-        //  Name: parseItems()
-        //  Date created: 23.11.2017
-        //  Last modified: 29.11.2017
-        //  Description: Checks every item the script has found against preset filters
-        //  Parent methods:
-        //      run()
-
-        // Loop through every single item, checking every single one of them
-        for (Stash stash : reply.getStashes()) {
-            for (Item item : stash.getItems()) {
-                // Run through pricing service
-                pricerController.checkItem(item);
-            }
-        }
     }
 
     private void sleep(int timeMS) {

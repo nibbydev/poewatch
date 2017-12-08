@@ -114,10 +114,10 @@ public class Main {
         Calendar calendar = Calendar.getInstance();
 
         // Format hour
-        if (calendar.get(Calendar.HOUR_OF_DAY) < 10)
-            hour = "0" + calendar.get(Calendar.HOUR_OF_DAY);
+        if ((calendar.get(Calendar.HOUR_OF_DAY) + 2) < 10)
+            hour = "0" + (calendar.get(Calendar.HOUR_OF_DAY) + 2);
         else
-            hour = "" + calendar.get(Calendar.HOUR_OF_DAY);
+            hour = "" + (calendar.get(Calendar.HOUR_OF_DAY) + 2);
 
         // Format minute
         if (calendar.get(Calendar.MINUTE) < 10)

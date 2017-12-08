@@ -13,7 +13,7 @@ public class DataEntry {
     //  Description: An object that stores an item's price data
 
     private static int CYCLE_COUNT = 0;
-    private static int CYCLE_LIMIT = 5;
+    private static final int CYCLE_LIMIT = 5;
 
     private int count = 0;
     private double mean = 0.0;
@@ -48,7 +48,7 @@ public class DataEntry {
     public void buildBaseData(Map<String, DataEntry> statistics) {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 08.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         String index;
@@ -78,6 +78,8 @@ public class DataEntry {
         // Soft-cap list at 100 entries
         if (baseData.size() > 100)
             baseData.subList(0, baseData.size() - 100).clear();
+
+        this.count = baseData.size();
     }
 
     public void purgeBaseData() {
@@ -148,7 +150,7 @@ public class DataEntry {
 
         // Limit hourly to 60 values
         if (hourlyData.size() > 60)
-            hourlyData.subList(0, hourlyData.size() - 24).clear();
+            hourlyData.subList(0, hourlyData.size() - 60).clear();
     }
 
     public void clearRawData() {
@@ -171,18 +173,13 @@ public class DataEntry {
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
-        if (CYCLE_COUNT < CYCLE_LIMIT || hourlyData.size() < CYCLE_LIMIT)
+        if (CYCLE_COUNT < CYCLE_LIMIT || hourlyData.isEmpty())
             return "";
-        else
-            CYCLE_COUNT = 0;
 
         // Make a copy so the original order persists and sort the entries in growing order
         ArrayList<Double> tempValueList = new ArrayList<>();
         tempValueList.addAll(hourlyData);
         Collections.sort(tempValueList);
-
-        // TODO: This *should* be 60 every single time
-        int count = tempValueList.size();
 
         // Add up values to calculate mean
         Double mean = 0.0;
@@ -190,10 +187,11 @@ public class DataEntry {
             mean += i;
         }
 
+        int count = tempValueList.size();
         mean = Math.round(mean / count * 10000) / 10000.0;
         Double median = Math.round(tempValueList.get((int) (count / 2.0)) * 10000) / 10000.0;
 
-        return "{\"median\": " + median + ", \"mean\": " + mean + ", \"count\": " + baseData.size() + "},";
+        return "{\"median\": " + median + ", \"mean\": " + mean + ", \"count\": " + this.count + "}";
     }
 
     public void parseIOLine(String[] splitLine) {
@@ -292,5 +290,9 @@ public class DataEntry {
 
     public static void incCycleCount() {
         CYCLE_COUNT++;
+    }
+
+    public static void zeroCycleCount() {
+        CYCLE_COUNT = 0;
     }
 }
