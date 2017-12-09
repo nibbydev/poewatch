@@ -37,7 +37,7 @@ public class Item {
     private String itemType;
     private String key = "";
 
-    private static Map<String, String> currencyShorthandsMap = new TreeMap<>() {{
+    private static final Map<String, String> currencyShorthandsMap = new TreeMap<>() {{
         put("exalt", "Exalted Orb");
         put("regret", "Orb of Regret");
         put("divine", "Divine Orb");
@@ -90,7 +90,7 @@ public class Item {
         put("aug", "Orb of Augmentation");
         put("mirror", "Mirror of Kalandra");
     }};
-    private static Map<String, String> baseCurrencyIndexesMap = new TreeMap<>() {{
+    private static final Map<String, String> baseCurrencyIndexesMap = new TreeMap<>() {{
         put("Chaos Orb", "1");
         put("Exalted Orb", "2");
         put("Divine Orb", "3");
@@ -379,6 +379,12 @@ public class Item {
         if(!itemType.equals("Staves") && !itemType.equals("BodyArmours") && !itemType.equals("TwoHandSwords"))
             if (!itemType.equals("TwoHandMaces") && !itemType.equals("TwoHandAxes") && !itemType.equals("Bows"))
                 return;
+
+        // This was an error somehow, somewhere
+        if(sockets == null){
+            setDiscard();
+            return;
+        }
 
         // Group links together
         Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};

@@ -7,6 +7,7 @@ import MainPack.PricerClasses.PricerController;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -89,6 +90,7 @@ public class Worker extends Thread {
         byte[] byteBuffer = new byte[chunkSize];
         boolean regexLock = true;
         int byteCount;
+        InputStream stream = null;
 
         // Sleep for 500ms
         sleep(500);
@@ -97,7 +99,7 @@ public class Worker extends Thread {
             // Define the request
             URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
-            InputStream stream = connection.getInputStream();
+            stream = connection.getInputStream();
 
             // Stream data and count bytes
             while ((byteCount = stream.read(byteBuffer, 0, chunkSize)) != -1) {
@@ -120,7 +122,7 @@ public class Worker extends Thread {
             }
 
         } catch (Exception ex) {
-            System.out.println("[" + timeStamp() + "] Caught worker download error: " + ex.getMessage());
+            System.out.println(timeStamp() + " Caught worker download error: " + ex.getMessage());
 
             // Add old changeID to the pool only if a new one hasn't been found
             if(regexLock) {
@@ -130,6 +132,11 @@ public class Worker extends Thread {
 
             // Clear the buffer so that an empty string will be returned instead
             stringBuilderBuffer.setLength(0);
+        } finally {
+            try {
+                if (stream != null)
+                    stream.close();
+            } catch (IOException ex) {}
         }
 
         // Return the downloaded mess of a JSON string
