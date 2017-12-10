@@ -12,7 +12,7 @@ import static MainPack.Main.timeStamp;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 08.12.2017
+    //  Last modified: 10.12.2017
     //  Description: A threaded object that manages databases
 
     private static final int SLEEP_CYCLE = 60;
@@ -95,7 +95,7 @@ public class PricerController extends Thread {
     public void parseItems(APIReply reply) {
         //  Name: parseItems()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 10.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Loop through every single item, checking every single one of them
@@ -113,8 +113,8 @@ public class PricerController extends Thread {
 
                 // Parse item data
                 item.parseItem();
-                if(item.isDiscard())
-                    return;
+                if (item.isDiscard())
+                    continue; // FML. this used to be return
 
                 // Add item to database
                 data.putIfAbsent(item.getKey(), new DataEntry());
@@ -196,7 +196,7 @@ public class PricerController extends Thread {
         //  Description: Packages JSON and writes to file
 
         String JSONPacket = entry.buildJSONPackage();
-        if(JSONPacket.equals(""))
+        if (JSONPacket.equals(""))
             return;
 
         // Reassign key (remove the league and type)
@@ -262,7 +262,7 @@ public class PricerController extends Thread {
         //  Last modified: 08.12.2017
         //  Description: Basically writes JSON string to file
 
-        if(JSONBuilder.length() < 5)
+        if (JSONBuilder.length() < 5)
             return;
 
         // Zero DataEntry's static cycle count
