@@ -9,7 +9,7 @@ import java.util.Map;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 08.12.2017
+    //  Last modified: 09.12.2017
     //  Description: An object that stores an item's price data
 
     private static int CYCLE_COUNT = 0;
@@ -45,10 +45,10 @@ public class DataEntry {
             duplicates.subList(0, duplicates.size() - 60).clear();
     }
 
-    public void buildBaseData(Map<String, DataEntry> statistics) {
+    public void buildBaseData(Map<String, DataEntry> database) {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 09.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         String index;
@@ -60,18 +60,19 @@ public class DataEntry {
             index = entry[1];
 
             // If we have the median price, use that
-            if (!index.equals("1")) {
+            if (!index.equals("Chaos Orb")) {
+                String currencyKey = key.split("\\|")[0] + "|Currency|" + index + "|5";
                 // If there's a value in the statistics database, use that
-                if (statistics.containsKey(key))
-                    value = value * statistics.get(key).getMedian();
+                if (database.containsKey(currencyKey))
+                    value = value * database.get(currencyKey).getMedian();
                 else
                     continue;
             }
 
             // Round it up
-            value = Math.round(value * 1000) / 1000.0;
+            value = Math.round(value * 10000) / 10000.0;
 
-            if (value > 0.01)
+            if (value > 0.001)
                 baseData.add(value);
         }
 

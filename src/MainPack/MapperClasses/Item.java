@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class Item {
     //  Name: Item
     //  Date created: 23.11.2017
-    //  Last modified: 08.12.2017
+    //  Last modified: 09.12.2017
     //  Description: Class used for deserializing a JSON string
 
     private int w;
@@ -90,37 +90,6 @@ public class Item {
         put("aug", "Orb of Augmentation");
         put("mirror", "Mirror of Kalandra");
     }};
-    private static final Map<String, String> baseCurrencyIndexesMap = new TreeMap<>() {{
-        put("Chaos Orb", "1");
-        put("Exalted Orb", "2");
-        put("Divine Orb", "3");
-        put("Orb of Alchemy", "4");
-        put("Orb of Fusing", "5");
-        put("Orb of Alteration", "6");
-        put("Regal Orb", "7");
-        put("Vaal Orb", "8");
-        put("Orb of Regret", "9");
-        put("Cartographer's Chisel", "10");
-        put("Jeweller's Orb", "11");
-        put("Silver Coin", "12");
-        put("Perandus Coin", "13");
-        put("Orb of Scouring", "14");
-        put("Gemcutter's Prism", "15");
-        put("Orb of Chance", "16");
-        put("Chromatic Orb", "17");
-        put("Blessed Orb", "18");
-        put("Glassblower's Bauble", "19");
-        put("Orb of Augmentation", "20");
-        put("Orb of Transmutation", "21");
-        put("Mirror of Kalandra", "22");
-        put("Scroll of Wisdom", "23");
-        put("Portal Scroll", "24");
-        put("Blacksmith's Whetstone", "25");
-        put("Armourer's Scrap", "26");
-        put("Apprentice Cartographer's Sextant", "27");
-        put("Journeyman Cartographer's Sextant", "28");
-        put("Master Cartographer's Sextant", "29");
-    }};
 
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
@@ -129,7 +98,7 @@ public class Item {
     public void parseItem(){
         //  Name: parseItem()
         //  Date created: 08.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 09.12.2017
         //  Description: Calls other Item class related methods.
 
         // Do a few checks on the league, note and etc
@@ -146,8 +115,10 @@ public class Item {
         formatNameAndItemType();
 
         // Filter out white base types (but allow maps)
-        if (frameType == 0 && !itemType.contains("maps"))
+        if (frameType == 0 && !itemType.contains("maps")) {
+            setDiscard();
             return;
+        }
 
         // Check gem info or check links and variants
         if (frameType == 4) {
@@ -189,7 +160,7 @@ public class Item {
     private void parseNote() {
         //  Name: parseNote()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 09.12.2017
         //  Description: Checks and formats notes (user-inputted textfields that usually contain price data)
         //  Parent methods:
         //      parseItem()
@@ -230,7 +201,7 @@ public class Item {
         }
 
         // Add currency type to item
-        this.priceType = baseCurrencyIndexesMap.get(currencyShorthandsMap.get(noteList[2]));
+        this.priceType = currencyShorthandsMap.get(noteList[2]);
     }
 
     private void formatNameAndItemType() {
