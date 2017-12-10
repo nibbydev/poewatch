@@ -315,9 +315,4 @@ public class DataEntry {
         return count;
     }
 
-    //TODO: TEMP
-
-    public ArrayList<Double> getBaseData() {
-        return baseData;
-    }
 }

@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class Item {
     //  Name: Item
     //  Date created: 23.11.2017
-    //  Last modified: 09.12.2017
+    //  Last modified: 10.12.2017
     //  Description: Class used for deserializing a JSON string
 
     private int w;
@@ -38,54 +38,55 @@ public class Item {
     private String key = "";
 
     private static final Map<String, String> currencyShorthandsMap = new TreeMap<>() {{
+        put("exalted", "Exalted Orb");
+        put("exalts", "Exalted Orb");
         put("exalt", "Exalted Orb");
-        put("regret", "Orb of Regret");
-        put("divine", "Divine Orb");
-        put("chis", "Cartographer's Chisel");
+        put("exa", "Exalted Orb");
+        put("exe", "Exalted Orb");
+        put("ex", "Exalted Orb");
+        put("chaos", "Chaos Orb");
+        put("choas", "Chaos Orb");
         put("chao", "Chaos Orb");
+        put("c", "Chaos Orb");
+        put("regret", "Orb of Regret");
+        put("regrets", "Orb of Regret");
+        put("divine", "Divine Orb");
+        put("div", "Divine Orb");
+        put("chisel", "Cartographer's Chisel");
+        put("chis", "Cartographer's Chisel");
+        put("cart", "Cartographer's Chisel");
+        put("chisels", "Cartographer's Chisel");
         put("alchemy", "Orb of Alchemy");
+        put("alch", "Orb of Alchemy");
+        put("alc", "Orb of Alchemy");
         put("alts", "Orb of Alteration");
+        put("alteration", "Orb of Alteration");
+        put("alt", "Orb of Alteration");
         put("fusing", "Orb of Fusing");
         put("fus", "Orb of Fusing");
-        put("alteration", "Orb of Alteration");
-        put("choas", "Chaos Orb");
+        put("fusings", "Orb of Fusing");
+        put("fuse", "Orb of Fusing");
+        put("regal", "Regal Orb");
         put("rega", "Regal Orb");
         put("gcp", "Gemcutter's Prism");
-        put("regrets", "Orb of Regret");
-        put("jeweller", "Jeweller's Orb");
-        put("regal", "Regal Orb");
-        put("chromatics", "Chromatic Orb");
-        put("bles", "Blessed Orb");
-        put("jewellers", "Jeweller's Orb");
-        put("chance", "Orb of Chance");
-        put("ex", "Exalted Orb");
-        put("chromes", "Chromatic Orb");
-        put("chanc", "Orb of Chance");
-        put("chrom", "Chromatic Orb");
-        put("exalted", "Exalted Orb");
-        put("blessed", "Blessed Orb");
-        put("c", "Chaos Orb");
-        put("chaos", "Chaos Orb");
-        put("chisel", "Cartographer's Chisel");
-        put("alch", "Orb of Alchemy");
-        put("exa", "Exalted Orb");
-        put("vaal", "Vaal Orb");
-        put("chrome", "Chromatic Orb");
-        put("jew", "Jeweller's Orb");
-        put("exalts", "Exalted Orb");
-        put("scour", "Orb of Scouring");
-        put("cart", "Cartographer's Chisel");
-        put("alc", "Orb of Alchemy");
-        put("fuse", "Orb of Fusing");
-        put("exe", "Exalted Orb");
-        put("jewel", "Jeweller's Orb");
-        put("div", "Divine Orb");
-        put("alt", "Orb of Alteration");
-        put("fusings", "Orb of Fusing");
-        put("chisels", "Cartographer's Chisel");
-        put("chromatic", "Chromatic Orb");
-        put("scouring", "Orb of Scouring");
         put("gemc", "Gemcutter's Prism");
+        put("jeweller", "Jeweller's Orb");
+        put("jewellers", "Jeweller's Orb");
+        put("jewel", "Jeweller's Orb");
+        put("jew", "Jeweller's Orb");
+        put("chromatics", "Chromatic Orb");
+        put("chrom", "Chromatic Orb");
+        put("chromes", "Chromatic Orb");
+        put("chrome", "Chromatic Orb");
+        put("chromatic", "Chromatic Orb");
+        put("bles", "Blessed Orb");
+        put("blessed", "Blessed Orb");
+        put("bless", "Blessed Orb");
+        put("chance", "Orb of Chance");
+        put("chanc", "Orb of Chance");
+        put("vaal", "Vaal Orb");
+        put("scour", "Orb of Scouring");
+        put("scouring", "Orb of Scouring");
         put("silver", "Silver Coin");
         put("aug", "Orb of Augmentation");
         put("mirror", "Mirror of Kalandra");
@@ -95,7 +96,7 @@ public class Item {
     // Methods used to convert/calculate/extract item data //
     /////////////////////////////////////////////////////////
 
-    public void parseItem(){
+    public void parseItem() {
         //  Name: parseItem()
         //  Date created: 08.12.2017
         //  Last modified: 09.12.2017
@@ -341,18 +342,17 @@ public class Item {
     private void checkSixLink() {
         //  Name: checkSixLink()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
-        //  Description: Since 6-links are naturally more expensive, assign them a separate database key
+        //  Last modified: 10.12.2017
+        //  Description: Since 6-links are naturally more expensive, assign them a separate key
         //  Parent methods:
         //      checkItem()
 
-        // This is bad and I'm bad
-        if(!itemType.equals("Staves") && !itemType.equals("BodyArmours") && !itemType.equals("TwoHandSwords"))
+        if (!itemType.equals("Staves") && !itemType.equals("BodyArmours") && !itemType.equals("TwoHandSwords"))
             if (!itemType.equals("TwoHandMaces") && !itemType.equals("TwoHandAxes") && !itemType.equals("Bows"))
                 return;
 
         // This was an error somehow, somewhere
-        if(sockets == null){
+        if (sockets == null) {
             setDiscard();
             return;
         }
@@ -382,15 +382,15 @@ public class Item {
     private void checkSpecialItemVariant() {
         //  Name: checkSpecialItemVariant()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 10.12.2017
         //  Description: Check if the item has a special variant, eg vessel of vinktar
         //  Parent methods:
         //      parseItem()
 
         String keySuffix = "";
 
-        // Try to determine the type of Atziri's Splendour by looking at the item properties
         switch (name) {
+            // Try to determine the type of Atziri's Splendour by looking at the item properties
             case "Atziri's Splendour":
                 int armour = 0;
                 int evasion = 0;
@@ -411,7 +411,6 @@ public class Item {
                     }
                 }
 
-                // Run them through this massive IF block to determine the variant
                 // Values taken from https://pathofexile.gamepedia.com/Atziri%27s_Splendour (at 29.11.2017)
                 if (1052 <= armour && armour <= 1118) {
                     if (energy == 76) {
@@ -437,10 +436,11 @@ public class Item {
                     }
                 }
                 break;
+
             case "Vessel of Vinktar":
                 // Attempt to match preset mod with item mod
                 for (String itemMod : explicitMods) {
-                    if(itemMod.contains("Lightning Damage to Spells")) {
+                    if (itemMod.contains("Lightning Damage to Spells")) {
                         keySuffix = "|var(spells)";
                         break;
                     } else if (itemMod.contains("Lightning Damage to Attacks")) {
@@ -455,10 +455,11 @@ public class Item {
                     }
                 }
                 break;
+
             case "Doryani's Invitation":
                 // Attempt to match preset mod with item mod
                 for (String itemMod : explicitMods) {
-                    if(itemMod.contains("increased Lightning Damage")) {
+                    if (itemMod.contains("increased Lightning Damage")) {
                         keySuffix = "|var(lightning)";
                         break;
                     } else if (itemMod.contains("increased Fire Damage")) {
@@ -473,10 +474,11 @@ public class Item {
                     }
                 }
                 break;
+
             case "Yriel's Fostering":
                 // Attempt to match preset mod with item mod
                 for (String itemMod : explicitMods) {
-                    if(itemMod.contains("Chaos Damage to Attacks")) {
+                    if (itemMod.contains("Chaos Damage to Attacks")) {
                         keySuffix = "|var(chaos)";
                         break;
                     } else if (itemMod.contains("Physical Damage to Attack")) {
@@ -488,10 +490,11 @@ public class Item {
                     }
                 }
                 break;
+
             case "Volkuur's Guidance":
                 // Attempt to match preset mod with item mod
                 for (String itemMod : explicitMods) {
-                    if(itemMod.contains("Fire Damage to Spells")) {
+                    if (itemMod.contains("Fire Damage to Spells")) {
                         keySuffix = "|var(fire)";
                         break;
                     } else if (itemMod.contains("Cold Damage to Spells")) {
@@ -503,6 +506,29 @@ public class Item {
                     }
                 }
                 break;
+
+            case "Impresence":
+                // Attempt to match preset mod with item mod
+                for (String itemMod : explicitMods) {
+                    if (itemMod.contains("Lightning Damage")) {
+                        keySuffix = "|var(lightning)";
+                        break;
+                    } else if (itemMod.contains("Fire Damage")) {
+                        keySuffix = "|var(fire)";
+                        break;
+                    } else if (itemMod.contains("Cold Damage")) {
+                        keySuffix = "|var(cold)";
+                        break;
+                    } else if (itemMod.contains("Physical Damage")) {
+                        keySuffix = "|var(physical)";
+                        break;
+                    } else if (itemMod.contains("Chaos Damage")) {
+                        keySuffix = "|var(chaos)";
+                        break;
+                    }
+                }
+                break;
+
             default:
                 return;
         }
@@ -529,14 +555,6 @@ public class Item {
 
     public String getPriceType() {
         return priceType;
-    }
-
-    public void setPriceType(String priceType) {
-        this.priceType = priceType;
-    }
-
-    public String getItemType() {
-        return itemType;
     }
 
     public String getKey() {
