@@ -18,7 +18,7 @@ public class PricerController extends Thread {
 
     private static boolean flagLocalRun = true;
     private static boolean flagPause = false;
-    private static final Map<String, DataEntry> ENTRY_MAP = new TreeMap<>();
+    private static final Map<String, DataEntry> entryMap = new TreeMap<>();
     private static final StringBuilder JSONBuilder = new StringBuilder();
 
     private static String lastLeague = "";
@@ -33,39 +33,46 @@ public class PricerController extends Thread {
         // Load data in on initial script launch
         readDataFromFile();
 
+        int sleepLength = Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle"));
+
         while (true) {
-            sleepWhile(Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle")));
+            sleepWhile(sleepLength);
 
             // Break if run flag has been lowered
             if (!flagLocalRun)
                 break;
 
-            runButFromADifferentMethod();
+            runCycle();
         }
     }
 
-    private void runButFromADifferentMethod() {
-        //  Name: runButFromADifferentMethod()
+    private void runCycle() {
+        //  Name: runCycle()
         //  Date created: 11.12.2017
         //  Last modified: 11.12.2017
-        //  Description: Calls methods that construct/parse/write database ENTRY_MAP
-
-        System.out.println(timeStamp() + " Generating databases");
+        //  Description: Calls methods that construct/parse/write database entryMap
 
         // Prepare for database building
         flagPause = true;
+        System.out.println(timeStamp() + " Generating databases");
 
         // Increase DataEntry's static cycle count
         DataEntry.incCycleCount();
 
         // Loop through database entries, calling their methods
         JSONBuilder.append("{");
-        ENTRY_MAP.forEach((String key, DataEntry entry) -> packageJSON(entry.databaseBuilder()));
+        entryMap.forEach((String key, DataEntry entry) -> packageJSON(entry.databaseBuilder()));
         JSONBuilder.append("}");
 
         // Write generated data to file
         writeDataToFile();
         writeJSONToFile();
+
+        // Zero DataEntry's static cycle count
+        if(DataEntry.getCycleState()) {
+            DataEntry.zeroCycleCount();
+            System.out.println(timeStamp() + " Building JSON");
+        }
 
         // Clean up after building
         JSONBuilder.setLength(0);
@@ -120,8 +127,8 @@ public class PricerController extends Thread {
                     continue; // FML. this used to be return
 
                 // Add item to database
-                ENTRY_MAP.putIfAbsent(item.getKey(), new DataEntry());
-                ENTRY_MAP.get(item.getKey()).addRaw(item);
+                entryMap.putIfAbsent(item.getKey(), new DataEntry());
+                entryMap.get(item.getKey()).addRaw(item);
             }
         }
     }
@@ -145,8 +152,8 @@ public class PricerController extends Thread {
 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] splitLine = line.split("::");
-                ENTRY_MAP.put(splitLine[0], new DataEntry());
-                ENTRY_MAP.get(splitLine[0]).parseIOLine(splitLine);
+                entryMap.put(splitLine[0], new DataEntry());
+                entryMap.get(splitLine[0]).parseIOLine(splitLine);
             }
 
         } catch (IOException ex) {
@@ -174,9 +181,9 @@ public class PricerController extends Thread {
             File fFile = new File("./data.txt");
             fOut = new FileOutputStream(fFile);
 
-            for (String key : ENTRY_MAP.keySet()) {
-                if (!ENTRY_MAP.get(key).isEmpty())
-                    fOut.write(ENTRY_MAP.get(key).makeIOLine().getBytes());
+            for (String key : entryMap.keySet()) {
+                if (!entryMap.get(key).isEmpty())
+                    fOut.write(entryMap.get(key).makeIOLine().getBytes());
             }
 
         } catch (IOException ex) {
@@ -315,6 +322,6 @@ public class PricerController extends Thread {
     }
 
     public Map<String, DataEntry> getEntryMap() {
-        return ENTRY_MAP;
+        return entryMap;
     }
 }

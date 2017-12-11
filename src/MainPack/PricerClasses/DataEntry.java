@@ -15,12 +15,15 @@ public class DataEntry {
     //  Description: An object that stores an item's price data
 
     // Cycle counters
-    private static int CYCLE_COUNT = 0;
+    private static int cycleCount = 0;
     private static final int CYCLE_LIMIT = Integer.parseInt(PROPERTIES.getProperty("DataEntryCycleLimit"));
 
     // Statistical values
-    private int count = 0, discardedCounter = 0, addedCounter = 0;
-    private double mean = 0.0, median = 0.0;
+    private int count = 0;
+    private int discardedCounter = 0;
+    private int addedCounter = 0;
+    private double mean = 0.0;
+    private double median = 0.0;
     private String key;
 
     // Lists that hold price data
@@ -203,7 +206,7 @@ public class DataEntry {
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
-        if (CYCLE_COUNT < CYCLE_LIMIT || hourlyData.isEmpty())
+        if (cycleCount < CYCLE_LIMIT || hourlyData.isEmpty())
             return "";
 
         // Warn the user if there are irregularities with the discard counter
@@ -327,15 +330,18 @@ public class DataEntry {
     }
 
     public static void incCycleCount() {
-        CYCLE_COUNT++;
+        cycleCount++;
     }
 
     public static void zeroCycleCount() {
-        CYCLE_COUNT = 0;
+        cycleCount = 0;
     }
 
     public int getCount() {
         return count;
     }
 
+    public static boolean getCycleState() {
+        return cycleCount >= CYCLE_LIMIT;
+    }
 }

@@ -22,8 +22,9 @@ public class Worker extends Thread {
     //  Last modified: 11.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
-    private static int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
-    private static long LAST_PULL_TIME = 0;
+    private static final int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
+    private static final int CHUNK_SIZE = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
+    private static long lastPullTime = 0;
     private boolean flagLocalRun = true;
     private int index;
     private String nextChangeID = "";
@@ -81,18 +82,17 @@ public class Worker extends Thread {
         //  Last modified: 11.12.2017
         //  Description: Method that downloads data from the API
 
-        int chunkSize = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[chunkSize];
+        byte[] byteBuffer = new byte[CHUNK_SIZE];
         boolean regexLock = true;
         InputStream stream = null;
         int byteCount;
 
         // Sleep for x milliseconds
-        while(System.currentTimeMillis() - LAST_PULL_TIME < DOWNLOAD_DELAY) {
+        while(System.currentTimeMillis() - lastPullTime < DOWNLOAD_DELAY) {
             sleep(10);
         }
-        LAST_PULL_TIME = System.currentTimeMillis();
+        lastPullTime = System.currentTimeMillis();
 
         try {
             // Define the request
@@ -101,7 +101,7 @@ public class Worker extends Thread {
             stream = connection.getInputStream();
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, chunkSize)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, CHUNK_SIZE)) != -1) {
                 // Check if run flag is lowered
                 if (!this.flagLocalRun)
                     return "";

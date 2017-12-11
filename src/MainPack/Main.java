@@ -19,12 +19,15 @@ public class Main {
         //  Last modified: 11.12.2017
         //  Description: The main class. Run this to run the program
 
-        // Set default values and start controllers
-        WORKER_CONTROLLER.start();
-        PRICER_CONTROLLER.start();
+        // Print MotD
+        printMotD();
 
         // Ask the user how many workers should be spawned and spawn them
         WORKER_CONTROLLER.spawnWorkers(askUserForIntInputWithValidation());
+
+        // Set default values and start controllers
+        WORKER_CONTROLLER.start();
+        PRICER_CONTROLLER.start();
 
         // Initiate main command loop, allowing user some control over the program
         commandLoop();
@@ -109,7 +112,7 @@ public class Main {
         //  Description: Returns time in the format of [HH:MM]
 
         StringBuilder stringBuilder = new StringBuilder();
-        int timeZone = Integer.parseInt(PROPERTIES.getProperty("timeZone"));
+        int timeZone = Integer.parseInt(PROPERTIES.getProperty("timeZoneOffset"));
 
         // Refresh calendar (this is a bug with Calendar, I've heard)
         Calendar calendar = Calendar.getInstance();
@@ -152,10 +155,10 @@ public class Main {
 
         // Writes values from statistics to file
         try {
-            fileInputStream = new FileInputStream("./config.PROPERTIES");
+            fileInputStream = new FileInputStream("./config.properties");
             properties.load(fileInputStream);
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not read PROPERTIES file:");
+            System.out.println("[ERROR] Could not read properties file:");
             ex.printStackTrace();
         } finally {
             try {
@@ -168,6 +171,15 @@ public class Main {
         }
 
         return properties;
+    }
+
+    private static void printMotD() {
+        //  Name: printMotD()
+        //  Date created: 11.12.2017
+        //  Last modified: 11.12.2017
+        //  Description: Prints a message
+
+        System.out.println("PoE stash API JSON statistics generator\nMade by: Sander H. (179900IVSB)\n");
     }
 
     ////////////////////////////////////////

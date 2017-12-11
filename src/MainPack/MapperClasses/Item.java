@@ -15,14 +15,17 @@ public class Item {
 
     // Variables used by deserializer
     private int w, h, x, y, ilvl, frameType;
-    private boolean identified = true, corrupted = false;
-    private String icon, league, id, name, typeLine, note = "";
+    private boolean identified = true;
+    private boolean corrupted = false;
+    private String icon, league, id, name, typeLine;
+    private String note = "";
     private List<Properties> properties;
     private List<Socket> sockets;
     private List<String> explicitMods;
 
     // Variables not used by deserializer
-    private String priceType, itemType, key = "";
+    private String priceType, itemType;
+    private String key = "";
     private boolean discard = false;
     private double price;
 
@@ -123,7 +126,7 @@ public class Item {
     private void basicChecks() {
         //  Name: basicChecks()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Method that does a few basic checks on items
         //  Parent methods:
         //      parseItem()
@@ -142,6 +145,9 @@ public class Item {
             setDiscard();
         } else if (league.contains("SSF")) {
             // Filter out SSF leagues as trading there is disabled
+            setDiscard();
+        } else if (league.equals("false")) {
+            // This is a bug in the API
             setDiscard();
         }
 
@@ -261,7 +267,7 @@ public class Item {
             return;
         }
 
-        // Begin the long block that filters out gems based on a number of PROPERTIES
+        // Begin the long block that filters out gems based on a number of properties
         if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
             if (corrupted) {
                 if (lvl == 4 || lvl == 3)
@@ -285,7 +291,7 @@ public class Item {
                 if (itemType.equals("VaalGems")) {
                     if (lvl < 10 && quality == 20)
                         lvl = 0;
-                    else if (lvl == 20 && quality == 20)
+                    else if (lvl != 20 || quality != 20)
                         ; // TODO: improve this
                     else {
                         setDiscard();
@@ -380,7 +386,7 @@ public class Item {
         String keySuffix = "";
 
         switch (name) {
-            // Try to determine the type of Atziri's Splendour by looking at the item PROPERTIES
+            // Try to determine the type of Atziri's Splendour by looking at the item properties
             case "Atziri's Splendour":
                 int armour = 0;
                 int evasion = 0;
