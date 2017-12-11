@@ -10,33 +10,23 @@ import java.util.TreeMap;
 public class Item {
     //  Name: Item
     //  Date created: 23.11.2017
-    //  Last modified: 10.12.2017
+    //  Last modified: 11.12.2017
     //  Description: Class used for deserializing a JSON string
 
-    private int w;
-    private int h;
-    private int ilvl;
-    private String icon;
-    private String league;
-    private String id;
-    private String name;
-    private String typeLine;
-    private boolean identified = true;
-    private boolean corrupted = false;
-    private String note = "";
-    private int frameType;
-    private int x;
-    private int y;
+    // Variables used by deserializer
+    private int w, h, x, y, ilvl, frameType;
+    private boolean identified = true, corrupted = false;
+    private String icon, league, id, name, typeLine, note = "";
     private List<Properties> properties;
     private List<Socket> sockets;
     private List<String> explicitMods;
 
+    // Variables not used by deserializer
+    private String priceType, itemType, key = "";
     private boolean discard = false;
     private double price;
-    private String priceType;
-    private String itemType;
-    private String key = "";
 
+    // Map of potential keyword-value pairs
     private static final Map<String, String> currencyShorthandsMap = new TreeMap<>() {{
         put("exalted", "Exalted Orb");
         put("exalts", "Exalted Orb");

@@ -18,57 +18,60 @@ public class PricerController extends Thread {
 
     private static boolean flagLocalRun = true;
     private static boolean flagPause = false;
-    private static Map<String, DataEntry> data = new TreeMap<>();
-    private static StringBuilder JSONBuilder = new StringBuilder();
+    private static final Map<String, DataEntry> ENTRY_MAP = new TreeMap<>();
+    private static final StringBuilder JSONBuilder = new StringBuilder();
 
     private static String lastLeague = "";
     private static String lastType = "";
 
-    // TODO: move to separate functions
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
         //  Last modified: 11.12.2017
-        //  Description: Contains the main loop of the pricing service
+        //  Description: Main loop of the pricing service
 
         // Load data in on initial script launch
         readDataFromFile();
 
         while (true) {
             sleepWhile(Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle")));
-            System.out.println(timeStamp() + " Generating databases");
 
             // Break if run flag has been lowered
             if (!flagLocalRun)
                 break;
 
-            // Prepare for database building
-            flagPause = true;
-            JSONBuilder.append("{");
-
-            // Increase DataEntry's static cycle count
-            DataEntry.incCycleCount();
-
-            // manage+write data
-            data.forEach((String key, DataEntry entry) -> {
-                entry.buildBaseData(data);
-                entry.purgeBaseData();
-                entry.buildStatistics();
-                entry.clearRawData();
-                packageJSON(entry);
-            });
-
-            JSONBuilder.append("}");
-
-            writeDataToFile();
-            writeJSONToFile();
-
-            // Clean up after database building
-            JSONBuilder.setLength(0);
-            lastType = "";
-            lastLeague = "";
-            flagPause = false;
+            runButFromADifferentMethod();
         }
+    }
+
+    private void runButFromADifferentMethod() {
+        //  Name: runButFromADifferentMethod()
+        //  Date created: 11.12.2017
+        //  Last modified: 11.12.2017
+        //  Description: Calls methods that construct/parse/write database ENTRY_MAP
+
+        System.out.println(timeStamp() + " Generating databases");
+
+        // Prepare for database building
+        flagPause = true;
+
+        // Increase DataEntry's static cycle count
+        DataEntry.incCycleCount();
+
+        // Loop through database entries, calling their methods
+        JSONBuilder.append("{");
+        ENTRY_MAP.forEach((String key, DataEntry entry) -> packageJSON(entry.databaseBuilder()));
+        JSONBuilder.append("}");
+
+        // Write generated data to file
+        writeDataToFile();
+        writeJSONToFile();
+
+        // Clean up after building
+        JSONBuilder.setLength(0);
+        lastType = "";
+        lastLeague = "";
+        flagPause = false;
     }
 
     private void sleepWhile(int howLongInSeconds) {
@@ -117,8 +120,8 @@ public class PricerController extends Thread {
                     continue; // FML. this used to be return
 
                 // Add item to database
-                data.putIfAbsent(item.getKey(), new DataEntry());
-                data.get(item.getKey()).addRaw(item);
+                ENTRY_MAP.putIfAbsent(item.getKey(), new DataEntry());
+                ENTRY_MAP.get(item.getKey()).addRaw(item);
             }
         }
     }
@@ -142,8 +145,8 @@ public class PricerController extends Thread {
 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] splitLine = line.split("::");
-                data.put(splitLine[0], new DataEntry());
-                data.get(splitLine[0]).parseIOLine(splitLine);
+                ENTRY_MAP.put(splitLine[0], new DataEntry());
+                ENTRY_MAP.get(splitLine[0]).parseIOLine(splitLine);
             }
 
         } catch (IOException ex) {
@@ -171,9 +174,9 @@ public class PricerController extends Thread {
             File fFile = new File("./data.txt");
             fOut = new FileOutputStream(fFile);
 
-            for (String key : data.keySet()) {
-                if (!data.get(key).isEmpty())
-                    fOut.write(data.get(key).makeIOLine().getBytes());
+            for (String key : ENTRY_MAP.keySet()) {
+                if (!ENTRY_MAP.get(key).isEmpty())
+                    fOut.write(ENTRY_MAP.get(key).makeIOLine().getBytes());
             }
 
         } catch (IOException ex) {
@@ -281,7 +284,7 @@ public class PricerController extends Thread {
             fOut.write(JSONBuilder.toString().getBytes());
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write data:");
+            System.out.println("[ERROR] Could not write report.json:");
             ex.printStackTrace();
         } finally {
             try {
@@ -311,4 +314,7 @@ public class PricerController extends Thread {
         return flagPause;
     }
 
+    public Map<String, DataEntry> getEntryMap() {
+        return ENTRY_MAP;
+    }
 }

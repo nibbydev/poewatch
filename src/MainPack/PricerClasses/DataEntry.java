@@ -4,8 +4,8 @@ import MainPack.MapperClasses.Item;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 
+import static MainPack.Main.PRICER_CONTROLLER;
 import static MainPack.Main.PROPERTIES;
 
 public class DataEntry {
@@ -14,20 +14,34 @@ public class DataEntry {
     //  Last modified: 11.12.2017
     //  Description: An object that stores an item's price data
 
+    // Cycle counters
     private static int CYCLE_COUNT = 0;
     private static final int CYCLE_LIMIT = Integer.parseInt(PROPERTIES.getProperty("DataEntryCycleLimit"));
 
-    private int count = 0;
-    private double mean = 0.0;
-    private double median = 0.0;
+    // Statistical values
+    private int count = 0, discardedCounter = 0, addedCounter = 0;
+    private double mean = 0.0, median = 0.0;
     private String key;
-    private int discardedCounter = 0;
-    private int addedCounter = 0;
 
+    // Lists that hold price data
     private ArrayList<String[]> rawData = new ArrayList<>();
     private ArrayList<Double> baseData = new ArrayList<>();
     private ArrayList<Double> hourlyData = new ArrayList<>();
     private ArrayList<String> duplicates = new ArrayList<>();
+
+    public DataEntry databaseBuilder() {
+        //  Name: databaseBuilder
+        //  Date created: 11.12.2017
+        //  Last modified: 11.12.2017
+        //  Description: Methods that constructs the database. Should be called at a timed interval
+
+        buildBaseData();
+        purgeBaseData();
+        buildStatistics();
+        rawData.clear();
+
+        return this;
+    }
 
     public void addRaw(Item item) {
         //  Name: addRaw
@@ -52,7 +66,7 @@ public class DataEntry {
             duplicates.subList(0, duplicates.size() - 60).clear();
     }
 
-    public void buildBaseData(Map<String, DataEntry> database) {
+    private void buildBaseData() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
         //  Last modified: 11.12.2017
@@ -70,9 +84,9 @@ public class DataEntry {
             if (!index.equals("Chaos Orb")) {
                 String currencyKey = key.split("\\|")[0] + "|Currency|" + index + "|5";
                 // If there's a value in the statistics database, use that
-                if (database.containsKey(currencyKey)) {
-                    if (database.get(currencyKey).getCount() >= 10) {
-                        value = value * database.get(currencyKey).getMedian();
+                if (PRICER_CONTROLLER.getEntryMap().containsKey(currencyKey)) {
+                    if (PRICER_CONTROLLER.getEntryMap().get(currencyKey).getCount() >= 10) {
+                        value = value * PRICER_CONTROLLER.getEntryMap().get(currencyKey).getMedian();
                     } else {
                         discardedCounter++;
                         continue;
@@ -95,7 +109,7 @@ public class DataEntry {
             baseData.subList(0, baseData.size() - 100).clear();
     }
 
-    public void purgeBaseData() {
+    private void purgeBaseData() {
         //  Name: purgeBaseData
         //  Date created: 29.11.2017
         //  Last modified: 11.12.2017
@@ -119,7 +133,7 @@ public class DataEntry {
         }
     }
 
-    public void buildStatistics() {
+    private void buildStatistics() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
         //  Last modified: 10.12.2017
@@ -178,15 +192,6 @@ public class DataEntry {
             hourlyData.subList(0, hourlyData.size() - 60).clear();
     }
 
-    public void clearRawData() {
-        //  Name: clearRawData
-        //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
-        //  Description: Method that removes all entries from rawData from outside this object
-
-        rawData.clear();
-    }
-
     /////////////////
     // I/O helpers //
     /////////////////
@@ -203,7 +208,7 @@ public class DataEntry {
 
         // Warn the user if there are irregularities with the discard counter
         if (addedCounter < discardedCounter && discardedCounter > 20)
-            System.out.println("Odd discard ratio: " + key + " - " + addedCounter + " / " + discardedCounter);
+            System.out.println("[INFO][" + key + "] Odd discard ratio: " + addedCounter + "/" + discardedCounter + " (add/discard)");
 
         // Clear the counters
         this.discardedCounter = 0;

@@ -22,6 +22,8 @@ public class Worker extends Thread {
     //  Last modified: 11.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
+    private static int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
+    private static long LAST_PULL_TIME = 0;
     private boolean flagLocalRun = true;
     private int index;
     private String nextChangeID = "";
@@ -78,11 +80,6 @@ public class Worker extends Thread {
         //  Date created: 21.11.2017
         //  Last modified: 11.12.2017
         //  Description: Method that downloads data from the API
-        //  Parent methods:
-        //      run()
-        //  Child methods:
-        //      trimPartialByteBuffer()
-        //      sleep()
 
         int chunkSize = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
         StringBuilder stringBuilderBuffer = new StringBuilder();
@@ -91,8 +88,11 @@ public class Worker extends Thread {
         InputStream stream = null;
         int byteCount;
 
-        // Sleep for 500ms
-        sleep(500);
+        // Sleep for x milliseconds
+        while(System.currentTimeMillis() - LAST_PULL_TIME < DOWNLOAD_DELAY) {
+            sleep(10);
+        }
+        LAST_PULL_TIME = System.currentTimeMillis();
 
         try {
             // Define the request

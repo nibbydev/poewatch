@@ -28,17 +28,12 @@ public class WorkerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 22.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 11.12.2017
         //  Description: Assigns jobs to workers
 
         // Run main loop while flag is up
         while (flagLocalRun) {
-            // Sleep for 100ms
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+            sleep(100);
 
             // Check if nextChangeID has a value
             if (nextChangeID.equals("")) {
@@ -66,6 +61,19 @@ public class WorkerController extends Thread {
                     }
                 }
             }
+        }
+    }
+
+    private void sleep(int timeMS) {
+        //  Name: sleep()
+        //  Date created: 02.12.2017
+        //  Last modified: 11.12.2017
+        //  Description: Sleeps for <timeMS> ms
+
+        try {
+            Thread.sleep(timeMS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 
