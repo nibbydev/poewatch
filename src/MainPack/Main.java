@@ -3,64 +3,64 @@ package MainPack;
 import MainPack.PricerClasses.PricerController;
 import NotMadeByMe.TextIO;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Calendar;
+import java.util.Properties;
 
 public class Main {
+    public static final Properties PROPERTIES = readProperties();
+    public static final WorkerController WORKER_CONTROLLER = new WorkerController();
+    public static final PricerController PRICER_CONTROLLER = new PricerController();
+
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 11.12.2017
         //  Description: The main class. Run this to run the program
 
-        WorkerController workerController = new WorkerController();
-        PricerController pricerController = new PricerController();
+        // Set default values and start controllers
+        WORKER_CONTROLLER.start();
+        PRICER_CONTROLLER.start();
 
-        // Set default values and start the worker controller
-        workerController.setPricerController(pricerController);
-        workerController.setWorkerLimit(5);
-        workerController.start();
-
-        // Set default values and start the pricer controller
-        pricerController.start();
-
-        // Ask the user how many workers should be spawned and spawn tem
-        workerController.spawnWorkers(askUserForIntInputWithValidation(workerController));
+        // Ask the user how many workers should be spawned and spawn them
+        WORKER_CONTROLLER.spawnWorkers(askUserForIntInputWithValidation());
 
         // Initiate main command loop, allowing user some control over the program
-        commandLoop(workerController, pricerController);
+        commandLoop();
 
         // Stop workers on exit
-        workerController.stopAllWorkers();
-        workerController.setFlagLocalRun(false);
-        pricerController.setFlagLocalRun(false);
+        WORKER_CONTROLLER.stopController();
+        PRICER_CONTROLLER.stopController();
     }
 
-    private static int askUserForIntInputWithValidation(WorkerController workerController) {
+    private static int askUserForIntInputWithValidation() {
         //  Name: askUserForIntInputWithValidation()
         //  Date created: 21.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 11.12.2017
         //  Description: Asks the user for an input, has validation so that the input is actually valid
         //  Parent methods:
         //      main()
 
         int userInput = -1;
+        int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
 
-        System.out.println("How many workers should be spawned (1 - " + workerController.getWorkerLimit() + ")?");
+        System.out.println("How many workers should be spawned (1 - " + workerLimit + ")?");
 
-        while (userInput <= 0 || userInput > workerController.getWorkerLimit()) {
+        while (userInput <= 0 || userInput > workerLimit) {
             userInput = TextIO.getlnInt();
 
-            if (userInput > workerController.getWorkerLimit())
+            if (userInput > workerLimit)
                 System.out.println("That is way too many workers!");
         }
 
         return userInput;
     }
 
-    private static void commandLoop(WorkerController workerController, PricerController pricerController) {
+    private static void commandLoop() {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Command loop method. Allows the user some interaction with the script as it is running.
         //  Parent methods:
         //      main()
@@ -87,13 +87,13 @@ public class Main {
                     System.out.println("[INFO] Shutting down..");
                     return;
                 case "pause":
-                    commandPause(pricerController);
+                    commandPause();
                     break;
                 case "id":
-                    commandIdAdd(workerController, userInput);
+                    commandIdAdd(userInput);
                     break;
                 case "worker":
-                    commandWorker(workerController, userInput);
+                    commandWorker(userInput);
                     break;
                 default:
                     System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -105,38 +105,79 @@ public class Main {
     public static String timeStamp(){
         //  Name: timeStamp()
         //  Date created: 06.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Returns time in the format of [HH:MM]
 
-        String hour, minute;
+        StringBuilder stringBuilder = new StringBuilder();
+        int timeZone = Integer.parseInt(PROPERTIES.getProperty("timeZone"));
 
-        // Refresh calendar (this is a bug with Calendar)
+        // Refresh calendar (this is a bug with Calendar, I've heard)
         Calendar calendar = Calendar.getInstance();
 
-        // Format hour
-        if ((calendar.get(Calendar.HOUR_OF_DAY) + 2) < 10)
-            hour = "0" + (calendar.get(Calendar.HOUR_OF_DAY) + 2);
-        else
-            hour = "" + (calendar.get(Calendar.HOUR_OF_DAY) + 2);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY) + timeZone;
+        int minute = calendar.get(Calendar.MINUTE);
+
+        stringBuilder.append("[");
+
+        // Format hour (timezones can be set in Calendar by default, I know)
+        if (hour > 24)
+            hour -= 24;
+
+        // Add 0 so that "[09:32]" is returned instead of "[9:32]"
+        if(hour < 10)
+            stringBuilder.append(0);
+
+        stringBuilder.append(hour);
+        stringBuilder.append(":");
 
         // Format minute
-        if (calendar.get(Calendar.MINUTE) < 10)
-            minute = "0" + calendar.get(Calendar.MINUTE);
-        else
-            minute = "" + calendar.get(Calendar.MINUTE);
+        if (minute < 10)
+            stringBuilder.append(0);
+
+        stringBuilder.append(minute);
+        stringBuilder.append("]");
 
         // Return [HH:MM]
-        return "[" + hour + ":" + minute + "]";
+        return stringBuilder.toString();
+    }
+
+    private static Properties readProperties(){
+        //  Name: readProperties()
+        //  Date created: 11.12.2017
+        //  Last modified: 11.12.2017
+        //  Description: Reads in config file from classpath. Probably crashes the program if no valid data is found
+
+        Properties properties = new Properties();
+        FileInputStream fileInputStream = null;
+
+        // Writes values from statistics to file
+        try {
+            fileInputStream = new FileInputStream("./config.PROPERTIES");
+            properties.load(fileInputStream);
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not read PROPERTIES file:");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (fileInputStream != null) {
+                    fileInputStream.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return properties;
     }
 
     ////////////////////////////////////////
     // Methods extracted from commandLoop //
     ////////////////////////////////////////
 
-    private static void commandIdAdd(WorkerController workerController, String[] userInput) {
+    private static void commandIdAdd(String[] userInput) {
         //  Name: commandIdAdd()
         //  Date created: 27.11.2017
-        //  Last modified: 01.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Adds a ChangeID to the queue
 
 
@@ -152,22 +193,22 @@ public class Main {
 
         switch (userInput[1]) {
             case "default":
-                workerController.setNextChangeID("109146384-114458199-107400880-123773152-115750588");
+                WorkerController.setNextChangeID(PROPERTIES.getProperty("defaultChangeID"));
                 break;
             case "new":
-                workerController.setNextChangeID(workerController.getLatestChangeID());
+                WorkerController.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
                 break;
             default:
-                workerController.setNextChangeID(userInput[1]);
+                WorkerController.setNextChangeID(userInput[1]);
         }
 
         System.out.println("[INFO] New ChangeID added");
     }
 
-    private static void commandWorker(WorkerController workerController, String[] userInput) {
+    private static void commandWorker(String[] userInput) {
         //  Name: commandWorker()
         //  Date created: 27.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 11.11.2017
         //  Description: Holds commands that have something to do with worker operation
 
         String helpString = "[INFO] Available worker commands:\n";
@@ -182,29 +223,29 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            workerController.listAllWorkers();
+            WORKER_CONTROLLER.listAllWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
-            workerController.fireWorkers(Integer.parseInt(userInput[2]));
+            WORKER_CONTROLLER.fireWorkers(Integer.parseInt(userInput[2]));
         } else if (userInput[1].equalsIgnoreCase("add")) {
             System.out.println("[INFO] Adding " + userInput[2] + " worker..");
-            workerController.spawnWorkers(Integer.parseInt(userInput[2]));
+            WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
         }
     }
 
-    private static void commandPause(PricerController pricerController) {
+    private static void commandPause() {
         //  Name: commandIdAdd()
         //  Date created: 27.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 11.12.2017
         //  Description: Pauses or resumes the script
 
-        if (pricerController.isFlagPause()) {
-            pricerController.setFlagPause(false);
+        if (PRICER_CONTROLLER.isFlagPause()) {
+            PRICER_CONTROLLER.setFlagPause(false);
             System.out.println("[INFO] Resumed");
         } else {
-            pricerController.setFlagPause(true);
+            PRICER_CONTROLLER.setFlagPause(true);
             System.out.println("[INFO] Paused");
         }
     }

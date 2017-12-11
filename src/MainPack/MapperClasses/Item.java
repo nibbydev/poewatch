@@ -271,7 +271,7 @@ public class Item {
             return;
         }
 
-        // Begin the long block that filters out gems based on a number of properties
+        // Begin the long block that filters out gems based on a number of PROPERTIES
         if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
             if (corrupted) {
                 if (lvl == 4 || lvl == 3)
@@ -390,7 +390,7 @@ public class Item {
         String keySuffix = "";
 
         switch (name) {
-            // Try to determine the type of Atziri's Splendour by looking at the item properties
+            // Try to determine the type of Atziri's Splendour by looking at the item PROPERTIES
             case "Atziri's Splendour":
                 int armour = 0;
                 int evasion = 0;

@@ -1,7 +1,6 @@
 package MainPack;
 
 import MainPack.MapperClasses.ChangeID;
-import MainPack.PricerClasses.PricerController;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -9,17 +8,18 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class WorkerController extends Thread {
-    //   Name: WorkerController
-    //   Date created: 21.11.2017
-    //   Last modified: 30.11.2017
-    //   Description: Object that's used to manage worker objects
+import static MainPack.Main.PROPERTIES;
 
-    private ArrayList<Worker> workerList = new ArrayList<>();
-    private int workerLimit = 5;
-    private boolean flagLocalRun = true;
-    private String nextChangeID = "";
-    private PricerController pricerController;
+public class WorkerController extends Thread {
+    //  Name: WorkerController
+    //  Date created: 21.11.2017
+    //  Last modified: 11.12.2017
+    //  Description: Object that's used to manage worker objects
+
+    private static final int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
+    private static boolean flagLocalRun = true;
+    private static ArrayList<Worker> workerList = new ArrayList<>();
+    private static String nextChangeID = "";
 
     /////////////////////////////
     // Actually useful methods //
@@ -69,20 +69,6 @@ public class WorkerController extends Thread {
         }
     }
 
-    public void stopAllWorkers() {
-        //  Name: stopAllWorkers()
-        //  Date created: 21.11.2017
-        //  Last modified: 29.11.2017
-        //  Description: Stops all running workers
-
-        // Loop though every worker and raise the stop flag
-        for (Worker workerObject : workerList) {
-            workerObject.setFlagLocalRun(false);
-        }
-
-        workerList.clear();
-    }
-
     public void listAllWorkers() {
         //  Name: listAllWorkers()
         //  Date created: 22.11.2017
@@ -98,7 +84,7 @@ public class WorkerController extends Thread {
     public void spawnWorkers(int workerCount) {
         //  Name: spawnWorkers()
         //  Date created: 21.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 11.12.2017
         //  Description: Creates <workerCount> amount of new workers
 
         // Get the next available index
@@ -114,8 +100,7 @@ public class WorkerController extends Thread {
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
             Worker worker = new Worker();
 
-            // Set some worker properties and start
-            worker.setPricerController(pricerController);
+            // Set some worker PROPERTIES and start
             worker.setIndex(i);
             worker.start();
 
@@ -127,13 +112,13 @@ public class WorkerController extends Thread {
     public void fireWorkers(int workerCount) {
         //  Name: fireWorkers()
         //  Date created: 22.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 11.12.2017
         //  Description: Removes <workerCount> amount running workers
 
         Worker lastWorker;
 
         // Get the last available index
-        int lastWorkerIndex = this.workerList.size() - 1;
+        int lastWorkerIndex = workerList.size() - 1;
 
         // Can't remove what's not there
         if (lastWorkerIndex <= 0 || lastWorkerIndex - workerCount < 0) {
@@ -144,16 +129,32 @@ public class WorkerController extends Thread {
         // Loop through removal
         for (int i = lastWorkerIndex; i > lastWorkerIndex - workerCount; i--) {
             lastWorker = workerList.get(i);
-            lastWorker.setFlagLocalRun(false);
+            lastWorker.stopWorker();
             workerList.remove(lastWorker);
         }
     }
 
-    //////////////////////////////////////////////////////
-    // Getting a working ChangeID from external sources //
-    //////////////////////////////////////////////////////
+    public void stopController() {
+        //  Name: stopController()
+        //  Date created: 11.12.2017
+        //  Last modified: 11.12.2017
+        //  Description: Stops all running workers and this object's process
 
-    public String getLatestChangeID(){
+        // Loop though every worker and raise the stop flag
+        for (Worker worker : workerList) {
+            worker.stopWorker();
+        }
+
+        workerList.clear();
+
+        flagLocalRun = false;
+    }
+
+    //////////////////////////////////////////////////////////
+    // Methods for getting a ChangeID from external sources //
+    //////////////////////////////////////////////////////////
+
+    public String getLatestChangeID() {
         //  Name: getLatestChangeID()
         //  Date created: 29.11.2017
         //  Last modified: 30.11.2017
@@ -197,7 +198,7 @@ public class WorkerController extends Thread {
         return response;
     }
 
-    private String compareChangeIDs(String idOne, String idTwo){
+    private String compareChangeIDs(String idOne, String idTwo) {
         //  Name: compareChangeIDs()
         //  Date created: 30.11.2017
         //  Last modified: 30.11.2017
@@ -225,24 +226,8 @@ public class WorkerController extends Thread {
     // Getters / Setters //
     ///////////////////////
 
-    public void setFlagLocalRun(boolean flagLocalRun) {
-        this.flagLocalRun = flagLocalRun;
-    }
-
-    public void setWorkerLimit(int workerLimit) {
-        this.workerLimit = workerLimit;
-    }
-
-    public void setNextChangeID(String nextChangeID) {
-        this.nextChangeID = nextChangeID;
-    }
-
-    public int getWorkerLimit() {
-        return workerLimit;
-    }
-
-    public void setPricerController(PricerController pricerController) {
-        this.pricerController = pricerController;
+    public static void setNextChangeID(String newChangeID) {
+        nextChangeID = newChangeID;
     }
 
 }

@@ -1,9 +1,6 @@
 package MainPack;
 
 import MainPack.MapperClasses.APIReply;
-import MainPack.MapperClasses.Item;
-import MainPack.MapperClasses.Stash;
-import MainPack.PricerClasses.PricerController;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -15,19 +12,20 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static MainPack.Main.PRICER_CONTROLLER;
+import static MainPack.Main.PROPERTIES;
 import static MainPack.Main.timeStamp;
 
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 08.12.2017
+    //  Last modified: 11.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private boolean flagLocalRun = true;
     private int index;
     private String nextChangeID = "";
     private String job = "";
-    private PricerController pricerController;
 
     /////////////////////////////
     // Actually useful methods //
@@ -36,7 +34,7 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Contains the main loop of the worker
         //  Child methods:
         //      downloadData()
@@ -48,6 +46,8 @@ public class Worker extends Thread {
 
         // Run while flag is true
         while (flagLocalRun) {
+            sleep(100);
+
             // Check for new jobs
             if (!job.equals("")) {
                 // Download and parse data according to the changeID.
@@ -57,27 +57,26 @@ public class Worker extends Thread {
                 if (replyJSONString.equals(""))
                     continue;
 
-                // Seems good, deserialize the JSON string
+                // Deserialize the JSON string
                 reply = deSerializeJSONString(replyJSONString);
 
-                // Check if object has info in it
+                // If deserialization was unsuccessful, stop
                 if (reply.getNext_change_id().equals(""))
                     continue;
 
                 // Parse the deserialized JSON
-                pricerController.parseItems(reply);
+                PRICER_CONTROLLER.parseItems(reply);
 
                 // Clear the job
                 setJob("");
             }
-            sleep(100);
         }
     }
 
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Method that downloads data from the API
         //  Parent methods:
         //      run()
@@ -85,19 +84,19 @@ public class Worker extends Thread {
         //      trimPartialByteBuffer()
         //      sleep()
 
+        int chunkSize = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        int chunkSize = 128;
         byte[] byteBuffer = new byte[chunkSize];
         boolean regexLock = true;
-        int byteCount;
         InputStream stream = null;
+        int byteCount;
 
         // Sleep for 500ms
         sleep(500);
 
         try {
             // Define the request
-            URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
+            URL request = new URL(PROPERTIES.getProperty("defaultAPIURL") + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
             stream = connection.getInputStream();
 
@@ -136,7 +135,9 @@ public class Worker extends Thread {
             try {
                 if (stream != null)
                     stream.close();
-            } catch (IOException ex) {}
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
 
         // Return the downloaded mess of a JSON string
@@ -220,8 +221,8 @@ public class Worker extends Thread {
         this.index = index;
     }
 
-    public void setFlagLocalRun(boolean flagLocalRun) {
-        this.flagLocalRun = flagLocalRun;
+    public void stopWorker() {
+        this.flagLocalRun = false;
     }
 
     public int getIndex() {
@@ -234,10 +235,6 @@ public class Worker extends Thread {
 
     public String getJob() {
         return job;
-    }
-
-    public void setPricerController(PricerController pricerController) {
-        this.pricerController = pricerController;
     }
 
 }

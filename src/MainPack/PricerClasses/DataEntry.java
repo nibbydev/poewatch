@@ -6,36 +6,41 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
+import static MainPack.Main.PROPERTIES;
+
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 10.12.2017
+    //  Last modified: 11.12.2017
     //  Description: An object that stores an item's price data
 
     private static int CYCLE_COUNT = 0;
-    private static final int CYCLE_LIMIT = 5;
+    private static final int CYCLE_LIMIT = Integer.parseInt(PROPERTIES.getProperty("DataEntryCycleLimit"));
 
     private int count = 0;
     private double mean = 0.0;
     private double median = 0.0;
     private String key;
+    private int discardedCounter = 0;
+    private int addedCounter = 0;
 
     private ArrayList<String[]> rawData = new ArrayList<>();
     private ArrayList<Double> baseData = new ArrayList<>();
     private ArrayList<Double> hourlyData = new ArrayList<>();
     private ArrayList<String> duplicates = new ArrayList<>();
 
-    // TODO: add statistic currency ratio map?
-
     public void addRaw(Item item) {
         //  Name: addRaw
         //  Date created: 05.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Method that adds entries to raw data database
 
         // Skip duplicate items
         if (duplicates.contains(item.getId()))
             return;
+
+        // Increase the added item count
+        addedCounter++;
 
         // Assign key and add value to raw data array
         this.key = item.getKey();
@@ -50,7 +55,7 @@ public class DataEntry {
     public void buildBaseData(Map<String, DataEntry> database) {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 10.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         String index;
@@ -65,13 +70,17 @@ public class DataEntry {
             if (!index.equals("Chaos Orb")) {
                 String currencyKey = key.split("\\|")[0] + "|Currency|" + index + "|5";
                 // If there's a value in the statistics database, use that
-                if (database.containsKey(currencyKey))
-                    if (database.get(currencyKey).getCount() >= 10)
+                if (database.containsKey(currencyKey)) {
+                    if (database.get(currencyKey).getCount() >= 10) {
                         value = value * database.get(currencyKey).getMedian();
-                    else
+                    } else {
+                        discardedCounter++;
                         continue;
-                else
+                    }
+                } else {
+                    discardedCounter++;
                     continue;
+                }
             }
 
             // Round it up
@@ -89,7 +98,7 @@ public class DataEntry {
     public void purgeBaseData() {
         //  Name: purgeBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 10.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
         //               whether there's a large difference between the two
 
@@ -105,6 +114,7 @@ public class DataEntry {
             // Remove values that are larger/smaller than the median
             if (value > median * 2.0 || value < median / 2.0) {
                 baseData.remove(value);
+                discardedCounter++;
             }
         }
     }
@@ -184,12 +194,20 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
         if (CYCLE_COUNT < CYCLE_LIMIT || hourlyData.isEmpty())
             return "";
+
+        // Warn the user if there are irregularities with the discard counter
+        if (addedCounter < discardedCounter && discardedCounter > 20)
+            System.out.println("Odd discard ratio: " + key + " - " + addedCounter + " / " + discardedCounter);
+
+        // Clear the counters
+        this.discardedCounter = 0;
+        this.addedCounter = 0;
 
         // Make a copy so the original order persists and sort the entries in growing order
         ArrayList<Double> tempValueList = new ArrayList<>();

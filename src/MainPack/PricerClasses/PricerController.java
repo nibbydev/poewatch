@@ -7,34 +7,35 @@ import MainPack.MapperClasses.Stash;
 import java.io.*;
 import java.util.*;
 
+import static MainPack.Main.PROPERTIES;
 import static MainPack.Main.timeStamp;
 
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 10.12.2017
+    //  Last modified: 11.12.2017
     //  Description: A threaded object that manages databases
 
-    private static final int SLEEP_CYCLE = 60;
-    private boolean flagLocalRun = true;
-    private boolean flagPause = false;
+    private static boolean flagLocalRun = true;
+    private static boolean flagPause = false;
     private static Map<String, DataEntry> data = new TreeMap<>();
     private static StringBuilder JSONBuilder = new StringBuilder();
 
     private static String lastLeague = "";
     private static String lastType = "";
 
+    // TODO: move to separate functions
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Contains the main loop of the pricing service
 
         // Load data in on initial script launch
         readDataFromFile();
 
         while (true) {
-            sleepWhile(SLEEP_CYCLE);
+            sleepWhile(Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle")));
             System.out.println(timeStamp() + " Generating databases");
 
             // Break if run flag has been lowered
@@ -43,7 +44,6 @@ public class PricerController extends Thread {
 
             // Prepare for database building
             flagPause = true;
-
             JSONBuilder.append("{");
 
             // Increase DataEntry's static cycle count
@@ -63,7 +63,7 @@ public class PricerController extends Thread {
             writeDataToFile();
             writeJSONToFile();
 
-            // Clear string builder
+            // Clean up after database building
             JSONBuilder.setLength(0);
             lastType = "";
             lastLeague = "";
@@ -130,7 +130,7 @@ public class PricerController extends Thread {
     public void readDataFromFile() {
         //  Name: readDataFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Reads and parses database data from file
 
         String line;
@@ -153,6 +153,7 @@ public class PricerController extends Thread {
                     bufferedReader.close();
                 }
             } catch (IOException ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -160,7 +161,7 @@ public class PricerController extends Thread {
     private void writeDataToFile() {
         //  Name: writeDataToFile()
         //  Date created: 06.12.2017
-        //  Last modified: 06.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Writes database data to file
 
         OutputStream fOut = null;
@@ -185,6 +186,7 @@ public class PricerController extends Thread {
                     fOut.close();
                 }
             } catch (IOException ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -259,7 +261,7 @@ public class PricerController extends Thread {
     private void writeJSONToFile() {
         //  Name: writeJSONToFile()
         //  Date created: 06.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 11.12.2017
         //  Description: Basically writes JSON string to file
 
         if (JSONBuilder.length() < 5)
@@ -288,6 +290,7 @@ public class PricerController extends Thread {
                     fOut.close();
                 }
             } catch (IOException ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -296,12 +299,12 @@ public class PricerController extends Thread {
     // Getters / Setters //
     ///////////////////////
 
-    public void setFlagLocalRun(boolean flagLocalRun) {
-        this.flagLocalRun = flagLocalRun;
+    public void stopController() {
+        flagLocalRun = false;
     }
 
-    public void setFlagPause(boolean flagPause) {
-        this.flagPause = flagPause;
+    public void setFlagPause(boolean newFlagPause) {
+        flagPause = newFlagPause;
     }
 
     public boolean isFlagPause() {
