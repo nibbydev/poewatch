@@ -11,7 +11,7 @@ import static MainPack.Main.PROPERTIES;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 11.12.2017
+    //  Last modified: 12.12.2017
     //  Description: An object that stores an item's price data
 
     // Cycle counters
@@ -32,6 +32,15 @@ public class DataEntry {
     private ArrayList<Double> hourlyData = new ArrayList<>();
     private ArrayList<String> duplicates = new ArrayList<>();
 
+    // Constants that limit list sizes
+    private static final int BASEDATA_SIZE = Integer.parseInt(PROPERTIES.getProperty("baseDataSize"));
+    private static final int HOURLY_DATA_SIZE = Integer.parseInt(PROPERTIES.getProperty("hourlyDataSize"));
+    private static final int DUPLICATES_SIZE = Integer.parseInt(PROPERTIES.getProperty("duplicatesSize"));
+
+    //////////////////
+    // Main methods //
+    //////////////////
+
     public DataEntry databaseBuilder() {
         //  Name: databaseBuilder
         //  Date created: 11.12.2017
@@ -46,10 +55,23 @@ public class DataEntry {
         return this;
     }
 
+    public DataEntry databaseBuilder2() {
+        //  Name: databaseBuilder
+        //  Date created: 11.12.2017
+        //  Last modified: 12.12.2017
+        //  Description: Methods that constructs the database. Should be called at a timed interval
+
+        buildBaseData();
+        purgeBaseData();
+        buildStatistics();
+
+        return this;
+    }
+
     public void addRaw(Item item) {
         //  Name: addRaw
         //  Date created: 05.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 12.12.2017
         //  Description: Method that adds entries to raw data database
 
         // Skip duplicate items
@@ -65,14 +87,14 @@ public class DataEntry {
 
         // Add item ID to duplicate list
         duplicates.add(item.getId());
-        if (duplicates.size() > 60)
-            duplicates.subList(0, duplicates.size() - 60).clear();
+        if (duplicates.size() > DUPLICATES_SIZE)
+            duplicates.subList(0, duplicates.size() - DUPLICATES_SIZE).clear();
     }
 
     private void buildBaseData() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 12.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         String index;
@@ -107,9 +129,12 @@ public class DataEntry {
                 baseData.add(value);
         }
 
+        // Clear raw data
+        rawData.clear();
+
         // Soft-cap list at 100 entries
-        if (baseData.size() > 100)
-            baseData.subList(0, baseData.size() - 100).clear();
+        if (baseData.size() > BASEDATA_SIZE)
+            baseData.subList(0, baseData.size() - BASEDATA_SIZE).clear();
     }
 
     private void purgeBaseData() {
@@ -139,12 +164,11 @@ public class DataEntry {
     private void buildStatistics() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 10.12.2017
+        //  Last modified: 12.12.2017
         //  Description: Method that adds entries to statistics
 
-        Double mean = 0.0;
-        int count = baseData.size();
-        this.count = count;
+        // Assign count to local "global" variable
+        this.count = baseData.size();
 
         // Make a copy so the original order persists and sort new array
         ArrayList<Double> tempValueList = new ArrayList<>();
@@ -176,23 +200,41 @@ public class DataEntry {
             tempValueList.subList(0, 5).clear();
         }
 
-        // Reassign count
-        count = tempValueList.size();
-
-        // Add up values to calculate mean
-        for (Double i : tempValueList)
-            mean += i;
-
-        // Calculate mean and median values and round them to 3 digits
-        this.mean = Math.round(mean / count * 10000) / 10000.0;
-        this.median = Math.round(tempValueList.get((int) (count / 2.0)) * 10000) / 10000.0;
+        // Calculate mean and median values
+        this.mean = findMean(tempValueList);
+        this.median = findMedian(tempValueList);
 
         // Add value to hourly
         hourlyData.add(this.median);
 
         // Limit hourly to 60 values
-        if (hourlyData.size() > 60)
-            hourlyData.subList(0, hourlyData.size() - 60).clear();
+        if (hourlyData.size() > HOURLY_DATA_SIZE)
+            hourlyData.subList(0, hourlyData.size() - HOURLY_DATA_SIZE).clear();
+    }
+
+    private double findMean(ArrayList<Double> valueList){
+        //  Name: findMean
+        //  Date created: 12.12.2017
+        //  Last modified: 12.12.2017
+        //  Description: Finds the mean value of an array
+
+        double mean = 0.0;
+        int count = valueList.size();
+
+        // Add up values to calculate mean
+        for (Double i : valueList)
+            mean += i;
+
+        return Math.round(mean / count * 10000) / 10000.0;
+    }
+
+    private double findMedian(ArrayList<Double> valueList){
+        //  Name: findMedian
+        //  Date created: 12.12.2017
+        //  Last modified: 12.12.2017
+        //  Description: Finds the median value of an array. Has 1/4 shift to left
+
+        return Math.round(valueList.get((int) (valueList.size() / 4.0)) * 10000) / 10000.0;
     }
 
     /////////////////
@@ -202,7 +244,7 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 12.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
@@ -221,18 +263,9 @@ public class DataEntry {
         ArrayList<Double> tempValueList = new ArrayList<>();
         tempValueList.addAll(hourlyData);
         Collections.sort(tempValueList);
+        hourlyData.clear();
 
-        // Add up values to calculate mean
-        Double mean = 0.0;
-        for (Double i : tempValueList) {
-            mean += i;
-        }
-
-        int count = tempValueList.size();
-        mean = Math.round(mean / count * 10000) / 10000.0;
-        Double median = Math.round(tempValueList.get((int) (count / 2.0)) * 10000) / 10000.0;
-
-        return "{\"median\": " + median + ", \"mean\": " + mean + ", \"count\": " + this.count + "}";
+        return "{\"median\": " + findMedian(tempValueList) + ", \"mean\": " + findMean(tempValueList) + ", \"count\": " + this.count + "}";
     }
 
     public void parseIOLine(String[] splitLine) {

@@ -16,11 +16,8 @@ public class Main {
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 12.12.2017
         //  Description: The main class. Run this to run the program
-
-        // Print MotD
-        printMotD();
 
         // Ask the user how many workers should be spawned and spawn them
         WORKER_CONTROLLER.spawnWorkers(askUserForIntInputWithValidation());
@@ -171,15 +168,6 @@ public class Main {
         }
 
         return properties;
-    }
-
-    private static void printMotD() {
-        //  Name: printMotD()
-        //  Date created: 11.12.2017
-        //  Last modified: 11.12.2017
-        //  Description: Prints a message
-
-        System.out.println("PoE stash API JSON statistics generator\nMade by: Sander H. (179900IVSB)\n");
     }
 
     ////////////////////////////////////////

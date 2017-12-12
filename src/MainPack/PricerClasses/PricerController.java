@@ -13,7 +13,7 @@ import static MainPack.Main.timeStamp;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 11.12.2017
+    //  Last modified: 12.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
@@ -27,7 +27,7 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 12.12.2017
         //  Description: Main loop of the pricing service
 
         // Load data in on initial script launch
@@ -42,7 +42,9 @@ public class PricerController extends Thread {
             if (!flagLocalRun)
                 break;
 
+            flagPause = true;
             runCycle();
+            flagPause = false;
         }
     }
 
@@ -53,7 +55,6 @@ public class PricerController extends Thread {
         //  Description: Calls methods that construct/parse/write database entryMap
 
         // Prepare for database building
-        flagPause = true;
         System.out.println(timeStamp() + " Generating databases");
 
         // Increase DataEntry's static cycle count
@@ -78,7 +79,6 @@ public class PricerController extends Thread {
         JSONBuilder.setLength(0);
         lastType = "";
         lastLeague = "";
-        flagPause = false;
     }
 
     private void sleepWhile(int howLongInSeconds) {
@@ -204,7 +204,7 @@ public class PricerController extends Thread {
     private void packageJSON(DataEntry entry) {
         //  Name: packageJSON()
         //  Date created: 06.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 12.12.2017
         //  Description: Packages JSON and writes to file
 
         String JSONPacket = entry.buildJSONPackage();
@@ -212,17 +212,8 @@ public class PricerController extends Thread {
             return;
 
         // Reassign key (remove the league and type)
-        String key = "";
         String[] splitKey = entry.getKey().split("\\|");
-        for (int i = 0; i < splitKey.length; i++) {
-            if (i > 1)
-                key += splitKey[i] + "|";
-        }
-
-        // Reformat key, removing league and item type
-        ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
-        partialKey.subList(0, 2).clear();
-        key = String.join("|", partialKey);
+        String key = removeLeagueAndTypeFromKey(splitKey);
 
         // Check if key (league) has been changed
         if (lastLeague.equals("")) {
@@ -230,16 +221,14 @@ public class PricerController extends Thread {
             JSONBuilder.append("\"");
             JSONBuilder.append(lastLeague);
             JSONBuilder.append("\": {");
+        } else if (lastLeague.equals(splitKey[0])) {
+            JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
         } else {
-            if (lastLeague.equals(splitKey[0])) {
-                JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
-            } else {
-                lastLeague = splitKey[0];
-                JSONBuilder.append(",\"");
-                JSONBuilder.append(lastLeague);
-                JSONBuilder.append("\": {");
-                lastType = "";
-            }
+            lastLeague = splitKey[0];
+            JSONBuilder.append(",\"");
+            JSONBuilder.append(lastLeague);
+            JSONBuilder.append("\": {");
+            lastType = "";
         }
 
         // Check if key (item type) has been changed
@@ -248,16 +237,14 @@ public class PricerController extends Thread {
             JSONBuilder.append("\"");
             JSONBuilder.append(lastType);
             JSONBuilder.append("\": {");
+        } else if (lastType.equals(splitKey[1])) {
+            JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
+            JSONBuilder.append(",");
         } else {
-            if (lastType.equals(splitKey[1])) {
-                JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
-                JSONBuilder.append(",");
-            } else {
-                lastType = splitKey[1];
-                JSONBuilder.append(",\"");
-                JSONBuilder.append(lastType);
-                JSONBuilder.append("\": {");
-            }
+            lastType = splitKey[1];
+            JSONBuilder.append(",\"");
+            JSONBuilder.append(lastType);
+            JSONBuilder.append("\": {");
         }
 
         // Generate and add statistical data to the JSON skeleton
@@ -303,6 +290,21 @@ public class PricerController extends Thread {
                 ex.printStackTrace();
             }
         }
+    }
+
+    private String removeLeagueAndTypeFromKey(String[] splitKey){
+        //  Name: removeLeagueAndTypeFromKey()
+        //  Date created: 12.12.2017
+        //  Last modified: 12.12.2017
+        //  Description: Removes league and itemType fields from a database key
+        //      {"Abyss", "Amulets", "Name", "Type", "3"} -> "Name|Type|3"
+
+        // Convert array to ArrayList
+        ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
+        // Remove the first 2 elements
+        partialKey.subList(0, 2).clear();
+
+        return String.join("|", partialKey);
     }
 
     ///////////////////////
