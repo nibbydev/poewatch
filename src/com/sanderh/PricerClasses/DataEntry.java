@@ -1,13 +1,13 @@
-package MainPack.PricerClasses;
+package com.sanderh.PricerClasses;
 
-import MainPack.MapperClasses.Item;
+import com.sanderh.MapperClasses.Item;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static MainPack.Main.PRICER_CONTROLLER;
-import static MainPack.Main.PROPERTIES;
+import static com.sanderh.Main.PRICER_CONTROLLER;
+import static com.sanderh.Main.PROPERTIES;
 
 public class DataEntry {
     //  Name: DataEntry
