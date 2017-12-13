@@ -1,7 +1,9 @@
 # PoE stash API JSON statistics generator
 
 ## What it does? 
-TL;DR: calculates how much an item is worth (see [poe.ninja](http://poe.ninja)) based on Path of Exile's public [stash API](www.pathofexile.com/api/public-stash-tabs), writes results in JSON
+TL;DR: calculates how much an item is worth (see [poe.ninja](http://poe.ninja)) based on Path of Exile's public [stash API](http://www.pathofexile.com/api/public-stash-tabs), writes results in JSON
+
+Live example can be found [here](http://18.195.15.90).
 
 ## Workflow
 1. Concurrently downloads JSON-formatted strings from the official Path of Exile stash API

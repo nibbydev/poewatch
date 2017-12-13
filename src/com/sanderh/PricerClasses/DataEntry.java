@@ -1,17 +1,18 @@
-package MainPack.PricerClasses;
+package com.sanderh.PricerClasses;
 
-import MainPack.MapperClasses.Item;
+import com.sanderh.MapperClasses.Item;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
-import static MainPack.Main.PRICER_CONTROLLER;
-import static MainPack.Main.PROPERTIES;
+import static com.sanderh.Main.PRICER_CONTROLLER;
+import static com.sanderh.Main.PROPERTIES;
 
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 12.12.2017
+    //  Last modified: 13.12.2017
     //  Description: An object that stores an item's price data
 
     // Cycle counters
@@ -25,6 +26,10 @@ public class DataEntry {
     private double mean = 0.0;
     private double median = 0.0;
     private String key;
+
+    private String league = "";
+    private String type = "";
+    private String JSONkey = "";
 
     // Lists that hold price data
     private ArrayList<String[]> rawData = new ArrayList<>();
@@ -42,20 +47,6 @@ public class DataEntry {
     //////////////////
 
     public DataEntry databaseBuilder() {
-        //  Name: databaseBuilder
-        //  Date created: 11.12.2017
-        //  Last modified: 11.12.2017
-        //  Description: Methods that constructs the database. Should be called at a timed interval
-
-        buildBaseData();
-        purgeBaseData();
-        buildStatistics();
-        rawData.clear();
-
-        return this;
-    }
-
-    public DataEntry databaseBuilder2() {
         //  Name: databaseBuilder
         //  Date created: 11.12.2017
         //  Last modified: 12.12.2017
@@ -89,6 +80,25 @@ public class DataEntry {
         duplicates.add(item.getId());
         if (duplicates.size() > DUPLICATES_SIZE)
             duplicates.subList(0, duplicates.size() - DUPLICATES_SIZE).clear();
+    }
+
+    private void removeLeagueAndTypeFromKey() {
+        //  Name: removeLeagueAndTypeFromKey()
+        //  Date created: 12.12.2017
+        //  Last modified: 13.12.2017
+        //  Description: Removes league and itemType fields from a database key
+        //      {"Abyss", "Amulets", "Name", "Type", "3"} -> "Name|Type|3"
+
+        String[] splitKey = key.split("\\|");
+
+        // Convert array to ArrayList
+        ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
+        // Remove the first 2 elements
+        partialKey.subList(0, 2).clear();
+
+        JSONkey = String.join("|", partialKey);
+        league = splitKey[0];
+        type = splitKey[1];
     }
 
     private void buildBaseData() {
@@ -212,7 +222,7 @@ public class DataEntry {
             hourlyData.subList(0, hourlyData.size() - HOURLY_DATA_SIZE).clear();
     }
 
-    private double findMean(ArrayList<Double> valueList){
+    private double findMean(ArrayList<Double> valueList) {
         //  Name: findMean
         //  Date created: 12.12.2017
         //  Last modified: 12.12.2017
@@ -228,7 +238,7 @@ public class DataEntry {
         return Math.round(mean / count * 10000) / 10000.0;
     }
 
-    private double findMedian(ArrayList<Double> valueList){
+    private double findMedian(ArrayList<Double> valueList) {
         //  Name: findMedian
         //  Date created: 12.12.2017
         //  Last modified: 12.12.2017
@@ -244,12 +254,16 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
         if (cycleCount < CYCLE_LIMIT || hourlyData.isEmpty())
             return "";
+
+        // Format the key to fit for JSON
+        if (league.equals("") || type.equals(""))
+            removeLeagueAndTypeFromKey();
 
         // Warn the user if there are irregularities with the discard counter
         if (addedCounter < discardedCounter && discardedCounter > 20)
@@ -265,7 +279,7 @@ public class DataEntry {
         Collections.sort(tempValueList);
         hourlyData.clear();
 
-        return "{\"median\": " + findMedian(tempValueList) + ", \"mean\": " + findMean(tempValueList) + ", \"count\": " + this.count + "}";
+        return "\"" + JSONkey + "\":{\"median\": " + findMedian(tempValueList) + ", \"mean\": " + findMean(tempValueList) + ", \"count\": " + this.count + "}";
     }
 
     public void parseIOLine(String[] splitLine) {
@@ -358,10 +372,6 @@ public class DataEntry {
         return baseData.isEmpty();
     }
 
-    public String getKey() {
-        return key;
-    }
-
     public static void incCycleCount() {
         cycleCount++;
     }
@@ -376,5 +386,13 @@ public class DataEntry {
 
     public static boolean getCycleState() {
         return cycleCount >= CYCLE_LIMIT;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getLeague() {
+        return league;
     }
 }
