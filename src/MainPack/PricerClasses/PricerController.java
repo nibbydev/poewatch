@@ -13,11 +13,11 @@ import static MainPack.Main.timeStamp;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 12.12.2017
+    //  Last modified: 13.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
-    private static boolean flagPause = false;
+    private static boolean flagPause = true;
     private static final Map<String, DataEntry> entryMap = new TreeMap<>();
     private static final StringBuilder JSONBuilder = new StringBuilder();
 
@@ -27,20 +27,21 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Main loop of the pricing service
+
+        int sleepLength = Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle"));
+
+        // Wait for user to initiate program before building databases
+        while (flagPause) {
+            sleep(100);
+        }
 
         // Load data in on initial script launch
         readDataFromFile();
 
-        int sleepLength = Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle"));
-
-        while (true) {
+        while (flagLocalRun) {
             sleepWhile(sleepLength);
-
-            // Break if run flag has been lowered
-            if (!flagLocalRun)
-                break;
 
             flagPause = true;
             runCycle();
@@ -49,10 +50,13 @@ public class PricerController extends Thread {
     }
 
     private void runCycle() {
-        //  Name: runCycle()
+        //  Name: runCycle2()
         //  Date created: 11.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Calls methods that construct/parse/write database entryMap
+
+        // Make sure output folder exists
+        new File("./output").mkdir();
 
         // Prepare for database building
         System.out.println(timeStamp() + " Generating databases");
@@ -61,24 +65,23 @@ public class PricerController extends Thread {
         DataEntry.incCycleCount();
 
         // Loop through database entries, calling their methods
-        JSONBuilder.append("{");
         entryMap.forEach((String key, DataEntry entry) -> packageJSON(entry.databaseBuilder()));
         JSONBuilder.append("}");
+        writeJSONToFile();
 
         // Write generated data to file
         writeDataToFile();
-        writeJSONToFile();
 
         // Zero DataEntry's static cycle count
-        if(DataEntry.getCycleState()) {
+        if (DataEntry.getCycleState()) {
             DataEntry.zeroCycleCount();
             System.out.println(timeStamp() + " Building JSON");
         }
 
         // Clean up after building
         JSONBuilder.setLength(0);
-        lastType = "";
         lastLeague = "";
+        lastType = "";
     }
 
     private void sleepWhile(int howLongInSeconds) {
@@ -102,10 +105,23 @@ public class PricerController extends Thread {
         }
     }
 
+    private void sleep(int timeMS) {
+        //  Name: sleep()
+        //  Date created: 02.12.2017
+        //  Last modified: 13.12.2017
+        //  Description: Sleeps for <timeMS> ms
+
+        try {
+            Thread.sleep(timeMS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void parseItems(APIReply reply) {
         //  Name: parseItems()
         //  Date created: 28.11.2017
-        //  Last modified: 10.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Loop through every single item, checking every single one of them
@@ -113,18 +129,13 @@ public class PricerController extends Thread {
             for (Item item : stash.getItems()) {
                 // Pause during I/O operations
                 while (flagPause) {
-                    // Sleep for 100ms
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    }
+                    sleep(100);
                 }
 
                 // Parse item data
                 item.parseItem();
                 if (item.isDiscard())
-                    continue; // FML. this used to be return
+                    continue;
 
                 // Add item to database
                 entryMap.putIfAbsent(item.getKey(), new DataEntry());
@@ -133,6 +144,17 @@ public class PricerController extends Thread {
         }
     }
 
+    public void stopController() {
+        //  Name: stopController()
+        //  Date created: 13.12.2017
+        //  Last modified: 13.12.2017
+        //  Description: Shuts down the controller safely
+
+        flagPause = false;
+        flagLocalRun = false;
+    }
+
+
     //////////////////////////////////////
     // Methods used to manage databases //
     //////////////////////////////////////
@@ -140,7 +162,7 @@ public class PricerController extends Thread {
     public void readDataFromFile() {
         //  Name: readDataFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Reads and parses database data from file
 
         String line;
@@ -157,6 +179,7 @@ public class PricerController extends Thread {
             }
 
         } catch (IOException ex) {
+            System.out.println("[INFO] File not found: ./data.txt");
         } finally {
             try {
                 if (bufferedReader != null) {
@@ -202,83 +225,62 @@ public class PricerController extends Thread {
     }
 
     private void packageJSON(DataEntry entry) {
-        //  Name: packageJSON()
-        //  Date created: 06.12.2017
-        //  Last modified: 12.12.2017
-        //  Description: Packages JSON and writes to file
+        //  Name: packageJSON2()
+        //  Date created: 13.12.2017
+        //  Last modified: 13.12.2017
+        //  Description: Builds a JSON-string out of JSON packets
 
-        String JSONPacket = entry.buildJSONPackage();
-        if (JSONPacket.equals(""))
+        String JSONPackage = entry.buildJSONPackage();
+        if (JSONPackage.equals(""))
             return;
 
-        // Reassign key (remove the league and type)
-        String[] splitKey = entry.getKey().split("\\|");
-        String key = removeLeagueAndTypeFromKey(splitKey);
-
-        // Check if key (league) has been changed
         if (lastLeague.equals("")) {
-            lastLeague = splitKey[0];
-            JSONBuilder.append("\"");
-            JSONBuilder.append(lastLeague);
-            JSONBuilder.append("\": {");
-        } else if (lastLeague.equals(splitKey[0])) {
-            JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
-        } else {
-            lastLeague = splitKey[0];
-            JSONBuilder.append(",\"");
-            JSONBuilder.append(lastLeague);
-            JSONBuilder.append("\": {");
+            JSONBuilder.append("{");
+        } else if (!lastLeague.equals(entry.getLeague())) {
+            JSONBuilder.append("}}");
             lastType = "";
+
+            writeJSONToFile();
+            JSONBuilder.setLength(0);
+            JSONBuilder.append("{");
         }
 
-        // Check if key (item type) has been changed
         if (lastType.equals("")) {
-            lastType = splitKey[1];
             JSONBuilder.append("\"");
-            JSONBuilder.append(lastType);
-            JSONBuilder.append("\": {");
-        } else if (lastType.equals(splitKey[1])) {
-            JSONBuilder.deleteCharAt(JSONBuilder.lastIndexOf("}"));
+            JSONBuilder.append(entry.getType());
+            JSONBuilder.append("\":{");
+        } else if (lastType.equals(entry.getType())) {
             JSONBuilder.append(",");
         } else {
-            lastType = splitKey[1];
-            JSONBuilder.append(",\"");
-            JSONBuilder.append(lastType);
-            JSONBuilder.append("\": {");
+            JSONBuilder.append("},\"");
+            JSONBuilder.append(entry.getType());
+            JSONBuilder.append("\":{");
         }
 
-        // Generate and add statistical data to the JSON skeleton
-        JSONBuilder.append("\"");
-        JSONBuilder.append(key);
-        JSONBuilder.append("\": ");
-        JSONBuilder.append(JSONPacket);
-        JSONBuilder.append("}}");
+        lastLeague = entry.getLeague();
+        lastType = entry.getType();
+        JSONBuilder.append(JSONPackage);
     }
 
     private void writeJSONToFile() {
-        //  Name: writeJSONToFile()
+        //  Name: writeJSONToFile2()
         //  Date created: 06.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Basically writes JSON string to file
 
         if (JSONBuilder.length() < 5)
             return;
 
-        // Zero DataEntry's static cycle count
-        DataEntry.zeroCycleCount();
-
-        System.out.println(timeStamp() + " Building JSON");
-
         OutputStream fOut = null;
 
         // Writes values from statistics to file
         try {
-            File fFile = new File("./report.json");
+            File fFile = new File("./output/" + lastLeague + ".json");
             fOut = new FileOutputStream(fFile);
             fOut.write(JSONBuilder.toString().getBytes());
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write report.json:");
+            System.out.println("[ERROR] Could not write ./output/" + lastLeague + ".json");
             ex.printStackTrace();
         } finally {
             try {
@@ -292,28 +294,9 @@ public class PricerController extends Thread {
         }
     }
 
-    private String removeLeagueAndTypeFromKey(String[] splitKey){
-        //  Name: removeLeagueAndTypeFromKey()
-        //  Date created: 12.12.2017
-        //  Last modified: 12.12.2017
-        //  Description: Removes league and itemType fields from a database key
-        //      {"Abyss", "Amulets", "Name", "Type", "3"} -> "Name|Type|3"
-
-        // Convert array to ArrayList
-        ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
-        // Remove the first 2 elements
-        partialKey.subList(0, 2).clear();
-
-        return String.join("|", partialKey);
-    }
-
     ///////////////////////
     // Getters / Setters //
     ///////////////////////
-
-    public void stopController() {
-        flagLocalRun = false;
-    }
 
     public void setFlagPause(boolean newFlagPause) {
         flagPause = newFlagPause;

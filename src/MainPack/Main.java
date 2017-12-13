@@ -60,20 +60,20 @@ public class Main {
     private static void commandLoop() {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Command loop method. Allows the user some interaction with the script as it is running.
         //  Parent methods:
         //      main()
 
-        String helpString = "[INFO] Available commands include:\n";
         String[] userInput;
 
-        helpString += "    help - display this help page\n";
-        helpString += "    exit - exit the script safely\n";
-        helpString += "    pause - pause item parsing\n";
-        helpString += "    worker - manage workers\n";
-        helpString += "    id - add a start changeID\n";
-
+        String helpString = "[INFO] Available commands include:\n"
+                + "    help - display this help page\n"
+                + "    exit - exit the script safely\n"
+                + "    pause - pause item parsing\n"
+                + "    worker - manage workers\n"
+                + "    id - add a start changeID\n"
+                + "    about - show about page\n";
         System.out.println(helpString);
 
         while (true) {
@@ -94,6 +94,9 @@ public class Main {
                     break;
                 case "worker":
                     commandWorker(userInput);
+                    break;
+                case "about":
+                    commandAbout();
                     break;
                 default:
                     System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -177,7 +180,7 @@ public class Main {
     private static void commandIdAdd(String[] userInput) {
         //  Name: commandIdAdd()
         //  Date created: 27.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 13.12.2017
         //  Description: Adds a ChangeID to the queue
 
 
@@ -202,6 +205,7 @@ public class Main {
                 WorkerController.setNextChangeID(userInput[1]);
         }
 
+        PRICER_CONTROLLER.setFlagPause(false);
         System.out.println("[INFO] New ChangeID added");
     }
 
@@ -248,6 +252,18 @@ public class Main {
             PRICER_CONTROLLER.setFlagPause(true);
             System.out.println("[INFO] Paused");
         }
+    }
+
+    private static void commandAbout(){
+        //  Name: commandAbout()
+        //  Date created: 13.12.2017
+        //  Last modified: 13.12.2017
+        //  Description: Prints about page
+
+        String about = "Project name: PoE stash API JSON statistics generator\n"
+                + "Made by: Sander H. (179900IVSB)\n"
+                + "Licenced under MIT licence, 2017\n";
+        System.out.println(about);
     }
 
 }
