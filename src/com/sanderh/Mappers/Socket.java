@@ -1,4 +1,4 @@
-package com.sanderh.MapperClasses;
+package com.sanderh.Mappers;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 

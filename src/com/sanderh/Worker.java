@@ -1,6 +1,6 @@
 package com.sanderh;
 
-import com.sanderh.MapperClasses.APIReply;
+import com.sanderh.Mappers.APIReply;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -12,14 +12,12 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.sanderh.Main.PRICER_CONTROLLER;
-import static com.sanderh.Main.PROPERTIES;
-import static com.sanderh.Main.timeStamp;
+import static com.sanderh.Main.*;
 
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 11.12.2017
+    //  Last modified: 16.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private static final int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
@@ -79,7 +77,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Method that downloads data from the API
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
@@ -93,6 +91,7 @@ public class Worker extends Thread {
             sleep(10);
         }
         lastPullTime = System.currentTimeMillis();
+        STATISTICS.incPullCountTotal();
 
         try {
             // Define the request
@@ -116,6 +115,12 @@ public class Worker extends Thread {
                     if (matcher.find()) {
                         this.nextChangeID = matcher.group();
                         regexLock = false;
+
+                        // If new changeID is equal to the previous changeID, it has already been downloaded
+                        if (this.nextChangeID.equals(this.job)) {
+                            STATISTICS.incPullCountDuplicate();
+                            return "";
+                        }
                     }
                 }
             }
@@ -129,6 +134,8 @@ public class Worker extends Thread {
                 this.nextChangeID = this.job;
             }
 
+            STATISTICS.incPullCountFailed();
+
             // Clear the buffer so that an empty string will be returned instead
             stringBuilderBuffer.setLength(0);
         } finally {
@@ -141,7 +148,6 @@ public class Worker extends Thread {
         }
 
         // Return the downloaded mess of a JSON string
-        // If the script reached this point, something probably went wrong
         return stringBuilderBuffer.toString();
     }
 

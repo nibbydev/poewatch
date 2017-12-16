@@ -1,6 +1,6 @@
 package com.sanderh;
 
-import com.sanderh.PricerClasses.PricerController;
+import com.sanderh.Pricer.PricerController;
 import NotMadeByMe.TextIO;
 
 import java.io.FileInputStream;
@@ -12,6 +12,7 @@ public class Main {
     public static final Properties PROPERTIES = readProperties();
     public static final WorkerController WORKER_CONTROLLER = new WorkerController();
     public static final PricerController PRICER_CONTROLLER = new PricerController();
+    public static final Statistics STATISTICS = new Statistics();
 
     public static void main(String[] args) {
         //  Name: main()

@@ -1,4 +1,4 @@
-package com.sanderh.MapperClasses;
+package com.sanderh.Mappers;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class Item {
     //  Name: Item
     //  Date created: 23.11.2017
-    //  Last modified: 13.12.2017
+    //  Last modified: 16.12.2017
     //  Description: Class used for deserializing a JSON string
 
     // Variables used by deserializer
@@ -92,7 +92,7 @@ public class Item {
     public void parseItem() {
         //  Name: parseItem()
         //  Date created: 08.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Calls other Item class related methods.
 
         // Do a few checks on the league, note and etc
@@ -108,41 +108,60 @@ public class Item {
         // Make database key and find item type
         formatNameAndItemType();
 
-        // Filter out white base types (but allow maps)
-        if (frameType == 0 && !itemType.contains("maps") && !itemType.equals("New")) {
-            setDiscard();
-            return;
-        }
+        switch (frameType) {
+            case 0: // Normal
+            case 1: // Magic
+            case 2: // Rare
+                switch (itemType){
+                    case "New":
+                    case "Maps":
+                    case "AtlasMaps":
+                    case "Atlas2Maps":
+                    case "act4maps":
+                        break;
+                    default:
+                        setDiscard();
+                        return;
+                }
 
-        // Check gem info or check links and variants
-        if (frameType == 4) {
-            checkGemInfo();
-        } else {
-            checkSixLink();
-            checkSpecialItemVariant();
+                if (key.contains("Superior ")) {
+                    // "Superior Ashen Wood" = "Ashen Wood"
+                    key = key.replace("Superior ", "");
+                }
+
+                // Include maps under similar frame type
+                frameType = 0;
+
+                break;
+
+            case 4: // Gem
+                checkGemInfo();
+                break;
+
+            default:
+                checkSixLink();
+                checkSpecialItemVariant();
         }
     }
 
     private void basicChecks() {
         //  Name: basicChecks()
         //  Date created: 28.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Method that does a few basic checks on items
-        //  Parent methods:
-        //      parseItem()
 
         if (note.equals("")) {
             // Filter out items without prices
             setDiscard();
-        } else if (frameType == 1 || frameType == 2 || frameType == 7) {
-            // Filter out unpriceable items
-            setDiscard();
+        //} else if (frameType == 1 || frameType == 2 || frameType == 7) {
+        //    // Filter out unpriceable items
+        //    setDiscard();
         } else if (!identified) {
             // Filter out unidentified items
             setDiscard();
-        } else if (corrupted && frameType != 4) {
-            // Filter out corrupted items besides gems
-            setDiscard();
+        //} else if (corrupted && frameType != 4) {
+        //    // Filter out corrupted items besides gems
+        //    setDiscard();
         } else if (league.contains("SSF")) {
             // Filter out SSF leagues as trading there is disabled
             setDiscard();
@@ -204,10 +223,8 @@ public class Item {
     private void formatNameAndItemType() {
         //  Name: formatNameAndItemType()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Format the item's full name and finds the item type
-        //  Parent methods:
-        //      parseItem()
 
         // Start key with league
         addKey(league);
@@ -231,6 +248,8 @@ public class Item {
         // Format the name that will serve as the database key
         if (name.equals("")) {
             addKey("|" + typeLine);
+            name = typeLine;
+            typeLine = "";
         } else {
             addKey("|" + name);
             if (!typeLine.equals(""))
@@ -244,10 +263,8 @@ public class Item {
     private void checkGemInfo() {
         //  Name: checkGemInfo()
         //  Date created: 28.11.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Checks gem-specific information
-        //  Parent methods:
-        //      parseItem()
 
         int lvl = -1;
         int quality = 0;
@@ -268,7 +285,7 @@ public class Item {
         }
 
         // Begin the long block that filters out gems based on a number of properties
-        if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
+        if (key.contains("Empower Support") || key.contains("Enlighten Support") || key.contains("Enhance Support")) {
             if (corrupted) {
                 if (lvl == 4 || lvl == 3)
                     quality = 0;
@@ -338,14 +355,21 @@ public class Item {
     private void checkSixLink() {
         //  Name: checkSixLink()
         //  Date created: 28.11.2017
-        //  Last modified: 10.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Since 6-links are naturally more expensive, assign them a separate key
-        //  Parent methods:
-        //      checkItem()
 
-        if (!itemType.equals("Staves") && !itemType.equals("BodyArmours") && !itemType.equals("TwoHandSwords"))
-            if (!itemType.equals("TwoHandMaces") && !itemType.equals("TwoHandAxes") && !itemType.equals("Bows"))
+        // Filter out items that can have 6 links
+        switch (itemType) {
+            case "Staves":
+            case "BodyArmours":
+            case "TwoHandSwords":
+            case "TwoHandMaces":
+            case "TwoHandAxes":
+            case "Bows":
+                break;
+            default:
                 return;
+        }
 
         // This was an error somehow, somewhere
         if (sockets == null) {
@@ -378,7 +402,7 @@ public class Item {
     private void checkSpecialItemVariant() {
         //  Name: checkSpecialItemVariant()
         //  Date created: 28.11.2017
-        //  Last modified: 10.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Check if the item has a special variant, eg vessel of vinktar
         //  Parent methods:
         //      parseItem()
@@ -409,7 +433,7 @@ public class Item {
 
                 // Values taken from https://pathofexile.gamepedia.com/Atziri%27s_Splendour (at 29.11.2017)
                 if (1052 <= armour && armour <= 1118) {
-                    if (energy == 76) {
+                    if (75 <= energy && energy <= 77) {
                         keySuffix = "|var(ar/ev/li)";
                     } else if (204 <= energy && energy <= 217) {
                         keySuffix = "|var(ar/es/li)";
@@ -666,12 +690,7 @@ public class Item {
     }
 
     public void setName(String name) {
-        // This one is a bit longer but it's still a setter. Problem here is that some items come prefixed with
-        // "<<set:MS>><<set:M>><<set:S>>" for whatever reason. This is frowned upon so it has to be removed.
-        if (name.contains("<<set:MS>><<set:M>><<set:S>>"))
-            this.name = name.replace("<<set:MS>><<set:M>><<set:S>>", "");
-        else
-            this.name = name;
+        this.name = name.substring(name.lastIndexOf(">") + 1);
     }
 
     public void setNote(String note) {

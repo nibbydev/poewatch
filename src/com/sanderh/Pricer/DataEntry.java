@@ -1,6 +1,6 @@
-package com.sanderh.PricerClasses;
+package com.sanderh.Pricer;
 
-import com.sanderh.MapperClasses.Item;
+import com.sanderh.Mappers.Item;
 
 import java.util.ArrayList;
 import java.util.Arrays;

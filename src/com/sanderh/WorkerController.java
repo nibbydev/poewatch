@@ -1,6 +1,6 @@
 package com.sanderh;
 
-import com.sanderh.MapperClasses.ChangeID;
+import com.sanderh.Mappers.ChangeID;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -9,11 +9,12 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static com.sanderh.Main.PROPERTIES;
+import static com.sanderh.Main.STATISTICS;
 
 public class WorkerController extends Thread {
     //  Name: WorkerController
     //  Date created: 21.11.2017
-    //  Last modified: 11.12.2017
+    //  Last modified: 16.12.2017
     //  Description: Object that's used to manage worker objects
 
     private static final int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
@@ -28,7 +29,7 @@ public class WorkerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 22.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Assigns jobs to workers
 
         // Run main loop while flag is up
@@ -44,6 +45,9 @@ public class WorkerController extends Thread {
                         // Copy the new job over to the local variable, which will be assigned to a worker on the next
                         // iteration of the while loop
                         nextChangeID = worker.getNextChangeID();
+
+                        STATISTICS.setLatestChangeID(nextChangeID);
+
                         worker.setNextChangeID("");
                         break;
                     }

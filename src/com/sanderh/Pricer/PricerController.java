@@ -1,13 +1,14 @@
-package com.sanderh.PricerClasses;
+package com.sanderh.Pricer;
 
-import com.sanderh.MapperClasses.APIReply;
-import com.sanderh.MapperClasses.Item;
-import com.sanderh.MapperClasses.Stash;
+import com.sanderh.Mappers.APIReply;
+import com.sanderh.Mappers.Item;
+import com.sanderh.Mappers.Stash;
 
 import java.io.*;
 import java.util.*;
 
 import static com.sanderh.Main.PROPERTIES;
+import static com.sanderh.Main.STATISTICS;
 import static com.sanderh.Main.timeStamp;
 
 public class PricerController extends Thread {
@@ -121,7 +122,7 @@ public class PricerController extends Thread {
     public void parseItems(APIReply reply) {
         //  Name: parseItems()
         //  Date created: 28.11.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Loop through every single item, checking every single one of them
@@ -131,6 +132,8 @@ public class PricerController extends Thread {
                 while (flagPause) {
                     sleep(100);
                 }
+
+                STATISTICS.parseItem(item);
 
                 // Parse item data
                 item.parseItem();
