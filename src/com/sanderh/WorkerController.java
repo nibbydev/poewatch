@@ -20,7 +20,8 @@ public class WorkerController extends Thread {
     private static final int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
     private static boolean flagLocalRun = true;
     private static ArrayList<Worker> workerList = new ArrayList<>();
-    private static String nextChangeID = "";
+    private static final ArrayList<String> nextChangeIDs = new ArrayList<>();
+    private static final Object monitor = new Object();
 
     /////////////////////////////
     // Actually useful methods //
@@ -34,50 +35,55 @@ public class WorkerController extends Thread {
 
         // Run main loop while flag is up
         while (flagLocalRun) {
-            sleep(100);
+            checkMonitor();
 
-            // Check if nextChangeID has a value
-            if (nextChangeID.equals("")) {
-                // Loop through every worker as there's a new job to be given out
+            // While there's a job that needs to be given out
+            while (!nextChangeIDs.isEmpty() && flagLocalRun) {
+                // Loop through workers
                 for (Worker worker : workerList) {
-                    // Check if a worker has a job available
-                    if (!worker.getNextChangeID().equals("")) {
-                        // Copy the new job over to the local variable, which will be assigned to a worker on the next
-                        // iteration of the while loop
-                        nextChangeID = worker.getNextChangeID();
-
-                        STATISTICS.setLatestChangeID(nextChangeID);
-
-                        worker.setNextChangeID("");
-                        break;
-                    }
+                    // Check if worker is free
+                    if (worker.hasJob()) continue;
+                    // Give the LATEST job to the worker
+                    worker.setJob(nextChangeIDs.get(nextChangeIDs.size() - 1));
+                    // Remove all older jobs from the list
+                    nextChangeIDs.clear();
+                    // Wake the worker so it can start working on the job
+                    wakeWorkerMonitor(worker);
+                    break;
                 }
-            } else {
-                // Loop through every worker to check if any of them have found a new job
-                for (Worker worker : workerList) {
-                    // Check if the current worker has no active job
-                    if (worker.getJob().equals("")) {
-                        // Give the job to the worker
-                        worker.setJob(nextChangeID);
-                        // Remove the job that was just given out
-                        nextChangeID = "";
-                        break;
-                    }
+
+                // Wait for a moment if all workers are busy
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
                 }
             }
         }
     }
 
-    private void sleep(int timeMS) {
-        //  Name: sleep()
-        //  Date created: 02.12.2017
-        //  Last modified: 11.12.2017
-        //  Description: Sleeps for <timeMS> ms
+    private void checkMonitor() {
+        //  Name: checkMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Sleeps until monitor object is notified?
 
-        try {
-            Thread.sleep(timeMS);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
+        synchronized (monitor) {
+            try {
+                monitor.wait();
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+
+    private void wakeWorkerMonitor(Worker worker) {
+        //  Name: wakeWorkerMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Wakes Worker
+
+        synchronized (worker.getMonitor()) {
+            worker.getMonitor().notifyAll();
         }
     }
 
@@ -149,17 +155,18 @@ public class WorkerController extends Thread {
     public void stopController() {
         //  Name: stopController()
         //  Date created: 11.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Stops all running workers and this object's process
 
-        // Loop though every worker and raise the stop flag
+        flagLocalRun = false;
+
+        // Loop though every worker and call stop method
         for (Worker worker : workerList) {
             worker.stopWorker();
+            wakeWorkerMonitor(worker);
         }
 
         workerList.clear();
-
-        flagLocalRun = false;
     }
 
     //////////////////////////////////////////////////////////
@@ -239,7 +246,11 @@ public class WorkerController extends Thread {
     ///////////////////////
 
     public static void setNextChangeID(String newChangeID) {
-        nextChangeID = newChangeID;
+        nextChangeIDs.add(newChangeID);
+    }
+
+    public static Object getMonitor() {
+        return monitor;
     }
 
 }

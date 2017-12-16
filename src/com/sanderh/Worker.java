@@ -22,11 +22,11 @@ public class Worker extends Thread {
 
     private static final int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
     private static final int CHUNK_SIZE = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
+    private final Object monitor = new Object();
     private static long lastPullTime = 0;
     private boolean flagLocalRun = true;
-    private int index;
-    private String nextChangeID = "";
     private String job = "";
+    private int index;
 
     /////////////////////////////
     // Actually useful methods //
@@ -35,41 +35,48 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Contains the main loop of the worker
-        //  Child methods:
-        //      downloadData()
-        //      deSerializeJSONString()
-        //      sleep()
 
         String replyJSONString;
         APIReply reply;
 
         // Run while flag is true
         while (flagLocalRun) {
-            sleep(100);
+            // Snooze
+            checkMonitor();
 
-            // Check for new jobs
-            if (!job.equals("")) {
+            // Check if new job has been added after interrupt
+            if (!job.equals("") && flagLocalRun) {
                 // Download and parse data according to the changeID.
                 replyJSONString = downloadData();
 
                 // If download was unsuccessful, stop
-                if (replyJSONString.equals(""))
-                    continue;
+                if (!replyJSONString.equals("")) {
+                    // Deserialize the JSON string
+                    reply = deSerializeJSONString(replyJSONString);
 
-                // Deserialize the JSON string
-                reply = deSerializeJSONString(replyJSONString);
-
-                // If deserialization was unsuccessful, stop
-                if (reply.getNext_change_id().equals(""))
-                    continue;
-
-                // Parse the deserialized JSON
-                PRICER_CONTROLLER.parseItems(reply);
+                    // Parse the deserialized JSON if deserialization was successful
+                    if (!reply.getNext_change_id().equals(""))
+                        PRICER_CONTROLLER.parseItems(reply);
+                }
 
                 // Clear the job
                 setJob("");
+            }
+        }
+    }
+
+    private void checkMonitor() {
+        //  Name: checkMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Sleeps until monitor object is notified?
+
+        synchronized (monitor) {
+            try {
+                monitor.wait();
+            } catch (InterruptedException e) {
             }
         }
     }
@@ -87,7 +94,7 @@ public class Worker extends Thread {
         int byteCount;
 
         // Sleep for x milliseconds
-        while(System.currentTimeMillis() - lastPullTime < DOWNLOAD_DELAY) {
+        while (System.currentTimeMillis() - lastPullTime < DOWNLOAD_DELAY) {
             sleep(10);
         }
         lastPullTime = System.currentTimeMillis();
@@ -113,11 +120,13 @@ public class Worker extends Thread {
                     Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
                     Matcher matcher = pattern.matcher(stringBuilderBuffer.toString());
                     if (matcher.find()) {
-                        this.nextChangeID = matcher.group();
                         regexLock = false;
+                        //System.out.println(this.job + " - > " + matcher.group());
+                        WorkerController.setNextChangeID(matcher.group());
+                        wakeWorkerControllerMonitor();
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
-                        if (this.nextChangeID.equals(this.job)) {
+                        if (matcher.group().equals(this.job)) {
                             STATISTICS.incPullCountDuplicate();
                             return "";
                         }
@@ -129,9 +138,10 @@ public class Worker extends Thread {
             System.out.println(timeStamp() + " Caught worker download error: " + ex.getMessage());
 
             // Add old changeID to the pool only if a new one hasn't been found
-            if(regexLock) {
+            if (regexLock) {
                 sleep(5000);
-                this.nextChangeID = this.job;
+                WorkerController.setNextChangeID(this.job);
+                wakeWorkerControllerMonitor();
             }
 
             STATISTICS.incPullCountFailed();
@@ -149,6 +159,17 @@ public class Worker extends Thread {
 
         // Return the downloaded mess of a JSON string
         return stringBuilderBuffer.toString();
+    }
+
+    private void wakeWorkerControllerMonitor() {
+        //  Name: wakeWorkerControllerMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Wakes WorkerController
+
+        synchronized (WorkerController.getMonitor()) {
+            WorkerController.getMonitor().notifyAll();
+        }
     }
 
     private String trimPartialByteBuffer(byte[] buffer, int length) {
@@ -215,10 +236,6 @@ public class Worker extends Thread {
     // Getters / Setters //
     ///////////////////////
 
-    public void setNextChangeID(String nextChangeID) {
-        this.nextChangeID = nextChangeID;
-    }
-
     public void setJob(String job) {
         this.job = job;
     }
@@ -227,20 +244,23 @@ public class Worker extends Thread {
         this.index = index;
     }
 
-    public void stopWorker() {
-        this.flagLocalRun = false;
-    }
-
     public int getIndex() {
         return index;
     }
 
-    public String getNextChangeID() {
-        return nextChangeID;
+    public boolean hasJob() {
+        return !job.equals("");
     }
 
     public String getJob() {
         return job;
     }
 
+    public Object getMonitor() {
+        return monitor;
+    }
+
+    public void stopWorker() {
+        this.flagLocalRun = false;
+    }
 }

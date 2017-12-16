@@ -33,6 +33,7 @@ public class Main {
         // Stop workers on exit
         WORKER_CONTROLLER.stopController();
         PRICER_CONTROLLER.stopController();
+        wakeControllers();
     }
 
     private static int askUserForIntInputWithValidation() {
@@ -174,6 +175,22 @@ public class Main {
         return properties;
     }
 
+    private static void wakeControllers(){
+        //  Name: wakeControllers()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Wakes all objects from sleep
+
+        // Wake price controller
+        synchronized (PricerController.getMonitor()){
+            PricerController.getMonitor().notifyAll();
+        }
+        // Wake worker controller
+        synchronized (WorkerController.getMonitor()){
+            WorkerController.getMonitor().notifyAll();
+        }
+    }
+
     ////////////////////////////////////////
     // Methods extracted from commandLoop //
     ////////////////////////////////////////
@@ -181,9 +198,8 @@ public class Main {
     private static void commandIdAdd(String[] userInput) {
         //  Name: commandIdAdd()
         //  Date created: 27.11.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Adds a ChangeID to the queue
-
 
         String helpString = "[INFO] Available changeID commands:\n";
         helpString += "    'id <string>' - Add optional string to job queue\n";
@@ -206,7 +222,7 @@ public class Main {
                 WorkerController.setNextChangeID(userInput[1]);
         }
 
-        PRICER_CONTROLLER.setFlagPause(false);
+        wakeControllers();
         System.out.println("[INFO] New ChangeID added");
     }
 
@@ -258,13 +274,12 @@ public class Main {
     private static void commandAbout(){
         //  Name: commandAbout()
         //  Date created: 13.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Prints about page
 
         String about = "Project name: PoE stash API JSON statistics generator\n"
-                + "Made by: Sander H. (179900IVSB)\n"
+                + "Made by: Sander H.\n"
                 + "Licenced under MIT licence, 2017\n";
         System.out.println(about);
     }
-
 }

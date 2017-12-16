@@ -7,46 +7,45 @@ import com.sanderh.Mappers.Stash;
 import java.io.*;
 import java.util.*;
 
-import static com.sanderh.Main.PROPERTIES;
-import static com.sanderh.Main.STATISTICS;
-import static com.sanderh.Main.timeStamp;
+import static com.sanderh.Main.*;
 
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 13.12.2017
+    //  Last modified: 16.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
-    private static boolean flagPause = true;
+    private static boolean flagPause = false;
     private static final Map<String, DataEntry> entryMap = new TreeMap<>();
     private static final StringBuilder JSONBuilder = new StringBuilder();
 
     private static String lastLeague = "";
     private static String lastType = "";
 
+    private static final Object monitor = new Object();
+
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Main loop of the pricing service
 
         int sleepLength = Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle"));
 
         // Wait for user to initiate program before building databases
-        while (flagPause) {
-            sleep(100);
-        }
+        checkMonitor();
 
         // Load data in on initial script launch
         readDataFromFile();
 
+        sleepWhile(sleepLength);
         while (flagLocalRun) {
-            sleepWhile(sleepLength);
-
             flagPause = true;
             runCycle();
             flagPause = false;
+
+            sleepWhile(sleepLength);
         }
     }
 
@@ -83,6 +82,20 @@ public class PricerController extends Thread {
         JSONBuilder.setLength(0);
         lastLeague = "";
         lastType = "";
+    }
+
+    private void checkMonitor() {
+        //  Name: checkMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Sleeps until monitor object is notified?
+
+        synchronized (monitor) {
+            try {
+                monitor.wait();
+            } catch (InterruptedException e) {
+            }
+        }
     }
 
     private void sleepWhile(int howLongInSeconds) {
@@ -150,13 +163,12 @@ public class PricerController extends Thread {
     public void stopController() {
         //  Name: stopController()
         //  Date created: 13.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Shuts down the controller safely
 
         flagPause = false;
         flagLocalRun = false;
     }
-
 
     //////////////////////////////////////
     // Methods used to manage databases //
@@ -311,5 +323,9 @@ public class PricerController extends Thread {
 
     public Map<String, DataEntry> getEntryMap() {
         return entryMap;
+    }
+
+    public static Object getMonitor() {
+        return monitor;
     }
 }

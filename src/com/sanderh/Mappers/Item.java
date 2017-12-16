@@ -2,6 +2,7 @@ package com.sanderh.Mappers;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -153,9 +154,9 @@ public class Item {
         if (note.equals("")) {
             // Filter out items without prices
             setDiscard();
-        //} else if (frameType == 1 || frameType == 2 || frameType == 7) {
-        //    // Filter out unpriceable items
-        //    setDiscard();
+        } else if (frameType == 1 || frameType == 2 || frameType == 7) {
+            // Filter out unpriceable items
+            setDiscard();
         } else if (!identified) {
             // Filter out unidentified items
             setDiscard();
@@ -308,8 +309,10 @@ public class Item {
                 if (itemType.equals("VaalGems")) {
                     if (lvl < 10 && quality == 20)
                         lvl = 0;
-                    else if (lvl != 20 || quality != 20)
-                        ; // TODO: improve this
+                    else if (lvl == 10 || quality == 20)
+                        ;
+                    else if (lvl == 20 && quality < 10)
+                        quality = 0;
                     else {
                         setDiscard();
                         return;
@@ -348,8 +351,6 @@ public class Item {
             addKey("|1");
         else
             addKey("|0");
-
-
     }
 
     private void checkSixLink() {
@@ -410,50 +411,42 @@ public class Item {
         String keySuffix = "";
 
         switch (name) {
-            // Try to determine the type of Atziri's Splendour by looking at the item properties
+            // Try to determine the type of Atziri's Splendour by looking at the item explicit mods
             case "Atziri's Splendour":
-                int armour = 0;
-                int evasion = 0;
-                int energy = 0;
+                switch (String.join("#", explicitMods.get(0).split("\\d+"))) {
+                    case "#% increased Armour and Energy Shield":
+                        if (explicitMods.get(1).contains("maximum Life"))
+                            keySuffix = "|var(ar/es/li)";
+                        else
+                            keySuffix = "|var(ar/es)";
+                        break;
 
-                // Find each property's amount
-                for (Properties prop : properties) {
-                    switch (prop.getName()) {
-                        case "Armour":
-                            armour = Integer.parseInt(prop.getValues().get(0).get(0));
-                            break;
-                        case "Evasion Rating":
-                            evasion = Integer.parseInt(prop.getValues().get(0).get(0));
-                            break;
-                        case "Energy Shield":
-                            energy = Integer.parseInt(prop.getValues().get(0).get(0));
-                            break;
-                    }
-                }
+                    case "#% increased Evasion and Energy Shield":
+                        if (explicitMods.get(1).contains("maximum Life"))
+                            keySuffix = "|var(ev/es/li)";
+                        else
+                            keySuffix = "|var(ev/es)";
+                        break;
 
-                // Values taken from https://pathofexile.gamepedia.com/Atziri%27s_Splendour (at 29.11.2017)
-                if (1052 <= armour && armour <= 1118) {
-                    if (75 <= energy && energy <= 77) {
-                        keySuffix = "|var(ar/ev/li)";
-                    } else if (204 <= energy && energy <= 217) {
-                        keySuffix = "|var(ar/es/li)";
-                    } else if (428 <= energy && energy <= 489) {
-                        keySuffix = "|var(ar/es)";
-                    }
-                } else if (armour > 1600) {
-                    keySuffix = "|var(ar)";
-                } else if (evasion > 1600) {
-                    keySuffix = "|var(ev)";
-                } else if (energy > 500) {
-                    keySuffix = "|var(es)";
-                } else if (1283 <= armour && armour <= 1513) {
-                    keySuffix = "|var(ar/ev/es)";
-                } else if (1052 <= evasion && evasion <= 1118) {
-                    if (energy > 400) {
-                        keySuffix = "|var(ev/es)";
-                    } else {
-                        keySuffix = "|var(ev/es/li)";
-                    }
+                    case "#% increased Armour and Evasion":
+                        keySuffix = "|var(ar/ev)";
+                        break;
+
+                    case "#% increased Armour":
+                        keySuffix = "|var(ar)";
+                        break;
+
+                    case "#% increased Evasion Rating":
+                        keySuffix = "|var(ev)";
+                        break;
+
+                    case "#% increased Energy Shield":
+                        keySuffix = "|var(es)";
+                        break;
+
+                    case "#% increased Armour, Evasion and Energy Shield":
+                        keySuffix = "|var(ar/ev/es)";
+                        break;
                 }
                 break;
 

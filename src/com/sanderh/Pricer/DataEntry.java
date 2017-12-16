@@ -254,7 +254,7 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 16.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
@@ -279,7 +279,7 @@ public class DataEntry {
         Collections.sort(tempValueList);
         hourlyData.clear();
 
-        return "\"" + JSONkey + "\":{\"median\": " + findMedian(tempValueList) + ", \"mean\": " + findMean(tempValueList) + ", \"count\": " + this.count + "}";
+        return "\"" + JSONkey + "\":{\"median\":" + findMedian(tempValueList) + ",\"mean\":" + findMean(tempValueList) + ",\"count\":" + this.count + "}";
     }
 
     public void parseIOLine(String[] splitLine) {
