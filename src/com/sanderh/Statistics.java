@@ -1,11 +1,9 @@
 package com.sanderh;
 
-import com.sanderh.Mappers.Item;
-
 public class Statistics {
     //  Name: Statistics
     //  Date created: 16.12.2017
-    //  Last modified: 16.12.2017
+    //  Last modified: 17.12.2017
     //  Description: Object meant to be used as a static statistics collector
 
     private final long startTime = System.currentTimeMillis();

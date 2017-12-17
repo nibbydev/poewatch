@@ -1,36 +1,21 @@
-package com.sanderh.Mappers;
+package com.sanderh;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Item {
-    //  Name: Item
+public class Item extends Mappers.BaseItem {
+    //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 16.12.2017
-    //  Description: Class used for deserializing a JSON string
+    //  Last modified: 17.12.2017
+    //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
-    // Variables used by deserializer
-    private int w, h, x, y, ilvl, frameType;
-    private boolean identified = true;
-    private boolean corrupted = false;
-    private String icon, league, id, name, typeLine;
-    private String note = "";
-    private List<Properties> properties;
-    private List<Socket> sockets;
-    private List<String> explicitMods;
-
-    // Variables not used by deserializer
     private String priceType, itemType;
     private String key = "";
     private boolean discard = false;
     private double price;
 
-    // Map of potential keyword-value pairs
+    // Static map of potential keyword-value pairs, that are used to determine whether user-inputted strings are valid
+    // currency names
     private static final Map<String, String> currencyShorthandsMap = new TreeMap<>() {{
         put("exalted", "Exalted Orb");
         put("exalts", "Exalted Orb");
@@ -93,7 +78,7 @@ public class Item {
     public void parseItem() {
         //  Name: parseItem()
         //  Date created: 08.12.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Calls other Item class related methods.
 
         // Do a few checks on the league, note and etc
@@ -106,23 +91,19 @@ public class Item {
         if (discard)
             return;
 
+        // Find out the item category (eg armour/belt/weapon etc)
+        parseCategory();
+
         // Make database key and find item type
         formatNameAndItemType();
 
-        switch (frameType) {
+        switch (getFrameType()) {
             case 0: // Normal
             case 1: // Magic
             case 2: // Rare
-                switch (itemType){
-                    case "New":
-                    case "Maps":
-                    case "AtlasMaps":
-                    case "Atlas2Maps":
-                    case "act4maps":
-                        break;
-                    default:
-                        setDiscard();
-                        return;
+                if (!itemType.contains("maps")) {
+                    setDiscard();
+                    return;
                 }
 
                 if (key.contains("Superior ")) {
@@ -131,7 +112,7 @@ public class Item {
                 }
 
                 // Include maps under similar frame type
-                frameType = 0;
+                setFrameType(0);
 
                 break;
 
@@ -142,31 +123,29 @@ public class Item {
             default:
                 checkSixLink();
                 checkSpecialItemVariant();
+                break;
         }
     }
 
     private void basicChecks() {
         //  Name: basicChecks()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Method that does a few basic checks on items
 
-        if (note.equals("")) {
+        if (getNote().equals("")) {
             // Filter out items without prices
             setDiscard();
-        } else if (frameType == 1 || frameType == 2 || frameType == 7) {
+        } else if (getFrameType() == 1 || getFrameType() == 2 || getFrameType() == 7) {
             // Filter out unpriceable items
             setDiscard();
-        } else if (!identified) {
+        } else if (!isIdentified()) {
             // Filter out unidentified items
             setDiscard();
-        //} else if (corrupted && frameType != 4) {
-        //    // Filter out corrupted items besides gems
-        //    setDiscard();
-        } else if (league.contains("SSF")) {
+        } else if (getLeague().contains("SSF")) {
             // Filter out SSF leagues as trading there is disabled
             setDiscard();
-        } else if (league.equals("false")) {
+        } else if (getLeague().equals("false")) {
             // This is a bug in the API
             setDiscard();
         }
@@ -177,12 +156,10 @@ public class Item {
     private void parseNote() {
         //  Name: parseNote()
         //  Date created: 28.11.2017
-        //  Last modified: 09.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Checks and formats notes (user-inputted textfields that usually contain price data)
-        //  Parent methods:
-        //      parseItem()
 
-        String[] noteList = note.split(" ");
+        String[] noteList = getNote().split(" ");
         Double price;
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
@@ -224,54 +201,96 @@ public class Item {
     private void formatNameAndItemType() {
         //  Name: formatNameAndItemType()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Format the item's full name and finds the item type
 
         // Start key with league
-        addKey(league);
+        addKey(getLeague());
 
-        // Get the item's type
-        String[] splitItemType = icon.split("/");
-        String itemType = splitItemType[splitItemType.length - 2];
+        // Divide large categories into smaller ones
+        String[] splitItemType = getIcon().split("/");
+        String iconType = splitItemType[splitItemType.length - 2].toLowerCase();
 
-        // Make sure even the weird items get a correct item type
-        if (splitItemType[splitItemType.length - 1].equals("Item.png")) {
-            itemType = "Flasks";
-        } else if (frameType == 8) {
-            // Prophecy items have the same icon category as currency
-            itemType = "Prophecy";
+        // The API is pretty horrible, format it better
+        switch (itemType) {
+            case "currency":
+                // Prophecy items have the same icon category as currency
+                if(getFrameType() == 8)
+                    itemType += ":prophecy";
+                else if (iconType.equals("divination") || iconType.equals("currency"))
+                    itemType += ":orbs";
+                else
+                    itemType += ":" + iconType;
+                break;
+
+            case "gems":
+                switch (iconType){
+                    case "vaalgems":
+                        itemType += ":vaal";
+                        break;
+                    case "gems":
+                        itemType += ":skill";
+                        break;
+                    default:
+                        itemType += ":" + iconType;
+                        break;
+                }
+                break;
+
+            case "maps":
+                if (iconType.equals("maps")) {
+                    if (getFrameType() == 3) {
+                        // Unique IF: itemType="maps", iconType="maps", frameType=3
+                        itemType += ":unique";
+                    } else if (getProperties() == null){
+                        // Fragment IF: itemType="maps", iconType="maps", frameType=0, properties=null
+                        itemType += ":fragment";
+                    } else {
+                        // Legacy map IF: itemType="maps", iconType="maps", frameType=0, properties!=null
+                        itemType += ":" + iconType;
+                    }
+                } else if (iconType.equals("atlasmaps")) {
+                    // Fragment IF: itemType="maps", iconType="atlasmaps", frameType=0
+                    itemType += ":fragment";
+                } else {
+                    itemType += ":" + iconType;
+                }
+                break;
+
+            case "cards":
+                itemType = "divinationcards";
+                break;
         }
 
         // Set the value in the item object
-        this.itemType = itemType;
         addKey("|" + itemType);
 
         // Format the name that will serve as the database key
-        if (name.equals("")) {
-            addKey("|" + typeLine);
-            name = typeLine;
-            typeLine = "";
+        if (getName().equals("")) {
+            addKey("|" + getTypeLine());
+            setName(getTypeLine());
+            setTypeLine("");
         } else {
-            addKey("|" + name);
-            if (!typeLine.equals(""))
-                addKey("|" + typeLine);
+            addKey("|" + getName());
+            if (!getTypeLine().equals(""))
+                addKey("|" + getTypeLine());
         }
 
         // Add frameType to key
-        addKey("|" + frameType);
+        addKey("|" + getFrameType());
     }
 
     private void checkGemInfo() {
         //  Name: checkGemInfo()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Checks gem-specific information
 
         int lvl = -1;
         int quality = 0;
 
         // Attempt to extract lvl and quality from item info
-        for (Properties prop : properties) {
+        for (Mappers.Properties prop : getProperties()) {
             if (prop.getName().equals("Level")) {
                 lvl = Integer.parseInt(prop.getValues().get(0).get(0).split(" ")[0]);
             } else if (prop.getName().equals("Quality")) {
@@ -287,7 +306,7 @@ public class Item {
 
         // Begin the long block that filters out gems based on a number of properties
         if (key.contains("Empower Support") || key.contains("Enlighten Support") || key.contains("Enhance Support")) {
-            if (corrupted) {
+            if (isCorrupted()) {
                 if (lvl == 4 || lvl == 3)
                     quality = 0;
                 else {
@@ -305,11 +324,11 @@ public class Item {
                 }
             }
         } else {
-            if (corrupted) {
-                if (itemType.equals("VaalGems")) {
+            if (isCorrupted()) {
+                if (key.contains("Vaal ")) {
                     if (lvl < 10 && quality == 20)
                         lvl = 0;
-                    else if (lvl == 10 || quality == 20)
+                    else if (lvl == 20 && quality == 20)
                         ;
                     else if (lvl == 20 && quality < 10)
                         quality = 0;
@@ -347,7 +366,7 @@ public class Item {
         addKey("|" + lvl + "|" + quality);
 
         // Add corruption notifier
-        if (corrupted)
+        if (isCorrupted())
             addKey("|1");
         else
             addKey("|0");
@@ -356,31 +375,35 @@ public class Item {
     private void checkSixLink() {
         //  Name: checkSixLink()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Since 6-links are naturally more expensive, assign them a separate key
 
         // Filter out items that can have 6 links
         switch (itemType) {
-            case "Staves":
-            case "BodyArmours":
-            case "TwoHandSwords":
-            case "TwoHandMaces":
-            case "TwoHandAxes":
-            case "Bows":
+            /*
+            case "armour-chest":
+            case "weapons-staff":
+            case "weapons-twosword":
+            case "weapons-twomace":
+            case "weapons-twoaxe":
+            case "weapons-bow":
+            */
+            case "armour":
+            case "weapons":
                 break;
             default:
                 return;
         }
 
         // This was an error somehow, somewhere
-        if (sockets == null) {
+        if (getSockets() == null) {
             setDiscard();
             return;
         }
 
         // Group links together
         Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};
-        for (Socket socket : sockets) {
+        for (Mappers.Socket socket : getSockets()) {
             links[socket.getGroup()]++;
         }
 
@@ -403,67 +426,65 @@ public class Item {
     private void checkSpecialItemVariant() {
         //  Name: checkSpecialItemVariant()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Check if the item has a special variant, eg vessel of vinktar
-        //  Parent methods:
-        //      parseItem()
 
         String keySuffix = "";
 
-        switch (name) {
+        switch (getName()) {
             // Try to determine the type of Atziri's Splendour by looking at the item explicit mods
             case "Atziri's Splendour":
-                switch (String.join("#", explicitMods.get(0).split("\\d+"))) {
+                switch (String.join("#", getExplicitMods().get(0).split("\\d+"))) {
                     case "#% increased Armour and Energy Shield":
-                        if (explicitMods.get(1).contains("maximum Life"))
-                            keySuffix = "|var(ar/es/li)";
+                        if (getExplicitMods().get(1).contains("maximum Life"))
+                            keySuffix = "|var:ar/es/li";
                         else
-                            keySuffix = "|var(ar/es)";
+                            keySuffix = "|var:ar/es";
                         break;
 
                     case "#% increased Evasion and Energy Shield":
-                        if (explicitMods.get(1).contains("maximum Life"))
-                            keySuffix = "|var(ev/es/li)";
+                        if (getExplicitMods().get(1).contains("maximum Life"))
+                            keySuffix = "|var:ev/es/li";
                         else
-                            keySuffix = "|var(ev/es)";
+                            keySuffix = "|var:ev/es";
                         break;
 
                     case "#% increased Armour and Evasion":
-                        keySuffix = "|var(ar/ev)";
+                        keySuffix = "|var:ar/ev";
                         break;
 
                     case "#% increased Armour":
-                        keySuffix = "|var(ar)";
+                        keySuffix = "|var:ar";
                         break;
 
                     case "#% increased Evasion Rating":
-                        keySuffix = "|var(ev)";
+                        keySuffix = "|var:ev";
                         break;
 
                     case "#% increased Energy Shield":
-                        keySuffix = "|var(es)";
+                        keySuffix = "|var:es";
                         break;
 
                     case "#% increased Armour, Evasion and Energy Shield":
-                        keySuffix = "|var(ar/ev/es)";
+                        keySuffix = "|var:ar/ev/es";
                         break;
                 }
                 break;
 
             case "Vessel of Vinktar":
                 // Attempt to match preset mod with item mod
-                for (String itemMod : explicitMods) {
-                    if (itemMod.contains("Lightning Damage to Spells")) {
-                        keySuffix = "|var(spells)";
+                for (String explicitMod : getExplicitMods()) {
+                    if (explicitMod.contains("Lightning Damage to Spells")) {
+                        keySuffix = "|var:spells";
                         break;
-                    } else if (itemMod.contains("Lightning Damage to Attacks")) {
-                        keySuffix = "|var(attacks)";
+                    } else if (explicitMod.contains("Lightning Damage to Attacks")) {
+                        keySuffix = "|var:attacks";
                         break;
-                    } else if (itemMod.contains("Converted to Lightning")) {
-                        keySuffix = "|var(conversion)";
+                    } else if (explicitMod.contains("Converted to Lightning")) {
+                        keySuffix = "|var:conversion";
                         break;
-                    } else if (itemMod.contains("Damage Penetrates")) {
-                        keySuffix = "|var(penetration)";
+                    } else if (explicitMod.contains("Damage Penetrates")) {
+                        keySuffix = "|var:penetration";
                         break;
                     }
                 }
@@ -471,18 +492,18 @@ public class Item {
 
             case "Doryani's Invitation":
                 // Attempt to match preset mod with item mod
-                for (String itemMod : explicitMods) {
-                    if (itemMod.contains("increased Lightning Damage")) {
-                        keySuffix = "|var(lightning)";
+                for (String explicitMod : getExplicitMods()) {
+                    if (explicitMod.contains("increased Lightning Damage")) {
+                        keySuffix = "|var:lightning";
                         break;
-                    } else if (itemMod.contains("increased Fire Damage")) {
-                        keySuffix = "|var(fire)";
+                    } else if (explicitMod.contains("increased Fire Damage")) {
+                        keySuffix = "|var:fire";
                         break;
-                    } else if (itemMod.contains("increased Cold Damage")) {
-                        keySuffix = "|var(cold)";
+                    } else if (explicitMod.contains("increased Cold Damage")) {
+                        keySuffix = "|var:cold";
                         break;
-                    } else if (itemMod.contains("increased Physical Damage")) {
-                        keySuffix = "|var(physical)";
+                    } else if (explicitMod.contains("increased Physical Damage")) {
+                        keySuffix = "|var:physical";
                         break;
                     }
                 }
@@ -490,15 +511,15 @@ public class Item {
 
             case "Yriel's Fostering":
                 // Attempt to match preset mod with item mod
-                for (String itemMod : explicitMods) {
-                    if (itemMod.contains("Chaos Damage to Attacks")) {
-                        keySuffix = "|var(chaos)";
+                for (String explicitMod : getExplicitMods()) {
+                    if (explicitMod.contains("Chaos Damage to Attacks")) {
+                        keySuffix = "|var:chaos";
                         break;
-                    } else if (itemMod.contains("Physical Damage to Attack")) {
-                        keySuffix = "|var(physical)";
+                    } else if (explicitMod.contains("Physical Damage to Attack")) {
+                        keySuffix = "|var:physical";
                         break;
-                    } else if (itemMod.contains("increased Attack and Movement Speed")) {
-                        keySuffix = "|var(speed)";
+                    } else if (explicitMod.contains("increased Attack and Movement Speed")) {
+                        keySuffix = "|var:speed";
                         break;
                     }
                 }
@@ -506,15 +527,15 @@ public class Item {
 
             case "Volkuur's Guidance":
                 // Attempt to match preset mod with item mod
-                for (String itemMod : explicitMods) {
-                    if (itemMod.contains("Fire Damage to Spells")) {
-                        keySuffix = "|var(fire)";
+                for (String explicitMod : getExplicitMods()) {
+                    if (explicitMod.contains("Fire Damage to Spells")) {
+                        keySuffix = "|var:fire";
                         break;
-                    } else if (itemMod.contains("Cold Damage to Spells")) {
-                        keySuffix = "|var(cold)";
+                    } else if (explicitMod.contains("Cold Damage to Spells")) {
+                        keySuffix = "|var:cold";
                         break;
-                    } else if (itemMod.contains("Lightning Damage to Spells")) {
-                        keySuffix = "|var(lightning)";
+                    } else if (explicitMod.contains("Lightning Damage to Spells")) {
+                        keySuffix = "|var:lightning";
                         break;
                     }
                 }
@@ -522,21 +543,21 @@ public class Item {
 
             case "Impresence":
                 // Attempt to match preset mod with item mod
-                for (String itemMod : explicitMods) {
-                    if (itemMod.contains("Lightning Damage")) {
-                        keySuffix = "|var(lightning)";
+                for (String explicitMod : getExplicitMods()) {
+                    if (explicitMod.contains("Lightning Damage")) {
+                        keySuffix = "|var:lightning";
                         break;
-                    } else if (itemMod.contains("Fire Damage")) {
-                        keySuffix = "|var(fire)";
+                    } else if (explicitMod.contains("Fire Damage")) {
+                        keySuffix = "|var:fire";
                         break;
-                    } else if (itemMod.contains("Cold Damage")) {
-                        keySuffix = "|var(cold)";
+                    } else if (explicitMod.contains("Cold Damage")) {
+                        keySuffix = "|var:cold";
                         break;
-                    } else if (itemMod.contains("Physical Damage")) {
-                        keySuffix = "|var(physical)";
+                    } else if (explicitMod.contains("Physical Damage")) {
+                        keySuffix = "|var:physical";
                         break;
-                    } else if (itemMod.contains("Chaos Damage")) {
-                        keySuffix = "|var(chaos)";
+                    } else if (explicitMod.contains("Chaos Damage")) {
+                        keySuffix = "|var:chaos";
                         break;
                     }
                 }
@@ -550,9 +571,34 @@ public class Item {
         addKey(keySuffix);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Getters / Setters that do not have anything to do with the deserialization //
-    ////////////////////////////////////////////////////////////////////////////////
+    private void parseCategory() {
+        //  Name: parseCategory()
+        //  Date created: 17.12.2017
+        //  Last modified: 17.12.2017
+        //  Description: Gets text-value(s) from category Object
+
+        // A rough outline of what it is meant to do:
+        // {"category": "jewels"}                  -> "jewels"                -> {"jewels"}             -> "jewels"
+        // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour-gloves"
+        // {"category": {"weapons": ["bow"]}}      -> "{weapons=[bow]}"       -> {"weapons", "bow"}     -> "weapons-bow"
+
+        String asString = getCategory().toString();
+
+        if (asString.contains("=")) {
+            // Removes brackets: "{armour=[gloves]}" -> "armour=[gloves]"
+            asString = asString.substring(1, asString.length() - 1);
+            // Split: "armour=[gloves]" -> {"armour", "[gloves]"}
+            String[] splitString = asString.split("=");
+            // Add "armour" to final string, remove brackets around string (eg: "[gloves]" -> "gloves") and add to final string
+            itemType = splitString[0] + ":" + splitString[1].substring(1, splitString[1].length() - 1);
+        } else {
+            itemType = asString;
+        }
+    }
+
+    ///////////////////////
+    // Getters / Setters //
+    ///////////////////////
 
     public boolean isDiscard() {
         return discard;
@@ -577,145 +623,4 @@ public class Item {
     public void addKey(String partialKey) {
         this.key += partialKey;
     }
-
-    ///////////////////////
-    // Getters / Setters //
-    ///////////////////////
-
-    public String getId() {
-        return id;
-    }
-
-    public int getH() {
-        return h;
-    }
-
-    public int getIlvl() {
-        return ilvl;
-    }
-
-    public int getW() {
-        return w;
-    }
-
-    public int getFrameType() {
-        return frameType;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    public String getLeague() {
-        return league;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public String getTypeLine() {
-        return typeLine;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public boolean isCorrupted() {
-        return corrupted;
-    }
-
-    public boolean isIdentified() {
-        return identified;
-    }
-
-    public List<Properties> getProperties() {
-        return properties;
-    }
-
-    public List<Socket> getSockets() {
-        return sockets;
-    }
-
-    public List<String> getExplicitMods() {
-        return explicitMods;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setCorrupted(boolean corrupted) {
-        this.corrupted = corrupted;
-    }
-
-    public void setFrameType(int frameType) {
-        this.frameType = frameType;
-    }
-
-    public void setH(int h) {
-        this.h = h;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    public void setIdentified(boolean identified) {
-        this.identified = identified;
-    }
-
-    public void setIlvl(int ilvl) {
-        this.ilvl = ilvl;
-    }
-
-    public void setLeague(String league) {
-        this.league = league;
-    }
-
-    public void setName(String name) {
-        this.name = name.substring(name.lastIndexOf(">") + 1);
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    public void setTypeLine(String typeLine) {
-        this.typeLine = typeLine;
-    }
-
-    public void setW(int w) {
-        this.w = w;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public void setProperties(List<Properties> properties) {
-        this.properties = properties;
-    }
-
-    public void setSockets(List<Socket> sockets) {
-        this.sockets = sockets;
-    }
-
-    public void setExplicitMods(List<String> explicitMods) {
-        this.explicitMods = explicitMods;
-    }
-
 }

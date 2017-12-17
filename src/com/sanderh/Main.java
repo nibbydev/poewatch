@@ -2,6 +2,7 @@ package com.sanderh;
 
 import com.sanderh.Pricer.PricerController;
 import NotMadeByMe.TextIO;
+import com.sanderh.Worker.WorkerController;
 
 import java.io.FileInputStream;
 import java.io.IOException;

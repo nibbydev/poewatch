@@ -1,6 +1,6 @@
-package com.sanderh;
+package com.sanderh.Worker;
 
-import com.sanderh.Mappers.APIReply;
+import com.sanderh.Mappers;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -17,7 +17,7 @@ import static com.sanderh.Main.*;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 16.12.2017
+    //  Last modified: 17.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private static final int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
@@ -35,11 +35,11 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Contains the main loop of the worker
 
         String replyJSONString;
-        APIReply reply;
+        Mappers.APIReply reply;
 
         // Run while flag is true
         while (flagLocalRun) {
@@ -191,15 +191,13 @@ public class Worker extends Thread {
         return new String(bufferBuffer);
     }
 
-    private APIReply deSerializeJSONString(String stringBuffer) {
+    private Mappers.APIReply deSerializeJSONString(String stringBuffer) {
         //  Name: deSerializeJSONString()
         //  Date created: 22.11.2017
-        //  Last modified: 29.11.2017
+        //  Last modified: 17.12.2017
         //  Description: Maps a JSON string to an object
-        //  Parent methods:
-        //      run()
 
-        APIReply reply;
+        Mappers.APIReply reply;
 
         try {
             // Define the mapper
@@ -207,10 +205,10 @@ public class Worker extends Thread {
             mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
 
             // Map the JSON string to an object
-            reply = mapper.readValue(stringBuffer, APIReply.class);
+            reply = mapper.readValue(stringBuffer, Mappers.APIReply.class);
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new APIReply();
+            return new Mappers.APIReply();
         }
 
         return reply;

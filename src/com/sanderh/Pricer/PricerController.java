@@ -1,8 +1,7 @@
 package com.sanderh.Pricer;
 
-import com.sanderh.Mappers.APIReply;
-import com.sanderh.Mappers.Item;
-import com.sanderh.Mappers.Stash;
+import com.sanderh.Mappers;
+import com.sanderh.Item;
 
 import java.io.*;
 import java.util.*;
@@ -12,7 +11,7 @@ import static com.sanderh.Main.*;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 16.12.2017
+    //  Last modified: 17.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
@@ -132,14 +131,14 @@ public class PricerController extends Thread {
         }
     }
 
-    public void parseItems(APIReply reply) {
+    public void parseItems(Mappers.APIReply reply) {
         //  Name: parseItems()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Loop through every single item, checking every single one of them
-        for (Stash stash : reply.getStashes()) {
+        for (Mappers.Stash stash : reply.getStashes()) {
             for (Item item : stash.getItems()) {
                 // Pause during I/O operations
                 while (flagPause) {

@@ -1,6 +1,6 @@
 package com.sanderh.Pricer;
 
-import com.sanderh.Mappers.Item;
+import com.sanderh.Item;
 
 import java.util.ArrayList;
 import java.util.Arrays;

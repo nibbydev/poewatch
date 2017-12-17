@@ -1,6 +1,6 @@
-package com.sanderh;
+package com.sanderh.Worker;
 
-import com.sanderh.Mappers.ChangeID;
+import com.sanderh.Mappers;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -9,12 +9,11 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static com.sanderh.Main.PROPERTIES;
-import static com.sanderh.Main.STATISTICS;
 
 public class WorkerController extends Thread {
     //  Name: WorkerController
     //  Date created: 21.11.2017
-    //  Last modified: 16.12.2017
+    //  Last modified: 17.12.2017
     //  Description: Object that's used to manage worker objects
 
     private static final int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
@@ -188,7 +187,7 @@ public class WorkerController extends Thread {
     private String downloadData(String url) {
         //  Name: downloadData()
         //  Date created: 30.11.2017
-        //  Last modified: 30.11.2017
+        //  Last modified: 17.12.2017
         //  Description: Downloads content of <url> and returns it as String
 
         String response;
@@ -209,7 +208,7 @@ public class WorkerController extends Thread {
             mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
 
             // Map the JSON string to an object
-            response = mapper.readValue(response, ChangeID.class).getNext_change_id();
+            response = mapper.readValue(response, Mappers.ChangeID.class).getNext_change_id();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -252,5 +251,4 @@ public class WorkerController extends Thread {
     public static Object getMonitor() {
         return monitor;
     }
-
 }
