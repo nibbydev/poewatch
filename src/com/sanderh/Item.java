@@ -380,16 +380,12 @@ public class Item extends Mappers.BaseItem {
 
         // Filter out items that can have 6 links
         switch (itemType) {
-            /*
-            case "armour-chest":
-            case "weapons-staff":
-            case "weapons-twosword":
-            case "weapons-twomace":
-            case "weapons-twoaxe":
-            case "weapons-bow":
-            */
-            case "armour":
-            case "weapons":
+            case "armour:chest":
+            case "weapons:staff":
+            case "weapons:twosword":
+            case "weapons:twomace":
+            case "weapons:twoaxe":
+            case "weapons:bow":
                 break;
             default:
                 return;

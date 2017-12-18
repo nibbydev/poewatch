@@ -4,8 +4,9 @@ import com.sanderh.Pricer.PricerController;
 import NotMadeByMe.TextIO;
 import com.sanderh.Worker.WorkerController;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Properties;
 
@@ -18,8 +19,11 @@ public class Main {
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 18.12.2017
         //  Description: The main class. Run this to run the program
+
+        // Make sure basic folder structure exists
+        buildFolderFileStructure();
 
         // Ask the user how many workers should be spawned and spawn them
         WORKER_CONTROLLER.spawnWorkers(askUserForIntInputWithValidation());
@@ -63,12 +67,8 @@ public class Main {
     private static void commandLoop() {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Command loop method. Allows the user some interaction with the script as it is running.
-        //  Parent methods:
-        //      main()
-
-        String[] userInput;
 
         String helpString = "[INFO] Available commands include:\n"
                 + "    help - display this help page\n"
@@ -79,6 +79,7 @@ public class Main {
                 + "    about - show about page\n";
         System.out.println(helpString);
 
+        String[] userInput;
         while (true) {
             userInput = TextIO.getlnString().split(" ");
 
@@ -88,6 +89,8 @@ public class Main {
                     break;
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
+                    STATISTICS.setStatus(1);
+                    STATISTICS.writeChangeID();
                     return;
                 case "pause":
                     commandPause();
@@ -108,7 +111,7 @@ public class Main {
         }
     }
 
-    public static String timeStamp(){
+    public static String timeStamp() {
         //  Name: timeStamp()
         //  Date created: 06.12.2017
         //  Last modified: 11.12.2017
@@ -130,7 +133,7 @@ public class Main {
             hour -= 24;
 
         // Add 0 so that "[09:32]" is returned instead of "[9:32]"
-        if(hour < 10)
+        if (hour < 10)
             stringBuilder.append(0);
 
         stringBuilder.append(hour);
@@ -147,7 +150,7 @@ public class Main {
         return stringBuilder.toString();
     }
 
-    private static Properties readProperties(){
+    private static Properties readProperties() {
         //  Name: readProperties()
         //  Date created: 11.12.2017
         //  Last modified: 11.12.2017
@@ -176,19 +179,91 @@ public class Main {
         return properties;
     }
 
-    private static void wakeControllers(){
+    private static void wakeControllers() {
         //  Name: wakeControllers()
         //  Date created: 16.12.2017
         //  Last modified: 16.12.2017
         //  Description: Wakes all objects from sleep
 
         // Wake price controller
-        synchronized (PricerController.getMonitor()){
+        synchronized (PricerController.getMonitor()) {
             PricerController.getMonitor().notifyAll();
         }
         // Wake worker controller
-        synchronized (WorkerController.getMonitor()){
+        synchronized (WorkerController.getMonitor()) {
             WorkerController.getMonitor().notifyAll();
+        }
+    }
+
+    //////////////////////////////
+    // File structure I/O setup //
+    //////////////////////////////
+
+    private static void buildFolderFileStructure() {
+        //  Name: buildFolderFileStructure()
+        //  Date created: 18.12.2017
+        //  Last modified: 18.12.2017
+        //  Description: Creates all missing http files and folders on startup
+
+        // Make sure output folders exist
+        new File("./http/data").mkdirs();
+
+        // Create ./http/.htaccess if missing
+        if(!new File("./http/.htaccess").exists()) {
+            writeFile("./http/.htaccess", "<IfModule mod_rewrite.c>\n    RewriteEngine On\n    " +
+                    "RewriteCond %{REQUEST_FILENAME}.php -f\n    RewriteRule !.*\\.php$ %{REQUEST_FILENAME}.php " +
+                    "[QSA,L]\n</IfModule>\n");
+        }
+
+        // Create ./http/ChangeID.php if missing
+        if(!new File("./http/ChangeID.php").exists()) {
+            writeFile("./http/ChangeID.php", "<?php \n    header('Content-Type: application/json');\n    " +
+                    "echo file_get_contents( \"./data/ChangeID\" );\n?>\n");
+        }
+
+        // Create ./http/index.php if missing
+        if(!new File("./http/index.php").exists()) {
+            writeFile("./http/index.php", "\n");
+        }
+
+        // Create ./http/Stats.php if missing
+        if(!new File("./http/Stats.php").exists()) {
+            writeFile("./http/Stats.php", "<?php\n    header('Content-Type: application/json');\n    " +
+                    "echo file_get_contents( \"./data/\" . $_GET[\"league\"] . \".json\" );\n?>\n");
+        }
+
+        // Create ./http/data/index.php if missing
+        if(!new File("./http/data/index.php").exists()) {
+            writeFile("./http/data/index.php", "\n");
+        }
+    }
+
+    private static void writeFile(String path, String data) {
+        //  Name: writeFile()
+        //  Date created: 18.12.2017
+        //  Last modified: 18.12.2017
+        //  Description: Writes data to file
+
+        OutputStream fOut = null;
+
+        // Writes values from statistics to file
+        try {
+            File fFile = new File(path);
+            fOut = new FileOutputStream(fFile);
+
+            fOut.write(data.getBytes());
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write " + path + ":");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (fOut != null) {
+                    fOut.flush();
+                    fOut.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -272,7 +347,7 @@ public class Main {
         }
     }
 
-    private static void commandAbout(){
+    private static void commandAbout() {
         //  Name: commandAbout()
         //  Date created: 13.12.2017
         //  Last modified: 16.12.2017

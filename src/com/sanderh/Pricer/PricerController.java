@@ -11,7 +11,7 @@ import static com.sanderh.Main.*;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 17.12.2017
+    //  Last modified: 18.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
@@ -49,13 +49,10 @@ public class PricerController extends Thread {
     }
 
     private void runCycle() {
-        //  Name: runCycle2()
+        //  Name: runCycle()
         //  Date created: 11.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Calls methods that construct/parse/write database entryMap
-
-        // Make sure output folder exists
-        new File("./output").mkdir();
 
         // Prepare for database building
         System.out.println(timeStamp() + " Generating databases");
@@ -176,24 +173,34 @@ public class PricerController extends Thread {
     public void readDataFromFile() {
         //  Name: readDataFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Reads and parses database data from file
 
         String line;
         BufferedReader bufferedReader = null;
 
         try {
-            File fFile = new File("./data.txt");
+            File fFile = new File("./database.txt");
             bufferedReader = new BufferedReader(new FileReader(fFile));
 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] splitLine = line.split("::");
+
+                /*
+                String type = splitLine[0].split("\\|")[1];
+                if (type.equals("armour:chest") || type.equals("weapons:staff") || type.equals("weapons:twosword")
+                        || type.equals("weapons:twomace") || type.equals("weapons:twoaxe") || type.equals("weapons:bow")) {
+                    if (!splitLine[0].contains("0L") || !splitLine[0].contains("5L") || !splitLine[0].contains("6L"))
+                        continue;
+                }
+                */
+
                 entryMap.put(splitLine[0], new DataEntry());
                 entryMap.get(splitLine[0]).parseIOLine(splitLine);
             }
 
         } catch (IOException ex) {
-            System.out.println("[INFO] File not found: ./data.txt");
+            System.out.println("[INFO] File not found: ./database.txt");
         } finally {
             try {
                 if (bufferedReader != null) {
@@ -208,14 +215,14 @@ public class PricerController extends Thread {
     private void writeDataToFile() {
         //  Name: writeDataToFile()
         //  Date created: 06.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Writes database data to file
 
         OutputStream fOut = null;
 
         // Writes values from statistics to file
         try {
-            File fFile = new File("./data.txt");
+            File fFile = new File("./database.txt");
             fOut = new FileOutputStream(fFile);
 
             for (String key : entryMap.keySet()) {
@@ -224,7 +231,7 @@ public class PricerController extends Thread {
             }
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write data:");
+            System.out.println("[ERROR] Could not write ./database.txt:");
             ex.printStackTrace();
         } finally {
             try {
@@ -279,7 +286,7 @@ public class PricerController extends Thread {
     private void writeJSONToFile() {
         //  Name: writeJSONToFile2()
         //  Date created: 06.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Basically writes JSON string to file
 
         if (JSONBuilder.length() < 5)
@@ -289,12 +296,12 @@ public class PricerController extends Thread {
 
         // Writes values from statistics to file
         try {
-            File fFile = new File("./output/" + lastLeague + ".json");
+            File fFile = new File("./http/data/" + lastLeague + ".json");
             fOut = new FileOutputStream(fFile);
             fOut.write(JSONBuilder.toString().getBytes());
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write ./output/" + lastLeague + ".json");
+            System.out.println("[ERROR] Could not write ./http/data" + lastLeague + ".json");
             ex.printStackTrace();
         } finally {
             try {

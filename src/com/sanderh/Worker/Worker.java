@@ -84,7 +84,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Method that downloads data from the API
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
@@ -94,9 +94,9 @@ public class Worker extends Thread {
         int byteCount;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - lastPullTime < DOWNLOAD_DELAY) {
-            sleep(10);
-        }
+        if (System.currentTimeMillis() - lastPullTime < DOWNLOAD_DELAY)
+            justFuckingSleep((int) (DOWNLOAD_DELAY - System.currentTimeMillis() + lastPullTime));
+
         lastPullTime = System.currentTimeMillis();
         STATISTICS.incPullCountTotal();
 
@@ -121,9 +121,13 @@ public class Worker extends Thread {
                     Matcher matcher = pattern.matcher(stringBuilderBuffer.toString());
                     if (matcher.find()) {
                         regexLock = false;
-                        //System.out.println(this.job + " - > " + matcher.group());
+
+                        // Add new-found job to queue
                         WorkerController.setNextChangeID(matcher.group());
                         wakeWorkerControllerMonitor();
+
+                        // Add freshest changeID to statistics
+                        STATISTICS.setLatestChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(this.job)) {
@@ -139,7 +143,7 @@ public class Worker extends Thread {
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
-                sleep(5000);
+                justFuckingSleep(5000);
                 WorkerController.setNextChangeID(this.job);
                 wakeWorkerControllerMonitor();
             }
@@ -214,14 +218,11 @@ public class Worker extends Thread {
         return reply;
     }
 
-    private void sleep(int timeMS) {
-        //  Name: sleep()
+    private void justFuckingSleep(int timeMS) {
+        //  Name: justFuckingSleep()
         //  Date created: 02.12.2017
-        //  Last modified: 02.12.2017
+        //  Last modified: 17.12.2017
         //  Description: Sleeps for <timeMS> ms
-        //  Parent methods:
-        //      run()
-        //      downloadData()
 
         try {
             Thread.sleep(timeMS);
