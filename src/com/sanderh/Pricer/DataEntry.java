@@ -12,7 +12,7 @@ import static com.sanderh.Main.PROPERTIES;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 13.12.2017
+    //  Last modified: 18.12.2017
     //  Description: An object that stores an item's price data
 
     // Cycle counters
@@ -34,7 +34,8 @@ public class DataEntry {
     // Lists that hold price data
     private ArrayList<String[]> rawData = new ArrayList<>();
     private ArrayList<Double> baseData = new ArrayList<>();
-    private ArrayList<Double> hourlyData = new ArrayList<>();
+    private ArrayList<Double> hourlyMean = new ArrayList<>();
+    private ArrayList<Double> hourlyMedian = new ArrayList<>();
     private ArrayList<String> duplicates = new ArrayList<>();
 
     // Constants that limit list sizes
@@ -174,7 +175,7 @@ public class DataEntry {
     private void buildStatistics() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Method that adds entries to statistics
 
         // Assign count to local "global" variable
@@ -215,11 +216,14 @@ public class DataEntry {
         this.median = findMedian(tempValueList);
 
         // Add value to hourly
-        hourlyData.add(this.median);
+        hourlyMean.add(this.mean);
+        hourlyMedian.add(this.median);
 
-        // Limit hourly to 60 values
-        if (hourlyData.size() > HOURLY_DATA_SIZE)
-            hourlyData.subList(0, hourlyData.size() - HOURLY_DATA_SIZE).clear();
+        // Limit hourly to <x> values
+        if (hourlyMean.size() > HOURLY_DATA_SIZE)
+            hourlyMean.subList(0, hourlyMean.size() - HOURLY_DATA_SIZE).clear();
+        if (hourlyMedian.size() > HOURLY_DATA_SIZE)
+            hourlyMedian.subList(0, hourlyMedian.size() - HOURLY_DATA_SIZE).clear();
     }
 
     private double findMean(ArrayList<Double> valueList) {
@@ -254,11 +258,11 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
-        if (cycleCount < CYCLE_LIMIT || hourlyData.isEmpty())
+        if (cycleCount < CYCLE_LIMIT || hourlyMedian.isEmpty() || hourlyMean.isEmpty())
             return "";
 
         // Format the key to fit for JSON
@@ -274,12 +278,19 @@ public class DataEntry {
         this.addedCounter = 0;
 
         // Make a copy so the original order persists and sort the entries in growing order
-        ArrayList<Double> tempValueList = new ArrayList<>();
-        tempValueList.addAll(hourlyData);
-        Collections.sort(tempValueList);
-        hourlyData.clear();
+        ArrayList<Double> tempMeanList = new ArrayList<>();
+        ArrayList<Double> tempMedianList = new ArrayList<>();
+        tempMeanList.addAll(hourlyMean);
+        tempMedianList.addAll(hourlyMedian);
 
-        return "\"" + JSONkey + "\":{\"median\":" + findMedian(tempValueList) + ",\"mean\":" + findMean(tempValueList) + ",\"count\":" + this.count + "}";
+        // Sort list in ascending order
+        Collections.sort(tempMedianList);
+
+        // Clear the data
+        hourlyMean.clear();
+        hourlyMedian.clear();
+
+        return "\"" + JSONkey + "\":{\"median\":" + findMedian(tempMedianList) + ",\"mean\":" + findMean(tempMeanList) + ",\"count\":" + this.count + "}";
     }
 
     public void parseIOLine(String[] splitLine) {
