@@ -154,7 +154,7 @@ public class WorkerController extends Thread {
     public void stopController() {
         //  Name: stopController()
         //  Date created: 11.12.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Stops all running workers and this object's process
 
         flagLocalRun = false;
@@ -165,7 +165,10 @@ public class WorkerController extends Thread {
             wakeWorkerMonitor(worker);
         }
 
-        workerList.clear();
+        // Wake the monitor, allowing it to exit its loop
+        synchronized (getMonitor()) {
+            getMonitor().notifyAll();
+        }
     }
 
     //////////////////////////////////////////////////////////

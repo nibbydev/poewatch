@@ -12,7 +12,7 @@ import static com.sanderh.Main.PROPERTIES;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 18.12.2017
+    //  Last modified: 19.12.2017
     //  Description: An object that stores an item's price data
 
     // Cycle counters
@@ -20,9 +20,9 @@ public class DataEntry {
     private static final int CYCLE_LIMIT = Integer.parseInt(PROPERTIES.getProperty("DataEntryCycleLimit"));
 
     // Statistical values
-    private int count = 0;
-    private int discardedCounter = 0;
-    private int addedCounter = 0;
+    private int totalCount = 0;
+    private int newItemsFoundInCycle = 0;
+    private int oldItemsDiscardedInCycle = 0;
     private double mean = 0.0;
     private double median = 0.0;
     private String key;
@@ -63,18 +63,19 @@ public class DataEntry {
     public void addRaw(Item item) {
         //  Name: addRaw
         //  Date created: 05.12.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Method that adds entries to raw data database
 
         // Skip duplicate items
         if (duplicates.contains(item.getId()))
             return;
 
-        // Increase the added item count
-        addedCounter++;
+        // Increment total added item counter
+        newItemsFoundInCycle++;
 
         // Assign key and add value to raw data array
-        this.key = item.getKey();
+        if (this.key == null)
+            this.key = item.getKey();
         rawData.add(new String[]{Double.toString(item.getPrice()), item.getPriceType()});
 
         // Add item ID to duplicate list
@@ -105,7 +106,7 @@ public class DataEntry {
     private void buildBaseData() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         String index;
@@ -124,11 +125,11 @@ public class DataEntry {
                     if (PRICER_CONTROLLER.getEntryMap().get(currencyKey).getCount() >= 10) {
                         value = value * PRICER_CONTROLLER.getEntryMap().get(currencyKey).getMedian();
                     } else {
-                        discardedCounter++;
+                        oldItemsDiscardedInCycle++;
                         continue;
                     }
                 } else {
-                    discardedCounter++;
+                    oldItemsDiscardedInCycle++;
                     continue;
                 }
             }
@@ -151,7 +152,7 @@ public class DataEntry {
     private void purgeBaseData() {
         //  Name: purgeBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
         //               whether there's a large difference between the two
 
@@ -159,7 +160,7 @@ public class DataEntry {
             return;
         else if (median <= 0.0)
             return;
-        else if (count < 10)
+        else if (totalCount < 10)
             return;
 
         // Make a copy of the original array (so it is not altered any further)
@@ -167,7 +168,7 @@ public class DataEntry {
             // Remove values that are larger/smaller than the median
             if (value > median * 2.0 || value < median / 2.0) {
                 baseData.remove(value);
-                discardedCounter++;
+                oldItemsDiscardedInCycle++;
             }
         }
     }
@@ -175,11 +176,8 @@ public class DataEntry {
     private void buildStatistics() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Method that adds entries to statistics
-
-        // Assign count to local "global" variable
-        this.count = baseData.size();
 
         // Make a copy so the original order persists and sort new array
         ArrayList<Double> tempValueList = new ArrayList<>();
@@ -187,6 +185,7 @@ public class DataEntry {
         Collections.sort(tempValueList);
 
         // Slice sorted copy for more precision. Skip entries with a small number of elements
+        int count = baseData.size();
         if (count <= 2) {
             return;
         } else if (count < 5) {
@@ -258,7 +257,7 @@ public class DataEntry {
     public String buildJSONPackage() {
         //  Name: buildJSONPackage()
         //  Date created: 06.12.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
@@ -270,40 +269,50 @@ public class DataEntry {
             removeLeagueAndTypeFromKey();
 
         // Warn the user if there are irregularities with the discard counter
-        if (addedCounter < discardedCounter && discardedCounter > 20)
-            System.out.println("[INFO][" + key + "] Odd discard ratio: " + addedCounter + "/" + discardedCounter + " (add/discard)");
-
-        // Clear the counters
-        this.discardedCounter = 0;
-        this.addedCounter = 0;
+        if (newItemsFoundInCycle < oldItemsDiscardedInCycle && oldItemsDiscardedInCycle - newItemsFoundInCycle > 20)
+            System.out.println("[INFO][" + key + "] Odd discard ratio: " + newItemsFoundInCycle + "/" +
+                    oldItemsDiscardedInCycle + " (add/discard)");
 
         // Make a copy so the original order persists and sort the entries in growing order
-        ArrayList<Double> tempMeanList = new ArrayList<>();
         ArrayList<Double> tempMedianList = new ArrayList<>();
-        tempMeanList.addAll(hourlyMean);
         tempMedianList.addAll(hourlyMedian);
-
-        // Sort list in ascending order
         Collections.sort(tempMedianList);
 
-        // Clear the data
+        // Add new items to total counter
+        totalCount += newItemsFoundInCycle - oldItemsDiscardedInCycle;
+
+        // Soft-cap totalCount to 1000
+        if (totalCount > 999)
+            totalCount = 999;
+        else if (totalCount < 0)
+            totalCount = 0;
+
+        // Form the return JSON string
+        String returnString = "\"" + JSONkey + "\":{\"mean\":" + findMean(hourlyMean) + ",\"median\":" +
+                findMedian(tempMedianList) + ",\"count\":" + totalCount + ",\"new\":" + newItemsFoundInCycle + "}";
+
+        // Clear counters
         hourlyMean.clear();
         hourlyMedian.clear();
 
-        return "\"" + JSONkey + "\":{\"median\":" + findMedian(tempMedianList) + ",\"mean\":" + findMean(tempMeanList) + ",\"count\":" + this.count + "}";
+        // Clear the counters
+        this.newItemsFoundInCycle = 0;
+        this.oldItemsDiscardedInCycle = 0;
+
+        return returnString;
     }
 
     public void parseIOLine(String[] splitLine) {
         //  Name: parseIOLine()
         //  Date created: 06.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Reads values from a string and adds them to the lists
 
         key = splitLine[0];
 
         // get stats
         if (!splitLine[1].equals("-")) {
-            count = Integer.parseInt(splitLine[1].split(",")[0]);
+            totalCount = Integer.parseInt(splitLine[1].split(",")[0]);
             mean = Double.parseDouble(splitLine[1].split(",")[1]);
             median = Double.parseDouble(splitLine[1].split(",")[2]);
         }
@@ -324,7 +333,7 @@ public class DataEntry {
     public String makeIOLine() {
         //  Name: makeIOLine()
         //  Date created: 06.12.2017
-        //  Last modified: 08.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Converts this object's values into a string
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -333,7 +342,7 @@ public class DataEntry {
         stringBuilder.append(key);
         stringBuilder.append("::");
         if (median + mean > 0) {
-            stringBuilder.append(count);
+            stringBuilder.append(totalCount);
             stringBuilder.append(",");
             stringBuilder.append(mean);
             stringBuilder.append(",");
@@ -392,7 +401,7 @@ public class DataEntry {
     }
 
     public int getCount() {
-        return count;
+        return totalCount;
     }
 
     public static boolean getCycleState() {

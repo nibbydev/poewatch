@@ -9,10 +9,6 @@ import java.util.Calendar;
 import java.util.Properties;
 
     /* Solved TODO:
-    [x] add: static last pull time for workers, must be at least 500ms delay to initiate a new pull
-    [x] add: pause PRICER_CONTROLLER when script hasn't been initialized
-    [x] change: move PricerController's run() to separate function
-    [x] change: split report.json to league-based files
     [x][15.12.17] change: "Superior Ashen Wood" = "Ashen Wood"
     [x][16.12.17] change: replace sleep() with wait/notify
     [x][17.12.17] change: use new API category slot instead of icon for sorting
@@ -21,6 +17,8 @@ import java.util.Properties;
     [x][18.12.17] add: generate php + htaccess files
     [x][18.12.17] fix: output means appearing almost exactly as medians
     [x][19.12.17] change: use local changeID
+    [x][19.12.17] change: allow count to reach 1000
+    [x][19.12.17] change: add counters to output
      */
 
 public class Main {
@@ -51,7 +49,6 @@ public class Main {
         // Stop workers on exit
         WORKER_CONTROLLER.stopController();
         PRICER_CONTROLLER.stopController();
-        wakeControllers();
     }
 
     private static int askUserForIntInputWithValidation() {
@@ -292,7 +289,7 @@ public class Main {
 
         String helpString = "[INFO] Available changeID commands:\n";
         helpString += "    'id <string>' - Add optional string to job queue\n";
-        helpString += "    'id local' - Add middle-ground string to job queue\n";
+        helpString += "    'id local' - Add last locally used job to queue\n";
         helpString += "    'id new' - Add newest string to job queue (recommended)\n";
 
         if (userInput.length < 2) {

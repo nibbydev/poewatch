@@ -49,11 +49,12 @@ public class Mappers {
     public static class ChangeID {
         //  Name: ChangeID()
         //  Date created: 30.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Maps http://poe.ninja 's and http://poe-rates.com 's JSON API to an object
 
         private String next_change_id;
         private String changeId;
+        private String change_id;
 
         ///////////////////////
         // Getters / Setters //
@@ -73,6 +74,10 @@ public class Mappers {
 
         public void setChangeId(String changeId) {
             this.next_change_id = changeId;
+        }
+
+        public void setChange_id(String change_id) {
+            this.next_change_id = change_id;
         }
     }
 
@@ -225,6 +230,11 @@ public class Mappers {
             return id;
         }
 
+        public void setId(String id) {
+            // Save space, use 4x smaller IDs
+            this.id = id.substring(0, 16);
+        }
+
         public int getH() {
             return h;
         }
@@ -287,10 +297,6 @@ public class Mappers {
 
         public List<String> getExplicitMods() {
             return explicitMods;
-        }
-
-        public void setId(String id) {
-            this.id = id;
         }
 
         public void setCorrupted(boolean corrupted) {

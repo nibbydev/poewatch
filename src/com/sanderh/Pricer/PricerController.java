@@ -11,7 +11,7 @@ import static com.sanderh.Main.*;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 18.12.2017
+    //  Last modified: 19.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
@@ -27,16 +27,16 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Main loop of the pricing service
 
         int sleepLength = Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle"));
 
-        // Wait for user to initiate program before building databases
-        checkMonitor();
-
         // Load data in on initial script launch
         readDataFromFile();
+
+        // Wait for user to initiate program before building databases
+        checkMonitor();
 
         sleepWhile(sleepLength);
         while (flagLocalRun) {
@@ -161,11 +161,16 @@ public class PricerController extends Thread {
     public void stopController() {
         //  Name: stopController()
         //  Date created: 13.12.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Shuts down the controller safely
 
         flagPause = false;
         flagLocalRun = false;
+
+        // Wake the monitor, allowing it to exit its loop
+        synchronized (getMonitor()) {
+            getMonitor().notifyAll();
+        }
     }
 
     //////////////////////////////////////
@@ -175,7 +180,7 @@ public class PricerController extends Thread {
     public void readDataFromFile() {
         //  Name: readDataFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Reads and parses database data from file
 
         String line;
@@ -189,12 +194,8 @@ public class PricerController extends Thread {
                 String[] splitLine = line.split("::");
 
                 /*
-                String type = splitLine[0].split("\\|")[1];
-                if (type.equals("armour:chest") || type.equals("weapons:staff") || type.equals("weapons:twosword")
-                        || type.equals("weapons:twomace") || type.equals("weapons:twoaxe") || type.equals("weapons:bow")) {
-                    if (!splitLine[0].contains("0L") || !splitLine[0].contains("5L") || !splitLine[0].contains("6L"))
-                        continue;
-                }
+                if(splitLine[0].contains("currency:currency"))
+                    continue;
                 */
 
                 entryMap.put(splitLine[0], new DataEntry());

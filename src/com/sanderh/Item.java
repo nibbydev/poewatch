@@ -6,7 +6,7 @@ import java.util.TreeMap;
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 17.12.2017
+    //  Last modified: 19.12.2017
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
     private String priceType, itemType;
@@ -78,7 +78,7 @@ public class Item extends Mappers.BaseItem {
     public void parseItem() {
         //  Name: parseItem()
         //  Date created: 08.12.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Calls other Item class related methods.
 
         // Do a few checks on the league, note and etc
@@ -106,19 +106,23 @@ public class Item extends Mappers.BaseItem {
                     return;
                 }
 
+                // "Superior Ashen Wood" = "Ashen Wood"
                 if (key.contains("Superior ")) {
-                    // "Superior Ashen Wood" = "Ashen Wood"
                     key = key.replace("Superior ", "");
                 }
 
-                // Include maps under similar frame type
+                // Include maps under same frame type
                 setFrameType(0);
-
                 break;
 
             case 4: // Gem
                 checkGemInfo();
                 break;
+
+            // Filter out chaos orbs
+            case 5:
+                if(getName().equals("Chaos Orb"))
+                    setDiscard();
 
             default:
                 checkSixLink();
