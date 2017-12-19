@@ -54,6 +54,10 @@ public class PricerController extends Thread {
         //  Last modified: 18.12.2017
         //  Description: Calls methods that construct/parse/write database entryMap
 
+        // Don't run if service hasn't responded in the last 30 seconds
+        if (System.currentTimeMillis() - STATISTICS.getLastPullTime() > 30 * 1000)
+            return;
+
         // Prepare for database building
         System.out.println(timeStamp() + " Generating databases");
 
@@ -131,7 +135,7 @@ public class PricerController extends Thread {
     public void parseItems(Mappers.APIReply reply) {
         //  Name: parseItems()
         //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Loop through every single item, checking every single one of them
@@ -141,8 +145,6 @@ public class PricerController extends Thread {
                 while (flagPause) {
                     sleep(100);
                 }
-
-                STATISTICS.parseItem(item);
 
                 // Parse item data
                 item.parseItem();

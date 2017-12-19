@@ -17,13 +17,14 @@ import static com.sanderh.Main.*;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 17.12.2017
+    //  Last modified: 18.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private static final int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
     private static final int CHUNK_SIZE = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
+    private static final int READ_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("readTimeOut"));
+    private static final int CONNECT_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("connectTimeOut"));
     private final Object monitor = new Object();
-    private static long lastPullTime = 0;
     private boolean flagLocalRun = true;
     private String job = "";
     private int index;
@@ -84,7 +85,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 18.12.2017
         //  Description: Method that downloads data from the API
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
@@ -94,16 +95,23 @@ public class Worker extends Thread {
         int byteCount;
 
         // Sleep for x milliseconds
-        if (System.currentTimeMillis() - lastPullTime < DOWNLOAD_DELAY)
-            justFuckingSleep((int) (DOWNLOAD_DELAY - System.currentTimeMillis() + lastPullTime));
+        while (System.currentTimeMillis() - STATISTICS.getLastPullTime() < DOWNLOAD_DELAY) {
+            justFuckingSleep((int) (DOWNLOAD_DELAY - System.currentTimeMillis() + STATISTICS.getLastPullTime()));
+        }
 
-        lastPullTime = System.currentTimeMillis();
-        STATISTICS.incPullCountTotal();
+        // Run statistics cycle
+        STATISTICS.cycle();
 
         try {
             // Define the request
             URL request = new URL(PROPERTIES.getProperty("defaultAPIURL") + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
+
+            // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
+            connection.setReadTimeout(READ_TIMEOUT);
+            connection.setConnectTimeout(CONNECT_TIMEOUT);
+
+            // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes

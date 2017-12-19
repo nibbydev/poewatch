@@ -5,10 +5,23 @@ import NotMadeByMe.TextIO;
 import com.sanderh.Worker.WorkerController;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Properties;
+
+    /* Solved TODO:
+    [x] add: static last pull time for workers, must be at least 500ms delay to initiate a new pull
+    [x] add: pause PRICER_CONTROLLER when script hasn't been initialized
+    [x] change: move PricerController's run() to separate function
+    [x] change: split report.json to league-based files
+    [x][15.12.17] change: "Superior Ashen Wood" = "Ashen Wood"
+    [x][16.12.17] change: replace sleep() with wait/notify
+    [x][17.12.17] change: use new API category slot instead of icon for sorting
+    [x][18.12.17] add: http://id.poe.ovh/
+    [x][18.12.17] change: static php files read data from different directory
+    [x][18.12.17] add: generate php + htaccess files
+    [x][18.12.17] fix: output means appearing almost exactly as medians
+    [x][19.12.17] change: use local changeID
+     */
 
 public class Main {
     public static final Properties PROPERTIES = readProperties();
@@ -274,12 +287,12 @@ public class Main {
     private static void commandIdAdd(String[] userInput) {
         //  Name: commandIdAdd()
         //  Date created: 27.11.2017
-        //  Last modified: 16.12.2017
+        //  Last modified: 19.12.2017
         //  Description: Adds a ChangeID to the queue
 
         String helpString = "[INFO] Available changeID commands:\n";
         helpString += "    'id <string>' - Add optional string to job queue\n";
-        helpString += "    'id default' - Add middle-ground string to job queue\n";
+        helpString += "    'id local' - Add middle-ground string to job queue\n";
         helpString += "    'id new' - Add newest string to job queue (recommended)\n";
 
         if (userInput.length < 2) {
@@ -288,8 +301,8 @@ public class Main {
         }
 
         switch (userInput[1]) {
-            case "default":
-                WorkerController.setNextChangeID(PROPERTIES.getProperty("defaultChangeID"));
+            case "local":
+                WorkerController.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
                 break;
             case "new":
                 WorkerController.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
