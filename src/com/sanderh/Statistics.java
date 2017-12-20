@@ -8,7 +8,7 @@ import java.io.OutputStream;
 public class Statistics {
     //  Name: Statistics
     //  Date created: 16.12.2017
-    //  Last modified: 19.12.2017
+    //  Last modified: 20.12.2017
     //  Description: Object meant to be used as a static statistics collector
 
     private final long startTime = System.currentTimeMillis();
@@ -79,7 +79,7 @@ public class Statistics {
     public void writeChangeID() {
         //  Name: writeChangeID
         //  Date created: 18.12.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Writes latest ChangeID to file
 
         OutputStream fOut = null;
@@ -88,7 +88,7 @@ public class Statistics {
         try {
             File fFile = new File("./http/data/ChangeID");
             fOut = new FileOutputStream(fFile);
-            fOut.write(("{\"change_id\":\"" + latestChangeID + "\",\"status\":\"" + status + "\",\"lastUpdate\":\"" +
+            fOut.write(("{\"changeId\":\"" + latestChangeID + "\",\"status\":\"" + status + "\",\"lastUpdate\":\"" +
                     lastStatusChangeWhen + "\"}").getBytes());
 
         } catch (IOException ex) {

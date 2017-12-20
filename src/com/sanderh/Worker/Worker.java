@@ -17,13 +17,13 @@ import static com.sanderh.Main.*;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 18.12.2017
+    //  Last modified: 20.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
-    private static final int DOWNLOAD_DELAY = Integer.parseInt(PROPERTIES.getProperty("downloadDelay"));
-    private static final int CHUNK_SIZE = Integer.parseInt(PROPERTIES.getProperty("downloadChunkSize"));
-    private static final int READ_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("readTimeOut"));
-    private static final int CONNECT_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("connectTimeOut"));
+    private static final int DOWNLOAD_DELAY = CONFIG.getAsInt("downloadDelay");
+    private static final int CHUNK_SIZE = CONFIG.getAsInt("downloadChunkSize");
+    private static final int READ_TIMEOUT = CONFIG.getAsInt("readTimeOut");
+    private static final int CONNECT_TIMEOUT = CONFIG.getAsInt("connectTimeOut");
     private final Object monitor = new Object();
     private boolean flagLocalRun = true;
     private String job = "";
@@ -85,7 +85,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Method that downloads data from the API
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
@@ -104,7 +104,7 @@ public class Worker extends Thread {
 
         try {
             // Define the request
-            URL request = new URL(PROPERTIES.getProperty("defaultAPIURL") + this.job);
+            URL request = new URL(CONFIG.getAsStr("defaultAPIURL") + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
@@ -120,8 +120,16 @@ public class Worker extends Thread {
                 if (!this.flagLocalRun)
                     return "";
 
-                // Trim the byteBuffer, convert it into string and add to string buffer
-                stringBuilderBuffer.append(trimPartialByteBuffer(byteBuffer, byteCount));
+                // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
+                if (byteCount != CHUNK_SIZE) {
+                    byte[] trimmedByteBuffer = new byte[byteCount];
+                    System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
+
+                    // Trim byteBuffer, convert it into string and add to string buffer
+                    stringBuilderBuffer.append(new String(trimmedByteBuffer));
+                } else {
+                    stringBuilderBuffer.append(new String(byteBuffer));
+                }
 
                 // Try to find new job number using regex
                 if (regexLock) {
@@ -182,25 +190,6 @@ public class Worker extends Thread {
         synchronized (WorkerController.getMonitor()) {
             WorkerController.getMonitor().notifyAll();
         }
-    }
-
-    private String trimPartialByteBuffer(byte[] buffer, int length) {
-        //  Name: trimPartialByteBuffer()
-        //  Date created: 22.11.2017
-        //  Last modified: 29.11.2017
-        //  Description: Copies over contents of fixed-size byte array and adds contents to ArrayList, which converts it
-        //      into string. Reason: first iteration of get reply returns 26 bytes instead of 128
-        //  Parent methods:
-        //      downloadData()
-
-        byte[] bufferBuffer = new byte[length];
-
-        // TODO: improve this
-        for (int i = 0; i < length; i++) {
-            bufferBuffer[i] = buffer[i];
-        }
-
-        return new String(bufferBuffer);
     }
 
     private Mappers.APIReply deSerializeJSONString(String stringBuffer) {

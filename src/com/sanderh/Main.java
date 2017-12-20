@@ -6,7 +6,6 @@ import com.sanderh.Worker.WorkerController;
 
 import java.io.*;
 import java.util.Calendar;
-import java.util.Properties;
 
     /* Solved TODO:
     [x][15.12.17] change: "Superior Ashen Wood" = "Ashen Wood"
@@ -22,7 +21,7 @@ import java.util.Properties;
      */
 
 public class Main {
-    public static final Properties PROPERTIES = readProperties();
+    public static final ConfigReader CONFIG = new ConfigReader();
     public static final WorkerController WORKER_CONTROLLER = new WorkerController();
     public static final PricerController PRICER_CONTROLLER = new PricerController();
     public static final Statistics STATISTICS = new Statistics();
@@ -54,13 +53,11 @@ public class Main {
     private static int askUserForIntInputWithValidation() {
         //  Name: askUserForIntInputWithValidation()
         //  Date created: 21.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Asks the user for an input, has validation so that the input is actually valid
-        //  Parent methods:
-        //      main()
 
         int userInput = -1;
-        int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
+        int workerLimit = CONFIG.getAsInt("workerLimit");
 
         System.out.println("How many workers should be spawned (1 - " + workerLimit + ")?");
 
@@ -124,16 +121,15 @@ public class Main {
     public static String timeStamp() {
         //  Name: timeStamp()
         //  Date created: 06.12.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Returns time in the format of [HH:MM]
 
         StringBuilder stringBuilder = new StringBuilder();
-        int timeZone = Integer.parseInt(PROPERTIES.getProperty("timeZoneOffset"));
 
         // Refresh calendar (this is a bug with Calendar, I've heard)
         Calendar calendar = Calendar.getInstance();
 
-        int hour = calendar.get(Calendar.HOUR_OF_DAY) + timeZone;
+        int hour = calendar.get(Calendar.HOUR_OF_DAY) + CONFIG.getAsInt("timeZoneOffset");
         int minute = calendar.get(Calendar.MINUTE);
 
         stringBuilder.append("[");
@@ -160,35 +156,6 @@ public class Main {
         return stringBuilder.toString();
     }
 
-    private static Properties readProperties() {
-        //  Name: readProperties()
-        //  Date created: 11.12.2017
-        //  Last modified: 11.12.2017
-        //  Description: Reads in config file from classpath. Probably crashes the program if no valid data is found
-
-        Properties properties = new Properties();
-        FileInputStream fileInputStream = null;
-
-        // Writes values from statistics to file
-        try {
-            fileInputStream = new FileInputStream("./config.properties");
-            properties.load(fileInputStream);
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Could not read properties file:");
-            ex.printStackTrace();
-        } finally {
-            try {
-                if (fileInputStream != null) {
-                    fileInputStream.close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        return properties;
-    }
-
     private static void wakeControllers() {
         //  Name: wakeControllers()
         //  Date created: 16.12.2017
@@ -205,71 +172,81 @@ public class Main {
         }
     }
 
-    //////////////////////////////
-    // File structure I/O setup //
-    //////////////////////////////
+    //////////////////////////
+    // File structure setup //
+    //////////////////////////
 
     private static void buildFolderFileStructure() {
         //  Name: buildFolderFileStructure()
         //  Date created: 18.12.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Creates all missing http files and folders on startup
 
         // Make sure output folders exist
         new File("./http/data").mkdirs();
 
         // Create ./http/.htaccess if missing
-        if(!new File("./http/.htaccess").exists()) {
-            writeFile("./http/.htaccess", "<IfModule mod_rewrite.c>\n    RewriteEngine On\n    " +
-                    "RewriteCond %{REQUEST_FILENAME}.php -f\n    RewriteRule !.*\\.php$ %{REQUEST_FILENAME}.php " +
-                    "[QSA,L]\n</IfModule>\n");
-        }
+        saveResource("/http/", ".htaccess");
 
         // Create ./http/ChangeID.php if missing
-        if(!new File("./http/ChangeID.php").exists()) {
-            writeFile("./http/ChangeID.php", "<?php \n    header('Content-Type: application/json');\n    " +
-                    "echo file_get_contents( \"./data/ChangeID\" );\n?>\n");
-        }
+        saveResource("/http/", "ChangeID.php");
 
         // Create ./http/index.php if missing
-        if(!new File("./http/index.php").exists()) {
-            writeFile("./http/index.php", "\n");
-        }
+        saveResource("/http/", "index.php");
 
         // Create ./http/Stats.php if missing
-        if(!new File("./http/Stats.php").exists()) {
-            writeFile("./http/Stats.php", "<?php\n    header('Content-Type: application/json');\n    " +
-                    "echo file_get_contents( \"./data/\" . $_GET[\"league\"] . \".json\" );\n?>\n");
-        }
+        saveResource("/http/", "Stats.php");
 
         // Create ./http/data/index.php if missing
-        if(!new File("./http/data/index.php").exists()) {
-            writeFile("./http/data/index.php", "\n");
-        }
+        saveResource("/http/data/", "index.php");
+
+        // Create ./config.cfg if missing
+        saveResource("/", "config.cfg");
     }
 
-    private static void writeFile(String path, String data) {
-        //  Name: writeFile()
-        //  Date created: 18.12.2017
-        //  Last modified: 18.12.2017
-        //  Description: Writes data to file
+    private static void saveResource(String outputDirectory, String name)  {
+        //  Name: saveResource()
+        //  Date created: 20.12.2017
+        //  Last modified: 20.12.2017
+        //  Description: Reads files from the .jar and writes them to filepath
 
-        OutputStream fOut = null;
+        // Get the current path
+        String workingDir = System.getProperty("user.dir");
+        File out = new File(workingDir + outputDirectory, name);
 
-        // Writes values from statistics to file
-        try {
-            File fFile = new File(path);
-            fOut = new FileOutputStream(fFile);
+        // No real need to overwrite on startup
+        if(out.exists())
+            return;
 
-            fOut.write(data.getBytes());
+        // Define I/O so they can be closed later
+        BufferedInputStream reader = null;
+        OutputStream writer = null;
+
+        try{
+            // Assign I/O
+            reader = new BufferedInputStream(Main.class.getResourceAsStream("/com/sanderh/Resource/" + name));
+            writer = new BufferedOutputStream(new FileOutputStream(out));
+
+            // Define I/O helpers
+            byte[] buffer = new byte[1024];
+            int position = 0;
+            int length;
+
+            // Read and write at the same time
+            while((length = reader.read(buffer, 0, 1024)) > 0) {
+                writer.write(buffer, position, length);
+                position += length;
+            }
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write " + path + ":");
             ex.printStackTrace();
         } finally {
             try {
-                if (fOut != null) {
-                    fOut.flush();
-                    fOut.close();
+                if (reader != null)
+                    reader.close();
+
+                if(writer != null) {
+                    writer.flush();
+                    writer.close();
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();

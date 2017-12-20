@@ -11,7 +11,7 @@ import static com.sanderh.Main.*;
 public class PricerController extends Thread {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 19.12.2017
+    //  Last modified: 20.12.2017
     //  Description: A threaded object that manages databases
 
     private static boolean flagLocalRun = true;
@@ -27,10 +27,10 @@ public class PricerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 28.11.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Main loop of the pricing service
 
-        int sleepLength = Integer.parseInt(PROPERTIES.getProperty("PricerControllerSleepCycle"));
+        int sleepLength = CONFIG.getAsInt("PricerControllerSleepCycle");
 
         // Load data in on initial script launch
         readDataFromFile();
@@ -180,38 +180,24 @@ public class PricerController extends Thread {
     public void readDataFromFile() {
         //  Name: readDataFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Reads and parses database data from file
 
         String line;
-        BufferedReader bufferedReader = null;
+        File file = new File("./database.txt");
 
-        try {
-            File fFile = new File("./database.txt");
-            bufferedReader = new BufferedReader(new FileReader(fFile));
+        if (!file.exists())
+            return;
 
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))){
             while ((line = bufferedReader.readLine()) != null) {
                 String[] splitLine = line.split("::");
-
-                /*
-                if(splitLine[0].contains("currency:currency"))
-                    continue;
-                */
 
                 entryMap.put(splitLine[0], new DataEntry());
                 entryMap.get(splitLine[0]).parseIOLine(splitLine);
             }
-
         } catch (IOException ex) {
-            System.out.println("[INFO] File not found: ./database.txt");
-        } finally {
-            try {
-                if (bufferedReader != null) {
-                    bufferedReader.close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            ex.printStackTrace();
         }
     }
 

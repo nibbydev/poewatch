@@ -49,12 +49,11 @@ public class Mappers {
     public static class ChangeID {
         //  Name: ChangeID()
         //  Date created: 30.11.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Maps http://poe.ninja 's and http://poe-rates.com 's JSON API to an object
 
         private String next_change_id;
         private String changeId;
-        private String change_id;
 
         ///////////////////////
         // Getters / Setters //
@@ -68,16 +67,8 @@ public class Mappers {
             this.next_change_id = next_change_id;
         }
 
-        public String getChangeId() {
-            return next_change_id;
-        }
-
         public void setChangeId(String changeId) {
             this.next_change_id = changeId;
-        }
-
-        public void setChange_id(String change_id) {
-            this.next_change_id = change_id;
         }
     }
 

@@ -8,15 +8,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
-import static com.sanderh.Main.PROPERTIES;
+import static com.sanderh.Main.CONFIG;
 
 public class WorkerController extends Thread {
     //  Name: WorkerController
     //  Date created: 21.11.2017
-    //  Last modified: 17.12.2017
+    //  Last modified: 20.12.2017
     //  Description: Object that's used to manage worker objects
 
-    private static final int workerLimit = Integer.parseInt(PROPERTIES.getProperty("workerLimit"));
     private static boolean flagLocalRun = true;
     private static ArrayList<Worker> workerList = new ArrayList<>();
     private static final ArrayList<String> nextChangeIDs = new ArrayList<>();
@@ -101,15 +100,15 @@ public class WorkerController extends Thread {
     public void spawnWorkers(int workerCount) {
         //  Name: spawnWorkers()
         //  Date created: 21.11.2017
-        //  Last modified: 11.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Creates <workerCount> amount of new workers
 
         // Get the next available index
         int nextWorkerIndex = workerList.size();
 
         // Forbid spawning over limit
-        if (nextWorkerIndex + workerCount > workerLimit) {
-            System.out.println("[ERROR] Maximum amount of workers is " + workerLimit);
+        if (nextWorkerIndex + workerCount > CONFIG.getAsInt("workerLimit")) {
+            System.out.println("[ERROR] Maximum amount of workers is " + CONFIG.getAsInt("workerLimit"));
             return;
         }
 

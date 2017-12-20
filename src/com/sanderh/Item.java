@@ -579,8 +579,8 @@ public class Item extends Mappers.BaseItem {
 
         // A rough outline of what it is meant to do:
         // {"category": "jewels"}                  -> "jewels"                -> {"jewels"}             -> "jewels"
-        // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour-gloves"
-        // {"category": {"weapons": ["bow"]}}      -> "{weapons=[bow]}"       -> {"weapons", "bow"}     -> "weapons-bow"
+        // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour:gloves"
+        // {"category": {"weapons": ["bow"]}}      -> "{weapons=[bow]}"       -> {"weapons", "bow"}     -> "weapons:bow"
 
         String asString = getCategory().toString();
 

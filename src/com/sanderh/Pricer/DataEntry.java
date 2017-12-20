@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static com.sanderh.Main.CONFIG;
 import static com.sanderh.Main.PRICER_CONTROLLER;
-import static com.sanderh.Main.PROPERTIES;
 
 public class DataEntry {
     //  Name: DataEntry
@@ -17,7 +17,7 @@ public class DataEntry {
 
     // Cycle counters
     private static int cycleCount = 0;
-    private static final int CYCLE_LIMIT = Integer.parseInt(PROPERTIES.getProperty("DataEntryCycleLimit"));
+    private static final int CYCLE_LIMIT = CONFIG.getAsInt("DataEntryCycleLimit");
 
     // Statistical values
     private int totalCount = 0;
@@ -39,9 +39,9 @@ public class DataEntry {
     private ArrayList<String> duplicates = new ArrayList<>();
 
     // Constants that limit list sizes
-    private static final int BASEDATA_SIZE = Integer.parseInt(PROPERTIES.getProperty("baseDataSize"));
-    private static final int HOURLY_DATA_SIZE = Integer.parseInt(PROPERTIES.getProperty("hourlyDataSize"));
-    private static final int DUPLICATES_SIZE = Integer.parseInt(PROPERTIES.getProperty("duplicatesSize"));
+    private static final int BASEDATA_SIZE = CONFIG.getAsInt("baseDataSize");
+    private static final int HOURLY_DATA_SIZE = CONFIG.getAsInt("hourlyDataSize");
+    private static final int DUPLICATES_SIZE = CONFIG.getAsInt("duplicatesSize");
 
     //////////////////
     // Main methods //
