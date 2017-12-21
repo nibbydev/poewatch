@@ -12,14 +12,10 @@ import static com.sanderh.Main.PRICER_CONTROLLER;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 19.12.2017
+    //  Last modified: 21.12.2017
     //  Description: An object that stores an item's price data
 
-    // Cycle counters
     private static int cycleCount = 0;
-    private static final int CYCLE_LIMIT = CONFIG.getAsInt("DataEntryCycleLimit");
-
-    // Statistical values
     private int totalCount = 0;
     private int newItemsFoundInCycle = 0;
     private int oldItemsDiscardedInCycle = 0;
@@ -37,11 +33,6 @@ public class DataEntry {
     private ArrayList<Double> hourlyMean = new ArrayList<>();
     private ArrayList<Double> hourlyMedian = new ArrayList<>();
     private ArrayList<String> duplicates = new ArrayList<>();
-
-    // Constants that limit list sizes
-    private static final int BASEDATA_SIZE = CONFIG.getAsInt("baseDataSize");
-    private static final int HOURLY_DATA_SIZE = CONFIG.getAsInt("hourlyDataSize");
-    private static final int DUPLICATES_SIZE = CONFIG.getAsInt("duplicatesSize");
 
     //////////////////
     // Main methods //
@@ -63,7 +54,7 @@ public class DataEntry {
     public void addRaw(Item item) {
         //  Name: addRaw
         //  Date created: 05.12.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Method that adds entries to raw data database
 
         // Skip duplicate items
@@ -80,9 +71,13 @@ public class DataEntry {
 
         // Add item ID to duplicate list
         duplicates.add(item.getId());
-        if (duplicates.size() > DUPLICATES_SIZE)
-            duplicates.subList(0, duplicates.size() - DUPLICATES_SIZE).clear();
+        if (duplicates.size() > CONFIG.duplicatesSize)
+            duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
     }
+
+    /////////////////////
+    // Private methods //
+    /////////////////////
 
     private void removeLeagueAndTypeFromKey() {
         //  Name: removeLeagueAndTypeFromKey()
@@ -106,7 +101,7 @@ public class DataEntry {
     private void buildBaseData() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         String index;
@@ -145,8 +140,8 @@ public class DataEntry {
         rawData.clear();
 
         // Soft-cap list at 100 entries
-        if (baseData.size() > BASEDATA_SIZE)
-            baseData.subList(0, baseData.size() - BASEDATA_SIZE).clear();
+        if (baseData.size() > CONFIG.baseDataSize)
+            baseData.subList(0, baseData.size() - CONFIG.baseDataSize).clear();
     }
 
     private void purgeBaseData() {
@@ -176,7 +171,7 @@ public class DataEntry {
     private void buildStatistics() {
         //  Name: buildBaseData
         //  Date created: 29.11.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Method that adds entries to statistics
 
         // Make a copy so the original order persists and sort new array
@@ -219,10 +214,10 @@ public class DataEntry {
         hourlyMedian.add(this.median);
 
         // Limit hourly to <x> values
-        if (hourlyMean.size() > HOURLY_DATA_SIZE)
-            hourlyMean.subList(0, hourlyMean.size() - HOURLY_DATA_SIZE).clear();
-        if (hourlyMedian.size() > HOURLY_DATA_SIZE)
-            hourlyMedian.subList(0, hourlyMedian.size() - HOURLY_DATA_SIZE).clear();
+        if (hourlyMean.size() > CONFIG.hourlyDataSize)
+            hourlyMean.subList(0, hourlyMean.size() - CONFIG.hourlyDataSize).clear();
+        if (hourlyMedian.size() > CONFIG.hourlyDataSize)
+            hourlyMedian.subList(0, hourlyMedian.size() - CONFIG.hourlyDataSize).clear();
     }
 
     private double findMean(ArrayList<Double> valueList) {
@@ -261,7 +256,7 @@ public class DataEntry {
         //  Description: Creates a JSON-encoded string of hourly medians
 
         // Run every x cycles AND if there's enough data
-        if (cycleCount < CYCLE_LIMIT || hourlyMedian.isEmpty() || hourlyMean.isEmpty())
+        if (cycleCount < CONFIG.dataEntryCycleLimit || hourlyMedian.isEmpty() || hourlyMean.isEmpty())
             return "";
 
         // Format the key to fit for JSON
@@ -405,7 +400,7 @@ public class DataEntry {
     }
 
     public static boolean getCycleState() {
-        return cycleCount >= CYCLE_LIMIT;
+        return cycleCount >= CONFIG.dataEntryCycleLimit;
     }
 
     public String getType() {

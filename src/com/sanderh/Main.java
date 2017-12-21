@@ -5,6 +5,8 @@ import NotMadeByMe.TextIO;
 import com.sanderh.Worker.WorkerController;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
     /* Solved TODO:
@@ -16,12 +18,16 @@ import java.util.Calendar;
     [x][18.12.17] add: generate php + htaccess files
     [x][18.12.17] fix: output means appearing almost exactly as medians
     [x][19.12.17] change: use local changeID
-    [x][19.12.17] change: allow count to reach 1000
-    [x][19.12.17] change: add counters to output
+    [x][20.12.17] change: create custom config loader
+    [x][20.12.17] change: "Chaos Orb" currency conversion
+    [x][20.12.17] change: build on full hour
+    [x][20.12.17] change: run pricer controller after x pulls?
+    [x][21.12.17] change: add CLI options
+    [x][21.12.17] change: use string instead of array list for latest changeID in worker controller
      */
 
 public class Main {
-    public static final ConfigReader CONFIG = new ConfigReader();
+    public static final ConfigReader CONFIG = new ConfigReader("config.cfg");
     public static final WorkerController WORKER_CONTROLLER = new WorkerController();
     public static final PricerController PRICER_CONTROLLER = new PricerController();
     public static final Statistics STATISTICS = new Statistics();
@@ -29,58 +35,76 @@ public class Main {
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 21.12.2017
         //  Description: The main class. Run this to run the program
 
         // Make sure basic folder structure exists
         buildFolderFileStructure();
 
-        // Ask the user how many workers should be spawned and spawn them
-        WORKER_CONTROLLER.spawnWorkers(askUserForIntInputWithValidation());
-
-        // Set default values and start controllers
+        // Start controller
         WORKER_CONTROLLER.start();
-        PRICER_CONTROLLER.start();
+
+        // Parse CLI parameters
+        parseCommandParameters(args);
 
         // Initiate main command loop, allowing user some control over the program
         commandLoop();
 
         // Stop workers on exit
         WORKER_CONTROLLER.stopController();
-        PRICER_CONTROLLER.stopController();
     }
 
-    private static int askUserForIntInputWithValidation() {
-        //  Name: askUserForIntInputWithValidation()
-        //  Date created: 21.11.2017
-        //  Last modified: 20.12.2017
-        //  Description: Asks the user for an input, has validation so that the input is actually valid
+    private static void parseCommandParameters (String[] args){
+        //  Name: parseCommandParameters()
+        //  Date created: 21.12.2017
+        //  Last modified: 21.12.2017
+        //  Description: Parses CLI / commandline parameters
 
-        int userInput = -1;
-        int workerLimit = CONFIG.getAsInt("workerLimit");
+        ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
-        System.out.println("How many workers should be spawned (1 - " + workerLimit + ")?");
+        for (String arg : newArgs) {
+            if (!arg.startsWith("-"))
+                continue;
 
-        while (userInput <= 0 || userInput > workerLimit) {
-            userInput = TextIO.getlnInt();
+            switch (arg) {
+                case "-workers":
+                    WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
+                    System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
+                    break;
+                case "-id":
+                    switch (newArgs.get(newArgs.lastIndexOf(arg) + 1)) {
+                        case "local":
+                            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                            System.out.println("[INFO] Local ChangeID added");
+                            break;
+                        case "new":
+                            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                            System.out.println("[INFO] New ChangeID added");
+                            break;
+                        default:
+                            WORKER_CONTROLLER.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
+                            System.out.println("[INFO] Custom ChangeID added");
+                            break;
 
-            if (userInput > workerLimit)
-                System.out.println("That is way too many workers!");
+                    }
+                    break;
+                default:
+                    System.out.println("[ERROR] Unknown CLI parameter: " + arg);
+                    break;
+            }
         }
 
-        return userInput;
     }
 
     private static void commandLoop() {
         //  Name: commandLoop()
         //  Date created: 22.11.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 10.12.2017
         //  Description: Command loop method. Allows the user some interaction with the script as it is running.
 
         String helpString = "[INFO] Available commands include:\n"
                 + "    help - display this help page\n"
                 + "    exit - exit the script safely\n"
-                + "    pause - pause item parsing\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    about - show about page\n";
@@ -99,9 +123,6 @@ public class Main {
                     STATISTICS.setStatus(1);
                     STATISTICS.writeChangeID();
                     return;
-                case "pause":
-                    commandPause();
-                    break;
                 case "id":
                     commandIdAdd(userInput);
                     break;
@@ -121,7 +142,7 @@ public class Main {
     public static String timeStamp() {
         //  Name: timeStamp()
         //  Date created: 06.12.2017
-        //  Last modified: 20.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Returns time in the format of [HH:MM]
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -129,7 +150,7 @@ public class Main {
         // Refresh calendar (this is a bug with Calendar, I've heard)
         Calendar calendar = Calendar.getInstance();
 
-        int hour = calendar.get(Calendar.HOUR_OF_DAY) + CONFIG.getAsInt("timeZoneOffset");
+        int hour = calendar.get(Calendar.HOUR_OF_DAY) + CONFIG.timeZoneOffset;
         int minute = calendar.get(Calendar.MINUTE);
 
         stringBuilder.append("[");
@@ -154,22 +175,6 @@ public class Main {
 
         // Return [HH:MM]
         return stringBuilder.toString();
-    }
-
-    private static void wakeControllers() {
-        //  Name: wakeControllers()
-        //  Date created: 16.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Wakes all objects from sleep
-
-        // Wake price controller
-        synchronized (PricerController.getMonitor()) {
-            PricerController.getMonitor().notifyAll();
-        }
-        // Wake worker controller
-        synchronized (WorkerController.getMonitor()) {
-            WorkerController.getMonitor().notifyAll();
-        }
     }
 
     //////////////////////////
@@ -261,7 +266,7 @@ public class Main {
     private static void commandIdAdd(String[] userInput) {
         //  Name: commandIdAdd()
         //  Date created: 27.11.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Adds a ChangeID to the queue
 
         String helpString = "[INFO] Available changeID commands:\n";
@@ -276,17 +281,24 @@ public class Main {
 
         switch (userInput[1]) {
             case "local":
-                WorkerController.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                System.out.println("[INFO] Local ChangeID added");
                 break;
             case "new":
-                WorkerController.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                System.out.println("[INFO] New ChangeID added");
                 break;
             default:
-                WorkerController.setNextChangeID(userInput[1]);
+                WORKER_CONTROLLER.setNextChangeID(userInput[1]);
+                System.out.println("[INFO] Custom ChangeID added");
+                break;
+
         }
 
-        wakeControllers();
-        System.out.println("[INFO] New ChangeID added");
+        // Wake worker controller
+        synchronized (WORKER_CONTROLLER.getMonitor()) {
+            WORKER_CONTROLLER.getMonitor().notifyAll();
+        }
     }
 
     private static void commandWorker(String[] userInput) {
@@ -316,21 +328,6 @@ public class Main {
             WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
-        }
-    }
-
-    private static void commandPause() {
-        //  Name: commandIdAdd()
-        //  Date created: 27.11.2017
-        //  Last modified: 11.12.2017
-        //  Description: Pauses or resumes the script
-
-        if (PRICER_CONTROLLER.isFlagPause()) {
-            PRICER_CONTROLLER.setFlagPause(false);
-            System.out.println("[INFO] Resumed");
-        } else {
-            PRICER_CONTROLLER.setFlagPause(true);
-            System.out.println("[INFO] Paused");
         }
     }
 

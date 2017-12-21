@@ -24,7 +24,7 @@ public class Statistics {
     private int[] itemCountFrameType = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     private int changeIDCycleCounter = 0;
-    private long lastStatusChangeWhen = 0;
+    private long lastSuccessfulPullTime = 0;
     private String status = "up";
     private String oldStatus = "";
 
@@ -79,7 +79,7 @@ public class Statistics {
     public void writeChangeID() {
         //  Name: writeChangeID
         //  Date created: 18.12.2017
-        //  Last modified: 20.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Writes latest ChangeID to file
 
         OutputStream fOut = null;
@@ -89,7 +89,7 @@ public class Statistics {
             File fFile = new File("./http/data/ChangeID");
             fOut = new FileOutputStream(fFile);
             fOut.write(("{\"changeId\":\"" + latestChangeID + "\",\"status\":\"" + status + "\",\"lastUpdate\":\"" +
-                    lastStatusChangeWhen + "\"}").getBytes());
+                    lastSuccessfulPullTime + "\"}").getBytes());
 
         } catch (IOException ex) {
             System.out.println("[ERROR] Could not write ./http/data/ChangeID");
@@ -113,11 +113,11 @@ public class Statistics {
     public void setLatestChangeID(String latestChangeID) {
         //  Name: setLatestChangeID
         //  Date created: 16.12.2017
-        //  Last modified: 19.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Updates the latest changeID and time
 
         this.latestChangeID = latestChangeID;
-        lastStatusChangeWhen = System.currentTimeMillis();
+        lastSuccessfulPullTime = System.currentTimeMillis();
         changeIDCycleCounter++;
 
         // Write to file every <x> cycles
@@ -166,5 +166,9 @@ public class Statistics {
 
     public long getLastPullTime() {
         return lastPullTime;
+    }
+
+    public long getLastSuccessfulPullTime() {
+        return lastSuccessfulPullTime;
     }
 }

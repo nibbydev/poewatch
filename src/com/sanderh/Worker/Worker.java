@@ -17,15 +17,11 @@ import static com.sanderh.Main.*;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 20.12.2017
+    //  Last modified: 21.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
-    private static final int DOWNLOAD_DELAY = CONFIG.getAsInt("downloadDelay");
-    private static final int CHUNK_SIZE = CONFIG.getAsInt("downloadChunkSize");
-    private static final int READ_TIMEOUT = CONFIG.getAsInt("readTimeOut");
-    private static final int CONNECT_TIMEOUT = CONFIG.getAsInt("connectTimeOut");
     private final Object monitor = new Object();
-    private boolean flagLocalRun = true;
+    private volatile boolean flagLocalRun = true;
     private String job = "";
     private int index;
 
@@ -36,7 +32,7 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Contains the main loop of the worker
 
         String replyJSONString;
@@ -44,8 +40,7 @@ public class Worker extends Thread {
 
         // Run while flag is true
         while (flagLocalRun) {
-            // Snooze
-            checkMonitor();
+            waitOnMonitor();
 
             // Check if new job has been added after interrupt
             if (!job.equals("") && flagLocalRun) {
@@ -68,35 +63,35 @@ public class Worker extends Thread {
         }
     }
 
-    private void checkMonitor() {
-        //  Name: checkMonitor()
-        //  Date created: 16.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Sleeps until monitor object is notified?
+    public void stopWorker() {
+        //  Name: stopWorker()
+        //  Date created: 11.12.2017
+        //  Last modified: 21.12.2017
+        //  Description: Stops current Worker's process
 
-        synchronized (monitor) {
-            try {
-                monitor.wait();
-            } catch (InterruptedException e) {
-            }
-        }
+        this.flagLocalRun = false;
+        wakeLocalMonitor();
     }
+
+    /////////////////////////////
+    // Primary private methods //
+    /////////////////////////////
 
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 20.12.2017
+        //  Last modified: 21.12.2017
         //  Description: Method that downloads data from the API
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[CHUNK_SIZE];
+        byte[] byteBuffer = new byte[CONFIG.downloadChunkSize];
         boolean regexLock = true;
         InputStream stream = null;
         int byteCount;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - STATISTICS.getLastPullTime() < DOWNLOAD_DELAY) {
-            justFuckingSleep((int) (DOWNLOAD_DELAY - System.currentTimeMillis() + STATISTICS.getLastPullTime()));
+        while (System.currentTimeMillis() - STATISTICS.getLastPullTime() < CONFIG.downloadDelay) {
+            justFuckingSleep((int) (CONFIG.downloadDelay - System.currentTimeMillis() + STATISTICS.getLastPullTime()));
         }
 
         // Run statistics cycle
@@ -104,24 +99,24 @@ public class Worker extends Thread {
 
         try {
             // Define the request
-            URL request = new URL(CONFIG.getAsStr("defaultAPIURL") + this.job);
+            URL request = new URL(CONFIG.defaultAPIURL + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(READ_TIMEOUT);
-            connection.setConnectTimeout(CONNECT_TIMEOUT);
+            connection.setReadTimeout(CONFIG.readTimeOut);
+            connection.setConnectTimeout(CONFIG.connectTimeOut);
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, CHUNK_SIZE)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, CONFIG.downloadChunkSize)) != -1) {
                 // Check if run flag is lowered
                 if (!this.flagLocalRun)
                     return "";
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != CHUNK_SIZE) {
+                if (byteCount != CONFIG.downloadChunkSize) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
@@ -139,8 +134,7 @@ public class Worker extends Thread {
                         regexLock = false;
 
                         // Add new-found job to queue
-                        WorkerController.setNextChangeID(matcher.group());
-                        wakeWorkerControllerMonitor();
+                        WORKER_CONTROLLER.setNextChangeID(matcher.group());
 
                         // Add freshest changeID to statistics
                         STATISTICS.setLatestChangeID(matcher.group());
@@ -160,8 +154,7 @@ public class Worker extends Thread {
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
                 justFuckingSleep(5000);
-                WorkerController.setNextChangeID(this.job);
-                wakeWorkerControllerMonitor();
+                WORKER_CONTROLLER.setNextChangeID(this.job);
             }
 
             STATISTICS.incPullCountFailed();
@@ -179,17 +172,6 @@ public class Worker extends Thread {
 
         // Return the downloaded mess of a JSON string
         return stringBuilderBuffer.toString();
-    }
-
-    private void wakeWorkerControllerMonitor() {
-        //  Name: wakeWorkerControllerMonitor()
-        //  Date created: 16.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Wakes WorkerController
-
-        synchronized (WorkerController.getMonitor()) {
-            WorkerController.getMonitor().notifyAll();
-        }
     }
 
     private Mappers.APIReply deSerializeJSONString(String stringBuffer) {
@@ -228,9 +210,38 @@ public class Worker extends Thread {
         }
     }
 
-    ///////////////////////
-    // Getters / Setters //
-    ///////////////////////
+    /////////////////////////////
+    //     Monitor methods     //
+    /////////////////////////////
+
+    private void waitOnMonitor() {
+        //  Name: waitOnMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 16.12.2017
+        //  Description: Sleeps until monitor object is notified?
+
+        synchronized (monitor) {
+            try {
+                monitor.wait();
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+
+    public void wakeLocalMonitor() {
+        //  Name: wakeWorkerMonitor()
+        //  Date created: 16.12.2017
+        //  Last modified: 21.12.2017
+        //  Description: Wakes Worker
+
+        synchronized (monitor) {
+            monitor.notify();
+        }
+    }
+
+    /////////////////////////////
+    //    Getters / Setters    //
+    /////////////////////////////
 
     public void setJob(String job) {
         this.job = job;
@@ -250,13 +261,5 @@ public class Worker extends Thread {
 
     public String getJob() {
         return job;
-    }
-
-    public Object getMonitor() {
-        return monitor;
-    }
-
-    public void stopWorker() {
-        this.flagLocalRun = false;
     }
 }

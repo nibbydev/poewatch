@@ -6,7 +6,7 @@ import java.util.TreeMap;
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 19.12.2017
+    //  Last modified: 20.12.2017
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
     private String priceType, itemType;
@@ -160,7 +160,7 @@ public class Item extends Mappers.BaseItem {
     private void parseNote() {
         //  Name: parseNote()
         //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 20.12.2017
         //  Description: Checks and formats notes (user-inputted textfields that usually contain price data)
 
         String[] noteList = getNote().split(" ");
@@ -170,9 +170,11 @@ public class Item extends Mappers.BaseItem {
         if (noteList.length < 3) {
             setDiscard();
             return;
-        } else if (!noteList[0].equalsIgnoreCase("~b/o") && !noteList[0].equalsIgnoreCase("~price")) {
-            setDiscard();
-            return;
+        } else if (!noteList[0].equalsIgnoreCase("~b/o")) {
+            if (!noteList[0].equalsIgnoreCase("~price")) {
+                setDiscard();
+                return;
+            }
         }
 
         // If the price has a ration then split it (eg ["5, 3"] with or ["24.3"] without a ration)
@@ -189,9 +191,6 @@ public class Item extends Mappers.BaseItem {
             return;
         }
 
-        // Assign price to item
-        this.price = Math.round(price * 1000) / 1000.0;
-
         // See if the currency type listed is valid currency type
         if (!currencyShorthandsMap.containsKey(noteList[2])) {
             setDiscard();
@@ -199,7 +198,16 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Add currency type to item
-        this.priceType = currencyShorthandsMap.get(noteList[2]);
+        // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
+        // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
+        if (getTypeLine().equals("Chaos Orb")){
+            setTypeLine(currencyShorthandsMap.get(noteList[2]));
+            priceType = "Chaos Orb";
+            this.price = 1 / (Math.round(price * 1000) / 1000.0);
+        } else {
+            this.price = Math.round(price * 1000) / 1000.0;
+            priceType = currencyShorthandsMap.get(noteList[2]);
+        }
     }
 
     private void formatNameAndItemType() {
