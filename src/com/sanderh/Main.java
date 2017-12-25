@@ -9,23 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 
-    /* Solved TODO:
-    [x][15.12.17] change: "Superior Ashen Wood" = "Ashen Wood"
-    [x][16.12.17] change: replace sleep() with wait/notify
-    [x][17.12.17] change: use new API category slot instead of icon for sorting
-    [x][18.12.17] add: http://id.poe.ovh/
-    [x][18.12.17] change: static php files read data from different directory
-    [x][18.12.17] add: generate php + htaccess files
-    [x][18.12.17] fix: output means appearing almost exactly as medians
-    [x][19.12.17] change: use local changeID
-    [x][20.12.17] change: create custom config loader
-    [x][20.12.17] change: "Chaos Orb" currency conversion
-    [x][20.12.17] change: build on full hour
-    [x][20.12.17] change: run pricer controller after x pulls?
-    [x][21.12.17] change: add CLI options
-    [x][21.12.17] change: use string instead of array list for latest changeID in worker controller
-     */
-
 public class Main {
     public static final ConfigReader CONFIG = new ConfigReader("config.cfg");
     public static final WorkerController WORKER_CONTROLLER = new WorkerController();
@@ -35,17 +18,17 @@ public class Main {
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 24.12.2017
         //  Description: The main class. Run this to run the program
+
+        // Parse CLI parameters
+        parseCommandParameters(args);
 
         // Make sure basic folder structure exists
         buildFolderFileStructure();
 
         // Start controller
         WORKER_CONTROLLER.start();
-
-        // Parse CLI parameters
-        parseCommandParameters(args);
 
         // Initiate main command loop, allowing user some control over the program
         commandLoop();
@@ -57,10 +40,19 @@ public class Main {
     private static void parseCommandParameters (String[] args){
         //  Name: parseCommandParameters()
         //  Date created: 21.12.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Parses CLI / commandline parameters
 
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
+
+        // TODO: improve this a bit
+        if (!newArgs.contains("-workers")) {
+            System.out.println("Missing CLI option:\n    -workers <1-5>");
+            System.exit(0);
+        } else if (!newArgs.contains("-id")) {
+            System.out.println("Missing CLI option:\n    -id <'new'/'local'/custom>");
+            System.exit(0);
+        }
 
         for (String arg : newArgs) {
             if (!arg.startsWith("-"))
@@ -85,7 +77,6 @@ public class Main {
                             WORKER_CONTROLLER.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
                             System.out.println("[INFO] Custom ChangeID added");
                             break;
-
                     }
                     break;
                 default:

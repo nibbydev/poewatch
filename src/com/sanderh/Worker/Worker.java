@@ -17,12 +17,12 @@ import static com.sanderh.Main.*;
 public class Worker extends Thread {
     //  Name: Worker
     //  Date created: 21.11.2017
-    //  Last modified: 21.12.2017
+    //  Last modified: 24.12.2017
     //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
 
     private final Object monitor = new Object();
     private volatile boolean flagLocalRun = true;
-    private String job = "";
+    private String job;
     private int index;
 
     /////////////////////////////
@@ -32,7 +32,7 @@ public class Worker extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 21.11.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 24.12.2017
         //  Description: Contains the main loop of the worker
 
         String replyJSONString;
@@ -40,26 +40,33 @@ public class Worker extends Thread {
 
         // Run while flag is true
         while (flagLocalRun) {
+            // If there's no new job, sleep
             waitOnMonitor();
 
-            // Check if new job has been added after interrupt
-            if (!job.equals("") && flagLocalRun) {
-                // Download and parse data according to the changeID.
-                replyJSONString = downloadData();
+            // Check if Worker should close after being woken from sleep
+            if(!flagLocalRun)
+                break;
 
-                // If download was unsuccessful, stop
-                if (!replyJSONString.equals("")) {
-                    // Deserialize the JSON string
-                    reply = deSerializeJSONString(replyJSONString);
+            // In case the notify came from some other source or there was a timeout, make sure the worker doesn't
+            // continue with an empty job
+            if (job == null)
+                continue;
 
-                    // Parse the deserialized JSON if deserialization was successful
-                    if (!reply.getNext_change_id().equals(""))
-                        PRICER_CONTROLLER.parseItems(reply);
-                }
+            // Download and parse data according to the changeID.
+            replyJSONString = downloadData();
 
-                // Clear the job
-                setJob("");
+            // If download was unsuccessful, stop
+            if (!replyJSONString.equals("")) {
+                // Deserialize the JSON string
+                reply = deSerializeJSONString(replyJSONString);
+
+                // Parse the deserialized JSON if deserialization was successful
+                if (!reply.getNext_change_id().equals(""))
+                    PRICER_CONTROLLER.parseItems(reply);
             }
+
+            // Clear the job
+            job = null;
         }
     }
 
@@ -80,7 +87,7 @@ public class Worker extends Thread {
     private String downloadData() {
         //  Name: downloadData()
         //  Date created: 21.11.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 23.12.2017
         //  Description: Method that downloads data from the API
 
         StringBuilder stringBuilderBuffer = new StringBuilder();
@@ -140,7 +147,7 @@ public class Worker extends Thread {
                         STATISTICS.setLatestChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
-                        if (matcher.group().equals(this.job)) {
+                        if (matcher.group().equals(job)) {
                             STATISTICS.incPullCountDuplicate();
                             return "";
                         }
@@ -154,7 +161,7 @@ public class Worker extends Thread {
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
                 justFuckingSleep(5000);
-                WORKER_CONTROLLER.setNextChangeID(this.job);
+                WORKER_CONTROLLER.setNextChangeID(job);
             }
 
             STATISTICS.incPullCountFailed();
@@ -217,12 +224,12 @@ public class Worker extends Thread {
     private void waitOnMonitor() {
         //  Name: waitOnMonitor()
         //  Date created: 16.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Sleeps until monitor object is notified?
+        //  Last modified: 24.12.2017
+        //  Description: Sleeps until monitor object is notified. Has 500 MS timeout
 
         synchronized (monitor) {
             try {
-                monitor.wait();
+                monitor.wait(500);
             } catch (InterruptedException e) {
             }
         }
@@ -245,6 +252,9 @@ public class Worker extends Thread {
 
     public void setJob(String job) {
         this.job = job;
+
+        // Wake the worker so it can start working on the job
+        wakeLocalMonitor();
     }
 
     public void setIndex(int index) {
@@ -256,7 +266,7 @@ public class Worker extends Thread {
     }
 
     public boolean hasJob() {
-        return !job.equals("");
+        return job != null;
     }
 
     public String getJob() {

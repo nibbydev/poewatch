@@ -2,8 +2,12 @@ package com.sanderh.Pricer;
 
 import com.sanderh.Mappers;
 import com.sanderh.Item;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import javax.xml.crypto.Data;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static com.sanderh.Main.*;
@@ -11,29 +15,31 @@ import static com.sanderh.Main.*;
 public class PricerController {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 21.12.2017
+    //  Last modified: 25.12.2017
     //  Description: An object that manages databases
 
-    private final Map<String, DataEntry> entryMap = new TreeMap<>();
-    private final StringBuilder JSONBuilder = new StringBuilder();
-
-    private String lastLeague = "";
-    private String lastType = "";
+    private final Map<String, DataEntry> entryMap = new HashMap<>();
+    private final Map<String, DataEntry> currencyMap = new HashMap<>();
+    private final ArrayList<String> JSONParcel = new ArrayList<>();
 
     private long lastRunTime = System.currentTimeMillis();
     private volatile boolean flagPause = false;
     private final Object monitor = new Object();
 
     public PricerController() {
-        // Load data in on initial script launch
-        readDataFromFile();
+        //  Name: PricerController
+        //  Date created: 25.12.2017
+        //  Last modified: 25.12.2017
+        //  Description: Used to load data in on object initialization
+
+        readCurrencyFromFile();
     }
 
     public void run() {
         //  Name: run()
         //  Date created: 11.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Main loop of the pricing service
+        //  Last modified: 25.12.2017
+        //  Description: Main loop of the pricing service. Is called whenever a worker is assigned a new job
 
         // Run every minute (-ish)
         if ((System.currentTimeMillis() - lastRunTime) / 1000 < CONFIG.pricerControllerSleepCycle)
@@ -46,7 +52,8 @@ public class PricerController {
         flipPauseFlag();
 
         // Prepare for database building
-        System.out.println(timeStamp() + " Generating databases (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)");
+        System.out.println(timeStamp() + " Generating databases [" + (DataEntry.getCycleCount() + 1) + "/" +
+                CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)");
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
@@ -54,24 +61,14 @@ public class PricerController {
         // Increase DataEntry's static cycle count
         DataEntry.incCycleCount();
 
-        // Loop through database entries, calling their methods
-        entryMap.forEach((String key, DataEntry entry) -> packageJSON(entry.databaseBuilder()));
-        JSONBuilder.append("}");
+        readFileParseFileWriteFile();
         writeJSONToFile();
-
-        // Write generated data to file
-        writeDataToFile();
 
         // Zero DataEntry's static cycle count
         if (DataEntry.getCycleState()) {
             DataEntry.zeroCycleCount();
             System.out.println(timeStamp() + " Building JSON");
         }
-
-        // Clean up after building
-        JSONBuilder.setLength(0);
-        lastLeague = "";
-        lastType = "";
 
         // Lower the pause flag, so that other Worker threads may continue using the databases
         flipPauseFlag();
@@ -80,7 +77,7 @@ public class PricerController {
     public void parseItems(Mappers.APIReply reply) {
         //  Name: parseItems()
         //  Date created: 28.11.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Method that's used to add entries to the databases
 
         // Loop through every single item, checking every single one of them
@@ -90,7 +87,7 @@ public class PricerController {
                 while (flagPause) {
                     synchronized (monitor) {
                         try {
-                            monitor.wait();
+                            monitor.wait(500);
                         } catch (InterruptedException ex) {
                         }
                     }
@@ -101,9 +98,14 @@ public class PricerController {
                 if (item.isDiscard())
                     continue;
 
-                // Add item to database
-                entryMap.putIfAbsent(item.getKey(), new DataEntry());
-                entryMap.get(item.getKey()).addRaw(item);
+                // Add item to database, separating currency
+                if (item.getKey().contains("currency:orbs")) {
+                    currencyMap.putIfAbsent(item.getKey(), new DataEntry());
+                    currencyMap.get(item.getKey()).add(item);
+                } else {
+                    entryMap.putIfAbsent(item.getKey(), new DataEntry());
+                    entryMap.get(item.getKey()).add(item);
+                }
             }
         }
     }
@@ -111,145 +113,271 @@ public class PricerController {
     private void flipPauseFlag() {
         //  Name: flipPauseFlag()
         //  Date created: 21.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Switches boolean from state to state and wakes monitor
+        //  Last modified: 24.12.2017
+        //  Description: Switches pause boolean from state to state and wakes monitor
 
         flagPause = !flagPause;
 
         synchronized (monitor) {
             monitor.notifyAll();
         }
-
     }
 
-    //////////////////////////////////////
-    // Methods used to manage databases //
-    //////////////////////////////////////
+    /////////////////////////////////////////
+    // Methods used to interface databases //
+    /////////////////////////////////////////
 
-    public void readDataFromFile() {
-        //  Name: readDataFromFile()
+    public void readCurrencyFromFile() {
+        //  Name: readCurrencyFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 20.12.2017
-        //  Description: Reads and parses database data from file
+        //  Last modified: 25.12.2017
+        //  Description: Reads data from file and adds to list, reads only lines that have "currency:orbs" in them
+        //               Should only be called on initial object creation
 
-        String line;
-        File file = new File("./database.txt");
+        try (BufferedReader reader = defineReader(new File("./database.txt"))) {
+            if (reader == null) return;
 
-        if (!file.exists())
-            return;
+            String line, key;
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-            while ((line = bufferedReader.readLine()) != null) {
-                String[] splitLine = line.split("::");
+            while ((line = reader.readLine()) != null) {
+                key = line.substring(0, line.indexOf("::"));
 
-                entryMap.put(splitLine[0], new DataEntry());
-                entryMap.get(splitLine[0]).parseIOLine(splitLine);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void writeDataToFile() {
-        //  Name: writeDataToFile()
-        //  Date created: 06.12.2017
-        //  Last modified: 18.12.2017
-        //  Description: Writes database data to file
-
-        OutputStream fOut = null;
-
-        // Writes values from statistics to file
-        try {
-            File fFile = new File("./database.txt");
-            fOut = new FileOutputStream(fFile);
-
-            for (String key : entryMap.keySet()) {
-                if (!entryMap.get(key).isEmpty())
-                    fOut.write(entryMap.get(key).makeIOLine().getBytes());
+                if (key.contains("currency:orbs"))
+                    currencyMap.put(key, new DataEntry(line));
             }
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write ./database.txt:");
             ex.printStackTrace();
-        } finally {
-            try {
-                if (fOut != null) {
-                    fOut.flush();
-                    fOut.close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
         }
     }
 
     private void packageJSON(DataEntry entry) {
         //  Name: packageJSON2()
         //  Date created: 13.12.2017
-        //  Last modified: 13.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Builds a JSON-string out of JSON packets
 
+        // Attempt to get JSON-encoded package from database entry
         String JSONPackage = entry.buildJSONPackage();
-        if (JSONPackage.equals(""))
-            return;
+        if (JSONPackage == null) return;
 
-        if (lastLeague.equals("")) {
-            JSONBuilder.append("{");
-        } else if (!lastLeague.equals(entry.getLeague())) {
-            JSONBuilder.append("}}");
-            lastType = "";
-
-            writeJSONToFile();
-            JSONBuilder.setLength(0);
-            JSONBuilder.append("{");
-        }
-
-        if (lastType.equals("")) {
-            JSONBuilder.append("\"");
-            JSONBuilder.append(entry.getType());
-            JSONBuilder.append("\":{");
-        } else if (lastType.equals(entry.getType())) {
-            JSONBuilder.append(",");
-        } else {
-            JSONBuilder.append("},\"");
-            JSONBuilder.append(entry.getType());
-            JSONBuilder.append("\":{");
-        }
-
-        lastLeague = entry.getLeague();
-        lastType = entry.getType();
-        JSONBuilder.append(JSONPackage);
+        // Add new package to parcel
+        JSONParcel.add(entry.getKey() + "::" + JSONPackage);
     }
 
     private void writeJSONToFile() {
         //  Name: writeJSONToFile2()
         //  Date created: 06.12.2017
-        //  Last modified: 18.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Basically writes JSON string to file
 
-        if (JSONBuilder.length() < 5)
+        if (JSONParcel.isEmpty())
             return;
 
-        OutputStream fOut = null;
+        // Sort the list of JSON-encoded packages so they can be written to file
+        Collections.sort(JSONParcel);
 
-        // Writes values from statistics to file
+        // Define historical variables
+        String lastLeague = null;
+        String lastType = null;
+        BufferedWriter writer = null;
+
+        String league, type, pack;
         try {
-            File fFile = new File("./http/data/" + lastLeague + ".json");
-            fOut = new FileOutputStream(fFile);
-            fOut.write(JSONBuilder.toString().getBytes());
+            for (String line : JSONParcel) {
+                league = line.substring(0, line.indexOf("|"));
+                type = line.substring(line.indexOf("|") + 1, line.indexOf("|", line.indexOf("|") + 1));
+                pack = line.substring(line.indexOf("::") + 2);
+
+                // Prepare league changes (since each league will be written in a different file)
+                if (lastLeague == null || !lastLeague.equals(league)) {
+                    // If another writer was active, close it and start a new one
+                    if (writer != null) {
+                        // Write JSON closing brackets
+                        writer.write("}}", 0, 2);
+                        writer.flush();
+                        writer.close();
+                    }
+
+                    // League changed or this is the first time writing, need to create a new writer
+                    writer = defineWriter(new File("./http/data/" + league + ".json"));
+                    if (writer == null) throw new NullPointerException();
+
+                    // Write JSON opening bracket
+                    writer.write("{", 0, 1);
+
+                    // Clear type (since it obviously will change)
+                    lastType = null;
+                }
+
+                // Prepare type changes
+                if (lastType == null) {
+                    writer.write("\"" + type + "\":{", 0, 4 + type.length());
+                } else if (lastType.equals(type)) {
+                    writer.write(",", 0, 1);
+                } else {
+                    writer.write("},\"" + type + "\":{", 0, 6 + type.length());
+                }
+
+                // Write pack
+                writer.write(pack, 0, pack.length());
+
+                // Set new history variables
+                lastLeague = league;
+                lastType = type;
+            }
+
+            // Finalize writing
+            if (writer != null) {
+                // Add closing bracket to JSON
+                writer.write("}", 0, 1);
+                // Flush output
+                writer.flush();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            // Clear the parcel
+            JSONParcel.clear();
+        }
+    }
+
+    //////////////////
+    // New methods ///
+    //////////////////
+
+    public void readFileParseFileWriteFile() {
+        //  Name: readFileParseFileWriteFile()
+        //  Date created: 06.12.2017
+        //  Last modified: 25.12.2017
+        //  Description: reads data from file (line by line), parses it and writes it back
+
+        ArrayList<String> currencyKeysWrittenToFile = new ArrayList<>();
+        String line, key;
+        String buffer;
+        DataEntry entry;
+
+        File inputFile = new File("./database.txt");
+        File outputFile = new File("./database.temp");
+
+        BufferedReader reader = defineReader(inputFile);
+        BufferedWriter writer = defineWriter(outputFile);
+
+        // If there was a problem opening the writer, something seriously went wrong. Close the reader if necessary and
+        // return from the method.
+        if (writer == null) {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ex) {
+                }
+            }
+            return;
+        }
+
+        try {
+            // Write currency data to file
+            for (String key2 : currencyMap.keySet()) {
+                currencyKeysWrittenToFile.add(key2);
+                entry = currencyMap.get(key2);
+                buffer = entry.buildLine();
+                writer.write(buffer, 0, buffer.length());
+                packageJSON(entry);
+            }
+
+            // Read, parse and write file
+            if (reader != null) {
+                while ((line = reader.readLine()) != null) {
+                    key = line.substring(0, line.indexOf("::"));
+
+                    // If new values have been found, append them to the line and write it to the file, else just write
+                    // line to file
+                    if (!entryMap.containsKey(key))
+                        entry = new DataEntry();
+                    else
+                        entry = entryMap.get(key);
+
+                    buffer = entry.cycle(line);
+                    packageJSON(entry);
+                    entryMap.remove(key);
+
+                    // Skip currency entries that have already been written to file
+                    if (currencyKeysWrittenToFile.contains(key))
+                        continue;
+
+                    // Write line to temp output file
+                    writer.write(buffer, 0, buffer.length());
+                }
+            }
+
+            // Write leftover item data to file
+            for (String key2 : entryMap.keySet()) {
+                entry = entryMap.get(key2);
+                buffer = entry.buildLine();
+                writer.write(buffer, 0, buffer.length());
+                packageJSON(entry);
+            }
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write ./http/data" + lastLeague + ".json");
             ex.printStackTrace();
         } finally {
             try {
-                if (fOut != null) {
-                    fOut.flush();
-                    fOut.close();
-                }
+                if (reader != null)
+                    reader.close();
+                writer.flush();
+                writer.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+        }
+
+        // Clear entryMap
+        entryMap.clear();
+
+        if (inputFile.exists() && !inputFile.delete())
+            System.out.println("[ERROR] Could not delete: " + inputFile.getName());
+        if (!outputFile.renameTo(inputFile))
+            System.out.println("[ERROR] Could not rename: " + outputFile.getName() + " to " + inputFile.getName());
+    }
+
+    private BufferedReader defineReader(File inputFile) {
+        //  Name: defineReader()
+        //  Date created: 25.12.2017
+        //  Last modified: 25.12.2017
+        //  Description: Assigns reader buffer
+
+        if (!inputFile.exists())
+            return null;
+
+        // Open up the reader (it's fine if the file is missing)
+        try {
+            return new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    private BufferedWriter defineWriter(File outputFile) {
+        //  Name: defineWriter()
+        //  Date created: 25.12.2017
+        //  Last modified: 25.12.2017
+        //  Description: Assigns writer buffer
+
+        // Open up the writer (if this throws an exception holy fuck something went massively wrong)
+        try {
+            return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
         }
     }
 
@@ -257,7 +385,7 @@ public class PricerController {
     // Getters / Setters //
     ///////////////////////
 
-    public Map<String, DataEntry> getEntryMap() {
-        return entryMap;
+    public Map<String, DataEntry> getCurrencyMap() {
+        return currencyMap;
     }
 }

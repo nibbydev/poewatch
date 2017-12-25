@@ -1,6 +1,5 @@
 package com.sanderh.Worker;
 
-import com.sanderh.ConfigReader;
 import com.sanderh.Mappers;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -15,7 +14,7 @@ import static com.sanderh.Main.PRICER_CONTROLLER;
 public class WorkerController extends Thread {
     //  Name: WorkerController
     //  Date created: 21.11.2017
-    //  Last modified: 21.12.2017
+    //  Last modified: 23.12.2017
     //  Description: Object that's used to manage worker objects
 
     private volatile boolean flagLocalRun = true;
@@ -30,7 +29,7 @@ public class WorkerController extends Thread {
     public void run() {
         //  Name: run()
         //  Date created: 22.11.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 23.12.2017
         //  Description: Assigns jobs to workers
 
         // Run main loop while flag is up
@@ -47,8 +46,6 @@ public class WorkerController extends Thread {
                     if (worker.hasJob()) continue;
                     // Give the new job to the worker
                     worker.setJob(nextChangeID);
-                    // Wake the worker so it can start working on the job
-                    worker.wakeLocalMonitor();
                     // Remove old job
                     nextChangeID = null;
                     break;
