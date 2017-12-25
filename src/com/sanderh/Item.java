@@ -1,75 +1,17 @@
 package com.sanderh;
 
-import java.util.Map;
-import java.util.TreeMap;
+import static com.sanderh.Main.RELATIONS;
 
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 20.12.2017
+    //  Last modified: 25.12.2017
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
     private String priceType, itemType;
     private String key = "";
     private boolean discard = false;
     private double price;
-
-    // Static map of potential keyword-value pairs, that are used to determine whether user-inputted strings are valid
-    // currency names
-    private static final Map<String, String> currencyShorthandsMap = new TreeMap<>() {{
-        put("exalted", "Exalted Orb");
-        put("exalts", "Exalted Orb");
-        put("exalt", "Exalted Orb");
-        put("exa", "Exalted Orb");
-        put("exe", "Exalted Orb");
-        put("ex", "Exalted Orb");
-        put("chaos", "Chaos Orb");
-        put("choas", "Chaos Orb");
-        put("chao", "Chaos Orb");
-        put("c", "Chaos Orb");
-        put("regret", "Orb of Regret");
-        put("regrets", "Orb of Regret");
-        put("divine", "Divine Orb");
-        put("div", "Divine Orb");
-        put("chisel", "Cartographer's Chisel");
-        put("chis", "Cartographer's Chisel");
-        put("cart", "Cartographer's Chisel");
-        put("chisels", "Cartographer's Chisel");
-        put("alchemy", "Orb of Alchemy");
-        put("alch", "Orb of Alchemy");
-        put("alc", "Orb of Alchemy");
-        put("alts", "Orb of Alteration");
-        put("alteration", "Orb of Alteration");
-        put("alt", "Orb of Alteration");
-        put("fusing", "Orb of Fusing");
-        put("fus", "Orb of Fusing");
-        put("fusings", "Orb of Fusing");
-        put("fuse", "Orb of Fusing");
-        put("regal", "Regal Orb");
-        put("rega", "Regal Orb");
-        put("gcp", "Gemcutter's Prism");
-        put("gemc", "Gemcutter's Prism");
-        put("jeweller", "Jeweller's Orb");
-        put("jewellers", "Jeweller's Orb");
-        put("jewel", "Jeweller's Orb");
-        put("jew", "Jeweller's Orb");
-        put("chromatics", "Chromatic Orb");
-        put("chrom", "Chromatic Orb");
-        put("chromes", "Chromatic Orb");
-        put("chrome", "Chromatic Orb");
-        put("chromatic", "Chromatic Orb");
-        put("bles", "Blessed Orb");
-        put("blessed", "Blessed Orb");
-        put("bless", "Blessed Orb");
-        put("chance", "Orb of Chance");
-        put("chanc", "Orb of Chance");
-        put("vaal", "Vaal Orb");
-        put("scour", "Orb of Scouring");
-        put("scouring", "Orb of Scouring");
-        put("silver", "Silver Coin");
-        put("aug", "Orb of Augmentation");
-        put("mirror", "Mirror of Kalandra");
-    }};
 
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
@@ -160,7 +102,7 @@ public class Item extends Mappers.BaseItem {
     private void parseNote() {
         //  Name: parseNote()
         //  Date created: 28.11.2017
-        //  Last modified: 20.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Checks and formats notes (user-inputted textfields that usually contain price data)
 
         String[] noteList = getNote().split(" ");
@@ -192,7 +134,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!currencyShorthandsMap.containsKey(noteList[2])) {
+        if (!RELATIONS.shortHandToIndex.containsKey(noteList[2])) {
             setDiscard();
             return;
         }
@@ -201,12 +143,12 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (getTypeLine().equals("Chaos Orb")){
-            setTypeLine(currencyShorthandsMap.get(noteList[2]));
-            priceType = "Chaos Orb";
+            setTypeLine(RELATIONS.shortHandToName.get(noteList[2]));
+            priceType = "1";
             this.price = 1 / (Math.round(price * 1000) / 1000.0);
         } else {
             this.price = Math.round(price * 1000) / 1000.0;
-            priceType = currencyShorthandsMap.get(noteList[2]);
+            priceType = RELATIONS.shortHandToIndex.get(noteList[2]);
         }
     }
 

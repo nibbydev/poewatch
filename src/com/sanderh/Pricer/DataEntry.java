@@ -5,11 +5,11 @@ import com.sanderh.Item;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
 import java.util.function.Predicate;
 
 import static com.sanderh.Main.CONFIG;
 import static com.sanderh.Main.PRICER_CONTROLLER;
+import static com.sanderh.Main.RELATIONS;
 
 public class DataEntry {
     //  Name: DataEntry
@@ -102,9 +102,9 @@ public class DataEntry {
     /////////////////////
 
     private void parse() {
-        //  Name: parse
+        //  Name: parse()
         //  Date created: 29.11.2017
-        //  Last modified: 24.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Method that adds values from rawData to baseDatabase
 
         Double value;
@@ -118,9 +118,8 @@ public class DataEntry {
             value = Double.parseDouble(splitEntry[0]);
 
             // If we have the median price, use that
-            if (!splitEntry[1].equals("Chaos Orb")) {
-                // TODO: splitEntry[1] needs to be looked up from a table
-                currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + splitEntry[1] + "|5";
+            if (!splitEntry[1].equals("1")) {
+                currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(splitEntry[1]) + "|5";
 
                 // If there's a value in the statistics database, use that
                 if (PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) {

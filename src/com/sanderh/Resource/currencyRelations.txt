@@ -1,0 +1,29 @@
+1|Chaos Orb|chaos,choas,c
+2|Exalted Orb|exalted,exalt,exa,ex
+3|Divine Orb|divine,div
+4|Orb of Alchemy|alchemy,alch,alc
+5|Orb of Fusing|fusings,fusing,fuse,fus
+6|Orb of Alteration|alts,alteration,alt
+7|Regal Orb|regal,rega
+8|Vaal Orb|vaal
+9|Orb of Regret|regret,regrets,regr
+10|Cartographer's Chisel|chisel,chis,cart
+11|Jeweller's Orb|jewellers,jeweller,jew
+12|Silver Coin|silver
+13|Perandus Coin|coin,coins,perandus
+14|Orb of Scouring|scouring,scour
+15|Gemcutter's Prism|gcp,gemc
+16|Orb of Chance|chance,chanc
+17|Chromatic Orb|chrome,chrom
+18|Blessed Orb|blessed,bless,bles
+19|Glassblower's Bauble|glass,bauble
+20|Orb of Augmentation|aug
+21|Orb of Transmutation|tra
+22|Mirror of Kalandra|mirror,mir,kal
+23|Scroll of Wisdom|wis
+24|Portal Scroll|port
+25|Blacksmith's Whetstone|whetstone,blacksmith
+26|Armourer's Scrap|armour
+27|Apprentice Cartographer's Sextant|apprentice-sextant
+28|Journeyman Cartographer's Sextant|journeyman-sextant
+29|Master Cartographer's Sextant|master-sextant

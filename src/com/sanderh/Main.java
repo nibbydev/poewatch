@@ -14,11 +14,12 @@ public class Main {
     public static final WorkerController WORKER_CONTROLLER = new WorkerController();
     public static final PricerController PRICER_CONTROLLER = new PricerController();
     public static final Statistics STATISTICS = new Statistics();
+    public static RelationManager RELATIONS;
 
     public static void main(String[] args) {
         //  Name: main()
         //  Date created: 21.11.2017
-        //  Last modified: 24.12.2017
+        //  Last modified: 25.12.2017
         //  Description: The main class. Run this to run the program
 
         // Parse CLI parameters
@@ -26,6 +27,9 @@ public class Main {
 
         // Make sure basic folder structure exists
         buildFolderFileStructure();
+
+        // Load in relations
+        RELATIONS = new RelationManager();
 
         // Start controller
         WORKER_CONTROLLER.start();
@@ -175,7 +179,7 @@ public class Main {
     private static void buildFolderFileStructure() {
         //  Name: buildFolderFileStructure()
         //  Date created: 18.12.2017
-        //  Last modified: 20.12.2017
+        //  Last modified: 25.12.2017
         //  Description: Creates all missing http files and folders on startup
 
         // Make sure output folders exist
@@ -198,6 +202,9 @@ public class Main {
 
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
+
+        // Create ./currencyRelations.txt if missing
+        saveResource("/", "currencyRelations.txt");
     }
 
     private static void saveResource(String outputDirectory, String name)  {
