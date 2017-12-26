@@ -15,7 +15,7 @@ import static com.sanderh.Main.*;
 public class PricerController {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 25.12.2017
+    //  Last modified: 26.12.2017
     //  Description: An object that manages databases
 
     private final Map<String, DataEntry> entryMap = new HashMap<>();
@@ -130,7 +130,7 @@ public class PricerController {
     public void readCurrencyFromFile() {
         //  Name: readCurrencyFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 26.12.2017
         //  Description: Reads data from file and adds to list, reads only lines that have "currency:orbs" in them
         //               Should only be called on initial object creation
 
@@ -138,6 +138,9 @@ public class PricerController {
             if (reader == null) return;
 
             String line, key;
+
+            // Set the startParameters, the first line has important data
+            loadStartParameters(reader.readLine());
 
             while ((line = reader.readLine()) != null) {
                 key = line.substring(0, line.indexOf("::"));
@@ -257,12 +260,11 @@ public class PricerController {
     public void readFileParseFileWriteFile() {
         //  Name: readFileParseFileWriteFile()
         //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 26.12.2017
         //  Description: reads data from file (line by line), parses it and writes it back
 
         ArrayList<String> currencyKeysWrittenToFile = new ArrayList<>();
         String line, key;
-        String buffer;
         DataEntry entry;
 
         File inputFile = new File("./database.txt");
@@ -284,13 +286,16 @@ public class PricerController {
         }
 
         try {
+            // Write startParameters to file
+            writer.write(saveStartParameters());
+
             // Write currency data to file
             for (String key2 : currencyMap.keySet()) {
                 currencyKeysWrittenToFile.add(key2);
                 entry = currencyMap.get(key2);
-                buffer = entry.buildLine();
-                writer.write(buffer, 0, buffer.length());
+                entry.cycle();
                 packageJSON(entry);
+                writer.write(entry.buildLine());
             }
 
             // Read, parse and write file
@@ -300,12 +305,16 @@ public class PricerController {
 
                     // If new values have been found, append them to the line and write it to the file, else just write
                     // line to file
-                    if (!entryMap.containsKey(key))
-                        entry = new DataEntry();
-                    else
+                    if (currencyMap.containsKey(key))
+                        continue;
+                    else if (entryMap.containsKey(key))
                         entry = entryMap.get(key);
+                    else if (key.length() == 5)
+                        continue;
+                    else
+                        entry = new DataEntry();
 
-                    buffer = entry.cycle(line);
+                    entry.cycle(line);
                     packageJSON(entry);
                     entryMap.remove(key);
 
@@ -314,16 +323,16 @@ public class PricerController {
                         continue;
 
                     // Write line to temp output file
-                    writer.write(buffer, 0, buffer.length());
+                    writer.write(entry.buildLine());
                 }
             }
 
             // Write leftover item data to file
             for (String key2 : entryMap.keySet()) {
                 entry = entryMap.get(key2);
-                buffer = entry.buildLine();
-                writer.write(buffer, 0, buffer.length());
+                entry.cycle();
                 packageJSON(entry);
+                writer.write(entry.buildLine());
             }
 
         } catch (IOException ex) {
@@ -379,6 +388,50 @@ public class PricerController {
             ex.printStackTrace();
             return null;
         }
+    }
+
+    private void loadStartParameters(String line) {
+        //  Name: loadStartParameters()
+        //  Date created: 26.12.2017
+        //  Last modified: 26.12.2017
+        //  Description: Parses whatever data was saved in the database file's first line
+
+        String[] splitLine = line.split("::");
+
+        // First parameter is the version of the config, I suppose
+        switch (splitLine[0]) {
+            // Version 00000
+            case "00000":
+                // 0 - version nr
+                // 1 - last build/write time
+                // 2 - cycle counter
+
+                System.out.println("[INFO] Found start parameters:\n    Cycle counter: " + splitLine[2] +
+                        "\n    Last write time: " + (System.currentTimeMillis() - Long.parseLong(splitLine[1])) /
+                        1000 + " sec ago");
+
+                // Set the cycle counter to whatever is in the file
+                DataEntry.setCycleCount(Integer.parseInt(splitLine[2]));
+                break;
+        }
+    }
+
+    private String saveStartParameters() {
+        //  Name: saveStartParameters()
+        //  Date created: 26.12.2017
+        //  Last modified: 26.12.2017
+        //  Description: Gathers some data and makes start parameters that will be saved in the database file
+
+        String builder;
+
+        builder = "00000"
+                + "::"
+                + System.currentTimeMillis()
+                + "::"
+                + DataEntry.getCycleCount()
+                + "\n";
+
+        return builder;
     }
 
     ///////////////////////

@@ -14,7 +14,7 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 25.12.2017
+    //  Last modified: 26.12.2017
     //  Description: An object that stores an item's price data
 
     private static int cycleCount = 0;
@@ -80,10 +80,10 @@ public class DataEntry {
             duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
     }
 
-    public String cycle(String line) {
+    public void cycle(String line) {
         //  Name: cycle()
         //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 26.12.2017
         //  Description: Methods that constructs the object's. Should be called at a timed interval
 
         // Load data into lists
@@ -93,8 +93,76 @@ public class DataEntry {
         parse();
         purge();
         build();
+    }
 
-        return buildLine();
+    public void cycle() {
+        //  Name: cycle()
+        //  Date created: 06.12.2017
+        //  Last modified: 26.12.2017
+        //  Description: Methods that constructs the object's. Should be called at a timed interval
+
+        // Build statistics and databases
+        parse();
+        purge();
+        build();
+    }
+
+    public String buildJSONPackage() {
+        //  Name: buildJSONPackage()
+        //  Date created: 06.12.2017
+        //  Last modified: 25.12.2017
+        //  Description: Creates a JSON-encoded string of hourly medians
+
+        // Run every x cycles AND if there's enough data
+        if (cycleCount < CONFIG.dataEntryCycleLimit || hourlyMedian.isEmpty() || hourlyMean.isEmpty())
+            return null;
+
+        // Format the key to fit for JSON
+        if (league.equals("") || type.equals("")) {
+            String[] splitKey = key.split("\\|");
+
+            // Convert array to ArrayList
+            ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
+            // Remove the first 2 elements
+            partialKey.subList(0, 2).clear();
+
+            JSONkey = String.join("|", partialKey);
+            league = splitKey[0];
+            type = splitKey[1];
+        }
+
+        // Warn the user if there are irregularities with the discard counter
+        if (newItemsFoundInCycle < oldItemsDiscardedInCycle && oldItemsDiscardedInCycle - newItemsFoundInCycle > 20)
+            System.out.println("[INFO][" + key + "] Odd discard ratio: " + newItemsFoundInCycle + "/" +
+                    oldItemsDiscardedInCycle + " (add/discard)");
+
+        // Make a copy so the original order persists and sort the entries in growing order
+        ArrayList<Double> tempMedianList = new ArrayList<>();
+        tempMedianList.addAll(hourlyMedian);
+        Collections.sort(tempMedianList);
+
+        // Add new items to total counter
+        totalCount += newItemsFoundInCycle - oldItemsDiscardedInCycle;
+
+        // Soft-cap totalCount to 1000
+        if (totalCount > 999)
+            totalCount = 999;
+        else if (totalCount < 0)
+            totalCount = 0;
+
+        // Form the return JSON string
+        String returnString = "\"" + JSONkey + "\":{\"mean\":" + findMean(hourlyMean) + ",\"median\":" +
+                findMedian(tempMedianList) + ",\"count\":" + totalCount + ",\"new\":" + newItemsFoundInCycle + "}";
+
+        // Clear counters
+        hourlyMean.clear();
+        hourlyMedian.clear();
+
+        // Clear the counters
+        this.newItemsFoundInCycle = 0;
+        this.oldItemsDiscardedInCycle = 0;
+
+        return returnString;
     }
 
     /////////////////////
@@ -152,9 +220,23 @@ public class DataEntry {
     private void purge() {
         //  Name: purge
         //  Date created: 29.11.2017
-        //  Last modified: 24.12.2017
+        //  Last modified: 26.12.2017
         //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
         //               whether there's a large difference between the two
+
+        class BaseDataClearingPredicate<T> implements Predicate<T> {
+            //  Name: BaseDataClearingPredicate()
+            //  Date created: 24.12.2017
+            //  Last modified: 26.12.2017
+            //  Description: Predicate used to filter baseData's values. If a value strays too far from median, it is
+            //               removed
+
+            Double median;
+
+            public boolean test(T value) {
+                return (Double) value > median * 2.0 || (Double) value < median / 2.0;
+            }
+        }
 
         if (baseData.isEmpty())
             return;
@@ -252,64 +334,6 @@ public class DataEntry {
     /////////////////
     // I/O helpers //
     /////////////////
-
-    public String buildJSONPackage() {
-        //  Name: buildJSONPackage()
-        //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Creates a JSON-encoded string of hourly medians
-
-        // Run every x cycles AND if there's enough data
-        if (cycleCount < CONFIG.dataEntryCycleLimit || hourlyMedian.isEmpty() || hourlyMean.isEmpty())
-            return null;
-
-        // Format the key to fit for JSON
-        if (league.equals("") || type.equals("")) {
-            String[] splitKey = key.split("\\|");
-
-            // Convert array to ArrayList
-            ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
-            // Remove the first 2 elements
-            partialKey.subList(0, 2).clear();
-
-            JSONkey = String.join("|", partialKey);
-            league = splitKey[0];
-            type = splitKey[1];
-        }
-
-        // Warn the user if there are irregularities with the discard counter
-        if (newItemsFoundInCycle < oldItemsDiscardedInCycle && oldItemsDiscardedInCycle - newItemsFoundInCycle > 20)
-            System.out.println("[INFO][" + key + "] Odd discard ratio: " + newItemsFoundInCycle + "/" +
-                    oldItemsDiscardedInCycle + " (add/discard)");
-
-        // Make a copy so the original order persists and sort the entries in growing order
-        ArrayList<Double> tempMedianList = new ArrayList<>();
-        tempMedianList.addAll(hourlyMedian);
-        Collections.sort(tempMedianList);
-
-        // Add new items to total counter
-        totalCount += newItemsFoundInCycle - oldItemsDiscardedInCycle;
-
-        // Soft-cap totalCount to 1000
-        if (totalCount > 999)
-            totalCount = 999;
-        else if (totalCount < 0)
-            totalCount = 0;
-
-        // Form the return JSON string
-        String returnString = "\"" + JSONkey + "\":{\"mean\":" + findMean(hourlyMean) + ",\"median\":" +
-                findMedian(tempMedianList) + ",\"count\":" + totalCount + ",\"new\":" + newItemsFoundInCycle + "}";
-
-        // Clear counters
-        hourlyMean.clear();
-        hourlyMedian.clear();
-
-        // Clear the counters
-        this.newItemsFoundInCycle = 0;
-        this.oldItemsDiscardedInCycle = 0;
-
-        return returnString;
-    }
 
     public String buildLine() {
         //  Name: buildLine()
@@ -550,23 +574,6 @@ public class DataEntry {
         }
     }
 
-    ///////////////////////////////////////
-    // Predicate used to filter baseData //
-    ///////////////////////////////////////
-
-    private static class BaseDataClearingPredicate<T> implements Predicate<T> {
-        //  Name: BaseDataClearingPredicate()
-        //  Date created: 24.12.2017
-        //  Last modified: 24.12.2017
-        //  Description: Predicate used to filter baseData's values. If a value strays too far from median, it is removed
-
-        Double median;
-
-        public boolean test(T value) {
-            return (Double) value > median * 2.0 || (Double) value < median / 2.0;
-        }
-    }
-
     ///////////////////////
     // Getters / Setters //
     ///////////////////////
@@ -597,5 +604,9 @@ public class DataEntry {
 
     public static int getCycleCount() {
         return cycleCount;
+    }
+
+    public static void setCycleCount(int cycleCount) {
+        DataEntry.cycleCount = cycleCount;
     }
 }
