@@ -12,7 +12,7 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 01.01.2018
+    //  Last modified: 02.01.2018
     //  Description: An object that stores an item's price data
 
     private static int cycleCount = 0;
@@ -50,26 +50,15 @@ public class DataEntry {
     public void add(Item item) {
         //  Name: addItem
         //  Date created: 05.12.2017
-        //  Last modified: 28.12.2017
+        //  Last modified: 02.02.2018
         //  Description: Adds entries to the rawData and duplicates lists
-
-        // Skip duplicate items
-        if (duplicates.contains(item.getId()))
-            return;
 
         // Assign key if missing
         if (key == null)
             key = item.getKey();
 
         // Add new value to raw data array
-        rawData.add(item.getPrice() + "," + item.getPriceType());
-
-        // Add item ID to duplicate list
-        duplicates.add(item.getId());
-
-        // Slice off excess entries in duplicates list
-        if (duplicates.size() > CONFIG.duplicatesSize)
-            duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
+        rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId());
     }
 
     public void cycle(String line) {
@@ -106,26 +95,27 @@ public class DataEntry {
     private void parse() {
         //  Name: parse()
         //  Date created: 29.11.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 02.01.2018
         //  Description: Method that adds values from rawData to baseDatabase
-
-        Double value;
-        String[] splitEntry;
-        String currencyKey;
-        DataEntry currencyEntry;
 
         // Loop through entries
         for (String entry : rawData) {
-            splitEntry = entry.split(",");
-            value = Double.parseDouble(splitEntry[0]);
+            String[] splitEntry = entry.split(",");
+            Double value = Double.parseDouble(splitEntry[0]);
+
+            // Compare IDs with the ones in the file
+            if (duplicates.contains(splitEntry[2]))
+                continue;
+            else
+                duplicates.add(splitEntry[2]);
 
             // If we have the median price, use that
             if (!splitEntry[1].equals("1")) {
-                currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(splitEntry[1]) + "|5";
+                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(splitEntry[1]) + "|5";
 
                 // If there's a value in the statistics database, use that
                 if (PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) {
-                    currencyEntry = PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
+                    DataEntry currencyEntry = PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
                     if (currencyEntry.getCount() >= 10) {
                         value = value * currencyEntry.getMedian();
                     } else {
@@ -153,6 +143,9 @@ public class DataEntry {
         // Soft-cap price list at <x> entries
         if (baseData.size() > CONFIG.baseDataSize)
             baseData.subList(0, baseData.size() - CONFIG.baseDataSize).clear();
+        // Slice off excess entries in duplicates list
+        if (duplicates.size() > CONFIG.duplicatesSize)
+            duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
     }
 
     private void purge() {
