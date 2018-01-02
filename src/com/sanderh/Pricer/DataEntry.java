@@ -2,9 +2,7 @@ package com.sanderh.Pricer;
 
 import com.sanderh.Item;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static com.sanderh.Main.CONFIG;
@@ -14,20 +12,17 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 26.12.2017
+    //  Last modified: 01.01.2018
     //  Description: An object that stores an item's price data
 
     private static int cycleCount = 0;
-    private int totalCount = 0;
+    private long totalCount = 0;
     private int newItemsFoundInCycle = 0;
     private int oldItemsDiscardedInCycle = 0;
     private double mean = 0.0;
     private double median = 0.0;
     private String key;
-
-    private String league = "";
-    private String type = "";
-    private String JSONkey = "";
+    private int discards;
 
     // Lists that hold price data
     private ArrayList<String> rawData = new ArrayList<>();
@@ -55,15 +50,12 @@ public class DataEntry {
     public void add(Item item) {
         //  Name: addItem
         //  Date created: 05.12.2017
-        //  Last modified: 24.12.2017
+        //  Last modified: 28.12.2017
         //  Description: Adds entries to the rawData and duplicates lists
 
         // Skip duplicate items
         if (duplicates.contains(item.getId()))
             return;
-
-        // Increment total added item counter
-        newItemsFoundInCycle++;
 
         // Assign key if missing
         if (key == null)
@@ -83,7 +75,7 @@ public class DataEntry {
     public void cycle(String line) {
         //  Name: cycle()
         //  Date created: 06.12.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 01.01.2018
         //  Description: Methods that constructs the object's. Should be called at a timed interval
 
         // Load data into lists
@@ -91,78 +83,20 @@ public class DataEntry {
 
         // Build statistics and databases
         parse();
-        purge();
+        if (discards < 50) purge();
         build();
     }
 
     public void cycle() {
         //  Name: cycle()
         //  Date created: 06.12.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 01.01.2018
         //  Description: Methods that constructs the object's. Should be called at a timed interval
 
         // Build statistics and databases
         parse();
-        purge();
+        if (discards < 50) purge();
         build();
-    }
-
-    public String buildJSONPackage() {
-        //  Name: buildJSONPackage()
-        //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Creates a JSON-encoded string of hourly medians
-
-        // Run every x cycles AND if there's enough data
-        if (cycleCount < CONFIG.dataEntryCycleLimit || hourlyMedian.isEmpty() || hourlyMean.isEmpty())
-            return null;
-
-        // Format the key to fit for JSON
-        if (league.equals("") || type.equals("")) {
-            String[] splitKey = key.split("\\|");
-
-            // Convert array to ArrayList
-            ArrayList<String> partialKey = new ArrayList<>(Arrays.asList(splitKey));
-            // Remove the first 2 elements
-            partialKey.subList(0, 2).clear();
-
-            JSONkey = String.join("|", partialKey);
-            league = splitKey[0];
-            type = splitKey[1];
-        }
-
-        // Warn the user if there are irregularities with the discard counter
-        if (newItemsFoundInCycle < oldItemsDiscardedInCycle && oldItemsDiscardedInCycle - newItemsFoundInCycle > 20)
-            System.out.println("[INFO][" + key + "] Odd discard ratio: " + newItemsFoundInCycle + "/" +
-                    oldItemsDiscardedInCycle + " (add/discard)");
-
-        // Make a copy so the original order persists and sort the entries in growing order
-        ArrayList<Double> tempMedianList = new ArrayList<>();
-        tempMedianList.addAll(hourlyMedian);
-        Collections.sort(tempMedianList);
-
-        // Add new items to total counter
-        totalCount += newItemsFoundInCycle - oldItemsDiscardedInCycle;
-
-        // Soft-cap totalCount to 1000
-        if (totalCount > 999)
-            totalCount = 999;
-        else if (totalCount < 0)
-            totalCount = 0;
-
-        // Form the return JSON string
-        String returnString = "\"" + JSONkey + "\":{\"mean\":" + findMean(hourlyMean) + ",\"median\":" +
-                findMedian(tempMedianList) + ",\"count\":" + totalCount + ",\"new\":" + newItemsFoundInCycle + "}";
-
-        // Clear counters
-        hourlyMean.clear();
-        hourlyMedian.clear();
-
-        // Clear the counters
-        this.newItemsFoundInCycle = 0;
-        this.oldItemsDiscardedInCycle = 0;
-
-        return returnString;
     }
 
     /////////////////////
@@ -205,8 +139,12 @@ public class DataEntry {
             }
 
             // If value is more than a very small amount, round it up and add to list
-            if (value > 0.001)
+            if (value > 0.001) {
                 baseData.add(Math.round(value * 10000) / 10000.0);
+
+                // Increment total added item counter
+                newItemsFoundInCycle++;
+            }
         }
 
         // Clear raw data after extracting and converting values
@@ -338,7 +276,7 @@ public class DataEntry {
     public String buildLine() {
         //  Name: buildLine()
         //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 31.12.2017
         //  Description: Converts this object's values into a string that's used for text-file-based storage
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -350,19 +288,17 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add statistics
-        if (median + mean > 0 || newItemsFoundInCycle + oldItemsDiscardedInCycle > 0) {
-            stringBuilder.append(totalCount);
-            stringBuilder.append(",");
-            stringBuilder.append(mean);
-            stringBuilder.append(",");
-            stringBuilder.append(median);
-            stringBuilder.append(",");
-            stringBuilder.append(newItemsFoundInCycle);
-            stringBuilder.append(",");
-            stringBuilder.append(oldItemsDiscardedInCycle);
-        } else {
-            stringBuilder.append("-");
-        }
+        stringBuilder.append(totalCount);
+        stringBuilder.append(",");
+        stringBuilder.append(mean);
+        stringBuilder.append(",");
+        stringBuilder.append(median);
+        stringBuilder.append(",");
+        stringBuilder.append(newItemsFoundInCycle);
+        stringBuilder.append(",");
+        stringBuilder.append(oldItemsDiscardedInCycle);
+        stringBuilder.append(",");
+        stringBuilder.append(discards);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -424,7 +360,7 @@ public class DataEntry {
     private void parseLine(String line) {
         //  Name: parseLine()
         //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 31.12.2017
         //  Description: Reads values from a string and adds them to the lists
 
         /*
@@ -437,6 +373,7 @@ public class DataEntry {
             2 - median
             3 - added items
             4 - discarded items
+            5 - nr of problematic discards in the last x cycles
         2 - base
         3 - duplicates
         4 - hourly mean
@@ -448,25 +385,24 @@ public class DataEntry {
         String[] splitLine = line.split("::");
 
         // Add key if missing
-        if(key == null)
+        if (key == null)
             key = splitLine[0];
 
         // Import statistical values
         if (!splitLine[1].equals("-") && mean + median <= 0) {
             String[] values = splitLine[1].split(",");
-            totalCount = Integer.parseInt(values[0]);
+            totalCount = Long.parseLong(values[0]);
             mean = Double.parseDouble(values[1]);
             median = Double.parseDouble(values[2]);
 
             // TODO: remove this clause but not the contents
-            if (values.length > 3) {
-                newItemsFoundInCycle += Integer.parseInt(values[3]);
-            }
+            if (values.length > 3) newItemsFoundInCycle += Integer.parseInt(values[3]);
 
             // TODO: remove this clause but not the contents
-            if (values.length > 4) {
-                oldItemsDiscardedInCycle += Integer.parseInt(values[4]);
-            }
+            if (values.length > 4) oldItemsDiscardedInCycle += Integer.parseInt(values[4]);
+
+            // TODO: remove this clause but not the contents
+            if (values.length > 5) discards = Integer.parseInt(values[5]);
         }
 
         // Import baseData values
@@ -574,6 +510,80 @@ public class DataEntry {
         }
     }
 
+    public String JSONController() {
+        //  Name: JSONController()
+        //  Date created: 31.12.2017
+        //  Last modified: 01.01.2018
+        //  Description: Decides whether to make a JSON package or not
+
+        // Run every x cycles AND if there's enough data
+        if (cycleCount < CONFIG.dataEntryCycleLimit)
+            return null;
+        else if (hourlyMedian.isEmpty() || hourlyMean.isEmpty())
+            return null;
+
+        // My attempt at fixing invalid prices
+        if (newItemsFoundInCycle > 10) {
+            // If more than 30% have been discarded
+            if (oldItemsDiscardedInCycle / newItemsFoundInCycle * 100 > 90) {
+                // Update the entry
+                discards += 3;
+            }
+        }
+
+        if (discards > 0) discards--;
+
+        // Display a warning in the console if the item has had more than 3 cycles with problematic discards
+        if (discards > 7) {
+            System.out.println("[INFO][" + key + "] Odd discard ratio: " + newItemsFoundInCycle + "/" +
+                    oldItemsDiscardedInCycle + " (add/discard); counter: " + discards);
+
+            if (discards < 50) {
+                discards = 100;
+            } else if (discards < 95) {
+                discards = 0;
+            }
+        }
+
+        // Add new items to total counter
+        totalCount += newItemsFoundInCycle - oldItemsDiscardedInCycle;
+        if (totalCount < 0) totalCount = 0;
+
+        return buildJSONPackage();
+    }
+
+    private String buildJSONPackage() {
+        //  Name: buildJSONPackage()
+        //  Date created: 06.12.2017
+        //  Last modified: 01.01.2018
+        //  Description: Creates a JSON-encoded string of hourly medians
+
+        // Make a copy so the original order persists and sort the entries in growing order
+        ArrayList<Double> tempMedianList = new ArrayList<>();
+        tempMedianList.addAll(hourlyMedian);
+        Collections.sort(tempMedianList);
+
+        // Form the return JSON string
+        String JSONKey = key.substring(key.indexOf("|", key.indexOf("|") + 1) + 1);
+        String returnString = "\"" + JSONKey + "\":{" +
+                "\"mean\":" + findMean(hourlyMean) + "," +
+                "\"median\":" + findMedian(tempMedianList) + "," +
+                "\"count\":" + totalCount + "," +
+                "\"inc\":" + newItemsFoundInCycle + "," +
+                "\"dec\":" + oldItemsDiscardedInCycle + "," +
+                "\"acc\":" + discards + "}";
+
+        // Clear counters
+        hourlyMean.clear();
+        hourlyMedian.clear();
+
+        // Clear the counters
+        this.newItemsFoundInCycle = 0;
+        this.oldItemsDiscardedInCycle = 0;
+
+        return returnString;
+    }
+
     ///////////////////////
     // Getters / Setters //
     ///////////////////////
@@ -594,7 +604,7 @@ public class DataEntry {
         cycleCount = 0;
     }
 
-    public int getCount() {
+    public long getCount() {
         return totalCount;
     }
 

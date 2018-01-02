@@ -7,7 +7,7 @@ import java.util.List;
 public class Mappers {
     //  Name: Mapper
     //  Date created: 17.12.2017
-    //  Last modified: 17.12.2017
+    //  Last modified: 31.12.2017
     //  Description: Holds all the mapper classes. These are not used for anything other than to map JSON strings to
     //               objects and therefore will not likely to be changed at all. Each of these classes is similar in
     //               structure - they all have nothing but variables, getters and setters. If additional functionality
@@ -196,7 +196,7 @@ public class Mappers {
     public static class BaseItem {
         //  Name: BaseItem
         //  Date created: 23.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 31.12.2017
         //  Description: Class used for deserializing a JSON string
 
         private int w, h, x, y, ilvl, frameType;
@@ -212,6 +212,7 @@ public class Mappers {
         // {"category": "jewels"}
         // {"category": {"armour": ["gloves"]}}
         private Object category;
+        private boolean enchanted = false;
 
         ///////////////////////
         // Getters / Setters //
@@ -360,6 +361,14 @@ public class Mappers {
 
         public Object getCategory() {
             return category;
+        }
+
+        public void setEnchanted(Object enchantMods) {
+            this.enchanted = true;
+        }
+
+        public boolean isEnchanted() {
+            return enchanted;
         }
     }
 }

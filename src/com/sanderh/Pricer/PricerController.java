@@ -15,7 +15,7 @@ import static com.sanderh.Main.*;
 public class PricerController {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 26.12.2017
+    //  Last modified: 02.01.2018
     //  Description: An object that manages databases
 
     private final Map<String, DataEntry> entryMap = new HashMap<>();
@@ -157,11 +157,11 @@ public class PricerController {
     private void packageJSON(DataEntry entry) {
         //  Name: packageJSON2()
         //  Date created: 13.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 31.12.2017
         //  Description: Builds a JSON-string out of JSON packets
 
         // Attempt to get JSON-encoded package from database entry
-        String JSONPackage = entry.buildJSONPackage();
+        String JSONPackage = entry.JSONController();
         if (JSONPackage == null) return;
 
         // Add new package to parcel
@@ -171,7 +171,7 @@ public class PricerController {
     private void writeJSONToFile() {
         //  Name: writeJSONToFile2()
         //  Date created: 06.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 02.01.2018
         //  Description: Basically writes JSON string to file
 
         if (JSONParcel.isEmpty())
@@ -185,12 +185,11 @@ public class PricerController {
         String lastType = null;
         BufferedWriter writer = null;
 
-        String league, type, pack;
         try {
             for (String line : JSONParcel) {
-                league = line.substring(0, line.indexOf("|"));
-                type = line.substring(line.indexOf("|") + 1, line.indexOf("|", line.indexOf("|") + 1));
-                pack = line.substring(line.indexOf("::") + 2);
+                String league = line.substring(0, line.indexOf("|"));
+                String type = line.substring(line.indexOf("|") + 1, line.indexOf("|", line.indexOf("|") + 1));
+                String pack = line.substring(line.indexOf("::") + 2);
 
                 // Prepare league changes (since each league will be written in a different file)
                 if (lastLeague == null || !lastLeague.equals(league)) {

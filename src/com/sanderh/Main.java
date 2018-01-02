@@ -44,7 +44,7 @@ public class Main {
     private static void parseCommandParameters (String[] args){
         //  Name: parseCommandParameters()
         //  Date created: 21.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 26.12.2017
         //  Description: Parses CLI / commandline parameters
 
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
@@ -88,7 +88,6 @@ public class Main {
                     break;
             }
         }
-
     }
 
     private static void commandLoop() {

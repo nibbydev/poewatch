@@ -5,7 +5,7 @@ import static com.sanderh.Main.RELATIONS;
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 25.12.2017
+    //  Last modified: 31.12.2017
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
     private String priceType, itemType;
@@ -76,7 +76,7 @@ public class Item extends Mappers.BaseItem {
     private void basicChecks() {
         //  Name: basicChecks()
         //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 31.12.2017
         //  Description: Method that does a few basic checks on items
 
         if (getNote().equals("")) {
@@ -94,9 +94,10 @@ public class Item extends Mappers.BaseItem {
         } else if (getLeague().equals("false")) {
             // This is a bug in the API
             setDiscard();
+        } else if (isEnchanted()) {
+            // Enchanted items usually have a much, much higher price
+            setDiscard();
         }
-
-        // TODO: add filter for enchanted items
     }
 
     private void parseNote() {
