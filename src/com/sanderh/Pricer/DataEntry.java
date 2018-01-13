@@ -563,8 +563,7 @@ public class DataEntry {
                 "\"median\":" + findMedian(tempMedianList) + "," +
                 "\"count\":" + totalCount + "," +
                 "\"inc\":" + newItemsFoundInCycle + "," +
-                "\"dec\":" + oldItemsDiscardedInCycle + "," +
-                "\"acc\":" + discards + "}";
+                "\"dec\":" + oldItemsDiscardedInCycle + "}";
 
         // Clear counters
         hourlyMean.clear();
