@@ -15,7 +15,7 @@ import static com.sanderh.Main.*;
 public class PricerController {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 02.01.2018
+    //  Last modified: 15.01.2018
     //  Description: An object that manages databases
 
     private final Map<String, DataEntry> entryMap = new HashMap<>();
@@ -25,13 +25,15 @@ public class PricerController {
     private long lastRunTime = System.currentTimeMillis();
     private volatile boolean flagPause = false;
     private final Object monitor = new Object();
+    private final ArrayList<String> keyBlackList = new ArrayList<>();
 
     public PricerController() {
         //  Name: PricerController
         //  Date created: 25.12.2017
-        //  Last modified: 25.12.2017
+        //  Last modified: 15.01.2018
         //  Description: Used to load data in on object initialization
 
+        ReadBlackListFromFile();
         readCurrencyFromFile();
     }
 
@@ -127,10 +129,30 @@ public class PricerController {
     // Methods used to interface databases //
     /////////////////////////////////////////
 
+    private void ReadBlackListFromFile(){
+        //  Name: ReadBlackListFromFile
+        //  Date created: 25.12.2017
+        //  Last modified: 15.01.2018
+        //  Description: Loads in list of keys that should be removed from the database
+
+        try (BufferedReader reader = defineReader(new File("./blacklist.txt"))) {
+            if (reader == null) return;
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                keyBlackList.add(line);
+            }
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public void readCurrencyFromFile() {
         //  Name: readCurrencyFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 15.01.2018
         //  Description: Reads data from file and adds to list, reads only lines that have "currency:orbs" in them
         //               Should only be called on initial object creation
 
@@ -144,6 +166,8 @@ public class PricerController {
 
             while ((line = reader.readLine()) != null) {
                 key = line.substring(0, line.indexOf("::"));
+
+                if (keyBlackList.contains(key)) continue;
 
                 if (key.contains("currency:orbs"))
                     currencyMap.put(key, new DataEntry(line));
@@ -259,7 +283,7 @@ public class PricerController {
     public void readFileParseFileWriteFile() {
         //  Name: readFileParseFileWriteFile()
         //  Date created: 06.12.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 15.01.2018
         //  Description: reads data from file (line by line), parses it and writes it back
 
         ArrayList<String> currencyKeysWrittenToFile = new ArrayList<>();
@@ -304,7 +328,9 @@ public class PricerController {
 
                     // If new values have been found, append them to the line and write it to the file, else just write
                     // line to file
-                    if (currencyMap.containsKey(key))
+                    if (keyBlackList.contains(key))
+                        continue;
+                    else if (currencyMap.containsKey(key))
                         continue;
                     else if (entryMap.containsKey(key))
                         entry = entryMap.get(key);

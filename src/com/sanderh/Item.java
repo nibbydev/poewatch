@@ -514,6 +514,18 @@ public class Item extends Mappers.BaseItem {
                 }
                 break;
 
+            case "Lightpoacher":
+            case "Shroud of the Lightless":
+            case "Bubonic Trail":
+            case "Tombfist":
+                if (getExplicitMods().get(0).equals("Has 1 Abyssal Socket")) {
+                    keySuffix = "|var:1";
+                    break;
+                } else if (getExplicitMods().get(0).equals("Has 2 Abyssal Sockets")) {
+                    keySuffix = "|var:2";
+                    break;
+                }
+
             default:
                 return;
         }
