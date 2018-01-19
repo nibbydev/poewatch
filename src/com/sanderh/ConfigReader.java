@@ -8,7 +8,7 @@ import java.io.IOException;
 public class ConfigReader {
     //  Name: ConfigReader
     //  Date created: 20.12.2017
-    //  Last modified: 20.12.2017
+    //  Last modified: 18.01.2018
     //  Description: Object that's used to manage constants
 
     public int timeZoneOffset = 2;
@@ -22,6 +22,7 @@ public class ConfigReader {
     public int baseDataSize = 100;
     public int hourlyDataSize = 60;
     public int duplicatesSize = 60;
+    public int accountNameSize = 15;
     public String defaultAPIURL = "http://www.pathofexile.com/api/public-stash-tabs?id=";
 
     public ConfigReader(String file) {
@@ -36,7 +37,7 @@ public class ConfigReader {
     private void readFile(String fileName) {
         //  Name: readFile
         //  Date created: 20.12.2017
-        //  Last modified: 21.12.2017
+        //  Last modified: 18.01.2018
         //  Description: Reads config in from file
 
         String line, key, value;
@@ -91,6 +92,9 @@ public class ConfigReader {
                         break;
                     case "defaultAPIURL":
                         defaultAPIURL = value;
+                        break;
+                    case "accountNameSize":
+                        accountNameSize = Integer.parseInt(value);
                         break;
                     default:
                         System.out.println("[ERROR] Unknown config key: (" + key + ") and value (" + value + ")");

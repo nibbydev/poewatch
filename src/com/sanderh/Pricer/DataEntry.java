@@ -12,7 +12,7 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 02.01.2018
+    //  Last modified: 19.21.2018
     //  Description: An object that stores an item's price data
 
     private static int cycleCount = 0;
@@ -30,6 +30,7 @@ public class DataEntry {
     private ArrayList<Double> hourlyMean = new ArrayList<>(CONFIG.hourlyDataSize);
     private ArrayList<Double> hourlyMedian = new ArrayList<>(CONFIG.hourlyDataSize);
     private ArrayList<String> duplicates = new ArrayList<>(CONFIG.duplicatesSize);
+    private ArrayList<String> accounts = new ArrayList<>(CONFIG.accountNameSize);
 
     //////////////////
     // Main methods //
@@ -44,21 +45,25 @@ public class DataEntry {
         parseLine(line);
     }
 
-    public DataEntry() {
-    }
-
-    public void add(Item item) {
+    public void add(Item item, String accountName) {
         //  Name: addItem
         //  Date created: 05.12.2017
-        //  Last modified: 02.02.2018
+        //  Last modified: 18.01.2018
         //  Description: Adds entries to the rawData and duplicates lists
 
         // Assign key if missing
-        if (key == null)
-            key = item.getKey();
+        if (key == null) key = item.getKey();
 
         // Add new value to raw data array
-        rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId());
+        if (!accounts.contains(accountName)) {
+            rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId());
+        }
+
+        accounts.add(accountName);
+
+        // Clear excess elements
+        if (accounts.size() > CONFIG.accountNameSize)
+            accounts.subList(0, accounts.size() - CONFIG.accountNameSize).clear();
     }
 
     public void cycle(String line) {
@@ -269,7 +274,7 @@ public class DataEntry {
     public String buildLine() {
         //  Name: buildLine()
         //  Date created: 06.12.2017
-        //  Last modified: 31.12.2017
+        //  Last modified: 18.21.2018
         //  Description: Converts this object's values into a string that's used for text-file-based storage
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -345,6 +350,20 @@ public class DataEntry {
             stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
         }
 
+        // Add delimiter
+        stringBuilder.append("::");
+
+        // Add hourly median
+        if (accounts.isEmpty()) {
+            stringBuilder.append("-");
+        } else {
+            for (String s : accounts) {
+                stringBuilder.append(s);
+                stringBuilder.append(",");
+            }
+            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+        }
+
         // Add newline and return string
         stringBuilder.append("\n");
         return stringBuilder.toString();
@@ -353,7 +372,7 @@ public class DataEntry {
     private void parseLine(String line) {
         //  Name: parseLine()
         //  Date created: 06.12.2017
-        //  Last modified: 31.12.2017
+        //  Last modified: 18.21.2018
         //  Description: Reads values from a string and adds them to the lists
 
         /*
@@ -498,6 +517,31 @@ public class DataEntry {
                     // Clear excess elements
                     if (hourlyMedian.size() > CONFIG.dataEntryCycleLimit)
                         hourlyMedian.subList(0, hourlyMedian.size() - CONFIG.dataEntryCycleLimit).clear();
+                }
+            }
+        }
+
+        // Safety measure for converting from one database type to another
+        // TODO: remove this clause but not the contents
+        if (splitLine.length > 7) {
+            // Import hourly median
+            if (!splitLine[6].equals("-")) {
+                if (accounts.isEmpty()) {
+                    Collections.addAll(accounts, splitLine[6].split(","));
+                } else {
+                    // Make a copy of the list and clear it, as we need these elements to be on the top of the stack
+                    ArrayList<String> tempStringStorageList = new ArrayList<>(accounts);
+                    accounts.clear();
+
+                    // Add values found in files to the bottom of the stack
+                    Collections.addAll(accounts, splitLine[6].split(","));
+
+                    // Add new values back to the list, but on top of the stack
+                    accounts.addAll(tempStringStorageList);
+
+                    // Clear excess elements
+                    if (accounts.size() > CONFIG.accountNameSize)
+                        accounts.subList(0, accounts.size() - CONFIG.accountNameSize).clear();
                 }
             }
         }

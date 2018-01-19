@@ -15,7 +15,7 @@ import static com.sanderh.Main.*;
 public class PricerController {
     //  Name: PricerController
     //  Date created: 28.11.2017
-    //  Last modified: 15.01.2018
+    //  Last modified: 18.01.2018
     //  Description: An object that manages databases
 
     private final Map<String, DataEntry> entryMap = new HashMap<>();
@@ -103,10 +103,10 @@ public class PricerController {
                 // Add item to database, separating currency
                 if (item.getKey().contains("currency:orbs")) {
                     currencyMap.putIfAbsent(item.getKey(), new DataEntry());
-                    currencyMap.get(item.getKey()).add(item);
+                    currencyMap.get(item.getKey()).add(item, stash.getAccountName());
                 } else {
                     entryMap.putIfAbsent(item.getKey(), new DataEntry());
-                    entryMap.get(item.getKey()).add(item);
+                    entryMap.get(item.getKey()).add(item, stash.getAccountName());
                 }
             }
         }
@@ -283,7 +283,7 @@ public class PricerController {
     public void readFileParseFileWriteFile() {
         //  Name: readFileParseFileWriteFile()
         //  Date created: 06.12.2017
-        //  Last modified: 15.01.2018
+        //  Last modified: 18.01.2018
         //  Description: reads data from file (line by line), parses it and writes it back
 
         ArrayList<String> currencyKeysWrittenToFile = new ArrayList<>();
