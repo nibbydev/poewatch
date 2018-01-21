@@ -5,7 +5,7 @@ import static com.sanderh.Main.RELATIONS;
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 31.12.2017
+    //  Last modified: 21.01.2018
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
     private String priceType, itemType;
@@ -238,7 +238,7 @@ public class Item extends Mappers.BaseItem {
     private void checkGemInfo() {
         //  Name: checkGemInfo()
         //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 21.01.2018
         //  Description: Checks gem-specific information
 
         int lvl = -1;
@@ -330,7 +330,7 @@ public class Item extends Mappers.BaseItem {
     private void checkSixLink() {
         //  Name: checkSixLink()
         //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
+        //  Last modified: 21.01.2018
         //  Description: Since 6-links are naturally more expensive, assign them a separate key
 
         // Filter out items that can have 6 links
@@ -370,8 +370,8 @@ public class Item extends Mappers.BaseItem {
             addKey("|6L");
         else if (maxLinks == 5)
             addKey("|5L");
-        else
-            addKey("|0L");
+        //else
+        //    addKey("|0L"); //TODO: removed this
     }
 
     private void checkSpecialItemVariant() {
@@ -386,15 +386,19 @@ public class Item extends Mappers.BaseItem {
             // Try to determine the type of Atziri's Splendour by looking at the item explicit mods
             case "Atziri's Splendour":
                 switch (String.join("#", getExplicitMods().get(0).split("\\d+"))) {
+                    case "#% increased Armour, Evasion and Energy Shield":
+                        keySuffix = "|var:ar/ev/es";
+                        break;
+
                     case "#% increased Armour and Energy Shield":
-                        if (getExplicitMods().get(1).contains("maximum Life"))
+                        if (getExplicitMods().get(1).contains("Life"))
                             keySuffix = "|var:ar/es/li";
                         else
                             keySuffix = "|var:ar/es";
                         break;
 
                     case "#% increased Evasion and Energy Shield":
-                        if (getExplicitMods().get(1).contains("maximum Life"))
+                        if (getExplicitMods().get(1).contains("Life"))
                             keySuffix = "|var:ev/es/li";
                         else
                             keySuffix = "|var:ev/es";
@@ -412,12 +416,8 @@ public class Item extends Mappers.BaseItem {
                         keySuffix = "|var:ev";
                         break;
 
-                    case "#% increased Energy Shield":
+                    case "+# to maximum Energy Shield":
                         keySuffix = "|var:es";
-                        break;
-
-                    case "#% increased Armour, Evasion and Energy Shield":
-                        keySuffix = "|var:ar/ev/es";
                         break;
                 }
                 break;

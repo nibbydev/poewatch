@@ -12,7 +12,7 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 19.21.2018
+    //  Last modified: 19.01.2018
     //  Description: An object that stores an item's price data
 
     private static int cycleCount = 0;
@@ -45,6 +45,10 @@ public class DataEntry {
         parseLine(line);
     }
 
+    public DataEntry () {
+        // This is needed tbh
+    }
+
     public void add(Item item, String accountName) {
         //  Name: addItem
         //  Date created: 05.12.2017
@@ -56,14 +60,8 @@ public class DataEntry {
 
         // Add new value to raw data array
         if (!accounts.contains(accountName)) {
-            rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId());
+            rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId() + "," + accountName);
         }
-
-        accounts.add(accountName);
-
-        // Clear excess elements
-        if (accounts.size() > CONFIG.accountNameSize)
-            accounts.subList(0, accounts.size() - CONFIG.accountNameSize).clear();
     }
 
     public void cycle(String line) {
@@ -100,29 +98,36 @@ public class DataEntry {
     private void parse() {
         //  Name: parse()
         //  Date created: 29.11.2017
-        //  Last modified: 02.01.2018
+        //  Last modified: 19.01.2018
         //  Description: Method that adds values from rawData to baseDatabase
 
         // Loop through entries
         for (String entry : rawData) {
             String[] splitEntry = entry.split(",");
-            Double value = Double.parseDouble(splitEntry[0]);
 
-            // Compare IDs with the ones in the file
-            if (duplicates.contains(splitEntry[2]))
+            Double price = Double.parseDouble(splitEntry[0]);
+            String priceType = splitEntry[1];
+            String id = splitEntry[2];
+            String account = splitEntry[3];
+
+            // Compare data to the ones in the file to avoid duplicates
+            if (duplicates.contains(id))
                 continue;
-            else
-                duplicates.add(splitEntry[2]);
+            else if (accounts.contains(account))
+                continue;
+
+            duplicates.add(id);
+            accounts.add(account);
 
             // If we have the median price, use that
-            if (!splitEntry[1].equals("1")) {
-                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(splitEntry[1]) + "|5";
+            if (!priceType.equals("1")) {
+                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(priceType) + "|5";
 
                 // If there's a value in the statistics database, use that
                 if (PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) {
                     DataEntry currencyEntry = PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
                     if (currencyEntry.getCount() >= 10) {
-                        value = value * currencyEntry.getMedian();
+                        price = price * currencyEntry.getMedian();
                     } else {
                         oldItemsDiscardedInCycle++;
                         continue;
@@ -133,13 +138,9 @@ public class DataEntry {
                 }
             }
 
-            // If value is more than a very small amount, round it up and add to list
-            if (value > 0.001) {
-                baseData.add(Math.round(value * 10000) / 10000.0);
-
-                // Increment total added item counter
-                newItemsFoundInCycle++;
-            }
+            baseData.add(Math.round(price * 10000) / 10000.0);
+            // Increment total added item counter
+            newItemsFoundInCycle++;
         }
 
         // Clear raw data after extracting and converting values
@@ -151,6 +152,9 @@ public class DataEntry {
         // Slice off excess entries in duplicates list
         if (duplicates.size() > CONFIG.duplicatesSize)
             duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
+        // Limit size of account history
+        if (accounts.size() > CONFIG.accountNameSize)
+            accounts.subList(0, accounts.size() - CONFIG.accountNameSize).clear();
     }
 
     private void purge() {
@@ -397,8 +401,7 @@ public class DataEntry {
         String[] splitLine = line.split("::");
 
         // Add key if missing
-        if (key == null)
-            key = splitLine[0];
+        if (key == null) key = splitLine[0];
 
         // Import statistical values
         if (!splitLine[1].equals("-") && mean + median <= 0) {
@@ -524,7 +527,7 @@ public class DataEntry {
         // Safety measure for converting from one database type to another
         // TODO: remove this clause but not the contents
         if (splitLine.length > 7) {
-            // Import hourly median
+            // Import account names
             if (!splitLine[6].equals("-")) {
                 if (accounts.isEmpty()) {
                     Collections.addAll(accounts, splitLine[6].split(","));

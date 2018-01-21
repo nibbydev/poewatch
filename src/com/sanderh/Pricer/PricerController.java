@@ -344,8 +344,7 @@ public class PricerController {
                     entryMap.remove(key);
 
                     // Skip currency entries that have already been written to file
-                    if (currencyKeysWrittenToFile.contains(key))
-                        continue;
+                    if (currencyKeysWrittenToFile.contains(key)) continue;
 
                     // Write line to temp output file
                     writer.write(entry.buildLine());
