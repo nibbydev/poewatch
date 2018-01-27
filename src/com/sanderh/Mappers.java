@@ -176,6 +176,10 @@ public class Mappers {
         }
 
         public String getAccountName() {
+            if (accountName.contains(",")) accountName = accountName.replace(",", "");
+            if (accountName.contains("|")) accountName = accountName.replace("|", "");
+            if (accountName.contains(":")) accountName = accountName.replace(":", "");
+
             return accountName;
         }
 

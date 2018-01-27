@@ -3,7 +3,6 @@ package com.sanderh.Pricer;
 import com.sanderh.Item;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 import static com.sanderh.Main.CONFIG;
 import static com.sanderh.Main.PRICER_CONTROLLER;
@@ -12,25 +11,27 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 19.01.2018
+    //  Last modified: 26.01.2018
     //  Description: An object that stores an item's price data
 
+    // TODO: instead of oldItem_counter have a percentage?
+
     private static int cycleCount = 0;
-    private long totalCount = 0;
-    private int newItemsFoundInCycle = 0;
-    private int oldItemsDiscardedInCycle = 0;
+    private long total_counter = 0;
+    private int newItem_counter = 0;
+    private int oldItem_counter = 0;
     private double mean = 0.0;
-    private double median = 0.0;
+    private double median;
+    private double threshold_multiplier = 0.0;
     private String key;
-    private int discards;
 
     // Lists that hold price data
     private ArrayList<String> rawData = new ArrayList<>();
-    private ArrayList<Double> baseData = new ArrayList<>(CONFIG.baseDataSize);
-    private ArrayList<Double> hourlyMean = new ArrayList<>(CONFIG.hourlyDataSize);
-    private ArrayList<Double> hourlyMedian = new ArrayList<>(CONFIG.hourlyDataSize);
-    private ArrayList<String> duplicates = new ArrayList<>(CONFIG.duplicatesSize);
-    private ArrayList<String> accounts = new ArrayList<>(CONFIG.accountNameSize);
+    private ArrayList<Double> database_prices = new ArrayList<>(CONFIG.baseDataSize);
+    private ArrayList<String> database_accounts = new ArrayList<>(CONFIG.baseDataSize);
+    private ArrayList<String> database_itemIDs = new ArrayList<>(CONFIG.baseDataSize);
+    private ArrayList<Double> database_hourlyMean = new ArrayList<>(CONFIG.hourlyDataSize);
+    private ArrayList<Double> database_hourlyMedian = new ArrayList<>(CONFIG.hourlyDataSize);
 
     //////////////////
     // Main methods //
@@ -45,29 +46,27 @@ public class DataEntry {
         parseLine(line);
     }
 
-    public DataEntry () {
+    public DataEntry() {
         // This is needed tbh
     }
 
     public void add(Item item, String accountName) {
-        //  Name: addItem
+        //  Name: add
         //  Date created: 05.12.2017
-        //  Last modified: 18.01.2018
-        //  Description: Adds entries to the rawData and duplicates lists
+        //  Last modified: 26.01.2018
+        //  Description: Adds entries to the rawData and database_itemIDs lists
 
-        // Assign key if missing
+        // Assign key if missing TODO: is this needed?
         if (key == null) key = item.getKey();
 
         // Add new value to raw data array
-        if (!accounts.contains(accountName)) {
-            rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId() + "," + accountName);
-        }
+        rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId() + "," + accountName);
     }
 
     public void cycle(String line) {
         //  Name: cycle()
         //  Date created: 06.12.2017
-        //  Last modified: 01.01.2018
+        //  Last modified: 26.01.2018
         //  Description: Methods that constructs the object's. Should be called at a timed interval
 
         // Load data into lists
@@ -75,20 +74,26 @@ public class DataEntry {
 
         // Build statistics and databases
         parse();
-        if (discards < 50) purge();
+        purge();
         build();
+
+        // Limit list sizes
+        cap();
     }
 
     public void cycle() {
         //  Name: cycle()
         //  Date created: 06.12.2017
-        //  Last modified: 01.01.2018
+        //  Last modified: 26.01.2018
         //  Description: Methods that constructs the object's. Should be called at a timed interval
 
         // Build statistics and databases
         parse();
-        if (discards < 50) purge();
+        purge();
         build();
+
+        // Limit list sizes
+        cap();
     }
 
     /////////////////////
@@ -98,8 +103,8 @@ public class DataEntry {
     private void parse() {
         //  Name: parse()
         //  Date created: 29.11.2017
-        //  Last modified: 19.01.2018
-        //  Description: Method that adds values from rawData to baseDatabase
+        //  Last modified: 26.01.2018
+        //  Description: Method that adds values from rawData array to database_prices array
 
         // Loop through entries
         for (String entry : rawData) {
@@ -110,165 +115,143 @@ public class DataEntry {
             String id = splitEntry[2];
             String account = splitEntry[3];
 
-            // Compare data to the ones in the file to avoid duplicates
-            if (duplicates.contains(id))
-                continue;
-            else if (accounts.contains(account))
-                continue;
+            // If a user already has listed a similar item, ignore it
+            if (database_itemIDs.contains(id)) continue;
+            // If a user already has listed the same item before, ignore it
+            if (database_accounts.contains(account)) continue;
 
-            duplicates.add(id);
-            accounts.add(account);
-
-            // If we have the median price, use that
+            // If the item was not listed for chaos orbs ("1" == Chaos Orb), then find the value in chaos
             if (!priceType.equals("1")) {
+                // Get the database key of the currency the item was listed for
                 String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(priceType) + "|5";
 
-                // If there's a value in the statistics database, use that
-                if (PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) {
-                    DataEntry currencyEntry = PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
-                    if (currencyEntry.getCount() >= 10) {
-                        price = price * currencyEntry.getMedian();
-                    } else {
-                        oldItemsDiscardedInCycle++;
-                        continue;
-                    }
-                } else {
-                    oldItemsDiscardedInCycle++;
-                    continue;
-                }
+                // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
+                if (!PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) continue;
+
+                // Get the currency item entry the item was listed in
+                DataEntry currencyEntry = PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
+
+                // If the currency the item was listed in has very few listings then ignore this item
+                if (currencyEntry.getCount() < 20) continue;
+
+                // Convert the item's price into Chaos Orbs
+                price = price * currencyEntry.getMedian();
             }
 
-            baseData.add(Math.round(price * 10000) / 10000.0);
+            // Hard-cap item prices
+            if (price > 500000.0 || price < 0.001) continue;
+
+            // Add values to the front of the lists
+            database_prices.add(0, Math.round(price * 1000.0) / 1000.0);
+            database_itemIDs.add(0, id);
+            database_accounts.add(0, account);
+
             // Increment total added item counter
-            newItemsFoundInCycle++;
+            newItem_counter++;
         }
 
         // Clear raw data after extracting and converting values
         rawData.clear();
-
-        // Soft-cap price list at <x> entries
-        if (baseData.size() > CONFIG.baseDataSize)
-            baseData.subList(0, baseData.size() - CONFIG.baseDataSize).clear();
-        // Slice off excess entries in duplicates list
-        if (duplicates.size() > CONFIG.duplicatesSize)
-            duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
-        // Limit size of account history
-        if (accounts.size() > CONFIG.accountNameSize)
-            accounts.subList(0, accounts.size() - CONFIG.accountNameSize).clear();
     }
 
     private void purge() {
         //  Name: purge
         //  Date created: 29.11.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 27.01.2018
         //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
         //               whether there's a large difference between the two
 
-        class BaseDataClearingPredicate<T> implements Predicate<T> {
-            //  Name: BaseDataClearingPredicate()
-            //  Date created: 24.12.2017
-            //  Last modified: 26.12.2017
-            //  Description: Predicate used to filter baseData's values. If a value strays too far from median, it is
-            //               removed
+        // Precautions
+        if (database_prices.isEmpty()) return;
+        // If too few items have been found then it probably doesn't have a median price
+        if (total_counter < 20) return;
+        // No median price found
+        if (median <= 0) return;
 
-            Double median;
+        // Loop through database_prices, if the price is lower than the boundaries, remove the first instance of the
+        // price and its related account name and ID
+        int weight = 0;
+        int oldSize = database_prices.size();
+        for (int i = 0; i < oldSize; i++) {
+            if (database_prices.get(i - weight) < median * (3.0 + threshold_multiplier))
+                if (database_prices.get(i - weight) > median / (3.0 + threshold_multiplier)) continue;
 
-            public boolean test(T value) {
-                return (Double) value > median * 2.0 || (Double) value < median / 2.0;
-            }
+            database_prices.remove(i - weight);
+            database_itemIDs.remove(i - weight);
+            database_accounts.remove(i - weight);
+
+            // Since we removed elements with index i we need to adjust for the rest of them that fell back one place
+            weight++;
         }
 
-        if (baseData.isEmpty())
-            return;
-        else if (median <= 0.0)
-            return;
-        else if (totalCount < 10)
-            return;
-
-        int oldSize = baseData.size();
-        BaseDataClearingPredicate<Double> filter = new BaseDataClearingPredicate<>();
-        filter.median = median;
-        baseData.removeIf(filter);
-
         // Increment discard counter by how many were discarded
-        oldItemsDiscardedInCycle += oldSize - baseData.size();
+        if (weight > 0) oldItem_counter += weight;
     }
 
     private void build() {
-        //  Name: parse
-        //  Date created: 29.11.2017
-        //  Last modified: 24.12.2017
-        //  Description: Method that adds entries to statistics
-
-        // Make a copy so the original order persists and sort new array
-        ArrayList<Double> tempValueList = new ArrayList<>();
-        tempValueList.addAll(baseData);
-        Collections.sort(tempValueList);
-
-        // Slice sorted copy for more precision. Skip entries with a small number of elements
-        int count = baseData.size();
-        if (count <= 2) {
-            return;
-        } else if (count < 5) {
-            tempValueList.subList(count - 2, count - 1).clear();
-        } else if (count < 10) {
-            tempValueList.subList(count - 3, count - 1).clear();
-            tempValueList.subList(0, 1).clear();
-        } else if (count < 15) {
-            tempValueList.subList(count - 4, count - 1).clear();
-            tempValueList.subList(0, 2).clear();
-        } else if (count < 30) {
-            tempValueList.subList(count - 11, count - 1).clear();
-            tempValueList.subList(0, 2).clear();
-        } else if (count < 60) {
-            tempValueList.subList(count - 16, count - 1).clear();
-            tempValueList.subList(0, 3).clear();
-        } else if (count < 80) {
-            tempValueList.subList(count - 21, count - 1).clear();
-            tempValueList.subList(0, 4).clear();
-        } else if (count < 110) {
-            tempValueList.subList(count - 31, count - 1).clear();
-            tempValueList.subList(0, 5).clear();
-        }
+        // Precaution
+        if (database_prices.isEmpty()) return;
 
         // Calculate mean and median values
-        this.mean = findMean(tempValueList);
-        this.median = findMedian(tempValueList);
+        mean = findMean(database_prices);
+        median = findMedian(database_prices);
 
-        // Add value to hourly
-        hourlyMean.add(this.mean);
-        hourlyMedian.add(this.median);
-
-        // Limit hourly to <x> values
-        if (hourlyMean.size() > CONFIG.dataEntryCycleLimit)
-            hourlyMean.subList(0, hourlyMean.size() - CONFIG.dataEntryCycleLimit).clear();
-        if (hourlyMedian.size() > CONFIG.dataEntryCycleLimit)
-            hourlyMedian.subList(0, hourlyMedian.size() - CONFIG.dataEntryCycleLimit).clear();
+        // add to hourly
+        database_hourlyMean.add(0, mean);
+        database_hourlyMedian.add(0, median);
     }
 
-    private double findMean(ArrayList<Double> valueList) {
+    private void cap() {
+        //  Name: cap
+        //  Date created: 26.01.2018
+        //  Last modified: 26.01.2018
+        //  Description: Makes sure lists don't exceed X amount of elements
+
+        // If an array has more elements than specified, remove everything from the possible last index up until
+        // however many excess elements it has
+        if (database_prices.size() > CONFIG.baseDataSize) {
+            database_prices.subList(CONFIG.baseDataSize, database_prices.size() - 1).clear();
+            database_itemIDs.subList(CONFIG.baseDataSize, database_prices.size() - 1).clear();
+            database_accounts.subList(CONFIG.baseDataSize, database_prices.size() - 1).clear();
+        }
+
+        // If an array has more elements than specified, remove everything from the possible last index up until
+        // however many excess elements it has
+        if (database_hourlyMean.size() > CONFIG.hourlyDataSize) {
+            database_hourlyMean.subList(CONFIG.hourlyDataSize, database_hourlyMean.size() - 1).clear();
+            database_hourlyMedian.subList(CONFIG.hourlyDataSize, database_hourlyMean.size() - 1).clear();
+        }
+    }
+
+    private double findMean(ArrayList<Double> list) {
         //  Name: findMean
         //  Date created: 12.12.2017
-        //  Last modified: 12.12.2017
+        //  Last modified: 26.01.2018
         //  Description: Finds the mean value of an array
 
         double mean = 0.0;
-        int count = valueList.size();
 
         // Add up values to calculate mean
-        for (Double i : valueList)
-            mean += i;
+        for (Double i : list) mean += i;
 
-        return Math.round(mean / count * 10000) / 10000.0;
+        return Math.round(mean / list.size() * 1000.0) / 1000.0;
     }
 
-    private double findMedian(ArrayList<Double> valueList) {
+    private double findMedian(ArrayList<Double> list) {
         //  Name: findMedian
         //  Date created: 12.12.2017
-        //  Last modified: 12.12.2017
-        //  Description: Finds the median value of an array. Has 1/4 shift to left
+        //  Last modified: 26.12.2017
+        //  Description: Finds the median value of an array. Has 1/3 shift to left
 
-        return Math.round(valueList.get((int) (valueList.size() / 4.0)) * 10000) / 10000.0;
+        // Precaution
+        if (list.isEmpty()) return 0;
+
+        // Make a copy so the original order persists and sort new array
+        ArrayList<Double> tempList = new ArrayList<>();
+        tempList.addAll(list);
+        Collections.sort(tempList);
+
+        return Math.round(tempList.get(tempList.size() / 3) * 1000.0) / 1000.0;
     }
 
     /////////////////
@@ -278,7 +261,7 @@ public class DataEntry {
     public String buildLine() {
         //  Name: buildLine()
         //  Date created: 06.12.2017
-        //  Last modified: 18.21.2018
+        //  Last modified: 23.01.2018
         //  Description: Converts this object's values into a string that's used for text-file-based storage
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -290,82 +273,54 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add statistics
-        stringBuilder.append(totalCount);
+        stringBuilder.append(total_counter);
         stringBuilder.append(",");
         stringBuilder.append(mean);
         stringBuilder.append(",");
         stringBuilder.append(median);
         stringBuilder.append(",");
-        stringBuilder.append(newItemsFoundInCycle);
+        stringBuilder.append(newItem_counter);
         stringBuilder.append(",");
-        stringBuilder.append(oldItemsDiscardedInCycle);
+        stringBuilder.append(oldItem_counter);
         stringBuilder.append(",");
-        stringBuilder.append(discards);
+        stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
 
         // Add delimiter
         stringBuilder.append("::");
 
-        // Add base data
-        if (baseData.isEmpty()) {
+        // Add database entries
+        if (database_prices.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            for (Double d : baseData) {
-                stringBuilder.append(d);
+            for (int i = 0; i < database_prices.size(); i++) {
+                stringBuilder.append(database_prices.get(i));
                 stringBuilder.append(",");
+                stringBuilder.append(database_accounts.get(i));
+                stringBuilder.append(",");
+                stringBuilder.append(database_itemIDs.get(i));
+                stringBuilder.append("|");
             }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+
+            // Remove the overflow "|"
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
 
         // Add delimiter
         stringBuilder.append("::");
 
-        // Add duplicates
-        if (duplicates.isEmpty()) {
+        // Add hourly entries
+        if (database_hourlyMean.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            stringBuilder.append(String.join(",", duplicates));
-        }
-
-        // Add delimiter
-        stringBuilder.append("::");
-
-        // Add hourly mean
-        if (hourlyMean.isEmpty()) {
-            stringBuilder.append("-");
-        } else {
-            for (Double d : hourlyMean) {
-                stringBuilder.append(d);
+            for (int i = 0; i < database_hourlyMean.size(); i++) {
+                stringBuilder.append(database_hourlyMean.get(i));
                 stringBuilder.append(",");
+                stringBuilder.append(database_hourlyMedian.get(i));
+                stringBuilder.append("|");
             }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
-        }
 
-        // Add delimiter
-        stringBuilder.append("::");
-
-        // Add hourly median
-        if (hourlyMedian.isEmpty()) {
-            stringBuilder.append("-");
-        } else {
-            for (Double d : hourlyMedian) {
-                stringBuilder.append(d);
-                stringBuilder.append(",");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
-        }
-
-        // Add delimiter
-        stringBuilder.append("::");
-
-        // Add hourly median
-        if (accounts.isEmpty()) {
-            stringBuilder.append("-");
-        } else {
-            for (String s : accounts) {
-                stringBuilder.append(s);
-                stringBuilder.append(",");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.lastIndexOf(","));
+            // Remove the overflow "|"
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
 
         // Add newline and return string
@@ -376,26 +331,25 @@ public class DataEntry {
     private void parseLine(String line) {
         //  Name: parseLine()
         //  Date created: 06.12.2017
-        //  Last modified: 18.21.2018
+        //  Last modified: 26.01.2018
         //  Description: Reads values from a string and adds them to the lists
 
-        /*
-        Storage positions:
-
-        0 - key
-        1 - stats
-            0 - total count (0-999)
-            1 - mean
-            2 - median
-            3 - added items
-            4 - discarded items
-            5 - nr of problematic discards in the last x cycles
-        2 - base
-        3 - duplicates
-        4 - hourly mean
-        5 - hourly median
-
-        0 key :: 1 stats :: 2 base :: 3 duplicates :: 4 h_mean :: 5 h_median
+        /* (Spliterator: "::")
+            0 - key
+            1 - stats (Spliterator: ",")
+                0 - total count (0-999-xxx)
+                1 - mean
+                2 - median
+                3 - added items
+                4 - discarded items
+                5 - nr of problematic threshold_multiplier in the last x cycles
+            2 - database entries (Spliterator: ";" and ",")
+                0 - price
+                1 - account name
+                2 - item id
+            3 - hourly (Spliterator: ",")
+                0 - mean
+                1 - median
          */
 
         String[] splitLine = line.split("::");
@@ -404,148 +358,34 @@ public class DataEntry {
         if (key == null) key = splitLine[0];
 
         // Import statistical values
-        if (!splitLine[1].equals("-") && mean + median <= 0) {
+        if (!splitLine[1].equals("-")) {
             String[] values = splitLine[1].split(",");
-            totalCount = Long.parseLong(values[0]);
+            total_counter = Long.parseLong(values[0]);
             mean = Double.parseDouble(values[1]);
             median = Double.parseDouble(values[2]);
-
-            // TODO: remove this clause but not the contents
-            if (values.length > 3) newItemsFoundInCycle += Integer.parseInt(values[3]);
-
-            // TODO: remove this clause but not the contents
-            if (values.length > 4) oldItemsDiscardedInCycle += Integer.parseInt(values[4]);
-
-            // TODO: remove this clause but not the contents
-            if (values.length > 5) discards = Integer.parseInt(values[5]);
+            newItem_counter += Integer.parseInt(values[3]);
+            oldItem_counter += Integer.parseInt(values[4]);
+            threshold_multiplier = Double.parseDouble(values[5]);
         }
 
-        // Import baseData values
+        // Import database_prices, account names and item IDs
         if (!splitLine[2].equals("-")) {
-            if (baseData.isEmpty()) {
-                for (String value : splitLine[2].split(",")) {
-                    baseData.add(Double.parseDouble(value));
-                }
-            } else {
-                // Make a copy of the list and clear it, as we need these elements to be on the top of the stack
-                ArrayList<Double> tempDoubleStorageList = new ArrayList<>(baseData);
-                baseData.clear();
+            for (String entry : splitLine[2].split("\\|")) {
+                String[] entryList = entry.split(",");
 
-                // Add values found in files to the bottom of the stack
-                for (String value : splitLine[2].split(",")) {
-                    baseData.add(Double.parseDouble(value));
-                }
-
-                // Add new values back to the list, but on top of the stack
-                baseData.addAll(tempDoubleStorageList);
-
-                // Clear excess elements
-                if (baseData.size() > CONFIG.baseDataSize)
-                    baseData.subList(0, baseData.size() - CONFIG.baseDataSize).clear();
+                database_prices.add(Double.parseDouble(entryList[0]));
+                database_accounts.add(entryList[1]);
+                database_itemIDs.add(entryList[2]);
             }
         }
 
-        // Import duplicates
+        // Import hourly mean and median values
         if (!splitLine[3].equals("-")) {
-            if (duplicates.isEmpty()) {
-                Collections.addAll(duplicates, splitLine[3].split(","));
-            } else {
-                // Make a copy of the list and clear it, as we need these elements to be on the top of the stack
-                ArrayList<String> tempStringStorageList = new ArrayList<>(duplicates);
-                duplicates.clear();
+            for (String entry : splitLine[3].split("\\|")) {
+                String[] entryList = entry.split(",");
 
-                // Add values found in files to the bottom of the stack
-                Collections.addAll(duplicates, splitLine[3].split(","));
-
-                // Add new values back to the list, but on top of the stack
-                duplicates.addAll(tempStringStorageList);
-
-                // Clear excess elements
-                if (duplicates.size() > CONFIG.duplicatesSize)
-                    duplicates.subList(0, duplicates.size() - CONFIG.duplicatesSize).clear();
-            }
-        }
-
-        // Safety measure for converting from one database type to another
-        // TODO: remove this clause but not the contents
-        if (splitLine.length > 5) {
-            // Import hourly mean
-            if (!splitLine[4].equals("-")) {
-                if (hourlyMean.isEmpty()) {
-                    for (String value : splitLine[4].split(",")) {
-                        hourlyMean.add(Double.parseDouble(value));
-                    }
-                } else {
-                    // Make a copy of the list and clear it, as we need these elements to be on the top of the stack
-                    ArrayList<Double> tempDoubleStorageList = new ArrayList<>(hourlyMean);
-                    hourlyMean.clear();
-
-                    // Add values found in files to the bottom of the stack
-                    for (String value : splitLine[4].split(",")) {
-                        hourlyMean.add(Double.parseDouble(value));
-                    }
-
-                    // Add new values back to the list, but on top of the stack
-                    hourlyMean.addAll(tempDoubleStorageList);
-
-                    // Clear excess elements
-                    if (hourlyMean.size() > CONFIG.dataEntryCycleLimit)
-                        hourlyMean.subList(0, hourlyMean.size() - CONFIG.dataEntryCycleLimit).clear();
-                }
-            }
-        }
-
-        // Safety measure for converting from one database type to another
-        // TODO: remove this clause but not the contents
-        if (splitLine.length > 6) {
-            // Import hourly median
-            if (!splitLine[5].equals("-")) {
-                if (hourlyMedian.isEmpty()) {
-                    for (String value : splitLine[5].split(",")) {
-                        hourlyMedian.add(Double.parseDouble(value));
-                    }
-                } else {
-                    // Make a copy of the list and clear it, as we need these elements to be on the top of the stack
-                    ArrayList<Double> tempDoubleStorageList = new ArrayList<>(hourlyMedian);
-                    hourlyMedian.clear();
-
-                    // Add values found in files to the bottom of the stack
-                    for (String value : splitLine[5].split(",")) {
-                        hourlyMedian.add(Double.parseDouble(value));
-                    }
-
-                    // Add new values back to the list, but on top of the stack
-                    hourlyMedian.addAll(tempDoubleStorageList);
-
-                    // Clear excess elements
-                    if (hourlyMedian.size() > CONFIG.dataEntryCycleLimit)
-                        hourlyMedian.subList(0, hourlyMedian.size() - CONFIG.dataEntryCycleLimit).clear();
-                }
-            }
-        }
-
-        // Safety measure for converting from one database type to another
-        // TODO: remove this clause but not the contents
-        if (splitLine.length > 7) {
-            // Import account names
-            if (!splitLine[6].equals("-")) {
-                if (accounts.isEmpty()) {
-                    Collections.addAll(accounts, splitLine[6].split(","));
-                } else {
-                    // Make a copy of the list and clear it, as we need these elements to be on the top of the stack
-                    ArrayList<String> tempStringStorageList = new ArrayList<>(accounts);
-                    accounts.clear();
-
-                    // Add values found in files to the bottom of the stack
-                    Collections.addAll(accounts, splitLine[6].split(","));
-
-                    // Add new values back to the list, but on top of the stack
-                    accounts.addAll(tempStringStorageList);
-
-                    // Clear excess elements
-                    if (accounts.size() > CONFIG.accountNameSize)
-                        accounts.subList(0, accounts.size() - CONFIG.accountNameSize).clear();
-                }
+                database_hourlyMean.add(Double.parseDouble(entryList[0]));
+                database_hourlyMedian.add(Double.parseDouble(entryList[1]));
             }
         }
     }
@@ -553,72 +393,44 @@ public class DataEntry {
     public String JSONController() {
         //  Name: JSONController()
         //  Date created: 31.12.2017
-        //  Last modified: 01.01.2018
+        //  Last modified: 26.01.2018
         //  Description: Decides whether to make a JSON package or not
 
-        // Run every x cycles AND if there's enough data
-        if (cycleCount < CONFIG.dataEntryCycleLimit)
-            return null;
-        else if (hourlyMedian.isEmpty() || hourlyMean.isEmpty())
-            return null;
+        // Run every Xth cycle
+        if (cycleCount < CONFIG.dataEntryCycleLimit) return null;
+        // Run if there's any data
+        if (database_hourlyMedian.isEmpty()) return null;
 
-        // My attempt at fixing invalid prices
-        if (newItemsFoundInCycle > 10) {
-            // If more than 30% have been discarded
-            if (oldItemsDiscardedInCycle / newItemsFoundInCycle * 100 > 90) {
-                // Update the entry
-                discards += 3;
-            }
-        }
+        // If more items were removed than added and at least 6 were removed, update counter by 0.1
+        if (newItem_counter > 0 && oldItem_counter / newItem_counter * 100.0 > 50 && oldItem_counter > 5)
+            threshold_multiplier += 0.1;
+        else if (newItem_counter > 0 && threshold_multiplier > -1)
+            threshold_multiplier -= 0.1;
 
-        if (discards > 0) discards--;
+        // Don't let it grow infinitely
+        if (threshold_multiplier > 7) threshold_multiplier -= 0.2;
 
-        // Display a warning in the console if the item has had more than 3 cycles with problematic discards
-        if (discards > 7) {
-            System.out.println("[INFO][" + key + "] Odd discard ratio: " + newItemsFoundInCycle + "/" +
-                    oldItemsDiscardedInCycle + " (add/discard); counter: " + discards);
-
-            if (discards < 50) {
-                discards = 100;
-            } else if (discards < 95) {
-                discards = 0;
-            }
-        }
+        // Display a warning in the console
+        if (oldItem_counter / newItem_counter * 100.0 > 50 && oldItem_counter > 5)
+            System.out.println("[WARN][" + key + "] " + newItem_counter + "/" + oldItem_counter
+                    + " (new/old); multi: " + threshold_multiplier);
 
         // Add new items to total counter
-        totalCount += newItemsFoundInCycle - oldItemsDiscardedInCycle;
-        if (totalCount < 0) totalCount = 0;
-
-        return buildJSONPackage();
-    }
-
-    private String buildJSONPackage() {
-        //  Name: buildJSONPackage()
-        //  Date created: 06.12.2017
-        //  Last modified: 01.01.2018
-        //  Description: Creates a JSON-encoded string of hourly medians
-
-        // Make a copy so the original order persists and sort the entries in growing order
-        ArrayList<Double> tempMedianList = new ArrayList<>();
-        tempMedianList.addAll(hourlyMedian);
-        Collections.sort(tempMedianList);
+        total_counter += newItem_counter - oldItem_counter;
+        if (total_counter < 0) total_counter = 0;
 
         // Form the return JSON string
         String JSONKey = key.substring(key.indexOf("|", key.indexOf("|") + 1) + 1);
         String returnString = "\"" + JSONKey + "\":{" +
-                "\"mean\":" + findMean(hourlyMean) + "," +
-                "\"median\":" + findMedian(tempMedianList) + "," +
-                "\"count\":" + totalCount + "," +
-                "\"inc\":" + newItemsFoundInCycle + "," +
-                "\"dec\":" + oldItemsDiscardedInCycle + "}";
-
-        // Clear counters
-        hourlyMean.clear();
-        hourlyMedian.clear();
+                "\"mean\":" + findMean(database_hourlyMean) + "," +
+                "\"median\":" + findMedian(database_hourlyMedian) + "," +
+                "\"count\":" + total_counter + "," +
+                "\"inc\":" + newItem_counter + "," +
+                "\"dec\":" + oldItem_counter + "}";
 
         // Clear the counters
-        this.newItemsFoundInCycle = 0;
-        this.oldItemsDiscardedInCycle = 0;
+        newItem_counter = 0;
+        oldItem_counter = 0;
 
         return returnString;
     }
@@ -644,7 +456,7 @@ public class DataEntry {
     }
 
     public long getCount() {
-        return totalCount;
+        return total_counter;
     }
 
     public static boolean getCycleState() {

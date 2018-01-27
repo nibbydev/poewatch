@@ -5,7 +5,7 @@ import static com.sanderh.Main.RELATIONS;
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 21.01.2018
+    //  Last modified: 23.01.2018
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
     private String priceType, itemType;
@@ -330,7 +330,7 @@ public class Item extends Mappers.BaseItem {
     private void checkSixLink() {
         //  Name: checkSixLink()
         //  Date created: 28.11.2017
-        //  Last modified: 21.01.2018
+        //  Last modified: 23.01.2018
         //  Description: Since 6-links are naturally more expensive, assign them a separate key
 
         // Filter out items that can have 6 links
@@ -370,8 +370,6 @@ public class Item extends Mappers.BaseItem {
             addKey("|6L");
         else if (maxLinks == 5)
             addKey("|5L");
-        //else
-        //    addKey("|0L"); //TODO: removed this
     }
 
     private void checkSpecialItemVariant() {

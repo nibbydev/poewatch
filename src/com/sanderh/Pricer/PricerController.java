@@ -132,7 +132,7 @@ public class PricerController {
     private void ReadBlackListFromFile(){
         //  Name: ReadBlackListFromFile
         //  Date created: 25.12.2017
-        //  Last modified: 15.01.2018
+        //  Last modified: 23.01.2018
         //  Description: Loads in list of keys that should be removed from the database
 
         try (BufferedReader reader = defineReader(new File("./blacklist.txt"))) {
@@ -140,9 +140,7 @@ public class PricerController {
 
             String line;
 
-            while ((line = reader.readLine()) != null) {
-                keyBlackList.add(line);
-            }
+            while ((line = reader.readLine()) != null) keyBlackList.add(line);
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -152,7 +150,7 @@ public class PricerController {
     public void readCurrencyFromFile() {
         //  Name: readCurrencyFromFile()
         //  Date created: 06.12.2017
-        //  Last modified: 15.01.2018
+        //  Last modified: 23.01.2018
         //  Description: Reads data from file and adds to list, reads only lines that have "currency:orbs" in them
         //               Should only be called on initial object creation
 
@@ -169,8 +167,7 @@ public class PricerController {
 
                 if (keyBlackList.contains(key)) continue;
 
-                if (key.contains("currency:orbs"))
-                    currencyMap.put(key, new DataEntry(line));
+                if (key.contains("currency:orbs")) currencyMap.put(key, new DataEntry(line));
             }
 
         } catch (IOException ex) {
@@ -195,11 +192,10 @@ public class PricerController {
     private void writeJSONToFile() {
         //  Name: writeJSONToFile2()
         //  Date created: 06.12.2017
-        //  Last modified: 02.01.2018
+        //  Last modified: 23.01.2018
         //  Description: Basically writes JSON string to file
 
-        if (JSONParcel.isEmpty())
-            return;
+        if (JSONParcel.isEmpty()) return;
 
         // Sort the list of JSON-encoded packages so they can be written to file
         Collections.sort(JSONParcel);
@@ -280,15 +276,11 @@ public class PricerController {
     // New methods ///
     //////////////////
 
-    public void readFileParseFileWriteFile() {
+    private void readFileParseFileWriteFile() {
         //  Name: readFileParseFileWriteFile()
         //  Date created: 06.12.2017
-        //  Last modified: 18.01.2018
+        //  Last modified: 26.01.2018
         //  Description: reads data from file (line by line), parses it and writes it back
-
-        ArrayList<String> currencyKeysWrittenToFile = new ArrayList<>();
-        String line, key;
-        DataEntry entry;
 
         File inputFile = new File("./database.txt");
         File outputFile = new File("./database.temp");
@@ -299,12 +291,7 @@ public class PricerController {
         // If there was a problem opening the writer, something seriously went wrong. Close the reader if necessary and
         // return from the method.
         if (writer == null) {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException ex) {
-                }
-            }
+            if (reader != null) try { reader.close(); } catch (IOException ex) { ex.printStackTrace(); }
             return;
         }
 
@@ -312,48 +299,45 @@ public class PricerController {
             // Write startParameters to file
             writer.write(saveStartParameters());
 
-            // Write currency data to file
-            for (String key2 : currencyMap.keySet()) {
-                currencyKeysWrittenToFile.add(key2);
-                entry = currencyMap.get(key2);
+            // Write everything in currencyMap to file
+            for (String key : currencyMap.keySet()) {
+                DataEntry entry = currencyMap.get(key);
                 entry.cycle();
                 packageJSON(entry);
                 writer.write(entry.buildLine());
             }
 
-            // Read, parse and write file
+            // Re-write everything in file
             if (reader != null) {
-                while ((line = reader.readLine()) != null) {
-                    key = line.substring(0, line.indexOf("::"));
+                // Read in the first line which holds version info
+                reader.readLine();
 
-                    // If new values have been found, append them to the line and write it to the file, else just write
-                    // line to file
-                    if (keyBlackList.contains(key))
-                        continue;
-                    else if (currencyMap.containsKey(key))
-                        continue;
-                    else if (entryMap.containsKey(key))
-                        entry = entryMap.get(key);
-                    else if (key.length() == 5)
-                        continue;
-                    else
-                        entry = new DataEntry();
+                String line;
+                DataEntry entry;
+                while ((line = reader.readLine()) != null) {
+                    String key = line.substring(0, line.indexOf("::"));
+
+                    // Ignore some items
+                    if (keyBlackList.contains(key)) continue;
+                    // Ignore currency that's stored in a separate list
+                    if (currencyMap.containsKey(key)) continue;
+
+                    // Create an instance of DataEntry related to the item
+                    if (entryMap.containsKey(key)) entry = entryMap.get(key);
+                    else entry = new DataEntry();
 
                     entry.cycle(line);
                     packageJSON(entry);
                     entryMap.remove(key);
-
-                    // Skip currency entries that have already been written to file
-                    if (currencyKeysWrittenToFile.contains(key)) continue;
 
                     // Write line to temp output file
                     writer.write(entry.buildLine());
                 }
             }
 
-            // Write leftover item data to file
-            for (String key2 : entryMap.keySet()) {
-                entry = entryMap.get(key2);
+            // Write new data to file (not found in data file)
+            for (String key : entryMap.keySet()) {
+                DataEntry entry = entryMap.get(key);
                 entry.cycle();
                 packageJSON(entry);
                 writer.write(entry.buildLine());
@@ -363,8 +347,7 @@ public class PricerController {
             ex.printStackTrace();
         } finally {
             try {
-                if (reader != null)
-                    reader.close();
+                if (reader != null) reader.close();
                 writer.flush();
                 writer.close();
             } catch (IOException ex) {
@@ -417,7 +400,7 @@ public class PricerController {
     private void loadStartParameters(String line) {
         //  Name: loadStartParameters()
         //  Date created: 26.12.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 27.01.2018
         //  Description: Parses whatever data was saved in the database file's first line
 
         String[] splitLine = line.split("::");
@@ -425,7 +408,7 @@ public class PricerController {
         // First parameter is the version of the config, I suppose
         switch (splitLine[0]) {
             // Version 00000
-            case "00000":
+            case "00001":
                 // 0 - version nr
                 // 1 - last build/write time
                 // 2 - cycle counter
@@ -443,12 +426,12 @@ public class PricerController {
     private String saveStartParameters() {
         //  Name: saveStartParameters()
         //  Date created: 26.12.2017
-        //  Last modified: 26.12.2017
+        //  Last modified: 22.01.2018
         //  Description: Gathers some data and makes start parameters that will be saved in the database file
 
         String builder;
 
-        builder = "00000"
+        builder = "00001"
                 + "::"
                 + System.currentTimeMillis()
                 + "::"
