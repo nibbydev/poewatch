@@ -11,7 +11,7 @@ import static com.sanderh.Main.RELATIONS;
 public class DataEntry {
     //  Name: DataEntry
     //  Date created: 05.12.2017
-    //  Last modified: 26.01.2018
+    //  Last modified: 30.01.2018
     //  Description: An object that stores an item's price data
 
     // TODO: instead of oldItem_counter have a percentage?
@@ -142,7 +142,7 @@ public class DataEntry {
             if (price > 500000.0 || price < 0.001) continue;
 
             // Add values to the front of the lists
-            database_prices.add(0, Math.round(price * 1000.0) / 1000.0);
+            database_prices.add(0, Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
             database_itemIDs.add(0, id);
             database_accounts.add(0, account);
 
@@ -204,7 +204,7 @@ public class DataEntry {
     private void cap() {
         //  Name: cap
         //  Date created: 26.01.2018
-        //  Last modified: 26.01.2018
+        //  Last modified: 30.01.2018
         //  Description: Makes sure lists don't exceed X amount of elements
 
         // If an array has more elements than specified, remove everything from the possible last index up until
@@ -226,7 +226,7 @@ public class DataEntry {
     private double findMean(ArrayList<Double> list) {
         //  Name: findMean
         //  Date created: 12.12.2017
-        //  Last modified: 26.01.2018
+        //  Last modified: 28.01.2018
         //  Description: Finds the mean value of an array
 
         double mean = 0.0;
@@ -234,24 +234,50 @@ public class DataEntry {
         // Add up values to calculate mean
         for (Double i : list) mean += i;
 
-        return Math.round(mean / list.size() * 1000.0) / 1000.0;
+        return Math.round(mean / list.size() * CONFIG.pricePrecision) / CONFIG.pricePrecision;
     }
 
+    /**
+     * Finds the median of the given array
+     * @param list Unsorted array of doubles
+     * @return Median value of the list, shifted by however much specified in the config
+     */
     private double findMedian(ArrayList<Double> list) {
         //  Name: findMedian
         //  Date created: 12.12.2017
-        //  Last modified: 26.12.2017
-        //  Description: Finds the median value of an array. Has 1/3 shift to left
+        //  Last modified: 28.12.2017
+        //  Description: Finds the median value of an array. Has a shift to left
 
         // Precaution
         if (list.isEmpty()) return 0;
 
         // Make a copy so the original order persists and sort new array
-        ArrayList<Double> tempList = new ArrayList<>();
-        tempList.addAll(list);
+        ArrayList<Double> tempList = new ArrayList<>(list);
         Collections.sort(tempList);
 
-        return Math.round(tempList.get(tempList.size() / 3) * 1000.0) / 1000.0;
+        return Math.round(tempList.get(tempList.size() / CONFIG.medianLeftShift) * CONFIG.pricePrecision) / CONFIG.pricePrecision;
+    }
+
+    /**
+     * Finds the mode of the given array
+     * @param list Unsorted array of doubles
+     * @return Most frequently occurring value in the list
+     */
+    private double findMode(ArrayList<Double> list) {
+        double maxValue = 0, maxCount = 0;
+
+        for (double value_1 : list) {
+            int count = 0;
+
+            for (double value_2 : list) if (value_2 == value_1) ++count;
+
+            if (count > maxCount) {
+                maxCount = count;
+                maxValue = value_1;
+            }
+        }
+
+        return maxValue;
     }
 
     /////////////////
@@ -261,7 +287,7 @@ public class DataEntry {
     public String buildLine() {
         //  Name: buildLine()
         //  Date created: 06.12.2017
-        //  Last modified: 23.01.2018
+        //  Last modified: 30.01.2018
         //  Description: Converts this object's values into a string that's used for text-file-based storage
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -331,7 +357,7 @@ public class DataEntry {
     private void parseLine(String line) {
         //  Name: parseLine()
         //  Date created: 06.12.2017
-        //  Last modified: 26.01.2018
+        //  Last modified: 30.01.2018
         //  Description: Reads values from a string and adds them to the lists
 
         /* (Spliterator: "::")
@@ -393,7 +419,7 @@ public class DataEntry {
     public String JSONController() {
         //  Name: JSONController()
         //  Date created: 31.12.2017
-        //  Last modified: 26.01.2018
+        //  Last modified: 30.01.2018
         //  Description: Decides whether to make a JSON package or not
 
         // Run every Xth cycle
@@ -402,7 +428,7 @@ public class DataEntry {
         if (database_hourlyMedian.isEmpty()) return null;
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
-        if (newItem_counter > 0 && oldItem_counter / newItem_counter * 100.0 > 50 && oldItem_counter > 5)
+        if (newItem_counter > 0 && oldItem_counter / newItem_counter * 100.0 > 70 && oldItem_counter > 5)
             threshold_multiplier += 0.1;
         else if (newItem_counter > 0 && threshold_multiplier > -1)
             threshold_multiplier -= 0.1;
@@ -411,9 +437,9 @@ public class DataEntry {
         if (threshold_multiplier > 7) threshold_multiplier -= 0.2;
 
         // Display a warning in the console
-        if (oldItem_counter / newItem_counter * 100.0 > 50 && oldItem_counter > 5)
-            System.out.println("[WARN][" + key + "] " + newItem_counter + "/" + oldItem_counter
-                    + " (new/old); multi: " + threshold_multiplier);
+        //if (newItem_counter > 0 && oldItem_counter / newItem_counter * 100.0 > 70 && oldItem_counter > 5)
+        //    System.out.println("[WARN][" + key + "] " + newItem_counter + "/" + oldItem_counter
+        //            + " (new/old); multi: " + threshold_multiplier);
 
         // Add new items to total counter
         total_counter += newItem_counter - oldItem_counter;
@@ -422,8 +448,9 @@ public class DataEntry {
         // Form the return JSON string
         String JSONKey = key.substring(key.indexOf("|", key.indexOf("|") + 1) + 1);
         String returnString = "\"" + JSONKey + "\":{" +
-                "\"mean\":" + findMean(database_hourlyMean) + "," +
-                "\"median\":" + findMedian(database_hourlyMedian) + "," +
+                "\"mean\":" + findMean(database_prices) + "," +
+                "\"median\":" + findMedian(database_prices) + "," +
+                "\"mode\":" + findMode(database_prices) + "," +
                 "\"count\":" + total_counter + "," +
                 "\"inc\":" + newItem_counter + "," +
                 "\"dec\":" + oldItem_counter + "}";

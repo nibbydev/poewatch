@@ -1,16 +1,17 @@
 package com.sanderh;
 
+import static com.sanderh.Main.CONFIG;
 import static com.sanderh.Main.RELATIONS;
 
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem
     //  Date created: 23.11.2017
-    //  Last modified: 23.01.2018
+    //  Last modified: 28.01.2018
     //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
 
+    private volatile boolean discard = false;
     private String priceType, itemType;
     private String key = "";
-    private boolean discard = false;
     private double price;
 
     /////////////////////////////////////////////////////////
@@ -103,40 +104,35 @@ public class Item extends Mappers.BaseItem {
     private void parseNote() {
         //  Name: parseNote()
         //  Date created: 28.11.2017
-        //  Last modified: 25.12.2017
-        //  Description: Checks and formats notes (user-inputted textfields that usually contain price data)
+        //  Last modified: 28.01.2018
+        //  Description: Check and format item note (user-inputted text field that usually contain item price)
 
         String[] noteList = getNote().split(" ");
-        Double price;
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
-        if (noteList.length < 3) {
-            setDiscard();
+        if (noteList.length < 3 || !noteList[0].equals("~b/o") && !noteList[0].equals("~price")) {
+            discard = true;
             return;
-        } else if (!noteList[0].equalsIgnoreCase("~b/o")) {
-            if (!noteList[0].equalsIgnoreCase("~price")) {
-                setDiscard();
-                return;
-            }
         }
 
         // If the price has a ration then split it (eg ["5, 3"] with or ["24.3"] without a ration)
         String[] priceArray = noteList[1].split("/");
 
         // Try to figure out if price is numeric
+        Double price;
         try {
             if (priceArray.length == 1)
                 price = Double.parseDouble(priceArray[0]);
             else
                 price = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
         } catch (Exception ex) {
-            setDiscard();
+            discard = true;
             return;
         }
 
         // See if the currency type listed is valid currency type
         if (!RELATIONS.shortHandToIndex.containsKey(noteList[2])) {
-            setDiscard();
+            discard = true;
             return;
         }
 
@@ -146,9 +142,9 @@ public class Item extends Mappers.BaseItem {
         if (getTypeLine().equals("Chaos Orb")){
             setTypeLine(RELATIONS.shortHandToName.get(noteList[2]));
             priceType = "1";
-            this.price = 1 / (Math.round(price * 1000) / 1000.0);
+            this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
         } else {
-            this.price = Math.round(price * 1000) / 1000.0;
+            this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
             priceType = RELATIONS.shortHandToIndex.get(noteList[2]);
         }
     }
@@ -238,7 +234,7 @@ public class Item extends Mappers.BaseItem {
     private void checkGemInfo() {
         //  Name: checkGemInfo()
         //  Date created: 28.11.2017
-        //  Last modified: 21.01.2018
+        //  Last modified: 30.01.2018
         //  Description: Checks gem-specific information
 
         int lvl = -1;
@@ -260,71 +256,29 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Begin the long block that filters out gems based on a number of properties
-        if (key.contains("Empower Support") || key.contains("Enlighten Support") || key.contains("Enhance Support")) {
-            if (isCorrupted()) {
-                if (lvl == 4 || lvl == 3)
-                    quality = 0;
-                else {
-                    setDiscard();
-                    return;
-                }
-            } else {
-                if (quality < 10)
-                    quality = 0;
-                else if (quality > 17)
-                    quality = 20;
-                else {
-                    setDiscard();
-                    return;
-                }
-            }
+        if (key.contains("Empower") || key.contains("Enlighten") || key.contains("Enhance")) {
+            if (isCorrupted()) quality = 0;
+            else if (quality < 10) quality = 0;
+            else if (quality < 20) quality = 10;
+            else if (quality > 20) quality = 20;
+
+            if (lvl == 3) quality = 0;
         } else {
-            if (isCorrupted()) {
-                if (key.contains("Vaal ")) {
-                    if (lvl < 10 && quality == 20)
-                        lvl = 0;
-                    else if (lvl == 20 && quality == 20)
-                        ;
-                    else if (lvl == 20 && quality < 10)
-                        quality = 0;
-                    else {
-                        setDiscard();
-                        return;
-                    }
-                } else {
-                    if (lvl == 21 && quality == 20)
-                        ;
-                    else if (lvl == 20 && quality == 23)
-                        ;
-                    else if (lvl == 20 && quality == 20)
-                        ;
-                    else {
-                        setDiscard();
-                        return;
-                    }
-                }
-            } else {
-                if (lvl < 10 && quality == 20)
-                    lvl = 0;
-                else if (lvl == 20 && quality == 20)
-                    ;
-                else if (lvl == 20 && quality < 10)
-                    quality = 0;
-                else {
-                    setDiscard();
-                    return;
-                }
-            }
+            if (lvl < 10) lvl = 1;
+            else if (lvl < 20) lvl = 10;
+
+            if (quality < 10) quality = 0;
+            else if (quality < 20) quality = 10;
+            else if (quality == 21) quality = 20;
+            else if (quality > 21) quality = 23;
         }
 
         // Add the lvl and key to database key
         addKey("|" + lvl + "|" + quality);
 
         // Add corruption notifier
-        if (isCorrupted())
-            addKey("|1");
-        else
-            addKey("|0");
+        if (isCorrupted()) addKey("|1");
+        else addKey("|0");
     }
 
     private void checkSixLink() {
@@ -545,15 +499,16 @@ public class Item extends Mappers.BaseItem {
 
         String asString = getCategory().toString();
 
-        if (asString.contains("=")) {
-            // Removes brackets: "{armour=[gloves]}" -> "armour=[gloves]"
-            asString = asString.substring(1, asString.length() - 1);
-            // Split: "armour=[gloves]" -> {"armour", "[gloves]"}
-            String[] splitString = asString.split("=");
-            // Add "armour" to final string, remove brackets around string (eg: "[gloves]" -> "gloves") and add to final string
-            itemType = splitString[0] + ":" + splitString[1].substring(1, splitString[1].length() - 1);
+        // "{armour=[gloves]}" -> "armour=[gloves]"
+        asString = asString.substring(1, asString.length() - 1);
+
+        // "armour=[gloves]" -> {"armour", "[gloves]"}
+        String[] splitString = asString.split("=");
+
+        if (splitString[1].equals("[]")) {
+            itemType = splitString[0];
         } else {
-            itemType = asString;
+            itemType = splitString[0] + ":" + splitString[1].substring(1, splitString[1].length() - 1);
         }
     }
 

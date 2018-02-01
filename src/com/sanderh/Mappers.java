@@ -216,7 +216,7 @@ public class Mappers {
         // {"category": "jewels"}
         // {"category": {"armour": ["gloves"]}}
         private Object category;
-        private boolean enchanted = false;
+        private Object enchantMods;
 
         ///////////////////////
         // Getters / Setters //
@@ -367,12 +367,12 @@ public class Mappers {
             return category;
         }
 
-        public void setEnchanted(Object enchantMods) {
-            this.enchanted = true;
+        public void setEnchantMods(Object enchantMods) {
+            this.enchantMods = enchantMods;
         }
 
         public boolean isEnchanted() {
-            return enchanted;
+            return enchantMods != null;
         }
     }
 }
