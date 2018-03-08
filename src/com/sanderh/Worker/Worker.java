@@ -14,12 +14,10 @@ import java.util.regex.Pattern;
 
 import static com.sanderh.Main.*;
 
+/**
+ * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
+ */
 public class Worker extends Thread {
-    //  Name: Worker
-    //  Date created: 21.11.2017
-    //  Last modified: 24.12.2017
-    //  Description: Contains a worker used to download and parse a batch from the PoE API. Runs in a separate loop.
-
     private final Object monitor = new Object();
     private volatile boolean flagLocalRun = true;
     private String job;
@@ -29,12 +27,10 @@ public class Worker extends Thread {
     // Actually useful methods //
     /////////////////////////////
 
+    /**
+     * Contains main loop. Checks for new jobs and processes them
+     */
     public void run() {
-        //  Name: run()
-        //  Date created: 21.11.2017
-        //  Last modified: 24.12.2017
-        //  Description: Contains the main loop of the worker
-
         String replyJSONString;
         Mappers.APIReply reply;
 
@@ -70,26 +66,23 @@ public class Worker extends Thread {
         }
     }
 
+    /**
+     * Stops current Worker's process
+     */
     public void stopWorker() {
-        //  Name: stopWorker()
-        //  Date created: 11.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Stops current Worker's process
-
         this.flagLocalRun = false;
         wakeLocalMonitor();
     }
 
-    /////////////////////////////
-    // Primary private methods //
-    /////////////////////////////
+    ////////////////////////////////////
+    // Primary download/parse methods //
+    ////////////////////////////////////
 
+    /**
+     * Downloads data from the API
+     * @return Whole stash batch as a string
+     */
     private String downloadData() {
-        //  Name: downloadData()
-        //  Date created: 21.11.2017
-        //  Last modified: 23.12.2017
-        //  Description: Method that downloads data from the API
-
         StringBuilder stringBuilderBuffer = new StringBuilder();
         byte[] byteBuffer = new byte[CONFIG.downloadChunkSize];
         boolean regexLock = true;
@@ -181,12 +174,12 @@ public class Worker extends Thread {
         return stringBuilderBuffer.toString();
     }
 
+    /**
+     * Maps JSON string to an object
+     * @param stringBuffer JSON string to be mapped
+     * @return Mapped APIReply object
+     */
     private Mappers.APIReply deSerializeJSONString(String stringBuffer) {
-        //  Name: deSerializeJSONString()
-        //  Date created: 22.11.2017
-        //  Last modified: 17.12.2017
-        //  Description: Maps a JSON string to an object
-
         Mappers.APIReply reply;
 
         try {
@@ -204,12 +197,11 @@ public class Worker extends Thread {
         return reply;
     }
 
+    /**
+     * Sleeps for designated amount of time
+     * @param timeMS Time in milliseconds to sleep
+     */
     private void justFuckingSleep(int timeMS) {
-        //  Name: justFuckingSleep()
-        //  Date created: 02.12.2017
-        //  Last modified: 17.12.2017
-        //  Description: Sleeps for <timeMS> ms
-
         try {
             Thread.sleep(timeMS);
         } catch (InterruptedException ex) {
@@ -221,12 +213,10 @@ public class Worker extends Thread {
     //     Monitor methods     //
     /////////////////////////////
 
+    /**
+     * Sleeps until monitor object is notified
+     */
     private void waitOnMonitor() {
-        //  Name: waitOnMonitor()
-        //  Date created: 16.12.2017
-        //  Last modified: 24.12.2017
-        //  Description: Sleeps until monitor object is notified. Has 500 MS timeout
-
         synchronized (monitor) {
             try {
                 monitor.wait(500);
@@ -235,12 +225,10 @@ public class Worker extends Thread {
         }
     }
 
-    public void wakeLocalMonitor() {
-        //  Name: wakeWorkerMonitor()
-        //  Date created: 16.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Wakes Worker
-
+    /**
+     * Notifies local monitor
+     */
+    private void wakeLocalMonitor() {
         synchronized (monitor) {
             monitor.notify();
         }

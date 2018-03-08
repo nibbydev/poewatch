@@ -2,22 +2,16 @@ package com.sanderh.Pricer;
 
 import com.sanderh.Mappers;
 import com.sanderh.Item;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import javax.xml.crypto.Data;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static com.sanderh.Main.*;
 
+/**
+ * Manages CSV database
+ */
 public class PricerController {
-    //  Name: PricerController
-    //  Date created: 28.11.2017
-    //  Last modified: 18.01.2018
-    //  Description: An object that manages databases
-
     private final Map<String, DataEntry> entryMap = new HashMap<>();
     private final Map<String, DataEntry> currencyMap = new HashMap<>();
     private final ArrayList<String> JSONParcel = new ArrayList<>();
@@ -27,28 +21,22 @@ public class PricerController {
     private final Object monitor = new Object();
     private final ArrayList<String> keyBlackList = new ArrayList<>();
 
+    /**
+     * Loads data in from file on object initialization
+     */
     public PricerController() {
-        //  Name: PricerController
-        //  Date created: 25.12.2017
-        //  Last modified: 15.01.2018
-        //  Description: Used to load data in on object initialization
-
         ReadBlackListFromFile();
         readCurrencyFromFile();
     }
 
+    /**
+     * Main loop of the pricing service. Can be called whenever, only runs after specific amount of time has passed
+     */
     public void run() {
-        //  Name: run()
-        //  Date created: 11.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Main loop of the pricing service. Is called whenever a worker is assigned a new job
-
         // Run every minute (-ish)
-        if ((System.currentTimeMillis() - lastRunTime) / 1000 < CONFIG.pricerControllerSleepCycle)
-            return;
+        if ((System.currentTimeMillis() - lastRunTime) / 1000 < CONFIG.pricerControllerSleepCycle) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
-        if ((System.currentTimeMillis() - STATISTICS.getLastSuccessfulPullTime()) / 1000 > 30)
-            return;
+        if ((System.currentTimeMillis() - STATISTICS.getLastSuccessfulPullTime()) / 1000 > 30) return;
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
@@ -76,12 +64,12 @@ public class PricerController {
         flipPauseFlag();
     }
 
+    /**
+     * Adds entries to the databases
+     *
+     * @param reply APIReply object that a Worker has downloaded and deserialized
+     */
     public void parseItems(Mappers.APIReply reply) {
-        //  Name: parseItems()
-        //  Date created: 28.11.2017
-        //  Last modified: 25.12.2017
-        //  Description: Method that's used to add entries to the databases
-
         // Loop through every single item, checking every single one of them
         for (Mappers.Stash stash : reply.getStashes()) {
             for (Item item : stash.getItems()) {
@@ -112,15 +100,12 @@ public class PricerController {
         }
     }
 
+    /**
+     * Switches pause boolean from state to state and wakes monitor
+     */
     private void flipPauseFlag() {
-        //  Name: flipPauseFlag()
-        //  Date created: 21.12.2017
-        //  Last modified: 24.12.2017
-        //  Description: Switches pause boolean from state to state and wakes monitor
-
-        flagPause = !flagPause;
-
         synchronized (monitor) {
+            flagPause = !flagPause;
             monitor.notifyAll();
         }
     }
@@ -129,12 +114,10 @@ public class PricerController {
     // Methods used to interface databases //
     /////////////////////////////////////////
 
-    private void ReadBlackListFromFile(){
-        //  Name: ReadBlackListFromFile
-        //  Date created: 25.12.2017
-        //  Last modified: 23.01.2018
-        //  Description: Loads in list of keys that should be removed from the database
-
+    /**
+     * Loads in list of keys that should be removed from the database during program start
+     */
+    private void ReadBlackListFromFile() {
         try (BufferedReader reader = defineReader(new File("./blacklist.txt"))) {
             if (reader == null) return;
 
@@ -147,13 +130,10 @@ public class PricerController {
         }
     }
 
-    public void readCurrencyFromFile() {
-        //  Name: readCurrencyFromFile()
-        //  Date created: 06.12.2017
-        //  Last modified: 23.01.2018
-        //  Description: Reads data from file and adds to list, reads only lines that have "currency:orbs" in them
-        //               Should only be called on initial object creation
-
+    /**
+     * Reads currency data from file and adds to list. Should only be called on initial object creation
+     */
+    private void readCurrencyFromFile() {
         try (BufferedReader reader = defineReader(new File("./database.txt"))) {
             if (reader == null) return;
 
@@ -175,12 +155,12 @@ public class PricerController {
         }
     }
 
+    /**
+     * Calls DataEntry to form a JSON-encoded string and appends that string to the JSON StringBuilder
+     *
+     * @param entry DataEntry object which should create a JSON package
+     */
     private void packageJSON(DataEntry entry) {
-        //  Name: packageJSON2()
-        //  Date created: 13.12.2017
-        //  Last modified: 31.12.2017
-        //  Description: Builds a JSON-string out of JSON packets
-
         // Attempt to get JSON-encoded package from database entry
         String JSONPackage = entry.JSONController();
         if (JSONPackage == null) return;
@@ -189,12 +169,10 @@ public class PricerController {
         JSONParcel.add(entry.getKey() + "::" + JSONPackage);
     }
 
+    /**
+     * Takes the CSV-format JSONParcel, converts it to a valid JSON string and writes the result to different files
+     */
     private void writeJSONToFile() {
-        //  Name: writeJSONToFile2()
-        //  Date created: 06.12.2017
-        //  Last modified: 23.01.2018
-        //  Description: Basically writes JSON string to file
-
         if (JSONParcel.isEmpty()) return;
 
         // Sort the list of JSON-encoded packages so they can be written to file
@@ -244,6 +222,9 @@ public class PricerController {
                 // Write pack
                 writer.write(pack, 0, pack.length());
 
+                // Flush output
+                writer.flush();
+
                 // Set new history variables
                 lastLeague = league;
                 lastType = type;
@@ -253,6 +234,11 @@ public class PricerController {
             if (writer != null) {
                 // Add closing bracket to JSON
                 writer.write("}", 0, 1);
+
+                // idk man
+                if (lastLeague.equals("Standard"))
+                    writer.write("}", 0, 1);
+
                 // Flush output
                 writer.flush();
             }
@@ -276,6 +262,33 @@ public class PricerController {
     // New methods ///
     //////////////////
 
+    private boolean checkKey(String key) {
+        String[] splitKey = key.split("\\|");
+
+        // Abyss|gems:vaal|Vaal Lightning Warp|4|1|20|1
+        if (splitKey[3].equals("4")) {
+            int lvl = Integer.parseInt(splitKey[4]);
+            int quality = Integer.parseInt(splitKey[5]);
+            String cor = splitKey[6];
+
+            if (key.contains("Empower") || key.contains("Enlighten") || key.contains("Enhance")) {
+                return false;
+            } else if (key.contains("Vaal ")) {
+                // Allow only if its "vaal" and is corrupted
+                return cor.equals("0");
+            } else if (cor.equals("1")) {
+                // If gem is not vaal gem and is corrupted, remove if
+                if (lvl < 20 && quality > 20) return true;
+                else if (lvl == 21 && quality == 10) return true;
+                else if (lvl < 20 && quality < 20) return true;
+            }
+
+            return (lvl > 21 || quality > 23);
+        }
+
+        return false;
+    }
+
     private void readFileParseFileWriteFile() {
         //  Name: readFileParseFileWriteFile()
         //  Date created: 06.12.2017
@@ -291,7 +304,11 @@ public class PricerController {
         // If there was a problem opening the writer, something seriously went wrong. Close the reader if necessary and
         // return from the method.
         if (writer == null) {
-            if (reader != null) try { reader.close(); } catch (IOException ex) { ex.printStackTrace(); }
+            if (reader != null) try {
+                reader.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
             return;
         }
 
@@ -317,8 +334,15 @@ public class PricerController {
                 while ((line = reader.readLine()) != null) {
                     String key = line.substring(0, line.indexOf("::"));
 
+                    /*
+                    if (checkKey(key)) {
+                        System.out.println("removed: " + key);
+                        continue;
+                    }
+                     */
+
                     // Ignore some items
-                    if (keyBlackList.contains(key)) continue;
+                    // if (keyBlackList.contains(key)) continue;
                     // Ignore currency that's stored in a separate list
                     if (currencyMap.containsKey(key)) continue;
 

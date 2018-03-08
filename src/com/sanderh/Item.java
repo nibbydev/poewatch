@@ -39,13 +39,15 @@ public class Item extends Mappers.BaseItem {
 
         // Make database key and find item type
         formatNameAndItemType();
+        if (discard)
+            return;
 
         switch (getFrameType()) {
             case 0: // Normal
             case 1: // Magic
             case 2: // Rare
                 if (!itemType.contains("maps")) {
-                    setDiscard();
+                    discard = true;
                     return;
                 }
 
@@ -64,8 +66,10 @@ public class Item extends Mappers.BaseItem {
 
             // Filter out chaos orbs
             case 5:
-                if(getName().equals("Chaos Orb"))
-                    setDiscard();
+                if (getName().equals("Chaos Orb")) {
+                    discard = true;
+                    return;
+                }
 
             default:
                 checkSixLink();
@@ -82,22 +86,22 @@ public class Item extends Mappers.BaseItem {
 
         if (getNote().equals("")) {
             // Filter out items without prices
-            setDiscard();
+            discard = true;
         } else if (getFrameType() == 1 || getFrameType() == 2 || getFrameType() == 7) {
             // Filter out unpriceable items
-            setDiscard();
+            discard = true;
         } else if (!isIdentified()) {
             // Filter out unidentified items
-            setDiscard();
+            discard = true;
         } else if (getLeague().contains("SSF")) {
             // Filter out SSF leagues as trading there is disabled
-            setDiscard();
+            discard = true;
         } else if (getLeague().equals("false")) {
             // This is a bug in the API
-            setDiscard();
+            discard = true;
         } else if (isEnchanted()) {
             // Enchanted items usually have a much, much higher price
-            setDiscard();
+            discard = true;
         }
     }
 
@@ -139,7 +143,7 @@ public class Item extends Mappers.BaseItem {
         // Add currency type to item
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
-        if (getTypeLine().equals("Chaos Orb")){
+        if (getTypeLine().equals("Chaos Orb")) {
             setTypeLine(RELATIONS.shortHandToName.get(noteList[2]));
             priceType = "1";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
@@ -166,7 +170,7 @@ public class Item extends Mappers.BaseItem {
         switch (itemType) {
             case "currency":
                 // Prophecy items have the same icon category as currency
-                if(getFrameType() == 8)
+                if (getFrameType() == 8)
                     itemType += ":prophecy";
                 else if (iconType.equals("divination") || iconType.equals("currency"))
                     itemType += ":orbs";
@@ -175,7 +179,7 @@ public class Item extends Mappers.BaseItem {
                 break;
 
             case "gems":
-                switch (iconType){
+                switch (iconType) {
                     case "vaalgems":
                         itemType += ":vaal";
                         break;
@@ -193,7 +197,7 @@ public class Item extends Mappers.BaseItem {
                     if (getFrameType() == 3) {
                         // Unique IF: itemType="maps", iconType="maps", frameType=3
                         itemType += ":unique";
-                    } else if (getProperties() == null){
+                    } else if (getProperties() == null) {
                         // Fragment IF: itemType="maps", iconType="maps", frameType=0, properties=null
                         itemType += ":fragment";
                     } else {
@@ -210,6 +214,10 @@ public class Item extends Mappers.BaseItem {
 
             case "cards":
                 itemType = "divinationcards";
+                break;
+
+            case "monsters":
+                discard = true;
                 break;
         }
 
@@ -251,33 +259,43 @@ public class Item extends Mappers.BaseItem {
 
         // If quality or lvl was not found, return
         if (lvl == -1) {
-            setDiscard();
+            discard = true;
             return;
         }
 
+        boolean tempCorruptionMarker = isCorrupted();
         // Begin the long block that filters out gems based on a number of properties
         if (key.contains("Empower") || key.contains("Enlighten") || key.contains("Enhance")) {
-            if (isCorrupted()) quality = 0;
-            else if (quality < 10) quality = 0;
-            else if (quality < 20) quality = 10;
-            else if (quality > 20) quality = 20;
+            if (quality < 6) quality = 0;
+            else if (quality < 16) quality = 10;
+            else if (quality >= 16) quality = 20;
 
-            if (lvl == 3) quality = 0;
+            // Quality doesn't matter for lvl 3 and 4
+            if (lvl > 2) quality = 0;
         } else {
-            if (lvl < 10) lvl = 1;
-            else if (lvl < 20) lvl = 10;
+            if (lvl < 7) lvl = 1;           // 1  = 1,2,3,4,5,6
+            else if (lvl < 19) lvl = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17,18
+            else if (lvl < 21) lvl = 20;    // 20 = 19,20
+            // 21 = 21
 
-            if (quality < 10) quality = 0;
-            else if (quality < 20) quality = 10;
-            else if (quality == 21) quality = 20;
-            else if (quality > 21) quality = 23;
+            if (quality < 7) quality = 0;           // 0  = 0,1,2,3,4,5,6
+            else if (quality < 18) quality = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17
+            else if (quality < 23) quality = 20;    // 20 = 18,19,20,21,22
+            // 23 = 23
+
+            // Gets rid of specific gems
+            if (lvl < 20 && quality > 20) quality = 20;         // |4| 1|23|1 and |4|10|23|1
+            else if (lvl == 21 && quality < 20) quality = 0;    // |4|21|10|1
+
+            if (lvl < 20 && quality < 20) tempCorruptionMarker = false;
+            if (key.contains("Vaal")) tempCorruptionMarker = true;
         }
 
         // Add the lvl and key to database key
         addKey("|" + lvl + "|" + quality);
 
         // Add corruption notifier
-        if (isCorrupted()) addKey("|1");
+        if (tempCorruptionMarker) addKey("|1");
         else addKey("|0");
     }
 
@@ -302,7 +320,7 @@ public class Item extends Mappers.BaseItem {
 
         // This was an error somehow, somewhere
         if (getSockets() == null) {
-            setDiscard();
+            discard = true;
             return;
         }
 
@@ -518,10 +536,6 @@ public class Item extends Mappers.BaseItem {
 
     public boolean isDiscard() {
         return discard;
-    }
-
-    public void setDiscard() {
-        this.discard = true;
     }
 
     public double getPrice() {

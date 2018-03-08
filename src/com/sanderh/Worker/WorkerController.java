@@ -11,13 +11,11 @@ import java.util.ArrayList;
 import static com.sanderh.Main.CONFIG;
 import static com.sanderh.Main.PRICER_CONTROLLER;
 
+/**
+ * Manages Worker objects (eg. distributing jobs, adding/removing workers)
+ */
 public class WorkerController extends Thread {
-    //  Name: WorkerController
-    //  Date created: 21.11.2017
-    //  Last modified: 23.12.2017
-    //  Description: Object that's used to manage worker objects
-
-    private volatile boolean flagLocalRun = true;
+    private volatile boolean flag_Run = true;
     private ArrayList<Worker> workerList = new ArrayList<>();
     private final Object monitor = new Object();
     private String nextChangeID;
@@ -26,20 +24,17 @@ public class WorkerController extends Thread {
     // Actually useful methods //
     /////////////////////////////
 
+    /**
+     * Contains main loop. Checks for open jobs and assigns them to workers
+     */
     public void run() {
-        //  Name: run()
-        //  Date created: 22.11.2017
-        //  Last modified: 23.12.2017
-        //  Description: Assigns jobs to workers
-
         // Run main loop while flag is up
-        while (flagLocalRun) {
-            // Sleep only if there is no job to be given out
-            if (nextChangeID == null)
-                checkMonitor();
+        while (flag_Run) {
+            // Sleep if there is no job to be given out
+            if (nextChangeID == null) waitOnMonitor();
 
             // While there's a job that needs to be given out
-            while (flagLocalRun && nextChangeID != null) {
+            while (flag_Run && nextChangeID != null) {
                 // Loop through workers
                 for (Worker worker : workerList) {
                     // Check if worker is free
@@ -48,6 +43,7 @@ public class WorkerController extends Thread {
                     worker.setJob(nextChangeID);
                     // Remove old job
                     nextChangeID = null;
+                    // Exit the topmost while loop
                     break;
                 }
 
@@ -61,40 +57,36 @@ public class WorkerController extends Thread {
                 }
             }
 
-            // Run pricer controller. As that Class has no actual loop and this method executes pretty often, pricer
+            // Run PRICER_CONTROLLER. As that Class has no actual loop and this method executes pretty often, pricer
             // controller itself has some checks whether it should run on method call or not
             PRICER_CONTROLLER.run();
         }
     }
 
-    private void checkMonitor() {
-        //  Name: checkMonitor()
-        //  Date created: 16.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Sleeps until monitor object is notified?
-
+    /**
+     * Sleeps until monitor object is notified
+     */
+    private void waitOnMonitor() {
         synchronized (monitor) {
             try {
-                monitor.wait();
+                monitor.wait(500);
             } catch (InterruptedException e) {
             }
         }
     }
 
+    /**
+     * Stops all active Workers and this object's process
+     */
     public void stopController() {
-        //  Name: stopController()
-        //  Date created: 11.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Stops all running workers and this object's process
-
-        flagLocalRun = false;
+        flag_Run = false;
 
         // Loop though every worker and call stop method
         for (Worker worker : workerList) {
             worker.stopWorker();
         }
 
-        // Wake the monitor, allowing it to exit its loop
+        // Wake the monitor that's holding up the main loop, allowing safe exit
         synchronized (getMonitor()) {
             getMonitor().notify();
         }
@@ -104,25 +96,22 @@ public class WorkerController extends Thread {
     // Methods for worker management //
     ///////////////////////////////////
 
-    public void listAllWorkers() {
-        //  Name: listAllWorkers()
-        //  Date created: 22.11.2017
-        //  Last modified: 29.11.2017
-        //  Description: Prints out all active workers and their active jobs
-
+    /**
+     * Prints out all active workers and their active jobs
+     */
+    public void printAllWorkers() {
         // Loop though every worker and print out its job
-        for (Worker workerObject : workerList) {
+        for (Worker workerObject : workerList)
             System.out.println("    " + workerObject.getIndex() + ": " + workerObject.getJob());
-        }
     }
 
+    /**
+     * Spawns new workers
+     *
+     * @param workerCount Amount of new workers to be added
+     */
     public void spawnWorkers(int workerCount) {
-        //  Name: spawnWorkers()
-        //  Date created: 21.11.2017
-        //  Last modified: 21.12.2017
-        //  Description: Creates <workerCount> amount of new workers
-
-        // Get the next available index
+        // Get the next available array index
         int nextWorkerIndex = workerList.size();
 
         // Forbid spawning over limit
@@ -144,12 +133,12 @@ public class WorkerController extends Thread {
         }
     }
 
+    /**
+     * Removes active workers
+     *
+     * @param workerCount Amount of new workers to be removed
+     */
     public void fireWorkers(int workerCount) {
-        //  Name: fireWorkers()
-        //  Date created: 22.11.2017
-        //  Last modified: 11.12.2017
-        //  Description: Removes <workerCount> amount running workers
-
         Worker lastWorker;
 
         // Get the last available index
@@ -173,12 +162,12 @@ public class WorkerController extends Thread {
     // Methods for getting a ChangeID from external sources //
     //////////////////////////////////////////////////////////
 
+    /**
+     * Get a changeID that's close to the stack top
+     *
+     * @return ChangeID as string
+     */
     public String getLatestChangeID() {
-        //  Name: getLatestChangeID()
-        //  Date created: 29.11.2017
-        //  Last modified: 21.12.2017
-        //  Description: Get a changeID that's close to the stack top
-
         String idOne = downloadChangeID("http://api.poe.ninja/api/Data/GetStats");
         String idTwo = downloadChangeID("http://poe-rates.com/actions/getLastChangeId.php");
 
@@ -189,12 +178,13 @@ public class WorkerController extends Thread {
             return idOne;
     }
 
+    /**
+     * Downloads content of ChangeID url and returns it
+     *
+     * @param url Link to ChangeID resource
+     * @return ChangeID as string
+     */
     private String downloadChangeID(String url) {
-        //  Name: downloadChangeID()
-        //  Date created: 30.11.2017
-        //  Last modified: 19.12.2017
-        //  Description: Downloads content of <url> and returns it as String
-
         String response;
 
         // Download data
@@ -221,12 +211,12 @@ public class WorkerController extends Thread {
         return response;
     }
 
+    /**
+     * Gets local ChangeID
+     *
+     * @return ChangeID as string
+     */
     public String getLocalChangeID() {
-        //  Name: getLocalChangeID()
-        //  Date created: 19.12.2017
-        //  Last modified: 19.12.2017
-        //  Description: Gets local ChangeID
-
         return downloadChangeID("http://api.poe.ovh/ChangeID");
     }
 
@@ -234,13 +224,13 @@ public class WorkerController extends Thread {
     // Getters / Setters //
     ///////////////////////
 
+    /**
+     * Sets the next change ID in the variable. If the variable has no value, set it to the newChangeID's one,
+     * otherwise compare the two and set the newest
+     *
+     * @param newChangeID ChangeID to be added
+     */
     public void setNextChangeID(String newChangeID) {
-        //  Name: getLocalChangeID()
-        //  Date created: 22.11.2017
-        //  Last modified: 21.12.2017
-        //  Description: Sets the next change ID in the variable. If the variable has no value, set it to the
-        //               newChangeID's one, otherwise compare the two and set the newest
-
         if (nextChangeID == null) {
             nextChangeID = newChangeID;
         } else if (Integer.parseInt(newChangeID.substring(newChangeID.lastIndexOf('-') + 1, newChangeID.length())) >
@@ -253,6 +243,11 @@ public class WorkerController extends Thread {
         }
     }
 
+    /**
+     * Shares monitor to other classes
+     *
+     * @return Monitor object
+     */
     public Object getMonitor() {
         return monitor;
     }

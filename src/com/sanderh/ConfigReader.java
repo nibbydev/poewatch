@@ -5,12 +5,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+ * Loads in values from file. Values can be accessed from anywhere in the script
+ */
 public class ConfigReader {
-    //  Name: ConfigReader
-    //  Date created: 20.12.2017
-    //  Last modified: 28.01.2018
-    //  Description: Object that's used to manage constants
-
     public int timeZoneOffset = 2;
     public int workerLimit = 5;
     public int downloadChunkSize = 128;
@@ -25,15 +23,20 @@ public class ConfigReader {
     public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
 
-    public ConfigReader(String file) {
-        //  Name: ConfigReader
-        //  Date created: 20.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Replaces Properties()
-
-        readFile(file);
+    /**
+     * Calls method that loads in config values on class init
+     *
+     * @param fileName Config file name in relation to local path
+     */
+    ConfigReader(String fileName) {
+        readFile(fileName);
     }
 
+    /**
+     * Reads values from CSV config file, overwrites static class values
+     *
+     * @param fileName Config file name in relation to local path
+     */
     private void readFile(String fileName) {
         //  Name: readFile
         //  Date created: 20.12.2017
@@ -48,7 +51,7 @@ public class ConfigReader {
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             while ((line = bufferedReader.readLine()) != null) {
-                if(line.equals(""))
+                if (line.equals(""))
                     continue;
                 else if (line.startsWith("#"))
                     continue;

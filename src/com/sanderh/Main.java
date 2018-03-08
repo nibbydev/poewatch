@@ -10,26 +10,30 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 public class Main {
-    public static final ConfigReader CONFIG = new ConfigReader("config.cfg");
-    public static final WorkerController WORKER_CONTROLLER = new WorkerController();
-    public static final PricerController PRICER_CONTROLLER = new PricerController();
-    public static final Statistics STATISTICS = new Statistics();
+    public static ConfigReader CONFIG;
+    public static WorkerController WORKER_CONTROLLER;
+    public static PricerController PRICER_CONTROLLER;
+    public static Statistics STATISTICS;
     public static RelationManager RELATIONS;
 
+    /**
+     * The main class. Run this to run the program
+     *
+     * @param args CLI args
+     */
     public static void main(String[] args) {
-        //  Name: main()
-        //  Date created: 21.11.2017
-        //  Last modified: 25.12.2017
-        //  Description: The main class. Run this to run the program
+        // Initialize objects
+        CONFIG = new ConfigReader("config.cfg");
+        WORKER_CONTROLLER = new WorkerController();
+        PRICER_CONTROLLER = new PricerController();
+        STATISTICS = new Statistics();
+        RELATIONS = new RelationManager();
 
         // Parse CLI parameters
         parseCommandParameters(args);
 
         // Make sure basic folder structure exists
         buildFolderFileStructure();
-
-        // Load in relations
-        RELATIONS = new RelationManager();
 
         // Start controller
         WORKER_CONTROLLER.start();
@@ -41,12 +45,12 @@ public class Main {
         WORKER_CONTROLLER.stopController();
     }
 
-    private static void parseCommandParameters (String[] args){
-        //  Name: parseCommandParameters()
-        //  Date created: 21.12.2017
-        //  Last modified: 26.12.2017
-        //  Description: Parses CLI / commandline parameters
-
+    /**
+     * Checks CLI parameters
+     *
+     * @param args Passed CLI args
+     */
+    private static void parseCommandParameters(String[] args) {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         // TODO: improve this a bit
@@ -90,12 +94,10 @@ public class Main {
         }
     }
 
+    /**
+     * Main loop. Allows for some primitive command input through the console
+     */
     private static void commandLoop() {
-        //  Name: commandLoop()
-        //  Date created: 22.11.2017
-        //  Last modified: 10.12.2017
-        //  Description: Command loop method. Allows the user some interaction with the script as it is running.
-
         String helpString = "[INFO] Available commands include:\n"
                 + "    help - display this help page\n"
                 + "    exit - exit the script safely\n"
@@ -133,12 +135,12 @@ public class Main {
         }
     }
 
+    /**
+     * Creates a timestamp prefix for console output, has support for timezones
+     *
+     * @return time in the format of "[HH:MM]"
+     */
     public static String timeStamp() {
-        //  Name: timeStamp()
-        //  Date created: 06.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Returns time in the format of [HH:MM]
-
         StringBuilder stringBuilder = new StringBuilder();
 
         // Refresh calendar (this is a bug with Calendar, I've heard)
@@ -175,12 +177,10 @@ public class Main {
     // File structure setup //
     //////////////////////////
 
+    /**
+     * Creates all missing http files and folders on startup
+     */
     private static void buildFolderFileStructure() {
-        //  Name: buildFolderFileStructure()
-        //  Date created: 18.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Creates all missing http files and folders on startup
-
         // Make sure output folders exist
         new File("./http/data").mkdirs();
 
@@ -199,6 +199,9 @@ public class Main {
         // Create ./http/data/index.php if missing
         saveResource("/http/data/", "index.php");
 
+        // Create ./http/index.php if missing
+        saveResource("/http/", "index.php");
+
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
 
@@ -206,25 +209,25 @@ public class Main {
         saveResource("/", "currencyRelations.txt");
     }
 
-    private static void saveResource(String outputDirectory, String name)  {
-        //  Name: saveResource()
-        //  Date created: 20.12.2017
-        //  Last modified: 20.12.2017
-        //  Description: Reads files from the .jar and writes them to filepath
-
+    /**
+     * Reads files from the .jar and writes them to filepath
+     *
+     * @param outputDirectory local path to directory
+     * @param name            filename
+     */
+    private static void saveResource(String outputDirectory, String name) {
         // Get the current path
         String workingDir = System.getProperty("user.dir");
         File out = new File(workingDir + outputDirectory, name);
 
         // No real need to overwrite on startup
-        if(out.exists())
-            return;
+        if (out.exists()) return;
 
         // Define I/O so they can be closed later
         BufferedInputStream reader = null;
         OutputStream writer = null;
 
-        try{
+        try {
             // Assign I/O
             reader = new BufferedInputStream(Main.class.getResourceAsStream("/com/sanderh/Resource/" + name));
             writer = new BufferedOutputStream(new FileOutputStream(out));
@@ -235,7 +238,7 @@ public class Main {
             int length;
 
             // Read and write at the same time
-            while((length = reader.read(buffer, 0, 1024)) > 0) {
+            while ((length = reader.read(buffer, 0, 1024)) > 0) {
                 writer.write(buffer, position, length);
                 position += length;
             }
@@ -246,7 +249,7 @@ public class Main {
                 if (reader != null)
                     reader.close();
 
-                if(writer != null) {
+                if (writer != null) {
                     writer.flush();
                     writer.close();
                 }
@@ -260,12 +263,12 @@ public class Main {
     // Methods extracted from commandLoop //
     ////////////////////////////////////////
 
+    /**
+     * Adds a ChangeID to the queue
+     *
+     * @param userInput The changeID to be added
+     */
     private static void commandIdAdd(String[] userInput) {
-        //  Name: commandIdAdd()
-        //  Date created: 27.11.2017
-        //  Last modified: 21.12.2017
-        //  Description: Adds a ChangeID to the queue
-
         String helpString = "[INFO] Available changeID commands:\n";
         helpString += "    'id <string>' - Add optional string to job queue\n";
         helpString += "    'id local' - Add last locally used job to queue\n";
@@ -298,12 +301,12 @@ public class Main {
         }
     }
 
+    /**
+     * Holds commands that have something to do with worker operation
+     *
+     * @param userInput Input string
+     */
     private static void commandWorker(String[] userInput) {
-        //  Name: commandWorker()
-        //  Date created: 27.11.2017
-        //  Last modified: 11.11.2017
-        //  Description: Holds commands that have something to do with worker operation
-
         String helpString = "[INFO] Available worker commands:\n";
         helpString += "    'worker list' - List all active workers\n";
         helpString += "    'worker del <count>' - Remove <count> amount of workers\n";
@@ -316,7 +319,7 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            WORKER_CONTROLLER.listAllWorkers();
+            WORKER_CONTROLLER.printAllWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
             WORKER_CONTROLLER.fireWorkers(Integer.parseInt(userInput[2]));
@@ -328,6 +331,9 @@ public class Main {
         }
     }
 
+    /**
+     * Prints about page
+     */
     private static void commandAbout() {
         //  Name: commandAbout()
         //  Date created: 13.12.2017
@@ -335,8 +341,8 @@ public class Main {
         //  Description: Prints about page
 
         String about = "Project name: PoE stash API JSON statistics generator\n"
-                + "Made by: Sander H.\n"
-                + "Licenced under MIT licence, 2017\n";
+                + "Made by: Siegrest\n"
+                + "Licenced under MIT licence, 2018\n";
         System.out.println(about);
     }
 }

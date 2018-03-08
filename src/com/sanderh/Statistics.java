@@ -5,12 +5,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * Collects various statistics
+ */
 public class Statistics {
-    //  Name: Statistics
-    //  Date created: 16.12.2017
-    //  Last modified: 20.12.2017
-    //  Description: Object meant to be used as a static statistics collector
-
     private final long startTime = System.currentTimeMillis();
     private String latestChangeID;
 
@@ -32,21 +30,19 @@ public class Statistics {
     // Main methods //
     //////////////////
 
+    /**
+     * Called from Worker's download method, enables Statistics to run at <x> download cycles
+     */
     public void cycle() {
-        //  Name: cycle
-        //  Date created: 18.12.2017
-        //  Last modified: 19.12.2017
-        //  Description: Called from Worker's download method, enables Statistics to run at <x> download cycles
-
         // Runs ever <x> cycles
         if (pullCountTotal >= 5) {
             // If there have not been any successful pulls, set status to "unreachable"
             if (pullCountTotal <= pullCountFailed)
                 setStatus(4);
-            // Else if there are a few failed pulls, set status to "questionable"
+                // Else if there are a few failed pulls, set status to "questionable"
             else if (pullCountFailed > 2)
                 setStatus(2);
-            // Else set status to "up"
+                // Else set status to "up"
             else
                 setStatus(0);
 
@@ -65,23 +61,21 @@ public class Statistics {
         this.pullCountTotal++;
     }
 
+    /**
+     * Checks some item values, adds result to counters
+     *
+     * @param item Item to be scanned
+     */
     public void parseItem(Item item) {
-        //  Name: parseItem
-        //  Date created: 16.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Checks some item values, adds result to counters
-
         if (item.isCorrupted()) itemCountCorrupted++;
         if (!item.isIdentified()) itemCountUnidentified++;
         itemCountFrameType[item.getFrameType()]++;
     }
 
+    /**
+     * Writes latest ChangeID to file
+     */
     public void writeChangeID() {
-        //  Name: writeChangeID
-        //  Date created: 18.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Writes latest ChangeID to file
-
         OutputStream fOut = null;
 
         // Writes values from statistics to file
@@ -110,12 +104,12 @@ public class Statistics {
     // Special    Setters //
     ////////////////////////
 
+    /**
+     * Updates the latest changeID and time
+     *
+     * @param latestChangeID The newest ChangeID string
+     */
     public void setLatestChangeID(String latestChangeID) {
-        //  Name: setLatestChangeID
-        //  Date created: 16.12.2017
-        //  Last modified: 21.12.2017
-        //  Description: Updates the latest changeID and time
-
         this.latestChangeID = latestChangeID;
         lastSuccessfulPullTime = System.currentTimeMillis();
         changeIDCycleCounter++;
@@ -127,12 +121,12 @@ public class Statistics {
         }
     }
 
+    /**
+     * Updates status code and status timer based on situation
+     *
+     * @param status Up/Down/Questionable/Throttled/Unreachable
+     */
     public void setStatus(int status) {
-        //  Name: setStatus
-        //  Date created: 18.12.2017
-        //  Last modified: 18.12.2017
-        //  Description: Updates status code and status timer
-
         switch (status) {
             case 0:
                 this.status = "up";

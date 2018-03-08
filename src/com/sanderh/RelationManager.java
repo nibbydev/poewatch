@@ -4,27 +4,26 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Maps indexes and shorthands to currency names and vice versa
+ */
 public class RelationManager {
-    //  Name: RelationManager()
-    //  Date created: 25.12.2017
-    //  Last modified: 25.12.2017
-    //  Description: Contains maps that connect shortened indexed versions of currency item names
-
     public Map<String, String> indexToName = new HashMap<>();
     public Map<String, String> nameToIndex = new HashMap<>();
     public Map<String, String> shortHandToIndex = new HashMap<>();
     public Map<String, String> shortHandToName = new HashMap<>();
 
-    public RelationManager () {
+    /**
+     * Reads currency relation data from file on object init
+     */
+    public RelationManager() {
         readCurrencyFromFile();
     }
 
-    public void readCurrencyFromFile() {
-        //  Name: readCurrencyFromFile()
-        //  Date created: 25.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Reads currency relation data in from file and adds it to maps
-
+    /**
+     * Reads currency relation data from file and adds it to maps
+     */
+    private void readCurrencyFromFile() {
         File file = new File("./currencyRelations.txt");
 
         // Open up the reader
