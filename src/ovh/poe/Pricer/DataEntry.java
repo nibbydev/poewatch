@@ -5,14 +5,10 @@ import ovh.poe.Main;
 
 import java.util.*;
 
+/**
+ * Price database entry object
+ */
 public class DataEntry {
-    //  Name: DataEntry
-    //  Date created: 05.12.2017
-    //  Last modified: 30.01.2018
-    //  Description: An object that stores an item's price data
-
-    // TODO: instead of oldItem_counter have a percentage?
-
     private static int cycleCount = 0;
     private long total_counter = 0;
     private int newItem_counter = 0;
@@ -30,29 +26,34 @@ public class DataEntry {
     private ArrayList<Double> database_hourlyMean = new ArrayList<>(Main.CONFIG.hourlyDataSize);
     private ArrayList<Double> database_hourlyMedian = new ArrayList<>(Main.CONFIG.hourlyDataSize);
 
+    // TODO: As there are tens of thousands of instances of this class, make the methods static
+
     //////////////////
     // Main methods //
     //////////////////
 
+    /**
+     * Used to load data in on object initialization
+     *
+     * @param line Database entry from the CSV-format file
+     */
     public DataEntry(String line) {
-        //  Name: DataEntry
-        //  Date created: 05.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Used to load data in on object initialization
-
         parseLine(line);
     }
 
+    /**
+     * This is needed to create an instance without initial parameters
+     */
     public DataEntry() {
-        // This is needed tbh
     }
 
+    /**
+     * Adds entries to the rawData and database_itemIDs lists
+     *
+     * @param item Item object
+     * @param accountName Account name of the seller
+     */
     public void add(Item item, String accountName) {
-        //  Name: add
-        //  Date created: 05.12.2017
-        //  Last modified: 26.01.2018
-        //  Description: Adds entries to the rawData and database_itemIDs lists
-
         // Assign key if missing TODO: is this needed?
         if (key == null) key = item.getKey();
 
@@ -60,12 +61,12 @@ public class DataEntry {
         rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId() + "," + accountName);
     }
 
+    /**
+     * Caller method. Calls other methods
+     *
+     * @param line Database entry from the CSV-format file
+     */
     public void cycle(String line) {
-        //  Name: cycle()
-        //  Date created: 06.12.2017
-        //  Last modified: 26.01.2018
-        //  Description: Methods that constructs the object's. Should be called at a timed interval
-
         // Load data into lists
         parseLine(line);
 
@@ -78,12 +79,10 @@ public class DataEntry {
         cap();
     }
 
+    /**
+     * Caller method. Calls other methods
+     */
     public void cycle() {
-        //  Name: cycle()
-        //  Date created: 06.12.2017
-        //  Last modified: 26.01.2018
-        //  Description: Methods that constructs the object's. Should be called at a timed interval
-
         // Build statistics and databases
         parse();
         purge();
@@ -97,12 +96,10 @@ public class DataEntry {
     // Private methods //
     /////////////////////
 
+    /**
+     * Adds values from rawData array to prices database array
+     */
     private void parse() {
-        //  Name: parse()
-        //  Date created: 29.11.2017
-        //  Last modified: 26.01.2018
-        //  Description: Method that adds values from rawData array to database_prices array
-
         // Loop through entries
         for (String entry : rawData) {
             String[] splitEntry = entry.split(",");
@@ -151,13 +148,10 @@ public class DataEntry {
         rawData.clear();
     }
 
+    /**
+     * Removes improper entries from databases
+     */
     private void purge() {
-        //  Name: purge
-        //  Date created: 29.11.2017
-        //  Last modified: 27.01.2018
-        //  Description: Method that removes entries from baseDatabase (based on statistics HashMap) depending
-        //               whether there's a large difference between the two
-
         // Precautions
         if (database_prices.isEmpty()) return;
         // If too few items have been found then it probably doesn't have a median price
@@ -185,6 +179,9 @@ public class DataEntry {
         if (weight > 0) oldItem_counter += weight;
     }
 
+    /**
+     * Calculates mean/median
+     */
     private void build() {
         // Precaution
         if (database_prices.isEmpty()) return;
@@ -198,12 +195,10 @@ public class DataEntry {
         database_hourlyMedian.add(0, median);
     }
 
+    /**
+     * Soft-caps database lists
+     */
     private void cap() {
-        //  Name: cap
-        //  Date created: 26.01.2018
-        //  Last modified: 30.01.2018
-        //  Description: Makes sure lists don't exceed X amount of elements
-
         // If an array has more elements than specified, remove everything from the possible last index up until
         // however many excess elements it has
         if (database_prices.size() > Main.CONFIG.baseDataSize) {
@@ -220,12 +215,13 @@ public class DataEntry {
         }
     }
 
+    /**
+     * Finds the mean value of an array
+     *
+     * @param list Unsorted array of doubles
+     * @return The mean of the array
+     */
     private double findMean(ArrayList<Double> list) {
-        //  Name: findMean
-        //  Date created: 12.12.2017
-        //  Last modified: 28.01.2018
-        //  Description: Finds the mean value of an array
-
         double mean = 0.0;
 
         // Add up values to calculate mean
@@ -236,6 +232,7 @@ public class DataEntry {
 
     /**
      * Finds the median of the given array
+     *
      * @param list Unsorted array of doubles
      * @return Median value of the list, shifted by however much specified in the config
      */
@@ -257,6 +254,7 @@ public class DataEntry {
 
     /**
      * Finds the mode of the given array
+     *
      * @param list Unsorted array of doubles
      * @return Most frequently occurring value in the list
      */
@@ -281,12 +279,12 @@ public class DataEntry {
     // I/O helpers //
     /////////////////
 
+    /**
+     * Converts this instance's values into CSV format
+     *
+     * @return CSV line
+     */
     public String buildLine() {
-        //  Name: buildLine()
-        //  Date created: 06.12.2017
-        //  Last modified: 30.01.2018
-        //  Description: Converts this object's values into a string that's used for text-file-based storage
-
         StringBuilder stringBuilder = new StringBuilder();
 
         // Add key
@@ -351,12 +349,12 @@ public class DataEntry {
         return stringBuilder.toString();
     }
 
+    /**
+     * Reads values from CSV line and adds them to lists
+     *
+     * @param line CSV line
+     */
     private void parseLine(String line) {
-        //  Name: parseLine()
-        //  Date created: 06.12.2017
-        //  Last modified: 30.01.2018
-        //  Description: Reads values from a string and adds them to the lists
-
         /* (Spliterator: "::")
             0 - key
             1 - stats (Spliterator: ",")
@@ -413,12 +411,12 @@ public class DataEntry {
         }
     }
 
+    /**
+     * Decides whether to make a JSON package or not
+     *
+     * @return JSON package, if present
+     */
     public String JSONController() {
-        //  Name: JSONController()
-        //  Date created: 31.12.2017
-        //  Last modified: 30.01.2018
-        //  Description: Decides whether to make a JSON package or not
-
         // Run every Xth cycle
         if (cycleCount < Main.CONFIG.dataEntryCycleLimit) return null;
         // Run if there's any data

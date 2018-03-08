@@ -3,12 +3,10 @@ package ovh.poe;
 import static ovh.poe.Main.CONFIG;
 import static ovh.poe.Main.RELATIONS;
 
+/**
+ * Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
+ */
 public class Item extends Mappers.BaseItem {
-    //  Name: NewItem
-    //  Date created: 23.11.2017
-    //  Last modified: 28.01.2018
-    //  Description: Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
-
     private volatile boolean discard = false;
     private String priceType, itemType;
     private String key = "";
@@ -18,12 +16,10 @@ public class Item extends Mappers.BaseItem {
     // Methods used to convert/calculate/extract item data //
     /////////////////////////////////////////////////////////
 
+    /**
+     * "Main" controller, calls other methods
+     */
     public void parseItem() {
-        //  Name: parseItem()
-        //  Date created: 08.12.2017
-        //  Last modified: 19.12.2017
-        //  Description: Calls other Item class related methods.
-
         // Do a few checks on the league, note and etc
         basicChecks();
         if (discard)
@@ -78,12 +74,10 @@ public class Item extends Mappers.BaseItem {
         }
     }
 
+    /**
+     * Does a few basic checks on items
+     */
     private void basicChecks() {
-        //  Name: basicChecks()
-        //  Date created: 28.11.2017
-        //  Last modified: 31.12.2017
-        //  Description: Method that does a few basic checks on items
-
         if (getNote().equals("")) {
             // Filter out items without prices
             discard = true;
@@ -105,12 +99,10 @@ public class Item extends Mappers.BaseItem {
         }
     }
 
+    /**
+     * Check and format item note (user-inputted text field that usually contain item price)
+     */
     private void parseNote() {
-        //  Name: parseNote()
-        //  Date created: 28.11.2017
-        //  Last modified: 28.01.2018
-        //  Description: Check and format item note (user-inputted text field that usually contain item price)
-
         String[] noteList = getNote().split(" ");
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
@@ -153,12 +145,10 @@ public class Item extends Mappers.BaseItem {
         }
     }
 
+    /**
+     * Format the item's full name and finds the item type
+     */
     private void formatNameAndItemType() {
-        //  Name: formatNameAndItemType()
-        //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
-        //  Description: Format the item's full name and finds the item type
-
         // Start key with league
         addKey(getLeague());
 
@@ -239,12 +229,10 @@ public class Item extends Mappers.BaseItem {
         addKey("|" + getFrameType());
     }
 
+    /**
+     * Checks gem-specific information
+     */
     private void checkGemInfo() {
-        //  Name: checkGemInfo()
-        //  Date created: 28.11.2017
-        //  Last modified: 30.01.2018
-        //  Description: Checks gem-specific information
-
         int lvl = -1;
         int quality = 0;
 
@@ -299,12 +287,10 @@ public class Item extends Mappers.BaseItem {
         else addKey("|0");
     }
 
+    /**
+     * Check if item can have a 6-link, assign them a separate key
+     */
     private void checkSixLink() {
-        //  Name: checkSixLink()
-        //  Date created: 28.11.2017
-        //  Last modified: 23.01.2018
-        //  Description: Since 6-links are naturally more expensive, assign them a separate key
-
         // Filter out items that can have 6 links
         switch (itemType) {
             case "armour:chest":
@@ -344,12 +330,10 @@ public class Item extends Mappers.BaseItem {
             addKey("|5L");
     }
 
+    /**
+     * Check if item has a variants (e.g. Vessel of Vinktar)
+     */
     private void checkSpecialItemVariant() {
-        //  Name: checkSpecialItemVariant()
-        //  Date created: 28.11.2017
-        //  Last modified: 17.12.2017
-        //  Description: Check if the item has a special variant, eg vessel of vinktar
-
         String keySuffix = "";
 
         switch (getName()) {
@@ -504,12 +488,10 @@ public class Item extends Mappers.BaseItem {
         addKey(keySuffix);
     }
 
+    /**
+     * Gets text-value(s) from category object
+     */
     private void parseCategory() {
-        //  Name: parseCategory()
-        //  Date created: 17.12.2017
-        //  Last modified: 17.12.2017
-        //  Description: Gets text-value(s) from category Object
-
         // A rough outline of what it is meant to do:
         // {"category": "jewels"}                  -> "jewels"                -> {"jewels"}             -> "jewels"
         // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour:gloves"
