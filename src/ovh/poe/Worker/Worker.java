@@ -1,8 +1,9 @@
-package com.sanderh.Worker;
+package ovh.poe.Worker;
 
-import com.sanderh.Mappers;
+import ovh.poe.Mappers;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
+import ovh.poe.Main;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,8 +12,6 @@ import java.net.URL;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.sanderh.Main.*;
 
 /**
  * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
@@ -58,7 +57,7 @@ public class Worker extends Thread {
 
                 // Parse the deserialized JSON if deserialization was successful
                 if (!reply.getNext_change_id().equals(""))
-                    PRICER_CONTROLLER.parseItems(reply);
+                    Main.PRICER_CONTROLLER.parseItems(reply);
             }
 
             // Clear the job
@@ -84,39 +83,39 @@ public class Worker extends Thread {
      */
     private String downloadData() {
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[CONFIG.downloadChunkSize];
+        byte[] byteBuffer = new byte[Main.CONFIG.downloadChunkSize];
         boolean regexLock = true;
         InputStream stream = null;
         int byteCount;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - STATISTICS.getLastPullTime() < CONFIG.downloadDelay) {
-            justFuckingSleep((int) (CONFIG.downloadDelay - System.currentTimeMillis() + STATISTICS.getLastPullTime()));
+        while (System.currentTimeMillis() - Main.STATISTICS.getLastPullTime() < Main.CONFIG.downloadDelay) {
+            justFuckingSleep((int) (Main.CONFIG.downloadDelay - System.currentTimeMillis() + Main.STATISTICS.getLastPullTime()));
         }
 
         // Run statistics cycle
-        STATISTICS.cycle();
+        Main.STATISTICS.cycle();
 
         try {
             // Define the request
-            URL request = new URL(CONFIG.defaultAPIURL + this.job);
+            URL request = new URL(Main.CONFIG.defaultAPIURL + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(CONFIG.readTimeOut);
-            connection.setConnectTimeout(CONFIG.connectTimeOut);
+            connection.setReadTimeout(Main.CONFIG.readTimeOut);
+            connection.setConnectTimeout(Main.CONFIG.connectTimeOut);
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, CONFIG.downloadChunkSize)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, Main.CONFIG.downloadChunkSize)) != -1) {
                 // Check if run flag is lowered
                 if (!this.flagLocalRun)
                     return "";
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != CONFIG.downloadChunkSize) {
+                if (byteCount != Main.CONFIG.downloadChunkSize) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
@@ -134,14 +133,14 @@ public class Worker extends Thread {
                         regexLock = false;
 
                         // Add new-found job to queue
-                        WORKER_CONTROLLER.setNextChangeID(matcher.group());
+                        Main.WORKER_CONTROLLER.setNextChangeID(matcher.group());
 
                         // Add freshest changeID to statistics
-                        STATISTICS.setLatestChangeID(matcher.group());
+                        Main.STATISTICS.setLatestChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            STATISTICS.incPullCountDuplicate();
+                            Main.STATISTICS.incPullCountDuplicate();
                             return "";
                         }
                     }
@@ -149,15 +148,15 @@ public class Worker extends Thread {
             }
 
         } catch (Exception ex) {
-            System.out.println(timeStamp() + " Caught worker download error: " + ex.getMessage());
+            System.out.println(Main.timeStamp() + " Caught worker download error: " + ex.getMessage());
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
                 justFuckingSleep(5000);
-                WORKER_CONTROLLER.setNextChangeID(job);
+                Main.WORKER_CONTROLLER.setNextChangeID(job);
             }
 
-            STATISTICS.incPullCountFailed();
+            Main.STATISTICS.incPullCountFailed();
 
             // Clear the buffer so that an empty string will be returned instead
             stringBuilderBuffer.setLength(0);

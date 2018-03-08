@@ -1,12 +1,11 @@
-package com.sanderh.Pricer;
+package ovh.poe.Pricer;
 
-import com.sanderh.Mappers;
-import com.sanderh.Item;
+import ovh.poe.Mappers;
+import ovh.poe.Item;
+import ovh.poe.Main;
 
 import java.io.*;
 import java.util.*;
-
-import static com.sanderh.Main.*;
 
 /**
  * Manages CSV database
@@ -34,16 +33,16 @@ public class PricerController {
      */
     public void run() {
         // Run every minute (-ish)
-        if ((System.currentTimeMillis() - lastRunTime) / 1000 < CONFIG.pricerControllerSleepCycle) return;
+        if ((System.currentTimeMillis() - lastRunTime) / 1000 < Main.CONFIG.pricerControllerSleepCycle) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
-        if ((System.currentTimeMillis() - STATISTICS.getLastSuccessfulPullTime()) / 1000 > 30) return;
+        if ((System.currentTimeMillis() - Main.STATISTICS.getLastSuccessfulPullTime()) / 1000 > 30) return;
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
 
         // Prepare for database building
-        System.out.println(timeStamp() + " Generating databases [" + (DataEntry.getCycleCount() + 1) + "/" +
-                CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)");
+        System.out.println(Main.timeStamp() + " Generating databases [" + (DataEntry.getCycleCount() + 1) + "/" +
+                Main.CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)");
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
@@ -57,7 +56,7 @@ public class PricerController {
         // Zero DataEntry's static cycle count
         if (DataEntry.getCycleState()) {
             DataEntry.zeroCycleCount();
-            System.out.println(timeStamp() + " Building JSON");
+            System.out.println(Main.timeStamp() + " Building JSON");
         }
 
         // Lower the pause flag, so that other Worker threads may continue using the databases

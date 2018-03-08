@@ -1,12 +1,9 @@
-package com.sanderh.Pricer;
+package ovh.poe.Pricer;
 
-import com.sanderh.Item;
+import ovh.poe.Item;
+import ovh.poe.Main;
 
 import java.util.*;
-
-import static com.sanderh.Main.CONFIG;
-import static com.sanderh.Main.PRICER_CONTROLLER;
-import static com.sanderh.Main.RELATIONS;
 
 public class DataEntry {
     //  Name: DataEntry
@@ -27,11 +24,11 @@ public class DataEntry {
 
     // Lists that hold price data
     private ArrayList<String> rawData = new ArrayList<>();
-    private ArrayList<Double> database_prices = new ArrayList<>(CONFIG.baseDataSize);
-    private ArrayList<String> database_accounts = new ArrayList<>(CONFIG.baseDataSize);
-    private ArrayList<String> database_itemIDs = new ArrayList<>(CONFIG.baseDataSize);
-    private ArrayList<Double> database_hourlyMean = new ArrayList<>(CONFIG.hourlyDataSize);
-    private ArrayList<Double> database_hourlyMedian = new ArrayList<>(CONFIG.hourlyDataSize);
+    private ArrayList<Double> database_prices = new ArrayList<>(Main.CONFIG.baseDataSize);
+    private ArrayList<String> database_accounts = new ArrayList<>(Main.CONFIG.baseDataSize);
+    private ArrayList<String> database_itemIDs = new ArrayList<>(Main.CONFIG.baseDataSize);
+    private ArrayList<Double> database_hourlyMean = new ArrayList<>(Main.CONFIG.hourlyDataSize);
+    private ArrayList<Double> database_hourlyMedian = new ArrayList<>(Main.CONFIG.hourlyDataSize);
 
     //////////////////
     // Main methods //
@@ -123,13 +120,13 @@ public class DataEntry {
             // If the item was not listed for chaos orbs ("1" == Chaos Orb), then find the value in chaos
             if (!priceType.equals("1")) {
                 // Get the database key of the currency the item was listed for
-                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + RELATIONS.indexToName.get(priceType) + "|5";
+                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + Main.RELATIONS.indexToName.get(priceType) + "|5";
 
                 // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
-                if (!PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) continue;
+                if (!Main.PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) continue;
 
                 // Get the currency item entry the item was listed in
-                DataEntry currencyEntry = PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
+                DataEntry currencyEntry = Main.PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
 
                 // If the currency the item was listed in has very few listings then ignore this item
                 if (currencyEntry.getCount() < 20) continue;
@@ -142,7 +139,7 @@ public class DataEntry {
             if (price > 500000.0 || price < 0.001) continue;
 
             // Add values to the front of the lists
-            database_prices.add(0, Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
+            database_prices.add(0, Math.round(price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision);
             database_itemIDs.add(0, id);
             database_accounts.add(0, account);
 
@@ -209,17 +206,17 @@ public class DataEntry {
 
         // If an array has more elements than specified, remove everything from the possible last index up until
         // however many excess elements it has
-        if (database_prices.size() > CONFIG.baseDataSize) {
-            database_prices.subList(CONFIG.baseDataSize, database_prices.size() - 1).clear();
-            database_itemIDs.subList(CONFIG.baseDataSize, database_prices.size() - 1).clear();
-            database_accounts.subList(CONFIG.baseDataSize, database_prices.size() - 1).clear();
+        if (database_prices.size() > Main.CONFIG.baseDataSize) {
+            database_prices.subList(Main.CONFIG.baseDataSize, database_prices.size() - 1).clear();
+            database_itemIDs.subList(Main.CONFIG.baseDataSize, database_prices.size() - 1).clear();
+            database_accounts.subList(Main.CONFIG.baseDataSize, database_prices.size() - 1).clear();
         }
 
         // If an array has more elements than specified, remove everything from the possible last index up until
         // however many excess elements it has
-        if (database_hourlyMean.size() > CONFIG.hourlyDataSize) {
-            database_hourlyMean.subList(CONFIG.hourlyDataSize, database_hourlyMean.size() - 1).clear();
-            database_hourlyMedian.subList(CONFIG.hourlyDataSize, database_hourlyMean.size() - 1).clear();
+        if (database_hourlyMean.size() > Main.CONFIG.hourlyDataSize) {
+            database_hourlyMean.subList(Main.CONFIG.hourlyDataSize, database_hourlyMean.size() - 1).clear();
+            database_hourlyMedian.subList(Main.CONFIG.hourlyDataSize, database_hourlyMean.size() - 1).clear();
         }
     }
 
@@ -234,7 +231,7 @@ public class DataEntry {
         // Add up values to calculate mean
         for (Double i : list) mean += i;
 
-        return Math.round(mean / list.size() * CONFIG.pricePrecision) / CONFIG.pricePrecision;
+        return Math.round(mean / list.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
     }
 
     /**
@@ -255,7 +252,7 @@ public class DataEntry {
         ArrayList<Double> tempList = new ArrayList<>(list);
         Collections.sort(tempList);
 
-        return Math.round(tempList.get(tempList.size() / CONFIG.medianLeftShift) * CONFIG.pricePrecision) / CONFIG.pricePrecision;
+        return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
     }
 
     /**
@@ -423,7 +420,7 @@ public class DataEntry {
         //  Description: Decides whether to make a JSON package or not
 
         // Run every Xth cycle
-        if (cycleCount < CONFIG.dataEntryCycleLimit) return null;
+        if (cycleCount < Main.CONFIG.dataEntryCycleLimit) return null;
         // Run if there's any data
         if (database_hourlyMedian.isEmpty()) return null;
 
@@ -487,7 +484,7 @@ public class DataEntry {
     }
 
     public static boolean getCycleState() {
-        return cycleCount >= CONFIG.dataEntryCycleLimit;
+        return cycleCount >= Main.CONFIG.dataEntryCycleLimit;
     }
 
     public static int getCycleCount() {

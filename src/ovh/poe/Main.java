@@ -1,8 +1,8 @@
-package com.sanderh;
+package ovh.poe;
 
-import com.sanderh.Pricer.PricerController;
+import ovh.poe.Pricer.PricerController;
 import NotMadeByMe.TextIO;
-import com.sanderh.Worker.WorkerController;
+import ovh.poe.Worker.WorkerController;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -229,7 +229,7 @@ public class Main {
 
         try {
             // Assign I/O
-            reader = new BufferedInputStream(Main.class.getResourceAsStream("/com/sanderh/Resource/" + name));
+            reader = new BufferedInputStream(Main.class.getResourceAsStream("/com/poe/Resource/" + name));
             writer = new BufferedOutputStream(new FileOutputStream(out));
 
             // Define I/O helpers
@@ -335,11 +335,6 @@ public class Main {
      * Prints about page
      */
     private static void commandAbout() {
-        //  Name: commandAbout()
-        //  Date created: 13.12.2017
-        //  Last modified: 16.12.2017
-        //  Description: Prints about page
-
         String about = "Project name: PoE stash API JSON statistics generator\n"
                 + "Made by: Siegrest\n"
                 + "Licenced under MIT licence, 2018\n";

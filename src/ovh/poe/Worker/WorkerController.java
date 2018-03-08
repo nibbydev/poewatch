@@ -1,15 +1,13 @@
-package com.sanderh.Worker;
+package ovh.poe.Worker;
 
-import com.sanderh.Mappers;
+import ovh.poe.Mappers;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
+import ovh.poe.Main;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-
-import static com.sanderh.Main.CONFIG;
-import static com.sanderh.Main.PRICER_CONTROLLER;
 
 /**
  * Manages Worker objects (eg. distributing jobs, adding/removing workers)
@@ -59,7 +57,7 @@ public class WorkerController extends Thread {
 
             // Run PRICER_CONTROLLER. As that Class has no actual loop and this method executes pretty often, pricer
             // controller itself has some checks whether it should run on method call or not
-            PRICER_CONTROLLER.run();
+            Main.PRICER_CONTROLLER.run();
         }
     }
 
@@ -115,8 +113,8 @@ public class WorkerController extends Thread {
         int nextWorkerIndex = workerList.size();
 
         // Forbid spawning over limit
-        if (nextWorkerIndex + workerCount > CONFIG.workerLimit) {
-            System.out.println("[ERROR] Maximum amount of workers is " + CONFIG.workerLimit);
+        if (nextWorkerIndex + workerCount > Main.CONFIG.workerLimit) {
+            System.out.println("[ERROR] Maximum amount of workers is " + Main.CONFIG.workerLimit);
             return;
         }
 

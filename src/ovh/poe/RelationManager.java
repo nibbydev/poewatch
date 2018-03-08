@@ -1,4 +1,4 @@
-package com.sanderh;
+package ovh.poe;
 
 import java.io.*;
 import java.util.HashMap;

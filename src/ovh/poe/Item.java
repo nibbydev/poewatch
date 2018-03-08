@@ -1,7 +1,7 @@
-package com.sanderh;
+package ovh.poe;
 
-import static com.sanderh.Main.CONFIG;
-import static com.sanderh.Main.RELATIONS;
+import static ovh.poe.Main.CONFIG;
+import static ovh.poe.Main.RELATIONS;
 
 public class Item extends Mappers.BaseItem {
     //  Name: NewItem

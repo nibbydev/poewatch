@@ -1,4 +1,4 @@
-package com.sanderh;
+package ovh.poe;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -145,7 +145,7 @@ public class Mappers {
         private String accountName;
         private String stash;
         private String lastCharacterName;
-        private List<com.sanderh.Item> items;
+        private List<Item> items;
 
         ///////////////////////
         // Getters / Setters //
@@ -159,7 +159,7 @@ public class Mappers {
             this.id = id;
         }
 
-        public void setItems(List<com.sanderh.Item> items) {
+        public void setItems(List<Item> items) {
             this.items = items;
         }
 
@@ -171,7 +171,7 @@ public class Mappers {
             this.stash = stash;
         }
 
-        public List<com.sanderh.Item> getItems() {
+        public List<Item> getItems() {
             return items;
         }
 

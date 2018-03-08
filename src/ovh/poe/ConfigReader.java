@@ -1,4 +1,4 @@
-package com.sanderh;
+package ovh.poe;
 
 import java.io.BufferedReader;
 import java.io.File;
