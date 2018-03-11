@@ -1,8 +1,8 @@
 package ovh.poe.Worker;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import ovh.poe.Mappers;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
 import ovh.poe.Main;
 
 import java.io.InputStream;
@@ -15,6 +15,8 @@ import java.util.ArrayList;
 public class WorkerController extends Thread {
     private volatile boolean flag_Run = true;
     private ArrayList<Worker> workerList = new ArrayList<>();
+    private GsonBuilder gsonBuilder = new GsonBuilder();
+    private Gson gson = gsonBuilder.create();
     private final Object monitor = new Object();
     private String nextChangeID;
 
@@ -123,6 +125,7 @@ public class WorkerController extends Thread {
             Worker worker = new Worker();
 
             // Set some worker PROPERTIES and start
+            worker.setGson(gsonBuilder.create());
             worker.setIndex(i);
             worker.start();
 
@@ -197,11 +200,8 @@ public class WorkerController extends Thread {
 
         // Map data
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
-
             // Map the JSON string to an object
-            response = mapper.readValue(response, Mappers.ChangeID.class).getNext_change_id();
+            response = gson.fromJson(response, Mappers.ChangeID.class).get();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

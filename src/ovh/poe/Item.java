@@ -38,7 +38,7 @@ public class Item extends Mappers.BaseItem {
         if (discard)
             return;
 
-        switch (getFrameType()) {
+        switch (frameType) {
             case 0: // Normal
             case 1: // Magic
             case 2: // Rare
@@ -53,7 +53,7 @@ public class Item extends Mappers.BaseItem {
                 }
 
                 // Include maps under same frame type
-                setFrameType(0);
+                frameType = 0;
                 break;
 
             case 4: // Gem
@@ -62,7 +62,7 @@ public class Item extends Mappers.BaseItem {
 
             // Filter out chaos orbs
             case 5:
-                if (getName().equals("Chaos Orb")) {
+                if (name.equals("Chaos Orb")) {
                     discard = true;
                     return;
                 }
@@ -78,22 +78,22 @@ public class Item extends Mappers.BaseItem {
      * Does a few basic checks on items
      */
     private void basicChecks() {
-        if (getNote().equals("")) {
+        if (note.equals("")) {
             // Filter out items without prices
             discard = true;
-        } else if (getFrameType() == 1 || getFrameType() == 2 || getFrameType() == 7) {
+        } else if (frameType == 1 || frameType == 2 || frameType == 7) {
             // Filter out unpriceable items
             discard = true;
-        } else if (!isIdentified()) {
+        } else if (!identified) {
             // Filter out unidentified items
             discard = true;
-        } else if (getLeague().contains("SSF")) {
+        } else if (league.contains("SSF")) {
             // Filter out SSF leagues as trading there is disabled
             discard = true;
-        } else if (getLeague().equals("false")) {
+        } else if (league.equals("false")) {
             // This is a bug in the API
             discard = true;
-        } else if (isEnchanted()) {
+        } else if (enchanted) {
             // Enchanted items usually have a much, much higher price
             discard = true;
         }
@@ -103,7 +103,7 @@ public class Item extends Mappers.BaseItem {
      * Check and format item note (user-inputted text field that usually contain item price)
      */
     private void parseNote() {
-        String[] noteList = getNote().split(" ");
+        String[] noteList = note.split(" ");
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
         if (noteList.length < 3 || !noteList[0].equals("~b/o") && !noteList[0].equals("~price")) {
@@ -135,8 +135,8 @@ public class Item extends Mappers.BaseItem {
         // Add currency type to item
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
-        if (getTypeLine().equals("Chaos Orb")) {
-            setTypeLine(RELATIONS.shortHandToName.get(noteList[2]));
+        if (typeLine.equals("Chaos Orb")) {
+            typeLine = RELATIONS.shortHandToName.get(noteList[2]);
             priceType = "1";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
         } else {
@@ -150,17 +150,17 @@ public class Item extends Mappers.BaseItem {
      */
     private void formatNameAndItemType() {
         // Start key with league
-        addKey(getLeague());
+        addKey(league);
 
         // Divide large categories into smaller ones
-        String[] splitItemType = getIcon().split("/");
+        String[] splitItemType = icon.split("/");
         String iconType = splitItemType[splitItemType.length - 2].toLowerCase();
 
         // The API is pretty horrible, format it better
         switch (itemType) {
             case "currency":
                 // Prophecy items have the same icon category as currency
-                if (getFrameType() == 8)
+                if (frameType == 8)
                     itemType += ":prophecy";
                 else if (iconType.equals("divination") || iconType.equals("currency"))
                     itemType += ":orbs";
@@ -184,10 +184,10 @@ public class Item extends Mappers.BaseItem {
 
             case "maps":
                 if (iconType.equals("maps")) {
-                    if (getFrameType() == 3) {
+                    if (frameType == 3) {
                         // Unique IF: itemType="maps", iconType="maps", frameType=3
                         itemType += ":unique";
-                    } else if (getProperties() == null) {
+                    } else if (properties == null) {
                         // Fragment IF: itemType="maps", iconType="maps", frameType=0, properties=null
                         itemType += ":fragment";
                     } else {
@@ -215,18 +215,18 @@ public class Item extends Mappers.BaseItem {
         addKey("|" + itemType);
 
         // Format the name that will serve as the database key
-        if (getName().equals("")) {
-            addKey("|" + getTypeLine());
-            setName(getTypeLine());
-            setTypeLine("");
+        if (name.equals("")) {
+            addKey("|" + typeLine);
+            setName(typeLine);
+            typeLine = "";
         } else {
-            addKey("|" + getName());
-            if (!getTypeLine().equals(""))
-                addKey("|" + getTypeLine());
+            addKey("|" + name);
+            if (!typeLine.equals(""))
+                addKey("|" + typeLine);
         }
 
         // Add frameType to key
-        addKey("|" + getFrameType());
+        addKey("|" + frameType);
     }
 
     /**
@@ -237,11 +237,11 @@ public class Item extends Mappers.BaseItem {
         int quality = 0;
 
         // Attempt to extract lvl and quality from item info
-        for (Mappers.Properties prop : getProperties()) {
-            if (prop.getName().equals("Level")) {
-                lvl = Integer.parseInt(prop.getValues().get(0).get(0).split(" ")[0]);
-            } else if (prop.getName().equals("Quality")) {
-                quality = Integer.parseInt(prop.getValues().get(0).get(0).replace("+", "").replace("%", ""));
+        for (Mappers.Properties prop : properties) {
+            if (prop.name.equals("Level")) {
+                lvl = Integer.parseInt(prop.values.get(0).get(0).split(" ")[0]);
+            } else if (prop.name.equals("Quality")) {
+                quality = Integer.parseInt(prop.values.get(0).get(0).replace("+", "").replace("%", ""));
             }
         }
 
@@ -251,7 +251,7 @@ public class Item extends Mappers.BaseItem {
             return;
         }
 
-        boolean tempCorruptionMarker = isCorrupted();
+        boolean tempCorruptionMarker = corrupted;
         // Begin the long block that filters out gems based on a number of properties
         if (key.contains("Empower") || key.contains("Enlighten") || key.contains("Enhance")) {
             if (quality < 6) quality = 0;
@@ -305,15 +305,15 @@ public class Item extends Mappers.BaseItem {
         }
 
         // This was an error somehow, somewhere
-        if (getSockets() == null) {
+        if (sockets == null) {
             discard = true;
             return;
         }
 
         // Group links together
         Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};
-        for (Mappers.Socket socket : getSockets()) {
-            links[socket.getGroup()]++;
+        for (Mappers.Socket socket : sockets) {
+            links[socket.group]++;
         }
 
         // Find largest single link
@@ -336,23 +336,23 @@ public class Item extends Mappers.BaseItem {
     private void checkSpecialItemVariant() {
         String keySuffix = "";
 
-        switch (getName()) {
+        switch (name) {
             // Try to determine the type of Atziri's Splendour by looking at the item explicit mods
             case "Atziri's Splendour":
-                switch (String.join("#", getExplicitMods().get(0).split("\\d+"))) {
+                switch (String.join("#", explicitMods.get(0).split("\\d+"))) {
                     case "#% increased Armour, Evasion and Energy Shield":
                         keySuffix = "|var:ar/ev/es";
                         break;
 
                     case "#% increased Armour and Energy Shield":
-                        if (getExplicitMods().get(1).contains("Life"))
+                        if (explicitMods.get(1).contains("Life"))
                             keySuffix = "|var:ar/es/li";
                         else
                             keySuffix = "|var:ar/es";
                         break;
 
                     case "#% increased Evasion and Energy Shield":
-                        if (getExplicitMods().get(1).contains("Life"))
+                        if (explicitMods.get(1).contains("Life"))
                             keySuffix = "|var:ev/es/li";
                         else
                             keySuffix = "|var:ev/es";
@@ -378,7 +378,7 @@ public class Item extends Mappers.BaseItem {
 
             case "Vessel of Vinktar":
                 // Attempt to match preset mod with item mod
-                for (String explicitMod : getExplicitMods()) {
+                for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Lightning Damage to Spells")) {
                         keySuffix = "|var:spells";
                         break;
@@ -397,7 +397,7 @@ public class Item extends Mappers.BaseItem {
 
             case "Doryani's Invitation":
                 // Attempt to match preset mod with item mod
-                for (String explicitMod : getExplicitMods()) {
+                for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("increased Lightning Damage")) {
                         keySuffix = "|var:lightning";
                         break;
@@ -416,7 +416,7 @@ public class Item extends Mappers.BaseItem {
 
             case "Yriel's Fostering":
                 // Attempt to match preset mod with item mod
-                for (String explicitMod : getExplicitMods()) {
+                for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Chaos Damage to Attacks")) {
                         keySuffix = "|var:chaos";
                         break;
@@ -432,7 +432,7 @@ public class Item extends Mappers.BaseItem {
 
             case "Volkuur's Guidance":
                 // Attempt to match preset mod with item mod
-                for (String explicitMod : getExplicitMods()) {
+                for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Fire Damage to Spells")) {
                         keySuffix = "|var:fire";
                         break;
@@ -448,7 +448,7 @@ public class Item extends Mappers.BaseItem {
 
             case "Impresence":
                 // Attempt to match preset mod with item mod
-                for (String explicitMod : getExplicitMods()) {
+                for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Lightning Damage")) {
                         keySuffix = "|var:lightning";
                         break;
@@ -472,10 +472,10 @@ public class Item extends Mappers.BaseItem {
             case "Shroud of the Lightless":
             case "Bubonic Trail":
             case "Tombfist":
-                if (getExplicitMods().get(0).equals("Has 1 Abyssal Socket")) {
+                if (explicitMods.get(0).equals("Has 1 Abyssal Socket")) {
                     keySuffix = "|var:1";
                     break;
-                } else if (getExplicitMods().get(0).equals("Has 2 Abyssal Sockets")) {
+                } else if (explicitMods.get(0).equals("Has 2 Abyssal Sockets")) {
                     keySuffix = "|var:2";
                     break;
                 }
@@ -497,7 +497,7 @@ public class Item extends Mappers.BaseItem {
         // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour:gloves"
         // {"category": {"weapons": ["bow"]}}      -> "{weapons=[bow]}"       -> {"weapons", "bow"}     -> "weapons:bow"
 
-        String asString = getCategory().toString();
+        String asString = category.toString();
 
         // "{armour=[gloves]}" -> "armour=[gloves]"
         asString = asString.substring(1, asString.length() - 1);

@@ -1,8 +1,8 @@
 package ovh.poe.Worker;
 
 import ovh.poe.Mappers;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import ovh.poe.Main;
 
 import java.io.IOException;
@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     private final Object monitor = new Object();
     private volatile boolean flagLocalRun = true;
+    private Gson gson;
     private String job;
     private int index;
 
@@ -53,10 +54,10 @@ public class Worker extends Thread {
             // If download was unsuccessful, stop
             if (!replyJSONString.equals("")) {
                 // Deserialize the JSON string
-                reply = deSerializeJSONString(replyJSONString);
+                reply = gson.fromJson(replyJSONString, Mappers.APIReply.class);
 
                 // Parse the deserialized JSON if deserialization was successful
-                if (!reply.getNext_change_id().equals(""))
+                if (!reply.next_change_id.equals(""))
                     Main.PRICER_CONTROLLER.parseItems(reply);
             }
 
@@ -79,6 +80,7 @@ public class Worker extends Thread {
 
     /**
      * Downloads data from the API
+     *
      * @return Whole stash batch as a string
      */
     private String downloadData() {
@@ -174,30 +176,8 @@ public class Worker extends Thread {
     }
 
     /**
-     * Maps JSON string to an object
-     * @param stringBuffer JSON string to be mapped
-     * @return Mapped APIReply object
-     */
-    private Mappers.APIReply deSerializeJSONString(String stringBuffer) {
-        Mappers.APIReply reply;
-
-        try {
-            // Define the mapper
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
-
-            // Map the JSON string to an object
-            reply = mapper.readValue(stringBuffer, Mappers.APIReply.class);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return new Mappers.APIReply();
-        }
-
-        return reply;
-    }
-
-    /**
      * Sleeps for designated amount of time
+     *
      * @param timeMS Time in milliseconds to sleep
      */
     private void justFuckingSleep(int timeMS) {
@@ -258,5 +238,9 @@ public class Worker extends Thread {
 
     public String getJob() {
         return job;
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
     }
 }

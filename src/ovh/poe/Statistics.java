@@ -67,9 +67,9 @@ public class Statistics {
      * @param item Item to be scanned
      */
     public void parseItem(Item item) {
-        if (item.isCorrupted()) itemCountCorrupted++;
-        if (!item.isIdentified()) itemCountUnidentified++;
-        itemCountFrameType[item.getFrameType()]++;
+        if (item.corrupted) itemCountCorrupted++;
+        if (!item.identified) itemCountUnidentified++;
+        itemCountFrameType[item.frameType]++;
     }
 
     /**

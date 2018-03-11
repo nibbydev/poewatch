@@ -70,8 +70,8 @@ public class PricerController {
      */
     public void parseItems(Mappers.APIReply reply) {
         // Loop through every single item, checking every single one of them
-        for (Mappers.Stash stash : reply.getStashes()) {
-            for (Item item : stash.getItems()) {
+        for (Mappers.Stash stash : reply.stashes) {
+            for (Item item : stash.items) {
                 // Snooze. The lock will be lifted in about 0.1 seconds. This loop is NOT time-sensitive
                 while (flagPause) {
                     synchronized (monitor) {
@@ -90,10 +90,10 @@ public class PricerController {
                 // Add item to database, separating currency
                 if (item.getKey().contains("currency:orbs")) {
                     currencyMap.putIfAbsent(item.getKey(), new DataEntry());
-                    currencyMap.get(item.getKey()).add(item, stash.getAccountName());
+                    currencyMap.get(item.getKey()).add(item, stash.accountName);
                 } else {
                     entryMap.putIfAbsent(item.getKey(), new DataEntry());
-                    entryMap.get(item.getKey()).add(item, stash.getAccountName());
+                    entryMap.get(item.getKey()).add(item, stash.accountName);
                 }
             }
         }

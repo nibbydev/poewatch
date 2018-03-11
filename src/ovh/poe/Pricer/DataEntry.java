@@ -58,7 +58,7 @@ public class DataEntry {
         if (key == null) key = item.getKey();
 
         // Add new value to raw data array
-        rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.getId() + "," + accountName);
+        rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.id + "," + accountName);
     }
 
     /**
