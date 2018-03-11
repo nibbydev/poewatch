@@ -1,5 +1,7 @@
 package ovh.poe;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import ovh.poe.Pricer.PricerController;
 import NotMadeByMe.TextIO;
 import ovh.poe.Worker.WorkerController;
@@ -15,6 +17,7 @@ public class Main {
     public static PricerController PRICER_CONTROLLER;
     public static Statistics STATISTICS;
     public static RelationManager RELATIONS;
+    private static GsonBuilder gsonBuilder;
 
     /**
      * The main class. Run this to run the program
@@ -22,6 +25,12 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
+        gsonBuilder = new GsonBuilder();
+        gsonBuilder.disableHtmlEscaping();
+
+        // Make sure basic folder structure exists
+        buildFolderFileStructure();
+
         // Initialize objects
         CONFIG = new ConfigReader("config.cfg");
         WORKER_CONTROLLER = new WorkerController();
@@ -31,9 +40,6 @@ public class Main {
 
         // Parse CLI parameters
         parseCommandParameters(args);
-
-        // Make sure basic folder structure exists
-        buildFolderFileStructure();
 
         // Start controller
         WORKER_CONTROLLER.start();
@@ -229,7 +235,7 @@ public class Main {
 
         try {
             // Assign I/O
-            reader = new BufferedInputStream(Main.class.getResourceAsStream("/com/poe/Resource/" + name));
+            reader = new BufferedInputStream(Main.class.getResourceAsStream("/ovh/poe/Resource/" + name));
             writer = new BufferedOutputStream(new FileOutputStream(out));
 
             // Define I/O helpers
@@ -339,5 +345,14 @@ public class Main {
                 + "Made by: Siegrest\n"
                 + "Licenced under MIT licence, 2018\n";
         System.out.println(about);
+    }
+
+    /**
+     * Creates an instance of Gson
+     *
+     * @return Gson instance
+     */
+    public static Gson getGson() {
+        return gsonBuilder.create();
     }
 }

@@ -1,6 +1,8 @@
 package ovh.poe;
 
-import java.util.List;
+import ovh.poe.Pricer.DataEntry;
+
+import java.util.*;
 
 /**
  * Holds all the mapper classes. These are not used for anything other than to map JSON strings to objects and
@@ -81,7 +83,7 @@ public class Mappers {
         public int w, h, x, y, ilvl, frameType;
         public boolean identified, corrupted, enchanted;
         public String icon, league, id, name, typeLine;
-        public String note = "";
+        public String note;
         public List<Properties> properties;
         public List<Socket> sockets;
         public List<String> explicitMods;
@@ -92,17 +94,55 @@ public class Mappers {
         public Object category;
         public Object enchantMods;
 
-        public void setId(String id) {
-            // Save space, use 4x smaller IDs
-            this.id = id.substring(0, 16);
+        public void fix() {
+            id = id.substring(0, 16);
+            name = name.substring(name.lastIndexOf(">") + 1);
+            enchanted = enchantMods != null;
+        }
+    }
+
+    /**
+     * Serializable output
+     */
+    public static class JSONParcel {
+        public static class Item {
+            public double mean, median, mode;
+            public int count, inc, dec;
+
+            public void copy (DataEntry entry) {
+                mean = entry.getMean();
+                median = entry.getMedian();
+                mode = entry.getMode();
+                count = entry.getCount();
+                inc = entry.getInc_counter();
+                dec = entry.getDec_counter();
+            }
         }
 
-        public void setName(String name) {
-            this.name = name.substring(name.lastIndexOf(">") + 1);
+        public Map<String, Map<String, Map<String, Item>>> leagues = new TreeMap<>();
+
+        public void add(DataEntry entry) {
+            // Hardcore Bestiary|currency:orbs|Orb of Transmutation|5
+            String[] splitKey = entry.getKey().split("\\|");
+
+            String itemName = "";
+            for (int i = 2; i < splitKey.length; i++) itemName += splitKey[i] + "|";
+            itemName = itemName.substring(0, itemName.length() - 1);
+
+            if (!this.leagues.containsKey(splitKey[0])) this.leagues.put(splitKey[0], new TreeMap<>());
+            Map<String, Map<String, Item>> league = this.leagues.get(splitKey[0]);
+
+            if (!league.containsKey(splitKey[1])) league.put(splitKey[1], new TreeMap<>());
+            Map<String, Item> category = league.get(splitKey[1]);
+
+            if (!category.containsKey(itemName)) category.put(itemName, new Item());
+            Item item = category.get(itemName);
+
+            item.copy(entry);
         }
 
-        public void setEnchantMods(Object enchantMods) {
-            enchanted = true;
+        public void clear () {
+            leagues.clear();
         }
     }
 }

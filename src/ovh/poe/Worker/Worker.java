@@ -2,7 +2,6 @@ package ovh.poe.Worker;
 
 import ovh.poe.Mappers;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import ovh.poe.Main;
 
 import java.io.IOException;
@@ -19,7 +18,7 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     private final Object monitor = new Object();
     private volatile boolean flagLocalRun = true;
-    private Gson gson;
+    private Gson gson = Main.getGson();
     private String job;
     private int index;
 
@@ -92,7 +91,7 @@ public class Worker extends Thread {
 
         // Sleep for x milliseconds
         while (System.currentTimeMillis() - Main.STATISTICS.getLastPullTime() < Main.CONFIG.downloadDelay) {
-            justFuckingSleep((int) (Main.CONFIG.downloadDelay - System.currentTimeMillis() + Main.STATISTICS.getLastPullTime()));
+            sleepX((int) (Main.CONFIG.downloadDelay - System.currentTimeMillis() + Main.STATISTICS.getLastPullTime()));
         }
 
         // Run statistics cycle
@@ -154,7 +153,7 @@ public class Worker extends Thread {
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
-                justFuckingSleep(5000);
+                sleepX(5000);
                 Main.WORKER_CONTROLLER.setNextChangeID(job);
             }
 
@@ -180,7 +179,7 @@ public class Worker extends Thread {
      *
      * @param timeMS Time in milliseconds to sleep
      */
-    private void justFuckingSleep(int timeMS) {
+    private void sleepX(int timeMS) {
         try {
             Thread.sleep(timeMS);
         } catch (InterruptedException ex) {
@@ -238,9 +237,5 @@ public class Worker extends Thread {
 
     public String getJob() {
         return job;
-    }
-
-    public void setGson(Gson gson) {
-        this.gson = gson;
     }
 }

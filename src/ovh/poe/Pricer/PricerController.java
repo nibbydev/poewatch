@@ -1,5 +1,6 @@
 package ovh.poe.Pricer;
 
+import com.google.gson.Gson;
 import ovh.poe.Mappers;
 import ovh.poe.Item;
 import ovh.poe.Main;
@@ -13,12 +14,18 @@ import java.util.*;
 public class PricerController {
     private final Map<String, DataEntry> entryMap = new HashMap<>();
     private final Map<String, DataEntry> currencyMap = new HashMap<>();
-    private final ArrayList<String> JSONParcel = new ArrayList<>();
 
     private long lastRunTime = System.currentTimeMillis();
     private volatile boolean flagPause = false;
     private final Object monitor = new Object();
     private final ArrayList<String> keyBlackList = new ArrayList<>();
+
+    private Mappers.JSONParcel JSONParcel = new Mappers.JSONParcel();
+    private Gson gson = Main.getGson();
+    private long lastClearCycle;
+    public volatile boolean clearStats = false;
+    public volatile boolean writeJSON = false;
+    private int cycleCount = 0;
 
     /**
      * Loads data in from file on object initialization
@@ -41,23 +48,31 @@ public class PricerController {
         flipPauseFlag();
 
         // Prepare for database building
-        System.out.println(Main.timeStamp() + " Generating databases [" + (DataEntry.getCycleCount() + 1) + "/" +
+        System.out.println(Main.timeStamp() + " Generating databases [" + (cycleCount + 1) + "/" +
                 Main.CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)");
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
 
         // Increase DataEntry's static cycle count
-        DataEntry.incCycleCount();
+        cycleCount++;
 
-        readFileParseFileWriteFile();
-        writeJSONToFile();
+        if ((System.currentTimeMillis() - lastClearCycle) / 60000 > 3600) {
+            lastClearCycle = System.currentTimeMillis();
+            clearStats = true;
+        }
 
         // Zero DataEntry's static cycle count
-        if (DataEntry.getCycleState()) {
-            DataEntry.zeroCycleCount();
+        if (cycleCount >= Main.CONFIG.dataEntryCycleLimit) {
+            cycleCount = 0;
+            writeJSON = true;
             System.out.println(Main.timeStamp() + " Building JSON");
         }
+
+        readFileParseFileWriteFile();
+        if (writeJSON) writeJSONToFile();
+
+        clearStats = writeJSON = false;
 
         // Lower the pause flag, so that other Worker threads may continue using the databases
         flipPauseFlag();
@@ -83,6 +98,7 @@ public class PricerController {
                 }
 
                 // Parse item data
+                item.fix();
                 item.parseItem();
                 if (item.isDiscard())
                     continue;
@@ -154,107 +170,23 @@ public class PricerController {
         }
     }
 
-    /**
-     * Calls DataEntry to form a JSON-encoded string and appends that string to the JSON StringBuilder
-     *
-     * @param entry DataEntry object which should create a JSON package
-     */
-    private void packageJSON(DataEntry entry) {
-        // Attempt to get JSON-encoded package from database entry
-        String JSONPackage = entry.JSONController();
-        if (JSONPackage == null) return;
-
-        // Add new package to parcel
-        JSONParcel.add(entry.getKey() + "::" + JSONPackage);
-    }
-
-    /**
-     * Takes the CSV-format JSONParcel, converts it to a valid JSON string and writes the result to different files
-     */
     private void writeJSONToFile() {
-        if (JSONParcel.isEmpty()) return;
+        for (Map.Entry<String, Map<String, Map<String, Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
+            try {
+                BufferedWriter writer = defineWriter(new File("./http/data/" + entry.getKey() + ".json"));
+                if (writer == null) continue;
 
-        // Sort the list of JSON-encoded packages so they can be written to file
-        Collections.sort(JSONParcel);
-
-        // Define historical variables
-        String lastLeague = null;
-        String lastType = null;
-        BufferedWriter writer = null;
-
-        try {
-            for (String line : JSONParcel) {
-                String league = line.substring(0, line.indexOf("|"));
-                String type = line.substring(line.indexOf("|") + 1, line.indexOf("|", line.indexOf("|") + 1));
-                String pack = line.substring(line.indexOf("::") + 2);
-
-                // Prepare league changes (since each league will be written in a different file)
-                if (lastLeague == null || !lastLeague.equals(league)) {
-                    // If another writer was active, close it and start a new one
-                    if (writer != null) {
-                        // Write JSON closing brackets
-                        writer.write("}}", 0, 2);
-                        writer.flush();
-                        writer.close();
-                    }
-
-                    // League changed or this is the first time writing, need to create a new writer
-                    writer = defineWriter(new File("./http/data/" + league + ".json"));
-                    if (writer == null) throw new NullPointerException();
-
-                    // Write JSON opening bracket
-                    writer.write("{", 0, 1);
-
-                    // Clear type (since it obviously will change)
-                    lastType = null;
-                }
-
-                // Prepare type changes
-                if (lastType == null) {
-                    writer.write("\"" + type + "\":{", 0, 4 + type.length());
-                } else if (lastType.equals(type)) {
-                    writer.write(",", 0, 1);
-                } else {
-                    writer.write("},\"" + type + "\":{", 0, 6 + type.length());
-                }
-
-                // Write pack
-                writer.write(pack, 0, pack.length());
-
-                // Flush output
+                writer.write(gson.toJson(entry.getValue()));
                 writer.flush();
+                writer.close();
 
-                // Set new history variables
-                lastLeague = league;
-                lastType = type;
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
-
-            // Finalize writing
-            if (writer != null) {
-                // Add closing bracket to JSON
-                writer.write("}", 0, 1);
-
-                // idk man
-                if (lastLeague.equals("Standard"))
-                    writer.write("}", 0, 1);
-
-                // Flush output
-                writer.flush();
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            // Clear the parcel
-            JSONParcel.clear();
         }
+
+        // Clear the parcel
+        JSONParcel.clear();
     }
 
     //////////////////
@@ -288,12 +220,10 @@ public class PricerController {
         return false;
     }
 
+    /**
+     * Reads data from file (line by line), parses it and writes it back
+     */
     private void readFileParseFileWriteFile() {
-        //  Name: readFileParseFileWriteFile()
-        //  Date created: 06.12.2017
-        //  Last modified: 26.01.2018
-        //  Description: reads data from file (line by line), parses it and writes it back
-
         File inputFile = new File("./database.txt");
         File outputFile = new File("./database.temp");
 
@@ -319,7 +249,7 @@ public class PricerController {
             for (String key : currencyMap.keySet()) {
                 DataEntry entry = currencyMap.get(key);
                 entry.cycle();
-                packageJSON(entry);
+                if (writeJSON) JSONParcel.add(entry);
                 writer.write(entry.buildLine());
             }
 
@@ -350,7 +280,7 @@ public class PricerController {
                     else entry = new DataEntry();
 
                     entry.cycle(line);
-                    packageJSON(entry);
+                    if (writeJSON) JSONParcel.add(entry);
                     entryMap.remove(key);
 
                     // Write line to temp output file
@@ -362,7 +292,7 @@ public class PricerController {
             for (String key : entryMap.keySet()) {
                 DataEntry entry = entryMap.get(key);
                 entry.cycle();
-                packageJSON(entry);
+                if (writeJSON) JSONParcel.add(entry);
                 writer.write(entry.buildLine());
             }
 
@@ -420,45 +350,49 @@ public class PricerController {
         }
     }
 
+    /**
+     * Parses whatever data was saved in the database file's first line
+     *
+     * @param line CSV format starting line
+     */
     private void loadStartParameters(String line) {
-        //  Name: loadStartParameters()
-        //  Date created: 26.12.2017
-        //  Last modified: 27.01.2018
-        //  Description: Parses whatever data was saved in the database file's first line
-
         String[] splitLine = line.split("::");
 
         // First parameter is the version of the config, I suppose
         switch (splitLine[0]) {
-            // Version 00000
-            case "00001":
+            case "00002":
                 // 0 - version nr
                 // 1 - last build/write time
                 // 2 - cycle counter
+                // 3 - last clear time
 
                 System.out.println("[INFO] Found start parameters:\n    Cycle counter: " + splitLine[2] +
                         "\n    Last write time: " + (System.currentTimeMillis() - Long.parseLong(splitLine[1])) /
                         1000 + " sec ago");
 
                 // Set the cycle counter to whatever is in the file
-                DataEntry.setCycleCount(Integer.parseInt(splitLine[2]));
+                cycleCount = Integer.parseInt(splitLine[2]);
+
+                lastClearCycle = Long.parseLong(splitLine[3]);
                 break;
         }
     }
 
+    /**
+     * Gathers some data and makes start parameters that will be saved in the database file
+     *
+     * @return
+     */
     private String saveStartParameters() {
-        //  Name: saveStartParameters()
-        //  Date created: 26.12.2017
-        //  Last modified: 22.01.2018
-        //  Description: Gathers some data and makes start parameters that will be saved in the database file
-
         String builder;
 
-        builder = "00001"
+        builder = "00002"
                 + "::"
                 + System.currentTimeMillis()
                 + "::"
-                + DataEntry.getCycleCount()
+                + cycleCount
+                + "::"
+                + lastClearCycle
                 + "\n";
 
         return builder;

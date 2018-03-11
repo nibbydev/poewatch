@@ -15,8 +15,7 @@ import java.util.ArrayList;
 public class WorkerController extends Thread {
     private volatile boolean flag_Run = true;
     private ArrayList<Worker> workerList = new ArrayList<>();
-    private GsonBuilder gsonBuilder = new GsonBuilder();
-    private Gson gson = gsonBuilder.create();
+    private Gson gson = Main.getGson();
     private final Object monitor = new Object();
     private String nextChangeID;
 
@@ -125,7 +124,6 @@ public class WorkerController extends Thread {
             Worker worker = new Worker();
 
             // Set some worker PROPERTIES and start
-            worker.setGson(gsonBuilder.create());
             worker.setIndex(i);
             worker.start();
 

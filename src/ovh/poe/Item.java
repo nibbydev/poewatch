@@ -22,21 +22,18 @@ public class Item extends Mappers.BaseItem {
     public void parseItem() {
         // Do a few checks on the league, note and etc
         basicChecks();
-        if (discard)
-            return;
+        if (discard) return;
 
         // Get price as boolean and currency type as index
         parseNote();
-        if (discard)
-            return;
+        if (discard) return;
 
         // Find out the item category (eg armour/belt/weapon etc)
         parseCategory();
 
         // Make database key and find item type
         formatNameAndItemType();
-        if (discard)
-            return;
+        if (discard) return;
 
         switch (frameType) {
             case 0: // Normal
@@ -78,7 +75,7 @@ public class Item extends Mappers.BaseItem {
      * Does a few basic checks on items
      */
     private void basicChecks() {
-        if (note.equals("")) {
+        if (note == null || note.equals("")) {
             // Filter out items without prices
             discard = true;
         } else if (frameType == 1 || frameType == 2 || frameType == 7) {
@@ -217,7 +214,7 @@ public class Item extends Mappers.BaseItem {
         // Format the name that will serve as the database key
         if (name.equals("")) {
             addKey("|" + typeLine);
-            setName(typeLine);
+            name = typeLine;
             typeLine = "";
         } else {
             addKey("|" + name);
