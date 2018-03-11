@@ -29,14 +29,11 @@ public class Mappers {
         public String lastCharacterName;
         public List<Item> items;
 
-        /**
-         * Setter for deserializer
-         * Roots out illegal characters
-         *
-         * @param accountName Account name
-         */
-        public void setAccountName(String accountName) {
-            this.accountName = accountName.replace(":", "").replace("|", "").replace(",", "");
+        public void fix() {
+            if (accountName != null)
+                accountName = accountName.replaceAll("[^A-Za-z0-9]", "_");
+            if (lastCharacterName != null)
+                lastCharacterName = lastCharacterName.replaceAll("[^A-Za-z0-9]", "_");
         }
     }
 
