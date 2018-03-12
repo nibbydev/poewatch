@@ -192,8 +192,13 @@ public class Item extends Mappers.BaseItem {
                         itemType += ":" + iconType;
                     }
                 } else if (iconType.equals("atlasmaps")) {
-                    // Fragment IF: itemType="maps", iconType="atlasmaps", frameType=0
-                    itemType += ":fragment";
+                    if (properties == null) {
+                        // Fragment IF: itemType="maps", iconType="atlasmaps", frameType=0, properties!=null
+                        itemType += ":fragment";
+                    } else {
+                        // Fragment IF: itemType="maps", iconType="atlasmaps", frameType=0, properties=null
+                        itemType += ":" + iconType;
+                    }
                 } else {
                     itemType += ":" + iconType;
                 }
