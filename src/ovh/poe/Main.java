@@ -235,7 +235,7 @@ public class Main {
 
         try {
             // Assign I/O
-            reader = new BufferedInputStream(Main.class.getResourceAsStream("/ovh/poe/Resource/" + name));
+            reader = new BufferedInputStream(Main.class.getResourceAsStream("/resources/" + name));
             writer = new BufferedOutputStream(new FileOutputStream(out));
 
             // Define I/O helpers
