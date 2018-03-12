@@ -173,7 +173,7 @@ public class DataEntry {
         // Precautions
         if (database_items.isEmpty()) return;
         // If too few items have been found then it probably doesn't have a median price
-        if (total_counter < 10) return;
+        if (total_counter + inc_counter < 10) return;
         // No median price found
         if (median <= 0) return;
 
@@ -182,8 +182,8 @@ public class DataEntry {
         int offset = 0;
         int oldSize = database_items.size();
         for (int i = 0; i < oldSize; i++) {
-            if (database_items.get(i - offset).price < median * (2.0 + threshold_multiplier))
-                if (database_items.get(i - offset).price > median / (2.0 + threshold_multiplier)) continue;
+            double price = database_items.get(i - offset).price;
+            if (price < median * (2.0 + threshold_multiplier) && price > median / (2.0 + threshold_multiplier)) continue;
 
             database_items.remove(i - offset);
 
@@ -199,8 +199,6 @@ public class DataEntry {
      * Calculates mean/median
      */
     private void build() {
-        if (database_items.isEmpty()) return;
-
         // Calculate mean and median values
         double tempMean = findMean(0);
         double tempMedian = findMedian(0);
@@ -215,7 +213,7 @@ public class DataEntry {
         mode = findMode(1);
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
-        if (inc_counter > 0 && dec_counter > 5 && dec_counter / inc_counter * 100.0 > 70)
+        if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 50)
             threshold_multiplier += 0.1;
         else if (inc_counter > 0 && threshold_multiplier > -1)
             threshold_multiplier -= 0.1;
@@ -506,7 +504,7 @@ public class DataEntry {
     }
 
     public int getCount() {
-        return total_counter + inc_counter;
+        return total_counter + inc_counter - dec_counter;
     }
 
     public int getInc_counter() {
