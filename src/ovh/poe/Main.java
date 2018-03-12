@@ -122,7 +122,7 @@ public class Main {
                     break;
                 case "exit":
                     System.out.println("[INFO] Shutting down..");
-                    STATISTICS.setStatus(1);
+                    STATISTICS.setStatus("DOWN");
                     STATISTICS.writeChangeID();
                     return;
                 case "id":

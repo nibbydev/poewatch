@@ -141,7 +141,6 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            Main.STATISTICS.incPullCountDuplicate();
                             return "";
                         }
                     }

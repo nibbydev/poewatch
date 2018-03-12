@@ -14,16 +14,11 @@ public class Statistics {
 
     private int pullCountTotal = 0;
     private int pullCountFailed = 0;
-    private int pullCountDuplicate = 0;
     private long lastPullTime = 0;
-
-    private int itemCountCorrupted = 0;
-    private int itemCountUnidentified = 0;
-    private int[] itemCountFrameType = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     private int changeIDCycleCounter = 0;
     private long lastSuccessfulPullTime = 0;
-    private String status = "up";
+    private String status = "UP";
     private String oldStatus = "";
 
     //////////////////
@@ -38,13 +33,13 @@ public class Statistics {
         if (pullCountTotal >= 5) {
             // If there have not been any successful pulls, set status to "unreachable"
             if (pullCountTotal <= pullCountFailed)
-                setStatus(4);
+                this.status = "UNREACHABLE";
                 // Else if there are a few failed pulls, set status to "questionable"
             else if (pullCountFailed > 2)
-                setStatus(2);
+                this.status = "QUESTIONABLE";
                 // Else set status to "up"
             else
-                setStatus(0);
+                this.status = "UP";
 
             // Write info to file if there has been a change
             if (!oldStatus.equals(status))
@@ -59,17 +54,6 @@ public class Statistics {
         // Increment pull counter and update last pull time
         lastPullTime = System.currentTimeMillis();
         this.pullCountTotal++;
-    }
-
-    /**
-     * Checks some item values, adds result to counters
-     *
-     * @param item Item to be scanned
-     */
-    public void parseItem(Item item) {
-        if (item.corrupted) itemCountCorrupted++;
-        if (!item.identified) itemCountUnidentified++;
-        itemCountFrameType[item.frameType]++;
     }
 
     /**
@@ -126,24 +110,8 @@ public class Statistics {
      *
      * @param status Up/Down/Questionable/Throttled/Unreachable
      */
-    public void setStatus(int status) {
-        switch (status) {
-            case 0:
-                this.status = "up";
-                break;
-            case 1:
-                this.status = "down";
-                break;
-            case 2:
-                this.status = "questionable";
-                break;
-            case 3:
-                this.status = "throttled";
-                break;
-            case 4:
-                this.status = "unreachable";
-                break;
-        }
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     ///////////////////////
@@ -152,10 +120,6 @@ public class Statistics {
 
     public void incPullCountFailed() {
         this.pullCountFailed++;
-    }
-
-    public void incPullCountDuplicate() {
-        this.pullCountDuplicate++;
     }
 
     public long getLastPullTime() {
