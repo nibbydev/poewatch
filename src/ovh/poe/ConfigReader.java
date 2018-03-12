@@ -38,11 +38,6 @@ public class ConfigReader {
      * @param fileName Config file name in relation to local path
      */
     private void readFile(String fileName) {
-        //  Name: readFile
-        //  Date created: 20.12.2017
-        //  Last modified: 28.01.2018
-        //  Description: Reads config in from file
-
         String line, key, value;
         File file = new File(fileName);
 

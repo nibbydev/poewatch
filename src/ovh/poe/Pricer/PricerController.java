@@ -171,6 +171,9 @@ public class PricerController {
         }
     }
 
+    /**
+     * Writes JSONParcel object to JSON file
+     */
     private void writeJSONToFile() {
         for (Map.Entry<String, Map<String, Map<String, Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
             try {
@@ -188,37 +191,6 @@ public class PricerController {
 
         // Clear the parcel
         JSONParcel.clear();
-    }
-
-    //////////////////
-    // New methods ///
-    //////////////////
-
-    private boolean checkKey(String key) {
-        String[] splitKey = key.split("\\|");
-
-        // Abyss|gems:vaal|Vaal Lightning Warp|4|1|20|1
-        if (splitKey[3].equals("4")) {
-            int lvl = Integer.parseInt(splitKey[4]);
-            int quality = Integer.parseInt(splitKey[5]);
-            String cor = splitKey[6];
-
-            if (key.contains("Empower") || key.contains("Enlighten") || key.contains("Enhance")) {
-                return false;
-            } else if (key.contains("Vaal ")) {
-                // Allow only if its "vaal" and is corrupted
-                return cor.equals("0");
-            } else if (cor.equals("1")) {
-                // If gem is not vaal gem and is corrupted, remove if
-                if (lvl < 20 && quality > 20) return true;
-                else if (lvl == 21 && quality == 10) return true;
-                else if (lvl < 20 && quality < 20) return true;
-            }
-
-            return (lvl > 21 || quality > 23);
-        }
-
-        return false;
     }
 
     /**
@@ -318,12 +290,13 @@ public class PricerController {
             System.out.println("[ERROR] Could not rename: " + outputFile.getName() + " to " + inputFile.getName());
     }
 
+    /**
+     * Create a BufferedReader instance
+     *
+     * @param inputFile File to read
+     * @return Created BufferedReader instance
+     */
     private BufferedReader defineReader(File inputFile) {
-        //  Name: defineReader()
-        //  Date created: 25.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Assigns reader buffer
-
         if (!inputFile.exists())
             return null;
 
@@ -336,12 +309,13 @@ public class PricerController {
         }
     }
 
+    /**
+     * Creates a BufferedWriter instance
+     *
+     * @param outputFile File to write
+     * @return Created BufferedWriter instance
+     */
     private BufferedWriter defineWriter(File outputFile) {
-        //  Name: defineWriter()
-        //  Date created: 25.12.2017
-        //  Last modified: 25.12.2017
-        //  Description: Assigns writer buffer
-
         // Open up the writer (if this throws an exception holy fuck something went massively wrong)
         try {
             return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8"));
@@ -382,7 +356,7 @@ public class PricerController {
     /**
      * Gathers some data and makes start parameters that will be saved in the database file
      *
-     * @return
+     * @return Generated CSV-format start params
      */
     private String saveStartParameters() {
         String builder;
