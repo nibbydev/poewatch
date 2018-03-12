@@ -167,14 +167,24 @@ public class WorkerController extends Thread {
      * @return ChangeID as string
      */
     public String getLatestChangeID() {
+        // Get data from API
         String idOne = downloadChangeID("http://api.poe.ninja/api/Data/GetStats");
         String idTwo = downloadChangeID("http://poe-rates.com/actions/getLastChangeId.php");
+        String idThree = downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
 
-        if (Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1, idOne.length())) <
-                Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1, idTwo.length())))
-            return idTwo;
-        else
-            return idOne;
+        // Get current cluster index
+        int sizeOne = Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1, idOne.length()));
+        int sizeTwo = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1, idTwo.length()));
+        int sizeThree = Integer.parseInt(idThree.substring(idThree.lastIndexOf('-') + 1, idThree.length()));
+
+        // Compare cluster indexes and return latest
+        if (sizeOne < sizeTwo) {
+            if (sizeThree < sizeTwo) return idTwo;
+            else return idThree;
+        } else {
+            if (sizeThree < sizeOne) return idOne;
+            else return idThree;
+        }
     }
 
     /**

@@ -39,21 +39,17 @@ public class Mappers {
 
 
     /**
-     * Maps http://poe.ninja's and http://poe-rates.com's JSON API to an object
+     * Universal deserializer for poe.ninja, poe.rates and pathofexile.com/api
      */
     public class ChangeID {
         public String next_change_id;
         public String changeId;
-
-        ///////////////////////
-        // Getters / Setters //
-        ///////////////////////
+        public String psapi;
 
         public String get() {
-            if (next_change_id != null)
-                return next_change_id;
-            else
-                return changeId;
+            if (next_change_id != null) return next_change_id;
+            else if (changeId != null) return changeId;
+            else return psapi;
         }
     }
 
