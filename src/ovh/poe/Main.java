@@ -3,7 +3,6 @@ package ovh.poe;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ovh.poe.Pricer.PricerController;
-import NotMadeByMe.TextIO;
 import ovh.poe.Worker.WorkerController;
 
 import java.io.*;
@@ -112,31 +111,38 @@ public class Main {
                 + "    about - show about page\n";
         System.out.println(helpString);
 
+        // Define reader
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
         String[] userInput;
         while (true) {
-            userInput = TextIO.getlnString().split(" ");
+            try {
+                userInput = reader.readLine().split(" ");
 
-            switch (userInput[0]) {
-                case "help":
-                    System.out.println(helpString);
-                    break;
-                case "exit":
-                    System.out.println("[INFO] Shutting down..");
-                    STATISTICS.setStatus("DOWN");
-                    STATISTICS.writeChangeID();
-                    return;
-                case "id":
-                    commandIdAdd(userInput);
-                    break;
-                case "worker":
-                    commandWorker(userInput);
-                    break;
-                case "about":
-                    commandAbout();
-                    break;
-                default:
-                    System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
-                    break;
+                switch (userInput[0]) {
+                    case "help":
+                        System.out.println(helpString);
+                        break;
+                    case "exit":
+                        System.out.println("[INFO] Shutting down..");
+                        STATISTICS.setStatus("DOWN");
+                        STATISTICS.writeChangeID();
+                        return;
+                    case "id":
+                        commandIdAdd(userInput);
+                        break;
+                    case "worker":
+                        commandWorker(userInput);
+                        break;
+                    case "about":
+                        commandAbout();
+                        break;
+                    default:
+                        System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
+                        break;
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -228,6 +234,9 @@ public class Main {
 
         // No real need to overwrite on startup
         if (out.exists()) return;
+
+        // Notify if any files were created
+        System.out.println("[INFO] Created file: " + outputDirectory + name);
 
         // Define I/O so they can be closed later
         BufferedInputStream reader = null;
