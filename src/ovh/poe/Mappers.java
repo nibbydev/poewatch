@@ -101,6 +101,7 @@ public class Mappers {
         public static class Item {
             public double mean, median, mode;
             public int count, inc;
+            public String ico;
 
             public void copy (DataEntry entry) {
                 mean = entry.getMean();
@@ -108,6 +109,7 @@ public class Mappers {
                 mode = entry.getMode();
                 count = entry.getCount() + entry.getInc_counter();
                 inc = entry.getInc_counter();
+                ico = entry.getIcon();
             }
         }
 

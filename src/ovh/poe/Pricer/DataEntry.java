@@ -4,6 +4,7 @@ import ovh.poe.Item;
 import ovh.poe.Main;
 
 import java.util.*;
+import java.util.Base64;
 
 /**
  * Price database entry object
@@ -35,7 +36,7 @@ public class DataEntry {
     private double mean = 0.0;
     private double median, mode;
     private double threshold_multiplier = 0.0;
-    private String key;
+    private String key, icon;
 
     // Lists that hold price data
     private ArrayList<String> rawData = new ArrayList<>();
@@ -73,6 +74,13 @@ public class DataEntry {
 
         // Add new value to raw data array
         rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.id + "," + accountName);
+
+        // Get latest icon
+        int tempIndex = item.icon.indexOf("?");
+        if (tempIndex == -1) tempIndex = item.icon.length();
+        icon = item.icon.substring(0, tempIndex);
+        // "Encode" url so it doesn't break the CSV
+        icon = Base64.getEncoder().encodeToString(icon.getBytes());
     }
 
     /**
@@ -337,14 +345,15 @@ public class DataEntry {
     public String buildLine() {
         /* (Spliterator: "::")
             0 - key
-            1 - stats (Spliterator: ",")
-                0 - total count during league
-                1 - added items per 24h
-                2 - discarded items 24h
-                3 - mean
-                4 - median
-                5 - mode
-                6 - threshold_multiplier
+            1 - stats (Spliterator: "," and ":")
+                cnt: - total count during league
+                inc: - added items per 24h
+                dec: - discarded items 24h
+                mea: - mean
+                med: - median
+                mod: - mode
+                mtp: - threshold_multiplier
+                ico: - icon url
             2 - database entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
@@ -362,19 +371,23 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add statistics
+        stringBuilder.append("cnt:");
         stringBuilder.append(total_counter);
-        stringBuilder.append(",");
+        stringBuilder.append(",add:");
         stringBuilder.append(inc_counter);
-        stringBuilder.append(",");
+        stringBuilder.append(",dec:");
         stringBuilder.append(dec_counter);
-        stringBuilder.append(",");
+        stringBuilder.append(",mea:");
         stringBuilder.append(mean);
-        stringBuilder.append(",");
+        stringBuilder.append(",med:");
         stringBuilder.append(median);
-        stringBuilder.append(",");
+        stringBuilder.append(",mod:");
         stringBuilder.append(mode);
-        stringBuilder.append(",");
+        stringBuilder.append(",mtp:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
+        stringBuilder.append(",ico:");
+        if (icon == null) stringBuilder.append("-");
+        else stringBuilder.append(icon);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -429,14 +442,15 @@ public class DataEntry {
     private void parseLine(String line) {
         /* (Spliterator: "::")
             0 - key
-            1 - stats (Spliterator: ",")
-                0 - total count during league
-                1 - added items per 24h
-                2 - discarded items 24h
-                3 - mean
-                4 - median
-                5 - mode
-                6 - threshold_multiplier
+            1 - stats (Spliterator: "," and ":")
+                cnt: - total count during league
+                inc: - added items per 24h
+                dec: - discarded items 24h
+                mea: - mean
+                med: - median
+                mod: - mode
+                mtp: - threshold_multiplier
+                ico: - icon url
             2 - database entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
@@ -455,13 +469,52 @@ public class DataEntry {
         // Import statistical values
         if (!splitLine[1].equals("-")) {
             String[] values = splitLine[1].split(",");
-            total_counter = Integer.parseInt(values[0]);
-            inc_counter += Integer.parseInt(values[1]);
-            dec_counter += Integer.parseInt(values[2]);
-            mean = Double.parseDouble(values[3]);
-            median = Double.parseDouble(values[4]);
-            mode = Double.parseDouble(values[5]);
-            threshold_multiplier = Double.parseDouble(values[6]);
+
+            for (String dataItem : values) {
+                String[] splitDataItem = dataItem.split(":");
+
+                // The old method TODO: remove this
+                if (splitDataItem.length < 2) {
+                    total_counter = Integer.parseInt(values[0]);
+                    inc_counter += Integer.parseInt(values[1]);
+                    dec_counter += Integer.parseInt(values[2]);
+                    mean = Double.parseDouble(values[3]);
+                    median = Double.parseDouble(values[4]);
+                    mode = Double.parseDouble(values[5]);
+                    threshold_multiplier = Double.parseDouble(values[6]);
+                    break;
+                }
+
+                switch (splitDataItem[0]) {
+                    case "cnt":
+                        total_counter = Integer.parseInt(splitDataItem[1]);
+                        break;
+                    case "add":
+                        inc_counter += Integer.parseInt(splitDataItem[1]);
+                        break;
+                    case "dec":
+                        dec_counter += Integer.parseInt(splitDataItem[1]);
+                        break;
+                    case "mea":
+                        mean = Double.parseDouble(splitDataItem[1]);
+                        break;
+                    case "med":
+                        median = Double.parseDouble(splitDataItem[1]);
+                        break;
+                    case "mod":
+                        mode = Double.parseDouble(splitDataItem[1]);
+                        break;
+                    case "mtp":
+                        threshold_multiplier = Double.parseDouble(splitDataItem[1]);
+                        break;
+                    case "ico":
+                        if (!splitDataItem[1].equals("-")) icon = splitDataItem[1];
+                        break;
+                    default:
+                        System.out.println("idk: " + splitDataItem[0]);
+                        break;
+                }
+            }
         }
 
         // Import database_prices, account names and item IDs
@@ -513,5 +566,12 @@ public class DataEntry {
 
     public int getDec_counter() {
         return dec_counter;
+    }
+
+    public String getIcon() {
+        if (icon == null)
+            return "";
+        else
+            return new String(Base64.getUrlDecoder().decode(icon.getBytes()));
     }
 }
