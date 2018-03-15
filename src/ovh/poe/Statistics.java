@@ -64,13 +64,13 @@ public class Statistics {
 
         // Writes values from statistics to file
         try {
-            File fFile = new File("./http/data/ChangeID");
+            File fFile = new File("./http/api/data/ChangeID");
             fOut = new FileOutputStream(fFile);
             fOut.write(("{\"changeId\":\"" + latestChangeID + "\",\"status\":\"" + status + "\",\"lastUpdate\":\"" +
                     lastSuccessfulPullTime + "\"}").getBytes());
 
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write ./http/data/ChangeID");
+            System.out.println("[ERROR] Could not write ./http/api/data/ChangeID");
             ex.printStackTrace();
         } finally {
             try {

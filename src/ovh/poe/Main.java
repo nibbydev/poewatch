@@ -194,25 +194,26 @@ public class Main {
      */
     private static void buildFolderFileStructure() {
         // Make sure output folders exist
-        new File("./http/data").mkdirs();
+        new File("./http/api/data").mkdirs();
+        new File("./http/html/data").mkdirs();
 
         // Create ./http/.htaccess if missing
-        saveResource("/http/", ".htaccess");
+        saveResource("/http/api/", ".htaccess");
+        saveResource("/http/html/", ".htaccess");
+        //saveResource("/http/html/data/", ".htaccess"); TODO: enable this
 
         // Create ./http/ChangeID.php if missing
-        saveResource("/http/", "ChangeID.php");
+        saveResource("/http/api/", "ChangeID.php");
 
         // Create ./http/index.php if missing
-        saveResource("/http/", "index.php");
+        saveResource("/http/api/", "index.php");
 
         // Create ./http/Stats.php if missing
-        saveResource("/http/", "Stats.php");
+        saveResource("/http/api/", "Stats.php");
 
         // Create ./http/data/index.php if missing
-        saveResource("/http/data/", "index.php");
-
-        // Create ./http/index.php if missing
-        saveResource("/http/", "index.php");
+        saveResource("/http/api/data/", "index.php");
+        saveResource("/http/html/data/", "index.php");
 
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");

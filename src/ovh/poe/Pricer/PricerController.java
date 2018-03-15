@@ -49,7 +49,9 @@ public class PricerController {
 
         // Prepare for database building
         System.out.println(Main.timeStamp() + " Generating databases [" + (cycleCount + 1) + "/" +
-                Main.CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)");
+                Main.CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)" +
+                "(reset " + (1440 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min)"
+        );
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
@@ -57,7 +59,7 @@ public class PricerController {
         // Increase DataEntry's static cycle count
         cycleCount++;
 
-        if ((System.currentTimeMillis() - lastClearCycle) / 60000 > 3600) {
+        if ((System.currentTimeMillis() - lastClearCycle) > 86400000) {
             lastClearCycle = System.currentTimeMillis();
             clearStats = true;
         }
@@ -177,12 +179,17 @@ public class PricerController {
     private void writeJSONToFile() {
         for (Map.Entry<String, Map<String, Map<String, Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
             try {
-                BufferedWriter writer = defineWriter(new File("./http/data/" + entry.getKey() + ".json"));
-                if (writer == null) continue;
+                BufferedWriter writerApi = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));
+                BufferedWriter writerHtml = defineWriter(new File("./http/html/data/" + entry.getKey() + ".json"));
+                if (writerApi == null) continue;
+                if (writerHtml == null) continue;
 
-                writer.write(gson.toJson(entry.getValue()));
-                writer.flush();
-                writer.close();
+                writerApi.write(gson.toJson(entry.getValue()));
+                writerHtml.write(gson.toJson(entry.getValue()));
+                writerApi.flush();
+                writerHtml.flush();
+                writerApi.close();
+                writerHtml.close();
 
             } catch (IOException ex) {
                 ex.printStackTrace();

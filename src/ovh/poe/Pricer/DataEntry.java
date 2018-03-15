@@ -504,7 +504,7 @@ public class DataEntry {
     }
 
     public int getCount() {
-        return total_counter + inc_counter - dec_counter;
+        return total_counter;
     }
 
     public int getInc_counter() {

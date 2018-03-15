@@ -100,15 +100,14 @@ public class Mappers {
     public static class JSONParcel {
         public static class Item {
             public double mean, median, mode;
-            public int count, inc, dec;
+            public int count, inc;
 
             public void copy (DataEntry entry) {
                 mean = entry.getMean();
                 median = entry.getMedian();
                 mode = entry.getMode();
-                count = entry.getCount();
+                count = entry.getCount() + entry.getInc_counter();
                 inc = entry.getInc_counter();
-                dec = entry.getDec_counter();
             }
         }
 
