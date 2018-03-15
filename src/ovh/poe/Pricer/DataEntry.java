@@ -75,12 +75,14 @@ public class DataEntry {
         // Add new value to raw data array
         rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.id + "," + accountName);
 
-        // Get latest icon
-        int tempIndex = item.icon.indexOf("?");
-        if (tempIndex == -1) tempIndex = item.icon.length();
-        icon = item.icon.substring(0, tempIndex);
-        // "Encode" url so it doesn't break the CSV
-        icon = Base64.getEncoder().encodeToString(icon.getBytes());
+        // Get latest icon, if present
+        if (item.icon != null) {
+            int tempIndex = item.icon.indexOf("?");
+            if (tempIndex == -1) tempIndex = item.icon.length();
+            icon = item.icon.substring(0, tempIndex);
+            // "Encode" url so it doesn't break the CSV
+            icon = Base64.getEncoder().encodeToString(icon.getBytes());
+        }
     }
 
     /**

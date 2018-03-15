@@ -136,6 +136,8 @@ public class Item extends Mappers.BaseItem {
             typeLine = RELATIONS.shortHandToName.get(noteList[2]);
             priceType = "1";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
+            // Prevents other currency items getting Chaos Orb's icon
+            icon = null;
         } else {
             this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
             priceType = RELATIONS.shortHandToIndex.get(noteList[2]);
