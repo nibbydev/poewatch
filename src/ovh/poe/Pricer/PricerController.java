@@ -179,18 +179,12 @@ public class PricerController {
     private void writeJSONToFile() {
         for (Map.Entry<String, Map<String, Map<String, Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
             try {
-                BufferedWriter writerApi = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));
-                BufferedWriter writerHtml = defineWriter(new File("./http/html/data/" + entry.getKey() + ".json"));
-                if (writerApi == null) continue;
-                if (writerHtml == null) continue;
+                BufferedWriter writer = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));
+                if (writer == null) continue;
 
-                writerApi.write(gson.toJson(entry.getValue()));
-                writerHtml.write(gson.toJson(entry.getValue()));
-                writerApi.flush();
-                writerHtml.flush();
-                writerApi.close();
-                writerHtml.close();
-
+                writer.write(gson.toJson(entry.getValue()));
+                writer.flush();
+                writer.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -348,9 +342,12 @@ public class PricerController {
                 // 2 - cycle counter
                 // 3 - last clear time
 
-                System.out.println("[INFO] Found start parameters:\n    Cycle counter: " + splitLine[2] +
-                        "\n    Last write time: " + (System.currentTimeMillis() - Long.parseLong(splitLine[1])) /
-                        1000 + " sec ago");
+                System.out.println("[INFO] Found start parameters:");
+                System.out.println("    Cycle counter: " + splitLine[2]);
+
+                long lastWriteTime = (System.currentTimeMillis() - Long.parseLong(splitLine[1])) / 1000;
+                System.out.println("    Last write time: " + lastWriteTime + " sec ago");
+
 
                 // Set the cycle counter to whatever is in the file
                 cycleCount = Integer.parseInt(splitLine[2]);

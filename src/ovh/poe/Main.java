@@ -195,12 +195,11 @@ public class Main {
     private static void buildFolderFileStructure() {
         // Make sure output folders exist
         new File("./http/api/data").mkdirs();
-        new File("./http/html/data").mkdirs();
+        new File("./http/html").mkdirs();
 
         // Create ./http/.htaccess if missing
-        saveResource("/http/api/", ".htaccess");
-        saveResource("/http/html/", ".htaccess");
-        //saveResource("/http/html/data/", ".htaccess"); TODO: enable this
+        saveResource("/http/api/", ".htaccess---api");
+        saveResource("/http/html/", ".htaccess---html");
 
         // Create ./http/ChangeID.php if missing
         saveResource("/http/api/", "ChangeID.php");
@@ -213,7 +212,6 @@ public class Main {
 
         // Create ./http/data/index.php if missing
         saveResource("/http/api/data/", "index.php");
-        saveResource("/http/html/data/", "index.php");
 
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
@@ -229,15 +227,18 @@ public class Main {
      * @param name            filename
      */
     private static void saveResource(String outputDirectory, String name) {
+        // Remove id from file name
+        String outputName = name.split("---")[0];
+
         // Get the current path
         String workingDir = System.getProperty("user.dir");
-        File out = new File(workingDir + outputDirectory, name);
+        File out = new File(workingDir + outputDirectory, outputName);
 
         // No real need to overwrite on startup
         if (out.exists()) return;
 
         // Notify if any files were created
-        System.out.println("[INFO] Created file: " + outputDirectory + name);
+        System.out.println("[INFO] Created file: " + outputDirectory + outputName);
 
         // Define I/O so they can be closed later
         BufferedInputStream reader = null;

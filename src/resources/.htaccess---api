@@ -3,3 +3,6 @@
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule !.*\.php$ %{REQUEST_FILENAME}.php [QSA,L]
 </IfModule>
+
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods: "GET"

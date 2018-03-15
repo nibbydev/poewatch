@@ -1,6 +1,0 @@
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME}.json -f
-RewriteRule !.*\.json$ %{REQUEST_FILENAME}.json [QSA,L]
-
-Header set Access-Control-Allow-Origin "*"
-Header set Access-Control-Allow-Methods: "GET"
