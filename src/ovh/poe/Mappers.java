@@ -144,6 +144,15 @@ public class Mappers {
         String[] aliases;
     }
 
+    public static class IconRelation {
+        String name, url;
+
+        public IconRelation (String name, String url) {
+            this.name = name;
+            this.url = url;
+        }
+    }
+
     public static class HourlyEntry {
         public double mean, median, mode;
 

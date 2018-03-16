@@ -11,6 +11,7 @@ public class Item extends Mappers.BaseItem {
     private String priceType, parentCategory, subCategory, key, variation;
     private double price;
     private int links, level, quality;
+    private String genericKey;
 
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
@@ -78,30 +79,40 @@ public class Item extends Mappers.BaseItem {
      */
     private void buildKey() {
         StringBuilder key = new StringBuilder();
+        StringBuilder genericKey = new StringBuilder();
 
         key.append(league);
         key.append('|');
         key.append(parentCategory);
+        genericKey.append(parentCategory);
 
         // If present, add subCategory to database key
         if (subCategory != null) {
             key.append(':');
             key.append(subCategory);
+            genericKey.append(':');
+            genericKey.append(subCategory);
         }
 
         // Add item's name to database key
         key.append('|');
         key.append(name);
+        genericKey.append('|');
+        genericKey.append(name);
 
         // If present, add typeline to database key
         if (typeLine != null) {
             key.append(':');
             key.append(typeLine);
+            genericKey.append(':');
+            genericKey.append(typeLine);
         }
 
         // Add item's frametype to database key
         key.append('|');
         key.append(frameType);
+        genericKey.append('|');
+        genericKey.append(frameType);
 
         // If the item has a 5- or 6-link
         if (links > 4) {
@@ -113,6 +124,8 @@ public class Item extends Mappers.BaseItem {
         if (variation != null) {
             key.append("|var:");
             key.append(variation);
+            genericKey.append("|var:");
+            genericKey.append(variation);
         }
 
         // If the item was a gem, add gem info
@@ -128,6 +141,7 @@ public class Item extends Mappers.BaseItem {
 
         // Convert stringbuilder to string
         this.key = key.toString();
+        this.genericKey = genericKey.toString();
     }
 
     /**
@@ -528,6 +542,10 @@ public class Item extends Mappers.BaseItem {
 
     public String getKey() {
         return key;
+    }
+
+    public String getGenericKey() {
+        return genericKey;
     }
 
     public String getParentCategory() {

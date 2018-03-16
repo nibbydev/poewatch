@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -19,8 +18,8 @@ public class RelationManager {
     public Map<String, String> aliasToIndex = new HashMap<>();
     public Map<String, String> aliasToName = new HashMap<>();
 
-    public Map<String, Integer> iconToIndex = new HashMap<>();
-    public Map<Integer, String> indexToIcon = new TreeMap<>();
+    public Map<String, Integer> nameToIconIndex = new HashMap<>();
+    public Map<Integer, Mappers.IconRelation> iconIndexToIcon = new TreeMap<>();
 
     public Map<String, List<String>> categories = new HashMap<>();
 
@@ -66,13 +65,13 @@ public class RelationManager {
 
         // Open up the reader
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-            Type listType = new TypeToken<HashMap<Integer, String>>(){}.getType();
-            HashMap<Integer, String> relations = gson.fromJson(reader, listType);
+            Type listType = new TypeToken<HashMap<Integer, Mappers.IconRelation>>(){}.getType();
+            HashMap<Integer, Mappers.IconRelation> relations = gson.fromJson(reader, listType);
 
             // Lambda loop
-            relations.forEach((key, value) -> {
-                iconToIndex.put(value, key);
-                indexToIcon.put(key, value);
+            relations.forEach((index, item) -> {
+                nameToIconIndex.put(item.name, index);
+                iconIndexToIcon.put(index, item);
             });
 
         } catch (IOException ex) {
@@ -87,7 +86,7 @@ public class RelationManager {
         // Save icon relations to file
         File iconFile = new File("./iconRelations.json");
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(iconFile), "UTF-8"))) {
-            gson.toJson(indexToIcon, writer);
+            gson.toJson(iconIndexToIcon, writer);
         } catch (IOException ex) {
             System.out.println("[ERROR] Could not write to icoRelations.json");
             ex.printStackTrace();
@@ -106,17 +105,23 @@ public class RelationManager {
     /**
      * Provides an interface for saving and retrieving icons and indexes
      *
-     * @param icon Image url to add
+     * @param key Item's key to add
+     * @param icon Item's image url to add
      * @return Generated index of added url
      */
-    public int addIcon(String icon) {
+    public int addIcon(String key, String icon) {
         // If icon is already present, return icon index
-        if (iconToIndex.containsKey(icon)) return iconToIndex.get(icon);
+        if (nameToIconIndex.containsKey(key)) return nameToIconIndex.get(key);
+
+        // Get "?"'s index in url
+        int tempIndex = (icon.contains("?") ? icon.indexOf("?") : icon.length());
+        // Get everything before "?"
+        icon = icon.substring(0, tempIndex);
 
         // Otherwise add to map and return icon index
-        int index = iconToIndex.size();
-        iconToIndex.put(icon, index);
-        indexToIcon.put(index, icon);
+        int index = nameToIconIndex.size();
+        nameToIconIndex.put(key, index);
+        iconIndexToIcon.put(index, new Mappers.IconRelation(key, icon));
         return index;
     }
 

@@ -61,12 +61,8 @@ public class DataEntry {
 
         // Get latest icon, if present
         if (item.icon != null && iconIndex < 0) {
-            // Get "?"'s index in url
-            int tempIndex = (item.icon.contains("?") ? item.icon.indexOf("?") : item.icon.length());
-            // Get everything before "?"
-            String icon = item.icon.substring(0, tempIndex);
-            // Save it in relationmanager and get index
-            iconIndex = Main.RELATIONS.addIcon(icon);
+            // Get icon's index
+            iconIndex = Main.RELATIONS.addIcon(item.getGenericKey(), item.icon);
         }
     }
 
