@@ -19,7 +19,6 @@ public class ConfigReader {
     public int dataEntryCycleLimit = 10;
     public int baseDataSize = 100;
     public int hourlyDataSize = 60;
-    public String defaultAPIURL = "http://www.pathofexile.com/api/public-stash-tabs?id=";
     public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
 
@@ -84,9 +83,6 @@ public class ConfigReader {
                         break;
                     case "hourlyDataSize":
                         hourlyDataSize = Integer.parseInt(value);
-                        break;
-                    case "defaultAPIURL":
-                        defaultAPIURL = value;
                         break;
                     case "medianLeftShift":
                         medianLeftShift = Integer.parseInt(value);
