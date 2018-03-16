@@ -529,4 +529,12 @@ public class Item extends Mappers.BaseItem {
     public String getKey() {
         return key;
     }
+
+    public String getParentCategory() {
+        return parentCategory;
+    }
+
+    public String getSubCategory() {
+        return subCategory;
+    }
 }

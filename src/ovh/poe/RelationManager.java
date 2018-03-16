@@ -22,6 +22,8 @@ public class RelationManager {
     public Map<String, Integer> iconToIndex = new HashMap<>();
     public Map<Integer, String> indexToIcon = new TreeMap<>();
 
+    public Map<String, List<String>> categories = new HashMap<>();
+
     /**
      * Reads currency and icon relation data from file on object init
      */
@@ -91,13 +93,12 @@ public class RelationManager {
             ex.printStackTrace();
         }
 
-        // Copy file to api directory
-        try {
-            File outputFile = new File("./http/api/data/iconRelations.json");
-            if (outputFile.exists()) outputFile.delete();
-            Files.copy(file.toPath(), outputFile.toPath());
+        // Save item categories to file
+        File categoryFile = new File("./categories.json");
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(categoryFile), "UTF-8"))) {
+            gson.toJson(categories, writer);
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not copy iconRelations.json to api folder");
+            System.out.println("[ERROR] Could not write to categories.json");
             ex.printStackTrace();
         }
     }
@@ -117,5 +118,19 @@ public class RelationManager {
         iconToIndex.put(icon, index);
         indexToIcon.put(index, icon);
         return index;
+    }
+
+    /**
+     * Manages item category list
+     *
+     * @param parentCategory Parent category of item (e.g. "armour" or "flasks")
+     * @param childCategory Child category of item (e.g. "gloves" or null)
+     */
+    public void addCategory(String parentCategory, String childCategory) {
+        List<String> childCategories = categories.getOrDefault(parentCategory, new ArrayList<>());
+
+        if (childCategory != null && !childCategories.contains(childCategory)) childCategories.add(childCategory);
+
+        categories.putIfAbsent(parentCategory, childCategories);
     }
 }

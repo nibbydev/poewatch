@@ -75,6 +75,8 @@ public class DataEntry {
         // Add new value to raw data array
         rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.id + "," + accountName);
 
+        Main.RELATIONS.addCategory(item.getParentCategory(), item.getSubCategory());
+
         // Get latest icon, if present
         if (item.icon != null) {
             // Get "?"'s index in url
