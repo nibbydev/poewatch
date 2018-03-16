@@ -48,6 +48,9 @@ public class Main {
 
         // Stop workers on exit
         WORKER_CONTROLLER.stopController();
+
+        // Save generated icon data
+        RELATIONS.saveData();
     }
 
     /**
