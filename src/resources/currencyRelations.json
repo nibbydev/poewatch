@@ -1,0 +1,119 @@
+[
+    {
+        "index": "0",
+        "name": "Chaos Orb",
+        "aliases": ["chaos", "choas", "c"]
+    },{
+        "index": "1",
+        "name": "Exalted Orb",
+        "aliases": ["exalted", "exalt", "exa", "ex"]
+    },{
+        "index": "2",
+        "name": "Divine Orb",
+        "aliases": ["divine", "div"]
+    },{
+        "index": "3",
+        "name": "Orb of Alchemy",
+        "aliases": ["alchemy", "alch", "alc"]
+    },{
+        "index": "4",
+        "name": "Orb of Fusing",
+        "aliases": ["fusings", "fusing", "fuse", "fus"]
+    },{
+        "index": "5",
+        "name": "Orb of Alteration",
+        "aliases": ["alts", "alteration", "alt"]
+    },{
+        "index": "6",
+        "name": "Regal Orb",
+        "aliases": ["regal", "rega"]
+    },{
+        "index": "7",
+        "name": "Vaal Orb",
+        "aliases": ["vaal"]
+    },{
+        "index": "8",
+        "name": "Orb of Regret",
+        "aliases": ["regret", "regrets", "regr"]
+    },{
+        "index": "9",
+        "name": "Cartographer's Chisel",
+        "aliases": ["chisel", "chis", "cart"]
+    },{
+        "index": "10",
+        "name": "Jeweller's Orb",
+        "aliases": ["jewellers", "jeweller", "jew"]
+    },{
+        "index": "11",
+        "name": "Silver Coin",
+        "aliases": ["silver"]
+    },{
+        "index": "12",
+        "name": "Perandus Coin",
+        "aliases": ["coin", "coins", "perandus"]
+    },{
+        "index": "13",
+        "name": "Orb of Scouring",
+        "aliases": ["scouring", "scour"]
+    },{
+        "index": "14",
+        "name": "Gemcutter's Prism",
+        "aliases": ["gcp", "gemc"]
+    },{
+        "index": "15",
+        "name": "Orb of Chance",
+        "aliases": ["chance", "chanc"]
+    },{
+        "index": "16",
+        "name": "Chromatic Orb",
+        "aliases": ["chrome", "chrom"]
+    },{
+        "index": "17",
+        "name": "Blessed Orb",
+        "aliases": ["blessed", "bless", "bles"]
+    },{
+        "index": "18",
+        "name": "Glassblower's Bauble",
+        "aliases": ["glass", "bauble"]
+    },{
+        "index": "19",
+        "name": "Orb of Augmentation",
+        "aliases": ["aug"]
+    },{
+        "index": "20",
+        "name": "Orb of Transmutation",
+        "aliases": ["tra", "trans"]
+    },{
+        "index": "21",
+        "name": "Mirror of Kalandra",
+        "aliases": ["mirror", "mir", "kal"]
+    },{
+        "index": "22",
+        "name": "Scroll of Wisdom",
+        "aliases": ["wis", "wisdom"]
+    },{
+        "index": "23",
+        "name": "Portal Scroll",
+        "aliases": ["port", "portal"]
+    },{
+        "index": "24",
+        "name": "Blacksmith's Whetstone",
+        "aliases": ["whetstone", "blacksmith", "whet"]
+    },{
+        "index": "25",
+        "name": "Armourer's Scrap",
+        "aliases": ["armour", "scrap"]
+    },{
+        "index": "26",
+        "name": "Apprentice Cartographer's Sextant",
+        "aliases": ["apprentice-sextant", "apprentice"]
+    },{
+        "index": "27",
+        "name": "Journeyman Cartographer's Sextant",
+        "aliases": ["journeyman-sextant", "journeyman"]
+    },{
+        "index": "28",
+        "name": "Master Cartographer's Sextant",
+        "aliases": ["master-sextant", "master"]
+    }
+]

@@ -139,4 +139,9 @@ public class Mappers {
             leagues.clear();
         }
     }
+
+    public static class CurrencyRelation {
+        String name, index;
+        String[] aliases;
+    }
 }

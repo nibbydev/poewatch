@@ -183,7 +183,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!RELATIONS.shortHandToIndex.containsKey(noteList[2])) {
+        if (!RELATIONS.aliasToIndex.containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -192,14 +192,14 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
-            typeLine = RELATIONS.shortHandToName.get(noteList[2]);
+            typeLine = RELATIONS.aliasToName.get(noteList[2]);
             priceType = "1";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
             icon = null;
         } else {
             this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
-            priceType = RELATIONS.shortHandToIndex.get(noteList[2]);
+            priceType = RELATIONS.aliasToIndex.get(noteList[2]);
         }
     }
 

@@ -216,8 +216,8 @@ public class Main {
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
 
-        // Create ./currencyRelations.txt if missing
-        saveResource("/", "currencyRelations.txt");
+        // Create ./currencyRelations.json if missing
+        saveResource("/", "currencyRelations.json");
     }
 
     /**
