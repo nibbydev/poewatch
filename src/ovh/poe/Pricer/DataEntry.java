@@ -58,6 +58,7 @@ public class DataEntry {
         rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.id + "," + accountName);
 
         Main.RELATIONS.addCategory(item.getParentCategory(), item.getSubCategory());
+        Main.RELATIONS.addLeague(item.league);
 
         // Get latest icon, if present
         if (item.icon != null && iconIndex < 0) {

@@ -5,6 +5,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -22,6 +24,7 @@ public class RelationManager {
     public Map<Integer, Mappers.IconRelation> iconIndexToIcon = new TreeMap<>();
 
     public Map<String, List<String>> categories = new HashMap<>();
+    public List<String> leagues = new ArrayList<>();
 
     /**
      * Reads currency and icon relation data from file on object init
@@ -29,6 +32,68 @@ public class RelationManager {
     public RelationManager() {
         readCurrencyRelationsFromFile();
         readIconsFromFile();
+    }
+
+    /**
+     * Downloads a list of active leagues from pathofexile.com and appends them to list
+     */
+    public void getLeagueList() {
+        List<Mappers.LeagueListElement> leagueList = null;
+        InputStream stream = null;
+
+        try {
+            // Define the request
+            URL request = new URL("http://api.pathofexile.com/leagues?type=main&compact=1");
+            HttpURLConnection connection = (HttpURLConnection) request.openConnection();
+
+            // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
+            connection.setReadTimeout(Main.CONFIG.readTimeOut);
+            connection.setConnectTimeout(Main.CONFIG.connectTimeOut);
+
+            // Define the streamer (used for reading in chunks)
+            stream = connection.getInputStream();
+
+            // Define some elements
+            StringBuilder stringBuilderBuffer = new StringBuilder();
+            byte[] byteBuffer = new byte[128];
+            int byteCount;
+
+            // Stream data and count bytes
+            while ((byteCount = stream.read(byteBuffer, 0, Main.CONFIG.downloadChunkSize)) != -1) {
+                // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
+                if (byteCount != Main.CONFIG.downloadChunkSize) {
+                    byte[] trimmedByteBuffer = new byte[byteCount];
+                    System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
+
+                    // Trim byteBuffer, convert it into string and add to string buffer
+                    stringBuilderBuffer.append(new String(trimmedByteBuffer));
+                } else {
+                    stringBuilderBuffer.append(new String(byteBuffer));
+                }
+            }
+
+            // Attempt to parse league list
+            Type listType = new TypeToken<List<Mappers.LeagueListElement>>(){}.getType();
+            leagueList = gson.fromJson(stringBuilderBuffer.toString(), listType);
+        } catch (Exception ex) {
+            System.out.println("[Error] Failed to download league list");
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (stream != null) stream.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        // If download was unsuccessful, return
+        if (leagueList == null || leagueList.size() < 3) return;
+
+        // Clear and fill list
+        leagues.clear();
+        for (Mappers.LeagueListElement element : leagueList) {
+            if (!element.id.contains("SSF")) leagues.add(element.id);
+        }
     }
 
     /**
@@ -100,6 +165,18 @@ public class RelationManager {
             System.out.println("[ERROR] Could not write to categories.json");
             ex.printStackTrace();
         }
+
+        // Get a list of leagues from pathofexile.com
+        getLeagueList();
+
+        // Save leagues to file
+        File leagueFile = new File("./leagues.json");
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(leagueFile), "UTF-8"))) {
+            gson.toJson(leagues, writer);
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write to leagues.json");
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -137,5 +214,14 @@ public class RelationManager {
         if (childCategory != null && !childCategories.contains(childCategory)) childCategories.add(childCategory);
 
         categories.putIfAbsent(parentCategory, childCategories);
+    }
+
+    /**
+     * Manages league list
+     *
+     * @param league Item's league
+     */
+    public void addLeague(String league) {
+        if (!leagues.contains(league)) leagues.add(league);
     }
 }

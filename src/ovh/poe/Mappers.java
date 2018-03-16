@@ -162,6 +162,7 @@ public class Mappers {
             this.mode = mode;
         }
     }
+
     public static class ItemEntry {
         public double price;
         public String accountName, id;
@@ -171,5 +172,9 @@ public class Mappers {
             this.accountName = accountName;
             this.id = id;
         }
+    }
+
+    public static class LeagueListElement {
+        public String id, startAt, endAt;
     }
 }
