@@ -143,4 +143,24 @@ public class Mappers {
         String name, index;
         String[] aliases;
     }
+
+    public static class HourlyEntry {
+        public double mean, median, mode;
+
+        public HourlyEntry (double mean, double median, double mode) {
+            this.mean = mean;
+            this.median = median;
+            this.mode = mode;
+        }
+    }
+    public static class ItemEntry {
+        public double price;
+        public String accountName, id;
+
+        public ItemEntry (double price, String accountName, String id) {
+            this.price = price;
+            this.accountName = accountName;
+            this.id = id;
+        }
+    }
 }
