@@ -4,7 +4,6 @@ import ovh.poe.Item;
 import ovh.poe.Main;
 
 import java.util.*;
-import java.util.Base64;
 
 /**
  * Price database entry object
@@ -36,7 +35,8 @@ public class DataEntry {
     private double mean = 0.0;
     private double median, mode;
     private double threshold_multiplier = 0.0;
-    private String key, icon;
+    private String key;
+    private int iconIndex = -1;
 
     // Lists that hold price data
     private ArrayList<String> rawData = new ArrayList<>();
@@ -77,11 +77,12 @@ public class DataEntry {
 
         // Get latest icon, if present
         if (item.icon != null) {
-            int tempIndex = item.icon.indexOf("?");
-            if (tempIndex == -1) tempIndex = item.icon.length();
-            icon = item.icon.substring(0, tempIndex);
-            // "Encode" url so it doesn't break the CSV
-            icon = Base64.getEncoder().encodeToString(icon.getBytes());
+            // Get "?"'s index in url
+            int tempIndex = (item.icon.contains("?") ? item.icon.indexOf("?") : item.icon.length());
+            // Get everything before "?"
+            String icon = item.icon.substring(0, tempIndex);
+            // Save it in relationmanager and get index
+            iconIndex = Main.RELATIONS.addIcon(icon);
         }
     }
 
@@ -223,13 +224,13 @@ public class DataEntry {
         mode = findMode(1);
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
-        if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 50)
+        if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 80)
             threshold_multiplier += 0.1;
         else if (inc_counter > 0 && threshold_multiplier > -1)
             threshold_multiplier -= 0.1;
 
         // Don't let it grow infinitely
-        if (threshold_multiplier > 7) threshold_multiplier -= 0.2;
+        if (threshold_multiplier > 5) threshold_multiplier -= 0.2;
 
         if (Main.PRICER_CONTROLLER.clearStats) {
             total_counter += inc_counter;
@@ -355,7 +356,7 @@ public class DataEntry {
                 med: - median
                 mod: - mode
                 mtp: - threshold_multiplier
-                ico: - icon url
+                ico: - icon index
             2 - database entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
@@ -388,8 +389,7 @@ public class DataEntry {
         stringBuilder.append(",mtp:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
         stringBuilder.append(",ico:");
-        if (icon == null) stringBuilder.append("-");
-        else stringBuilder.append(icon);
+        stringBuilder.append(iconIndex);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -452,7 +452,7 @@ public class DataEntry {
                 med: - median
                 mod: - mode
                 mtp: - threshold_multiplier
-                ico: - icon url
+                ico: - icon index
             2 - database entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
@@ -474,18 +474,6 @@ public class DataEntry {
 
             for (String dataItem : values) {
                 String[] splitDataItem = dataItem.split(":");
-
-                // The old method TODO: remove this
-                if (splitDataItem.length < 2) {
-                    total_counter = Integer.parseInt(values[0]);
-                    inc_counter += Integer.parseInt(values[1]);
-                    dec_counter += Integer.parseInt(values[2]);
-                    mean = Double.parseDouble(values[3]);
-                    median = Double.parseDouble(values[4]);
-                    mode = Double.parseDouble(values[5]);
-                    threshold_multiplier = Double.parseDouble(values[6]);
-                    break;
-                }
 
                 switch (splitDataItem[0]) {
                     case "cnt":
@@ -510,7 +498,7 @@ public class DataEntry {
                         threshold_multiplier = Double.parseDouble(splitDataItem[1]);
                         break;
                     case "ico":
-                        if (!splitDataItem[1].equals("-")) icon = splitDataItem[1];
+                        iconIndex = Integer.parseInt(splitDataItem[1]);
                         break;
                     default:
                         System.out.println("idk: " + splitDataItem[0]);
@@ -570,10 +558,7 @@ public class DataEntry {
         return dec_counter;
     }
 
-    public String getIcon() {
-        if (icon == null)
-            return "";
-        else
-            return new String(Base64.getUrlDecoder().decode(icon.getBytes()));
+    public int getIcon() {
+        return iconIndex;
     }
 }

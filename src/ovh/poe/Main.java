@@ -259,7 +259,7 @@ public class Main {
 
             // Read and write at the same time
             while ((length = reader.read(buffer, 0, 1024)) > 0) {
-                writer.write(buffer, position, length);
+                writer.write(buffer, 0, length);
                 position += length;
             }
         } catch (IOException ex) {

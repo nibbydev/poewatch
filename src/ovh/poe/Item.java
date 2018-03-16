@@ -214,8 +214,14 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Get item's icon sub-category
-        String[] splitItemType = icon.split("/");
-        String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
+        String iconCategory;
+        if (icon == null) {
+            // Misc currency
+            iconCategory = "currency";
+        } else {
+            String[] splitItemType = icon.split("/");
+            iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
+        }
 
         // Divide certain items to different sub-categories
         switch (parentCategory) {
@@ -301,6 +307,8 @@ public class Item extends Mappers.BaseItem {
      * Check if item can have a 6-link, assign them a separate key
      */
     private void checkSixLink() {
+        if (subCategory == null) return;
+
         // Filter out items that can have 6 links
         switch (subCategory) {
             case "chest":
@@ -495,10 +503,10 @@ public class Item extends Mappers.BaseItem {
         // "armour=[gloves]" -> {"armour", "[gloves]"}
         String[] splitString = asString.split("=");
 
-        if (splitString[1].equals("[]")) {
-            parentCategory = splitString[0];
-        } else {
-            parentCategory = splitString[0] + ":" + splitString[1].substring(1, splitString[1].length() - 1);
+        parentCategory = splitString[0].toLowerCase();
+
+        if (!splitString[1].equals("[]")) {
+            subCategory =  splitString[1].substring(1, splitString[1].length() - 1).toLowerCase();
         }
     }
 

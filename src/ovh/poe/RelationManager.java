@@ -5,10 +5,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.util.*;
 
 /**
  * Maps indexes and shorthands to currency names and vice versa
@@ -21,8 +19,8 @@ public class RelationManager {
     public Map<String, String> aliasToIndex = new HashMap<>();
     public Map<String, String> aliasToName = new HashMap<>();
 
-    public Map<String, String> iconToIndex = new HashMap<>();
-    public Map<String, String> indexToIcon = new HashMap<>();
+    public Map<String, Integer> iconToIndex = new HashMap<>();
+    public Map<Integer, String> indexToIcon = new TreeMap<>();
 
     /**
      * Reads currency and icon relation data from file on object init
@@ -62,12 +60,12 @@ public class RelationManager {
      * Reads icon relation data from file
      */
     private void readIconsFromFile() {
-        File file = new File("./icons.json");
+        File file = new File("./iconRelations.json");
 
         // Open up the reader
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-            Type listType = new TypeToken<HashMap<String, String>>(){}.getType();
-            HashMap<String, String> relations = gson.fromJson(reader, listType);
+            Type listType = new TypeToken<HashMap<Integer, String>>(){}.getType();
+            HashMap<Integer, String> relations = gson.fromJson(reader, listType);
 
             // Lambda loop
             relations.forEach((key, value) -> {
@@ -76,7 +74,7 @@ public class RelationManager {
             });
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            // Doesn't matter if the file exists or not. It will be written to later.
         }
     }
 
@@ -84,13 +82,40 @@ public class RelationManager {
      * Saves data to file on program exit
      */
     public void saveData() {
-        File file = new File("./currencyRelations.json");
-
-        // Open up the reader
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
+        // Save icon relations to file
+        File iconFile = new File("./iconRelations.json");
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(iconFile), "UTF-8"))) {
             gson.toJson(indexToIcon, writer);
         } catch (IOException ex) {
+            System.out.println("[ERROR] Could not write to icoRelations.json");
             ex.printStackTrace();
         }
+
+        // Copy file to api directory
+        try {
+            File outputFile = new File("./http/api/data/iconRelations.json");
+            if (outputFile.exists()) outputFile.delete();
+            Files.copy(file.toPath(), outputFile.toPath());
+        } catch (IOException ex) {
+            System.out.println("[ERROR] Could not copy iconRelations.json to api folder");
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Provides an interface for saving and retrieving icons and indexes
+     *
+     * @param icon Image url to add
+     * @return Generated index of added url
+     */
+    public int addIcon(String icon) {
+        // If icon is already present, return icon index
+        if (iconToIndex.containsKey(icon)) return iconToIndex.get(icon);
+
+        // Otherwise add to map and return icon index
+        int index = iconToIndex.size();
+        iconToIndex.put(icon, index);
+        indexToIcon.put(index, icon);
+        return index;
     }
 }

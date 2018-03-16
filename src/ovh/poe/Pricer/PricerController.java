@@ -151,7 +151,7 @@ public class PricerController {
         // Prepare for database building
         System.out.println(Main.timeStamp() + " Generating databases [" + (cycleCount + 1) + "/" +
                 Main.CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)" +
-                "(reset " + (1440 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min)"
+                "(reset " + (60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min)"
         );
 
         // Set last run time
@@ -160,7 +160,7 @@ public class PricerController {
         // Increase DataEntry's static cycle count
         cycleCount++;
 
-        if ((System.currentTimeMillis() - lastClearCycle) > 86400000) {
+        if ((System.currentTimeMillis() - lastClearCycle) > 3600000) {
             lastClearCycle = System.currentTimeMillis();
             clearStats = true;
         }
@@ -172,12 +172,19 @@ public class PricerController {
             System.out.println(Main.timeStamp() + " Building JSON");
         }
 
+        // The method that does it all
         readFileParseFileWriteFile();
-        if (writeJSON) writeJSONToFile();
 
+        // If this cycle is the JSON writing cycle
+        if (writeJSON) {
+            // Write JSON to file
+            writeJSONToFile();
+            // Save generated icon data
+            Main.RELATIONS.saveData();
+        }
+
+        // Switch off flags
         clearStats = writeJSON = false;
-
-        // Lower the pause flag, so that other Worker threads may continue using the databases
         flipPauseFlag();
     }
 
