@@ -97,6 +97,10 @@ public class DataEntry {
 
         // Build statistics and databases
         parse();
+
+        // No point in filling database with 0's
+        if (database_items.size() < 10) return;
+
         purge();
         build();
 
@@ -110,6 +114,10 @@ public class DataEntry {
     public void cycle() {
         // Build statistics and databases
         parse();
+
+        // No point in filling database with 0's
+        if (database_items.size() < 10) return;
+
         purge();
         build();
 
@@ -160,7 +168,7 @@ public class DataEntry {
             }
 
             // Hard-cap item prices
-            if (price > 500000.0 || price < 0.001) continue;
+            if (price > 50000.0 || price < 0.001) continue;
 
             // Add values to the front of the lists
             database_items.add(0, new ItemEntry(
