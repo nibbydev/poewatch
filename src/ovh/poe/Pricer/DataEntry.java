@@ -2,6 +2,8 @@ package ovh.poe.Pricer;
 
 import ovh.poe.Item;
 import ovh.poe.Main;
+import ovh.poe.Mappers.ItemEntry;
+import ovh.poe.Mappers.HourlyEntry;
 
 import java.util.*;
 
@@ -9,26 +11,6 @@ import java.util.*;
  * Price database entry object
  */
 public class DataEntry {
-    private class HourlyEntry {
-        public double mean, median, mode;
-
-        HourlyEntry (double mean, double median, double mode) {
-            this.mean = mean;
-            this.median = median;
-            this.mode = mode;
-        }
-    }
-    private class ItemEntry {
-        public double price;
-        public String accountName, id;
-
-        ItemEntry (double price, String accountName, String id) {
-            this.price = price;
-            this.accountName = accountName;
-            this.id = id;
-        }
-    }
-
     private int total_counter = 0;
     private int inc_counter = 0;
     private int dec_counter = 0;
@@ -78,7 +60,7 @@ public class DataEntry {
         Main.RELATIONS.addCategory(item.getParentCategory(), item.getSubCategory());
 
         // Get latest icon, if present
-        if (item.icon != null) {
+        if (item.icon != null && iconIndex < 0) {
             // Get "?"'s index in url
             int tempIndex = (item.icon.contains("?") ? item.icon.indexOf("?") : item.icon.length());
             // Get everything before "?"
