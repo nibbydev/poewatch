@@ -8,9 +8,9 @@ import static ovh.poe.Main.RELATIONS;
  */
 public class Item extends Mappers.BaseItem {
     private volatile boolean discard = false;
-    private String priceType, itemType;
-    private String key = "";
+    private String priceType, parentCategory, subCategory, key, variation;
     private double price;
+    private int links, level, quality;
 
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
@@ -35,19 +35,19 @@ public class Item extends Mappers.BaseItem {
         formatNameAndItemType();
         if (discard) return;
 
+        // Filter based on frametypes
         switch (frameType) {
             case 0: // Normal
             case 1: // Magic
             case 2: // Rare
-                if (!itemType.contains("maps")) {
+                // If it's not a map, discard it
+                if (!parentCategory.equals("maps")) {
                     discard = true;
                     return;
                 }
 
                 // "Superior Ashen Wood" = "Ashen Wood"
-                if (key.contains("Superior ")) {
-                    key = key.replace("Superior ", "");
-                }
+                if (name.contains("Superior ")) name = name.replace("Superior ", "");
 
                 // Include maps under same frame type
                 frameType = 0;
@@ -57,18 +57,77 @@ public class Item extends Mappers.BaseItem {
                 checkGemInfo();
                 break;
 
-            // Filter out chaos orbs
-            case 5:
+            case 5: // Filter out chaos orbs
                 if (name.equals("Chaos Orb")) {
                     discard = true;
                     return;
                 }
 
-            default:
+            default: // Everything else will pass through here
                 checkSixLink();
                 checkSpecialItemVariant();
                 break;
         }
+
+        // Form the database key
+        buildKey();
+    }
+
+    /**
+     * Format the item's database key
+     */
+    private void buildKey() {
+        StringBuilder key = new StringBuilder();
+
+        key.append(league);
+        key.append('|');
+        key.append(parentCategory);
+
+        // If present, add subCategory to database key
+        if (subCategory != null) {
+            key.append(':');
+            key.append(subCategory);
+        }
+
+        // Add item's name to database key
+        key.append('|');
+        key.append(name);
+
+        // If present, add typeline to database key
+        if (typeLine != null) {
+            key.append(':');
+            key.append(typeLine);
+        }
+
+        // Add item's frametype to database key
+        key.append('|');
+        key.append(frameType);
+
+        // If the item has a 5- or 6-link
+        if (links > 4) {
+            if (links == 5) key.append("|links:5");
+            else if (links == 6) key.append("|links:6");
+        }
+
+        // If the item has a variation
+        if (variation != null) {
+            key.append("|var:");
+            key.append(variation);
+        }
+
+        // If the item was a gem, add gem info
+        if (parentCategory.equals("gems")) {
+            key.append("|l:");
+            key.append(level);
+            key.append("|q:");
+            key.append(quality);
+            key.append("|c:");
+            if (corrupted) key.append(1);
+            else key.append(0);
+        }
+
+        // Convert stringbuilder to string
+        this.key = key.toString();
     }
 
     /**
@@ -148,89 +207,41 @@ public class Item extends Mappers.BaseItem {
      * Format the item's full name and finds the item type
      */
     private void formatNameAndItemType() {
-        // Start key with league
-        addKey(league);
+        // Format item name and/or typeline
+        if (name.equals("")) {
+            name = typeLine;
+            typeLine = null;
+        }
 
-        // Divide large categories into smaller ones
+        // Get item's icon sub-category
         String[] splitItemType = icon.split("/");
-        String iconType = splitItemType[splitItemType.length - 2].toLowerCase();
+        String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
 
-        // The API is pretty horrible, format it better
-        switch (itemType) {
+        // Divide certain items to different sub-categories
+        switch (parentCategory) {
             case "currency":
                 // Prophecy items have the same icon category as currency
-                if (frameType == 8)
-                    itemType += ":prophecy";
-                else if (iconType.equals("divination") || iconType.equals("currency"))
-                    itemType += ":orbs";
-                else
-                    itemType += ":" + iconType;
+                if (frameType == 8) parentCategory = "prophecy";
+                else if (iconCategory.equals("essence")) parentCategory = "essence";
+                else if (iconCategory.equals("piece")) parentCategory = "piece";
                 break;
-
             case "gems":
-                switch (iconType) {
-                    case "vaalgems":
-                        itemType += ":vaal";
-                        break;
-                    case "gems":
-                        itemType += ":skill";
-                        break;
-                    default:
-                        itemType += ":" + iconType;
-                        break;
-                }
+                // Put vaal gems into separate sub-category
+                if (subCategory.equals("activegem") && iconCategory.equals("vaalgems"))
+                    subCategory = "vaalgem";
                 break;
-
-            case "maps":
-                if (iconType.equals("maps")) {
-                    if (frameType == 3) {
-                        // Unique IF: itemType="maps", iconType="maps", frameType=3
-                        itemType += ":unique";
-                    } else if (properties == null) {
-                        // Fragment IF: itemType="maps", iconType="maps", frameType=0, properties=null
-                        itemType += ":fragment";
-                    } else {
-                        // Legacy map IF: itemType="maps", iconType="maps", frameType=0, properties!=null
-                        itemType += ":" + iconType;
-                    }
-                } else if (iconType.equals("atlasmaps")) {
-                    if (properties == null) {
-                        // Fragment IF: itemType="maps", iconType="atlasmaps", frameType=0, properties!=null
-                        itemType += ":fragment";
-                    } else {
-                        // Fragment IF: itemType="maps", iconType="atlasmaps", frameType=0, properties=null
-                        itemType += ":" + iconType;
-                    }
-                } else {
-                    itemType += ":" + iconType;
-                }
-                break;
-
-            case "cards":
-                itemType = "divinationcards";
-                break;
-
             case "monsters":
+                // Completely ignore monsters
                 discard = true;
                 break;
+            case "maps":
+                // Filter all unique maps under "unique" subcategory
+                if (frameType == 3) subCategory = "unique";
+                else if (iconCategory.equals("breach")) subCategory = "fragment";
+                else if (properties == null) subCategory = "fragment";
+                else subCategory = "map";
+                break;
         }
-
-        // Set the value in the item object
-        addKey("|" + itemType);
-
-        // Format the name that will serve as the database key
-        if (name.equals("")) {
-            addKey("|" + typeLine);
-            name = typeLine;
-            typeLine = "";
-        } else {
-            addKey("|" + name);
-            if (!typeLine.equals(""))
-                addKey("|" + typeLine);
-        }
-
-        // Add frameType to key
-        addKey("|" + frameType);
     }
 
     /**
@@ -238,14 +249,14 @@ public class Item extends Mappers.BaseItem {
      */
     private void checkGemInfo() {
         int lvl = -1;
-        int quality = 0;
+        int qual = 0;
 
         // Attempt to extract lvl and quality from item info
         for (Mappers.Properties prop : properties) {
             if (prop.name.equals("Level")) {
                 lvl = Integer.parseInt(prop.values.get(0).get(0).split(" ")[0]);
             } else if (prop.name.equals("Quality")) {
-                quality = Integer.parseInt(prop.values.get(0).get(0).replace("+", "").replace("%", ""));
+                qual = Integer.parseInt(prop.values.get(0).get(0).replace("+", "").replace("%", ""));
             }
         }
 
@@ -255,40 +266,35 @@ public class Item extends Mappers.BaseItem {
             return;
         }
 
-        boolean tempCorruptionMarker = corrupted;
         // Begin the long block that filters out gems based on a number of properties
-        if (key.contains("Empower") || key.contains("Enlighten") || key.contains("Enhance")) {
-            if (quality < 6) quality = 0;
-            else if (quality < 16) quality = 10;
-            else if (quality >= 16) quality = 20;
+        if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
+            if (qual < 6) qual = 0;
+            else if (qual < 16) qual = 10;
+            else if (qual >= 16) qual = 20;
 
             // Quality doesn't matter for lvl 3 and 4
-            if (lvl > 2) quality = 0;
+            if (lvl > 2) qual = 0;
         } else {
             if (lvl < 7) lvl = 1;           // 1  = 1,2,3,4,5,6
             else if (lvl < 19) lvl = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17,18
             else if (lvl < 21) lvl = 20;    // 20 = 19,20
             // 21 = 21
 
-            if (quality < 7) quality = 0;           // 0  = 0,1,2,3,4,5,6
-            else if (quality < 18) quality = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17
-            else if (quality < 23) quality = 20;    // 20 = 18,19,20,21,22
+            if (qual < 7) qual = 0;           // 0  = 0,1,2,3,4,5,6
+            else if (qual < 18) qual = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17
+            else if (qual < 23) qual = 20;    // 20 = 18,19,20,21,22
             // 23 = 23
 
             // Gets rid of specific gems
-            if (lvl < 20 && quality > 20) quality = 20;         // |4| 1|23|1 and |4|10|23|1
-            else if (lvl == 21 && quality < 20) quality = 0;    // |4|21|10|1
+            if (lvl < 20 && qual > 20) qual = 20;         // |4| 1|23|1 and |4|10|23|1
+            else if (lvl == 21 && qual < 20) qual = 0;    // |4|21|10|1
 
-            if (lvl < 20 && quality < 20) tempCorruptionMarker = false;
-            if (key.contains("Vaal")) tempCorruptionMarker = true;
+            if (lvl < 20 && qual < 20) corrupted = false;
+            if (name.contains("Vaal")) corrupted = true;
         }
 
-        // Add the lvl and key to database key
-        addKey("|" + lvl + "|" + quality);
-
-        // Add corruption notifier
-        if (tempCorruptionMarker) addKey("|1");
-        else addKey("|0");
+        this.level = lvl;
+        this.quality = qual;
     }
 
     /**
@@ -296,13 +302,13 @@ public class Item extends Mappers.BaseItem {
      */
     private void checkSixLink() {
         // Filter out items that can have 6 links
-        switch (itemType) {
-            case "armour:chest":
-            case "weapons:staff":
-            case "weapons:twosword":
-            case "weapons:twomace":
-            case "weapons:twoaxe":
-            case "weapons:bow":
+        switch (subCategory) {
+            case "chest":
+            case "staff":
+            case "twosword":
+            case "twomace":
+            case "twoaxe":
+            case "bow":
                 break;
             default:
                 return;
@@ -321,61 +327,49 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Find largest single link
-        int maxLinks = 0;
-        for (Integer link : links) {
-            if (link > maxLinks)
-                maxLinks = link;
-        }
-
-        // Update database key accordingly
-        if (maxLinks == 6)
-            addKey("|6L");
-        else if (maxLinks == 5)
-            addKey("|5L");
+        for (Integer link : links) if (link > this.links) this.links = link;
     }
 
     /**
      * Check if item has a variants (e.g. Vessel of Vinktar)
      */
     private void checkSpecialItemVariant() {
-        String keySuffix = "";
-
         switch (name) {
             // Try to determine the type of Atziri's Splendour by looking at the item explicit mods
             case "Atziri's Splendour":
                 switch (String.join("#", explicitMods.get(0).split("\\d+"))) {
                     case "#% increased Armour, Evasion and Energy Shield":
-                        keySuffix = "|var:ar/ev/es";
+                        variation = "ar/ev/es";
                         break;
 
                     case "#% increased Armour and Energy Shield":
                         if (explicitMods.get(1).contains("Life"))
-                            keySuffix = "|var:ar/es/li";
+                            variation = "ar/es/li";
                         else
-                            keySuffix = "|var:ar/es";
+                            variation = "ar/es";
                         break;
 
                     case "#% increased Evasion and Energy Shield":
                         if (explicitMods.get(1).contains("Life"))
-                            keySuffix = "|var:ev/es/li";
+                            variation = "ev/es/li";
                         else
-                            keySuffix = "|var:ev/es";
+                            variation = "ev/es";
                         break;
 
                     case "#% increased Armour and Evasion":
-                        keySuffix = "|var:ar/ev";
+                        variation = "ar/ev";
                         break;
 
                     case "#% increased Armour":
-                        keySuffix = "|var:ar";
+                        variation = "ar";
                         break;
 
                     case "#% increased Evasion Rating":
-                        keySuffix = "|var:ev";
+                        variation = "ev";
                         break;
 
                     case "+# to maximum Energy Shield":
-                        keySuffix = "|var:es";
+                        variation = "es";
                         break;
                 }
                 break;
@@ -384,16 +378,16 @@ public class Item extends Mappers.BaseItem {
                 // Attempt to match preset mod with item mod
                 for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Lightning Damage to Spells")) {
-                        keySuffix = "|var:spells";
+                        variation = "spells";
                         break;
                     } else if (explicitMod.contains("Lightning Damage to Attacks")) {
-                        keySuffix = "|var:attacks";
+                        variation = "attacks";
                         break;
                     } else if (explicitMod.contains("Converted to Lightning")) {
-                        keySuffix = "|var:conversion";
+                        variation = "conversion";
                         break;
                     } else if (explicitMod.contains("Damage Penetrates")) {
-                        keySuffix = "|var:penetration";
+                        variation = "penetration";
                         break;
                     }
                 }
@@ -403,16 +397,16 @@ public class Item extends Mappers.BaseItem {
                 // Attempt to match preset mod with item mod
                 for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("increased Lightning Damage")) {
-                        keySuffix = "|var:lightning";
+                        variation = "lightning";
                         break;
                     } else if (explicitMod.contains("increased Fire Damage")) {
-                        keySuffix = "|var:fire";
+                        variation = "fire";
                         break;
                     } else if (explicitMod.contains("increased Cold Damage")) {
-                        keySuffix = "|var:cold";
+                        variation = "cold";
                         break;
                     } else if (explicitMod.contains("increased Global Physical Damage")) {
-                        keySuffix = "|var:physical";
+                        variation = "physical";
                         break;
                     }
                 }
@@ -421,14 +415,14 @@ public class Item extends Mappers.BaseItem {
             case "Yriel's Fostering":
                 // Attempt to match preset mod with item mod
                 for (String explicitMod : explicitMods) {
-                    if (explicitMod.contains("Chaos Damage to Attacks")) {
-                        keySuffix = "|var:chaos";
+                    if (explicitMod.contains("Bestial Snake")) {
+                        variation = "snake";
                         break;
-                    } else if (explicitMod.contains("Physical Damage to Attack")) {
-                        keySuffix = "|var:physical";
+                    } else if (explicitMod.contains("Bestial Ursa")) {
+                        variation = "ursa";
                         break;
-                    } else if (explicitMod.contains("increased Attack and Movement Speed")) {
-                        keySuffix = "|var:speed";
+                    } else if (explicitMod.contains("Bestial Rhoa")) {
+                        variation = "rhoa";
                         break;
                     }
                 }
@@ -438,13 +432,13 @@ public class Item extends Mappers.BaseItem {
                 // Attempt to match preset mod with item mod
                 for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Fire Damage to Spells")) {
-                        keySuffix = "|var:fire";
+                        variation = "fire";
                         break;
                     } else if (explicitMod.contains("Cold Damage to Spells")) {
-                        keySuffix = "|var:cold";
+                        variation = "cold";
                         break;
                     } else if (explicitMod.contains("Lightning Damage to Spells")) {
-                        keySuffix = "|var:lightning";
+                        variation = "lightning";
                         break;
                     }
                 }
@@ -454,19 +448,19 @@ public class Item extends Mappers.BaseItem {
                 // Attempt to match preset mod with item mod
                 for (String explicitMod : explicitMods) {
                     if (explicitMod.contains("Lightning Damage")) {
-                        keySuffix = "|var:lightning";
+                        variation = "lightning";
                         break;
                     } else if (explicitMod.contains("Fire Damage")) {
-                        keySuffix = "|var:fire";
+                        variation = "fire";
                         break;
                     } else if (explicitMod.contains("Cold Damage")) {
-                        keySuffix = "|var:cold";
+                        variation = "cold";
                         break;
                     } else if (explicitMod.contains("Physical Damage")) {
-                        keySuffix = "|var:physical";
+                        variation = "physical";
                         break;
                     } else if (explicitMod.contains("Chaos Damage")) {
-                        keySuffix = "|var:chaos";
+                        variation = "chaos";
                         break;
                     }
                 }
@@ -476,20 +470,12 @@ public class Item extends Mappers.BaseItem {
             case "Shroud of the Lightless":
             case "Bubonic Trail":
             case "Tombfist":
-                if (explicitMods.get(0).equals("Has 1 Abyssal Socket")) {
-                    keySuffix = "|var:1";
-                    break;
-                } else if (explicitMods.get(0).equals("Has 2 Abyssal Sockets")) {
-                    keySuffix = "|var:2";
-                    break;
-                }
-
-            default:
-                return;
+                if (explicitMods.get(0).equals("Has 1 Abyssal Socket"))
+                    variation = "1 socket";
+                else if (explicitMods.get(0).equals("Has 2 Abyssal Sockets"))
+                    variation = "2 sockets";
+                break;
         }
-
-        // Add new key suffix to existing key
-        addKey(keySuffix);
     }
 
     /**
@@ -510,9 +496,9 @@ public class Item extends Mappers.BaseItem {
         String[] splitString = asString.split("=");
 
         if (splitString[1].equals("[]")) {
-            itemType = splitString[0];
+            parentCategory = splitString[0];
         } else {
-            itemType = splitString[0] + ":" + splitString[1].substring(1, splitString[1].length() - 1);
+            parentCategory = splitString[0] + ":" + splitString[1].substring(1, splitString[1].length() - 1);
         }
     }
 
@@ -534,9 +520,5 @@ public class Item extends Mappers.BaseItem {
 
     public String getKey() {
         return key;
-    }
-
-    public void addKey(String partialKey) {
-        this.key += partialKey;
     }
 }

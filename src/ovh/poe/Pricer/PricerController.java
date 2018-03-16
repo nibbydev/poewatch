@@ -165,7 +165,7 @@ public class PricerController {
 
                 if (keyBlackList.contains(key)) continue;
 
-                if (key.contains("currency:orbs")) currencyMap.put(key, new DataEntry(line));
+                if (key.contains("currency")) currencyMap.put(key, new DataEntry(line));
             }
 
         } catch (IOException ex) {

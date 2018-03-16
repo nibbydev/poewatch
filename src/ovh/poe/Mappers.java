@@ -82,8 +82,8 @@ public class Mappers {
         public List<String> explicitMods;
 
         // This field varies in the API and cannot be assigned a specific type. A few examples can be seen below:
-        // {"category": "jewels"}
-        // {"category": {"armour": ["gloves"]}}
+        // "category": {"jewels": []}
+        // "category": {"armour": ["gloves"]}
         public Object category;
         public Object enchantMods;
 
