@@ -411,7 +411,7 @@ public class Item extends Mappers.BaseItem {
                     } else if (explicitMod.contains("increased Cold Damage")) {
                         keySuffix = "|var:cold";
                         break;
-                    } else if (explicitMod.contains("increased Physical Damage")) {
+                    } else if (explicitMod.contains("increased Global Physical Damage")) {
                         keySuffix = "|var:physical";
                         break;
                     }
