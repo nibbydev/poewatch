@@ -24,8 +24,12 @@ public class PricerController {
     private Gson gson = Main.getGson();
     private long lastClearCycle;
     public volatile boolean clearStats = false;
-    public volatile boolean writeJSON = false;
+    private volatile boolean writeJSON = false;
     private int cycleCount = 0;
+
+    ////////////////////////////////////////
+    // Upon starting/stopping the program //
+    ////////////////////////////////////////
 
     /**
      * Loads data in from file on object initialization
@@ -34,6 +38,103 @@ public class PricerController {
         ReadBlackListFromFile();
         readCurrencyFromFile();
     }
+
+    /**
+     * Loads in list of keys that should be removed from the database during program start
+     */
+    private void ReadBlackListFromFile() {
+        try (BufferedReader reader = defineReader(new File("./blacklist.txt"))) {
+            if (reader == null) return;
+
+            String line;
+
+            while ((line = reader.readLine()) != null) keyBlackList.add(line);
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Reads currency data from file and adds to list. Should only be called on initial object creation
+     */
+    private void readCurrencyFromFile() {
+        try (BufferedReader reader = defineReader(new File("./database.txt"))) {
+            if (reader == null) return;
+
+            String line, key;
+
+            // Set the startParameters, the first line has important data
+            loadStartParameters(reader.readLine());
+
+            while ((line = reader.readLine()) != null) {
+                key = line.substring(0, line.indexOf("::"));
+
+                if (keyBlackList.contains(key)) continue;
+
+                if (key.contains("currency")) currencyMap.put(key, new DataEntry(line));
+            }
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Parses whatever data was saved in the database file's first line
+     *
+     * @param line CSV format starting line
+     */
+    private void loadStartParameters(String line) {
+        String[] splitLine = line.split("::");
+
+        // First parameter is the version of the config, I suppose
+        switch (splitLine[0]) {
+            case "00002":
+                // 0 - version nr
+                // 1 - last build/write time
+                // 2 - cycle counter
+                // 3 - last clear time
+
+                System.out.println("[INFO] Found start parameters:");
+                System.out.println("    Cycle counter: " + splitLine[2]);
+
+                long lastWriteTime = (System.currentTimeMillis() - Long.parseLong(splitLine[1])) / 1000;
+                System.out.println("    Last write time: " + lastWriteTime + " sec ago");
+
+
+                // Set the cycle counter to whatever is in the file
+                cycleCount = Integer.parseInt(splitLine[2]);
+
+                lastClearCycle = Long.parseLong(splitLine[3]);
+                break;
+        }
+    }
+
+    /**
+     * Gathers some data and makes start parameters that will be saved in the database file
+     *
+     * @return Generated CSV-format start params
+     */
+    private String saveStartParameters() {
+        String builder;
+
+        builder = "00002"
+                + "::"
+                + System.currentTimeMillis()
+                + "::"
+                + cycleCount
+                + "::"
+                + lastClearCycle
+                + "\n";
+
+        return builder;
+    }
+
+
+    /////////////////////////////////////
+    // Often called controller methods //
+    /////////////////////////////////////
 
     /**
      * Main loop of the pricing service. Can be called whenever, only runs after specific amount of time has passed
@@ -125,51 +226,6 @@ public class PricerController {
         synchronized (monitor) {
             flagPause = !flagPause;
             monitor.notifyAll();
-        }
-    }
-
-    /////////////////////////////////////////
-    // Methods used to interface databases //
-    /////////////////////////////////////////
-
-    /**
-     * Loads in list of keys that should be removed from the database during program start
-     */
-    private void ReadBlackListFromFile() {
-        try (BufferedReader reader = defineReader(new File("./blacklist.txt"))) {
-            if (reader == null) return;
-
-            String line;
-
-            while ((line = reader.readLine()) != null) keyBlackList.add(line);
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * Reads currency data from file and adds to list. Should only be called on initial object creation
-     */
-    private void readCurrencyFromFile() {
-        try (BufferedReader reader = defineReader(new File("./database.txt"))) {
-            if (reader == null) return;
-
-            String line, key;
-
-            // Set the startParameters, the first line has important data
-            loadStartParameters(reader.readLine());
-
-            while ((line = reader.readLine()) != null) {
-                key = line.substring(0, line.indexOf("::"));
-
-                if (keyBlackList.contains(key)) continue;
-
-                if (key.contains("currency")) currencyMap.put(key, new DataEntry(line));
-            }
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -291,6 +347,10 @@ public class PricerController {
             System.out.println("[ERROR] Could not rename: " + outputFile.getName() + " to " + inputFile.getName());
     }
 
+    //////////////////////////////
+    // Internal utility methods //
+    //////////////////////////////
+
     /**
      * Create a BufferedReader instance
      *
@@ -324,57 +384,6 @@ public class PricerController {
             ex.printStackTrace();
             return null;
         }
-    }
-
-    /**
-     * Parses whatever data was saved in the database file's first line
-     *
-     * @param line CSV format starting line
-     */
-    private void loadStartParameters(String line) {
-        String[] splitLine = line.split("::");
-
-        // First parameter is the version of the config, I suppose
-        switch (splitLine[0]) {
-            case "00002":
-                // 0 - version nr
-                // 1 - last build/write time
-                // 2 - cycle counter
-                // 3 - last clear time
-
-                System.out.println("[INFO] Found start parameters:");
-                System.out.println("    Cycle counter: " + splitLine[2]);
-
-                long lastWriteTime = (System.currentTimeMillis() - Long.parseLong(splitLine[1])) / 1000;
-                System.out.println("    Last write time: " + lastWriteTime + " sec ago");
-
-
-                // Set the cycle counter to whatever is in the file
-                cycleCount = Integer.parseInt(splitLine[2]);
-
-                lastClearCycle = Long.parseLong(splitLine[3]);
-                break;
-        }
-    }
-
-    /**
-     * Gathers some data and makes start parameters that will be saved in the database file
-     *
-     * @return Generated CSV-format start params
-     */
-    private String saveStartParameters() {
-        String builder;
-
-        builder = "00002"
-                + "::"
-                + System.currentTimeMillis()
-                + "::"
-                + cycleCount
-                + "::"
-                + lastClearCycle
-                + "\n";
-
-        return builder;
     }
 
     ///////////////////////
