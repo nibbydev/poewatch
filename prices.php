@@ -98,6 +98,7 @@
                   </thead>
                   <tbody></tbody>
                 </table>
+                <button type="button" class="btn btn-dark btn-block" id="button-loadmore">Load more</button>
               </div>
             </div>
           </div>

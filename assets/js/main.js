@@ -1,10 +1,13 @@
-// Define "global" variables (ie the largest scope here)
-const SELECTED;
+// Define "global" variable (ie the largest scope here)
+let SELECTED;
+
+const initialLoadAmount = 50;
 
 // Load conversion rates on page load
 $(document).ready(function() {
     var selectorLeague = $("#search-league");
     var selectorSub = $("#search-sub");
+    var buttonLoadmore = $("#button-loadmore");
 
     SELECTED = {
         league: selectorLeague.find(":selected").text(),
@@ -15,25 +18,34 @@ $(document).ready(function() {
     // Define event listener
     selectorLeague.on("change", function(){
         SELECTED.league = $(this).find(":selected").text();
-        makeRequest();
+        $("#searchResults tbody tr").empty();
+        makeRequest(0, initialLoadAmount);
     });
     // Define event listener
     selectorSub.on("change", function(){
         SELECTED.sub = $(this).find(":selected").text();
-        makeRequest();
+        $("#searchResults tbody tr").empty();
+        makeRequest(0, initialLoadAmount);
+    });
+    // Define event listener
+    buttonLoadmore.on("click", function(){
+        makeRequest(initialLoadAmount, 0);
+        $(this).hide();
     });
 
-    makeRequest();
+    makeRequest(0, initialLoadAmount);
 });
 
-function makeRequest() {
+function makeRequest(from, to) {
     var request = $.ajax({
         url: "http://api.poe.ovh/get",
         data: {
             async: true,
             league: $("#search-league").find(":selected").text(), 
             category: getUrlParameter("category"),
-            sub: $("#search-sub").find(":selected").text()
+            sub: $("#search-sub").find(":selected").text(),
+            from: from,
+            to: to
         },
         type: "GET",
         dataTypes: "json"
@@ -41,7 +53,6 @@ function makeRequest() {
 
     request.done(function(json) {
         var tableData = "";
-        $("#searchResults tbody tr").empty();
 
         for (let i = 0; i < json.length; i++) {
             const item = json[i];
