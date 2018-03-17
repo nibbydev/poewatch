@@ -100,38 +100,49 @@ public class Mappers {
     public static class JSONParcel {
         public static class Item {
             public double mean, median, mode;
-            public int count, inc, ico;
+            public int count, inc, index;
+            public String category, icon;
 
-            public void copy (DataEntry entry) {
+            public void copy (DataEntry entry, String childCategoryName) {
+                if (childCategoryName != null) category = childCategoryName;
+
                 mean = entry.getMean();
                 median = entry.getMedian();
                 mode = entry.getMode();
                 count = entry.getCount() + entry.getInc_counter();
                 inc = entry.getInc_counter();
-                ico = entry.getIcon();
+                index = entry.getIconIndex();
+                icon = Main.RELATIONS.iconIndexToIcon.get(index).url;
             }
         }
 
         public Map<String, Map<String, Map<String, Item>>> leagues = new TreeMap<>();
 
         public void add(DataEntry entry) {
-            // Hardcore Bestiary|currency:orbs|Orb of Transmutation|5
+            // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
             String[] splitKey = entry.getKey().split("\\|");
+            String leagueName = splitKey[0];
 
+            String[] splitCategoryName = splitKey[1].split(":");
+            String parentCategoryName = splitCategoryName[0];
+            String childCategoryName = null;
+            if (splitCategoryName.length > 1) childCategoryName = splitCategoryName[1];
+
+            // "Orb of Transmutation|5"
             String itemName = "";
             for (int i = 2; i < splitKey.length; i++) itemName += splitKey[i] + "|";
             itemName = itemName.substring(0, itemName.length() - 1);
 
-            if (!this.leagues.containsKey(splitKey[0])) this.leagues.put(splitKey[0], new TreeMap<>());
-            Map<String, Map<String, Item>> league = this.leagues.get(splitKey[0]);
+            if (!this.leagues.containsKey(leagueName)) this.leagues.put(leagueName, new TreeMap<>());
+            Map<String, Map<String, Item>> league = this.leagues.get(leagueName);
 
-            if (!league.containsKey(splitKey[1])) league.put(splitKey[1], new LinkedHashMap<>());
-            Map<String, Item> category = league.get(splitKey[1]);
+            if (!league.containsKey(parentCategoryName)) league.put(parentCategoryName, new LinkedHashMap<>());
+            Map<String, Item> category = league.get(parentCategoryName);
 
             if (!category.containsKey(itemName)) category.put(itemName, new Item());
             Item item = category.get(itemName);
 
-            item.copy(entry);
+            item.copy(entry, childCategoryName);
         }
 
         public void sort() {

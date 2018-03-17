@@ -164,7 +164,7 @@ public class DataEntry {
     private void purge() {
         // Precautions
         if (database_items.isEmpty()) return;
-        if (database_items.size() < Main.CONFIG.baseDataSize - 1) return;
+        if (database_items.size() < 10) return;
         // If too few items have been found then it probably doesn't have a median price
         if (total_counter + inc_counter < 10) return;
         // No median price found
@@ -543,7 +543,7 @@ public class DataEntry {
         return dec_counter;
     }
 
-    public int getIcon() {
+    public int getIconIndex() {
         return iconIndex;
     }
 }
