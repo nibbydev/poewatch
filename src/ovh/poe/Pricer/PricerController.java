@@ -215,7 +215,7 @@ public class PricerController {
                     continue;
 
                 // Add item to database, separating currency
-                if (item.getKey().contains("currency:orbs")) {
+                if (item.getKey().contains("currency")) {
                     currencyMap.putIfAbsent(item.getKey(), new DataEntry());
                     currencyMap.get(item.getKey()).add(item, stash.accountName);
                 } else {

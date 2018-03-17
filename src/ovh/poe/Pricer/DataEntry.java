@@ -78,10 +78,6 @@ public class DataEntry {
 
         // Build statistics and databases
         parse();
-
-        // No point in filling database with 0's
-        if (database_items.size() < 10) return;
-
         purge();
         build();
 
@@ -95,10 +91,6 @@ public class DataEntry {
     public void cycle() {
         // Build statistics and databases
         parse();
-
-        // No point in filling database with 0's
-        if (database_items.size() < 10) return;
-
         purge();
         build();
 
@@ -130,10 +122,10 @@ public class DataEntry {
             }
             if (discard) continue;
 
-            // If the item was not listed for chaos orbs ("1" == Chaos Orb), then find the value in chaos
-            if (!priceType.equals("1")) {
+            // If the item was not listed for chaos orbs ("0" == Chaos Orb), then find the value in chaos
+            if (!priceType.equals("0")) {
                 // Get the database key of the currency the item was listed for
-                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency:orbs|" + Main.RELATIONS.indexToName.get(priceType) + "|5";
+                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency|" + Main.RELATIONS.indexToName.get(priceType) + "|5";
 
                 // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
                 if (!Main.PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) continue;
@@ -172,6 +164,7 @@ public class DataEntry {
     private void purge() {
         // Precautions
         if (database_items.isEmpty()) return;
+        if (database_items.size() < Main.CONFIG.baseDataSize - 1) return;
         // If too few items have been found then it probably doesn't have a median price
         if (total_counter + inc_counter < 10) return;
         // No median price found
@@ -199,13 +192,16 @@ public class DataEntry {
      * Calculates mean/median
      */
     private void build() {
+        if (database_items.size() < 10) return;
+
         // Calculate mean and median values
         double tempMean = findMean(0);
         double tempMedian = findMedian(0);
         double tempMode = findMode(0);
 
         // add to hourly
-        database_hourly.add(0, new HourlyEntry(tempMean, tempMedian, tempMode));
+        if (tempMean + tempMedian + tempMode > 0)
+            database_hourly.add(0, new HourlyEntry(tempMean, tempMedian, tempMode));
 
         // Calculate mean and median values
         mean = findMean(1);
