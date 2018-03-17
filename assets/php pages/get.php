@@ -26,28 +26,26 @@
     $dataFile = file_get_contents(getcwd() . "/data/" . $paramLeague . ".json");
 
     // If user requested whole file
-    if ($paramCategory === "all") echo $dataFile;
+    if ($paramCategory === "all") {
+        echo $dataFile;
+        return;
+    }
     // If user requested whole category
     if ($paramSub === "all") $paramSub = null;
 
     // Get JSON objects from files
     $jsonFile = json_decode( $dataFile, true );
-    $iconFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/iconRelations.json"), true );
-
     $payload = [];
     $counter = 0;
 
     // Loop through all categories
-    foreach ($jsonFile as $categoryKey => $itemList) {
-        $splitCategory = explode(":", $categoryKey);
+    foreach ($jsonFile as $parentCategoryKey => $itemList) {
+        if ($paramCategory !== $parentCategoryKey) continue;
 
-        if ($paramCategory !== $splitCategory[0]) continue;
-        if ($paramSub && sizeof($splitCategory) > 1) {
-            if ($paramSub !== $splitCategory[1]) continue;
-        }
-        
         // Loop through the JSON file
         foreach ($itemList as $itemKey => $item) {
+            if ($paramSub && $item["category"] && $paramSub !== $item["category"]) continue;
+            
             $counter++;
             // Set starting position
             if ($praramFrom > 0 && $counter <= $praramFrom) continue;
@@ -91,7 +89,8 @@
                 "median" => $item["median"],
                 "mode" => $item["mode"],
                 "count" => $item["count"],
-                "icon" => $iconFile[$item["ico"]]["url"]
+                "icon" => $item["icon"],
+                "index" => $item["index"]
             ];
 
             // $name, $type, $variant, $frameType, $links, $lvl, $quality, $corrupted;
