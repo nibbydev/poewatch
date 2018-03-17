@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">Poe.Ovh</a>
 
@@ -35,15 +35,15 @@
   
 <div class="container-fluid">    
   <div class="row">
-    <div class="col-md-3"> 
+    <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
         <?php include "assets/php/menu.php" ?>
       </div>
     </div>
 
-    <div class="col-md-8 main-content"> 
+    <div class="col-lg-8 main-content"> 
       <div class="row nested-row">
-        <div class="col-md">
+        <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
               <h2>poe.ovh/get</h2>
@@ -103,7 +103,7 @@
       </div>
 
       <div class="row nested-row">
-        <div class="col-md">
+        <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
               <h2>poe.ovh/icons</h2>
@@ -140,7 +140,7 @@
       </div>
 
       <div class="row nested-row">
-        <div class="col-md">
+        <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
               <h2>poe.ovh/categories</h2>
@@ -156,7 +156,7 @@
       </div>
 
       <div class="row nested-row">
-        <div class="col-md">
+        <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
               <h2>poe.ovh/leagues</h2>
