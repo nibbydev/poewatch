@@ -1,0 +1,113 @@
+.main-content {
+    margin-top: 30px;
+}
+
+.nested-row {
+    margin: 0 0 20px 0;
+}
+
+.form-controlform-control {
+    background-color: #ddd;
+    color: #222;
+}
+
+.custom-card {
+    background-color: #ddd;
+    color: #222;
+}
+
+/* Remove the navbar's default margin-bottom and rounded borders */ 
+.navbar {
+    margin-bottom: 0;
+    border-radius: 0;
+}
+
+/* Set white text and some padding */
+footer {
+    color: #ddd;
+    padding: 15px;
+}
+
+/* Overwrite sidebar button active style background */
+.list-group-item.sidebar-link.active {background-color: #777}
+
+
+.sidebar-left {
+    max-width: 300px;
+}
+
+#sidebar-link-container {
+    margin: 20px 0 20px 0;
+}
+
+.sidebar-link {background-color: #ddd}
+
+#sidebar-link-container a {
+    color: #222;
+    border: transparent;
+}
+
+.list-group-item.sidebar-link.active {
+    background-color: #eee;
+}
+
+#sidebar-link-container a:hover {
+    background-color: #eee;
+}
+
+.sidebar-img-container {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+}
+
+.sidebar-img-container img {
+    max-height: 30px;
+}
+
+.table-img-container {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+}
+
+.table-img-container img {
+    max-height: 30px;
+    max-width: 30px;
+}
+
+body {
+    background-color: #222;
+    color: #ddd;
+}
+
+/* Styling for tables */
+.custom-table {
+    background-color: #ddd;
+    color: #222;
+}
+.custom-table table > thead > tr > th {
+    border-top-color: transparent;
+    border-bottom-color: #bbb;
+}
+.custom-table table > tbody > tr > td {border-color: #bbb}
+.custom-table table.table-hover > tbody > tr:hover {background-color: #eee}
+
+.custom-badge-red {background-color: rgb(209, 46, 46)}
+.custom-badge-orange {background-color: rgb(219, 161, 35)}
+.custom-badge-green {background-color: rgb(42, 182, 0)}
+.custom-badge-gray {background-color: rgb(168, 168, 168)}
+
+/* On small screens, set height to 'auto' for sidenav and grid */
+@media screen and (max-width: 992px) {
+    .sidenav {
+        height: auto;
+        padding: 15px;
+    }
+
+    .sidebar-left {
+        max-width: unset;
+    }
+}
