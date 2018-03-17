@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">Poe.Ovh</a>
 
@@ -35,35 +35,35 @@
   
 <div class="container-fluid">    
   <div class="row">
-    <div class="col-md-3"> 
+    <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
         <?php include "assets/php/menu.php" ?>
       </div>
     </div>
 
-    <div class="col-md-8 main-content"> 
+    <div class="col-lg-8 main-content"> 
       <div class="row nested-row">
-        <div class="col-md-4"> 
+        <div class="col-lg-4"> 
           <h1>Accessories</h1>
         </div>
       </div>
 
       <div class="row nested-row">
-        <div class="col-md-4"> 
+        <div class="col-lg-4"> 
           <h4>League</h4>
-          <select class="form-control" id="search-league" onchange="makeRequest()">
+          <select class="form-control" id="search-league">
             <?php include "assets/php/leagueSelector.php" ?>
           </select>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-lg-6">
           <h4>Sub-category</h4>
-          <select class="form-control" id="search-sub" onchange="makeRequest()">
+          <select class="form-control" id="search-sub">
             <?php include "assets/php/categorySelector.php" ?>
           </select>
         </div>
 
-        <div class="col-md-2">
+        <div class="col-lg-2">
           <h4>Links</h4>
           <select class="form-control">
             <option selected>(WIP)</option>
@@ -75,14 +75,14 @@
       </div>
 
       <div class="row nested-row">
-        <div class="col-md">
+        <div class="col-lg">
           <h4>Search</h4>
           <input type="text" class="form-control" placeholder="Search (WIP)">
         </div>
       </div>
 
       <div class="row nested-row">
-        <div class="col-md">
+        <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
               <div class="custom-table">
@@ -105,8 +105,6 @@
         </div>
       </div>
 
-
-      
     </div>
   </div>
 </div>
