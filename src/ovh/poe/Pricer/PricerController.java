@@ -240,6 +240,8 @@ public class PricerController {
      * Writes JSONParcel object to JSON file
      */
     private void writeJSONToFile() {
+        JSONParcel.sort();
+
         for (Map.Entry<String, Map<String, Map<String, Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
             try {
                 BufferedWriter writer = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));

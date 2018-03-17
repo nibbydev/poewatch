@@ -125,13 +125,45 @@ public class Mappers {
             if (!this.leagues.containsKey(splitKey[0])) this.leagues.put(splitKey[0], new TreeMap<>());
             Map<String, Map<String, Item>> league = this.leagues.get(splitKey[0]);
 
-            if (!league.containsKey(splitKey[1])) league.put(splitKey[1], new TreeMap<>());
+            if (!league.containsKey(splitKey[1])) league.put(splitKey[1], new LinkedHashMap<>());
             Map<String, Item> category = league.get(splitKey[1]);
 
             if (!category.containsKey(itemName)) category.put(itemName, new Item());
             Item item = category.get(itemName);
 
             item.copy(entry);
+        }
+
+        public void sort() {
+            for (String leagueKey : leagues.keySet()) {
+                Map<String, Map<String, Item>> league = leagues.get(leagueKey);
+
+                for (String categoryKey : league.keySet()) {
+                    Map<String, Item> category = league.get(categoryKey);
+                    Map<String, Item> sortedCategory = new LinkedHashMap<>();
+
+                    while (!category.isEmpty()) {
+                        Item mostExpensiveItem = new Item();
+                        String mostExpensiveItemKey = "";
+
+                        for (String itemKey : category.keySet()) {
+                            Item item = category.get(itemKey);
+
+                            if (mostExpensiveItem.median <= item.median){
+                                mostExpensiveItem = item;
+                                mostExpensiveItemKey = itemKey;
+                            }
+                        }
+
+                        // If statement not really needed
+                        if (!mostExpensiveItemKey.equals("")) category.remove(mostExpensiveItemKey);
+                        sortedCategory.put(mostExpensiveItemKey, mostExpensiveItem);
+                    }
+
+                    // Write sortedCategory to category map
+                    league.put(categoryKey, sortedCategory);
+                }
+            }
         }
 
         public void clear () {

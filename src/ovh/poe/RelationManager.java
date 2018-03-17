@@ -94,6 +94,23 @@ public class RelationManager {
         for (Mappers.LeagueListElement element : leagueList) {
             if (!element.id.contains("SSF")) leagues.add(element.id);
         }
+
+        // Sort the list for aesthetic purposes
+        String[] tempList = new String[leagues.size()];
+        int counter = 0;
+        for (String league : leagues) {
+            if (league.equals("Hardcore")) tempList[leagues.size() - 1] = league;
+            else if (league.equals("Standard")) tempList[leagues.size() - 2] = league;
+            else if (league.contains("Hardcore ")) tempList[leagues.size() - 3] = league;
+            else {
+                tempList[counter] = league;
+                counter++;
+            }
+        }
+
+        // Write the new list to the global var
+        leagues.clear();
+        leagues.addAll(Arrays.asList(tempList));
     }
 
     /**
