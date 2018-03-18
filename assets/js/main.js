@@ -157,16 +157,19 @@ function searchTheResults(input) {
     $("#searchResults > tbody").empty();
 
     // Format input
-    input = input.toLowerCase().trim();
+    var splitInput = input.toLowerCase().trim().split(" ");
 
     var tableData = "";
     ITEMS.forEach(item => {
-        if ("name" in item && item["name"].toLowerCase().indexOf(input) !== -1)
-            tableData += parseItem(item);
-        else if ("category" in item && item["category"].toLowerCase().indexOf(input) !== -1)
-            tableData += parseItem(item);
-        else if ("type" in item && item["type"].toLowerCase().indexOf(input) !== -1) 
-            tableData += parseItem(item);
+        let matchCount = 0;
+        
+        for (let i = 0; i < splitInput.length; i++) {
+            if ("name" in item && item["name"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
+            else if ("category" in item && item["category"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
+            else if ("type" in item && item["type"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
+        }
+
+        if (matchCount === splitInput.length) tableData += parseItem(item);
     });
 
     // Fill the table
