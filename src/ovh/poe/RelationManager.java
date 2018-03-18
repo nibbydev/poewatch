@@ -204,19 +204,86 @@ public class RelationManager {
      * @return Generated index of added url
      */
     public int addIcon(String key, String icon) {
+        // Generalize key
+        key = resolveSpecificKey(key);
+
         // If icon is already present, return icon index
         if (nameToIconIndex.containsKey(key)) return nameToIconIndex.get(key);
 
-        // Get "?"'s index in url
-        int tempIndex = (icon.contains("?") ? icon.indexOf("?") : icon.length());
-        // Get everything before "?"
-        icon = icon.substring(0, tempIndex);
+        String[] splitIcon = icon.split("\\?");
+        String fullIcon = splitIcon[0];
+
+        if (splitIcon.length > 1) {
+            StringBuilder paramBuilder = new StringBuilder();
+
+            for (String param : splitIcon[1].split("&")) {
+                String[] splitParam = param.split("=");
+
+                switch (splitParam[0]) {
+                    case "scale":
+                    case "w":
+                    case "h":
+                    case "mr": // shaped
+                    case "mn": // background
+                    case "mt": // tier
+                    case "relic":
+                        paramBuilder.append("&");
+                        paramBuilder.append(splitParam[0]);
+                        paramBuilder.append("=");
+                        paramBuilder.append(splitParam[1]);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // If there are parameters that should be kept, add them to fullIcon
+            if (paramBuilder.length() > 0) {
+                // Replace the first "&" symbol with "?"
+                paramBuilder.setCharAt(0, '?');
+                fullIcon += paramBuilder.toString();
+            }
+        }
 
         // Otherwise add to map and return icon index
         int index = nameToIconIndex.size();
         nameToIconIndex.put(key, index);
-        iconIndexToIcon.put(index, new Mappers.IconRelation(key, icon));
+        iconIndexToIcon.put(index, new Mappers.IconRelation(key, fullIcon));
         return index;
+    }
+
+    /**
+     * Generalizes a specific key
+     *
+     * @return Generalized item key
+     */
+    public String resolveSpecificKey(String key) {
+        // "Hardcore Bestiary|armour:chest|Shroud of the Lightless:Carnal Armour|3|var:1 socket"
+
+        StringBuilder genericKey = new StringBuilder();
+        String[] splitKey = key.split("\\|");
+
+        // Add item category
+        genericKey.append(splitKey[1]);
+        genericKey.append("|");
+
+        // Add item name
+        genericKey.append(splitKey[2]);
+        genericKey.append("|");
+
+        // Add item frameType
+        genericKey.append(splitKey[3]);
+
+        // Add var info, if present (eg Impresence has different icons based on variation)
+        for (int i = 4; i < splitKey.length; i++) {
+            if (splitKey[i].contains("var:")) {
+                genericKey.append("|");
+                genericKey.append(splitKey[i]);
+                break;
+            }
+        }
+
+        return genericKey.toString();
     }
 
     /**
@@ -240,5 +307,16 @@ public class RelationManager {
      */
     public void addLeague(String league) {
         if (!leagues.contains(league)) leagues.add(league);
+    }
+
+    /**
+     * Deletes all icon-related data
+     */
+    public void clearIcons() {
+        nameToIconIndex.clear();
+        iconIndexToIcon.clear();
+
+        File iconFile = new File("./iconRelations.json");
+        if (!iconFile.delete()) System.out.println("[Error] Couldn't delete ./iconRelations.json");
     }
 }

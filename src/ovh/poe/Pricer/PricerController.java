@@ -24,6 +24,7 @@ public class PricerController {
     private Gson gson = Main.getGson();
     private long lastClearCycle;
     public volatile boolean clearStats = false;
+    public volatile boolean clearIcons = false;
     private volatile boolean writeJSON = false;
     private int cycleCount = 0;
 
@@ -172,6 +173,9 @@ public class PricerController {
             System.out.println(Main.timeStamp() + " Building JSON");
         }
 
+        // If clear icons flag is up, delete all icon data (including files)
+        if (clearIcons) Main.RELATIONS.clearIcons();
+
         // The method that does it all
         readFileParseFileWriteFile();
 
@@ -184,7 +188,7 @@ public class PricerController {
         }
 
         // Switch off flags
-        clearStats = writeJSON = false;
+        clearStats = clearIcons = writeJSON = false;
         flipPauseFlag();
     }
 

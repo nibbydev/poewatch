@@ -63,7 +63,7 @@ public class DataEntry {
         // Get latest icon, if present
         if (item.icon != null && iconIndex < 0) {
             // Get icon's index
-            iconIndex = Main.RELATIONS.addIcon(item.getGenericKey(), item.icon);
+            iconIndex = Main.RELATIONS.addIcon(item.getKey(), item.icon);
         }
     }
 
@@ -75,6 +75,12 @@ public class DataEntry {
     public void cycle(String line) {
         // Load data into lists
         parseLine(line);
+
+        // Clear icon index if user requested icon database wipe
+        if (Main.PRICER_CONTROLLER.clearIcons) iconIndex = -1;
+        else if (iconIndex < 0) {
+            iconIndex = Main.RELATIONS.nameToIconIndex.getOrDefault(Main.RELATIONS.resolveSpecificKey(key), -1);
+        }
 
         // Build statistics and databases
         parse();
@@ -89,6 +95,9 @@ public class DataEntry {
      * Caller method. Calls other methods
      */
     public void cycle() {
+        // Clear icon index if user requested icon database wipe
+        if (Main.PRICER_CONTROLLER.clearIcons) iconIndex = -1;
+
         // Build statistics and databases
         parse();
         purge();

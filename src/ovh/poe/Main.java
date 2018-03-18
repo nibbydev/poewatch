@@ -111,6 +111,7 @@ public class Main {
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
+                + "    clearicons - clear the icon database\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -139,6 +140,14 @@ public class Main {
                         break;
                     case "about":
                         commandAbout();
+                        break;
+                    case "clearicons":
+                        if (commandConfirm()) {
+                            System.out.println("[WARN] Icon database will be cleared on next cycle");
+                            PRICER_CONTROLLER.clearIcons = true;
+                        } else {
+                            System.out.println("[Info] Deletion cancelled");
+                        }
                         break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -359,6 +368,27 @@ public class Main {
                 + "Made by: Siegrest\n"
                 + "Licenced under MIT licence, 2018\n";
         System.out.println(about);
+    }
+
+    /**
+     * Presents the user with a "Are you sure (yes/no)?" prompt for potentially destructive commands
+     *
+     * @return Result of the question
+     */
+    private static boolean commandConfirm() {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String userInput;
+
+        try {
+            System.out.println("[Info] Are you sure? (yes/no)");
+            userInput = reader.readLine();
+        } catch (IOException ex) {
+            System.out.println("[Error] Couldn't read user input for verification");
+            ex.printStackTrace();
+            return false;
+        }
+
+        return userInput.equals("yes");
     }
 
     /**

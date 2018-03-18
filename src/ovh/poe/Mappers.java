@@ -111,8 +111,12 @@ public class Mappers {
                 mode = entry.getMode();
                 count = entry.getCount() + entry.getInc_counter();
                 inc = entry.getInc_counter();
-                index = entry.getIconIndex();
-                icon = Main.RELATIONS.iconIndexToIcon.get(index).url;
+                if (entry.getIconIndex() >= 0) {
+                    index = entry.getIconIndex();
+
+                    if (Main.RELATIONS.iconIndexToIcon.containsKey(index))
+                        icon = Main.RELATIONS.iconIndexToIcon.get(index).url;
+                }
             }
         }
 
