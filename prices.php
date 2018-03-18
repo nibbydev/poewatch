@@ -49,28 +49,47 @@
       </div>
 
       <div class="row nested-row">
-        <div class="col-lg-4"> 
+        <div class="col-lg-6"> 
           <h4>League</h4>
-          <select class="form-control" id="search-league">
+          <select class="form-control custom-select" id="search-league">
             <?php include "assets/php/leagueSelector.php" ?>
           </select>
         </div>
 
         <div class="col-lg-6">
-          <h4>Sub-category</h4>
-          <select class="form-control" id="search-sub">
+          <h4>Child category</h4>
+          <select class="form-control custom-select" id="search-sub">
             <?php include "assets/php/categorySelector.php" ?>
           </select>
         </div>
+      </div>
 
-        <div class="col-lg-2">
-          <h4>Links</h4>
-          <select class="form-control">
-            <option selected>(WIP)</option>
-            <option value=0>None</option>
-            <option value=5>5</option>
-            <option value=6>6</option>
-          </select>
+      <div class="row nested-row">
+        <div class="col-lg-3">
+          <h4>Low count</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-outline-secondary active">
+              <input type="radio" name="options" id="radio-confidence-hide" autocomplete="off" checked>Hide
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="options" id="radio-confidence-show" autocomplete="off">Show
+            </label>
+          </div>
+        </div>
+        
+        <div class="col-lg-3">
+          <h4>Links (WIP)</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-outline-secondary active">
+              <input type="radio" name="options" id="radio-links-none" autocomplete="off" checked>None
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="options" id="radio-links-5" autocomplete="off">5L
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="options" id="radio-links-6" autocomplete="off">6L
+            </label>
+          </div>
         </div>
       </div>
 

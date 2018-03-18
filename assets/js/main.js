@@ -4,6 +4,10 @@ var ITEMS = [];
 const INITIAL_LOAD_AMOUNT = 50;
 const PRICE_PERCISION = 100;
 var currentlyLoaded = 0;
+var HIDE_LOW_CONFIDENCE = true;
+
+const COUNT_HIGH = 25;
+const COUNT_MED = 15;
 
 // Load conversion rates on page load
 $(document).ready(function() {
@@ -48,6 +52,20 @@ $(document).ready(function() {
         searchTheResults($(this).val());
     });
 
+    // Define low confidence radio button event listeners
+    $("#radio-confidence-show").on("change", function(){
+        if (HIDE_LOW_CONFIDENCE === true) {
+            HIDE_LOW_CONFIDENCE = false;
+            searchTheResults("");
+        }
+    });
+    $("#radio-confidence-hide").on("change", function(){
+        if (HIDE_LOW_CONFIDENCE === false) {
+            HIDE_LOW_CONFIDENCE = true;
+            searchTheResults("");
+        }
+    });
+
     makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
 
@@ -75,6 +93,8 @@ function makeRequest(from, to) {
         // Loop through all items, parse them and append to displaystring
         var tableData = "";
         ITEMS.forEach(item => {
+            // Hide low confidence at first
+            if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
             // Add it all together
             tableData += parseItem(item);
             // Inc loaded item counter
@@ -97,8 +117,8 @@ function parseItem(item) {
 
     // Format count badge
     var countBadge;
-    if (item["count"] > 50) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
-    else if (item["count"] > 20) countBadge = "<span class=\"badge custom-badge-orange\">" + item["count"] + "</span>";
+    if (item["count"] >= COUNT_HIGH) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
+    else if (item["count"] >= COUNT_MED) countBadge = "<span class=\"badge custom-badge-orange\">" + item["count"] + "</span>";
     else countBadge = "<span class=\"badge custom-badge-red\">" + item["count"] + "</span>";
 
     // Format icon
@@ -162,6 +182,8 @@ function searchTheResults(input) {
     var tableData = "";
     ITEMS.forEach(item => {
         let matchCount = 0;
+
+        if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
         
         for (let i = 0; i < splitInput.length; i++) {
             if ("name" in item && item["name"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
