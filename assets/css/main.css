@@ -28,6 +28,11 @@ footer {
     padding: 15px;
 }
 
+/* Set loadmore button to be hidden at first */
+#button-loadmore {
+    display: none;
+}
+
 /* Overwrite sidebar button active style background */
 .list-group-item.sidebar-link.active {background-color: #777}
 
