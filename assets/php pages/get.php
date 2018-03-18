@@ -26,10 +26,7 @@
     $dataFile = file_get_contents(getcwd() . "/data/" . $paramLeague . ".json");
 
     // If user requested whole file
-    if ($paramCategory === "all") {
-        echo $dataFile;
-        return;
-    }
+    if ($paramCategory === "all") $paramCategory = null;
     // If user requested whole category
     if ($paramSub === "all") $paramSub = null;
 
@@ -40,7 +37,7 @@
 
     // Loop through all categories
     foreach ($jsonFile as $parentCategoryKey => $itemList) {
-        if ($paramCategory !== $parentCategoryKey) continue;
+        if ($paramCategory && $paramCategory !== $parentCategoryKey) continue;
 
         // Loop through the JSON file
         foreach ($itemList as $itemKey => $item) {
@@ -92,6 +89,9 @@
                 "icon" => $item["icon"],
                 "index" => $item["index"]
             ];
+
+            if (!$paramCategory) $tempPayload["parent"] = $parentCategoryKey;
+            if (!$paramSub && $item["category"]) $tempPayload["child"] = $item["category"];
 
             // $name, $type, $variant, $frameType, $links, $lvl, $quality, $corrupted;
             if ($name) $tempPayload["name"] = $name;
