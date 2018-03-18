@@ -98,8 +98,8 @@ function parseItem(item) {
 
     // Format count badge
     var countBadge;
-    if (item["count"] > 100) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
-    else if (item["count"] > 50) countBadge = "<span class=\"badge custom-badge-orange\">" + item["count"] + "</span>";
+    if (item["count"] > 50) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
+    else if (item["count"] > 20) countBadge = "<span class=\"badge custom-badge-orange\">" + item["count"] + "</span>";
     else countBadge = "<span class=\"badge custom-badge-red\">" + item["count"] + "</span>";
 
     // Format icon
