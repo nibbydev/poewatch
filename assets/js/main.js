@@ -11,6 +11,7 @@ const COUNT_MED = 15;
 // User-modifiable variables
 var HIDE_LOW_CONFIDENCE = true;
 var LINK_FILTER = 0;
+var SEARCH_INPUT = "";
 
 // Load conversion rates on page load
 $(document).ready(function() {
@@ -52,35 +53,23 @@ $(document).ready(function() {
 
     // Define searchbar event listener
     $("#search-searchbar").on("input", function(){
-        searchTheResults($(this).val());
+        SEARCH_INPUT = $(this).val();
+        sortResults();
     });
 
-    // Define low confidence radio button event listeners
-    $("#radio-confidence-show").on("change", function(){
-        if (HIDE_LOW_CONFIDENCE === true) {
-            HIDE_LOW_CONFIDENCE = false;
-            searchTheResults("");
-        }
-    });
-    $("#radio-confidence-hide").on("change", function(){
-        if (HIDE_LOW_CONFIDENCE === false) {
-            HIDE_LOW_CONFIDENCE = true;
-            searchTheResults("");
+    // Define low confidence radio button event listener
+    $("#radio-confidence").on("change", function(){
+        let newValue = $("input[name=confidence]:checked", this).val();
+        if (newValue != HIDE_LOW_CONFIDENCE) {
+            HIDE_LOW_CONFIDENCE = !HIDE_LOW_CONFIDENCE;
+            sortResults();
         }
     });
 
-    // Define link selector event listener
-    $("#radio-confidence-hide").on("change", function(){
-        if (HIDE_LOW_CONFIDENCE === false) {
-            HIDE_LOW_CONFIDENCE = true;
-            searchTheResults("");
-        }
-    });
-
-    //$("input[name=links]:checked", "#radio-links").val()
+    // Define link radio button event listener
     $("#radio-links").on("change", function(){
         LINK_FILTER = parseInt($("input[name=links]:checked", this).val());
-        searchTheResults("");
+        sortResults();
     });
 
     makeRequest(0, INITIAL_LOAD_AMOUNT);
@@ -105,26 +94,8 @@ function makeRequest(from, to) {
     request.done(function(json) {
         // Add downloaded items to global variable ITEMS
         ITEMS = ITEMS.concat(json);
-        // Empty the table
-        $("#searchResults > tbody").empty();
-        // Loop through all items, parse them and append to displaystring
-        var tableData = "";
-        ITEMS.forEach(item => {
-            // Hide low confidence at first
-            if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
-            // Hide items with different links
-            if (LINK_FILTER) {
-                if (!("links" in item) || item["links"] !== LINK_FILTER) return;
-            } else if ("links" in item) return;
-
-            // Add it all together
-            tableData += parseItem(item);
-            // Inc loaded item counter
-            currentlyLoaded++;
-        });
-
-        // Add parsed items to the table (table might be cleared in previous function)
-        $("#searchResults").append(tableData);
+        // Sort the current results
+        sortResults();
         // Enable "show more" button
         if (ITEMS.length === INITIAL_LOAD_AMOUNT) $("#button-loadmore").show();
     });
@@ -194,12 +165,12 @@ function roundPrice(price) {
 }
 
 
-function searchTheResults(input) {
+function sortResults() {
     // Empty the table
     $("#searchResults > tbody").empty();
 
     // Format input
-    var splitInput = input.toLowerCase().trim().split(" ");
+    var splitInput = SEARCH_INPUT.toLowerCase().trim().split(" ");
 
     var tableData = "";
     ITEMS.forEach(item => {
