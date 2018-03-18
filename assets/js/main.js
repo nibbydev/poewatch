@@ -1,13 +1,16 @@
 // Define "global" variable (ie the largest scope here)
 let SELECTED;
 var ITEMS = [];
-const INITIAL_LOAD_AMOUNT = 50;
+const INITIAL_LOAD_AMOUNT = 100;
 const PRICE_PERCISION = 100;
 var currentlyLoaded = 0;
-var HIDE_LOW_CONFIDENCE = true;
 
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
+
+// User-modifiable variables
+var HIDE_LOW_CONFIDENCE = true;
+var LINK_FILTER = 0;
 
 // Load conversion rates on page load
 $(document).ready(function() {
@@ -66,6 +69,20 @@ $(document).ready(function() {
         }
     });
 
+    // Define link selector event listener
+    $("#radio-confidence-hide").on("change", function(){
+        if (HIDE_LOW_CONFIDENCE === false) {
+            HIDE_LOW_CONFIDENCE = true;
+            searchTheResults("");
+        }
+    });
+
+    //$("input[name=links]:checked", "#radio-links").val()
+    $("#radio-links").on("change", function(){
+        LINK_FILTER = parseInt($("input[name=links]:checked", this).val());
+        searchTheResults("");
+    });
+
     makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
 
@@ -95,6 +112,11 @@ function makeRequest(from, to) {
         ITEMS.forEach(item => {
             // Hide low confidence at first
             if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
+            // Hide items with different links
+            if (LINK_FILTER) {
+                if (!("links" in item) || item["links"] !== LINK_FILTER) return;
+            } else if ("links" in item) return;
+
             // Add it all together
             tableData += parseItem(item);
             // Inc loaded item counter
@@ -128,7 +150,7 @@ function parseItem(item) {
     // Format variant/links badge
     var name = item["name"];
     if (item["type"]) name += ", " + item["type"];
-    if (item["links"]) name += " <span class=\"badge custom-badge-gray\">" + item["links"] + " link</span>";
+    //if (item["links"]) name += " <span class=\"badge custom-badge-gray\">" + item["links"] + " link</span>";
     if (item["variant"]) name += " <span class=\"badge custom-badge-gray\">" + item["variant"] + "</span>";
 
     // Add gem badge
@@ -183,7 +205,12 @@ function searchTheResults(input) {
     ITEMS.forEach(item => {
         let matchCount = 0;
 
+        // Hide low confidence items
         if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
+        // Hide items with different links
+        if (LINK_FILTER) {
+            if (!("links" in item) || item["links"] !== LINK_FILTER) return;
+        } else if ("links" in item) return;
         
         for (let i = 0; i < splitInput.length; i++) {
             if ("name" in item && item["name"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;

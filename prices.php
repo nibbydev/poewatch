@@ -65,7 +65,7 @@
       </div>
 
       <div class="row nested-row">
-        <div class="col-lg-3">
+        <div class="col-md-6">
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons">
             <label class="btn btn-outline-secondary active">
@@ -77,17 +77,17 @@
           </div>
         </div>
         
-        <div class="col-lg-3">
-          <h4>Links (WIP)</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+        <div class="col-md-6">
+          <h4>Links</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-secondary active">
-              <input type="radio" name="options" id="radio-links-none" autocomplete="off" checked>None
+              <input type="radio" name="links" value="0" id="radio-links-none" autocomplete="off" checked>None
             </label>
             <label class="btn btn-outline-secondary">
-              <input type="radio" name="options" id="radio-links-5" autocomplete="off">5L
+              <input type="radio" name="links" value="5" id="radio-links-5" autocomplete="off">5L
             </label>
             <label class="btn btn-outline-secondary">
-              <input type="radio" name="options" id="radio-links-6" autocomplete="off">6L
+              <input type="radio" name="links" value="6" id="radio-links-6" autocomplete="off">6L
             </label>
           </div>
         </div>
