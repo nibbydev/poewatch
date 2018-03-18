@@ -77,7 +77,7 @@
       <div class="row nested-row">
         <div class="col-lg">
           <h4>Search</h4>
-          <input type="text" class="form-control" placeholder="Search (WIP)">
+          <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
         </div>
       </div>
 
