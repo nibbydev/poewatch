@@ -93,7 +93,7 @@
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&from=5&to=20">Example 1</a>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&from=5">Example 2</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=bootsto=20">Example 3</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&to=20">Example 3</a>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots">Example 3</a>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour">Example 4</a>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=all">Example 5</a>
@@ -149,7 +149,7 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of catetgories currently in use</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/categories">Example 1</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/categories">Example</a>
             </div>
           </div>
         </div>
@@ -165,7 +165,7 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of leagues</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/leagues">Example 1</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/leagues">Example</a>
             </div>
           </div>
         </div>
