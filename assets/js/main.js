@@ -23,8 +23,7 @@ $(document).ready(function() {
         SELECTED.league = $(this).find(":selected").text();
         // Empty item history
         ITEMS = [];
-        // Empty the table
-        $("#searchResults > tbody").empty();
+
         makeRequest(0, INITIAL_LOAD_AMOUNT);
     });
 
@@ -34,8 +33,7 @@ $(document).ready(function() {
         SELECTED.sub = $(this).find(":selected").text();
         // Empty item history
         ITEMS = [];
-        // Empty the table
-        $("#searchResults > tbody").empty();
+
         makeRequest(0, INITIAL_LOAD_AMOUNT);
     });
 
@@ -72,7 +70,8 @@ function makeRequest(from, to) {
     request.done(function(json) {
         // Add downloaded items to global variable ITEMS
         ITEMS = ITEMS.concat(json);
-        // Parse the downloaded items without parsing already displayed items
+        // Empty the table
+        $("#searchResults > tbody").empty();
         // Loop through all items, parse them and append to displaystring
         var tableData = "";
         ITEMS.forEach(item => {
