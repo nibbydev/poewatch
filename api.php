@@ -8,7 +8,15 @@
   <link rel="stylesheet" href="assets/css/main.css">
   <script src="assets/js/jquery.min.js"></script>
   <script src="assets/js/bootstrap.min.js"></script>
-  <script src="assets/js/main.js"></script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-115952624-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-115952624-1');
+  </script>
 </head>
 <body>
 
@@ -22,7 +30,7 @@
 
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" href="#">Front</a></li>
+        <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link" href="#">About</a></li>
       </ul>
@@ -50,7 +58,7 @@
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Main interface for the price API</p>
+              <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive</p>
               <h5 class="card-title">Fields</h5>
               <div class="custom-table">
                 <table class="table table-hover">
@@ -90,6 +98,7 @@
                   </tbody>
                 </table>
               </div>
+
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&from=5&to=20">Example 1</a>
               <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&from=5">Example 2</a>
