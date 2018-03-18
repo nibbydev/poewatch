@@ -12,6 +12,9 @@ const COUNT_MED = 15;
 var HIDE_LOW_CONFIDENCE = true;
 var LINK_FILTER = 0;
 var SEARCH_INPUT = "";
+var GEM_LEVEL = "-1";
+var GEM_QUALITY = "-1";
+var GEM_CORRUPTED = "-1";
 
 // Load conversion rates on page load
 $(document).ready(function() {
@@ -72,6 +75,20 @@ $(document).ready(function() {
         sortResults();
     });
 
+    // Define gem selector and radio event listeners
+    $("#select-level").on("change", function(){
+        GEM_LEVEL = $(":selected", this).val();
+        sortResults();
+    });
+    $("#select-quality").on("change", function(){
+        GEM_QUALITY = $(":selected", this).val();
+        sortResults();
+    });
+    $("#radio-corrupted").on("change", function(){
+        GEM_CORRUPTED = $(":checked", this).val();
+        sortResults();
+    });
+
     makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
 
@@ -121,19 +138,25 @@ function parseItem(item) {
     // Format variant/links badge
     var name = item["name"];
     if (item["type"]) name += ", " + item["type"];
-    //if (item["links"]) name += " <span class=\"badge custom-badge-gray\">" + item["links"] + " link</span>";
     if (item["variant"]) name += " <span class=\"badge custom-badge-gray\">" + item["variant"] + "</span>";
 
     // Add gem badge
+    var gemData = "";
     if (item["frameType"] === 4) {
-        if (item["lvl"]) name += " <span class=\"badge custom-badge-gray\">level " + item["lvl"] + "</span>";
-        if (item["quality"]) name += " <span class=\"badge custom-badge-gray\">quality " + item["quality"] + "</span>";
-        if (item["corrupted"]) name += " <span class=\"badge custom-badge-red\">Corrupted</span>";
+        if ("lvl" in item) gemData += "<td>" + item["lvl"] + "</td>";
+        else gemData += "<td>0</td>";
+        
+        if ("quality" in item) gemData += "<td>" + item["quality"] + "</td>";
+        else gemData += "<td>0</td>";
+
+        if ("corrupted" in item) gemData += "<td><span class=\"badge custom-badge-red\">Yes</span></td>";
+        else gemData += "<td>No</td>";
     }
 
     // Add it all together
     var returnString = "<tr>" +
     "<td>" +  iconDiv + name + "</td>" + 
+    gemData +
     "<td>" + roundPrice(item["mean"]) + "</td>" + 
     "<td>" + roundPrice(item["median"]) + "</td>" + 
     "<td>" + roundPrice(item["mode"]) + "</td>" +
@@ -182,6 +205,29 @@ function sortResults() {
         if (LINK_FILTER) {
             if (!("links" in item) || item["links"] !== LINK_FILTER) return;
         } else if ("links" in item) return;
+        // Sort gems, I guess
+        if (item["frameType"] === 4) {
+            if (GEM_LEVEL !== "-1") {
+                if (item["lvl"] !== GEM_LEVEL) return;
+            }
+            if (GEM_QUALITY !== "-1") {
+                if (GEM_QUALITY) {
+                    if (!("quality" in item)) return;
+                    if (item["quality"] !== GEM_QUALITY) return;
+                } else {
+                    if ("quality" in item && item["quality"] > 0) return;
+                }
+            }
+            if (GEM_CORRUPTED !== "-1") {
+                if (GEM_CORRUPTED == true) {
+                    if (!("corrupted" in item)) return;
+                    if (!item["corrupted"]) return;
+                } else {
+                    if ("corrupted" in item) return;
+                    if (item["corrupted"]) return;
+                }
+            }
+        }
         
         for (let i = 0; i < splitInput.length; i++) {
             if ("name" in item && item["name"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;

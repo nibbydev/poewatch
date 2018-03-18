@@ -37,17 +37,23 @@
   <div class="row">
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
-        <?php include "assets/php/menu.php" ?>
+
+<?php 
+  include "assets/php/menu.php" 
+?>
+
       </div>
     </div>
 
     <div class="col-lg-8 main-content"> 
       <div class="row nested-row">
         <div class="col-lg-4"> 
-          <?php
-            $pageTitle = ucwords(strtolower(trim($_GET["category"])));
-            echo "<h1>" . $pageTitle . "</h1>";
-          ?>
+
+<?php
+  $pageTitle = ucwords(strtolower(trim($_GET["category"])));
+  echo "<h1>" . $pageTitle . "</h1>";
+?>
+
         </div>
       </div>
 
@@ -55,14 +61,22 @@
         <div class="col-lg-6"> 
           <h4>League</h4>
           <select class="form-control custom-select" id="search-league">
-            <?php include "assets/php/leagueSelector.php" ?>
+
+<?php 
+  include "assets/php/leagueSelector.php" 
+?>
+
           </select>
         </div>
 
         <div class="col-lg-6">
           <h4>Child category</h4>
           <select class="form-control custom-select" id="search-sub">
-            <?php include "assets/php/categorySelector.php" ?>
+
+<?php 
+  include "assets/php/categorySelector.php"
+?>
+
           </select>
         </div>
       </div>
@@ -80,7 +94,12 @@
           </div>
         </div>
         
-        <div class="col-md-6">
+<?php
+  $pageTitle = strtolower(trim($_GET["category"]));
+  echo (($pageTitle === "armour" || $pageTitle === "weapons") ? "<div class=\"col-md-6\">" : "<div class=\"col-md-6\" style=\"display: none\">");
+?>
+
+        <!--<div class="col-md-6">-->
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-secondary active">
@@ -91,6 +110,57 @@
             </label>
             <label class="btn btn-outline-secondary">
               <input type="radio" name="links" value="6" autocomplete="off">6L
+            </label>
+          </div>
+        </div>
+      </div>
+
+<?php
+  $pageTitle = strtolower(trim($_GET["category"]));
+  echo ($pageTitle === "gems" ? "<div class=\"row nested-row\">" : "<div class=\"row nested-row\" style=\"display: none\">");
+?>
+
+      <!--<div class="row nested-row">-->
+        <div class="col-md-4">
+          <h4>Level</h4>
+          <div class="form-group">
+            <select class="form-control" id="select-level">
+              <option value="-1">All</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="21">21</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <h4>Quality</h4>
+          <div class="form-group">
+            <select class="form-control" id="select-quality">
+              <option value="-1">All</option>
+              <option value="0">0</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="23">23</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <h4>Corrupted</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
+            <label class="btn btn-outline-secondary active">
+              <input type="radio" name="corrupted" value="-1" autocomplete="off" checked>Either
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="corrupted" value="0" autocomplete="off" checked>No
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="corrupted" value="1" autocomplete="off">Yes
             </label>
           </div>
         </div>
@@ -112,6 +182,16 @@
                   <thead>
                     <tr>
                       <th scope="col">Item</th>
+
+<?php
+  $pageTitle = strtolower(trim($_GET["category"]));
+  if ($pageTitle === "gems") {
+    echo "<th scope=\"col\">Level</th>";
+    echo "<th scope=\"col\">Quality</th>";
+    echo "<th scope=\"col\">Corrupted</th>";
+  }
+?>
+
                       <th scope="col">Mean</th>
                       <th scope="col">Median</th>
                       <th scope="col">Mode</th>
