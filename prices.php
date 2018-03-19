@@ -38,9 +38,9 @@
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
-<?php 
-  include "assets/php/menu.php" 
-?>
+        <?php 
+          include "assets/php/menu.php" 
+        ?>
 
       </div>
     </div>
@@ -49,10 +49,10 @@
       <div class="row nested-row">
         <div class="col-lg-4"> 
 
-<?php
-  $pageTitle = ucwords(strtolower(trim($_GET["category"])));
-  echo "<h1>" . $pageTitle . "</h1>";
-?>
+          <?php
+            $pageTitle = ucwords(strtolower(trim($_GET["category"])));
+            echo "<h1>" . $pageTitle . "</h1>";
+          ?>
 
         </div>
       </div>
@@ -62,9 +62,10 @@
           <h4>League</h4>
           <select class="form-control custom-select" id="search-league">
 
-<?php 
-  include "assets/php/leagueSelector.php" 
-?>
+            <?php 
+              $jsonFile = json_decode( file_get_contents( dirname(getcwd(), 2) . "/leagues.json"), true );
+              foreach ($jsonFile as $leagueName) echo "<option>" . $leagueName . "</option>";
+            ?>
 
           </select>
         </div>
@@ -73,9 +74,14 @@
           <h4>Child category</h4>
           <select class="form-control custom-select" id="search-sub">
 
-<?php 
-  include "assets/php/categorySelector.php"
-?>
+            <?php 
+              $pageTitle = trim(strtolower($_GET["category"]));
+              if (!$pageTitle) $pageTitle = "currency";
+              $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/categories.json"), true );
+              echo "<option>All</option>";
+              if (!array_key_exists($pageTitle, $jsonFile)) return;
+              foreach ($jsonFile[$pageTitle] as $item) echo "<option>" . ucwords($item) . "</option>";
+            ?>
 
           </select>
         </div>
@@ -94,10 +100,14 @@
           </div>
         </div>
         
-<?php
-  $pageTitle = strtolower(trim($_GET["category"]));
-  echo (($pageTitle === "armour" || $pageTitle === "weapons") ? "<div class=\"col-md-6\">" : "<div class=\"col-md-6\" style=\"display: none\">");
-?>
+        <?php
+          $pageTitle = strtolower(trim($_GET["category"]));
+          if ($pageTitle === "armour" || $pageTitle === "weapons") {
+            echo "<div class=\"col-md-6\">";
+          } else {
+            echo "<div class=\"col-md-6\" style=\"display: none\">";
+          }
+        ?>
 
         <!--<div class="col-md-6">-->
           <h4>Links</h4>
@@ -115,10 +125,14 @@
         </div>
       </div>
 
-<?php
-  $pageTitle = strtolower(trim($_GET["category"]));
-  echo ($pageTitle === "gems" ? "<div class=\"row nested-row\">" : "<div class=\"row nested-row\" style=\"display: none\">");
-?>
+      <?php
+        $pageTitle = strtolower(trim($_GET["category"]));
+        if ($pageTitle === "gems") {
+          echo "<div class=\"row nested-row\">";
+        } else {
+          echo "<div class=\"row nested-row\" style=\"display: none\">";
+        }
+      ?>
 
       <!--<div class="row nested-row">-->
         <div class="col-md-4">
@@ -183,14 +197,14 @@
                     <tr>
                       <th scope="col">Item</th>
 
-<?php
-  $pageTitle = strtolower(trim($_GET["category"]));
-  if ($pageTitle === "gems") {
-    echo "<th scope=\"col\">Level</th>";
-    echo "<th scope=\"col\">Quality</th>";
-    echo "<th scope=\"col\">Corrupted</th>";
-  }
-?>
+                      <?php
+                        $pageTitle = strtolower(trim($_GET["category"]));
+                        if ($pageTitle === "gems") {
+                          echo "<th scope=\"col\">Level</th>";
+                          echo "<th scope=\"col\">Quality</th>";
+                          echo "<th scope=\"col\">Corrupted</th>";
+                        }
+                      ?>
 
                       <th scope="col">Mean</th>
                       <th scope="col">Median</th>
@@ -206,7 +220,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
