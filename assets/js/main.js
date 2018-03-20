@@ -120,11 +120,6 @@ function makeRequest(from, to) {
 
 
 function parseItem(item) {
-    // Check if the item has already been displayed
-    //if ("parsed" in item && item["parsed"] === true) return;
-    // Mark the item as "parsed"
-    //item["parsed"] = true;
-
     // Format count badge
     var countBadge;
     if (item["count"] >= COUNT_HIGH) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
@@ -140,26 +135,26 @@ function parseItem(item) {
     if (item["type"]) name += ", " + item["type"];
     if (item["variant"]) name += " <span class=\"badge custom-badge-gray\">" + item["variant"] + "</span>";
 
-    // Add gem badge
-    var gemData = "";
-    if (item["frameType"] === 4) {
-        if ("lvl" in item) gemData += "<td>" + item["lvl"] + "</td>";
-        else gemData += "<td>0</td>";
+    // Add gem/map extra data
+    var extraFields = "";
+    if (item["frame"] === 4) {
+        if ("lvl" in item) extraFields += "<td>" + item["lvl"] + "</td>";
+        else extraFields += "<td>0</td>";
         
-        if ("quality" in item) gemData += "<td>" + item["quality"] + "</td>";
-        else gemData += "<td>0</td>";
+        if ("quality" in item) extraFields += "<td>" + item["quality"] + "</td>";
+        else extraFields += "<td>0</td>";
 
-        if ("corrupted" in item) gemData += "<td><span class=\"badge custom-badge-red\">Yes</span></td>";
-        else gemData += "<td>No</td>";
+        if ("corrupted" in item) extraFields += "<td><span class=\"badge custom-badge-red\">Yes</span></td>";
+        else extraFields += "<td>No</td>";
     }
 
     // Add it all together
     var returnString = "<tr>" +
-    "<td>" +  iconDiv + name + "</td>" + 
-    gemData +
+    "<td>" +  iconDiv + name + ("tier" in item ? " <span class=\"badge custom-badge-gray\">" + item["tier"] + "</span>" : "") + "</td>" + 
+    extraFields +
+    //"<td>" + roundPrice(item["mean"]) + "</td>" + 
     "<td>" + roundPrice(item["mean"]) + "</td>" + 
-    "<td>" + roundPrice(item["median"]) + "</td>" + 
-    "<td>" + roundPrice(item["mode"]) + "</td>" +
+    //"<td>" + roundPrice(item["mode"]) + "</td>" +
     "<td>" + countBadge + "</td>" + 
     "</tr>";
 
@@ -206,14 +201,14 @@ function sortResults() {
             if (!("links" in item) || item["links"] !== LINK_FILTER) return;
         } else if ("links" in item) return;
         // Sort gems, I guess
-        if (item["frameType"] === 4) {
+        if (item["frame"] === 4) {
             if (GEM_LEVEL !== "-1") {
-                if (item["lvl"] !== GEM_LEVEL) return;
+                if (item["lvl"] != GEM_LEVEL) return;
             }
             if (GEM_QUALITY !== "-1") {
                 if (GEM_QUALITY) {
                     if (!("quality" in item)) return;
-                    if (item["quality"] !== GEM_QUALITY) return;
+                    if (item["quality"] != GEM_QUALITY) return;
                 } else {
                     if ("quality" in item && item["quality"] > 0) return;
                 }

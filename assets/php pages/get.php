@@ -12,14 +12,14 @@
 
     // Trim and format whatever's left
     $PARAM_league = ucwords(strtolower(trim($PARAM_league)));
-    $PARAM_fields = explode(',', trim($PARAM_fields));
+    $PARAM_fields = explode(',', strtolower(trim($PARAM_fields)));
     $PARAM_parent = strtolower(trim($PARAM_parent));
     $PARAM_child = strtolower(trim($PARAM_child));
     $PARAM_from = (int)trim($PARAM_from);
     $PARAM_to = (int)trim($PARAM_to);
 
     // Don't run with missing params
-    if (!$PARAM_league || !$PARAM_parent) {
+    if (!$PARAM_league || !$PARAM_parent || !$PARAM_child) {
         echo "{\"error\": \"Missing params\"}";
         return;
     }
@@ -39,13 +39,13 @@
     $payload = [];
     $counter = 0;
 
-    // Loop through all categories
+    // Loop through all categories in a league
     foreach ($jsonFile as $parentCategoryKey => $itemList) {
         if ($PARAM_parent && $PARAM_parent !== $parentCategoryKey) continue;
 
-        // Loop through the JSON file
+        // Loop through items in a category
         foreach ($itemList as $itemKey => $item) {
-            if ($PARAM_child && $item["category"] && $PARAM_child !== $item["category"]) continue;
+            if ($PARAM_child && $item["child"] && $PARAM_child !== $item["child"]) continue;
             
             $counter++;
             // Set starting position
@@ -53,70 +53,13 @@
             // Set ending position
             if ($PARAM_to > 0 && $counter > $PARAM_to) break;
 
-            // Null the variables
-            $name = null; 
-            $type = null; 
-            $variant = null; 
-            $frameType = null; 
-            $links = null; 
-            $lvl = null; 
-            $quality = null; 
-            $corrupted = null; 
+            if (array_key_exists("links", $item)) $item["links"] = (int)$item["links"];
+            if (array_key_exists("lvl", $item)) $item["lvl"] = (int)$item["lvl"];
+            if (array_key_exists("quality", $item)) $item["quality"] = (int)$item["quality"];
+            if (array_key_exists("tier", $item)) $item["tier"] = (int)$item["tier"];
+            if (array_key_exists("corrupted", $item)) $item["corrupted"] = !!$item["corrupted"];
 
-            $splitKey = explode("|", $itemKey);
-
-            $frameType = (int)$splitKey[1];
-
-            if ($frameType === 4) {
-                $name = $splitKey[0];
-
-                $lvl = (int)substr($splitKey[2], 2);
-                $quality = (int)substr($splitKey[3], 2);
-
-                $corrupted = ($splitKey[4] === "c:1" ? true : false);
-            } else {
-                if (strpos($splitKey[0], ":") != false) {
-                    $name = explode(":", $splitKey[0])[0];
-                    $type = explode(":", $splitKey[0])[1];
-                } else {
-                    $name = $splitKey[0];
-                }
-                
-                if (sizeof($splitKey) > 2) {
-                    // Can be either "5L" or "var:ar/es/li"
-                    if (strpos($splitKey[2], "var:") !== false) {
-                        $variant = substr($splitKey[2], 4);
-                    } else {
-                        $links = (int)substr($splitKey[2], -1);
-                        // Check if it has variant info aswell
-                        if (sizeof($splitKey) > 3) $variant = substr($splitKey[3], 4);
-                    }
-                }
-            }
-
-            $tempPayload = [
-                "mean" => $item["mean"],
-                "median" => $item["median"],
-                "mode" => $item["mode"],
-                "count" => $item["count"],
-                "icon" => $item["icon"],
-                "index" => $item["index"],
-                "name" => $name,
-                "frameType" => $frameType
-            ];
-
-            if (!$PARAM_parent) $tempPayload["parent"] = $parentCategoryKey;
-            if (!$PARAM_child && $item["category"]) $tempPayload["child"] = $item["category"];
-
-            // $name, $type, $variant, $frameType, $links, $lvl, $quality, $corrupted;
-            if (!is_null($type)) $tempPayload["type"] = $type;
-            if (!is_null($variant)) $tempPayload["variant"] = $variant;
-            if (!is_null($links)) $tempPayload["links"] = $links;
-            if (!is_null($lvl)) $tempPayload["lvl"] = $lvl;
-            if (!is_null($quality)) $tempPayload["quality"] = $quality;
-            if (!is_null($corrupted)) $tempPayload["corrupted"] = $corrupted;
-
-            array_push($payload, $tempPayload);
+            array_push($payload, $item);
         }
     }
 

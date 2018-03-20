@@ -206,9 +206,9 @@
                         }
                       ?>
 
-                      <th scope="col">Mean</th>
-                      <th scope="col">Median</th>
-                      <th scope="col">Mode</th>
+                      <!--<th scope="col">Mean</th>-->
+                      <th scope="col">Price (chaos)</th>
+                      <!--<th scope="col">Mode</th>-->
                       <th scope="col">Count</th>
                     </tr>
                   </thead>
