@@ -2,6 +2,7 @@ package ovh.poe;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import ovh.poe.Pricer.DataEntry;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -15,23 +16,23 @@ import java.util.*;
 public class RelationManager {
     private Gson gson = Main.getGson();
 
-    public Map<String, String> indexToName = new HashMap<>();
-    public Map<String, String> nameToIndex = new HashMap<>();
-    public Map<String, String> aliasToIndex = new HashMap<>();
-    public Map<String, String> aliasToName = new HashMap<>();
+    public Map<String, String> currencyIndexToName = new HashMap<>();
+    public Map<String, String> currencyNameToIndex = new HashMap<>();
+    public Map<String, String> currencyAliasToIndex = new HashMap<>();
+    public Map<String, String> currencyAliasToName = new HashMap<>();
 
-    public Map<String, Integer> nameToIconIndex = new HashMap<>();
-    public Map<Integer, Mappers.IconRelation> iconIndexToIcon = new TreeMap<>();
+    public Map<String, Integer> itemKeyToIndex = new HashMap<>();
+    public Map<Integer, Mappers.IndexedItem> itemIndexToData = new TreeMap<>();
 
     public Map<String, List<String>> categories = new HashMap<>();
     public List<String> leagues = new ArrayList<>();
 
     /**
-     * Reads currency and icon relation data from file on object init
+     * Reads currency and item data from file on object init
      */
     public RelationManager() {
         readCurrencyRelationsFromFile();
-        readIconsFromFile();
+        readItemDataFromFile();
     }
 
     /**
@@ -125,12 +126,12 @@ public class RelationManager {
             List<Mappers.CurrencyRelation> relations = gson.fromJson(reader, listType);
 
             for (Mappers.CurrencyRelation relation : relations) {
-                indexToName.put(relation.index, relation.name);
-                nameToIndex.put(relation.name, relation.index);
+                currencyIndexToName.put(relation.index, relation.name);
+                currencyNameToIndex.put(relation.name, relation.index);
 
                 for (String alias : relation.aliases) {
-                    aliasToIndex.put(alias, relation.index);
-                    aliasToName.put(alias, relation.name);
+                    currencyAliasToIndex.put(alias, relation.index);
+                    currencyAliasToName.put(alias, relation.name);
                 }
             }
 
@@ -140,20 +141,20 @@ public class RelationManager {
     }
 
     /**
-     * Reads icon relation data from file
+     * Reads item relation data from file
      */
-    private void readIconsFromFile() {
-        File file = new File("./iconRelations.json");
+    private void readItemDataFromFile() {
+        File file = new File("./itemData.json");
 
         // Open up the reader
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-            Type listType = new TypeToken<HashMap<Integer, Mappers.IconRelation>>(){}.getType();
-            HashMap<Integer, Mappers.IconRelation> relations = gson.fromJson(reader, listType);
+            Type listType = new TypeToken<HashMap<Integer, Mappers.IndexedItem>>(){}.getType();
+            HashMap<Integer, Mappers.IndexedItem> relations = gson.fromJson(reader, listType);
 
             // Lambda loop
             relations.forEach((index, item) -> {
-                nameToIconIndex.put(item.name, index);
-                iconIndexToIcon.put(index, item);
+                itemKeyToIndex.put(item.name, index);
+                itemIndexToData.put(index, item);
             });
 
         } catch (IOException ex) {
@@ -165,10 +166,10 @@ public class RelationManager {
      * Saves data to file on program exit
      */
     public void saveData() {
-        // Save icon relations to file
-        File iconFile = new File("./iconRelations.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(iconFile), "UTF-8"))) {
-            gson.toJson(iconIndexToIcon, writer);
+        // Save item relations to file
+        File itemFile = new File("./itemData.json");
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(itemFile), "UTF-8"))) {
+            gson.toJson(itemIndexToData, writer);
         } catch (IOException ex) {
             System.out.println("[ERROR] Could not write to icoRelations.json");
             ex.printStackTrace();
@@ -197,63 +198,44 @@ public class RelationManager {
     }
 
     /**
-     * Provides an interface for saving and retrieving icons and indexes
+     * Provides an interface for saving and retrieving item data and indexes
      *
-     * @param key Item's key to add
-     * @param icon Item's image url to add
+     * @param item Item object to index
      * @return Generated index of added url
      */
-    public int addIcon(String key, String icon) {
+    public int indexItem(Item item) {
+        if (item.icon == null) return -1;
+
         // Generalize key
-        key = resolveSpecificKey(key);
-
+        String key = resolveSpecificKey(item.key);
         // If icon is already present, return icon index
-        if (nameToIconIndex.containsKey(key)) return nameToIconIndex.get(key);
+        if (itemKeyToIndex.containsKey(key)) return itemKeyToIndex.get(key);
 
-        String[] splitIcon = icon.split("\\?");
-        String fullIcon = splitIcon[0];
+        // Create an instance of IndexedItem
+        Mappers.IndexedItem indexedItem = new Mappers.IndexedItem();
+        indexedItem.add(item);
 
-        if (splitIcon.length > 1) {
-            StringBuilder paramBuilder = new StringBuilder();
-
-            for (String param : splitIcon[1].split("&")) {
-                String[] splitParam = param.split("=");
-
-                switch (splitParam[0]) {
-                    case "scale":
-                    case "w":
-                    case "h":
-                    case "mr": // shaped
-                    case "mn": // background
-                    case "mt": // tier
-                    case "relic":
-                        paramBuilder.append("&");
-                        paramBuilder.append(splitParam[0]);
-                        paramBuilder.append("=");
-                        paramBuilder.append(splitParam[1]);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            // If there are parameters that should be kept, add them to fullIcon
-            if (paramBuilder.length() > 0) {
-                // Replace the first "&" symbol with "?"
-                paramBuilder.setCharAt(0, '?');
-                fullIcon += paramBuilder.toString();
-            }
-        }
-
-        // Otherwise add to map and return icon index
-        int index = nameToIconIndex.size();
-        nameToIconIndex.put(key, index);
-        iconIndexToIcon.put(index, new Mappers.IconRelation(key, fullIcon));
+        // Add IndexedItem instance to maps and return it's index for storage
+        int index = itemKeyToIndex.size();
+        itemKeyToIndex.put(key, index);
+        itemIndexToData.put(index, indexedItem);
         return index;
     }
 
     /**
-     * Generalizes a specific key
+     * Attempts to find the item's index
+     *
+     * @param key DataEntry's database key
+     * @return Index or -1, if missing
+     */
+    public int getIndex(String key) {
+        String generalizedKey = resolveSpecificKey(key);
+        return itemKeyToIndex.getOrDefault(generalizedKey, -1);
+    }
+
+    /**
+     * Generalizes a specific key. E.g: "Standard|gems:activegem|Flame Dash|4|l:10|q:20|c:0"
+     * is turned into: "gems:activegem|Flame Dash|4"
      *
      * @return Generalized item key
      */
@@ -289,34 +271,24 @@ public class RelationManager {
     /**
      * Manages item category list
      *
-     * @param parentCategory Parent category of item (e.g. "armour" or "flasks")
-     * @param childCategory Child category of item (e.g. "gloves" or null)
+     * @param item Item object to add
      */
-    public void addCategory(String parentCategory, String childCategory) {
-        List<String> childCategories = categories.getOrDefault(parentCategory, new ArrayList<>());
+    public void addCategory(Item item) {
+        List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
 
-        if (childCategory != null && !childCategories.contains(childCategory)) childCategories.add(childCategory);
+        if (item.childCategory != null && !childCategories.contains(item.childCategory))
+            childCategories.add(item.childCategory);
 
-        categories.putIfAbsent(parentCategory, childCategories);
+        categories.putIfAbsent(item.parentCategory, childCategories);
     }
 
     /**
      * Manages league list
      *
-     * @param league Item's league
+     * @param item Item object to add
      */
-    public void addLeague(String league) {
-        if (!leagues.contains(league)) leagues.add(league);
-    }
-
-    /**
-     * Deletes all icon-related data
-     */
-    public void clearIcons() {
-        nameToIconIndex.clear();
-        iconIndexToIcon.clear();
-
-        File iconFile = new File("./iconRelations.json");
-        if (!iconFile.delete()) System.out.println("[Error] Couldn't delete ./iconRelations.json");
+    public void addLeague(Item item) {
+        if (!leagues.contains(item.league))
+            leagues.add(item.league);
     }
 }

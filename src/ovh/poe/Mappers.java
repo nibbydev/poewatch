@@ -100,82 +100,88 @@ public class Mappers {
     public static class JSONParcel {
         public static class Item {
             public double mean, median, mode;
-            public int count, inc, index;
-            public String category, icon;
+            public int count, inc, index, frame;
+            public String child, icon, name, type, var;
+            public String corrupted, lvl, quality, links, tier;
 
-            public void copy (DataEntry entry, String childCategoryName) {
-                if (childCategoryName != null) category = childCategoryName;
-
+            public void copy (DataEntry entry) {
                 mean = entry.getMean();
                 median = entry.getMedian();
                 mode = entry.getMode();
                 count = entry.getCount() + entry.getInc_counter();
                 inc = entry.getInc_counter();
-                if (entry.getIconIndex() >= 0) {
-                    index = entry.getIconIndex();
 
-                    if (Main.RELATIONS.iconIndexToIcon.containsKey(index))
-                        icon = Main.RELATIONS.iconIndexToIcon.get(index).url;
+                index = entry.getItemIndex();
+
+                // Check if there's a match for the specific index
+                if (Main.RELATIONS.itemIndexToData.containsKey(index)) {
+                    IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
+                    frame = indexedItem.frame;
+                    child = indexedItem.child;
+                    icon = indexedItem.icon;
+                    name = indexedItem.name;
+                    type = indexedItem.type;
+                    var = indexedItem.var;
+                    tier = indexedItem.tier;
+                }
+
+                // Get some data (eg links/lvl/quality/corrupted) from item key
+                // "Standard|weapons:twosword|Starforge:Infernal Sword|3|links:6"
+                String[] splitKey = entry.getKey().split("\\|");
+                for (int i = 3; i < splitKey.length; i++) {
+                    if (splitKey[i].contains("links:")) links = splitKey[i].split(":")[1];
+                    else if (splitKey[i].contains("l:")) lvl = splitKey[i].split(":")[1];
+                    else if (splitKey[i].contains("q:")) quality = splitKey[i].split(":")[1];
+                    else if (splitKey[i].contains("c:")) corrupted = splitKey[i].split(":")[1];
                 }
             }
         }
 
-        public Map<String, Map<String, Map<String, Item>>> leagues = new TreeMap<>();
+        public Map<String, Map<String, List<Item>>> leagues = new TreeMap<>();
 
+        // TODO: maps need tier info
         public void add(DataEntry entry) {
+            if (entry.getItemIndex() < 0) return;
+
             // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
             String[] splitKey = entry.getKey().split("\\|");
+            String parentCategoryName = splitKey[1].split(":")[0];
             String leagueName = splitKey[0];
 
-            String[] splitCategoryName = splitKey[1].split(":");
-            String parentCategoryName = splitCategoryName[0];
-            String childCategoryName = null;
-            if (splitCategoryName.length > 1) childCategoryName = splitCategoryName[1];
+            if (!leagues.containsKey(leagueName)) leagues.put(leagueName, new TreeMap<>());
+            Map<String, List<Item>> league = leagues.get(leagueName);
 
-            // "Orb of Transmutation|5"
-            String itemName = "";
-            for (int i = 2; i < splitKey.length; i++) itemName += splitKey[i] + "|";
-            itemName = itemName.substring(0, itemName.length() - 1);
+            if (!league.containsKey(parentCategoryName)) league.put(parentCategoryName, new ArrayList<>());
+            List<Item> category = league.get(parentCategoryName);
 
-            if (!this.leagues.containsKey(leagueName)) this.leagues.put(leagueName, new TreeMap<>());
-            Map<String, Map<String, Item>> league = this.leagues.get(leagueName);
-
-            if (!league.containsKey(parentCategoryName)) league.put(parentCategoryName, new LinkedHashMap<>());
-            Map<String, Item> category = league.get(parentCategoryName);
-
-            if (!category.containsKey(itemName)) category.put(itemName, new Item());
-            Item item = category.get(itemName);
-
-            item.copy(entry, childCategoryName);
+            Item item = new Item();
+            item.copy(entry);
+            category.add(item);
         }
 
         public void sort() {
             for (String leagueKey : leagues.keySet()) {
-                Map<String, Map<String, Item>> league = leagues.get(leagueKey);
+                Map<String, List<Item>> league = leagues.get(leagueKey);
 
                 for (String categoryKey : league.keySet()) {
-                    Map<String, Item> category = league.get(categoryKey);
-                    Map<String, Item> sortedCategory = new LinkedHashMap<>();
+                    List<Item> category = league.get(categoryKey);
+                    List<Item> sortedCategory = new ArrayList<>();
 
                     while (!category.isEmpty()) {
-                        Item mostExpensiveItem = new Item();
-                        String mostExpensiveItemKey = "";
+                        Item mostExpensiveItem = null;
 
-                        for (String itemKey : category.keySet()) {
-                            Item item = category.get(itemKey);
-
-                            if (mostExpensiveItem.median <= item.median){
+                        for (Item item : category) {
+                            if (mostExpensiveItem == null)
                                 mostExpensiveItem = item;
-                                mostExpensiveItemKey = itemKey;
-                            }
+                            else if (item.mean > mostExpensiveItem.mean)
+                                mostExpensiveItem = item;
                         }
 
-                        // If statement not really needed
-                        if (!mostExpensiveItemKey.equals("")) category.remove(mostExpensiveItemKey);
-                        sortedCategory.put(mostExpensiveItemKey, mostExpensiveItem);
+                        category.remove(mostExpensiveItem);
+                        sortedCategory.add(mostExpensiveItem);
                     }
 
-                    // Write sortedCategory to category map
+                    // Write sortedCategory to league map
                     league.put(categoryKey, sortedCategory);
                 }
             }
@@ -191,12 +197,20 @@ public class Mappers {
         String[] aliases;
     }
 
-    public static class IconRelation {
-        String name, url;
+    public static class IndexedItem {
+        public String name, type, parent, child, icon, var, tier;
+        public int frame;
 
-        public IconRelation (String name, String url) {
-            this.name = name;
-            this.url = url;
+        public void add(Item item) {
+            name = item.name;
+            parent = item.parentCategory;
+            frame = item.frameType;
+
+            if (item.icon != null) icon = Item.formatIconURL(item.icon);
+            if (item.typeLine != null) type = item.typeLine;
+            if (item.childCategory != null) child = item.childCategory;
+            if (item.variation != null) var = item.variation;
+            if (item.tier != null) tier = item.tier;
         }
     }
 

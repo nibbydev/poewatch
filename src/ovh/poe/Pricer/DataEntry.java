@@ -18,7 +18,7 @@ public class DataEntry {
     private double median, mode;
     private double threshold_multiplier = 0.0;
     private String key;
-    private int iconIndex = -1;
+    private int itemIndex = -1;
 
     // Lists that hold price data
     private ArrayList<String> rawData = new ArrayList<>();
@@ -52,19 +52,16 @@ public class DataEntry {
      */
     public void add(Item item, String accountName) {
         // Assign key if missing TODO: is this needed?
-        if (key == null) key = item.getKey();
+        if (key == null) key = item.key;
 
-        // Add new value to raw data array
-        rawData.add(item.getPrice() + "," + item.getPriceType() + "," + item.id + "," + accountName);
+        // Add new value to raw data array TODO: Fix whatever the fuck this is supposed to be
+        rawData.add(item.price + "," + item.priceType + "," + item.id + "," + accountName);
 
-        Main.RELATIONS.addCategory(item.getParentCategory(), item.getSubCategory());
-        Main.RELATIONS.addLeague(item.league);
+        Main.RELATIONS.addCategory(item);
+        Main.RELATIONS.addLeague(item);
 
-        // Get latest icon, if present
-        if (item.icon != null && iconIndex < 0) {
-            // Get icon's index
-            iconIndex = Main.RELATIONS.addIcon(item.getKey(), item.icon);
-        }
+        // Get item's index, if missing
+        if (itemIndex < 0) itemIndex = Main.RELATIONS.indexItem(item);
     }
 
     /**
@@ -77,10 +74,8 @@ public class DataEntry {
         parseLine(line);
 
         // Clear icon index if user requested icon database wipe
-        if (Main.PRICER_CONTROLLER.clearIcons) iconIndex = -1;
-        else if (iconIndex < 0) {
-            iconIndex = Main.RELATIONS.nameToIconIndex.getOrDefault(Main.RELATIONS.resolveSpecificKey(key), -1);
-        }
+        if (Main.PRICER_CONTROLLER.clearIndexes) itemIndex = -1;
+        else if (itemIndex < 0) itemIndex = Main.RELATIONS.getIndex(key);
 
         // Build statistics and databases
         parse();
@@ -96,7 +91,8 @@ public class DataEntry {
      */
     public void cycle() {
         // Clear icon index if user requested icon database wipe
-        if (Main.PRICER_CONTROLLER.clearIcons) iconIndex = -1;
+        if (Main.PRICER_CONTROLLER.clearIndexes) itemIndex = -1;
+        else if (itemIndex < 0) itemIndex = Main.RELATIONS.getIndex(key);
 
         // Build statistics and databases
         parse();
@@ -134,7 +130,7 @@ public class DataEntry {
             // If the item was not listed for chaos orbs ("0" == Chaos Orb), then find the value in chaos
             if (!priceType.equals("0")) {
                 // Get the database key of the currency the item was listed for
-                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency|" + Main.RELATIONS.indexToName.get(priceType) + "|5";
+                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency|" + Main.RELATIONS.currencyIndexToName.get(priceType) + "|5";
 
                 // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
                 if (!Main.PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) continue;
@@ -173,7 +169,6 @@ public class DataEntry {
     private void purge() {
         // Precautions
         if (database_items.isEmpty()) return;
-        if (database_items.size() < 10) return;
         // If too few items have been found then it probably doesn't have a median price
         if (total_counter + inc_counter < 10) return;
         // No median price found
@@ -201,7 +196,10 @@ public class DataEntry {
      * Calculates mean/median
      */
     private void build() {
-        if (database_items.size() < 10) return;
+        // Precautions
+        if (database_items.isEmpty()) return;
+        // If too few items have been found then it probably doesn't have a median price
+        if (total_counter + inc_counter < 10) return;
 
         // Calculate mean and median values
         double tempMean = findMean(0);
@@ -382,8 +380,8 @@ public class DataEntry {
         stringBuilder.append(mode);
         stringBuilder.append(",mtp:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
-        stringBuilder.append(",ico:");
-        stringBuilder.append(iconIndex);
+        stringBuilder.append(",idx:");
+        stringBuilder.append(itemIndex);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -491,8 +489,8 @@ public class DataEntry {
                     case "mtp":
                         threshold_multiplier = Double.parseDouble(splitDataItem[1]);
                         break;
-                    case "ico":
-                        iconIndex = Integer.parseInt(splitDataItem[1]);
+                    case "idx":
+                        itemIndex = Integer.parseInt(splitDataItem[1]);
                         break;
                     default:
                         System.out.println("idk: " + splitDataItem[0]);
@@ -552,7 +550,7 @@ public class DataEntry {
         return dec_counter;
     }
 
-    public int getIconIndex() {
-        return iconIndex;
+    public int getItemIndex() {
+        return itemIndex;
     }
 }

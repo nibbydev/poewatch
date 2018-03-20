@@ -24,7 +24,7 @@ public class PricerController {
     private Gson gson = Main.getGson();
     private long lastClearCycle;
     public volatile boolean clearStats = false;
-    public volatile boolean clearIcons = false;
+    public volatile boolean clearIndexes = false;
     private volatile boolean writeJSON = false;
     private int cycleCount = 0;
 
@@ -173,9 +173,6 @@ public class PricerController {
             System.out.println(Main.timeStamp() + " Building JSON");
         }
 
-        // If clear icons flag is up, delete all icon data (including files)
-        if (clearIcons) Main.RELATIONS.clearIcons();
-
         // The method that does it all
         readFileParseFileWriteFile();
 
@@ -188,7 +185,7 @@ public class PricerController {
         }
 
         // Switch off flags
-        clearStats = clearIcons = writeJSON = false;
+        clearStats = clearIndexes = writeJSON = false;
         flipPauseFlag();
     }
 
@@ -215,16 +212,16 @@ public class PricerController {
                 // Parse item data
                 item.fix();
                 item.parseItem();
-                if (item.isDiscard())
+                if (item.discard)
                     continue;
 
                 // Add item to database, separating currency
-                if (item.getKey().contains("currency")) {
-                    currencyMap.putIfAbsent(item.getKey(), new DataEntry());
-                    currencyMap.get(item.getKey()).add(item, stash.accountName);
+                if (item.key.contains("currency")) {
+                    currencyMap.putIfAbsent(item.key, new DataEntry());
+                    currencyMap.get(item.key).add(item, stash.accountName);
                 } else {
-                    entryMap.putIfAbsent(item.getKey(), new DataEntry());
-                    entryMap.get(item.getKey()).add(item, stash.accountName);
+                    entryMap.putIfAbsent(item.key, new DataEntry());
+                    entryMap.get(item.key).add(item, stash.accountName);
                 }
             }
         }
@@ -246,7 +243,7 @@ public class PricerController {
     private void writeJSONToFile() {
         JSONParcel.sort();
 
-        for (Map.Entry<String, Map<String, Map<String, Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
+        for (Map.Entry<String, Map<String, List<Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
             try {
                 BufferedWriter writer = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));
                 if (writer == null) continue;

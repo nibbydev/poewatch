@@ -49,7 +49,7 @@ public class Main {
         // Stop workers on exit
         WORKER_CONTROLLER.stopController();
 
-        // Save generated icon data
+        // Save generated item data
         RELATIONS.saveData();
     }
 
@@ -111,7 +111,7 @@ public class Main {
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
-                + "    clearicons - clear the icon database\n"
+                + "    reindex - clear the item info database\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -141,12 +141,12 @@ public class Main {
                     case "about":
                         commandAbout();
                         break;
-                    case "clearicons":
+                    case "reindex":
                         if (commandConfirm()) {
-                            System.out.println("[WARN] Icon database will be cleared on next cycle");
-                            PRICER_CONTROLLER.clearIcons = true;
+                            System.out.println("[WARN] Item index database will be cleared on next cycle");
+                            PRICER_CONTROLLER.clearIndexes = true;
                         } else {
-                            System.out.println("[Info] Deletion cancelled");
+                            System.out.println("[Info] Reindexing cancelled");
                         }
                         break;
                     default:

@@ -7,10 +7,10 @@ import static ovh.poe.Main.RELATIONS;
  * Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
  */
 public class Item extends Mappers.BaseItem {
-    private volatile boolean discard = false;
-    private String priceType, parentCategory, subCategory, key, variation;
-    private double price;
-    private int links, level, quality;
+    public volatile boolean discard = false;
+    public String priceType, parentCategory, childCategory, key, variation, tier;
+    public double price;
+    public int links, level, quality;
 
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
@@ -69,6 +69,21 @@ public class Item extends Mappers.BaseItem {
                 break;
         }
 
+        // Attempt to find map tier from properties
+        if (parentCategory.equals("maps") && properties != null) {
+            for (Mappers.Properties prop : properties) {
+                if (prop.name.equals("Map Tier")) {
+                    try {
+                        tier = prop.values.get(0).get(0);
+                    } catch (Exception ex) {
+                        System.out.println("[ERROR] Couldn't parse tier:");
+                        ex.printStackTrace();
+                    }
+                    break;
+                }
+            }
+        }
+
         // Form the database key
         buildKey();
     }
@@ -83,10 +98,10 @@ public class Item extends Mappers.BaseItem {
         key.append('|');
         key.append(parentCategory);
 
-        // If present, add subCategory to database key
-        if (subCategory != null) {
+        // If present, add childCategory to database key
+        if (childCategory != null) {
             key.append(':');
-            key.append(subCategory);
+            key.append(childCategory);
         }
 
         // Add item's name to database key
@@ -183,7 +198,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!RELATIONS.aliasToIndex.containsKey(noteList[2])) {
+        if (!RELATIONS.currencyAliasToIndex.containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -192,14 +207,14 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
-            typeLine = RELATIONS.aliasToName.get(noteList[2]);
+            typeLine = RELATIONS.currencyAliasToName.get(noteList[2]);
             priceType = "1";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
             icon = null;
         } else {
             this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
-            priceType = RELATIONS.aliasToIndex.get(noteList[2]);
+            priceType = RELATIONS.currencyAliasToIndex.get(noteList[2]);
         }
     }
 
@@ -233,8 +248,8 @@ public class Item extends Mappers.BaseItem {
                 break;
             case "gems":
                 // Put vaal gems into separate sub-category
-                if (subCategory.equals("activegem") && iconCategory.equals("vaalgems"))
-                    subCategory = "vaalgem";
+                if (childCategory.equals("activegem") && iconCategory.equals("vaalgems"))
+                    childCategory = "vaalgem";
                 break;
             case "monsters":
                 // Completely ignore monsters
@@ -242,10 +257,10 @@ public class Item extends Mappers.BaseItem {
                 break;
             case "maps":
                 // Filter all unique maps under "unique" subcategory
-                if (frameType == 3) subCategory = "unique";
-                else if (iconCategory.equals("breach")) subCategory = "fragment";
-                else if (properties == null) subCategory = "fragment";
-                else subCategory = "map";
+                if (frameType == 3) childCategory = "unique";
+                else if (iconCategory.equals("breach")) childCategory = "fragment";
+                else if (properties == null) childCategory = "fragment";
+                else childCategory = "map";
                 break;
         }
     }
@@ -307,10 +322,10 @@ public class Item extends Mappers.BaseItem {
      * Check if item can have a 6-link, assign them a separate key
      */
     private void checkSixLink() {
-        if (subCategory == null) return;
+        if (childCategory == null) return;
 
         // Filter out items that can have 6 links
-        switch (subCategory) {
+        switch (childCategory) {
             case "chest":
             case "staff":
             case "twosword":
@@ -506,35 +521,52 @@ public class Item extends Mappers.BaseItem {
         parentCategory = splitString[0].toLowerCase();
 
         if (!splitString[1].equals("[]")) {
-            subCategory =  splitString[1].substring(1, splitString[1].length() - 1).toLowerCase();
+            childCategory =  splitString[1].substring(1, splitString[1].length() - 1).toLowerCase();
         }
     }
 
-    ///////////////////////
-    // Getters / Setters //
-    ///////////////////////
+    /**
+     * Removes any unnecessary fields from the item's icon
+     *
+     * @param icon An item's bloated URL
+     * @return Formatted icon URL
+     */
+    public static String formatIconURL(String icon) {
+        String[] splitURL = icon.split("\\?");
+        String fullIcon = splitURL[0];
 
-    public boolean isDiscard() {
-        return discard;
-    }
+        if (splitURL.length > 1) {
+            StringBuilder paramBuilder = new StringBuilder();
 
-    public double getPrice() {
-        return price;
-    }
+            for (String param : splitURL[1].split("&")) {
+                String[] splitParam = param.split("=");
 
-    public String getPriceType() {
-        return priceType;
-    }
+                switch (splitParam[0]) {
+                    case "scale":
+                    case "w":
+                    case "h":
+                    case "mr": // shaped
+                    case "mn": // background
+                    case "mt": // tier
+                    case "relic":
+                        paramBuilder.append("&");
+                        paramBuilder.append(splitParam[0]);
+                        paramBuilder.append("=");
+                        paramBuilder.append(splitParam[1]);
+                        break;
+                    default:
+                        break;
+                }
+            }
 
-    public String getKey() {
-        return key;
-    }
+            // If there are parameters that should be kept, add them to fullIcon
+            if (paramBuilder.length() > 0) {
+                // Replace the first "&" symbol with "?"
+                paramBuilder.setCharAt(0, '?');
+                fullIcon += paramBuilder.toString();
+            }
+        }
 
-    public String getParentCategory() {
-        return parentCategory;
-    }
-
-    public String getSubCategory() {
-        return subCategory;
+        return fullIcon;
     }
 }
