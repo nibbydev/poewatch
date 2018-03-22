@@ -47,7 +47,7 @@
         echo "{\"error\": \"Invalid parent category\"}";
         return;
     }
-    if ($PARAM_parent && $PARAM_child && !array_key_exists($PARAM_child, $categoryJSON[$PARAM_parent])){
+    if ($PARAM_parent && $PARAM_child && !in_array($PARAM_child, $categoryJSON[$PARAM_parent])){
         echo "{\"error\": \"Invalid child category\"}";
         return;
     }
@@ -73,11 +73,11 @@
 
             if (!$PARAM_parent) $item["parent"] = $parentCategoryKey;
 
-            if (array_key_exists("links", $item)) $item["links"] = (int)$item["links"];
-            if (array_key_exists("lvl", $item)) $item["lvl"] = (int)$item["lvl"];
-            if (array_key_exists("quality", $item)) $item["quality"] = (int)$item["quality"];
-            if (array_key_exists("tier", $item)) $item["tier"] = (int)$item["tier"];
-            if (array_key_exists("corrupted", $item)) $item["corrupted"] = !!$item["corrupted"];
+            if (array_key_exists("links", $item)) $item["links"] = $item["links"];
+            if (array_key_exists("lvl", $item)) $item["lvl"] = $item["lvl"];
+            if (array_key_exists("quality", $item)) $item["quality"] = $item["quality"];
+            if (array_key_exists("tier", $item)) $item["tier"] = $item["tier"];
+            if (array_key_exists("corrupted", $item)) $item["corrupted"] = $item["corrupted"];
 
             array_push($payload, $item);
         }
