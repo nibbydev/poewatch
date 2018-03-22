@@ -20,7 +20,7 @@ public class PricerController {
     private final Object monitor = new Object();
     private final ArrayList<String> keyBlackList = new ArrayList<>();
 
-    private Mappers.JSONParcel JSONParcel = new Mappers.JSONParcel();
+    private JSONParcel JSONParcel = new JSONParcel();
     private Gson gson = Main.getGson();
     private long lastClearCycle;
     public volatile boolean clearStats = false;
@@ -243,7 +243,7 @@ public class PricerController {
     private void writeJSONToFile() {
         JSONParcel.sort();
 
-        for (Map.Entry<String, Map<String, List<Mappers.JSONParcel.Item>>> entry : JSONParcel.leagues.entrySet()) {
+        for (Map.Entry<String, Map<String, List<JSONParcel.JSONItem>>> entry : JSONParcel.leagues.entrySet()) {
             try {
                 BufferedWriter writer = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));
                 if (writer == null) continue;
