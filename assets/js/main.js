@@ -89,6 +89,11 @@ $(document).ready(function() {
         sortResults();
     });
 
+    $("#searchResults").click(function(){ 
+        //console.log("It ran");
+        //$("tr", this).css("background-color", "red");
+    });
+
     makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
 
@@ -98,8 +103,8 @@ function makeRequest(from, to) {
         url: "http://api.poe.ovh/get",
         data: {
             league: SELECTED.league, 
-            category: SELECTED.category,
-            sub: SELECTED.sub,
+            parent: SELECTED.category,
+            child: SELECTED.sub,
             from: from,
             to: to
         },
@@ -144,8 +149,10 @@ function parseItem(item) {
         if ("quality" in item) extraFields += "<td>" + item["quality"] + "</td>";
         else extraFields += "<td>0</td>";
 
-        if ("corrupted" in item) extraFields += "<td><span class=\"badge custom-badge-red\">Yes</span></td>";
-        else extraFields += "<td>No</td>";
+        if ("corrupted" in item) {
+            if (item["corrupted"] === "1") extraFields += "<td><span class=\"badge custom-badge-red\">Yes</span></td>";
+            else extraFields += "<td><span class=\"badge custom-badge-green\">No</span></td>";
+        }
     }
 
     // Add it all together
@@ -213,14 +220,12 @@ function sortResults() {
                     if ("quality" in item && item["quality"] > 0) return;
                 }
             }
-            if (GEM_CORRUPTED !== "-1") {
-                if (GEM_CORRUPTED == true) {
-                    if (!("corrupted" in item)) return;
-                    if (!item["corrupted"]) return;
-                } else {
-                    if ("corrupted" in item) return;
-                    if (item["corrupted"]) return;
-                }
+            if (GEM_CORRUPTED === "1") {
+                if (!("corrupted" in item)) return;
+                if (!item["corrupted"]) return;
+            } else if (GEM_CORRUPTED === "0") {
+                if ("corrupted" in item) return;
+                if (item["corrupted"]) return;
             }
         }
         
@@ -230,7 +235,14 @@ function sortResults() {
             else if ("type" in item && item["type"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
         }
 
-        if (matchCount === splitInput.length) tableData += parseItem(item);
+        if (matchCount === splitInput.length) {
+            if ("tableData" in item) {
+                tableData += item["tableData"]
+            } else {
+                item["tableData"] = parseItem(item);
+                tableData += item["tableData"];
+            }
+        }
     });
 
     // Fill the table
