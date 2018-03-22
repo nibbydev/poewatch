@@ -21,8 +21,8 @@ public class RelationManager {
     public Map<String, String> currencyAliasToIndex = new HashMap<>();
     public Map<String, String> currencyAliasToName = new HashMap<>();
 
-    public Map<String, Integer> itemKeyToIndex = new HashMap<>();
-    public Map<Integer, Mappers.IndexedItem> itemIndexToData = new TreeMap<>();
+    public Map<String, String> itemKeyToIndex = new HashMap<>();
+    public Map<String, Mappers.IndexedItem> itemIndexToData = new HashMap<>();
 
     public Map<String, List<String>> categories = new HashMap<>();
     public List<String> leagues = new ArrayList<>();
@@ -148,8 +148,8 @@ public class RelationManager {
 
         // Open up the reader
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-            Type listType = new TypeToken<HashMap<Integer, Mappers.IndexedItem>>(){}.getType();
-            HashMap<Integer, Mappers.IndexedItem> relations = gson.fromJson(reader, listType);
+            Type listType = new TypeToken<HashMap<String, Mappers.IndexedItem>>(){}.getType();
+            HashMap<String, Mappers.IndexedItem> relations = gson.fromJson(reader, listType);
 
             // Lambda loop
             relations.forEach((index, item) -> {
@@ -203,8 +203,8 @@ public class RelationManager {
      * @param item Item object to index
      * @return Generated index of added url
      */
-    public int indexItem(Item item) {
-        if (item.icon == null) return -1;
+    public String indexItem(Item item) {
+        if (item.icon == null) return "-1";
 
         // Generalize key
         String key = resolveSpecificKey(item.key);
@@ -213,10 +213,10 @@ public class RelationManager {
 
         // Create an instance of IndexedItem
         Mappers.IndexedItem indexedItem = new Mappers.IndexedItem();
-        indexedItem.add(item);
+        indexedItem.add(item, key);
 
         // Add IndexedItem instance to maps and return it's index for storage
-        int index = itemKeyToIndex.size();
+        String index = Integer.toString(itemKeyToIndex.size());
         itemKeyToIndex.put(key, index);
         itemIndexToData.put(index, indexedItem);
         return index;
@@ -226,11 +226,11 @@ public class RelationManager {
      * Attempts to find the item's index
      *
      * @param key DataEntry's database key
-     * @return Index or -1, if missing
+     * @return Index or "-1", if missing
      */
-    public int getIndex(String key) {
+    public String getIndex(String key) {
         String generalizedKey = resolveSpecificKey(key);
-        return itemKeyToIndex.getOrDefault(generalizedKey, -1);
+        return itemKeyToIndex.getOrDefault(generalizedKey, "-1");
     }
 
     /**

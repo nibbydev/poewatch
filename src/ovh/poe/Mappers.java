@@ -100,8 +100,8 @@ public class Mappers {
     public static class JSONParcel {
         public static class Item {
             public double mean, median, mode;
-            public int count, inc, index, frame;
-            public String child, icon, name, type, var;
+            public int count, inc, frame;
+            public String child, icon, name, type, var, index;
             public String corrupted, lvl, quality, links, tier;
 
             public void copy (DataEntry entry) {
@@ -141,7 +141,7 @@ public class Mappers {
 
         // TODO: maps need tier info
         public void add(DataEntry entry) {
-            if (entry.getItemIndex() < 0) return;
+            if (entry.getItemIndex().equals("-1")) return;
 
             // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
             String[] splitKey = entry.getKey().split("\\|");
@@ -198,13 +198,14 @@ public class Mappers {
     }
 
     public static class IndexedItem {
-        public String name, type, parent, child, icon, var, tier;
+        public String name, type, parent, child, icon, var, tier, key;
         public int frame;
 
-        public void add(Item item) {
+        public void add(Item item, String key) {
             name = item.name;
             parent = item.parentCategory;
             frame = item.frameType;
+            this.key = key;
 
             if (item.icon != null) icon = Item.formatIconURL(item.icon);
             if (item.typeLine != null) type = item.typeLine;
