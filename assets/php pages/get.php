@@ -41,8 +41,15 @@
     // If user requested whole category
     if ($PARAM_child === "all") $PARAM_child = null;
 
-    // Check if user inputted the correct category data
-    $categoryJSON = json_decode( file_get_contents(dirname(getcwd(), 2) . "/categories.json") , true );
+    // Check if user inputted the correct league
+    $leagueJSON = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/leagues.json") , true );
+    if ($PARAM_league && !in_array($PARAM_league, $leagueJSON)) {
+        echo "{\"error\": \"Invalid league\"}";
+        return;
+    }
+
+    // Check if user inputted the correct category
+    $categoryJSON = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/categories.json") , true );
     if ($PARAM_parent && !array_key_exists($PARAM_parent, $categoryJSON)) {
         echo "{\"error\": \"Invalid parent category\"}";
         return;
@@ -52,17 +59,17 @@
         return;
     }
 
-    // Get JSON object from file
-    $jsonFile = json_decode( file_get_contents(getcwd() . "/data/" . $PARAM_league . ".json") , true );
     $payload = [];
     $counter = 0;
 
-    // Loop through all categories in a league
-    foreach ($jsonFile as $parentCategoryKey => $itemList) {
-        if ($PARAM_parent && $PARAM_parent !== $parentCategoryKey) continue;
+    // Get JSON object from file
+    foreach ($categoryJSON as $categoryName => $tmp_val) {
+        if ($PARAM_parent && $PARAM_parent !== $categoryName) continue;
+
+        $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/output/" . $PARAM_league . "/" . $categoryName . ".json") , true );
 
         // Loop through items in a category
-        foreach ($itemList as $itemKey => $item) {
+        foreach ($jsonFile as $item) {
             if ($PARAM_child && array_key_exists("child", $item) && $PARAM_child !== $item["child"]) continue;
             
             $counter++;

@@ -63,7 +63,8 @@
           <select class="form-control custom-select" id="search-league">
 
             <?php 
-              $jsonFile = json_decode( file_get_contents( dirname(getcwd(), 2) . "/leagues.json"), true );
+              $jsonFile = json_decode( file_get_contents( dirname(getcwd(), 2) . "/data/leagues.json"), true );
+              echo dirname(getcwd(), 2) . "/data/leagues.json";
               foreach ($jsonFile as $leagueName) echo "<option>" . $leagueName . "</option>";
             ?>
 
@@ -77,7 +78,7 @@
             <?php 
               $pageTitle = trim(strtolower($_GET["category"]));
               if (!$pageTitle) $pageTitle = "currency";
-              $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/categories.json"), true );
+              $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/categories.json"), true );
               echo "<option>All</option>";
               if (!array_key_exists($pageTitle, $jsonFile)) return;
               foreach ($jsonFile[$pageTitle] as $item) echo "<option>" . ucwords($item) . "</option>";

@@ -6,11 +6,11 @@
     $paramIndex = preg_replace("/[^0-9,]/", '', $_GET["index"]);
 
     // Get JSON file
-    $iconFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/iconRelations.json"), true );
+    $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/itemData.json"), true );
 
     // If the user didn't specify the indexes, echo the whole file
     if (!$paramIndex && $paramIndex !== "0") {
-        echo json_encode( $iconFile, true );
+        echo json_encode( $jsonFile, true );
         return;
     }
 
@@ -28,7 +28,7 @@
         if (!$inputIndex && $inputIndex !== "0") continue;
 
         // Make sure it's a legit index
-        if ((int)$inputIndex >= 0) $payload->{$inputIndex} = $iconFile[$inputIndex]["url"];
+        if ((int)$inputIndex >= 0) $payload->{$inputIndex} = $jsonFile[$inputIndex]["url"];
     }
 
     // echo constructed payload
