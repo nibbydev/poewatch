@@ -2,8 +2,6 @@ package ovh.poe.Pricer;
 
 import ovh.poe.Item;
 import ovh.poe.Main;
-import ovh.poe.Mappers.ItemEntry;
-import ovh.poe.Mappers.HourlyEntry;
 
 import java.util.*;
 
@@ -11,17 +9,50 @@ import java.util.*;
  * Price database entry object
  */
 public class DataEntry {
+    private static class RawDataItem {
+        String accountName, priceType, id;
+        double price;
+
+        void add (Item item, String accountName) {
+            this.price = item.price;
+            this.id = item.id;
+            this.accountName = accountName;
+            this.priceType = item.priceType;
+        }
+    }
+
+    private static class HourlyEntry {
+        double mean, median, mode;
+
+        HourlyEntry (double mean, double median, double mode) {
+            this.mean = mean;
+            this.median = median;
+            this.mode = mode;
+        }
+    }
+
+    private static class ItemEntry {
+        double price;
+        String accountName, id;
+
+        ItemEntry (double price, String accountName, String id) {
+            this.price = price;
+            this.accountName = accountName;
+            this.id = id;
+        }
+    }
+
+    private String key;
+    private String index = "-";
     private int total_counter = 0;
     private int inc_counter = 0;
     private int dec_counter = 0;
     private double mean = 0.0;
     private double median, mode;
     private double threshold_multiplier = 0.0;
-    private String key;
-    private String itemIndex = "-1";
 
     // Lists that hold price data
-    private ArrayList<String> rawData = new ArrayList<>();
+    private ArrayList<RawDataItem> rawData = new ArrayList<>();
     private ArrayList<ItemEntry> database_items = new ArrayList<>(Main.CONFIG.baseDataSize);
     private ArrayList<HourlyEntry> database_hourly = new ArrayList<>(Main.CONFIG.hourlyDataSize);
 
@@ -51,39 +82,15 @@ public class DataEntry {
      * @param accountName Account name of the seller
      */
     public void add(Item item, String accountName) {
-        // Assign key if missing TODO: is this needed?
         if (key == null) key = item.key;
 
-        // Add new value to raw data array TODO: Fix whatever the fuck this is supposed to be
-        rawData.add(item.price + "," + item.priceType + "," + item.id + "," + accountName);
+        // If missing, get item's index
+        if (index.equals("-")) index = Main.RELATIONS.indexItem(item);
 
-        Main.RELATIONS.addCategory(item);
-        Main.RELATIONS.addLeague(item);
-
-        // Get item's index, if missing
-        if (itemIndex.equals("-1")) itemIndex = Main.RELATIONS.indexItem(item);
-    }
-
-    /**
-     * Caller method. Calls other methods
-     *
-     * @param line Database entry from the CSV-format file
-     */
-    public void cycle(String line) {
-        // Load data into lists
-        parseLine(line);
-
-        // Clear icon index if user requested icon database wipe
-        if (Main.PRICER_CONTROLLER.clearIndexes) itemIndex = "-1";
-        else if (itemIndex.equals("-1")) itemIndex = Main.RELATIONS.getIndex(key);
-
-        // Build statistics and databases
-        parse();
-        purge();
-        build();
-
-        // Limit list sizes
-        cap();
+        // Add new value to raw data array
+        RawDataItem rawDataItem = new RawDataItem();
+        rawDataItem.add(item, accountName);
+        rawData.add(rawDataItem);
     }
 
     /**
@@ -91,8 +98,13 @@ public class DataEntry {
      */
     public void cycle() {
         // Clear icon index if user requested icon database wipe
-        if (Main.PRICER_CONTROLLER.clearIndexes) itemIndex = "-1";
-        else if (itemIndex.equals("-1")) itemIndex = Main.RELATIONS.getIndex(key);
+        if (Main.PRICER_CONTROLLER.clearIndexes) {
+            // Clear indexes flag was up, clear the indexed item database
+            index = "-";
+        } else if (index.equals("-")) {
+            // Attempt to find the item's index
+            index = Main.RELATIONS.getIndexFromKey(key);
+        }
 
         // Build statistics and databases
         parse();
@@ -112,48 +124,44 @@ public class DataEntry {
      */
     private void parse() {
         // Loop through entries
-        for (String entry : rawData) {
-            String[] splitEntry = entry.split(",");
-
-            Double price = Double.parseDouble(splitEntry[0]);
-            String priceType = splitEntry[1];
-            String id = splitEntry[2];
-            String account = splitEntry[3];
-
+        for (RawDataItem raw : rawData) {
             // If a user already has listed the same item before, ignore it
             boolean discard = false;
             for (ItemEntry itemEntry : database_items) {
-                if (itemEntry.accountName.equals(account) || itemEntry.id.equals(id)) discard = true;
+                if (itemEntry.accountName.equals(raw.accountName) || itemEntry.id.equals(raw.id)) {
+                    discard = true;
+                    break;
+                }
             }
             if (discard) continue;
 
             // If the item was not listed for chaos orbs ("0" == Chaos Orb), then find the value in chaos
-            if (!priceType.equals("0")) {
+            if (!raw.priceType.equals("0")) {
                 // Get the database key of the currency the item was listed for
-                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency|" + Main.RELATIONS.currencyIndexToName.get(priceType) + "|5";
+                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency|" +
+                        Main.RELATIONS.currencyIndexToName.get(raw.priceType) + "|5";
 
                 // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
-                if (!Main.PRICER_CONTROLLER.getCurrencyMap().containsKey(currencyKey)) continue;
+                if (!Main.PRICER_CONTROLLER.getEntryMap().containsKey(currencyKey)) continue;
 
                 // Get the currency item entry the item was listed in
-                DataEntry currencyEntry = Main.PRICER_CONTROLLER.getCurrencyMap().get(currencyKey);
+                DataEntry currencyEntry = Main.PRICER_CONTROLLER.getEntryMap().get(currencyKey);
 
                 // If the currency the item was listed in has very few listings then ignore this item
                 if (currencyEntry.getCount() < 20) continue;
 
                 // Convert the item's price into Chaos Orbs
-                price = price * currencyEntry.getMedian();
+                raw.price = raw.price * currencyEntry.getMedian();
             }
 
             // Hard-cap item prices
-            if (price > 50000.0 || price < 0.001) continue;
+            if (raw.price > 50000.0 || raw.price < 0.001) continue;
 
-            // Add values to the front of the lists
-            database_items.add(0, new ItemEntry(
-                    Math.round(price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision,
-                    account,
-                    id
-            ));
+            // Round em up
+            raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+
+            // Add entry to the database
+            database_items.add(0, new ItemEntry(raw.price, raw.accountName, raw.id));
 
             // Increment total added item counter
             inc_counter++;
@@ -173,6 +181,8 @@ public class DataEntry {
         if (total_counter + inc_counter < 10) return;
         // No median price found
         if (median <= 0) return;
+        // 90% of added items are discarded
+        if (inc_counter > 0 && dec_counter / inc_counter * 100 > 90) return;
 
         // Loop through database_prices, if the price is lower than the boundaries, remove the first instance of the
         // price and its related account name and ID
@@ -180,12 +190,15 @@ public class DataEntry {
         int oldSize = database_items.size();
         for (int i = 0; i < oldSize; i++) {
             double price = database_items.get(i - offset).price;
-            if (price < median * (2.0 + threshold_multiplier) && price > median / (2.0 + threshold_multiplier)) continue;
 
-            database_items.remove(i - offset);
+            // If price is more than double or less than half the median, remove it
+            if (price > median * threshold_multiplier || price < median / threshold_multiplier) {
+                // Remove the item
+                database_items.remove(i - offset);
 
-            // Since we removed elements with index i we need to adjust for the rest of them that fell back one place
-            offset++;
+                // Since we removed elements with index i we need to adjust for the rest of them that fell back one place
+                offset++;
+            }
         }
 
         // Increment discard counter by how many were discarded
@@ -222,7 +235,7 @@ public class DataEntry {
             threshold_multiplier -= 0.1;
 
         // Don't let it grow infinitely
-        if (threshold_multiplier > 5) threshold_multiplier -= 0.2;
+        if (threshold_multiplier > 7.1) threshold_multiplier -= 0.2;
 
         if (Main.PRICER_CONTROLLER.clearStats) {
             total_counter += inc_counter;
@@ -359,6 +372,8 @@ public class DataEntry {
                 1 - mode
          */
 
+        if (database_items.isEmpty()) return null;
+
         StringBuilder stringBuilder = new StringBuilder();
 
         // Add key
@@ -366,22 +381,22 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add statistics
-        stringBuilder.append("cnt:");
+        stringBuilder.append("count:");
         stringBuilder.append(total_counter);
-        stringBuilder.append(",add:");
+        stringBuilder.append(",inc:");
         stringBuilder.append(inc_counter);
         stringBuilder.append(",dec:");
         stringBuilder.append(dec_counter);
-        stringBuilder.append(",mea:");
+        stringBuilder.append(",mean:");
         stringBuilder.append(mean);
-        stringBuilder.append(",med:");
+        stringBuilder.append(",median:");
         stringBuilder.append(median);
-        stringBuilder.append(",mod:");
+        stringBuilder.append(",mode:");
         stringBuilder.append(mode);
-        stringBuilder.append(",mtp:");
+        stringBuilder.append(",multiplier:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
-        stringBuilder.append(",idx:");
-        stringBuilder.append(itemIndex);
+        stringBuilder.append(",index:");
+        stringBuilder.append(index);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -468,32 +483,32 @@ public class DataEntry {
                 String[] splitDataItem = dataItem.split(":");
 
                 switch (splitDataItem[0]) {
-                    case "cnt":
+                    case "count":
                         total_counter = Integer.parseInt(splitDataItem[1]);
                         break;
-                    case "add":
+                    case "inc":
                         inc_counter += Integer.parseInt(splitDataItem[1]);
                         break;
                     case "dec":
                         dec_counter += Integer.parseInt(splitDataItem[1]);
                         break;
-                    case "mea":
+                    case "mean":
                         mean = Double.parseDouble(splitDataItem[1]);
                         break;
-                    case "med":
+                    case "median":
                         median = Double.parseDouble(splitDataItem[1]);
                         break;
-                    case "mod":
+                    case "mode":
                         mode = Double.parseDouble(splitDataItem[1]);
                         break;
-                    case "mtp":
+                    case "multiplier":
                         threshold_multiplier = Double.parseDouble(splitDataItem[1]);
                         break;
-                    case "idx":
-                        itemIndex = splitDataItem[1];
+                    case "index":
+                        index = splitDataItem[1];
                         break;
                     default:
-                        System.out.println("idk: " + splitDataItem[0]);
+                        System.out.println("[ERROR] Unknown field: " + splitDataItem[0]);
                         break;
                 }
             }
@@ -551,6 +566,6 @@ public class DataEntry {
     }
 
     public String getItemIndex() {
-        return itemIndex;
+        return index;
     }
 }

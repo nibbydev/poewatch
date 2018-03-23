@@ -1,12 +1,9 @@
 package ovh.poe.Pricer;
 
 import ovh.poe.Main;
-import ovh.poe.Mappers;
+import ovh.poe.RelationManager.IndexedItem;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class JSONParcel {
     public static class JSONItem {
@@ -26,7 +23,7 @@ public class JSONParcel {
 
             // Check if there's a match for the specific index
             if (Main.RELATIONS.itemIndexToData.containsKey(index)) {
-                Mappers.IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
+                IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
                 frame = indexedItem.frame;
                 child = indexedItem.child;
                 icon = indexedItem.icon;
@@ -48,11 +45,10 @@ public class JSONParcel {
         }
     }
 
-    public Map<String, Map<String, List<JSONItem>>> leagues = new TreeMap<>();
+    public Map<String, Map<String, List<JSONItem>>> leagues = new HashMap<>();
 
-    // TODO: maps need tier info
     public void add(DataEntry entry) {
-        if (entry.getItemIndex().equals("-1")) return;
+        if (entry.getItemIndex().equals("-")) return;
 
         // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
         String[] splitKey = entry.getKey().split("\\|");

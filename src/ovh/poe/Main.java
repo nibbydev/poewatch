@@ -208,28 +208,17 @@ public class Main {
         // Make sure output folders exist
         new File("./http/api/data").mkdirs();
         new File("./http/html").mkdirs();
+        new File("./data/output").mkdirs();
 
         // Create ./http/.htaccess if missing
         saveResource("/http/api/", ".htaccess---api");
         saveResource("/http/html/", ".htaccess---html");
 
-        // Create ./http/ChangeID.php if missing
-        saveResource("/http/api/", "ChangeID.php");
-
-        // Create ./http/index.php if missing
-        saveResource("/http/api/", "index.php");
-
-        // Create ./http/Stats.php if missing
-        saveResource("/http/api/", "Stats.php");
-
-        // Create ./http/data/index.php if missing
-        saveResource("/http/api/data/", "index.php");
-
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
 
         // Create ./currencyRelations.json if missing
-        saveResource("/", "currencyRelations.json");
+        saveResource("/data/", "currencyRelations.json");
     }
 
     /**
@@ -263,13 +252,11 @@ public class Main {
 
             // Define I/O helpers
             byte[] buffer = new byte[1024];
-            int position = 0;
             int length;
 
             // Read and write at the same time
             while ((length = reader.read(buffer, 0, 1024)) > 0) {
                 writer.write(buffer, 0, length);
-                position += length;
             }
         } catch (IOException ex) {
             ex.printStackTrace();

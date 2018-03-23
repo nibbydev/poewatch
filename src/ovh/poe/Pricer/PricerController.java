@@ -1,31 +1,31 @@
 package ovh.poe.Pricer;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import ovh.poe.Mappers;
 import ovh.poe.Item;
 import ovh.poe.Main;
 
+import javax.xml.crypto.Data;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
- * Manages CSV database
+ * Manages database
  */
 public class PricerController {
     private final Map<String, DataEntry> entryMap = new HashMap<>();
-    private final Map<String, DataEntry> currencyMap = new HashMap<>();
 
     private long lastRunTime = System.currentTimeMillis();
     private volatile boolean flagPause = false;
     private final Object monitor = new Object();
-    private final ArrayList<String> keyBlackList = new ArrayList<>();
 
     private JSONParcel JSONParcel = new JSONParcel();
     private Gson gson = Main.getGson();
     private long lastClearCycle;
     public volatile boolean clearStats = false;
     public volatile boolean clearIndexes = false;
-    private volatile boolean writeJSON = false;
     private int cycleCount = 0;
 
     ////////////////////////////////////////
@@ -36,44 +36,30 @@ public class PricerController {
      * Loads data in from file on object initialization
      */
     public PricerController() {
-        ReadBlackListFromFile();
-        readCurrencyFromFile();
+        // Load in data from CSV file
+        loadDatabase();
     }
 
-    /**
-     * Loads in list of keys that should be removed from the database during program start
-     */
-    private void ReadBlackListFromFile() {
-        try (BufferedReader reader = defineReader(new File("./blacklist.txt"))) {
+    private void loadDatabase() {
+        try (BufferedReader reader = defineReader(new File("./data/database.txt"))) {
             if (reader == null) return;
+
+            // Parse whatever data was saved in the database file's first line
+            String[] splitLine = reader.readLine().split("::");
+
+            System.out.println("[INFO] Found start parameters:");
+            System.out.println("    Cycle counter: " + splitLine[2]);
+            long lastWriteTime = (System.currentTimeMillis() - Long.parseLong(splitLine[1])) / 1000;
+            System.out.println("    Last write time: " + lastWriteTime + " sec ago");
+
+            // Set the cycle counter to whatever is in the file
+            cycleCount = Integer.parseInt(splitLine[2]);
+            lastClearCycle = Long.parseLong(splitLine[3]);
 
             String line;
-
-            while ((line = reader.readLine()) != null) keyBlackList.add(line);
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * Reads currency data from file and adds to list. Should only be called on initial object creation
-     */
-    private void readCurrencyFromFile() {
-        try (BufferedReader reader = defineReader(new File("./database.txt"))) {
-            if (reader == null) return;
-
-            String line, key;
-
-            // Set the startParameters, the first line has important data
-            loadStartParameters(reader.readLine());
-
             while ((line = reader.readLine()) != null) {
-                key = line.substring(0, line.indexOf("::"));
-
-                if (keyBlackList.contains(key)) continue;
-
-                if (key.contains("currency")) currencyMap.put(key, new DataEntry(line));
+                String key = line.substring(0, line.indexOf("::"));
+                entryMap.put(key, new DataEntry(line));
             }
 
         } catch (IOException ex) {
@@ -81,34 +67,38 @@ public class PricerController {
         }
     }
 
-    /**
-     * Parses whatever data was saved in the database file's first line
-     *
-     * @param line CSV format starting line
-     */
-    private void loadStartParameters(String line) {
-        String[] splitLine = line.split("::");
+    private void saveDatabase() {
+        File outputFile = new File("./data/database.txt");
+        BufferedWriter writer = defineWriter(outputFile);
+        if (writer == null) return;
 
-        // First parameter is the version of the config, I suppose
-        switch (splitLine[0]) {
-            case "00002":
-                // 0 - version nr
-                // 1 - last build/write time
-                // 2 - cycle counter
-                // 3 - last clear time
+        try {
+            // Write startParameters to file
+            writer.write(saveStartParameters());
 
-                System.out.println("[INFO] Found start parameters:");
-                System.out.println("    Cycle counter: " + splitLine[2]);
+            // Write new data to file (not found in data file)
+            for (Map.Entry<String, DataEntry> entry : entryMap.entrySet()) {
+                String line = entry.getValue().buildLine();
+                if (line != null) writer.write(line);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                writer.flush();
+                writer.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 
-                long lastWriteTime = (System.currentTimeMillis() - Long.parseLong(splitLine[1])) / 1000;
-                System.out.println("    Last write time: " + lastWriteTime + " sec ago");
-
-
-                // Set the cycle counter to whatever is in the file
-                cycleCount = Integer.parseInt(splitLine[2]);
-
-                lastClearCycle = Long.parseLong(splitLine[3]);
-                break;
+    private void cycle() {
+        // Write everything in currencyMap to file
+        for (String key : entryMap.keySet()) {
+            DataEntry entry = entryMap.get(key);
+            entry.cycle();
+            JSONParcel.add(entry);
         }
     }
 
@@ -158,34 +148,33 @@ public class PricerController {
         // Set last run time
         lastRunTime = System.currentTimeMillis();
 
-        // Increase DataEntry's static cycle count
-        cycleCount++;
+        // Get a list of leagues from pathofexile.com. Will only run every 30 minutes
+        Main.RELATIONS.getLeagueList();
 
+        // Count cycles
+        if (cycleCount >= Main.CONFIG.dataEntryCycleLimit) cycleCount = 0;
+        else cycleCount++;
+
+        // Clear stats ever x-minutes
         if ((System.currentTimeMillis() - lastClearCycle) > 3600000) {
             lastClearCycle = System.currentTimeMillis();
             clearStats = true;
         }
 
-        // Zero DataEntry's static cycle count
-        if (cycleCount >= Main.CONFIG.dataEntryCycleLimit) {
-            cycleCount = 0;
-            writeJSON = true;
-            System.out.println(Main.timeStamp() + " Building JSON");
-        }
-
         // The method that does it all
-        readFileParseFileWriteFile();
+        cycle();
 
-        // If this cycle is the JSON writing cycle
-        if (writeJSON) {
-            // Write JSON to file
-            writeJSONToFile();
-            // Save generated icon data
-            Main.RELATIONS.saveData();
-        }
+        // Save data to file
+        saveDatabase();
+
+        // Build JSON
+        System.out.println(Main.timeStamp() + " Building JSON");
+        writeJSONToFile();
+        System.out.println(Main.timeStamp() + " JSON complete");
+        Main.RELATIONS.saveData();
 
         // Switch off flags
-        clearStats = clearIndexes = writeJSON = false;
+        clearStats = clearIndexes = false;
         flipPauseFlag();
     }
 
@@ -212,17 +201,11 @@ public class PricerController {
                 // Parse item data
                 item.fix();
                 item.parseItem();
-                if (item.discard)
-                    continue;
+                if (item.discard) continue;
 
-                // Add item to database, separating currency
-                if (item.key.contains("currency")) {
-                    currencyMap.putIfAbsent(item.key, new DataEntry());
-                    currencyMap.get(item.key).add(item, stash.accountName);
-                } else {
-                    entryMap.putIfAbsent(item.key, new DataEntry());
-                    entryMap.get(item.key).add(item, stash.accountName);
-                }
+                // Add item to database
+                entryMap.putIfAbsent(item.key, new DataEntry());
+                entryMap.get(item.key).add(item, stash.accountName);
             }
         }
     }
@@ -243,118 +226,25 @@ public class PricerController {
     private void writeJSONToFile() {
         JSONParcel.sort();
 
-        for (Map.Entry<String, Map<String, List<JSONParcel.JSONItem>>> entry : JSONParcel.leagues.entrySet()) {
-            try {
-                BufferedWriter writer = defineWriter(new File("./http/api/data/" + entry.getKey() + ".json"));
-                if (writer == null) continue;
+        for (Map.Entry<String, Map<String, List<JSONParcel.JSONItem>>> league : JSONParcel.leagues.entrySet()) {
+            for (Map.Entry<String, List<JSONParcel.JSONItem>> category : league.getValue().entrySet()) {
+                try {
+                    new File("./data/output/" + league.getKey()).mkdirs();
+                    File file = new File("./data/output/" + league.getKey(), category.getKey() + ".json");
 
-                writer.write(gson.toJson(entry.getValue()));
-                writer.flush();
-                writer.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+
+                    writer.write(gson.toJson(category.getValue()));
+                    writer.flush();
+                    writer.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
 
         // Clear the parcel
         JSONParcel.clear();
-    }
-
-    /**
-     * Reads data from file (line by line), parses it and writes it back
-     */
-    private void readFileParseFileWriteFile() {
-        File inputFile = new File("./database.txt");
-        File outputFile = new File("./database.temp");
-
-        BufferedReader reader = defineReader(inputFile);
-        BufferedWriter writer = defineWriter(outputFile);
-
-        // If there was a problem opening the writer, something seriously went wrong. Close the reader if necessary and
-        // return from the method.
-        if (writer == null) {
-            if (reader != null) try {
-                reader.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            return;
-        }
-
-        try {
-            // Write startParameters to file
-            writer.write(saveStartParameters());
-
-            // Write everything in currencyMap to file
-            for (String key : currencyMap.keySet()) {
-                DataEntry entry = currencyMap.get(key);
-                entry.cycle();
-                if (writeJSON) JSONParcel.add(entry);
-                writer.write(entry.buildLine());
-            }
-
-            // Re-write everything in file
-            if (reader != null) {
-                // Read in the first line which holds version info
-                reader.readLine();
-
-                String line;
-                DataEntry entry;
-                while ((line = reader.readLine()) != null) {
-                    String key = line.substring(0, line.indexOf("::"));
-
-                    /*
-                    if (checkKey(key)) {
-                        System.out.println("removed: " + key);
-                        continue;
-                    }
-                     */
-
-                    // Ignore some items
-                    // if (keyBlackList.contains(key)) continue;
-                    // Ignore currency that's stored in a separate list
-                    if (currencyMap.containsKey(key)) continue;
-
-                    // Create an instance of DataEntry related to the item
-                    if (entryMap.containsKey(key)) entry = entryMap.get(key);
-                    else entry = new DataEntry();
-
-                    entry.cycle(line);
-                    if (writeJSON) JSONParcel.add(entry);
-                    entryMap.remove(key);
-
-                    // Write line to temp output file
-                    writer.write(entry.buildLine());
-                }
-            }
-
-            // Write new data to file (not found in data file)
-            for (String key : entryMap.keySet()) {
-                DataEntry entry = entryMap.get(key);
-                entry.cycle();
-                if (writeJSON) JSONParcel.add(entry);
-                writer.write(entry.buildLine());
-            }
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } finally {
-            try {
-                if (reader != null) reader.close();
-                writer.flush();
-                writer.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        // Clear entryMap
-        entryMap.clear();
-
-        if (inputFile.exists() && !inputFile.delete())
-            System.out.println("[ERROR] Could not delete: " + inputFile.getName());
-        if (!outputFile.renameTo(inputFile))
-            System.out.println("[ERROR] Could not rename: " + outputFile.getName() + " to " + inputFile.getName());
     }
 
     //////////////////////////////
@@ -396,11 +286,7 @@ public class PricerController {
         }
     }
 
-    ///////////////////////
-    // Getters / Setters //
-    ///////////////////////
-
-    public Map<String, DataEntry> getCurrencyMap() {
-        return currencyMap;
+    public Map<String, DataEntry> getEntryMap() {
+        return entryMap;
     }
 }
