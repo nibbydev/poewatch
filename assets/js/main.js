@@ -137,8 +137,9 @@ function parseItem(item) {
 
     // Format variant/links badge
     var name = item["name"];
-    if (item["type"]) name += ", " + item["type"];
-    if (item["variant"]) name += " <span class=\"badge custom-badge-gray\">" + item["variant"] + "</span>";
+    if ("type" in item) name += ", " + item["type"];
+    if ("var" in item) name += " <span class=\"badge custom-badge-gray\">" + item["var"] + "</span>";
+    if ("tier" in item) name += " <span class=\"badge custom-badge-gray\">" + item["tier"] + "</span>";
 
     // Add gem/map extra data
     var extraFields = "";
@@ -157,7 +158,7 @@ function parseItem(item) {
 
     // Add it all together
     var returnString = "<tr>" +
-    "<td>" +  iconDiv + name + ("tier" in item ? " <span class=\"badge custom-badge-gray\">" + item["tier"] + "</span>" : "") + "</td>" + 
+    "<td>" +  iconDiv + name + "</td>" + 
     extraFields +
     //"<td>" + roundPrice(item["mean"]) + "</td>" + 
     "<td>" + roundPrice(item["mean"]) + "</td>" + 
