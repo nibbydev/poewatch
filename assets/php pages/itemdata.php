@@ -5,12 +5,12 @@
     // Get url params and allow only numeric inputs
     $paramIndex = preg_replace("/[^0-9,]/", '', $_GET["index"]);
 
-    // Get JSON file
-    $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/itemData.json"), true );
+    // Get file
+    $file = file_get_contents(dirname(getcwd(), 2) . "/data/itemData.json");
 
     // If the user didn't specify the indexes, echo the whole file
     if (!$paramIndex && $paramIndex !== "0") {
-        echo json_encode( $jsonFile, true );
+        echo $file;
         return;
     }
 
@@ -22,13 +22,15 @@
         return;
     }
     
+    $jsonFile = json_decode( $file, true );
+
     // Loop through the JSON file
     foreach ($indexList as $inputIndex) {
         // There was no value
         if (!$inputIndex && $inputIndex !== "0") continue;
 
         // Make sure it's a legit index
-        if ((int)$inputIndex >= 0) $payload->{$inputIndex} = $jsonFile[$inputIndex]["url"];
+        if ((int)$inputIndex >= 0) $payload->{$inputIndex} = $jsonFile[$inputIndex];
     }
 
     // echo constructed payload
