@@ -50,11 +50,14 @@ public class DataEntry {
     private double mean = 0.0;
     private double median, mode;
     private double threshold_multiplier = 0.0;
+    private int tempQuantity = 0;
+    private int quantity = 0;
 
     // Lists that hold price data
     private ArrayList<RawDataItem> rawData = new ArrayList<>();
     private ArrayList<ItemEntry> database_items = new ArrayList<>(Main.CONFIG.baseDataSize);
     private ArrayList<HourlyEntry> database_hourly = new ArrayList<>(Main.CONFIG.hourlyDataSize);
+    private ArrayList<Integer> database_quantity = new ArrayList<>(7);
 
     //////////////////
     // Main methods //
@@ -113,7 +116,24 @@ public class DataEntry {
 
         if (Main.PRICER_CONTROLLER.clearStats) {
             total_counter += inc_counter;
+            tempQuantity += inc_counter;
             inc_counter = dec_counter = 0;
+        }
+
+        if (Main.PRICER_CONTROLLER.twentyFourBool) {
+            database_quantity.add(0 , tempQuantity);
+
+            tempQuantity = 0;
+            quantity = 0;
+
+            if (!database_quantity.isEmpty()) {
+                if (database_quantity.size() > database_quantity.size()) {
+                    database_quantity.subList(database_quantity.size(), database_quantity.size() - 1).clear();
+                }
+
+                for (Integer entry : database_quantity) quantity += entry;
+                quantity = quantity / database_quantity.size();
+            }
         }
 
         // Limit list sizes
@@ -362,6 +382,7 @@ public class DataEntry {
                 mod: - mode
                 mtp: - threshold_multiplier
                 ico: - icon index
+                quantity: - quantity counter
             2 - database entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
@@ -397,6 +418,10 @@ public class DataEntry {
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
         stringBuilder.append(",index:");
         stringBuilder.append(index);
+        stringBuilder.append(",tempQuantity:");
+        stringBuilder.append(tempQuantity);
+        stringBuilder.append(",quantity:");
+        stringBuilder.append(quantity);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -438,6 +463,22 @@ public class DataEntry {
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
 
+        // Add delimiter
+        stringBuilder.append("::");
+
+        // Add hourly entries
+        if (database_quantity.isEmpty()) {
+            stringBuilder.append("-");
+        } else {
+            for (Integer entry : database_quantity) {
+                stringBuilder.append(entry);
+                stringBuilder.append(",");
+            }
+
+            // Remove the overflow ","
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
         // Add newline and return string
         stringBuilder.append("\n");
         return stringBuilder.toString();
@@ -460,6 +501,7 @@ public class DataEntry {
                 mod: - mode
                 mtp: - threshold_multiplier
                 ico: - icon index
+                quantity: - quantity counter
             2 - database entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
@@ -507,6 +549,12 @@ public class DataEntry {
                     case "index":
                         index = splitDataItem[1];
                         break;
+                    case "quantity":
+                        quantity = Integer.parseInt(splitDataItem[1]);
+                        break;
+                    case "tempQuantity":
+                        tempQuantity = Integer.parseInt(splitDataItem[1]);
+                        break;
                     default:
                         System.out.println("[ERROR] Unknown field: " + splitDataItem[0]);
                         break;
@@ -529,6 +577,13 @@ public class DataEntry {
                 String[] entryList = entry.split(",");
 
                 database_hourly.add(new HourlyEntry(Double.parseDouble(entryList[0]), Double.parseDouble(entryList[1]), Double.parseDouble(entryList[2])));
+            }
+        }
+
+        // Import hourly mean and median values
+        if (!splitLine[4].equals("-")) {
+            for (String entry : splitLine[4].split(",")) {
+                database_quantity.add(Integer.parseInt(entry));
             }
         }
     }
@@ -567,5 +622,9 @@ public class DataEntry {
 
     public String getItemIndex() {
         return index;
+    }
+
+    public int getQuantity() {
+        return quantity;
     }
 }

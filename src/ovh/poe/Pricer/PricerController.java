@@ -26,7 +26,9 @@ public class PricerController {
     private long lastClearCycle;
     public volatile boolean clearStats = false;
     public volatile boolean clearIndexes = false;
+    public volatile boolean twentyFourBool = false;
     private int cycleCount = 0;
+    private long twentyFourCounter;
 
     ////////////////////////////////////////
     // Upon starting/stopping the program //
@@ -55,6 +57,7 @@ public class PricerController {
             // Set the cycle counter to whatever is in the file
             cycleCount = Integer.parseInt(splitLine[2]);
             lastClearCycle = Long.parseLong(splitLine[3]);
+            twentyFourCounter = Long.parseLong(splitLine[4]);
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -117,6 +120,8 @@ public class PricerController {
                 + cycleCount
                 + "::"
                 + lastClearCycle
+                + "::"
+                + twentyFourCounter
                 + "\n";
 
         return builder;
@@ -152,6 +157,12 @@ public class PricerController {
             clearStats = true;
         }
 
+        // Run once every 24h
+        if ((System.currentTimeMillis() - twentyFourCounter) > 86400000) {
+            twentyFourCounter = System.currentTimeMillis();
+            twentyFourBool = true;
+        }
+
         // The method that does it all
         long time_cycle = System.currentTimeMillis();
         cycle();
@@ -169,12 +180,12 @@ public class PricerController {
 
         // Prepare message
         String cycleCounterDisplay = "[" + String.format("%2d", cycleCount) + "/" + String.format("%2d", Main.CONFIG.dataEntryCycleLimit) + "]";
-        String timeElapsedDisplay = "[Took: " + ((System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
-        String resetTimeDisplay = "[Reset: " + String.format("%3d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
-        String timeTookDisplay = " (Cycle: " + String.format("%4d", time_cycle) + ") (File: " +
-                String.format("%4d", time_file) + ") (JSON: " + String.format("%4d", time_json) + ")";
+        String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
+        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
+        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (File:" + String.format("%5d", time_file) + " ms) (JSON:" + String.format("%5d", time_json) + " ms)";
 
-        System.out.println(Main.timeStamp() + cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + timeTookDisplay);
+        System.out.println(Main.timeStamp() + cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay);
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();

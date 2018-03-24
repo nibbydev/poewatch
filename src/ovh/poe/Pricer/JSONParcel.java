@@ -8,7 +8,7 @@ import java.util.*;
 public class JSONParcel {
     public static class JSONItem {
         public double mean, median, mode;
-        public int count, inc, frame;
+        public int count, inc, frame, quantity;
         public String child, icon, name, type, var, index;
         public String corrupted, lvl, quality, links, tier;
 
@@ -18,7 +18,7 @@ public class JSONParcel {
             mode = entry.getMode();
             count = entry.getCount() + entry.getInc_counter();
             inc = entry.getInc_counter();
-
+            quantity = entry.getQuantity();
             index = entry.getItemIndex();
 
             // Check if there's a match for the specific index
