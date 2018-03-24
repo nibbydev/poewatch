@@ -111,6 +111,11 @@ public class DataEntry {
         purge();
         build();
 
+        if (Main.PRICER_CONTROLLER.clearStats) {
+            total_counter += inc_counter;
+            inc_counter = dec_counter = 0;
+        }
+
         // Limit list sizes
         cap();
     }
@@ -236,11 +241,6 @@ public class DataEntry {
 
         // Don't let it grow infinitely
         if (threshold_multiplier > 7.1) threshold_multiplier -= 0.2;
-
-        if (Main.PRICER_CONTROLLER.clearStats) {
-            total_counter += inc_counter;
-            inc_counter = dec_counter = 0;
-        }
     }
 
     /**

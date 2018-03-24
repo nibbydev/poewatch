@@ -139,15 +139,6 @@ public class PricerController {
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
 
-        // Prepare for database building
-        System.out.println(Main.timeStamp() + " Generating databases [" + (cycleCount + 1) + "/" +
-                Main.CONFIG.dataEntryCycleLimit + "] (" + (System.currentTimeMillis() - lastRunTime) / 1000 + " sec)" +
-                "(reset " + (60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min)"
-        );
-
-        // Set last run time
-        lastRunTime = System.currentTimeMillis();
-
         // Get a list of leagues from pathofexile.com. Will only run every 30 minutes
         Main.RELATIONS.getLeagueList();
 
@@ -162,15 +153,31 @@ public class PricerController {
         }
 
         // The method that does it all
+        long time_cycle = System.currentTimeMillis();
         cycle();
+        time_cycle = System.currentTimeMillis() - time_cycle;
 
         // Save data to file
+        long time_file = System.currentTimeMillis();
         saveDatabase();
+        time_file = System.currentTimeMillis() - time_file;
 
         // Build JSON
-        System.out.println(Main.timeStamp() + " Building JSON");
+        long time_json = System.currentTimeMillis();
         writeJSONToFile();
-        System.out.println(Main.timeStamp() + " JSON complete");
+        time_json = System.currentTimeMillis() - time_json;
+
+        // Prepare message
+        String cycleCounterDisplay = "[" + String.format("%01d", cycleCount) + "/" + String.format("%01d", Main.CONFIG.dataEntryCycleLimit) + "]";
+        String timeElapsedDisplay = "[Took: " + ((System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
+        String resetTimeDisplay = "[Reset: " + String.format("%02d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
+        String timeTookDisplay = " (Cycle: " + time_cycle + ") (File: " + time_file + ") (JSON: " + time_json + ")";
+
+        System.out.println(Main.timeStamp() + cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + timeTookDisplay);
+
+        // Set last run time
+        lastRunTime = System.currentTimeMillis();
+
         Main.RELATIONS.saveData();
 
         // Switch off flags
