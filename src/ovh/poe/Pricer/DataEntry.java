@@ -217,7 +217,7 @@ public class DataEntry {
         // Precautions
         if (database_items.isEmpty()) return;
         // If too few items have been found then it probably doesn't have a median price
-        if (total_counter + inc_counter < 10) return;
+        //if (total_counter + inc_counter < 10) return;
 
         // Calculate mean and median values
         double tempMean = findMean(0);

@@ -168,10 +168,11 @@ public class PricerController {
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message
-        String cycleCounterDisplay = "[" + String.format("%01d", cycleCount) + "/" + String.format("%01d", Main.CONFIG.dataEntryCycleLimit) + "]";
+        String cycleCounterDisplay = "[" + String.format("%2d", cycleCount) + "/" + String.format("%2d", Main.CONFIG.dataEntryCycleLimit) + "]";
         String timeElapsedDisplay = "[Took: " + ((System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
-        String resetTimeDisplay = "[Reset: " + String.format("%02d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
-        String timeTookDisplay = " (Cycle: " + time_cycle + ") (File: " + time_file + ") (JSON: " + time_json + ")";
+        String resetTimeDisplay = "[Reset: " + String.format("%3d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
+        String timeTookDisplay = " (Cycle: " + String.format("%4d", time_cycle) + ") (File: " +
+                String.format("%4d", time_file) + ") (JSON: " + String.format("%4d", time_json) + ")";
 
         System.out.println(Main.timeStamp() + cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + timeTookDisplay);
 
