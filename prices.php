@@ -64,7 +64,6 @@
 
             <?php 
               $jsonFile = json_decode( file_get_contents( dirname(getcwd(), 2) . "/data/leagues.json"), true );
-              echo dirname(getcwd(), 2) . "/data/leagues.json";
               foreach ($jsonFile as $leagueName) echo "<option>" . $leagueName . "</option>";
             ?>
 
@@ -225,9 +224,9 @@
   </div>
 </div>
 
-<footer class="container-fluid bg-dark text-center">
-  <p>Footer Text</p>
-</footer>
+<?php
+  include "assets/php/footer.php";
+?>
 
 </body>
 </html>
