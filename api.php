@@ -49,7 +49,7 @@
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive</p>
+              <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive. Updated every minute.</p>
               <h5 class="card-title">Fields</h5>
               <div class="custom-table">
                 <table class="table table-hover">
@@ -57,6 +57,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Required</th>
+                      <th>Description</th>
                       <th>Example</th>
                     </tr>
                   </thead>
@@ -64,26 +65,31 @@
                     <tr>
                       <td>league</td>
                       <td>Yes</td>
+                      <td>One of the acitve primary leagues</td>
                       <td>Hardcore Bestiary</td>
                     </tr>
                     <tr>
-                      <td>category</td>
+                      <td>parent</td>
                       <td>Yes</td>
+                      <td>Parent cateogry</td>
                       <td>Armour</td>
                     </tr>
                     <tr>
-                      <td>sub</td>
+                      <td>child</td>
                       <td>No</td>
+                      <td>Child category</td>
                       <td>Boots</td>
                     </tr>
                     <tr>
                       <td>from</td>
                       <td>No</td>
+                      <td>Limit entries</td>
                       <td>5</td>
                     </tr>
                     <tr>
                       <td>to</td>
                       <td>No</td>
+                      <td>Limit entries</td>
                       <td>64</td>
                     </tr>
                   </tbody>
@@ -91,12 +97,10 @@
               </div>
 
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&from=5&to=20">Example 1</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&from=5">Example 2</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots&to=20">Example 3</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour&sub=boots">Example 3</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=armour">Example 4</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&category=all">Example 5</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example 1</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example 2</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example 3</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example 4</a>
             </div>
           </div>
         </div>
@@ -106,11 +110,11 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>poe.ovh/icons</h2>
+              <h2>poe.ovh/itemdata</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Main interface for the icon API</p>
+              <p class="card-text">Allows retrieving item data based on indexes. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
               <h5 class="card-title">Fields</h5>
               <div class="custom-table">
                 <table class="table table-hover">
@@ -118,6 +122,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Required</th>
+                      <th>Description</th>
                       <th>Example</th>
                     </tr>
                   </thead>
@@ -125,15 +130,15 @@
                     <tr>
                       <td>index</td>
                       <td>No</td>
-                      <td>512,8,78</td>
+                      <td>Get specific indexes</td>
+                      <td>0000002,0000302,0002572</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/icons?index=451,4,5,6,1,88,0">Example 1</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/icons?index=55">Example 2</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/icons">Example 3</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata?index=0002572,0000302,0000002">Example 1</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata">Example 2</a>
             </div>
           </div>
         </div>
@@ -147,7 +152,7 @@
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides a list of catetgories currently in use</p>
+              <p class="card-text">Provides a list of catetgories currently in use. Updated dynamically.</p>
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark" href="http://api.poe.ovh/categories">Example</a>
             </div>
@@ -163,7 +168,7 @@
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides a list of leagues</p>
+              <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated every 30 minutes.</p>
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark" href="http://api.poe.ovh/leagues">Example</a>
             </div>
