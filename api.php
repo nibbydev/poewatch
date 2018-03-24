@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe.ovh</title>
+  <title>Poe.ovh - API</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
@@ -11,26 +11,9 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a href="/" class="navbar-brand">Poe.Ovh</a>
-
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
-        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-      </ul>
-      <div class="navbar-nav ml-auto">
-        <a href="api"><span class="badge badge-secondary">API</span></a>
-      </div>
-    </div>
-  </div>
-</nav>
+<?php
+  include "assets/php/header.php";
+?>
   
 <div class="container-fluid">    
   <div class="row">
