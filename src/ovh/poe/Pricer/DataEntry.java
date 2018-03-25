@@ -59,9 +59,9 @@ public class DataEntry {
     private ArrayList<HourlyEntry> database_hourly = new ArrayList<>(Main.CONFIG.hourlyDataSize);
     private ArrayList<Integer> database_quantity = new ArrayList<>(7);
 
-    //////////////////
-    // Main methods //
-    //////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Used to load data in on object initialization
@@ -114,35 +114,33 @@ public class DataEntry {
         purge();
         build();
 
+        // This runs every ~10 cycles
         if (Main.PRICER_CONTROLLER.clearStats) {
             total_counter += inc_counter;
             tempQuantity += inc_counter;
             inc_counter = dec_counter = 0;
         }
 
+        // This runs every 24 hours
         if (Main.PRICER_CONTROLLER.twentyFourBool) {
             database_quantity.add(0 , tempQuantity);
 
-            tempQuantity = 0;
-            quantity = 0;
-
-            if (!database_quantity.isEmpty()) {
-                if (database_quantity.size() > database_quantity.size()) {
-                    database_quantity.subList(database_quantity.size(), database_quantity.size() - 1).clear();
-                }
-
-                for (Integer entry : database_quantity) quantity += entry;
-                quantity = quantity / database_quantity.size();
+            // Cap the list
+            if (database_quantity.size() > 7) {
+                database_quantity.subList(7, database_hourly.size() - 1).clear();
             }
+
+            tempQuantity = 0;
+            quantity = findMeanQuantity();
         }
 
         // Limit list sizes
         cap();
     }
 
-    /////////////////////
-    // Private methods //
-    /////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Cycle methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Adds values from rawData array to prices database array
@@ -208,7 +206,6 @@ public class DataEntry {
         if (median <= 0) return;
         // 90% of added items are discarded
         if (inc_counter > 0 && dec_counter / inc_counter * 100 > 90) return;
-        // IDK dude
 
         // Loop through database_prices, if the price is lower than the boundaries, remove the first instance of the
         // price and its related account name and ID
@@ -237,28 +234,26 @@ public class DataEntry {
     private void build() {
         // Precautions
         if (database_items.isEmpty()) return;
-        // If too few items have been found then it probably doesn't have a median price
-        //if (total_counter + inc_counter < 10) return;
 
         // Calculate mean and median values
-        double tempMean = findMean(0);
-        double tempMedian = findMedian(0);
-        double tempMode = findMode(0);
+        double tempMean = findMeanItems();
+        double tempMedian = findMedianItems();
+        double tempMode = findModeItems();
 
-        // add to hourly
+        // Add to hourly
         if (tempMean + tempMedian + tempMode > 0)
             database_hourly.add(0, new HourlyEntry(tempMean, tempMedian, tempMode));
 
         // Calculate mean and median values
-        mean = findMean(1);
-        median = findMedian(1);
-        mode = findMode(1);
+        mean = findMeanHourly();
+        median = findMedianHourly();
+        mode = findModeHourly();
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
         if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 80)
             threshold_multiplier += 0.1;
         else if (inc_counter > 0)
-            threshold_multiplier -= 0.1;
+            threshold_multiplier -= 0.01;
 
         // Don't let it grow infinitely
         if (threshold_multiplier > 7) threshold_multiplier = 7;
@@ -281,91 +276,114 @@ public class DataEntry {
         }
     }
 
-    /**
-     * Finds the mean value of an array
-     *
-     * @param method 0 for database_items, 1 for database_hourly
-     * @return The mean of the array
-     */
-    private double findMean(int method) {
-        double mean = 0.0;
+    //------------------------------------------------------------------------------------------------------------
+    // Mean/median/mode calculation TODO: look for a better solution
+    //------------------------------------------------------------------------------------------------------------
 
-        if (method == 0) {
-            if (database_items.isEmpty()) return mean;
-            for (ItemEntry entry : database_items) mean += entry.price;
-            return Math.round(mean / database_items.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
-        } else {
-            if (database_hourly.isEmpty()) return mean;
-            for (HourlyEntry entry : database_hourly) mean += entry.mean;
-            return Math.round(mean / database_hourly.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+    private double findMeanItems() {
+        if (database_items.isEmpty()) return 0;
+
+        double mean = 0.0;
+        for (ItemEntry entry : database_items) {
+            mean += entry.price;
         }
+        mean = Math.round(mean / database_items.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+
+        return mean;
     }
 
-    /**
-     * Finds the median of the given array
-     *
-     * @param method 0 for database_items, 1 for database_hourly
-     * @return Median value of the list, shifted by however much specified in the config
-     */
-    private double findMedian(int method) {
-        ArrayList<Double> tempList = new ArrayList<>();
+    private double findMeanHourly() {
+        if (database_hourly.isEmpty()) return 0;
 
-        if (method == 0) {
-            if (database_items.isEmpty()) return 0;
-            for (ItemEntry entry : database_items) tempList.add(entry.price);
-        } else {
-            if (database_hourly.isEmpty()) return 0;
-            for (HourlyEntry entry : database_hourly) tempList.add(entry.median);
+        double mean = 0.0;
+        for (HourlyEntry entry : database_hourly) {
+            mean += entry.mean;
+        }
+        mean = Math.round(mean / database_hourly.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+
+        return mean;
+    }
+
+    private int findMeanQuantity() {
+        if (database_quantity.isEmpty()) return 0;
+
+        int mean = 0;
+        for (Integer entry : database_quantity) {
+            mean += entry;
+        }
+
+        return mean / database_quantity.size();
+    }
+
+    private double findMedianItems() {
+        if (database_items.isEmpty()) return 0;
+
+        ArrayList<Double> tempList = new ArrayList<>();
+        for (ItemEntry entry : database_items) {
+            tempList.add(entry.price);
         }
 
         Collections.sort(tempList);
+
         return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision)
                 / Main.CONFIG.pricePrecision;
     }
 
-    /**
-     * Finds the mode of the given array
-     *
-     * @param method 0 for database_items, 1 for database_hourly
-     * @return Most frequently occurring value in the list
-     */
-    private double findMode(int method) {
+    private double findMedianHourly() {
+        if (database_hourly.isEmpty()) return 0;
+
+        ArrayList<Double> tempList = new ArrayList<>();
+        for (HourlyEntry entry : database_hourly) {
+            tempList.add(entry.median);
+        }
+
+        Collections.sort(tempList);
+
+        return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision)
+                / Main.CONFIG.pricePrecision;
+    }
+
+    private double findModeItems() {
         double maxValue = 0, maxCount = 0;
 
-        if (method == 0) {
-            for (ItemEntry entry_1 : database_items) {
-                int count = 0;
+        for (ItemEntry entry_1 : database_items) {
+            int count = 0;
 
-                for (ItemEntry entry_2 : database_items) {
-                    if (entry_2.price == entry_1.price) ++count;
-                }
-
-                if (count > maxCount) {
-                    maxCount = count;
-                    maxValue = entry_1.price;
-                }
+            for (ItemEntry entry_2 : database_items) {
+                if (entry_2.price == entry_1.price) ++count;
             }
-        } else {
-            for (HourlyEntry entry_1 : database_hourly) {
-                int count = 0;
 
-                for (HourlyEntry entry_2 : database_hourly) {
-                    if (entry_2.mode == entry_1.mode) ++count;
-                }
-
-                if (count > maxCount) {
-                    maxCount = count;
-                    maxValue = entry_1.mode;
-                }
+            if (count > maxCount) {
+                maxCount = count;
+                maxValue = entry_1.price;
             }
         }
 
         return maxValue;
     }
 
-    /////////////////
-    // I/O helpers //
-    /////////////////
+    private double findModeHourly() {
+        double maxValue = 0, maxCount = 0;
+
+        for (HourlyEntry entry_1 : database_hourly) {
+            int count = 0;
+
+            for (HourlyEntry entry_2 : database_hourly) {
+                if (entry_2.mode == entry_1.mode) ++count;
+            }
+
+            if (count > maxCount) {
+                maxCount = count;
+                maxValue = entry_1.mode;
+            }
+        }
+
+        return maxValue;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Generic I/O
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Converts this instance's values into CSV format
@@ -590,9 +608,9 @@ public class DataEntry {
         }
     }
 
-    ///////////////////////
-    // Getters / Setters //
-    ///////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
 
     public double getMean() {
         return mean;
@@ -616,10 +634,6 @@ public class DataEntry {
 
     public int getInc_counter() {
         return inc_counter;
-    }
-
-    public int getDec_counter() {
-        return dec_counter;
     }
 
     public String getItemIndex() {
