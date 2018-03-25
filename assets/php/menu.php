@@ -10,7 +10,7 @@
 
     $row_data = "<a class=\"list-group-item sidebar-link" . $active . "\" href=\"" . $item["href"] . "\" >";
 
-    $row_data .= "<div class=\"sidebar-img-container\">";
+    $row_data .= "<div class=\"sidebar-img-container text-center\">";
     $row_data .= "<img src=\"" . $item["img"] . "\">";
     $row_data .= "</div>" . $item["title"] . "</a>";
     echo $row_data;
