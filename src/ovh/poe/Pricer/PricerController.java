@@ -30,9 +30,9 @@ public class PricerController {
     private int cycleCount = 0;
     private long twentyFourCounter;
 
-    ////////////////////////////////////////
-    // Upon starting/stopping the program //
-    ////////////////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Upon starting/stopping the program
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Loads data in from file on object initialization
@@ -46,25 +46,13 @@ public class PricerController {
         try (BufferedReader reader = defineReader(new File("./data/database.txt"))) {
             if (reader == null) return;
 
-            // Parse whatever data was saved in the database file's first line
-            String[] splitLine = reader.readLine().split("::");
-
-            System.out.println("[INFO] Found start parameters:");
-            System.out.println("    Cycle counter: " + splitLine[2]);
-            long lastWriteTime = (System.currentTimeMillis() - Long.parseLong(splitLine[1])) / 1000;
-            System.out.println("    Last write time: " + lastWriteTime + " sec ago");
-
-            // Set the cycle counter to whatever is in the file
-            cycleCount = Integer.parseInt(splitLine[2]);
-            lastClearCycle = Long.parseLong(splitLine[3]);
-            twentyFourCounter = Long.parseLong(splitLine[4]);
+            loadStartParameters(reader.readLine());
 
             String line;
             while ((line = reader.readLine()) != null) {
                 String key = line.substring(0, line.indexOf("::"));
                 entryMap.put(key, new DataEntry(line));
             }
-
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -111,26 +99,48 @@ public class PricerController {
      * @return Generated CSV-format start params
      */
     private String saveStartParameters() {
-        String builder;
+        // The general format should look something like this:
+        // "writeTime: <long> | cycleCount: 10 | lastClearCycle: <long> | twentyFourCounter: <long>"
 
-        builder = "00002"
-                + "::"
-                + System.currentTimeMillis()
-                + "::"
-                + cycleCount
-                + "::"
-                + lastClearCycle
-                + "::"
-                + twentyFourCounter
-                + "\n";
+        String buffer = "writeTime: " + System.currentTimeMillis();
+        buffer += " | cycleCount: " + cycleCount;
+        buffer += " | lastClearCycle: " + lastClearCycle;
+        buffer += " | twentyFourCounter: " + twentyFourCounter;
+        buffer += "\n";
 
-        return builder;
+        return buffer;
     }
 
+    private void loadStartParameters(String line) {
+        // The general format of line should look something like this:
+        // "writeTime: <long> | cycleCount: 10 | lastClearCycle: <long> | twentyFourCounter: <long>"
 
-    /////////////////////////////////////
-    // Often called controller methods //
-    /////////////////////////////////////
+        // Parse start parameters (database's first line)
+        String[] splitLine = line.split(" \\| ");
+
+        // In splitLine we have:
+        // ["writeTime: <long>",  "cycleCount: 10",  "lastClearCycle: <long>", "twentyFourCounter: <long>"]
+
+        for (String entry : splitLine) {
+            String[] splitEntry = entry.split(": ");
+
+            switch (splitEntry[0]) {
+                case "lastClearCycle":
+                    lastClearCycle = Long.parseLong(splitEntry[1]);
+                    break;
+                case "twentyFourCounter":
+                    twentyFourCounter = Long.parseLong(splitEntry[1]);
+                    break;
+                case "cycleCount":
+                    cycleCount = Integer.parseInt(splitEntry[1]);
+                    break;
+            }
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Often called controller methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Main loop of the pricing service. Can be called whenever, only runs after specific amount of time has passed
@@ -266,9 +276,9 @@ public class PricerController {
         JSONParcel.clear();
     }
 
-    //////////////////////////////
-    // Internal utility methods //
-    //////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Internal utility methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Create a BufferedReader instance
@@ -304,6 +314,10 @@ public class PricerController {
             return null;
         }
     }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
 
     public Map<String, DataEntry> getEntryMap() {
         return entryMap;
