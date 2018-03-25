@@ -576,7 +576,7 @@ public class DataEntry {
                         tempQuantity = Integer.parseInt(splitDataItem[1]);
                         break;
                     default:
-                        System.out.println("[ERROR] Unknown field: " + splitDataItem[0]);
+                        Main.ADMIN.log_("Unknown field: " + splitDataItem[0], 3);
                         break;
                 }
             }

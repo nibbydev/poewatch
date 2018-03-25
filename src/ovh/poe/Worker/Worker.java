@@ -22,9 +22,9 @@ public class Worker extends Thread {
     private String job;
     private int index;
 
-    /////////////////////////////
-    // Actually useful methods //
-    /////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Contains main loop. Checks for new jobs and processes them
@@ -73,9 +73,9 @@ public class Worker extends Thread {
         wakeLocalMonitor();
     }
 
-    ////////////////////////////////////
-    // Primary download/parse methods //
-    ////////////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Download/parse
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Downloads data from the API
@@ -90,12 +90,14 @@ public class Worker extends Thread {
         int byteCount;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - Main.STATISTICS.getLastPullTime() < Main.CONFIG.downloadDelay) {
-            sleepX((int) (Main.CONFIG.downloadDelay - System.currentTimeMillis() + Main.STATISTICS.getLastPullTime()));
+        while (System.currentTimeMillis() - Main.ADMIN.latestPullTime < Main.CONFIG.downloadDelay) {
+            sleepX((int) (Main.CONFIG.downloadDelay - System.currentTimeMillis() + Main.ADMIN.latestPullTime));
         }
 
         // Run statistics cycle
-        Main.STATISTICS.cycle();
+        Main.ADMIN.pullCountTotal++;
+        Main.ADMIN.latestPullTime = System.currentTimeMillis();
+        Main.ADMIN.workerCycle();
 
         try {
             // Define the request
@@ -137,7 +139,7 @@ public class Worker extends Thread {
                         Main.WORKER_CONTROLLER.setNextChangeID(matcher.group());
 
                         // Add freshest changeID to statistics
-                        Main.STATISTICS.setLatestChangeID(matcher.group());
+                        Main.ADMIN.setChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
@@ -148,7 +150,8 @@ public class Worker extends Thread {
             }
 
         } catch (Exception ex) {
-            System.out.println(Main.timeStamp() + " Caught worker download error: " + ex.getMessage());
+            Main.ADMIN.log_("Caught worker download error", 3);
+            ex.printStackTrace();
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
@@ -156,7 +159,7 @@ public class Worker extends Thread {
                 Main.WORKER_CONTROLLER.setNextChangeID(job);
             }
 
-            Main.STATISTICS.incPullCountFailed();
+            Main.ADMIN.pullCountError++;
 
             // Clear the buffer so that an empty string will be returned instead
             stringBuilderBuffer.setLength(0);
@@ -186,9 +189,9 @@ public class Worker extends Thread {
         }
     }
 
-    /////////////////////////////
-    //     Monitor methods     //
-    /////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Utility
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Sleeps until monitor object is notified
@@ -211,9 +214,9 @@ public class Worker extends Thread {
         }
     }
 
-    /////////////////////////////
-    //    Getters / Setters    //
-    /////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
 
     public void setJob(String job) {
         this.job = job;

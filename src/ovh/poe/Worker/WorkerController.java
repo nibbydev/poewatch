@@ -1,7 +1,6 @@
 package ovh.poe.Worker;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import ovh.poe.Mappers;
 import ovh.poe.Main;
 
@@ -19,9 +18,9 @@ public class WorkerController extends Thread {
     private final Object monitor = new Object();
     private String nextChangeID;
 
-    /////////////////////////////
-    // Actually useful methods //
-    /////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Contains main loop. Checks for open jobs and assigns them to workers
@@ -91,17 +90,16 @@ public class WorkerController extends Thread {
         }
     }
 
-    ///////////////////////////////////
-    // Methods for worker management //
-    ///////////////////////////////////
-
+    //------------------------------------------------------------------------------------------------------------
+    // Worker management
+    //------------------------------------------------------------------------------------------------------------
     /**
      * Prints out all active workers and their active jobs
      */
     public void printAllWorkers() {
         // Loop though every worker and print out its job
         for (Worker workerObject : workerList)
-            System.out.println("    " + workerObject.getIndex() + ": " + workerObject.getJob());
+            Main.ADMIN.log_("    " + workerObject.getIndex() + ": " + workerObject.getJob(), 1);
     }
 
     /**
@@ -115,7 +113,7 @@ public class WorkerController extends Thread {
 
         // Forbid spawning over limit
         if (nextWorkerIndex + workerCount > Main.CONFIG.workerLimit) {
-            System.out.println("[ERROR] Maximum amount of workers is " + Main.CONFIG.workerLimit);
+            Main.ADMIN.log_("Maximum amount of workers is " + Main.CONFIG.workerLimit, 3);
             return;
         }
 
@@ -145,7 +143,7 @@ public class WorkerController extends Thread {
 
         // Can't remove what's not there
         if (lastWorkerIndex <= 0 || lastWorkerIndex - workerCount < 0) {
-            System.out.println("[ERROR] Not enough active workers");
+            Main.ADMIN.log_("Not enough active workers", 3);
             return;
         }
 
@@ -157,9 +155,9 @@ public class WorkerController extends Thread {
         }
     }
 
-    //////////////////////////////////////////////////////////
-    // Methods for getting a ChangeID from external sources //
-    //////////////////////////////////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Getting starting change ID
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Get a changeID that's close to the stack top
@@ -226,9 +224,9 @@ public class WorkerController extends Thread {
         return downloadChangeID("http://api.poe.ovh/ChangeID");
     }
 
-    ///////////////////////
-    // Getters / Setters //
-    ///////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Sets the next change ID in the variable. If the variable has no value, set it to the newChangeID's one,

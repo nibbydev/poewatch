@@ -1,14 +1,11 @@
 package ovh.poe.Pricer;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import ovh.poe.Mappers;
 import ovh.poe.Item;
 import ovh.poe.Main;
 
-import javax.xml.crypto.Data;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -149,7 +146,7 @@ public class PricerController {
         // Run every minute (-ish)
         if ((System.currentTimeMillis() - lastRunTime) / 1000 < Main.CONFIG.pricerControllerSleepCycle) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
-        if ((System.currentTimeMillis() - Main.STATISTICS.getLastSuccessfulPullTime()) / 1000 > 30) return;
+        if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
@@ -194,8 +191,7 @@ public class PricerController {
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
         String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (File:" + String.format("%5d", time_file) + " ms) (JSON:" + String.format("%5d", time_json) + " ms)";
-
-        System.out.println(Main.timeStamp() + cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay);
+        Main.ADMIN.log_(cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, 1);
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();

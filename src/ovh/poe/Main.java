@@ -14,9 +14,9 @@ public class Main {
     public static ConfigReader CONFIG;
     public static WorkerController WORKER_CONTROLLER;
     public static PricerController PRICER_CONTROLLER;
-    public static Statistics STATISTICS;
     public static RelationManager RELATIONS;
-    private static GsonBuilder gsonBuilder;
+    private static GsonBuilder GSONBUILDER;
+    public static AdminSuite ADMIN;
 
     /**
      * The main class. Run this to run the program
@@ -24,8 +24,11 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        gsonBuilder = new GsonBuilder();
-        gsonBuilder.disableHtmlEscaping();
+        GSONBUILDER = new GsonBuilder();
+        GSONBUILDER.disableHtmlEscaping();
+
+        // Init admin suite
+        ADMIN = new AdminSuite();
 
         // Make sure basic folder structure exists
         buildFolderFileStructure();
@@ -34,7 +37,6 @@ public class Main {
         CONFIG = new ConfigReader("config.cfg");
         WORKER_CONTROLLER = new WorkerController();
         PRICER_CONTROLLER = new PricerController();
-        STATISTICS = new Statistics();
         RELATIONS = new RelationManager();
 
         // Parse CLI parameters
@@ -129,8 +131,8 @@ public class Main {
                         break;
                     case "exit":
                         System.out.println("[INFO] Shutting down..");
-                        STATISTICS.setStatus("DOWN");
-                        STATISTICS.writeChangeID();
+                        ADMIN.changeIDElement.setStatus(3);
+                        ADMIN.saveChangeID();
                         return;
                     case "id":
                         commandIdAdd(userInput);
@@ -197,9 +199,9 @@ public class Main {
         return stringBuilder.toString();
     }
 
-    //////////////////////////
-    // File structure setup //
-    //////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // File structure setup
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Creates all missing http files and folders on startup
@@ -275,9 +277,9 @@ public class Main {
         }
     }
 
-    ////////////////////////////////////////
-    // Methods extracted from commandLoop //
-    ////////////////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Command loop controllers
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Adds a ChangeID to the queue
@@ -378,12 +380,16 @@ public class Main {
         return userInput.equals("yes");
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
+
     /**
      * Creates an instance of Gson
      *
      * @return Gson instance
      */
     public static Gson getGson() {
-        return gsonBuilder.create();
+        return GSONBUILDER.create();
     }
 }
