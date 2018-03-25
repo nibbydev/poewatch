@@ -107,6 +107,7 @@ public class RelationManager {
     RelationManager() {
         readCurrencyRelationsFromFile();
         readItemDataFromFile();
+        readCategoriesFromFile();
     }
 
     /**
@@ -247,6 +248,21 @@ public class RelationManager {
                 itemIndexToData.put(index, item);
             });
 
+        } catch (IOException ex) {
+            // Doesn't matter if the file exists or not. It will be written to later.
+        }
+    }
+
+    /**
+     * Reads item relation data from file
+     */
+    private void readCategoriesFromFile() {
+        File file = new File("./data/categories.json");
+
+        // Open up the reader
+        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+            Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();
+            categories = gson.fromJson(reader, listType);
         } catch (IOException ex) {
             // Doesn't matter if the file exists or not. It will be written to later.
         }
