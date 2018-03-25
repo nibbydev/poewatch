@@ -26,31 +26,27 @@
     <div class="col-lg-8 main-content"> 
       <div class="row nested-row">
         <div class="col-lg">
-          <div class="alert alert-warning" role="alert">
-            <h3 class="alert-heading">Attention!</h3>
-            <p>This site is still a work in progress</p>
-            <hr>
-            <p>Data is wiped regularly, API endpoints may change, layout will change.</p>
+          <div class="card custom-card">
+            <div class="card-body">
+              <h2 class="card-title">Poe.Ovh</h2>
+              <hr>
+              <h5>Overview</h5>
+              <p>Collects data over time from various items on Path of Exile and shows their average price. This page is still in development and there has not been any official releases yet.</p>
+              <h5>The API</h5>
+              <p>Top-right of the screen - click that, it's pretty self-explanatory. Most API pages are listed there.</p>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="row nested-row">
         <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-body">
-              <h2 class="card-title">Poe.Ovh</h2>
-              <h5>Short description</h5>
-              <p>Site for interfacing the poe.ovh api for the everyday user</p>
-              <h5>The interface</h5>
-              <p>It's still in development, I can't be bothered to write a guide at this point</p>
-              <h5>The API</h5>
-              <p>Top-right of the screen - click that, it's pretty self-explanatory</p>
-            </div>
+          <div class="alert alert-warning" role="alert">
+            <h3 class="alert-heading">Attention!</h3>
+            <p>This site is still a work in progress. Data is wiped regularly, API endpoints may change, layout will change.</p>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
