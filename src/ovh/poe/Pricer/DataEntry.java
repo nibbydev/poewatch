@@ -208,6 +208,7 @@ public class DataEntry {
         if (median <= 0) return;
         // 90% of added items are discarded
         if (inc_counter > 0 && dec_counter / inc_counter * 100 > 90) return;
+        // IDK dude
 
         // Loop through database_prices, if the price is lower than the boundaries, remove the first instance of the
         // price and its related account name and ID
@@ -217,7 +218,7 @@ public class DataEntry {
             double price = database_items.get(i - offset).price;
 
             // If price is more than double or less than half the median, remove it
-            if (price > median * threshold_multiplier || price < median / threshold_multiplier) {
+            if (price > median * (2 + threshold_multiplier) || price < median / (2 + threshold_multiplier)) {
                 // Remove the item
                 database_items.remove(i - offset);
 
@@ -256,11 +257,12 @@ public class DataEntry {
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
         if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 80)
             threshold_multiplier += 0.1;
-        else if (inc_counter > 0 && threshold_multiplier > -1)
+        else if (inc_counter > 0)
             threshold_multiplier -= 0.1;
 
         // Don't let it grow infinitely
-        if (threshold_multiplier > 7.1) threshold_multiplier -= 0.2;
+        if (threshold_multiplier > 7) threshold_multiplier = 7;
+        if (threshold_multiplier < 0) threshold_multiplier = 0;
     }
 
     /**
