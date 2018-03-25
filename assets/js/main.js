@@ -162,7 +162,7 @@ function parseItem(item) {
   extraFields +
   //"<td>" + roundPrice(item["mean"]) + "</td>" + 
   "<td>" + roundPrice(item["mean"]) + "</td>" + 
-  //"<td>" + roundPrice(item["mode"]) + "</td>" +
+  "<td>" + roundPrice(item["quantity"]) + "</td>" +
   "<td>" + countBadge + "</td>" + 
   "</tr>";
 
