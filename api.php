@@ -80,10 +80,26 @@
               </div>
 
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example 1</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example 2</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example 3</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example 4</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example (parent)</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example (all)</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row nested-row">
+        <div class="col-lg">
+          <div class="card custom-card">
+            <div class="card-header">
+              <h2>poe.ovh/id</h2>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">Description</h5>
+              <p class="card-text">Provides users access to the Change ID from the top of the river. Shows status of the river. Last update time is in milliseconds.</p>
+              <h5 class="card-title">Examples</h5>
+              <a class="btn btn-dark" href="http://api.poe.ovh/id">Example</a>
             </div>
           </div>
         </div>
@@ -120,8 +136,8 @@
                 </table>
               </div>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata?index=0002572,0000302,0000002">Example 1</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata">Example 2</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata?index=0002572,0000302,0000002">Example (specific)</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata">Example (all)</a>
             </div>
           </div>
         </div>
