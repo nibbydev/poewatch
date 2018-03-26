@@ -3,14 +3,23 @@ package ovh.poe.Pricer;
 import ovh.poe.Main;
 import ovh.poe.RelationManager.IndexedItem;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class JSONParcel {
+    private static class HistoryItem {
+        public List<Double> mean = new ArrayList<>();
+        public List<Double> median = new ArrayList<>();
+        public List<Double> mode = new ArrayList<>();
+        public List<Integer> quantity = new ArrayList<>();
+    }
+
     public static class JSONItem {
         public double mean, median, mode;
         public int count, inc, frame, quantity;
         public String child, icon, name, type, var, index;
         public String corrupted, lvl, quality, links, tier;
+        public HistoryItem history = new HistoryItem();
 
         public void copy (DataEntry entry) {
             mean = entry.getMean();
@@ -20,6 +29,14 @@ public class JSONParcel {
             inc = entry.getInc_counter();
             quantity = entry.getQuantity();
             index = entry.getItemIndex();
+
+            // Copy the history over
+            for (DataEntry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                history.mean.add(dailyEntry.mean);
+                history.median.add(dailyEntry.median);
+                history.mode.add(dailyEntry.mode);
+                history.quantity.add(dailyEntry.quantity);
+            }
 
             // Check if there's a match for the specific index
             if (Main.RELATIONS.itemIndexToData.containsKey(index)) {

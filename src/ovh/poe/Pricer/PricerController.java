@@ -20,12 +20,11 @@ public class PricerController {
 
     private JSONParcel JSONParcel = new JSONParcel();
     private Gson gson = Main.getGson();
-    private long lastClearCycle;
-    public volatile boolean clearStats = false;
     public volatile boolean clearIndexes = false;
     public volatile boolean twentyFourBool = false;
-    private int cycleCount = 0;
-    private long twentyFourCounter;
+    public volatile boolean sixtyBool = false;
+    public volatile boolean tenBool = false;
+    private long twentyFourCounter, sixtyCounter, tenCounter;
 
     //------------------------------------------------------------------------------------------------------------
     // Upon starting/stopping the program
@@ -100,9 +99,9 @@ public class PricerController {
         // "writeTime: <long> | cycleCount: 10 | lastClearCycle: <long> | twentyFourCounter: <long>"
 
         String buffer = "writeTime: " + System.currentTimeMillis();
-        buffer += " | cycleCount: " + cycleCount;
-        buffer += " | lastClearCycle: " + lastClearCycle;
         buffer += " | twentyFourCounter: " + twentyFourCounter;
+        buffer += " | sixtyCounter: " + sixtyCounter;
+        buffer += " | tenCounter: " + tenCounter;
         buffer += "\n";
 
         return buffer;
@@ -122,14 +121,14 @@ public class PricerController {
             String[] splitEntry = entry.split(": ");
 
             switch (splitEntry[0]) {
-                case "lastClearCycle":
-                    lastClearCycle = Long.parseLong(splitEntry[1]);
-                    break;
                 case "twentyFourCounter":
                     twentyFourCounter = Long.parseLong(splitEntry[1]);
                     break;
-                case "cycleCount":
-                    cycleCount = Integer.parseInt(splitEntry[1]);
+                case "sixtyCounter":
+                    sixtyCounter = Long.parseLong(splitEntry[1]);
+                    break;
+                case "tenCounter":
+                    tenCounter = Long.parseLong(splitEntry[1]);
                     break;
             }
         }
@@ -151,17 +150,19 @@ public class PricerController {
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
 
-        // Get a list of leagues from pathofexile.com. Will only run every 30 minutes
-        Main.RELATIONS.getLeagueList();
+        // Run once every 10min
+        if ((System.currentTimeMillis() - tenCounter) > 3600000) {
+            tenCounter = System.currentTimeMillis();
+            tenBool = true;
+        }
 
-        // Count cycles
-        if (cycleCount >= Main.CONFIG.dataEntryCycleLimit) cycleCount = 0;
-        else cycleCount++;
+        // Run once every 60min
+        if ((System.currentTimeMillis() - sixtyCounter) > 3600000) {
+            // Get a list of active leagues from pathofexile.com's api
+            Main.RELATIONS.getLeagueList();
 
-        // Clear stats ever x-minutes
-        if ((System.currentTimeMillis() - lastClearCycle) > 3600000) {
-            lastClearCycle = System.currentTimeMillis();
-            clearStats = true;
+            sixtyCounter = System.currentTimeMillis();
+            sixtyBool = true;
         }
 
         // Run once every 24h
@@ -186,12 +187,11 @@ public class PricerController {
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message
-        String cycleCounterDisplay = "[" + String.format("%2d", cycleCount) + "/" + String.format("%2d", Main.CONFIG.dataEntryCycleLimit) + "]";
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
-        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - lastClearCycle) / 60000) + " min]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
         String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (File:" + String.format("%5d", time_file) + " ms) (JSON:" + String.format("%5d", time_json) + " ms)";
-        Main.ADMIN.log_(cycleCounterDisplay + timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, 1);
+        Main.ADMIN.log_(timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, 1);
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
@@ -199,7 +199,7 @@ public class PricerController {
         Main.RELATIONS.saveData();
 
         // Switch off flags
-        clearStats = clearIndexes = false;
+        tenBool = sixtyBool = twentyFourBool = clearIndexes = false;
         flipPauseFlag();
     }
 

@@ -99,7 +99,6 @@ public class RelationManager {
 
     public Map<String, List<String>> categories = new HashMap<>();
     public List<String> leagues = new ArrayList<>();
-    private long lastLeagueListUpdate;
 
     /**
      * Reads currency and item data from file on object init
@@ -112,13 +111,9 @@ public class RelationManager {
 
     /**
      * Downloads a list of active leagues from pathofexile.com, sorts them, adds them to 'List<String> leagues' and
-     * writes them to './data/leagues.json'. Can be called whenever but will only run every 30 minutes.
+     * writes them to './data/leagues.json'
      */
     public void getLeagueList() {
-        // Run every 30min
-        if ((System.currentTimeMillis() - lastLeagueListUpdate) < 1800000) return;
-        lastLeagueListUpdate = System.currentTimeMillis();
-
         List<LeagueListElement> leagueList = null;
         InputStream stream = null;
 

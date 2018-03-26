@@ -23,41 +23,125 @@ public class DataEntry {
 
     private static class HourlyEntry {
         double mean, median, mode;
+        String raw;
 
-        HourlyEntry (double mean, double median, double mode) {
+        void add (double mean, double median, double mode) {
             this.mean = mean;
             this.median = median;
             this.mode = mode;
+        }
+
+        void add(String raw) {
+            // Eg "8.241,5.0,5.0", mean median mode respectively
+            this.raw = raw;
+
+            String[] splitRaw = raw.split(",");
+            mean = Double.parseDouble(splitRaw[0]);
+            median = Double.parseDouble(splitRaw[1]);
+            mode = Double.parseDouble(splitRaw[2]);
+        }
+
+        @Override
+        public String toString() {
+            if (raw == null) return mean + "," + median + "," + mode;
+            else return raw;
+        }
+    }
+
+    private static class TenMinuteEntry {
+        double mean, median, mode;
+        String raw;
+
+        void add (double mean, double median, double mode) {
+            this.mean = mean;
+            this.median = median;
+            this.mode = mode;
+        }
+
+        void add(String raw) {
+            // Eg "8.241,5.0,5.0", mean median mode respectively
+            this.raw = raw;
+
+            String[] splitRaw = raw.split(",");
+            mean = Double.parseDouble(splitRaw[0]);
+            median = Double.parseDouble(splitRaw[1]);
+            mode = Double.parseDouble(splitRaw[2]);
+        }
+
+        @Override
+        public String toString() {
+            if (raw == null) return mean + "," + median + "," + mode;
+            else return raw;
+        }
+    }
+
+    public static class DailyEntry {
+        double mean, median, mode;
+        int quantity;
+        String raw;
+
+        void add(String raw) {
+            // Eg "8.241,5.0,5.0,3283", mean median mode quantity respectively
+            this.raw = raw;
+
+            String[] splitRaw = raw.split(",");
+            mean = Double.parseDouble(splitRaw[0]);
+            median = Double.parseDouble(splitRaw[1]);
+            mode = Double.parseDouble(splitRaw[2]);
+            quantity = Integer.parseInt(splitRaw[3]);
+        }
+
+        void add(double mean, double median, double mode, int quantity) {
+            this.mean = mean;
+            this.median = median;
+            this.mode = mode;
+            this.quantity = quantity;
+        }
+
+        @Override
+        public String toString() {
+            if (raw == null) return mean + "," + median + "," + mode + "," + quantity;
+            else return raw;
         }
     }
 
     private static class ItemEntry {
         double price;
-        String accountName, id;
+        String accountName, id, raw;
 
-        ItemEntry (double price, String accountName, String id) {
+        void add (String raw) {
+            this.raw = raw;
+            String[] splitRaw = raw.split(",");
+
+            this.price = Double.parseDouble(splitRaw[0]);
+            this.accountName = splitRaw[1];
+            this.id = splitRaw[2];
+        }
+
+        void add (double price, String accountName, String id) {
             this.price = price;
             this.accountName = accountName;
             this.id = id;
         }
+
+        @Override
+        public String toString() {
+            if (raw == null) return price + "," + accountName + "," + id;
+            else return raw;
+        }
     }
 
-    private String key;
-    private String index = "-";
-    private int total_counter = 0;
-    private int inc_counter = 0;
-    private int dec_counter = 0;
-    private double mean = 0.0;
-    private double median, mode;
-    private double threshold_multiplier = 0.0;
-    private int tempQuantity = 0;
-    private int quantity = 0;
+    private String key, index = "-";
+    private int total_counter, inc_counter, dec_counter, quantity;
+    private double mean, median, mode, threshold_multiplier;
 
     // Lists that hold price data
-    private ArrayList<RawDataItem> rawData = new ArrayList<>();
-    private ArrayList<ItemEntry> database_items = new ArrayList<>(Main.CONFIG.baseDataSize);
-    private ArrayList<HourlyEntry> database_hourly = new ArrayList<>(Main.CONFIG.hourlyDataSize);
-    private ArrayList<Integer> database_quantity = new ArrayList<>(7);
+    private List<RawDataItem> db_raw = new ArrayList<>();
+    private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
+
+    private List<DailyEntry> db_weekly = new ArrayList<>(7);
+    private List<HourlyEntry> db_daily = new ArrayList<>(24);
+    private List<TenMinuteEntry> db_hourly = new ArrayList<>(6);
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -79,7 +163,7 @@ public class DataEntry {
     }
 
     /**
-     * Adds entries to the rawData and database_itemIDs lists
+     * Adds entries to the db_raw and database_itemIDs lists
      *
      * @param item Item object
      * @param accountName Account name of the seller
@@ -93,7 +177,7 @@ public class DataEntry {
         // Add new value to raw data array
         RawDataItem rawDataItem = new RawDataItem();
         rawDataItem.add(item, accountName);
-        rawData.add(rawDataItem);
+        db_raw.add(rawDataItem);
     }
 
     /**
@@ -114,24 +198,35 @@ public class DataEntry {
         purge();
         build();
 
-        // This runs every ~10 cycles
-        if (Main.PRICER_CONTROLLER.clearStats) {
+        // This runs every 10 minutes
+        if (Main.PRICER_CONTROLLER.tenBool) {
+            TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
+            tenMinuteEntry.add(mean, median, mode);
+            db_hourly.add(0, tenMinuteEntry);
+
+            // Since the build() method overwrote mean, median and mode so an entry could be added to db_hourly, these
+            // variables should be overwritten once again
+            mean = findMeanHourly();
+            median = findMedianHourly();
+            mode = findModeHourly();
+        }
+
+        // This runs every 60 minutes
+        if (Main.PRICER_CONTROLLER.sixtyBool) {
             total_counter += inc_counter;
-            tempQuantity += inc_counter;
+            quantity += inc_counter;
             inc_counter = dec_counter = 0;
+
+            HourlyEntry hourlyEntry = new HourlyEntry();
+            hourlyEntry.add(mean, median, mode);
+            db_daily.add(0, hourlyEntry);
         }
 
         // This runs every 24 hours
         if (Main.PRICER_CONTROLLER.twentyFourBool) {
-            database_quantity.add(0 , tempQuantity);
-
-            // Cap the list
-            if (database_quantity.size() > 7) {
-                database_quantity.subList(7, database_hourly.size() - 1).clear();
-            }
-
-            tempQuantity = 0;
-            quantity = findMeanQuantity();
+            DailyEntry dailyEntry = new DailyEntry();
+            dailyEntry.add(mean, median, mode, quantity);
+            db_weekly.add(0, dailyEntry);
         }
 
         // Limit list sizes
@@ -143,14 +238,14 @@ public class DataEntry {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Adds values from rawData array to prices database array
+     * Adds values from db_raw array to prices database array
      */
     private void parse() {
         // Loop through entries
-        for (RawDataItem raw : rawData) {
+        for (RawDataItem raw : db_raw) {
             // If a user already has listed the same item before, ignore it
             boolean discard = false;
-            for (ItemEntry itemEntry : database_items) {
+            for (ItemEntry itemEntry : db_items) {
                 if (itemEntry.accountName.equals(raw.accountName) || itemEntry.id.equals(raw.id)) {
                     discard = true;
                     break;
@@ -184,14 +279,16 @@ public class DataEntry {
             raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
 
             // Add entry to the database
-            database_items.add(0, new ItemEntry(raw.price, raw.accountName, raw.id));
+            ItemEntry itemEntry = new ItemEntry();
+            itemEntry.add(raw.price, raw.accountName, raw.id);
+            db_items.add(0,itemEntry);
 
             // Increment total added item counter
             inc_counter++;
         }
 
         // Clear raw data after extracting and converting values
-        rawData.clear();
+        db_raw.clear();
     }
 
     /**
@@ -199,7 +296,7 @@ public class DataEntry {
      */
     private void purge() {
         // Precautions
-        if (database_items.isEmpty()) return;
+        if (db_items.isEmpty()) return;
         // If too few items have been found then it probably doesn't have a median price
         if (total_counter + inc_counter < 10) return;
         // No median price found
@@ -210,14 +307,14 @@ public class DataEntry {
         // Loop through database_prices, if the price is lower than the boundaries, remove the first instance of the
         // price and its related account name and ID
         int offset = 0;
-        int oldSize = database_items.size();
+        int oldSize = db_items.size();
         for (int i = 0; i < oldSize; i++) {
-            double price = database_items.get(i - offset).price;
+            double price = db_items.get(i - offset).price;
 
             // If price is more than double or less than half the median, remove it
             if (price > median * (2 + threshold_multiplier) || price < median / (2 + threshold_multiplier)) {
                 // Remove the item
-                database_items.remove(i - offset);
+                db_items.remove(i - offset);
 
                 // Since we removed elements with index i we need to adjust for the rest of them that fell back one place
                 offset++;
@@ -233,21 +330,12 @@ public class DataEntry {
      */
     private void build() {
         // Precautions
-        if (database_items.isEmpty()) return;
+        if (db_items.isEmpty()) return;
 
         // Calculate mean and median values
-        double tempMean = findMeanItems();
-        double tempMedian = findMedianItems();
-        double tempMode = findModeItems();
-
-        // Add to hourly
-        if (tempMean + tempMedian + tempMode > 0)
-            database_hourly.add(0, new HourlyEntry(tempMean, tempMedian, tempMode));
-
-        // Calculate mean and median values
-        mean = findMeanHourly();
-        median = findMedianHourly();
-        mode = findModeHourly();
+        mean = findMeanItems();
+        median = findMedianItems();
+        mode = findModeItems();
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
         if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 80)
@@ -267,12 +355,20 @@ public class DataEntry {
         // If an array has more elements than specified, remove everything from the possible last index up until
         // however many excess elements it has
 
-        if (database_items.size() > Main.CONFIG.baseDataSize) {
-            database_items.subList(Main.CONFIG.baseDataSize, database_items.size() - 1).clear();
+        if (db_items.size() > Main.CONFIG.baseDataSize) {
+            db_items.subList(Main.CONFIG.baseDataSize, db_items.size() - 1).clear();
         }
 
-        if (database_hourly.size() > Main.CONFIG.hourlyDataSize) {
-            database_hourly.subList(Main.CONFIG.hourlyDataSize, database_hourly.size() - 1).clear();
+        if (Main.PRICER_CONTROLLER.tenBool && db_hourly.size() > 6) {
+            db_hourly.subList(6, db_hourly.size() - 1).clear();
+        }
+
+        if (Main.PRICER_CONTROLLER.sixtyBool && db_daily.size() > 24) {
+            db_daily.subList(24, db_daily.size() - 1).clear();
+        }
+
+        if (Main.PRICER_CONTROLLER.twentyFourBool && db_weekly.size() > 7) {
+            db_weekly.subList(7, db_weekly.size() - 1).clear();
         }
     }
 
@@ -280,61 +376,35 @@ public class DataEntry {
     // Mean/median/mode calculation TODO: look for a better solution
     //------------------------------------------------------------------------------------------------------------
 
-    private double findMeanItems() {
-        if (database_items.isEmpty()) return 0;
-
-        double mean = 0.0;
-        for (ItemEntry entry : database_items) {
-            mean += entry.price;
-        }
-        mean = Math.round(mean / database_items.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
-
-        return mean;
-    }
-
-    private double findMeanHourly() {
-        if (database_hourly.isEmpty()) return 0;
-
-        double mean = 0.0;
-        for (HourlyEntry entry : database_hourly) {
-            mean += entry.mean;
-        }
-        mean = Math.round(mean / database_hourly.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
-
-        return mean;
-    }
-
     private int findMeanQuantity() {
-        if (database_quantity.isEmpty()) return 0;
+        if (db_weekly.isEmpty()) return 0;
 
         int mean = 0;
-        for (Integer entry : database_quantity) {
-            mean += entry;
+        for (DailyEntry entry : db_weekly) {
+            mean += entry.quantity;
         }
 
-        return mean / database_quantity.size();
+        return mean / db_weekly.size();
+    }
+
+    private double findMeanItems() {
+        if (db_items.isEmpty()) return 0;
+
+        double mean = 0.0;
+        for (ItemEntry entry : db_items) {
+            mean += entry.price;
+        }
+        mean = Math.round(mean / db_items.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+
+        return mean;
     }
 
     private double findMedianItems() {
-        if (database_items.isEmpty()) return 0;
+        if (db_items.isEmpty()) return 0;
 
         ArrayList<Double> tempList = new ArrayList<>();
-        for (ItemEntry entry : database_items) {
+        for (ItemEntry entry : db_items) {
             tempList.add(entry.price);
-        }
-
-        Collections.sort(tempList);
-
-        return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision)
-                / Main.CONFIG.pricePrecision;
-    }
-
-    private double findMedianHourly() {
-        if (database_hourly.isEmpty()) return 0;
-
-        ArrayList<Double> tempList = new ArrayList<>();
-        for (HourlyEntry entry : database_hourly) {
-            tempList.add(entry.median);
         }
 
         Collections.sort(tempList);
@@ -346,10 +416,10 @@ public class DataEntry {
     private double findModeItems() {
         double maxValue = 0, maxCount = 0;
 
-        for (ItemEntry entry_1 : database_items) {
+        for (ItemEntry entry_1 : db_items) {
             int count = 0;
 
-            for (ItemEntry entry_2 : database_items) {
+            for (ItemEntry entry_2 : db_items) {
                 if (entry_2.price == entry_1.price) ++count;
             }
 
@@ -362,13 +432,39 @@ public class DataEntry {
         return maxValue;
     }
 
+    private double findMeanHourly() {
+        if (db_hourly.isEmpty()) return 0;
+
+        double mean = 0.0;
+        for (TenMinuteEntry entry : db_hourly) {
+            mean += entry.mean;
+        }
+        mean = Math.round(mean / db_hourly.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+
+        return mean;
+    }
+
+    private double findMedianHourly() {
+        if (db_hourly.isEmpty()) return 0;
+
+        ArrayList<Double> tempList = new ArrayList<>();
+        for (TenMinuteEntry entry : db_hourly) {
+            tempList.add(entry.median);
+        }
+
+        Collections.sort(tempList);
+
+        return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision)
+                / Main.CONFIG.pricePrecision;
+    }
+
     private double findModeHourly() {
         double maxValue = 0, maxCount = 0;
 
-        for (HourlyEntry entry_1 : database_hourly) {
+        for (TenMinuteEntry entry_1 : db_hourly) {
             int count = 0;
 
-            for (HourlyEntry entry_2 : database_hourly) {
+            for (TenMinuteEntry entry_2 : db_hourly) {
                 if (entry_2.mode == entry_1.mode) ++count;
             }
 
@@ -413,7 +509,7 @@ public class DataEntry {
                 1 - mode
          */
 
-        if (database_items.isEmpty()) return null;
+        if (db_items.isEmpty()) return null;
 
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -428,18 +524,10 @@ public class DataEntry {
         stringBuilder.append(inc_counter);
         stringBuilder.append(",dec:");
         stringBuilder.append(dec_counter);
-        stringBuilder.append(",mean:");
-        stringBuilder.append(mean);
-        stringBuilder.append(",median:");
-        stringBuilder.append(median);
-        stringBuilder.append(",mode:");
-        stringBuilder.append(mode);
         stringBuilder.append(",multiplier:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
         stringBuilder.append(",index:");
         stringBuilder.append(index);
-        stringBuilder.append(",tempQuantity:");
-        stringBuilder.append(tempQuantity);
         stringBuilder.append(",quantity:");
         stringBuilder.append(quantity);
 
@@ -447,15 +535,11 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add database entries
-        if (database_items.isEmpty()) {
+        if (db_items.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            for (ItemEntry entry : database_items) {
-                stringBuilder.append(entry.price);
-                stringBuilder.append(",");
-                stringBuilder.append(entry.accountName);
-                stringBuilder.append(",");
-                stringBuilder.append(entry.id);
+            for (ItemEntry entry : db_items) {
+                stringBuilder.append(entry.toString());
                 stringBuilder.append("|");
             }
 
@@ -467,15 +551,11 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add hourly entries
-        if (database_hourly.isEmpty()) {
+        if (db_weekly.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            for (HourlyEntry entry : database_hourly) {
-                stringBuilder.append(entry.mean);
-                stringBuilder.append(",");
-                stringBuilder.append(entry.median);
-                stringBuilder.append(",");
-                stringBuilder.append(entry.mode);
+            for (DailyEntry entry : db_weekly) {
+                stringBuilder.append(entry.toString());
                 stringBuilder.append("|");
             }
 
@@ -487,15 +567,31 @@ public class DataEntry {
         stringBuilder.append("::");
 
         // Add hourly entries
-        if (database_quantity.isEmpty()) {
+        if (db_daily.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            for (Integer entry : database_quantity) {
-                stringBuilder.append(entry);
-                stringBuilder.append(",");
+            for (HourlyEntry entry : db_daily) {
+                stringBuilder.append(entry.toString());
+                stringBuilder.append("|");
             }
 
-            // Remove the overflow ","
+            // Remove the overflow "|"
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
+        // Add delimiter
+        stringBuilder.append("::");
+
+        // Add hourly entries
+        if (db_hourly.isEmpty()) {
+            stringBuilder.append("-");
+        } else {
+            for (TenMinuteEntry entry : db_hourly) {
+                stringBuilder.append(entry.toString());
+                stringBuilder.append("|");
+            }
+
+            // Remove the overflow "|"
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
 
@@ -554,15 +650,6 @@ public class DataEntry {
                     case "dec":
                         dec_counter += Integer.parseInt(splitDataItem[1]);
                         break;
-                    case "mean":
-                        mean = Double.parseDouble(splitDataItem[1]);
-                        break;
-                    case "median":
-                        median = Double.parseDouble(splitDataItem[1]);
-                        break;
-                    case "mode":
-                        mode = Double.parseDouble(splitDataItem[1]);
-                        break;
                     case "multiplier":
                         threshold_multiplier = Double.parseDouble(splitDataItem[1]);
                         break;
@@ -571,9 +658,6 @@ public class DataEntry {
                         break;
                     case "quantity":
                         quantity = Integer.parseInt(splitDataItem[1]);
-                        break;
-                    case "tempQuantity":
-                        tempQuantity = Integer.parseInt(splitDataItem[1]);
                         break;
                     default:
                         Main.ADMIN.log_("Unknown field: " + splitDataItem[0], 3);
@@ -585,26 +669,48 @@ public class DataEntry {
         // Import database_prices, account names and item IDs
         if (!splitLine[2].equals("-")) {
             for (String entry : splitLine[2].split("\\|")) {
-                String[] entryList = entry.split(",");
-
-                database_items.add(new ItemEntry(Double.parseDouble(entryList[0]), entryList[1], entryList[2]));
+                ItemEntry itemEntry = new ItemEntry();
+                itemEntry.add(entry);
+                db_items.add(itemEntry);
             }
         }
 
-        // Import hourly mean and median values
+        // Import daily values
         if (!splitLine[3].equals("-")) {
+            // Loop through all entries in the CSV
             for (String entry : splitLine[3].split("\\|")) {
-                String[] entryList = entry.split(",");
 
-                database_hourly.add(new HourlyEntry(Double.parseDouble(entryList[0]), Double.parseDouble(entryList[1]), Double.parseDouble(entryList[2])));
+                DailyEntry dailyEntry = new DailyEntry();
+                dailyEntry.add(entry); // "8.241,5.0,5.0,3283"
+                db_weekly.add(dailyEntry);
             }
         }
 
-        // Import hourly mean and median values
+        // Import daily values
         if (!splitLine[4].equals("-")) {
-            for (String entry : splitLine[4].split(",")) {
-                database_quantity.add(Integer.parseInt(entry));
+            // Loop through all entries in the CSV
+            for (String entry : splitLine[4].split("\\|")) {
+                HourlyEntry hourlyEntry = new HourlyEntry();
+                hourlyEntry.add(entry);
+                db_daily.add(hourlyEntry);
             }
+        }
+
+
+        // Import hourly values
+        if (!splitLine[5].equals("-")) {
+            // Loop through all entries in the CSV
+            for (String entry : splitLine[5].split("\\|")) {
+
+                TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
+                tenMinuteEntry.add(entry);
+                db_hourly.add(tenMinuteEntry);
+            }
+
+            // Using the imported values, find the prices
+            mean = findMeanHourly();
+            median = findMedianHourly();
+            mode = findModeHourly();
         }
     }
 
@@ -641,6 +747,10 @@ public class DataEntry {
     }
 
     public int getQuantity() {
-        return quantity;
+        return findMeanQuantity();
+    }
+
+    public List<DailyEntry> getDb_weekly() {
+        return db_weekly;
     }
 }
