@@ -136,14 +136,16 @@ public class AdminSuite {
         // Refresh calendar
         Calendar calendar = Calendar.getInstance();
 
-        // Form [HH:MM]
+        // Form [HH:MM:SS]
         stringBuilder.append("[");
         stringBuilder.append(String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY)));
         stringBuilder.append(":");
         stringBuilder.append(String.format("%02d", calendar.get(Calendar.MINUTE)));
+        stringBuilder.append(":");
+        stringBuilder.append(String.format("%02d", calendar.get(Calendar.SECOND)));
         stringBuilder.append("]");
 
-        // Return [HH:MM]
+        // Return [HH:MM:SS]
         return stringBuilder.toString();
     }
 

@@ -150,8 +150,7 @@ public class Worker extends Thread {
             }
 
         } catch (Exception ex) {
-            Main.ADMIN.log_("Caught worker download error", 3);
-            ex.printStackTrace();
+            Main.ADMIN.log_("Caught worker download error: " + ex.getMessage(), 3);
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {

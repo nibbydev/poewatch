@@ -157,7 +157,7 @@ public class RelationManager {
             Type listType = new TypeToken<List<LeagueListElement>>(){}.getType();
             leagueList = gson.fromJson(stringBuilderBuffer.toString(), listType);
         } catch (Exception ex) {
-            System.out.println("[Error] Failed to download league list");
+            Main.ADMIN.log_("Failed to download league list", 3);
         } finally {
             try {
                 if (stream != null) stream.close();
@@ -198,11 +198,11 @@ public class RelationManager {
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(leagueFile), "UTF-8"))) {
             gson.toJson(leagues, writer);
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write to leagues.json");
+            Main.ADMIN.log_("Could not write to leagues.json", 3);
             ex.printStackTrace();
         }
 
-        System.out.println(Main.timeStamp() + "[INFO] League list updated");
+        Main.ADMIN.log_("League list updated", 1);
     }
 
     /**
@@ -277,7 +277,7 @@ public class RelationManager {
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(itemFile), "UTF-8"))) {
             gson.toJson(itemIndexToData, writer);
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write to icoRelations.json");
+            Main.ADMIN.log_("Could not write to icoRelations.json", 3);
             ex.printStackTrace();
         }
 
@@ -286,7 +286,7 @@ public class RelationManager {
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(categoryFile), "UTF-8"))) {
             gson.toJson(categories, writer);
         } catch (IOException ex) {
-            System.out.println("[ERROR] Could not write to categories.json");
+            Main.ADMIN.log_("Could not write to categories.json", 3);
             ex.printStackTrace();
         }
     }
