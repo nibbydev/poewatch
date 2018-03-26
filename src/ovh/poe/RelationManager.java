@@ -323,7 +323,9 @@ public class RelationManager {
             IndexedItem indexedItem = new IndexedItem();
             indexedItem.add(item, key);
 
-            index = String.format("%07d", itemKeyToIndex.size());
+            index = Integer.toHexString(itemKeyToIndex.size());
+            index = ("0000" + index).substring(index.length());
+
             itemKeyToIndex.put(key, index);
             itemIndexToData.put(index, indexedItem);
         }
