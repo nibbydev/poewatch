@@ -1,7 +1,5 @@
 package ovh.poe;
 
-import ovh.poe.Pricer.DataEntry;
-
 import java.util.*;
 
 /**

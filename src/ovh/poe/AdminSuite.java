@@ -49,7 +49,7 @@ public class AdminSuite {
 
     private ArrayList<LogMessage> log = new ArrayList<>(256);
     private final long startTime = System.currentTimeMillis();
-    private Gson gson = Main.getGson();
+    private final Gson gson = Main.getGson();
 
     public ChangeIDElement changeIDElement = new ChangeIDElement();
     private String oldStatus;

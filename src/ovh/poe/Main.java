@@ -2,20 +2,19 @@ package ovh.poe;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ovh.poe.Pricer.PricerController;
+import ovh.poe.Pricer.EntryController;
 import ovh.poe.Worker.WorkerController;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 
 public class Main {
+    private static GsonBuilder gsonBuilder;
     public static ConfigReader CONFIG;
     public static WorkerController WORKER_CONTROLLER;
-    public static PricerController PRICER_CONTROLLER;
+    public static EntryController ENTRY_CONTROLLER;
     public static RelationManager RELATIONS;
-    private static GsonBuilder GSONBUILDER;
     public static AdminSuite ADMIN;
 
     /**
@@ -24,8 +23,8 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        GSONBUILDER = new GsonBuilder();
-        GSONBUILDER.disableHtmlEscaping();
+        gsonBuilder = new GsonBuilder();
+        gsonBuilder.disableHtmlEscaping();
 
         // Init admin suite
         ADMIN = new AdminSuite();
@@ -36,7 +35,7 @@ public class Main {
         // Initialize objects
         CONFIG = new ConfigReader("config.cfg");
         WORKER_CONTROLLER = new WorkerController();
-        PRICER_CONTROLLER = new PricerController();
+        ENTRY_CONTROLLER = new EntryController();
         RELATIONS = new RelationManager();
 
         // Parse CLI parameters
@@ -146,7 +145,7 @@ public class Main {
                     case "reindex":
                         if (commandConfirm()) {
                             System.out.println("[WARN] Item index database will be cleared on next cycle");
-                            PRICER_CONTROLLER.clearIndexes = true;
+                            ENTRY_CONTROLLER.clearIndexes = true;
                         } else {
                             System.out.println("[Info] Reindexing cancelled");
                         }
@@ -159,44 +158,6 @@ public class Main {
                 ex.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Creates a timestamp prefix for console output, has support for timezones
-     *
-     * @return time in the format of "[HH:MM]"
-     */
-    public static String timeStamp() {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        // Refresh calendar (this is a bug with Calendar, I've heard)
-        Calendar calendar = Calendar.getInstance();
-
-        int hour = calendar.get(Calendar.HOUR_OF_DAY) + CONFIG.timeZoneOffset;
-        int minute = calendar.get(Calendar.MINUTE);
-
-        stringBuilder.append("[");
-
-        // Format hour (timezones can be set in Calendar by default, I know)
-        if (hour > 24)
-            hour -= 24;
-
-        // Add 0 so that "[09:32]" is returned instead of "[9:32]"
-        if (hour < 10)
-            stringBuilder.append(0);
-
-        stringBuilder.append(hour);
-        stringBuilder.append(":");
-
-        // Format minute
-        if (minute < 10)
-            stringBuilder.append(0);
-
-        stringBuilder.append(minute);
-        stringBuilder.append("]");
-
-        // Return [HH:MM]
-        return stringBuilder.toString();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -390,6 +351,6 @@ public class Main {
      * @return Gson instance
      */
     public static Gson getGson() {
-        return GSONBUILDER.create();
+        return gsonBuilder.create();
     }
 }

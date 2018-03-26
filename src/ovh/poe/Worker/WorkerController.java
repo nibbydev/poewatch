@@ -12,10 +12,10 @@ import java.util.ArrayList;
  * Manages Worker objects (eg. distributing jobs, adding/removing workers)
  */
 public class WorkerController extends Thread {
-    private volatile boolean flag_Run = true;
     private ArrayList<Worker> workerList = new ArrayList<>();
-    private Gson gson = Main.getGson();
+    private final Gson gson = Main.getGson();
     private final Object monitor = new Object();
+    private volatile boolean flag_Run = true;
     private String nextChangeID;
 
     //------------------------------------------------------------------------------------------------------------
@@ -55,9 +55,9 @@ public class WorkerController extends Thread {
                 }
             }
 
-            // Run PRICER_CONTROLLER. As that Class has no actual loop and this method executes pretty often, pricer
+            // Run ENTRY_CONTROLLER. As that Class has no actual loop and this method executes pretty often, pricer
             // controller itself has some checks whether it should run on method call or not
-            Main.PRICER_CONTROLLER.run();
+            Main.ENTRY_CONTROLLER.run();
         }
     }
 

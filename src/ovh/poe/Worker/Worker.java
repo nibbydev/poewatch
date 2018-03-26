@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
  */
 public class Worker extends Thread {
     private final Object monitor = new Object();
+    private final Gson gson = Main.getGson();
     private volatile boolean flagLocalRun = true;
-    private Gson gson = Main.getGson();
     private String job;
     private int index;
 
@@ -57,7 +57,7 @@ public class Worker extends Thread {
 
                 // Parse the deserialized JSON if deserialization was successful
                 if (!reply.next_change_id.equals(""))
-                    Main.PRICER_CONTROLLER.parseItems(reply);
+                    Main.ENTRY_CONTROLLER.parseItems(reply);
             }
 
             // Clear the job

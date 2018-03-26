@@ -8,8 +8,8 @@ import java.util.*;
 /**
  * Price database entry object
  */
-public class DataEntry {
-    private static class RawDataItem {
+public class Entry {
+    private static class RawEntry {
         String accountName, priceType, id;
         double price;
 
@@ -136,7 +136,7 @@ public class DataEntry {
     private double mean, median, mode, threshold_multiplier;
 
     // Lists that hold price data
-    private List<RawDataItem> db_raw = new ArrayList<>();
+    private List<RawEntry> db_raw = new ArrayList<>();
     private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
 
     private List<DailyEntry> db_weekly = new ArrayList<>(7);
@@ -152,14 +152,14 @@ public class DataEntry {
      *
      * @param line Database entry from the CSV-format file
      */
-    public DataEntry(String line) {
+    Entry(String line) {
         parseLine(line);
     }
 
     /**
-     * This is needed to create an instance without initial parameters
+     * Needed to create an instance without initial parameters
      */
-    public DataEntry() {
+    Entry() {
     }
 
     /**
@@ -175,7 +175,7 @@ public class DataEntry {
         if (index.equals("-")) index = Main.RELATIONS.indexItem(item);
 
         // Add new value to raw data array
-        RawDataItem rawDataItem = new RawDataItem();
+        RawEntry rawDataItem = new RawEntry();
         rawDataItem.add(item, accountName);
         db_raw.add(rawDataItem);
     }
@@ -185,7 +185,7 @@ public class DataEntry {
      */
     public void cycle() {
         // Clear icon index if user requested icon database wipe
-        if (Main.PRICER_CONTROLLER.clearIndexes) {
+        if (Main.ENTRY_CONTROLLER.clearIndexes) {
             // Clear indexes flag was up, clear the indexed item database
             index = "-";
         } else if (index.equals("-")) {
@@ -199,7 +199,7 @@ public class DataEntry {
         build();
 
         // This runs every 10 minutes
-        if (Main.PRICER_CONTROLLER.tenBool) {
+        if (Main.ENTRY_CONTROLLER.tenBool) {
             TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
             tenMinuteEntry.add(mean, median, mode);
             db_hourly.add(0, tenMinuteEntry);
@@ -212,7 +212,7 @@ public class DataEntry {
         }
 
         // This runs every 60 minutes
-        if (Main.PRICER_CONTROLLER.sixtyBool) {
+        if (Main.ENTRY_CONTROLLER.sixtyBool) {
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
             db_daily.add(0, hourlyEntry);
@@ -223,7 +223,7 @@ public class DataEntry {
         }
 
         // This runs every 24 hours
-        if (Main.PRICER_CONTROLLER.twentyFourBool) {
+        if (Main.ENTRY_CONTROLLER.twentyFourBool) {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
             db_weekly.add(0, dailyEntry);
@@ -243,7 +243,7 @@ public class DataEntry {
      */
     private void parse() {
         // Loop through entries
-        for (RawDataItem raw : db_raw) {
+        for (RawEntry raw : db_raw) {
             // If a user already has listed the same item before, ignore it
             boolean discard = false;
             for (ItemEntry itemEntry : db_items) {
@@ -261,10 +261,10 @@ public class DataEntry {
                         Main.RELATIONS.currencyIndexToName.get(raw.priceType) + "|5";
 
                 // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
-                if (!Main.PRICER_CONTROLLER.getEntryMap().containsKey(currencyKey)) continue;
+                if (!Main.ENTRY_CONTROLLER.getEntryMap().containsKey(currencyKey)) continue;
 
                 // Get the currency item entry the item was listed in
-                DataEntry currencyEntry = Main.PRICER_CONTROLLER.getEntryMap().get(currencyKey);
+                Entry currencyEntry = Main.ENTRY_CONTROLLER.getEntryMap().get(currencyKey);
 
                 // If the currency the item was listed in has very few listings then ignore this item
                 if (currencyEntry.getCount() < 20) continue;
@@ -360,15 +360,15 @@ public class DataEntry {
             db_items.subList(Main.CONFIG.baseDataSize, db_items.size() - 1).clear();
         }
 
-        if (Main.PRICER_CONTROLLER.tenBool && db_hourly.size() > 6) {
+        if (Main.ENTRY_CONTROLLER.tenBool && db_hourly.size() > 6) {
             db_hourly.subList(6, db_hourly.size() - 1).clear();
         }
 
-        if (Main.PRICER_CONTROLLER.sixtyBool && db_daily.size() > 24) {
+        if (Main.ENTRY_CONTROLLER.sixtyBool && db_daily.size() > 24) {
             db_daily.subList(24, db_daily.size() - 1).clear();
         }
 
-        if (Main.PRICER_CONTROLLER.twentyFourBool && db_weekly.size() > 7) {
+        if (Main.ENTRY_CONTROLLER.twentyFourBool && db_weekly.size() > 7) {
             db_weekly.subList(7, db_weekly.size() - 1).clear();
         }
     }

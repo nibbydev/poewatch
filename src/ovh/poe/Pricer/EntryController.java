@@ -11,19 +11,14 @@ import java.util.*;
 /**
  * Manages database
  */
-public class PricerController {
-    private final Map<String, DataEntry> entryMap = new HashMap<>();
+public class EntryController {
+    private final Map<String, Entry> entryMap = new HashMap<>();
+    private final JSONParcel JSONParcel = new JSONParcel();
+    private final Object monitor = new Object();
+    private final Gson gson = Main.getGson();
 
     private long lastRunTime = System.currentTimeMillis();
-    private volatile boolean flagPause = false;
-    private final Object monitor = new Object();
-
-    private JSONParcel JSONParcel = new JSONParcel();
-    private Gson gson = Main.getGson();
-    public volatile boolean clearIndexes = false;
-    public volatile boolean twentyFourBool = false;
-    public volatile boolean sixtyBool = false;
-    public volatile boolean tenBool = false;
+    public volatile boolean flagPause, clearIndexes, tenBool, sixtyBool, twentyFourBool;
     private long twentyFourCounter, sixtyCounter, tenCounter;
 
     //------------------------------------------------------------------------------------------------------------
@@ -33,7 +28,7 @@ public class PricerController {
     /**
      * Loads data in from file on object initialization
      */
-    public PricerController() {
+    public EntryController() {
         // Load in data from CSV file
         loadDatabase();
     }
@@ -47,7 +42,7 @@ public class PricerController {
             String line;
             while ((line = reader.readLine()) != null) {
                 String key = line.substring(0, line.indexOf("::"));
-                entryMap.put(key, new DataEntry(line));
+                entryMap.put(key, new Entry(line));
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -64,7 +59,7 @@ public class PricerController {
             writer.write(saveStartParameters());
 
             // Write new data to file (not found in data file)
-            for (Map.Entry<String, DataEntry> entry : entryMap.entrySet()) {
+            for (Map.Entry<String, Entry> entry : entryMap.entrySet()) {
                 String line = entry.getValue().buildLine();
                 if (line != null) writer.write(line);
             }
@@ -83,7 +78,7 @@ public class PricerController {
     private void cycle() {
         // Write everything in currencyMap to file
         for (String key : entryMap.keySet()) {
-            DataEntry entry = entryMap.get(key);
+            Entry entry = entryMap.get(key);
             entry.cycle();
             JSONParcel.add(entry);
         }
@@ -143,7 +138,7 @@ public class PricerController {
      */
     public void run() {
         // Run every minute (-ish)
-        if ((System.currentTimeMillis() - lastRunTime) / 1000 < Main.CONFIG.pricerControllerSleepCycle) return;
+        if (System.currentTimeMillis() - lastRunTime < Main.CONFIG.pricerControllerSleepCycle * 1000) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
         if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
@@ -229,7 +224,7 @@ public class PricerController {
                 if (item.discard) continue;
 
                 // Add item to database
-                entryMap.putIfAbsent(item.key, new DataEntry());
+                entryMap.putIfAbsent(item.key, new Entry());
                 entryMap.get(item.key).add(item, stash.accountName);
             }
         }
@@ -315,7 +310,7 @@ public class PricerController {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public Map<String, DataEntry> getEntryMap() {
+    public Map<String, Entry> getEntryMap() {
         return entryMap;
     }
 }

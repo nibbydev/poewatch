@@ -2,7 +2,6 @@ package ovh.poe;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import ovh.poe.Pricer.DataEntry;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -94,7 +93,7 @@ public class RelationManager {
     public Map<String, String> currencyAliasToIndex = new HashMap<>();
     public Map<String, String> currencyAliasToName = new HashMap<>();
 
-    private Map<String, String> itemKeyToIndex = new HashMap<>(); // Private as item keys need to be generalized first
+    private Map<String, String> itemKeyToIndex = new HashMap<>();
     public Map<String, IndexedItem> itemIndexToData = new TreeMap<>();
 
     public Map<String, List<String>> categories = new HashMap<>();

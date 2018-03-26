@@ -3,7 +3,6 @@ package ovh.poe.Pricer;
 import ovh.poe.Main;
 import ovh.poe.RelationManager.IndexedItem;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class JSONParcel {
@@ -21,7 +20,7 @@ public class JSONParcel {
         public String corrupted, lvl, quality, links, tier;
         public HistoryItem history = new HistoryItem();
 
-        public void copy (DataEntry entry) {
+        public void copy (Entry entry) {
             mean = entry.getMean();
             median = entry.getMedian();
             mode = entry.getMode();
@@ -30,7 +29,7 @@ public class JSONParcel {
             index = entry.getItemIndex();
 
             // Copy the history over
-            for (DataEntry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+            for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
                 history.mean.add(dailyEntry.mean);
                 history.median.add(dailyEntry.median);
                 history.mode.add(dailyEntry.mode);
@@ -63,7 +62,7 @@ public class JSONParcel {
 
     public Map<String, Map<String, List<JSONItem>>> leagues = new HashMap<>();
 
-    public void add(DataEntry entry) {
+    public void add(Entry entry) {
         if (entry.getItemIndex().equals("-")) return;
 
         // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
