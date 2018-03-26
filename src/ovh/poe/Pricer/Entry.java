@@ -605,7 +605,7 @@ public class Entry {
      *
      * @param line CSV line
      */
-    private void parseLine(String line) {
+    public void parseLine(String line) {
         /* (Spliterator: "::")
             0 - key
             1 - stats (Spliterator: "," and ":")

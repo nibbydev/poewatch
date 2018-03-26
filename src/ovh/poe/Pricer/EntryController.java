@@ -33,7 +33,7 @@ public class EntryController {
         loadDatabase();
     }
 
-    private void loadDatabase() {
+    private void loadDatabase2() {
         try (BufferedReader reader = defineReader(new File("./data/database.txt"))) {
             if (reader == null) return;
 
@@ -43,6 +43,22 @@ public class EntryController {
             while ((line = reader.readLine()) != null) {
                 String key = line.substring(0, line.indexOf("::"));
                 entryMap.put(key, new Entry(line));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void loadDatabase() {
+        try (BufferedReader reader = defineReader(new File("./data/database.txt"))) {
+            if (reader == null) return;
+
+            loadStartParameters(reader.readLine());
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String key = line.substring(0, line.indexOf("::"));
+                if (key.contains("|currency|")) entryMap.put(key, new Entry(line));
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -75,13 +91,83 @@ public class EntryController {
         }
     }
 
-    private void cycle() {
+    private void cycle2() {
         // Write everything in currencyMap to file
         for (String key : entryMap.keySet()) {
             Entry entry = entryMap.get(key);
             entry.cycle();
             JSONParcel.add(entry);
         }
+    }
+
+    private void cycle() {
+        File inputFile = new File("./data", "database.txt");
+        File outputFile = new File("./data", "database.temp");
+
+        BufferedReader reader = defineReader(inputFile);
+        BufferedWriter writer = defineWriter(outputFile);
+
+        if (reader == null) return;
+        if (writer == null) return;
+
+        // Make copy of entryMap's key set
+        Set<String> parsedKeys = new HashSet<>(entryMap.keySet());
+
+        try {
+            reader.readLine();
+            writer.write(saveStartParameters());
+
+            // Add items that are present in the CSV file
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String key = line.substring(0, line.indexOf("::"));
+                Entry entry;
+
+                if (entryMap.containsKey(key)) {
+                    // Remove all keys that were present in the file
+                    parsedKeys.remove(key);
+
+                    if (key.contains("|currency|")) {
+                        entry = entryMap.getOrDefault(key, new Entry(line));
+                    } else {
+                        entry = entryMap.remove(key);
+                        entry.parseLine(line);
+                    }
+                } else {
+                    entry = new Entry(line);
+                }
+
+                entry.cycle();
+                JSONParcel.add(entry);
+
+                writer.write(entry.buildLine());
+                writer.flush();
+            }
+
+            // Add items that were present in entryMap but no the CSV file
+            for (String key : parsedKeys) {
+                Entry entry;
+                if (key.contains("|currency|")) entry = entryMap.get(key);
+                else entry = entryMap.remove(key);
+
+                entry.cycle();
+                JSONParcel.add(entry);
+                writer.write(entry.buildLine());
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                reader.close();
+                writer.flush();
+                writer.close();
+            } catch (IOException ex) {
+                Main.ADMIN.log_(ex.getMessage(), 3);
+            }
+        }
+
+        //inputFile.delete();
+        //outputFile.renameTo(new File("./data", "database.txt"));
     }
 
     /**
