@@ -33,22 +33,6 @@ public class EntryController {
         loadDatabase();
     }
 
-    private void loadDatabase2() {
-        try (BufferedReader reader = defineReader(new File("./data/database.txt"))) {
-            if (reader == null) return;
-
-            loadStartParameters(reader.readLine());
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String key = line.substring(0, line.indexOf("::"));
-                entryMap.put(key, new Entry(line));
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
     private void loadDatabase() {
         try (BufferedReader reader = defineReader(new File("./data/database.txt"))) {
             if (reader == null) return;
@@ -62,41 +46,6 @@ public class EntryController {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
-        }
-    }
-
-    private void saveDatabase() {
-        File outputFile = new File("./data/database.txt");
-        BufferedWriter writer = defineWriter(outputFile);
-        if (writer == null) return;
-
-        try {
-            // Write startParameters to file
-            writer.write(saveStartParameters());
-
-            // Write new data to file (not found in data file)
-            for (Map.Entry<String, Entry> entry : entryMap.entrySet()) {
-                String line = entry.getValue().buildLine();
-                if (line != null) writer.write(line);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } finally {
-            try {
-                writer.flush();
-                writer.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    private void cycle2() {
-        // Write everything in currencyMap to file
-        for (String key : entryMap.keySet()) {
-            Entry entry = entryMap.get(key);
-            entry.cycle();
-            JSONParcel.add(entry);
         }
     }
 
@@ -140,8 +89,9 @@ public class EntryController {
                 entry.cycle();
                 JSONParcel.add(entry);
 
-                writer.write(entry.buildLine());
-                writer.flush();
+                String writeLine = entry.buildLine();
+                if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getKey(), 0);
+                else writer.write(writeLine);
             }
 
             // Add items that were present in entryMap but no the CSV file
@@ -152,7 +102,9 @@ public class EntryController {
 
                 entry.cycle();
                 JSONParcel.add(entry);
-                writer.write(entry.buildLine());
+                String writeLine = entry.buildLine();
+                if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getKey(), 0);
+                else writer.write(writeLine);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -166,8 +118,8 @@ public class EntryController {
             }
         }
 
-        //inputFile.delete();
-        //outputFile.renameTo(new File("./data", "database.txt"));
+        if (!inputFile.delete()) Main.ADMIN.log_("Unable to remove database.tmp", 4);
+        if (!outputFile.renameTo(inputFile)) Main.ADMIN.log_("Unable to rename database.tmp", 4);
     }
 
     /**
@@ -257,11 +209,6 @@ public class EntryController {
         cycle();
         time_cycle = System.currentTimeMillis() - time_cycle;
 
-        // Save data to file
-        long time_file = System.currentTimeMillis();
-        saveDatabase();
-        time_file = System.currentTimeMillis() - time_file;
-
         // Build JSON
         long time_json = System.currentTimeMillis();
         writeJSONToFile();
@@ -271,7 +218,7 @@ public class EntryController {
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (File:" + String.format("%5d", time_file) + " ms) (JSON:" + String.format("%5d", time_json) + " ms)";
+        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (JSON:" + String.format("%5d", time_json) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, 1);
 
         // Set last run time
