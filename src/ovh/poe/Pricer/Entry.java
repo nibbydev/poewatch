@@ -195,7 +195,7 @@ public class Entry {
         if (Main.ENTRY_CONTROLLER.tenBool) {
             TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
             tenMinuteEntry.add(mean, median, mode);
-            db_hourly.add(0, tenMinuteEntry);
+            db_hourly.add(tenMinuteEntry);
 
             // Since the build() method overwrote mean, median and mode so an entry could be added to db_hourly, these
             // variables should be overwritten once again
@@ -208,7 +208,7 @@ public class Entry {
         if (Main.ENTRY_CONTROLLER.sixtyBool) {
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
-            db_daily.add(0, hourlyEntry);
+            db_daily.add(hourlyEntry);
 
             total_counter += inc_counter - dec_counter;
             quantity += inc_counter - dec_counter;
@@ -219,7 +219,7 @@ public class Entry {
         if (Main.ENTRY_CONTROLLER.twentyFourBool) {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
-            db_weekly.add(0, dailyEntry);
+            db_weekly.add(dailyEntry);
             quantity = 0;
         }
 
@@ -275,7 +275,7 @@ public class Entry {
             // Add entry to the database
             ItemEntry itemEntry = new ItemEntry();
             itemEntry.add(raw.price, raw.accountName, raw.id);
-            db_items.add(0,itemEntry);
+            db_items.add(itemEntry);
 
             // Increment total added item counter
             inc_counter++;
@@ -350,19 +350,19 @@ public class Entry {
         // however many excess elements it has
 
         if (db_items.size() > Main.CONFIG.baseDataSize) {
-            db_items.subList(Main.CONFIG.baseDataSize, db_items.size() - 1).clear();
+            db_items.subList(0, db_items.size() - Main.CONFIG.baseDataSize).clear();
         }
 
         if (Main.ENTRY_CONTROLLER.tenBool && db_hourly.size() > 6) {
-            db_hourly.subList(6, db_hourly.size() - 1).clear();
+            db_hourly.subList(0, db_hourly.size() - 6).clear();
         }
 
         if (Main.ENTRY_CONTROLLER.sixtyBool && db_daily.size() > 24) {
-            db_daily.subList(24, db_daily.size() - 1).clear();
+            db_daily.subList(0, db_daily.size() - 24).clear();
         }
 
         if (Main.ENTRY_CONTROLLER.twentyFourBool && db_weekly.size() > 7) {
-            db_weekly.subList(7, db_weekly.size() - 1).clear();
+            db_weekly.subList(0, db_weekly.size() - 7).clear();
         }
     }
 
@@ -674,39 +674,55 @@ public class Entry {
 
         // Import db_items' values
         if (!splitLine[2].equals("-")) {
+            List<ItemEntry> temp = new ArrayList<>();
+
             for (String entry : splitLine[2].split("\\|")) {
                 ItemEntry itemEntry = new ItemEntry();
                 itemEntry.add(entry);
-                db_items.add(itemEntry);
+                temp.add(itemEntry);
             }
+
+            db_items.addAll(0, temp);
         }
 
         // Import weekly values
         if (!splitLine[3].equals("-")) {
+            List<DailyEntry> temp = new ArrayList<>();
+
             for (String entry : splitLine[3].split("\\|")) {
                 DailyEntry dailyEntry = new DailyEntry();
                 dailyEntry.add(entry);
                 db_weekly.add(dailyEntry);
             }
+
+            db_weekly.addAll(0, temp);
         }
 
         // Import daily values
         if (!splitLine[4].equals("-")) {
+            List<HourlyEntry> temp = new ArrayList<>();
+
             for (String entry : splitLine[4].split("\\|")) {
                 HourlyEntry hourlyEntry = new HourlyEntry();
                 hourlyEntry.add(entry);
-                db_daily.add(hourlyEntry);
+                temp.add(hourlyEntry);
             }
+
+            db_daily.addAll(0, temp);
         }
 
 
         // Import hourly values
         if (!splitLine[5].equals("-")) {
+            List<TenMinuteEntry> temp = new ArrayList<>();
+
             for (String entry : splitLine[5].split("\\|")) {
                 TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
                 tenMinuteEntry.add(entry);
-                db_hourly.add(tenMinuteEntry);
+                temp.add(tenMinuteEntry);
             }
+
+            db_hourly.addAll(0, temp);
 
             // Using the imported values, calculate the prices
             mean = findMeanHourly();
