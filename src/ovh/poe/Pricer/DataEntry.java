@@ -213,13 +213,13 @@ public class DataEntry {
 
         // This runs every 60 minutes
         if (Main.PRICER_CONTROLLER.sixtyBool) {
-            total_counter += inc_counter;
-            quantity += inc_counter;
-            inc_counter = dec_counter = 0;
-
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
             db_daily.add(0, hourlyEntry);
+
+            total_counter += inc_counter - dec_counter;
+            quantity += inc_counter - dec_counter;
+            inc_counter = dec_counter = 0;
         }
 
         // This runs every 24 hours
@@ -227,6 +227,7 @@ public class DataEntry {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
             db_weekly.add(0, dailyEntry);
+            quantity = 0;
         }
 
         // Limit list sizes

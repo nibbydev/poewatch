@@ -16,7 +16,7 @@ public class JSONParcel {
 
     public static class JSONItem {
         public double mean, median, mode;
-        public int count, inc, frame, quantity;
+        public int count, frame, quantity;
         public String child, icon, name, type, var, index;
         public String corrupted, lvl, quality, links, tier;
         public HistoryItem history = new HistoryItem();
@@ -26,7 +26,6 @@ public class JSONParcel {
             median = entry.getMedian();
             mode = entry.getMode();
             count = entry.getCount() + entry.getInc_counter();
-            inc = entry.getInc_counter();
             quantity = entry.getQuantity();
             index = entry.getItemIndex();
 
