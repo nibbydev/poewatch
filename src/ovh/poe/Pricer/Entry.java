@@ -135,10 +135,8 @@ public class Entry {
     private int total_counter, inc_counter, dec_counter, quantity;
     private double mean, median, mode, threshold_multiplier;
 
-    // Lists that hold price data
     private List<RawEntry> db_raw = new ArrayList<>();
     private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
-
     private List<DailyEntry> db_weekly = new ArrayList<>(7);
     private List<HourlyEntry> db_daily = new ArrayList<>(24);
     private List<TenMinuteEntry> db_hourly = new ArrayList<>(6);
@@ -184,21 +182,16 @@ public class Entry {
      * Caller method. Calls other methods
      */
     public void cycle() {
-        // Clear icon index if user requested icon database wipe
-        if (Main.ENTRY_CONTROLLER.clearIndexes) {
-            // Clear indexes flag was up, clear the indexed item database
-            index = "-";
-        } else if (index.equals("-")) {
-            // Attempt to find the item's index
-            index = Main.RELATIONS.getIndexFromKey(key);
-        }
+        // Check what to do with item index
+        if (Main.ENTRY_CONTROLLER.clearIndexes) index = "-";
+        else if (index.equals("-")) index = Main.RELATIONS.getIndexFromKey(key);
 
         // Build statistics and databases
         parse();
         purge();
         build();
 
-        // This runs every 10 minutes
+        // Runs every 10 minutes
         if (Main.ENTRY_CONTROLLER.tenBool) {
             TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
             tenMinuteEntry.add(mean, median, mode);
@@ -211,7 +204,7 @@ public class Entry {
             mode = findModeHourly();
         }
 
-        // This runs every 60 minutes
+        // Runs every 60 minutes
         if (Main.ENTRY_CONTROLLER.sixtyBool) {
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
@@ -222,7 +215,7 @@ public class Entry {
             inc_counter = dec_counter = 0;
         }
 
-        // This runs every 24 hours
+        // Runs every 24 hours
         if (Main.ENTRY_CONTROLLER.twentyFourBool) {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
@@ -491,23 +484,29 @@ public class Entry {
         /* (Spliterator: "::")
             0 - key
             1 - stats (Spliterator: "," and ":")
-                cnt: - total count during league
-                inc: - added items per 24h
-                dec: - discarded items 24h
-                mea: - mean
-                med: - median
-                mod: - mode
-                mtp: - threshold_multiplier
-                ico: - icon index
-                quantity: - quantity counter
-            2 - database entries (Spliterator: "|" and ",")
+                count
+                inc
+                dec
+                multiplier
+                index
+                quantity
+            2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
                 2 - item id
-            3 - hourly (Spliterator: "|" and ",")
+            3 - weekly (Spliterator: "|" and ",")
                 0 - mean
                 1 - median
-                1 - mode
+                2 - mode
+                3 - quantity
+            4 - daily (Spliterator: "|" and ",")
+                0 - mean
+                1 - median
+                2 - mode
+            5 - hourly (Spliterator: "|" and ",")
+                0 - mean
+                1 - median
+                2 - mode
          */
 
         if (db_items.isEmpty()) return null;
@@ -610,23 +609,29 @@ public class Entry {
         /* (Spliterator: "::")
             0 - key
             1 - stats (Spliterator: "," and ":")
-                cnt: - total count during league
-                inc: - added items per 24h
-                dec: - discarded items 24h
-                mea: - mean
-                med: - median
-                mod: - mode
-                mtp: - threshold_multiplier
-                ico: - icon index
-                quantity: - quantity counter
-            2 - database entries (Spliterator: "|" and ",")
+                count
+                inc
+                dec
+                multiplier
+                index
+                quantity
+            2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account name
                 2 - item id
-            3 - hourly (Spliterator: "|" and ",")
+            3 - weekly (Spliterator: "|" and ",")
                 0 - mean
                 1 - median
-                1 - mode
+                2 - mode
+                3 - quantity
+            4 - daily (Spliterator: "|" and ",")
+                0 - mean
+                1 - median
+                2 - mode
+            5 - hourly (Spliterator: "|" and ",")
+                0 - mean
+                1 - median
+                2 - mode
          */
 
         String[] splitLine = line.split("::");
@@ -667,7 +672,7 @@ public class Entry {
             }
         }
 
-        // Import database_prices, account names and item IDs
+        // Import db_items' values
         if (!splitLine[2].equals("-")) {
             for (String entry : splitLine[2].split("\\|")) {
                 ItemEntry itemEntry = new ItemEntry();
@@ -676,20 +681,17 @@ public class Entry {
             }
         }
 
-        // Import daily values
+        // Import weekly values
         if (!splitLine[3].equals("-")) {
-            // Loop through all entries in the CSV
             for (String entry : splitLine[3].split("\\|")) {
-
                 DailyEntry dailyEntry = new DailyEntry();
-                dailyEntry.add(entry); // "8.241,5.0,5.0,3283"
+                dailyEntry.add(entry);
                 db_weekly.add(dailyEntry);
             }
         }
 
         // Import daily values
         if (!splitLine[4].equals("-")) {
-            // Loop through all entries in the CSV
             for (String entry : splitLine[4].split("\\|")) {
                 HourlyEntry hourlyEntry = new HourlyEntry();
                 hourlyEntry.add(entry);
@@ -700,15 +702,13 @@ public class Entry {
 
         // Import hourly values
         if (!splitLine[5].equals("-")) {
-            // Loop through all entries in the CSV
             for (String entry : splitLine[5].split("\\|")) {
-
                 TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
                 tenMinuteEntry.add(entry);
                 db_hourly.add(tenMinuteEntry);
             }
 
-            // Using the imported values, find the prices
+            // Using the imported values, calculate the prices
             mean = findMeanHourly();
             median = findMedianHourly();
             mode = findModeHourly();

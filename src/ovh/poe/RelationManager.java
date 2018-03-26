@@ -108,6 +108,10 @@ public class RelationManager {
         readCategoriesFromFile();
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Common I/O
+    //------------------------------------------------------------------------------------------------------------
+
     /**
      * Downloads a list of active leagues from pathofexile.com, sorts them, adds them to 'List<String> leagues' and
      * writes them to './data/leagues.json'
@@ -284,6 +288,10 @@ public class RelationManager {
             ex.printStackTrace();
         }
     }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Indexing interface
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Provides an interface for saving and retrieving item data (data, leagues, categories) and indexes
