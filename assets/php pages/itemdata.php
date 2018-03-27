@@ -2,8 +2,8 @@
   // Set header to json
   header('Content-Type: application/json');
 
-  // Get url params and allow only numeric inputs
-  $paramIndex = preg_replace("/[^0-9,]/", '', $_GET["index"]);
+  // Get url params and allow only alphanumeric inputs
+  $paramIndex = preg_replace("/[^A-Za-z0-9,]/", '', $_GET["index"]);
 
   // Get file
   $file = file_get_contents(dirname(getcwd(), 2) . "/data/itemData.json");

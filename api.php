@@ -130,13 +130,13 @@
                       <td>index</td>
                       <td>No</td>
                       <td>Get specific indexes</td>
-                      <td>0000002,0000302,0002572</td>
+                      <td>00fa,053e,0729</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata?index=0002572,0000302,0000002">Example (specific)</a>
+              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata?index=00fa,053e,0729">Example (specific)</a>
               <a class="btn btn-dark" href="http://api.poe.ovh/itemdata">Example (all)</a>
             </div>
           </div>
