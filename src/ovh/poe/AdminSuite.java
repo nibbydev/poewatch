@@ -47,7 +47,7 @@ public class AdminSuite {
         }
     }
 
-    private ArrayList<LogMessage> log = new ArrayList<>(256);
+    private ArrayList<LogMessage> log = new ArrayList<>(2048);
     private final long startTime = System.currentTimeMillis();
     private final Gson gson = Main.getGson();
 
@@ -69,7 +69,7 @@ public class AdminSuite {
         log.add(logMsg);
 
         // Limit log messages
-        if (log.size() > 256) log.subList(0, log.size() - 256).clear();
+        if (log.size() > 2048) log.subList(0, log.size() - 2048).clear();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -125,7 +125,6 @@ public class AdminSuite {
         }
     }
 
-
     //------------------------------------------------------------------------------------------------------------
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
@@ -170,9 +169,10 @@ public class AdminSuite {
 
     static String getFlair(int flair) {
         switch (flair) {
+            case -1:
+                return "[STATUS]";
             case 0:
                 return "[DEBUG]";
-            default:
             case 1:
                 return "[INFO]";
             case 2:
@@ -183,6 +183,8 @@ public class AdminSuite {
                 return "[CRITICAL]";
             case 5:
                 return "[FATAL]";
+            default:
+                return "";
         }
     }
 }

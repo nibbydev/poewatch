@@ -509,7 +509,7 @@ public class Entry {
                 2 - mode
          */
 
-        if (db_items.isEmpty()) return null;
+        //if (db_items.isEmpty()) return null;
 
         StringBuilder stringBuilder = new StringBuilder();
 
