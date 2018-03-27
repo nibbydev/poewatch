@@ -121,6 +121,11 @@
                       <td>Frametype</td>
                     </tr>
                     <tr>
+                      <td>parent</td>
+                      <td>No</td>
+                      <td>Parent category of item</td>
+                    </tr>
+                    <tr>
                       <td>child</td>
                       <td>No</td>
                       <td>Child category of item</td>

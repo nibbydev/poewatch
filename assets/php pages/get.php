@@ -78,7 +78,7 @@
       // Set ending position
       if ($PARAM_to > 0 && $counter > $PARAM_to) break;
 
-      if (!$PARAM_parent) $item["parent"] = $parentCategoryKey;
+      if (!$PARAM_parent) $item["parent"] = $categoryName;
 
       if (array_key_exists("links", $item)) $item["links"] = $item["links"];
       if (array_key_exists("lvl", $item)) $item["lvl"] = $item["lvl"];
