@@ -33,7 +33,7 @@
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive. Updated every minute.</p>
-              <h5 class="card-title">Fields</h5>
+              <h5 class="card-title">Request fields</h5>
               <div class="custom-table">
                 <table class="table table-hover">
                   <thead>
@@ -48,7 +48,7 @@
                     <tr>
                       <td>league</td>
                       <td>Yes</td>
-                      <td>One of the acitve primary leagues</td>
+                      <td>One of the active primary leagues</td>
                       <td>Hardcore Bestiary</td>
                     </tr>
                     <tr>
@@ -74,6 +74,106 @@
                       <td>No</td>
                       <td>Limit entries</td>
                       <td>64</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h5 class="card-title">JSON fields</h5>
+              <div class="custom-table">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Param</th>
+                      <th>Always present</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>mean</td>
+                      <td>Yes</td>
+                      <td>Item's price as mean</td>
+                    </tr>
+                    <tr>
+                      <td>median</td>
+                      <td>Yes</td>
+                      <td>Item's price as median</td>
+                    </tr>
+                    <tr>
+                      <td>mode</td>
+                      <td>Yes</td>
+                      <td>Item's price as mode</td>
+                    </tr>
+                    <tr>
+                      <td>count</td>
+                      <td>Yes</td>
+                      <td>Amount listed in total</td>
+                    </tr>
+                    <tr>
+                      <td>quantity</td>
+                      <td>Yes</td>
+                      <td>Average listed in 24h</td>
+                    </tr>
+                    <tr>
+                      <td>frame</td>
+                      <td>Yes</td>
+                      <td>Frametype</td>
+                    </tr>
+                    <tr>
+                      <td>child</td>
+                      <td>No</td>
+                      <td>Child category of item</td>
+                    </tr>
+                    <tr>
+                      <td>icon</td>
+                      <td>Yes</td>
+                      <td>Url to item's art</td>
+                    </tr>
+                    <tr>
+                      <td>name</td>
+                      <td>Yes</td>
+                      <td>Item's name</td>
+                    </tr>
+                    <tr>
+                      <td>type</td>
+                      <td>No</td>
+                      <td>Item's typeline</td>
+                    </tr>
+                    <tr>
+                      <td>index</td>
+                      <td>Yes</td>
+                      <td>Non-unique hexadecimal index</td>
+                    </tr>
+                    <tr>
+                      <td>var</td>
+                      <td>No</td>
+                      <td>Item variation</td>
+                    </tr>
+                    <tr>
+                      <td>history</td>
+                      <td>Yes</td>
+                      <td>Daily average prices/quantity</td>
+                    </tr>
+                    <tr>
+                      <td>lvl</td>
+                      <td>No</td>
+                      <td>Level of gems</td>
+                    </tr>
+                    <tr>
+                      <td>quality</td>
+                      <td>No</td>
+                      <td>Quality of gems</td>
+                    </tr>
+                    <tr>
+                      <td>corrupted</td>
+                      <td>No</td>
+                      <td>"0" or "1" for gems</td>
+                    </tr>
+                    <tr>
+                      <td>tier</td>
+                      <td>No</td>
+                      <td>Map tier</td>
                     </tr>
                   </tbody>
                 </table>
