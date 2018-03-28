@@ -1,4 +1,3 @@
-// Define "global" variable (ie the largest scope here)
 let SELECTED;
 var ITEMS = [];
 const INITIAL_LOAD_AMOUNT = 100;
@@ -132,9 +131,13 @@ function parseItem(item) {
   else countBadge = "<span class=\"badge custom-badge-red\">" + item["count"] + "</span>";
 
   // Format icon
-  var iconDiv = "<div class=\"table-img-container text-center\"><img src=\"" + 
-  (item["icon"] ? item["icon"] : "http://poe.ovh/assets/img/missing.png") + "\"></div>";
-
+  var iconDiv = "";
+  if (item["icon"]) {
+    item["icon"] = item["icon"].split("?")[0] + "?scale=1&w=1&h=1";
+    iconDiv = "<div class=\"table-img-container text-center\"><img src=\"" + item["icon"] + "\"></div>";
+  } else {
+    iconDiv = "<div class=\"table-img-container text-center\"><img src=\"http://poe.ovh/assets/img/missing.png\"></div>";
+  }
   // Format variant/links badge
   var name = item["name"];
   if ("type" in item) name += ", " + item["type"];
