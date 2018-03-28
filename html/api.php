@@ -76,6 +76,12 @@
                       <td>Limit entries</td>
                       <td>64</td>
                     </tr>
+                    <tr>
+                      <td>fields</td>
+                      <td>No</td>
+                      <td>Filter response fields</td>
+                      <td>name,median</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -186,10 +192,11 @@
               </div>
 
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example (parent)</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example (all)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&fields=name,type,frame,median">Example (fields)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example (parent)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example (all)</a>
             </div>
           </div>
         </div>
@@ -205,7 +212,7 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides users access to the Change ID from the top of the river. Shows status of the river. Last update time is in milliseconds.</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/id">Example</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/id">Example</a>
             </div>
           </div>
         </div>
@@ -242,8 +249,8 @@
                 </table>
               </div>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata?index=00fa,053e,0729">Example (specific)</a>
-              <a class="btn btn-dark" href="http://api.poe.ovh/itemdata">Example (all)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/itemdata?index=00fa,053e,0729">Example (specific)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/itemdata">Example (all)</a>
             </div>
           </div>
         </div>
@@ -259,7 +266,7 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of catetgories currently in use. Updated dynamically.</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/categories">Example</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/categories">Example</a>
             </div>
           </div>
         </div>
@@ -275,7 +282,7 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated every 30 minutes.</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark" href="http://api.poe.ovh/leagues">Example</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/leagues">Example</a>
             </div>
           </div>
         </div>
