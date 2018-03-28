@@ -193,7 +193,7 @@
                       <th scope="col">Price (chaos)</th>
                       <th scope="col">Quantity (24h)</th>
                       <!--<th scope="col">Mode</th>-->
-                      <th scope="col">Count</th>
+                      <th scope="col">Count (total)</th>
                     </tr>
                   </thead>
                   <tbody></tbody>

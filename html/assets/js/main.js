@@ -202,12 +202,17 @@ function sortResults() {
   ITEMS.forEach(item => {
     let matchCount = 0;
 
+    // Hide harbinger pieces of shit. This is temporary
+    if (item["child"] === "piece") return;
+
     // Hide low confidence items
     if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
+
     // Hide items with different links
     if (LINK_FILTER) {
       if (!("links" in item) || item["links"] !== LINK_FILTER) return;
     } else if ("links" in item) return;
+
     // Sort gems, I guess
     if (item["frame"] === 4) {
       if (GEM_LEVEL !== "-1") {
@@ -230,9 +235,11 @@ function sortResults() {
       }
     }
     
+    // Search string matching
     for (let i = 0; i < splitInput.length; i++) {
       if ("name" in item && item["name"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
-      else if ("category" in item && item["category"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
+      else if ("parent" in item && item["parent"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
+      else if ("child" in item && item["child"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
       else if ("type" in item && item["type"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
     }
 
