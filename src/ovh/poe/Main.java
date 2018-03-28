@@ -173,10 +173,6 @@ public class Main {
         new File("./http/html").mkdirs();
         new File("./data/output").mkdirs();
 
-        // Create ./http/.htaccess if missing
-        saveResource("/http/api/", ".htaccess---api");
-        saveResource("/http/html/", ".htaccess---html");
-
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
 
