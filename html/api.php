@@ -33,9 +33,10 @@
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive. Updated every minute.</p>
+
               <h5 class="card-title">Request fields</h5>
               <div class="custom-table">
-                <table class="table table-hover">
+                <table class="table table-hover table-sm">
                   <thead>
                     <tr>
                       <th>Param</th>
@@ -79,9 +80,9 @@
                 </table>
               </div>
 
-              <h5 class="card-title">JSON fields</h5>
+              <h5 class="card-title">Response fields</h5>
               <div class="custom-table">
-                <table class="table table-hover">
+                <table class="table table-hover table-sm">
                   <thead>
                     <tr>
                       <th>Param</th>
@@ -121,14 +122,9 @@
                       <td>Frametype</td>
                     </tr>
                     <tr>
-                      <td>parent</td>
-                      <td>No</td>
-                      <td>Parent category of item</td>
-                    </tr>
-                    <tr>
-                      <td>child</td>
-                      <td>No</td>
-                      <td>Child category of item</td>
+                      <td>history</td>
+                      <td>Yes</td>
+                      <td>Daily average prices/quantity</td>
                     </tr>
                     <tr>
                       <td>icon</td>
@@ -141,14 +137,24 @@
                       <td>Item's name</td>
                     </tr>
                     <tr>
-                      <td>type</td>
-                      <td>No</td>
-                      <td>Item's typeline</td>
-                    </tr>
-                    <tr>
                       <td>index</td>
                       <td>Yes</td>
                       <td>Non-unique hexadecimal index</td>
+                    </tr>
+                    <tr>
+                      <td>parent</td>
+                      <td>No</td>
+                      <td>Parent category of item</td>
+                    </tr>
+                    <tr>
+                      <td>child</td>
+                      <td>No</td>
+                      <td>Child category of item</td>
+                    </tr>
+                    <tr>
+                      <td>type</td>
+                      <td>No</td>
+                      <td>Item's typeline</td>
                     </tr>
                     <tr>
                       <td>var</td>
@@ -156,29 +162,24 @@
                       <td>Item variation</td>
                     </tr>
                     <tr>
-                      <td>history</td>
-                      <td>Yes</td>
-                      <td>Daily average prices/quantity</td>
-                    </tr>
-                    <tr>
                       <td>lvl</td>
                       <td>No</td>
-                      <td>Level of gems</td>
+                      <td>Gems only</td>
                     </tr>
                     <tr>
                       <td>quality</td>
                       <td>No</td>
-                      <td>Quality of gems</td>
+                      <td>Gems only</td>
                     </tr>
                     <tr>
                       <td>corrupted</td>
                       <td>No</td>
-                      <td>"0" or "1" for gems</td>
+                      <td>Gems only. "0" or "1"</td>
                     </tr>
                     <tr>
                       <td>tier</td>
                       <td>No</td>
-                      <td>Map tier</td>
+                      <td>Maps only</td>
                     </tr>
                   </tbody>
                 </table>
@@ -221,7 +222,7 @@
               <p class="card-text">Allows retrieving item data based on indexes. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
               <h5 class="card-title">Fields</h5>
               <div class="custom-table">
-                <table class="table table-hover">
+                <table class="table table-hover table-sm">
                   <thead>
                     <tr>
                       <th>Param</th>
@@ -279,7 +280,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
