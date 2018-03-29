@@ -29,7 +29,7 @@
     </div>
 
     <div class="col-lg-8 main-content"> 
-      <div class="row nested-row">
+      <div class="row mb-3">
         <div class="col-lg-4"> 
 
           <?php
@@ -40,7 +40,7 @@
         </div>
       </div>
 
-      <div class="row nested-row">
+      <div class="row mb-3">
         <div class="col-lg-6"> 
           <h4>League</h4>
           <select class="form-control custom-select" id="search-league">
@@ -70,7 +70,7 @@
         </div>
       </div>
 
-      <div class="row nested-row">
+      <div class="row mb-3">
         <div class="col-md-6">
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
@@ -163,14 +163,14 @@
         </div>
       </div>
 
-      <div class="row nested-row">
+      <div class="row mb-3">
         <div class="col-lg">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
         </div>
       </div>
 
-      <div class="row nested-row">
+      <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">

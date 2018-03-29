@@ -24,7 +24,7 @@
     </div>
 
     <div class="col-lg-8 main-content"> 
-      <div class="row nested-row">
+      <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
@@ -39,7 +39,7 @@
         </div>
       </div>
 
-      <div class="row nested-row">
+      <div class="row">
         <div class="col-lg">
           <div class="alert alert-warning" role="alert">
             <h3 class="alert-heading">Attention!</h3>
