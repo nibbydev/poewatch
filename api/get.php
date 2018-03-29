@@ -52,6 +52,9 @@
     die("{\"error\": \"Invalid child category\"}");
   }
 
+  // Get itemdata
+  $itemDataJSON = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/itemData.json") , true );
+
   $payload = [];
   $counter = 0;
 
@@ -63,6 +66,8 @@
 
     // Loop through items in a category
     foreach ($jsonFile as $item) {
+      $item = array_merge($itemDataJSON[$item["index"]], $item);
+
       if ($PARAM_child && array_key_exists("child", $item) && $PARAM_child !== $item["child"]) continue;
       
       $counter++;
