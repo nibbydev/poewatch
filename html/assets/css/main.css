@@ -112,3 +112,7 @@ body {
     max-width: unset;
   }
 }
+
+.link-fields, .gem-fields {
+  display: none;
+}

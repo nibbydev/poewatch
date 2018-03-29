@@ -82,17 +82,8 @@
             </label>
           </div>
         </div>
-        
-        <?php
-          $pageTitle = strtolower(trim($_GET["category"]));
-          if ($pageTitle === "armour" || $pageTitle === "weapons") {
-            echo "<div class=\"col-md-6\">";
-          } else {
-            echo "<div class=\"col-md-6\" style=\"display: none\">";
-          }
-        ?>
 
-        <!--<div class="col-md-6">-->
+        <div class="col-md-6 link-fields">
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-secondary active">
@@ -108,16 +99,7 @@
         </div>
       </div>
 
-      <?php
-        $pageTitle = strtolower(trim($_GET["category"]));
-        if ($pageTitle === "gems") {
-          echo "<div class=\"row nested-row\">";
-        } else {
-          echo "<div class=\"row nested-row\" style=\"display: none\">";
-        }
-      ?>
-
-      <!--<div class="row nested-row">-->
+      <div class="row mb-3 gem-fields">
         <div class="col-md-4">
           <h4>Level</h4>
           <div class="form-group">
@@ -178,22 +160,7 @@
                 <table class="table table-hover table-sm" id="searchResults">
                   <thead>
                     <tr>
-                      <th scope="col">Item</th>
-
-                      <?php
-                        $pageTitle = strtolower(trim($_GET["category"]));
-                        if ($pageTitle === "gems") {
-                          echo "<th scope=\"col\">Level</th>";
-                          echo "<th scope=\"col\">Quality</th>";
-                          echo "<th scope=\"col\">Corrupted</th>";
-                        }
-                      ?>
-
-                      <!--<th scope="col">Mean</th>-->
-                      <th scope="col">Price (chaos)</th>
-                      <th scope="col">Quantity (24h)</th>
-                      <!--<th scope="col">Mode</th>-->
-                      <th scope="col">Count (total)</th>
+                      <?php include "assets/php/price_table_header.php" ?>
                     </tr>
                   </thead>
                   <tbody></tbody>

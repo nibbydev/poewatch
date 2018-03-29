@@ -1,3 +1,8 @@
+/*
+  There's not much here except for some poorly written JS functions. And since you're 
+  already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
+*/
+
 let SELECTED;
 var ITEMS = [];
 const INITIAL_LOAD_AMOUNT = 100;
@@ -23,7 +28,7 @@ $(document).ready(function() {
 
   SELECTED = {
     league: selectorLeague.find(":selected").text(),
-    category: getUrlParameter("category"),
+    category: getUrlParameter("category").toLowerCase(),
     sub: selectorSub.find(":selected").text()
   };
 
@@ -94,6 +99,8 @@ $(document).ready(function() {
     //$("tr", this).css("background-color", "red");
   });
 
+  checkFields();
+
   makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
 
@@ -122,6 +129,14 @@ function makeRequest(from, to) {
     // Enable "show more" button
     if (ITEMS.length === INITIAL_LOAD_AMOUNT) $("#button-loadmore").show();
   });
+}
+
+function checkFields() {
+  if (SELECTED.category === "armour" || SELECTED.category === "weapons") {
+    $(".link-fields").removeClass("link-fields");
+  } else if (SELECTED.category === "gems") {
+    $(".gem-fields").removeClass("gem-fields");
+  }
 }
 
 
