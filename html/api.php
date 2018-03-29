@@ -77,10 +77,10 @@
                       <td>64</td>
                     </tr>
                     <tr>
-                      <td>fields</td>
+                      <td>exclude</td>
                       <td>No</td>
                       <td>Filter response fields</td>
-                      <td>name,median</td>
+                      <td>icon,index</td>
                     </tr>
                   </tbody>
                 </table>
@@ -194,7 +194,7 @@
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
               <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&fields=name,type,frame,median">Example (fields)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&exclude=icon,history,index">Example (exclude)</a>
               <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example (parent)</a>
               <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example (all)</a>
             </div>

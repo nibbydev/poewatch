@@ -105,7 +105,8 @@ function makeRequest(from, to) {
       parent: SELECTED.category,
       child: SELECTED.sub,
       from: from,
-      to: to
+      to: to,
+      exclude: "median,mode,history,index"
     },
     type: "GET",
     async: true,
@@ -133,7 +134,7 @@ function parseItem(item) {
   // Format icon
   var iconDiv = "";
   if (item["icon"]) {
-    item["icon"] = item["icon"].split("?")[0] + "?scale=1&w=1&h=1";
+    //item["icon"] = item["icon"].split("?")[0] + "?scale=1&w=1&h=1";
     iconDiv = "<div class=\"table-img-container text-center\"><img src=\"" + item["icon"] + "\"></div>";
   } else {
     iconDiv = "<div class=\"table-img-container text-center\"><img src=\"http://poe.ovh/assets/img/missing.png\"></div>";

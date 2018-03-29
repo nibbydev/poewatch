@@ -4,7 +4,7 @@
 
   // Get url params and allow only alphanumeric inputs
   $PARAM_league = preg_replace("/[^A-Za-z ]/", '', $_GET["league"]);
-  $PARAM_fields = preg_replace("/[^A-Za-z,]/", '', $_GET["fields"]);
+  $PARAM_exclude = preg_replace("/[^A-Za-z,]/", '', $_GET["exclude"]);
   $PARAM_parent = preg_replace("/[^A-Za-z]/", '', $_GET["parent"]);
   $PARAM_child = preg_replace("/[^A-Za-z]/", '', $_GET["child"]);
   $PARAM_from = preg_replace("/[^0-9]/", '', $_GET["from"]);
@@ -12,7 +12,7 @@
 
   // Trim and format whatever's left
   $PARAM_league = ucwords(strtolower(trim($PARAM_league)));
-  $PARAM_fields = strtolower(trim($PARAM_fields));
+  $PARAM_exclude = strtolower(trim($PARAM_exclude));
   $PARAM_parent = strtolower(trim($PARAM_parent));
   $PARAM_child = strtolower(trim($PARAM_child));
   $PARAM_from = (int)trim($PARAM_from);
@@ -21,7 +21,7 @@
   // Check if user inputted an invalid string that got filtered out
   if (!$_GET["league"] || !$PARAM_league || !$_GET["parent"] || !$PARAM_parent ||
     $_GET["child"] && !$PARAM_child || $_GET["from"] && !$PARAM_from ||
-    $_GET["to"] && !$PARAM_to || $_GET["fields"] && !$PARAM_fields) {
+    $_GET["to"] && !$PARAM_to || $_GET["exclude"] && !$PARAM_exclude) {
 
     die("{\"error\": \"Invalid params\"}");
   }
@@ -30,13 +30,11 @@
   if ($PARAM_parent === "all") $PARAM_parent = null;
   // If user requested whole category
   if ($PARAM_child === "all") $PARAM_child = null;
-  // If user requests all fields (not really needed)
-  if ($PARAM_fields === "all") $PARAM_fields = null;
 
-  // If user requests specific fields
-  if ($PARAM_fields) {
-    $PARAM_fields = explode(",", $PARAM_fields);
-    if (sizeof($PARAM_fields) > 20) die("{\"error\": \"Too many fields\"}"); 
+  // If user requests specific excluded fields
+  if ($PARAM_exclude) {
+    $PARAM_exclude = explode(",", $PARAM_exclude);
+    if (sizeof($PARAM_exclude) > 15) die("{\"error\": \"Too many params\"}"); 
   }
 
   // Check if user inputted the correct league
@@ -81,24 +79,24 @@
       if (array_key_exists("tier", $item)) $item["tier"] = $item["tier"];
       if (array_key_exists("corrupted", $item)) $item["corrupted"] = $item["corrupted"];
 
-      // If user requested specific fields
-      if ($PARAM_fields) {
+      // If user requested specific exclude
+      if ($PARAM_exclude) {
         $filtered_item = [];
 
-        // Loop through the fields provided by the user
-        foreach ($PARAM_fields as $field) {
+        foreach ($item as $item_key => $item_value) {
           // If the field exists in the item array, add it to the filtered item array
-          if (array_key_exists($field, $item)) $filtered_item[$field] = $item[$field];
+          if (!in_array($item_key, $PARAM_exclude)) $filtered_item[$item_key] = $item_value;
         }
 
-        // Add filtered item array to response payload
-        if ($filtered_item) array_push($payload, $filtered_item);
-      } else {
-        // Otherwise add whole item with all fields to response payload
-        array_push($payload, $item);
+        $item = $filtered_item;
       }
+
+      if (empty($item)) continue;
+
+      // Add item to response payload
+      array_push($payload, $item);
     }
   }
 
-  echo json_encode( $payload, true );
+  echo json_encode($payload, true);
 ?>
