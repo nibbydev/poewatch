@@ -9,7 +9,7 @@ const COUNT_MED = 15;
 
 // User-modifiable variables
 var HIDE_LOW_CONFIDENCE = true;
-var LINK_FILTER = 0;
+var LINK_FILTER = "";
 var SEARCH_INPUT = "";
 var GEM_LEVEL = "-1";
 var GEM_QUALITY = "-1";
@@ -70,7 +70,8 @@ $(document).ready(function() {
 
   // Define link radio button event listener
   $("#radio-links").on("change", function(){
-    LINK_FILTER = parseInt($("input[name=links]:checked", this).val());
+    LINK_FILTER = $("input[name=links]:checked", this).val();
+    console.log(LINK_FILTER);
     sortResults();
   });
 
