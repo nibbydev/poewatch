@@ -15,9 +15,9 @@ public class JSONParcel {
 
     public static class JSONItem {
         public double mean, median, mode;
-        public int count, frame, quantity;
-        public String child, icon, name, type, var, index;
-        public String corrupted, lvl, quality, links, tier;
+        public int count, quantity;
+        public String index, specificKey;
+        public String corrupted, lvl, quality, links;
         public HistoryItem history = new HistoryItem();
 
         public void copy (Entry entry) {
@@ -27,6 +27,7 @@ public class JSONParcel {
             count = entry.getCount() + entry.getInc_counter();
             quantity = entry.getQuantity();
             index = entry.getItemIndex();
+            specificKey = entry.getKey();
 
             // Copy the history over
             for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
@@ -36,6 +37,7 @@ public class JSONParcel {
                 history.quantity.add(dailyEntry.quantity);
             }
 
+            /*
             // Check if there's a match for the specific index
             if (Main.RELATIONS.itemIndexToData.containsKey(index)) {
                 IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
@@ -47,6 +49,7 @@ public class JSONParcel {
                 var = indexedItem.var;
                 tier = indexedItem.tier;
             }
+            */
 
             // Get some data (eg links/lvl/quality/corrupted) from item key
             // "Standard|weapons:twosword|Starforge:Infernal Sword|3|links:6"

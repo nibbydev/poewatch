@@ -23,14 +23,14 @@ public class RelationManager {
     }
 
     public static class IndexedItem {
-        public String name, type, parent, child, icon, var, tier, key;
+        public String name, type, parent, child, icon, var, tier, genericKey;
         public int frame;
 
-        void add(Item item, String key) {
+        void add(Item item, String genericKey) {
             name = item.name;
             parent = item.parentCategory;
             frame = item.frameType;
-            this.key = key;
+            this.genericKey = genericKey;
 
 
             if (item.icon != null) icon = formatIconURL(item.icon);
@@ -242,7 +242,7 @@ public class RelationManager {
 
             // Lambda loop
             relations.forEach((index, item) -> {
-                itemKeyToIndex.put(item.key, index);
+                itemKeyToIndex.put(item.genericKey, index);
                 itemIndexToData.put(index, item);
             });
 
@@ -315,18 +315,18 @@ public class RelationManager {
 
         // If icon is already present, return icon index. Otherwise create an instance of IndexedItem and add
         // IndexedItem instance to maps and return its index
-        String key = resolveSpecificKey(item.key);
+        String genericKey = resolveSpecificKey(item.key);
         String index;
-        if (itemKeyToIndex.containsKey(key)) {
-            index = itemKeyToIndex.get(key);
+        if (itemKeyToIndex.containsKey(genericKey)) {
+            index = itemKeyToIndex.get(genericKey);
         } else {
             IndexedItem indexedItem = new IndexedItem();
-            indexedItem.add(item, key);
+            indexedItem.add(item, genericKey);
 
             index = Integer.toHexString(itemKeyToIndex.size());
             index = ("0000" + index).substring(index.length());
 
-            itemKeyToIndex.put(key, index);
+            itemKeyToIndex.put(genericKey, index);
             itemIndexToData.put(index, indexedItem);
         }
 
