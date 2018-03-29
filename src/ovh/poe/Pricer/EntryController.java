@@ -226,6 +226,14 @@ public class EntryController {
 
         Main.RELATIONS.saveData();
 
+        // Backup output folder
+        if (twentyFourBool) {
+            long time_backup = System.currentTimeMillis();
+            Main.ADMIN.backupOutput();
+            time_backup = System.currentTimeMillis() - time_backup;
+            Main.ADMIN.log_("Backup took: " + time_backup + " ms", 0);
+        }
+
         // Switch off flags
         tenBool = sixtyBool = twentyFourBool = clearIndexes = false;
         flipPauseFlag();

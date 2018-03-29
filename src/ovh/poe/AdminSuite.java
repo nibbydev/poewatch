@@ -1,5 +1,14 @@
 package ovh.poe;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -123,6 +132,69 @@ public class AdminSuite {
             changeIDElement.changeId = changeID;
             saveChangeID();
         }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Backups. Original code by Deron Eriksson taken on 29 March, 2018 from
+    // http://www.avajava.com/tutorials/lessons/how-do-i-zip-a-directory-and-all-its-contents.html
+    //------------------------------------------------------------------------------------------------------------
+
+    public void backupOutput() {
+        File directoryToZip = new File("./data/output");
+        String outputFileName = "./backups/output " + dateStamp() + timeStamp().replaceAll(":", ".") + ".zip";
+
+        List<File> fileList = new ArrayList<>();
+        getAllFiles(directoryToZip, fileList);
+        writeZipFile(outputFileName, directoryToZip, fileList);
+    }
+
+    private void getAllFiles(File dir, List<File> fileList) {
+        File[] files = dir.listFiles();
+
+        for (File file : files) {
+            fileList.add(file);
+
+            if (file.isDirectory()) {
+                getAllFiles(file, fileList);
+            }
+        }
+    }
+
+    private void writeZipFile(String fileName, File directoryToZip, List<File> fileList) {
+
+        try {
+            FileOutputStream fos = new FileOutputStream(fileName);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            for (File file : fileList) {
+                if (!file.isDirectory()) { // we only zip files, not directories
+                    addToZip(directoryToZip, file, zos);
+                }
+            }
+
+            zos.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addToZip(File directoryToZip, File file, ZipOutputStream zos) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
+
+        String zipFilePath = file.getCanonicalPath().substring(directoryToZip.getCanonicalPath().length() + 1,
+                file.getCanonicalPath().length());
+        ZipEntry zipEntry = new ZipEntry(zipFilePath);
+        zos.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zos.write(bytes, 0, length);
+        }
+
+        zos.closeEntry();
+        fis.close();
     }
 
     //------------------------------------------------------------------------------------------------------------

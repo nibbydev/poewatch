@@ -172,6 +172,7 @@ public class Main {
         new File("./http/api/data").mkdirs();
         new File("./http/html").mkdirs();
         new File("./data/output").mkdirs();
+        new File("./backups").mkdirs();
 
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
