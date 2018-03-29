@@ -94,6 +94,7 @@
                       <th>Param</th>
                       <th>Always present</th>
                       <th>Description</th>
+                      <th>example</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -101,91 +102,109 @@
                       <td>mean</td>
                       <td>Yes</td>
                       <td>Item's price as mean</td>
+                      <td>22.5</td>
                     </tr>
                     <tr>
                       <td>median</td>
                       <td>Yes</td>
                       <td>Item's price as median</td>
+                      <td>22.0</td>
                     </tr>
                     <tr>
                       <td>mode</td>
                       <td>Yes</td>
                       <td>Item's price as mode</td>
+                      <td>22.45</td>
                     </tr>
                     <tr>
                       <td>count</td>
                       <td>Yes</td>
                       <td>Amount listed in total</td>
+                      <td>98452</td>
                     </tr>
                     <tr>
                       <td>quantity</td>
                       <td>Yes</td>
                       <td>Average listed in 24h</td>
+                      <td>9875</td>
                     </tr>
                     <tr>
                       <td>frame</td>
                       <td>Yes</td>
                       <td>Frametype</td>
+                      <td>3</td>
                     </tr>
                     <tr>
                       <td>history</td>
                       <td>Yes</td>
                       <td>Daily average prices/quantity</td>
+                      <td>Check the api</td>
                     </tr>
                     <tr>
                       <td>icon</td>
                       <td>Yes</td>
                       <td>Url to item's art</td>
+                      <td>Check the api</td>
                     </tr>
                     <tr>
                       <td>name</td>
                       <td>Yes</td>
                       <td>Item's name</td>
+                      <td>Wonderlust</td>
                     </tr>
                     <tr>
                       <td>index</td>
                       <td>Yes</td>
                       <td>Non-unique hexadecimal index</td>
+                      <td>005f</td>
                     </tr>
                     <tr>
                       <td>parent</td>
                       <td>No</td>
                       <td>Parent category of item</td>
+                      <td>armour</td>
                     </tr>
                     <tr>
                       <td>child</td>
                       <td>No</td>
                       <td>Child category of item</td>
+                      <td>boots</td>
                     </tr>
                     <tr>
                       <td>type</td>
                       <td>No</td>
                       <td>Item's typeline</td>
+                      <td>Wool Shoes</td>
                     </tr>
                     <tr>
                       <td>var</td>
                       <td>No</td>
                       <td>Item variation</td>
+                      <td>lightning</td>
                     </tr>
                     <tr>
                       <td>lvl</td>
                       <td>No</td>
                       <td>Gems only</td>
+                      <td>1</td>
                     </tr>
                     <tr>
                       <td>quality</td>
                       <td>No</td>
                       <td>Gems only</td>
+                      <td>10</td>
                     </tr>
                     <tr>
                       <td>corrupted</td>
                       <td>No</td>
                       <td>Gems only. "0" or "1"</td>
+                      <td>1</td>
                     </tr>
                     <tr>
                       <td>tier</td>
                       <td>No</td>
                       <td>Maps only</td>
+                      <td>12</td>
                     </tr>
                   </tbody>
                 </table>
