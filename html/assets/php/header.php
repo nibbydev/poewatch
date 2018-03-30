@@ -3,6 +3,7 @@ $title = basename($_SERVER["PHP_SELF"], ".php");
 $index = ($title === "index" ? "active" : "");
 $prices = ($title === "prices" ? "active" : "");
 $about = ($title === "about" ? "active" : "");
+$api = ($title === "api" ? "active" : "");
 
 echo <<<"HEADER"
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -17,11 +18,9 @@ echo <<<"HEADER"
       <ul class="navbar-nav mr-auto">
         <li class="nav-item"><a class="nav-link $index" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link $prices" href="prices">Prices</a></li>
-        <li class="nav-item"><a class="nav-link $about" href="#">About</a></li>
+        <li class="nav-item"><a class="nav-link $api" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link $about" href="about">About</a></li>
       </ul>
-      <div class="navbar-nav ml-auto">
-        <a href="api"><span class="badge badge-secondary">API</span></a>
-      </div>
     </div>
   </div>
 </nav>
