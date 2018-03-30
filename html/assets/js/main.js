@@ -125,7 +125,7 @@ $(document).ready(function() {
     var $curRow = $(this).closest("tr");
 
     var newRowData = "<tr><td colspan='100'>";
-    newRowData += "<div class='row mx-1'>";
+    newRowData += "<div class='row m-1'>";
       newRowData += "<div class='col-sm'>";
         newRowData += "<h4>Chaos value</h4>";
         newRowData += "<span class='sparkline-price'>Loading..</span>";
@@ -135,15 +135,16 @@ $(document).ready(function() {
         newRowData += "<span class='sparkline-quant'>Loading..</span>";
       newRowData += "</div>";
     newRowData += "</div>";
-    newRowData += "<div class='row mx-1 mt-2'>";
+    newRowData += "<div class='row m-1 mt-2'>";
       newRowData += "<div class='col-sm'>";
         newRowData += "<h4>Some additional data</h4>";
         newRowData += "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>";
       newRowData += "</div>";
     newRowData += "</div>";
-    newRowData += "<div class='row mx-1 mb-3'>";
+    newRowData += "<div class='row m-1 mb-3'>";
       newRowData += "<div class='col-sm'>";
-        newRowData += "<h4>Past leagues</h4>";
+        newRowData += "<h4>Past leagues (WIP, not an actual chart)</h4>";
+        newRowData += "<div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>";
         newRowData += "<span class='sparkline-past'>Loading..</span>";
       newRowData += "</div>";
     newRowData += "</div>";
@@ -156,21 +157,23 @@ $(document).ready(function() {
     console.log("clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
     //console.log(ITEMS[parentIndex]);
 
-    var sparklineValuesPast = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25];
+    var sparklineValuesPast = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25,25,25,26,25,25,25,24,24,24,24,23,23,24,24,24,24,23,24,24,24,23,24,23,24,22,19,20,22,24,23,22,22,22,22,23,22,21,19,18,17,19,18,17,17,17,16,16,16,16,17,18,17,17,16,15,15,15,15,14,14,13,13,15,18,26,28,32];
     var sparklineOptions = {
       width: "100%",
       height: "80px",
       //disableTooltips: true,
-      tooltipClassname: "sparkline-tooltip", 
-      lineColor: "#000",
-      fillColor: "#444",
+      //tooltipClassname: "sparkline-tooltip", 
+      spotRadius: 3,
+      lineColor: "#222",
+      //fillColor: "#444",
+      fillColor: "#aaa",
       highlightLineColor: "#000",
-      highlightSpotColor: "#eee",
+      highlightSpotColor: "#666",
       minSpotColor: false,
       maxSpotColor: false,
       spotColor: false,
       type: "line",
-      lineWidth: "2px"
+      lineWidth: 2
     };
     $(".sparkline-price").sparkline(ITEMS[parentIndex]["history"]["mean"], sparklineOptions);
     $(".sparkline-quant").sparkline(ITEMS[parentIndex]["history"]["quantity"], sparklineOptions);
