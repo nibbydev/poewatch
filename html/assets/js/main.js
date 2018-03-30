@@ -101,14 +101,11 @@ $(document).ready(function() {
   var parentRow;
   var selectedRow;
   $("#searchResults > tbody").delegate("tr", "click", function() {
-    console.log("row click");
-
     // Close row if user clicked on parentRow
     if ($(this).is(parentRow)) {
       console.log("parent");
       selectedRow.remove();
-      parentRow.css("background-color", "");
-      parentRow.css("color", "");
+      parentRow.removeAttr("class");
       parentRow = null;
       selectedRow = null;
       return;
@@ -122,16 +119,67 @@ $(document).ready(function() {
 
     if (selectedRow) {
       selectedRow.remove();
-      parentRow.css("background-color", "");
-      parentRow.css("color", "");
+      parentRow.removeAttr("class");
     }
 
     var $curRow = $(this).closest("tr");
-    selectedRow = $("<tr><td colspan='100'><h2>This is where the graphs will go</h2></td></tr>");
+
+    var newRowData = "<tr><td colspan='100'>";
+    newRowData += "<div class='row mx-1'>";
+      newRowData += "<div class='col-sm'>";
+        newRowData += "<h4>Chaos value</h4>";
+        newRowData += "<span class='sparkline-price'>Loading..</span>";
+      newRowData += "</div>";
+      newRowData += "<div class='col-sm'>";
+        newRowData += "<h4>Quantity</h4>";
+        newRowData += "<span class='sparkline-quant'>Loading..</span>";
+      newRowData += "</div>";
+    newRowData += "</div>";
+    newRowData += "<div class='row mx-1 mt-2'>";
+      newRowData += "<div class='col-sm'>";
+        newRowData += "<h4>Some additional data</h4>";
+        newRowData += "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>";
+      newRowData += "</div>";
+    newRowData += "</div>";
+    newRowData += "<div class='row mx-1 mb-3'>";
+      newRowData += "<div class='col-sm'>";
+        newRowData += "<h4>Past leagues</h4>";
+        newRowData += "<span class='sparkline-past'>Loading..</span>";
+      newRowData += "</div>";
+    newRowData += "</div>";
+    newRowData += "</td></tr>";
+
+    selectedRow = $(newRowData);
     $curRow.after(selectedRow);
+
+    var parentIndex = parseInt($(this).attr("value"));
+    console.log("clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
+    //console.log(ITEMS[parentIndex]);
+
+    var sparklineValuesPast = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25];
+    var sparklineOptions = {
+      width: "100%",
+      height: "80px",
+      //disableTooltips: true,
+      tooltipClassname: "sparkline-tooltip", 
+      lineColor: "#000",
+      fillColor: "#444",
+      highlightLineColor: "#000",
+      highlightSpotColor: "#eee",
+      minSpotColor: false,
+      maxSpotColor: false,
+      spotColor: false,
+      type: "line",
+      lineWidth: "2px"
+    };
+    $(".sparkline-price").sparkline(ITEMS[parentIndex]["history"]["mean"], sparklineOptions);
+    $(".sparkline-quant").sparkline(ITEMS[parentIndex]["history"]["quantity"], sparklineOptions);
+
+    sparklineOptions["height"] = "180px";
+    $(".sparkline-past").sparkline(sparklineValuesPast, sparklineOptions);
     
-    $(this).css("background-color", "#222");
-    $(this).css("color", "#eee");
+    $(this).addClass("parent-row");
+    selectedRow.addClass("selected-row");
     parentRow = $(this);
   });
 
@@ -150,7 +198,7 @@ function makeRequest(from, to) {
       child: FILTER.sub,
       from: from,
       to: to,
-      exclude: "median,mode,history,index"
+      exclude: "median,mode,index"
     },
     type: "GET",
     async: true,
@@ -214,7 +262,7 @@ function parseItem(item) {
   }
 
   // Add it all together
-  var returnString = "<tr>" +
+  var returnString = "<tr value=" + ITEMS.indexOf(item) + ">" +
   "<td>" +  iconDiv + name + "</td>" + 
   extraFields +
   //"<td>" + roundPrice(item["mean"]) + "</td>" + 

@@ -75,10 +75,10 @@
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
             <label class="btn btn-outline-secondary active">
-              <input type="radio" name="confidence" value="1" autocomplete="off" checked>Hide
+              <input type="radio" name="confidence" value="1" checked>Hide
             </label>
             <label class="btn btn-outline-secondary">
-              <input type="radio" name="confidence" value="" autocomplete="off">Show
+              <input type="radio" name="confidence" value="">Show
             </label>
           </div>
         </div>
@@ -111,7 +111,7 @@
               <option value="4">4</option>
               <option value="10">10</option>
               <option value="20">20</option>
-              <option value="21">21</option>
+              <option value="21" selected="selected">21</option>
             </select>
           </div>
         </div>
@@ -123,7 +123,7 @@
               <option value="">All</option>
               <option value="0">0</option>
               <option value="10">10</option>
-              <option value="20">20</option>
+              <option value="20" selected="selected">20</option>
               <option value="23">23</option>
             </select>
           </div>
@@ -133,13 +133,13 @@
           <h4>Corrupted</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
             <label class="btn btn-outline-secondary active">
-              <input type="radio" name="corrupted" value="" autocomplete="off" checked>Either
+              <input type="radio" name="corrupted" value="">Either
             </label>
             <label class="btn btn-outline-secondary">
-              <input type="radio" name="corrupted" value="0" autocomplete="off" checked>No
+              <input type="radio" name="corrupted" value="0">No
             </label>
             <label class="btn btn-outline-secondary">
-              <input type="radio" name="corrupted" value="1" autocomplete="off">Yes
+              <input type="radio" name="corrupted" value="1" checked>Yes
             </label>
           </div>
         </div>
@@ -179,5 +179,6 @@
   include "assets/php/footer.php";
 ?>
 
+<script type="text/javascript" src="assets/js/jquery.sparkline.min.js"></script>
 </body>
 </html>

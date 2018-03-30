@@ -116,3 +116,13 @@ body {
 .link-fields, .gem-fields {
   display: none;
 }
+
+tr.parent-row {
+  /* Some funky things start happening without !important */
+  background-color: #222 !important;
+  color: #eee;
+}
+
+tr.selected-row {
+  background-color: #eee;
+}
