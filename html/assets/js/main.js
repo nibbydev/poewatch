@@ -3,22 +3,13 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
-let SELECTED;
+let FILTER;
 var ITEMS = [];
+
 const INITIAL_LOAD_AMOUNT = 100;
 const PRICE_PERCISION = 100;
-var currentlyLoaded = 0;
-
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
-
-// User-modifiable variables
-var HIDE_LOW_CONFIDENCE = true;
-var LINK_FILTER = "";
-var SEARCH_INPUT = "";
-var GEM_LEVEL = "-1";
-var GEM_QUALITY = "-1";
-var GEM_CORRUPTED = "-1";
 
 // Load conversion rates on page load
 $(document).ready(function() {
@@ -26,16 +17,22 @@ $(document).ready(function() {
   var selectorSub = $("#search-sub");
   var buttonLoadmore = $("#button-loadmore");
 
-  SELECTED = {
-    league: selectorLeague.find(":selected").text(),
+  FILTER = {
+    league: selectorLeague.find(":selected").text().toLowerCase(),
     category: getUrlParameter("category").toLowerCase(),
-    sub: selectorSub.find(":selected").text()
+    sub: selectorSub.find(":selected").text().toLowerCase(),
+    hideLowConfidence: true,
+    links: "",
+    search: "",
+    gemLvl: "",
+    gemQuality: "",
+    gemCorrupted: ""
   };
 
   // Define league event listener
   selectorLeague.change(function(){
-    // Get field that changed
-    SELECTED.league = $(this).find(":selected").text();
+    FILTER.league = $(this).find(":selected").text();
+    console.log(FILTER.league);
     // Empty item history
     ITEMS = [];
 
@@ -44,8 +41,8 @@ $(document).ready(function() {
 
   // Define subcategory event listener
   selectorSub.change(function(){
-    // Get field that changed
-    SELECTED.sub = $(this).find(":selected").text();
+    FILTER.sub = $(this).find(":selected").text();
+    console.log(FILTER.sub);
     // Empty item history
     ITEMS = [];
 
@@ -54,43 +51,49 @@ $(document).ready(function() {
 
   // Define load more event listener
   buttonLoadmore.on("click", function(){
+    console.log("loadmore");
     makeRequest(INITIAL_LOAD_AMOUNT, 0);
     $(this).hide();
   });
 
   // Define searchbar event listener
   $("#search-searchbar").on("input", function(){
-    SEARCH_INPUT = $(this).val();
+    FILTER.search = $(this).val().toLowerCase().trim();
+    console.log(FILTER.search);
     sortResults();
   });
 
   // Define low confidence radio button event listener
   $("#radio-confidence").on("change", function(){
     let newValue = $("input[name=confidence]:checked", this).val();
-    if (newValue != HIDE_LOW_CONFIDENCE) {
-      HIDE_LOW_CONFIDENCE = !HIDE_LOW_CONFIDENCE;
+    console.log(newValue);
+    if (newValue != FILTER.hideLowConfidence) {
+      FILTER.hideLowConfidence = !FILTER.hideLowConfidence;
       sortResults();
     }
   });
 
   // Define link radio button event listener
   $("#radio-links").on("change", function(){
-    LINK_FILTER = $("input[name=links]:checked", this).val();
-    console.log(LINK_FILTER);
+    FILTER.links = $("input[name=links]:checked", this).val();
+    console.log(FILTER.links);
     sortResults();
   });
 
   // Define gem selector and radio event listeners
   $("#select-level").on("change", function(){
-    GEM_LEVEL = $(":selected", this).val();
+    FILTER.gemLvl = $(":selected", this).val();
+    console.log(FILTER.gemLvl);
     sortResults();
   });
   $("#select-quality").on("change", function(){
-    GEM_QUALITY = $(":selected", this).val();
+    FILTER.gemQuality = $(":selected", this).val();
+    console.log(FILTER.gemQuality);
     sortResults();
   });
   $("#radio-corrupted").on("change", function(){
-    GEM_CORRUPTED = $(":checked", this).val();
+    FILTER.gemCorrupted = $(":checked", this).val();
+    console.log(FILTER.gemCorrupted);
     sortResults();
   });
 
@@ -109,9 +112,9 @@ function makeRequest(from, to) {
   var request = $.ajax({
     url: "http://api.poe.ovh/get",
     data: {
-      league: SELECTED.league, 
-      parent: SELECTED.category,
-      child: SELECTED.sub,
+      league: FILTER.league, 
+      parent: FILTER.category,
+      child: FILTER.sub,
       from: from,
       to: to,
       exclude: "median,mode,history,index"
@@ -131,10 +134,11 @@ function makeRequest(from, to) {
   });
 }
 
+
 function checkFields() {
-  if (SELECTED.category === "armour" || SELECTED.category === "weapons") {
+  if (FILTER.category === "armour" || FILTER.category === "weapons") {
     $(".link-fields").removeClass("link-fields");
-  } else if (SELECTED.category === "gems") {
+  } else if (FILTER.category === "gems") {
     $(".gem-fields").removeClass("gem-fields");
   }
 }
@@ -216,7 +220,7 @@ function sortResults() {
   $("#searchResults > tbody").empty();
 
   // Format input
-  var splitInput = SEARCH_INPUT.toLowerCase().trim().split(" ");
+  var splitInput = FILTER.search.split(" ");
 
   var tableData = "";
   ITEMS.forEach(item => {
@@ -226,30 +230,30 @@ function sortResults() {
     if (item["child"] === "piece") return;
 
     // Hide low confidence items
-    if (HIDE_LOW_CONFIDENCE && item["count"] < COUNT_MED) return;
+    if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) return;
 
     // Hide items with different links
-    if (LINK_FILTER) {
-      if (!("links" in item) || item["links"] !== LINK_FILTER) return;
+    if (FILTER.links) {
+      if (!("links" in item) || item["links"] !== FILTER.links) return;
     } else if ("links" in item) return;
 
     // Sort gems, I guess
     if (item["frame"] === 4) {
-      if (GEM_LEVEL !== "-1") {
-        if (item["lvl"] != GEM_LEVEL) return;
+      if (FILTER.gemLvl !== "") {
+        if (item["lvl"] != FILTER.gemLvl) return;
       }
-      if (GEM_QUALITY !== "-1") {
-        if (GEM_QUALITY) {
+      if (FILTER.gemQuality !== "") {
+        if (FILTER.gemQuality) {
           if (!("quality" in item)) return;
-          if (item["quality"] != GEM_QUALITY) return;
+          if (item["quality"] != FILTER.gemQuality) return;
         } else {
           if ("quality" in item && item["quality"] > 0) return;
         }
       }
-      if (GEM_CORRUPTED === "1") {
+      if (FILTER.gemCorrupted === "1") {
         if (!("corrupted" in item)) return;
         if (!item["corrupted"]) return;
-      } else if (GEM_CORRUPTED === "0") {
+      } else if (FILTER.gemCorrupted === "0") {
         if ("corrupted" in item) return;
         if (item["corrupted"]) return;
       }
