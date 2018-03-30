@@ -177,6 +177,7 @@
   include "assets/php/footer.php";
 ?>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
 <script type="text/javascript" src="assets/js/jquery.sparkline.min.js"></script>
 </body>
 </html>

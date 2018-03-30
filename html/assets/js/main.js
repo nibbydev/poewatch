@@ -122,7 +122,7 @@ $(document).ready(function() {
         <div class='col-sm'>
           <h4>Past leagues (WIP, not an actual chart)</h4>
           <div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>
-          <span class='sparkline-past'>Loading..</span>
+          <canvas id="testChart" height="120px"></canvas>
         </div>
       </div>
     </td></tr>`;
@@ -170,8 +170,8 @@ $(document).ready(function() {
     $(".sparkline-price").sparkline(ITEMS[parentIndex]["history"]["mean"], sparklineOptions);
     $(".sparkline-quant").sparkline(ITEMS[parentIndex]["history"]["quantity"], sparklineOptions);
 
-    sparklineOptions["height"] = "180px";
-    $(".sparkline-past").sparkline(sparklineValuesPast, sparklineOptions);
+    // Here goes chartJS code
+    placeChart();
 
     $(this).addClass("parent-row");
     selectedRow.addClass("selected-row");
@@ -183,6 +183,33 @@ $(document).ready(function() {
 
   makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
+
+
+function placeChart() {
+  var sparklineValues = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25,25,25,26,25,25,25,24,24,24,24,23,23,24,24,24,24,23,24,24,24,23,24,23,24,22,19,20,22,24,23,22,22,22,22,23,22,21,19,18,17,19,18,17,17,17,16,16,16,16,17,18,17,17,16,15,15,15,15,14,14,13,13,15,18,26,28,32];
+  var sparklineLabels = ['','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','',''];
+  var ctx = document.getElementById("testChart");
+
+  var myChart = new Chart(ctx, {
+      type: "line",
+      data: {
+          labels: sparklineLabels,
+          datasets: [{
+              label: "Price in chaos",
+              data: sparklineValues,
+              backgroundColor: ["rgba(0, 0, 0, 0.2)"],
+              borderColor: ["#222"],
+              borderWidth: 1,
+              lineTension: 0
+          }]
+      },
+      options: {
+        animation: {duration: 0},
+        hover: {animationDuration: 0},
+        responsiveAnimationDuration: 0
+      }
+  });
+}
 
 
 function makeRequest(from, to) {
