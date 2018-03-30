@@ -152,15 +152,11 @@ $(document).ready(function() {
     var parentIndex = parseInt($(this).attr("value"));
     console.log("clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
 
-    var sparklineValuesPast = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25,25,25,26,25,25,25,24,24,24,24,23,23,24,24,24,24,23,24,24,24,23,24,23,24,22,19,20,22,24,23,22,22,22,22,23,22,21,19,18,17,19,18,17,17,17,16,16,16,16,17,18,17,17,16,15,15,15,15,14,14,13,13,15,18,26,28,32];
     var sparklineOptions = {
       width: "100%",
       height: "80px",
-      //disableTooltips: true,
-      //tooltipClassname: "sparkline-tooltip", 
       spotRadius: 3,
       lineColor: "#222",
-      //fillColor: "#444",
       fillColor: "#aaa",
       highlightLineColor: "#000",
       highlightSpotColor: "#666",
@@ -266,7 +262,7 @@ function parseItem(item) {
   "<td>" +  iconDiv + name + "</td>" + 
   extraFields +
   //"<td>" + roundPrice(item["mean"]) + "</td>" + 
-  "<td>" + roundPrice(item["mean"]) + "</td>" + 
+  "<td><span class='sparkline-small mr-2'>Loading</span>" + roundPrice(item["mean"]) + "</td>" + 
   "<td>" + roundPrice(item["quantity"]) + "</td>" +
   "<td>" + countBadge + "</td>" + 
   "</tr>";
@@ -297,6 +293,24 @@ function roundPrice(price) {
 
 
 function sortResults() {
+  const sparklineOptions = {
+    width: "50px",
+    height: "20px",
+    spotRadius: 0,
+    lineColor: "#222",
+    fillColor: "#aaa",
+    highlightLineColor: "#000",
+    highlightSpotColor: "#666",
+    minSpotColor: false,
+    maxSpotColor: false,
+    spotColor: false,
+    type: "line",
+    lineWidth: 2,
+    disableInteraction: true,
+    disableTooltips: true,
+    disableHighlight: true
+  };
+
   // Empty the table
   $("#searchResults > tbody").empty();
 
@@ -357,8 +371,9 @@ function sortResults() {
         tableData += item["tableData"];
       }
     }
-  }
 
-  // Fill the table
-  $("#searchResults").append(tableData);
+    var el = $(item["tableData"]);
+    $("#searchResults").append(el);
+    $(".sparkline-small", el).sparkline(item["history"]["mean"], sparklineOptions);
+  }
 }
