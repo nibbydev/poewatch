@@ -54,7 +54,7 @@
         </div>
 
         <div class="col-lg-6">
-          <h4>Child category</h4>
+          <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub">
 
             <?php 
@@ -78,7 +78,7 @@
               <input type="radio" name="confidence" value="1" autocomplete="off" checked>Hide
             </label>
             <label class="btn btn-outline-secondary">
-              <input type="radio" name="confidence" value="0" autocomplete="off">Show
+              <input type="radio" name="confidence" value="" autocomplete="off">Show
             </label>
           </div>
         </div>
@@ -104,7 +104,7 @@
           <h4>Level</h4>
           <div class="form-group">
             <select class="form-control" id="select-level">
-              <option value="-1">All</option>
+              <option value="">All</option>
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
@@ -120,7 +120,7 @@
           <h4>Quality</h4>
           <div class="form-group">
             <select class="form-control" id="select-quality">
-              <option value="-1">All</option>
+              <option value="">All</option>
               <option value="0">0</option>
               <option value="10">10</option>
               <option value="20">20</option>
@@ -133,7 +133,7 @@
           <h4>Corrupted</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
             <label class="btn btn-outline-secondary active">
-              <input type="radio" name="corrupted" value="-1" autocomplete="off" checked>Either
+              <input type="radio" name="corrupted" value="" autocomplete="off" checked>Either
             </label>
             <label class="btn btn-outline-secondary">
               <input type="radio" name="corrupted" value="0" autocomplete="off" checked>No
