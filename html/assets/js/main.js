@@ -307,39 +307,40 @@ function sortResults() {
   var splitInput = FILTER.search.split(" ");
 
   var tableData = "";
-  ITEMS.forEach(item => {
+  for (let index = 0; index < ITEMS.length; index++) {
+    const item = ITEMS[index];
     let matchCount = 0;
 
     // Hide harbinger pieces of shit. This is temporary
-    if (item["child"] === "piece") return;
+    if (item["child"] === "piece") continue;
 
     // Hide low confidence items
-    if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) return;
+    if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
 
     // Hide items with different links
     if (FILTER.links) {
-      if (!("links" in item) || item["links"] !== FILTER.links) return;
-    } else if ("links" in item) return;
+      if (!("links" in item) || item["links"] !== FILTER.links) continue;
+    } else if ("links" in item) continue;
 
     // Sort gems, I guess
     if (item["frame"] === 4) {
       if (FILTER.gemLvl !== "") {
-        if (item["lvl"] != FILTER.gemLvl) return;
+        if (item["lvl"] != FILTER.gemLvl) continue;
       }
       if (FILTER.gemQuality !== "") {
         if (FILTER.gemQuality) {
-          if (!("quality" in item)) return;
-          if (item["quality"] != FILTER.gemQuality) return;
+          if (!("quality" in item)) continue;
+          if (item["quality"] != FILTER.gemQuality) continue;
         } else {
-          if ("quality" in item && item["quality"] > 0) return;
+          if ("quality" in item && item["quality"] > 0) continue;
         }
       }
       if (FILTER.gemCorrupted === "1") {
-        if (!("corrupted" in item)) return;
-        if (!item["corrupted"]) return;
+        if (!("corrupted" in item)) continue;
+        if (!item["corrupted"]) continue;
       } else if (FILTER.gemCorrupted === "0") {
-        if ("corrupted" in item) return;
-        if (item["corrupted"]) return;
+        if ("corrupted" in item) continue;
+        if (item["corrupted"]) continue;
       }
     }
     
@@ -359,7 +360,7 @@ function sortResults() {
         tableData += item["tableData"];
       }
     }
-  });
+  }
 
   // Fill the table
   $("#searchResults").append(tableData);
