@@ -113,6 +113,7 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    reindex - clear the item info database\n"
+                + "    backup - backup commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -149,6 +150,9 @@ public class Main {
                         } else {
                             System.out.println("[Info] Reindexing cancelled");
                         }
+                        break;
+                    case "backup":
+                        commandBackup(userInput);
                         break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -336,6 +340,34 @@ public class Main {
         }
 
         return userInput.equals("yes");
+    }
+
+    /**
+     * Allows creating specific backups from the CLI
+     *
+     * @param userInput Input string
+     */
+    private static void commandBackup(String[] userInput) {
+        String helpString = "[INFO] Available backup commands:\n";
+        helpString += "    'backup data' - Add optional string to job queue\n";
+        helpString += "    'backup output' - Add last locally used job to queue\n";
+
+        if (userInput.length < 2) {
+            System.out.println(helpString);
+            return;
+        }
+
+        switch (userInput[1]) {
+            case "data":
+                ADMIN.backup(new File("./data/database.txt"), "cli_database");
+                break;
+            case "output":
+                ADMIN.backup(new File("./data/output"), "cli_output");
+                break;
+            default:
+                System.out.println(helpString);
+                break;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------

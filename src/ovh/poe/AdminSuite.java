@@ -139,13 +139,23 @@ public class AdminSuite {
     // http://www.avajava.com/tutorials/lessons/how-do-i-zip-a-directory-and-all-its-contents.html
     //------------------------------------------------------------------------------------------------------------
 
-    public void backupOutput() {
-        File directoryToZip = new File("./data/output");
-        String outputFileName = "./backups/output " + dateStamp() + timeStamp().replaceAll(":", ".") + ".zip";
+    public void backup(File dir2zip, String outputZipFileName) {
+        if (!outputZipFileName.endsWith(".zip")) {
+            outputZipFileName += ".zip";
+        }
 
-        List<File> fileList = new ArrayList<>();
-        getAllFiles(directoryToZip, fileList);
-        writeZipFile(outputFileName, directoryToZip, fileList);
+        String stamp = dateStamp() + timeStamp().replaceAll(":", ".");
+        String outputFileName = "./backups/" + outputZipFileName + "_" + stamp + ".zip";
+
+        if (dir2zip.isFile()) {
+            zipOneFile(dir2zip, new File(outputFileName));
+            Main.ADMIN.log_("Created backup: " + dir2zip.getName(), 0);
+        } else {
+            List<File> fileList = new ArrayList<>();
+            getAllFiles(dir2zip, fileList);
+            writeZipFile(outputFileName, dir2zip, fileList);
+            Main.ADMIN.log_("Created backup: " + dir2zip.getName(), 0);
+        }
     }
 
     private void getAllFiles(File dir, List<File> fileList) {
@@ -195,6 +205,27 @@ public class AdminSuite {
 
         zos.closeEntry();
         fis.close();
+    }
+
+    private void zipOneFile(File inputFile, File outputFile) {
+        try {
+            ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(outputFile));
+            FileInputStream fileInputStream = new FileInputStream(inputFile);
+
+            zipOutputStream.putNextEntry(new ZipEntry(inputFile.getName()));
+
+            byte[] bytes = new byte[1024];
+            int length;
+            while ((length = fileInputStream.read(bytes)) >= 0) {
+                zipOutputStream.write(bytes, 0, length);
+            }
+
+            zipOutputStream.closeEntry();
+            zipOutputStream.close();
+            fileInputStream.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
