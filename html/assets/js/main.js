@@ -101,6 +101,32 @@ $(document).ready(function() {
   var parentRow;
   var selectedRow;
   $("#searchResults > tbody").delegate("tr", "click", function() {
+    var selectedRowTemplate = `<tr><td colspan='100'>
+      <div class='row m-1'>
+        <div class='col-sm'>
+          <h4>Chaos value</h4>
+          <span class='sparkline-price'>Loading..</span>
+        </div>
+        <div class='col-sm'>
+          <h4>Quantity</h4>
+          <span class='sparkline-quant'>Loading..</span>
+        </div>
+      </div>
+      <div class='row m-1 mt-2'>
+        <div class='col-sm'>
+          <h4>Some additional data</h4>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>
+        </div>
+      </div>
+      <div class='row m-1 mb-3'>
+        <div class='col-sm'>
+          <h4>Past leagues (WIP, not an actual chart)</h4>
+          <div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>
+          <span class='sparkline-past'>Loading..</span>
+        </div>
+      </div>
+    </td></tr>`;
+
     // Close row if user clicked on parentRow
     if ($(this).is(parentRow)) {
       console.log("parent");
@@ -111,51 +137,20 @@ $(document).ready(function() {
       return;
     }
 
-    // Don't close row if user clicked on selectedRow
-    if ($(this).is(selectedRow)) {
-      console.log("selected");
-      return;
-    }
+    // Don't add a new row if user clicked on selectedRow
+    if ($(this).is(selectedRow)) return;
 
+    // If there's an expanded row open somewhere, remove it
     if (selectedRow) {
       selectedRow.remove();
       parentRow.removeAttr("class");
     }
 
-    var $curRow = $(this).closest("tr");
-
-    var newRowData = "<tr><td colspan='100'>";
-    newRowData += "<div class='row m-1'>";
-      newRowData += "<div class='col-sm'>";
-        newRowData += "<h4>Chaos value</h4>";
-        newRowData += "<span class='sparkline-price'>Loading..</span>";
-      newRowData += "</div>";
-      newRowData += "<div class='col-sm'>";
-        newRowData += "<h4>Quantity</h4>";
-        newRowData += "<span class='sparkline-quant'>Loading..</span>";
-      newRowData += "</div>";
-    newRowData += "</div>";
-    newRowData += "<div class='row m-1 mt-2'>";
-      newRowData += "<div class='col-sm'>";
-        newRowData += "<h4>Some additional data</h4>";
-        newRowData += "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>";
-      newRowData += "</div>";
-    newRowData += "</div>";
-    newRowData += "<div class='row m-1 mb-3'>";
-      newRowData += "<div class='col-sm'>";
-        newRowData += "<h4>Past leagues (WIP, not an actual chart)</h4>";
-        newRowData += "<div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>";
-        newRowData += "<span class='sparkline-past'>Loading..</span>";
-      newRowData += "</div>";
-    newRowData += "</div>";
-    newRowData += "</td></tr>";
-
-    selectedRow = $(newRowData);
-    $curRow.after(selectedRow);
+    selectedRow = $(selectedRowTemplate);
+    $(this).closest("tr").after(selectedRow);
 
     var parentIndex = parseInt($(this).attr("value"));
     console.log("clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
-    //console.log(ITEMS[parentIndex]);
 
     var sparklineValuesPast = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25,25,25,26,25,25,25,24,24,24,24,23,23,24,24,24,24,23,24,24,24,23,24,23,24,22,19,20,22,24,23,22,22,22,22,23,22,21,19,18,17,19,18,17,17,17,16,16,16,16,17,18,17,17,16,15,15,15,15,14,14,13,13,15,18,26,28,32];
     var sparklineOptions = {
@@ -175,14 +170,16 @@ $(document).ready(function() {
       type: "line",
       lineWidth: 2
     };
+
     $(".sparkline-price").sparkline(ITEMS[parentIndex]["history"]["mean"], sparklineOptions);
     $(".sparkline-quant").sparkline(ITEMS[parentIndex]["history"]["quantity"], sparklineOptions);
 
     sparklineOptions["height"] = "180px";
     $(".sparkline-past").sparkline(sparklineValuesPast, sparklineOptions);
-    
+
     $(this).addClass("parent-row");
     selectedRow.addClass("selected-row");
+    
     parentRow = $(this);
   });
 
