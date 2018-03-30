@@ -97,9 +97,42 @@ $(document).ready(function() {
     sortResults();
   });
 
-  $("#searchResults").click(function(){ 
-    //console.log("It ran");
-    //$("tr", this).css("background-color", "red");
+  // Define tr click event
+  var parentRow;
+  var selectedRow;
+  $("#searchResults > tbody").delegate("tr", "click", function() {
+    console.log("row click");
+
+    // Close row if user clicked on parentRow
+    if ($(this).is(parentRow)) {
+      console.log("parent");
+      selectedRow.remove();
+      parentRow.css("background-color", "");
+      parentRow.css("color", "");
+      parentRow = null;
+      selectedRow = null;
+      return;
+    }
+
+    // Don't close row if user clicked on selectedRow
+    if ($(this).is(selectedRow)) {
+      console.log("selected");
+      return;
+    }
+
+    if (selectedRow) {
+      selectedRow.remove();
+      parentRow.css("background-color", "");
+      parentRow.css("color", "");
+    }
+
+    var $curRow = $(this).closest("tr");
+    selectedRow = $("<tr><td colspan='100'><h2>This is where the graphs will go</h2></td></tr>");
+    $curRow.after(selectedRow);
+    
+    $(this).css("background-color", "#222");
+    $(this).css("color", "#eee");
+    parentRow = $(this);
   });
 
   checkFields();
