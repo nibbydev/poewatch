@@ -4,4 +4,3 @@ echo <<<EOT
     <p>Poe.ovh © 2018</p>
   </footer>
 EOT;
-?>

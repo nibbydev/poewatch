@@ -23,7 +23,7 @@
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
         <?php 
-          include "assets/php/menu.php" 
+          include "assets/php/menu.php" ;
         ?>
 
       </div>
@@ -53,7 +53,6 @@
 
           </select>
         </div>
-
         <div class="col-lg-6">
           <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub">
@@ -70,7 +69,6 @@
           </select>
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-md-6">
           <h4>Low count</h4>
@@ -83,7 +81,6 @@
             </label>
           </div>
         </div>
-
         <div class="col-md-6 link-fields">
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
@@ -99,7 +96,6 @@
           </div>
         </div>
       </div>
-
       <div class="row mb-3 gem-fields">
         <div class="col-md-4">
           <h4>Level</h4>
@@ -116,7 +112,6 @@
             </select>
           </div>
         </div>
-
         <div class="col-md-4">
           <h4>Quality</h4>
           <div class="form-group">
@@ -129,7 +124,6 @@
             </select>
           </div>
         </div>
-
         <div class="col-md-4">
           <h4>Corrupted</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
@@ -145,14 +139,12 @@
           </div>
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-lg">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
@@ -161,10 +153,15 @@
                 <table class="table table-hover table-sm" id="searchResults">
                   <thead>
                     <tr>
-                      <?php include "assets/php/price_table_header.php" ?>
+                    
+                      <?php 
+                        include "assets/php/price_table_header.php";
+                      ?>
+                      
                     </tr>
                   </thead>
-                  <tbody></tbody>
+                  <tbody>
+                  </tbody>
                 </table>
                 <button type="button" class="btn btn-dark btn-block" id="button-loadmore">Load more</button>
               </div>
@@ -176,7 +173,7 @@
   </div>
 </div>
 
-<?php
+<?php 
   include "assets/php/footer.php";
 ?>
 

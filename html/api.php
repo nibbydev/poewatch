@@ -19,10 +19,13 @@
   <div class="row">
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
-        <?php include "assets/php/menu.php" ?>
+        
+        <?php 
+          include "assets/php/menu.php";
+        ?>
+
       </div>
     </div>
-
     <div class="col-lg-8 main-content"> 
       <div class="row mb-3">
         <div class="col-lg">
@@ -33,7 +36,6 @@
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive. Updated every minute.</p>
-
               <h5 class="card-title">Request fields</h5>
               <div class="custom-table">
                 <table class="table table-hover table-sm">
@@ -85,7 +87,6 @@
                   </tbody>
                 </table>
               </div>
-
               <h5 class="card-title">Response fields</h5>
               <div class="custom-table">
                 <table class="table table-hover table-sm">
@@ -209,7 +210,6 @@
                   </tbody>
                 </table>
               </div>
-
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
               <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
@@ -220,7 +220,6 @@
           </div>
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
@@ -236,7 +235,6 @@
           </div>
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
@@ -274,7 +272,6 @@
           </div>
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
@@ -290,7 +287,6 @@
           </div>
         </div>
       </div>
-
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
