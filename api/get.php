@@ -2,40 +2,42 @@
   // Set header to json
   header('Content-Type: application/json');
 
-  // Get url params and allow only alphanumeric inputs
-  $PARAM_league = preg_replace("/[^A-Za-z ]/", '', $_GET["league"]);
-  $PARAM_exclude = preg_replace("/[^A-Za-z,]/", '', $_GET["exclude"]);
-  $PARAM_parent = preg_replace("/[^A-Za-z]/", '', $_GET["parent"]);
-  $PARAM_child = preg_replace("/[^A-Za-z]/", '', $_GET["child"]);
-  $PARAM_from = preg_replace("/[^0-9]/", '', $_GET["from"]);
-  $PARAM_to = preg_replace("/[^0-9]/", '', $_GET["to"]);
+  if (array_key_exists("league", $_GET)) {
+    $PARAM_league = ucwords(strtolower(trim(preg_replace("/[^A-Za-z ]/", '', $_GET["league"]))));
+    if (!$PARAM_league) die("{\"error\": \"Invalid params\"}");
+  } else die("{\"error\": \"Invalid params\"}");
 
-  // Trim and format whatever's left
-  $PARAM_league = ucwords(strtolower(trim($PARAM_league)));
-  $PARAM_exclude = strtolower(trim($PARAM_exclude));
-  $PARAM_parent = strtolower(trim($PARAM_parent));
-  $PARAM_child = strtolower(trim($PARAM_child));
-  $PARAM_from = (int)trim($PARAM_from);
-  $PARAM_to = (int)trim($PARAM_to);
+  if (array_key_exists("parent", $_GET)) {
+    $PARAM_parent = strtolower(trim(preg_replace("/[^A-Za-z]/", '', $_GET["parent"])));
+    if (!$PARAM_parent) die("{\"error\": \"Invalid params\"}");
+  } else die("{\"error\": \"Invalid params\"}");
 
-  // Check if user inputted an invalid string that got filtered out
-  if (!$_GET["league"] || !$PARAM_league || !$_GET["parent"] || !$PARAM_parent ||
-    $_GET["child"] && !$PARAM_child || $_GET["from"] && !$PARAM_from ||
-    $_GET["to"] && !$PARAM_to || $_GET["exclude"] && !$PARAM_exclude) {
+  if (array_key_exists("exclude", $_GET)) {
+    $PARAM_exclude = strtolower(trim(preg_replace("/[^A-Za-z,]/", '', $_GET["exclude"])));
+    if (!$PARAM_exclude) die("{\"error\": \"Invalid params\"}");
+    $PARAM_exclude = explode(",", $PARAM_exclude);
+    if (sizeof($PARAM_exclude) > 15) die("{\"error\": \"Too many params\"}"); 
+  } else $PARAM_exclude = "";
 
-    die("{\"error\": \"Invalid params\"}");
-  }
+  if (array_key_exists("child", $_GET)) {
+    $PARAM_child = strtolower(trim(preg_replace("/[^A-Za-z]/", '', $_GET["child"])));
+    if (!$PARAM_child) die("{\"error\": \"Invalid params\"}");
+  } else $PARAM_child = "";
+
+  if (array_key_exists("from", $_GET)) {
+    $PARAM_from = (int)trim(preg_replace("/[^0-9]/", '', $_GET["from"]));
+    if (!$PARAM_from) die("{\"error\": \"Invalid params\"}");
+  } else $PARAM_from = "";
+
+  if (array_key_exists("to", $_GET)) {
+    $PARAM_to = (int)trim(preg_replace("/[^0-9]/", '', $_GET["to"]));
+    if (!$PARAM_to) die("{\"error\": \"Invalid params\"}");
+  } else $PARAM_to = "";
 
   // If user requested whole file
   if ($PARAM_parent === "all") $PARAM_parent = null;
   // If user requested whole category
   if ($PARAM_child === "all") $PARAM_child = null;
-
-  // If user requests specific excluded fields
-  if ($PARAM_exclude) {
-    $PARAM_exclude = explode(",", $PARAM_exclude);
-    if (sizeof($PARAM_exclude) > 15) die("{\"error\": \"Too many params\"}"); 
-  }
 
   // Check if user inputted the correct league
   $leagueJSON = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/leagues.json") , true );
