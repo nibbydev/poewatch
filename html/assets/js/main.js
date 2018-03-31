@@ -59,7 +59,7 @@ $(document).ready(function() {
   // Define searchbar event listener
   $("#search-searchbar").on("input", function(){
     FILTER.search = $(this).val().toLowerCase().trim();
-    console.log(FILTER.search);
+    console.log("search: '" + FILTER.search + "'");
     sortResults();
   });
 
@@ -289,7 +289,8 @@ function parseItem(item) {
   "<td>" +  iconDiv + name + "</td>" + 
   extraFields +
   //"<td>" + roundPrice(item["mean"]) + "</td>" + 
-  "<td><span class='sparkline-small mr-2'>Loading</span>" + roundPrice(item["mean"]) + "</td>" + 
+  //"<td><span class='sparkline-small mr-2'>Loading</span>" + roundPrice(item["mean"]) + "</td>" + 
+  "<td>" + roundPrice(item["mean"]) + "</td>" + 
   "<td>" + roundPrice(item["quantity"]) + "</td>" +
   "<td>" + countBadge + "</td>" + 
   "</tr>";
@@ -320,34 +321,11 @@ function roundPrice(price) {
 
 
 function sortResults() {
-  const sparklineOptions = {
-    width: "50px",
-    height: "20px",
-    spotRadius: 0,
-    lineColor: "#222",
-    fillColor: "#aaa",
-    highlightLineColor: "#000",
-    highlightSpotColor: "#666",
-    minSpotColor: false,
-    maxSpotColor: false,
-    spotColor: false,
-    type: "line",
-    lineWidth: 2,
-    disableInteraction: true,
-    disableTooltips: true,
-    disableHighlight: true
-  };
-
   // Empty the table
   $("#searchResults > tbody").empty();
 
-  // Format input
-  var splitInput = FILTER.search.split(" ");
-
-  var tableData = "";
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
-    let matchCount = 0;
 
     // Hide harbinger pieces of shit. This is temporary
     if (item["child"] === "piece") continue;
@@ -381,26 +359,21 @@ function sortResults() {
         if (item["corrupted"]) continue;
       }
     }
-    
-    // Search string matching
-    for (let i = 0; i < splitInput.length; i++) {
-      if ("name" in item && item["name"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
-      else if ("parent" in item && item["parent"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
-      else if ("child" in item && item["child"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
-      else if ("type" in item && item["type"].toLowerCase().indexOf(splitInput[i]) !== -1) matchCount++;
+
+    if (FILTER.search) {
+      var nameBool = ("name" in item && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
+      var parentBool = ("parent" in item && item["parent"].toLowerCase().indexOf(FILTER.search) !== -1);
+      var childBool = ("child" in item && item["child"].toLowerCase().indexOf(FILTER.search) !== -1);
+      var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
+
+      if (!nameBool && !parentBool && !childBool && !typeBool) continue;
     }
 
-    if (matchCount === splitInput.length) {
-      if ("tableData" in item) {
-        tableData += item["tableData"]
-      } else {
-        item["tableData"] = parseItem(item);
-        tableData += item["tableData"];
-      }
-    }
+    // If item has not been parsed, parse it
+    if (!("tableData" in item)) item["tableData"] = $(parseItem(item));
 
-    var el = $(item["tableData"]);
-    $("#searchResults").append(el);
-    $(".sparkline-small", el).sparkline(item["history"]["mean"], sparklineOptions);
+    //$(".sparkline-small", el).sparkline(item["history"]["mean"], sparklineOptions);
+
+    $("#searchResults").append(item["tableData"]);
   }
 }
