@@ -229,7 +229,7 @@ public class EntryController {
         // Backup output folder
         if (twentyFourBool) {
             long time_backup = System.currentTimeMillis();
-            Main.ADMIN.backup(new File("./data/output"), "daily_");
+            Main.ADMIN.backup(new File("./data/output"), "daily");
             time_backup = System.currentTimeMillis() - time_backup;
             Main.ADMIN.log_("Backup took: " + time_backup + " ms", 0);
         }

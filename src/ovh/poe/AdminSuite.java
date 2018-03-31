@@ -140,10 +140,6 @@ public class AdminSuite {
     //------------------------------------------------------------------------------------------------------------
 
     public void backup(File dir2zip, String outputZipFileName) {
-        if (!outputZipFileName.endsWith(".zip")) {
-            outputZipFileName += ".zip";
-        }
-
         String stamp = dateStamp() + timeStamp().replaceAll(":", ".");
         String outputFileName = "./backups/" + outputZipFileName + "_" + stamp + ".zip";
 
