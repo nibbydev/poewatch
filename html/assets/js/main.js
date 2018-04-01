@@ -11,11 +11,39 @@ const PRICE_PERCISION = 100;
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
 
+var parentRow, expandedRow;
+
+var expandedRowTemplate = `<tr><td colspan='100'>
+  <div class='row m-1'>
+    <div class='col-sm'>
+      <h4>Chaos value</h4>
+      <div class='chart-small'><canvas class='chart-small' id="chart-price" height="110px"></canvas></div>
+    </div>
+    <div class='col-sm'>
+      <h4>Quantity</h4>
+      <div class='chart-small'><canvas class='chart-small' id="chart-quantity" height="110px"></canvas></div>
+    </div>
+  </div>
+  <div class='row m-1 mt-2'>
+    <div class='col-sm'>
+      <h4>Some additional data</h4>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>
+    </div>
+  </div>
+  <div class='row m-1 mb-3'>
+    <div class='col-sm'>
+      <h4>Past leagues (WIP, not an actual chart)</h4>
+      <div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>
+      <div class='chart-large'><canvas class='chart-large' id="chart-past" height="220px"></canvas></div>
+    </div>
+  </div>
+</td></tr>`;
+
 // Load conversion rates on page load
 $(document).ready(function() {
   var selectorLeague = $("#search-league");
   var selectorSub = $("#search-sub");
-  var buttonLoadmore = $("#button-loadmore");
+  var buttonLoadAll = $("#button-loadall");
 
   FILTER = {
     league: selectorLeague.find(":selected").text().toLowerCase(),
@@ -50,7 +78,7 @@ $(document).ready(function() {
   });
 
   // Define load more event listener
-  buttonLoadmore.on("click", function(){
+  buttonLoadAll.on("click", function(){
     console.log("loadmore");
     makeRequest(INITIAL_LOAD_AMOUNT, 0);
     $(this).hide();
@@ -98,85 +126,8 @@ $(document).ready(function() {
   });
 
   // Define tr click event
-  var parentRow;
-  var selectedRow;
-  $("#searchResults > tbody").delegate("tr", "click", function() {
-    var selectedRowTemplate = `<tr><td colspan='100'>
-      <div class='row m-1'>
-        <div class='col-sm'>
-          <h4>Chaos value</h4>
-          <span class='sparkline-price'>Loading..</span>
-        </div>
-        <div class='col-sm'>
-          <h4>Quantity</h4>
-          <span class='sparkline-quant'>Loading..</span>
-        </div>
-      </div>
-      <div class='row m-1 mt-2'>
-        <div class='col-sm'>
-          <h4>Some additional data</h4>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>
-        </div>
-      </div>
-      <div class='row m-1 mb-3'>
-        <div class='col-sm'>
-          <h4>Past leagues (WIP, not an actual chart)</h4>
-          <div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>
-          <canvas id="testChart" height="120px"></canvas>
-        </div>
-      </div>
-    </td></tr>`;
-
-    // Close row if user clicked on parentRow
-    if ($(this).is(parentRow)) {
-      console.log("parent");
-      selectedRow.remove();
-      parentRow.removeAttr("class");
-      parentRow = null;
-      selectedRow = null;
-      return;
-    }
-
-    // Don't add a new row if user clicked on selectedRow
-    if ($(this).is(selectedRow)) return;
-
-    // If there's an expanded row open somewhere, remove it
-    if (selectedRow) {
-      selectedRow.remove();
-      parentRow.removeAttr("class");
-    }
-
-    selectedRow = $(selectedRowTemplate);
-    $(this).closest("tr").after(selectedRow);
-
-    var parentIndex = parseInt($(this).attr("value"));
-    console.log("clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
-
-    var sparklineOptions = {
-      width: "100%",
-      height: "80px",
-      spotRadius: 3,
-      lineColor: "#222",
-      fillColor: "#aaa",
-      highlightLineColor: "#000",
-      highlightSpotColor: "#666",
-      minSpotColor: false,
-      maxSpotColor: false,
-      spotColor: false,
-      type: "line",
-      lineWidth: 2
-    };
-
-    $(".sparkline-price").sparkline(ITEMS[parentIndex]["history"]["mean"], sparklineOptions);
-    $(".sparkline-quant").sparkline(ITEMS[parentIndex]["history"]["quantity"], sparklineOptions);
-
-    // Here goes chartJS code
-    placeChart();
-
-    $(this).addClass("parent-row");
-    selectedRow.addClass("selected-row");
-    
-    parentRow = $(this);
+  $("#searchResults > tbody").delegate("tr", "click", function(event) {
+    onRowClick(event);
   });
 
   checkFields();
@@ -185,30 +136,145 @@ $(document).ready(function() {
 }); 
 
 
-function placeChart() {
-  var sparklineValues = [40,40,38,38,37,37,36,37,30,30,30,30,29,29,29,27,27,27,28,27,28,26,25,25,25,26,25,25,25,24,24,24,24,23,23,24,24,24,24,23,24,24,24,23,24,23,24,22,19,20,22,24,23,22,22,22,22,23,22,21,19,18,17,19,18,17,17,17,16,16,16,16,17,18,17,17,16,15,15,15,15,14,14,13,13,15,18,26,28,32];
-  var sparklineLabels = ['','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','',''];
-  var ctx = document.getElementById("testChart");
+function onRowClick(event) {
+  var target = $(event.currentTarget);
 
-  var myChart = new Chart(ctx, {
-      type: "line",
-      data: {
-          labels: sparklineLabels,
-          datasets: [{
-              label: "Price in chaos",
-              data: sparklineValues,
-              backgroundColor: ["rgba(0, 0, 0, 0.2)"],
-              borderColor: ["#222"],
-              borderWidth: 1,
-              lineTension: 0
-          }]
+  // Close row if user clicked on parentRow
+  if (target.is(parentRow)) {
+    console.log("Closed row");
+    expandedRow.remove();
+    parentRow.removeAttr("class");
+    parentRow = null;
+    expandedRow = null;
+    return;
+  }
+
+  // Don't add a new row if user clicked on expandedRow
+  if (target.is(expandedRow)) return;
+
+  // If there's an expanded row open somewhere, remove it
+  if (expandedRow) {
+    expandedRow.remove();
+    parentRow.removeAttr("class");
+  }
+
+  expandedRow = $(expandedRowTemplate);
+  target.closest("tr").after(expandedRow);
+
+  var parentIndex = parseInt(target.attr("value"));
+  console.log("Clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
+
+  // Here goes chartJS code
+  placeCharts(parentIndex);
+
+  target.addClass("parent-row");
+  expandedRow.addClass("selected-row");
+  
+  parentRow = target;
+}
+
+
+function placeCharts(index) {
+  var priceData = {
+    type: "line",
+    data: {
+      labels: ITEMS[index]["history"]["mean"],
+      datasets: [{
+        label: "Price in chaos",
+        data: ITEMS[index]["history"]["mean"],
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: "#222",
+        borderWidth: 1,
+        lineTension: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index"
       },
-      options: {
-        animation: {duration: 0},
-        hover: {animationDuration: 0},
-        responsiveAnimationDuration: 0
+      scales: {xAxes: [{display: false}]}
+    }
+  }
+  var quantData = {
+    type: "line",
+    data: {
+      labels: ITEMS[index]["history"]["quantity"],
+      datasets: [{
+        label: "Quantity",
+        data: ITEMS[index]["history"]["quantity"],
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: "#222",
+        borderWidth: 1,
+        lineTension: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index"
+      },
+      scales: {xAxes: [{display: false}]}
+    }
+  }
+  var randData = randNumbers(90, 50, 100);
+  var pastData = {
+    type: "line",
+    data: {
+      labels: randData,
+      datasets: [{
+        label: "Price in chaos",
+        data: randData,
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: "#222",
+        borderWidth: 1,
+        lineTension: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index"
+      },
+      scales: {
+        xAxes: [{display: false}],
+        yAxes: [{ticks: {beginAtZero:true}}]
       }
-  });
+    }
+  }
+
+  new Chart(document.getElementById("chart-price"), priceData);
+  new Chart(document.getElementById("chart-quantity"), quantData);
+  new Chart(document.getElementById("chart-past"), pastData);
+}
+
+
+function randNumbers(size, add, mult) {
+  var numbers = [];
+  
+  for (var i = 0; i < size; i += 1) {
+    numbers.push(add + Math.random() * mult);
+  }
+  
+  return numbers;
 }
 
 
@@ -221,7 +287,7 @@ function makeRequest(from, to) {
       child: FILTER.sub,
       from: from,
       to: to,
-      exclude: "median,mode,index"
+      exclude: "mode,index"
     },
     type: "GET",
     async: true,
@@ -234,7 +300,7 @@ function makeRequest(from, to) {
     // Sort the current results
     sortResults();
     // Enable "show more" button
-    if (ITEMS.length === INITIAL_LOAD_AMOUNT) $("#button-loadmore").show();
+    if (ITEMS.length === INITIAL_LOAD_AMOUNT) $(".loadall").show();
   });
 }
 
@@ -248,7 +314,7 @@ function checkFields() {
 }
 
 
-function parseItem(item) {
+function parseItem(item, index) {
   // Format count badge
   var countBadge;
   if (item["count"] >= COUNT_HIGH) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
@@ -259,9 +325,9 @@ function parseItem(item) {
   var iconDiv = "";
   if (item["icon"]) {
     //item["icon"] = item["icon"].split("?")[0] + "?scale=1&w=1&h=1";
-    iconDiv = "<div class=\"table-img-container text-center\"><img src=\"" + item["icon"] + "\"></div>";
+    iconDiv = "<span class=\"table-img-container text-center mr-2\"><img src=\"" + item["icon"] + "\"></span>";
   } else {
-    iconDiv = "<div class=\"table-img-container text-center\"><img src=\"http://poe.ovh/assets/img/missing.png\"></div>";
+    iconDiv = "<span class=\"table-img-container text-center mr-2\"><img src=\"http://poe.ovh/assets/img/missing.png\"></span>";
   }
   // Format variant/links badge
   var name = item["name"];
@@ -284,13 +350,15 @@ function parseItem(item) {
     }
   }
 
+  // Chaos orb icon
+  var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+
   // Add it all together
   var returnString = "<tr value=" + ITEMS.indexOf(item) + ">" +
   "<td>" +  iconDiv + name + "</td>" + 
   extraFields +
-  //"<td>" + roundPrice(item["mean"]) + "</td>" + 
-  //"<td><span class='sparkline-small mr-2'>Loading</span>" + roundPrice(item["mean"]) + "</td>" + 
-  "<td>" + roundPrice(item["mean"]) + "</td>" + 
+  "<td>" + "<div class='sparklinebox'><svg class='sparkline' width='60' height='25' stroke-width='3' id='sparkline-" + index + "'></svg>" +
+  chaosIcon + roundPrice(item["mean"]) + "</div></td>" + 
   "<td>" + roundPrice(item["quantity"]) + "</td>" +
   "<td>" + countBadge + "</td>" + 
   "</tr>";
@@ -369,11 +437,15 @@ function sortResults() {
       if (!nameBool && !parentBool && !childBool && !typeBool) continue;
     }
 
-    // If item has not been parsed, parse it
-    if (!("tableData" in item)) item["tableData"] = $(parseItem(item));
-
-    //$(".sparkline-small", el).sparkline(item["history"]["mean"], sparklineOptions);
+    // If item has not been parsed, parse it 
+    var temp = false;
+    if (!("tableData" in item)) {
+      item["tableData"] = $(parseItem(item, index));
+      temp = true;
+    }
 
     $("#searchResults").append(item["tableData"]);
+
+    if (temp) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["mean"]);
   }
 }

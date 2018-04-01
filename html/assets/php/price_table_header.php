@@ -4,13 +4,13 @@ $pageTitle = strtolower(trim($_GET["category"]));
 $sections = "<th scope='col'>Item</th>";
 
 if ($pageTitle === "gems") {
-  $sections .= "<th scope='col'>Level</th>";
-  $sections .= "<th scope='col'>Quality</th>";
-  $sections .= "<th scope='col'>Corrupted</th>";
+  $sections .= "<th scope='col'>Lvl</th>";
+  $sections .= "<th scope='col'>Qual</th>";
+  $sections .= "<th scope='col'>Corr</th>";
 }
 
-$sections .= "<th scope='col'>Price (chaos)</th>";
-$sections .= "<th scope='col'>Quantity (24h)</th>";
-$sections .= "<th scope='col'>Count (total)</th>";
+$sections .= "<th scope='col'>Price</th>";
+$sections .= "<th scope='col'>Quant</th>";
+$sections .= "<th scope='col'>Count</th>";
 
 echo $sections;

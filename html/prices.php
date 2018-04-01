@@ -7,9 +7,10 @@
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/prices.css">
-  <script src="assets/js/jquery.min.js"></script>
-  <script src="assets/js/bootstrap.min.js"></script>
-  <script src="assets/js/main.js"></script>
+  <script type="text/javascript" src="assets/js/jquery.min.js"></script>
+  <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="assets/js/sparkline.min.js"></script>
+  <script type="text/javascript" src="assets/js/main.js"></script>
 </head>
 <body>
 
@@ -149,21 +150,22 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <div class="custom-table">
-                <table class="table table-hover table-sm" id="searchResults">
-                  <thead>
-                    <tr>
+              <table class="table price-table table-hover" id="searchResults">
+                <thead>
+                  <tr>
+                  
+                    <?php 
+                      include "assets/php/price_table_header.php";
+                    ?>
                     
-                      <?php 
-                        include "assets/php/price_table_header.php";
-                      ?>
-                      
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-                <button type="button" class="btn btn-dark btn-block" id="button-loadmore">Load more</button>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+              <div class="loadall">
+                <p class="text-center"><span class="badge badge-danger">Warning:</span> Some categories (e.g. gems) have ~5000 entries. It will be slow</p>
+                <button type="button" class="btn btn-dark btn-block" id="button-loadall">Load more</button>
               </div>
             </div>
           </div>
@@ -178,6 +180,5 @@
 ?>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-<script type="text/javascript" src="assets/js/jquery.sparkline.min.js"></script>
 </body>
 </html>

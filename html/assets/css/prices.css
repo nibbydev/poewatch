@@ -1,32 +1,17 @@
-/* Set loadmore button to be hidden at first */
-#button-loadmore {
-  display: none;
-}
-
 .table-img-container {
   display: inline-block;
   width: 30px;
   height: 30px;
-  margin-right: 10px;
 }
 
 .table-img-container img {
   max-height: 30px;
   max-width: 30px;
+  vertical-align: middle;
 }
 
-/* Styling for tables */
-.custom-table {
-  background-color: #ddd;
-  color: #222;
-}
-.custom-table table > thead > tr > th {
-  border-top-color: transparent;
-  border-bottom-color: #bbb;
-}
-.custom-table table > tbody > tr > td {border-color: #bbb}
-.custom-table table.table-hover > tbody > tr:hover {background-color: #eee}
 
+/* Custom badge colors */
 .custom-badge-red {
   color: #222;
   background-color: rgb(202, 90, 90);
@@ -44,23 +29,50 @@
   background-color: rgb(168, 168, 168);
 }
 
-.link-fields, .gem-fields {
+/* Hide some search controls */
+.link-fields, 
+.gem-fields,
+.loadall {
   display: none;
 }
 
-tr.parent-row {
-  /* Some funky things start happening without !important */
-  background-color: #333 !important;
-  color: #eee;
+/* Styling for central table */
+.price-table, 
+.price-table > thead > tr > th,
+.price-table > tbody > tr > td {
+  border: 1px solid #ccc;
+  vertical-align: middle;
+  padding: 2px 2px 2px 4px;
 }
 
-tr.selected-row {
+.price-table > tbody > tr:hover {
   background-color: #eee;
 }
 
-.jqstooltip{
-  -webkit-box-sizing: content-box;
-  -moz-box-sizing: content-box;
-  box-sizing: content-box;
-  font: 12px;
+/* Styling for expanded table rows */
+.price-table tr.parent-row {
+  background-color: #212529 !important;
+  color: #ddd;
+}
+.price-table > tbody > tr.parent-row > td {
+  border: 1px solid #444;
+}
+.price-table tr.selected-row {
+  background-color: #eee;
+}
+
+/* Sparkline styling */
+.sparkline {
+  stroke: #4c9b4c;
+  fill: none;
+}
+
+.sparklinebox {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.sparklinebox .sparkline {
+  padding: 0,5px,0,0;
 }
