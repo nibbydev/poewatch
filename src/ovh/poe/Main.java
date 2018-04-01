@@ -349,8 +349,9 @@ public class Main {
      */
     private static void commandBackup(String[] userInput) {
         String helpString = "[INFO] Available backup commands:\n";
-        helpString += "    'backup data' - Add optional string to job queue\n";
-        helpString += "    'backup output' - Add last locally used job to queue\n";
+        helpString += "    'backup data' - Backup database.txt file\n";
+        helpString += "    'backup output' - Backup everything in output directory\n";
+        helpString += "    'backup all' - Backup everything in data directory\n";
 
         if (userInput.length < 2) {
             System.out.println(helpString);
@@ -360,9 +361,13 @@ public class Main {
         switch (userInput[1]) {
             case "data":
                 ADMIN.backup(new File("./data/database.txt"), "cli_database");
+                ADMIN.backup(new File("./data/itemData.json"), "cli_itemdata");
                 break;
             case "output":
                 ADMIN.backup(new File("./data/output"), "cli_output");
+                break;
+            case "all":
+                ADMIN.backup(new File("./data/"), "cli_all");
                 break;
             default:
                 System.out.println(helpString);
