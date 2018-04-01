@@ -7,10 +7,12 @@ import java.util.*;
 
 public class JSONParcel {
     private static class HistoryItem {
+        public List<Double> spark = new ArrayList<>();
         public List<Double> mean = new ArrayList<>();
         public List<Double> median = new ArrayList<>();
         public List<Double> mode = new ArrayList<>();
         public List<Integer> quantity = new ArrayList<>();
+        public double change;
     }
 
     public static class JSONItem {
@@ -18,6 +20,7 @@ public class JSONParcel {
         public int count, quantity;
         public String index, specificKey;
         public String corrupted, lvl, quality, links;
+        public String genericKey, parent, child, icon, name, type, var, tier, frame;
         public HistoryItem history = new HistoryItem();
 
         public void copy (Entry entry) {
@@ -30,18 +33,42 @@ public class JSONParcel {
             specificKey = entry.getKey();
 
             // Copy the history over
-            for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
-                history.mean.add(dailyEntry.mean);
-                history.median.add(dailyEntry.median);
-                history.mode.add(dailyEntry.mode);
-                history.quantity.add(dailyEntry.quantity);
+            if (entry.getDb_weekly().size() > 0) {
+                double lowestSpark = 99999;
+
+                for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                    history.mean.add(dailyEntry.mean);
+                    history.median.add(dailyEntry.median);
+                    history.mode.add(dailyEntry.mode);
+                    history.quantity.add(dailyEntry.quantity);
+
+                    // Find the lowest mean entry
+                    if (dailyEntry.mean < lowestSpark) lowestSpark = dailyEntry.mean;
+                }
+
+                // Get the absolute value of lowestSpark as the JS plugin can't handle negative values
+                if (lowestSpark < 0) lowestSpark *= -1;
+
+                // Get variation from lowest value
+                for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                    double newSpark = lowestSpark != 0 ? dailyEntry.mean / lowestSpark - 1 : 0.0;
+                    newSpark = Math.round(newSpark * 10000.0) / 100.0;
+                    history.spark.add(newSpark);
+                }
+
+                // Set change
+                if (history.spark.size() > 0) {
+                    history.change = history.spark.get(history.spark.size() - 1) - history.spark.get(0);
+                    history.change = Math.round(history.change * 10000.0) / 100.0;
+                }
             }
 
-            /*
             // Check if there's a match for the specific index
             if (Main.RELATIONS.itemIndexToData.containsKey(index)) {
                 IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
-                frame = indexedItem.frame;
+                frame = Integer.toString(indexedItem.frame);
+                genericKey = indexedItem.genericKey;
+                parent = indexedItem.parent;
                 child = indexedItem.child;
                 icon = indexedItem.icon;
                 name = indexedItem.name;
@@ -49,7 +76,6 @@ public class JSONParcel {
                 var = indexedItem.var;
                 tier = indexedItem.tier;
             }
-            */
 
             // Get some data (eg links/lvl/quality/corrupted) from item key
             // "Standard|weapons:twosword|Starforge:Infernal Sword|3|links:6"
