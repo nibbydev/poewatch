@@ -272,7 +272,6 @@ public class Entry {
             // Check if item doesn't fall under the current (but widened) price range
             if (median > 0 && inc_counter > 0 && dec_counter / inc_counter < 0.5) {
                 if (raw.price > median * (3 + threshold_multiplier) || raw.price < median / (3 + threshold_multiplier)) {
-                    dec_counter++;
                     continue;
                 }
             }
