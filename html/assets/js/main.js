@@ -203,6 +203,7 @@ function placeCharts(index) {
       }
     }
   }
+  
   var quantData = {
     type: "line",
     data: {
@@ -230,6 +231,7 @@ function placeCharts(index) {
       }
     }
   }
+
   var randData = randNumbers(90, 50, 10);
   var pastData = {
     type: "line",
@@ -406,7 +408,13 @@ function getUrlParameter(sParam) {
 
 
 function roundPrice(price) {
-  return Math.round(price * PRICE_PERCISION) / PRICE_PERCISION;
+  const numberWithCommas = (x) => {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+  }
+
+  return numberWithCommas(Math.round(price * PRICE_PERCISION) / PRICE_PERCISION);
 }
 
 
