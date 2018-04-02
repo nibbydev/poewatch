@@ -179,7 +179,7 @@ function placeCharts(index) {
   var priceData = {
     type: "line",
     data: {
-      labels: ITEMS[index]["history"]["mean"],
+      labels: getAllDays(ITEMS[index]["history"]["mean"].length),
       datasets: [{
         label: "Price in chaos",
         data: ITEMS[index]["history"]["mean"],
@@ -191,6 +191,7 @@ function placeCharts(index) {
       }]
     },
     options: {
+      legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
       animation: {duration: 0},
@@ -199,14 +200,13 @@ function placeCharts(index) {
       tooltips: {
         intersect: false,
         mode: "index"
-      },
-      scales: {xAxes: [{display: false}]}
+      }
     }
   }
   var quantData = {
     type: "line",
     data: {
-      labels: ITEMS[index]["history"]["quantity"],
+      labels: getAllDays(ITEMS[index]["history"]["quantity"].length),
       datasets: [{
         label: "Quantity",
         data: ITEMS[index]["history"]["quantity"],
@@ -218,6 +218,7 @@ function placeCharts(index) {
       }]
     },
     options: {
+      legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
       animation: {duration: 0},
@@ -226,15 +227,14 @@ function placeCharts(index) {
       tooltips: {
         intersect: false,
         mode: "index"
-      },
-      scales: {xAxes: [{display: false}]}
+      }
     }
   }
   var randData = randNumbers(90, 50, 10);
   var pastData = {
     type: "line",
     data: {
-      labels: randData,
+      labels: getAllDays(randData.length),
       datasets: [{
         label: "Price in chaos",
         data: randData,
@@ -246,6 +246,7 @@ function placeCharts(index) {
       }]
     },
     options: {
+      legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
       animation: {duration: 0},
@@ -256,7 +257,6 @@ function placeCharts(index) {
         mode: "index"
       },
       scales: {
-        xAxes: [{display: false}],
         yAxes: [{ticks: {beginAtZero:true}}]
       }
     }
@@ -277,6 +277,22 @@ function randNumbers(size, add, mult) {
   
   return numbers;
 }
+
+
+function getAllDays(length) {
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
+  ];
+  var a = [];
+  
+  for (let index = length; index > 0; index--) {
+    var s = new Date();
+    var n = new Date(s.setDate(s.getDate() - index))
+    a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
+  }
+
+  return a;
+};
 
 
 function makeRequest(from, to) {
