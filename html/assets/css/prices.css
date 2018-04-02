@@ -19,13 +19,21 @@
   color: #222;
   background-color:rgb(202, 163, 90);
 }
+.custom-badge-orange-lo {
+  color: #222;
+  background-color:rgb(192, 185, 146);
+}
 .custom-badge-green {
   color: #222;
   background-color: rgb(112, 202, 90);
 }
+.custom-badge-green-lo {
+  color: #222;
+  background-color: rgb(155, 192, 146);
+}
 .custom-badge-gray {
   color: #222;
-  background-color: rgb(168, 168, 168);
+  background-color: rgb(194, 194, 194);
 }
 
 /* Hide some search controls */
@@ -61,10 +69,10 @@
 }
 
 /* Sparkline styling */
-.sparkline {
-  stroke: #4c9b4c;
-  fill: none;
-}
+.sparkline-green {stroke: #4c9b4c}
+.sparkline-red {stroke: #dc2b33}
+.sparkline-orange {stroke: #e36023}
+.sparkline {fill: none}
 
 .sparklinebox {
   display: flex;

@@ -10,9 +10,10 @@ const INITIAL_LOAD_AMOUNT = 100;
 const PRICE_PERCISION = 100;
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
+const MINOR_CHANGE = 50;
+const MAJOR_CHANGE = 100;
 
 var parentRow, expandedRow;
-
 var expandedRowTemplate = `<tr><td colspan='100'>
   <div class='row m-1'>
     <div class='col-sm'>
@@ -229,7 +230,7 @@ function placeCharts(index) {
       scales: {xAxes: [{display: false}]}
     }
   }
-  var randData = randNumbers(90, 50, 100);
+  var randData = randNumbers(90, 50, 10);
   var pastData = {
     type: "line",
     data: {
@@ -295,10 +296,9 @@ function makeRequest(from, to) {
   });
 
   request.done(function(json) {
-    // Add downloaded items to global variable ITEMS
     ITEMS = ITEMS.concat(json);
-    // Sort the current results
     sortResults();
+    
     // Enable "show more" button
     if (ITEMS.length === INITIAL_LOAD_AMOUNT) $(".loadall").show();
   });
@@ -315,52 +315,58 @@ function checkFields() {
 
 
 function parseItem(item, index) {
-  // Format count badge
-  var countBadge;
-  if (item["count"] >= COUNT_HIGH) countBadge = "<span class=\"badge custom-badge-green\">" + item["count"] + "</span>";
-  else if (item["count"] >= COUNT_MED) countBadge = "<span class=\"badge custom-badge-orange\">" + item["count"] + "</span>";
-  else countBadge = "<span class=\"badge custom-badge-red\">" + item["count"] + "</span>";
-
   // Format icon
-  var iconDiv = "";
-  if (item["icon"]) {
-    //item["icon"] = item["icon"].split("?")[0] + "?scale=1&w=1&h=1";
-    iconDiv = "<span class=\"table-img-container text-center mr-2\"><img src=\"" + item["icon"] + "\"></span>";
-  } else {
-    iconDiv = "<span class=\"table-img-container text-center mr-2\"><img src=\"http://poe.ovh/assets/img/missing.png\"></span>";
-  }
-  // Format variant/links badge
-  var name = item["name"];
-  if ("type" in item) name += ", " + item["type"];
-  if ("var" in item) name += " <span class=\"badge custom-badge-gray\">" + item["var"] + "</span>";
-  if ("tier" in item) name += " <span class=\"badge custom-badge-gray\">" + item["tier"] + "</span>";
+  var tmpIcon = item["icon"] ? item["icon"] : "http://poe.ovh/assets/img/missing.png";
+  var iconField = "<span class='table-img-container text-center mr-2'><img src='" + tmpIcon + "'></span>";
 
-  // Add gem/map extra data
-  var extraFields = "";
-  if (item["frame"] === 4) {
-    if ("lvl" in item) extraFields += "<td>" + item["lvl"] + "</td>";
-    else extraFields += "<td>0</td>";
-    
-    if ("quality" in item) extraFields += "<td>" + item["quality"] + "</td>";
-    else extraFields += "<td>0</td>";
+  // Format name and variant/links badge
+  var nameField = item["name"];
+  if ("type" in item) nameField += ", " + item["type"];
+  if ("var" in item) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+  if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+
+  // Format gem fields
+  var gemFields = "";
+  if (item["frame"] === "4") {
+    gemFields += "lvl" in item ? "<td>" + item["lvl"] + "</td>" : "<td>0</td>";
+    gemFields += "quality" in item ? "<td>" + item["quality"] + "</td>" : "<td>0</td>";
 
     if ("corrupted" in item) {
-      if (item["corrupted"] === "1") extraFields += "<td><span class=\"badge custom-badge-red\">Yes</span></td>";
-      else extraFields += "<td><span class=\"badge custom-badge-green\">No</span></td>";
+      if (item["corrupted"] === "1") gemFields += "<td><span class='badge custom-badge-red'>Yes</span></td>";
+      else gemFields += "<td><span class='badge custom-badge-green'>No</span></td>";
     }
   }
 
-  // Chaos orb icon
-  var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+  // Format price and sparkline field
+  var priceField = "<div class='sparklinebox'>";
+  var sparkColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
+  priceField += "<svg class='sparkline "+sparkColorClass+"' width='60' height='25' stroke-width='3' id='sparkline-"+index+"'></svg>";
+  priceField += "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+  priceField += roundPrice(item["mean"]);
+  priceField += "</div>";
+
+  // Format change field
+  var tmpChange;
+  if (item["history"]["change"] > MAJOR_CHANGE) tmpChange = "custom-badge-green";
+  else if (item["history"]["change"] < -1*MAJOR_CHANGE) tmpChange = "custom-badge-orange";
+  else if (item["history"]["change"] > MINOR_CHANGE) tmpChange = "custom-badge-green-lo";
+  else if (item["history"]["change"] < -1*MINOR_CHANGE) tmpChange = "custom-badge-orange-lo";
+  else tmpChange = "custom-badge-gray";
+  var changeField = "<span class='badge "+tmpChange+"'>"+item["history"]["change"]+"%</span>";
+
+  // Format count badge
+  var countField;
+  if (item["count"] >= COUNT_HIGH) countField = "<span class='badge custom-badge-gray'>" + item["count"] + "</span>";
+  else if (item["count"] >= COUNT_MED) countField = "<span class='badge custom-badge-orange'>" + item["count"] + "</span>";
+  else countField = "<span class='badge custom-badge-red'>" + item["count"] + "</span>";
 
   // Add it all together
   var returnString = "<tr value=" + ITEMS.indexOf(item) + ">" +
-  "<td>" +  iconDiv + name + "</td>" + 
-  extraFields +
-  "<td>" + "<div class='sparklinebox'><svg class='sparkline' width='60' height='25' stroke-width='3' id='sparkline-" + index + "'></svg>" +
-  chaosIcon + roundPrice(item["mean"]) + "</div></td>" + 
-  "<td>" + roundPrice(item["quantity"]) + "</td>" +
-  "<td>" + countBadge + "</td>" + 
+  "<td>" +  iconField + nameField + "</td>" + 
+  gemFields +
+  "<td>" + priceField + "</td>" + 
+  "<td>" + changeField + "</td>" + 
+  "<td>" + countField + "</td>" + 
   "</tr>";
 
   return returnString;
@@ -446,6 +452,6 @@ function sortResults() {
 
     $("#searchResults").append(item["tableData"]);
 
-    if (temp) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["mean"]);
+    if (temp) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["spark"]);
   }
 }

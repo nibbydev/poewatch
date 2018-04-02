@@ -10,7 +10,7 @@ if ($pageTitle === "gems") {
 }
 
 $sections .= "<th scope='col'>Price</th>";
-$sections .= "<th scope='col'>Quant</th>";
+$sections .= "<th scope='col'>Change</th>";
 $sections .= "<th scope='col'>Count</th>";
 
 echo $sections;
