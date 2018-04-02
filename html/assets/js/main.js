@@ -413,7 +413,7 @@ function sortResults() {
     } else if ("links" in item) continue;
 
     // Sort gems, I guess
-    if (item["frame"] === 4) {
+    if (item["frame"] === "4") {
       if (FILTER.gemLvl !== "") {
         if (item["lvl"] != FILTER.gemLvl) continue;
       }
@@ -425,13 +425,9 @@ function sortResults() {
           if ("quality" in item && item["quality"] > 0) continue;
         }
       }
-      if (FILTER.gemCorrupted === "1") {
-        if (!("corrupted" in item)) continue;
-        if (!item["corrupted"]) continue;
-      } else if (FILTER.gemCorrupted === "0") {
-        if ("corrupted" in item) continue;
-        if (item["corrupted"]) continue;
-      }
+      // Sort based on corruption selector
+      if (FILTER.gemCorrupted === "1" && item["corrupted"] !== "1") continue;
+      else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") continue;
     }
 
     if (FILTER.search) {
