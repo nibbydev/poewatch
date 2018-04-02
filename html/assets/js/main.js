@@ -17,11 +17,11 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   <div class='row m-1'>
     <div class='col-sm'>
       <h4>Chaos value</h4>
-      <div class='chart-small'><canvas class='chart-small' id="chart-price" height="110px"></canvas></div>
+      <div class='chart-small'><canvas id="chart-price"></canvas></div>
     </div>
     <div class='col-sm'>
       <h4>Quantity</h4>
-      <div class='chart-small'><canvas class='chart-small' id="chart-quantity" height="110px"></canvas></div>
+      <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
     </div>
   </div>
   <div class='row m-1 mt-2'>
@@ -34,7 +34,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
     <div class='col-sm'>
       <h4>Past leagues (WIP, not an actual chart)</h4>
       <div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>
-      <div class='chart-large'><canvas class='chart-large' id="chart-past" height="220px"></canvas></div>
+      <div class='chart-large'><canvas id="chart-past"></canvas></div>
     </div>
   </div>
 </td></tr>`;

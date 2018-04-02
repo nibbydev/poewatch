@@ -10,7 +10,6 @@
   vertical-align: middle;
 }
 
-
 /* Custom badge colors */
 .custom-badge-red {
   color: #222;
@@ -75,4 +74,18 @@
 
 .sparklinebox .sparkline {
   padding: 0,5px,0,0;
+}
+
+.chart-large {
+  height: 250px;
+}
+
+.chart-small {
+  height: 110px;
+}
+
+canvas {
+  width: 100% !important;
+  max-width: 800px;
+  height: auto !important;
 }
