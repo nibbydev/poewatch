@@ -185,22 +185,28 @@ public class EntryController {
 
         // Run once every 10min
         if ((System.currentTimeMillis() - tenCounter) > 3600000) {
-            tenCounter = System.currentTimeMillis();
+            if (tenCounter < 1) tenCounter = System.currentTimeMillis();
+            else tenCounter += 10 * 60 * 1000;
+
             tenBool = true;
         }
 
         // Run once every 60min
         if ((System.currentTimeMillis() - sixtyCounter) > 3600000) {
+            if (sixtyCounter < 1) sixtyCounter = System.currentTimeMillis();
+            else sixtyCounter += 60 * 60 * 1000;
+
+            sixtyBool = true;
+
             // Get a list of active leagues from pathofexile.com's api
             Main.RELATIONS.getLeagueList();
-
-            sixtyCounter = System.currentTimeMillis();
-            sixtyBool = true;
         }
 
         // Run once every 24h
         if ((System.currentTimeMillis() - twentyFourCounter) > 86400000) {
-            twentyFourCounter = System.currentTimeMillis();
+            if (twentyFourCounter < 1) twentyFourCounter = System.currentTimeMillis();
+            else twentyFourCounter += 24 * 60 * 60 * 1000;
+
             twentyFourBool = true;
         }
 
@@ -208,6 +214,11 @@ public class EntryController {
         long time_cycle = System.currentTimeMillis();
         cycle();
         time_cycle = System.currentTimeMillis() - time_cycle;
+
+        // Sort JSON
+        long time_sort = System.currentTimeMillis();
+        JSONParcel.sort();
+        time_sort = System.currentTimeMillis() - time_sort;
 
         // Build JSON
         long time_json = System.currentTimeMillis();
@@ -218,7 +229,7 @@ public class EntryController {
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (JSON:" + String.format("%5d", time_json) + " ms)";
+        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (JSON:" + String.format("%5d", time_json) + " ms) (sort:" + String.format("%5d", time_sort) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Set last run time
@@ -233,6 +244,9 @@ public class EntryController {
             time_backup = System.currentTimeMillis() - time_backup;
             Main.ADMIN.log_("Backup took: " + time_backup + " ms", 0);
         }
+
+        // Clear the parcel
+        JSONParcel.clear();
 
         // Switch off flags
         tenBool = sixtyBool = twentyFourBool = clearIndexes = false;
@@ -285,8 +299,6 @@ public class EntryController {
      * Writes JSONParcel object to JSON file
      */
     private void writeJSONToFile() {
-        JSONParcel.sort();
-
         for (Map.Entry<String, Map<String, List<JSONParcel.JSONItem>>> league : JSONParcel.leagues.entrySet()) {
             for (Map.Entry<String, List<JSONParcel.JSONItem>> category : league.getValue().entrySet()) {
                 try {
@@ -303,9 +315,6 @@ public class EntryController {
                 }
             }
         }
-
-        // Clear the parcel
-        JSONParcel.clear();
     }
 
     //------------------------------------------------------------------------------------------------------------
