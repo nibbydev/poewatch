@@ -13,31 +13,41 @@ import java.util.*;
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    public static class LeagueListElement {
+    public class LeagueListElement {
         String id, startAt, endAt;
     }
 
-    public static class CurrencyRelation {
+    public class CurrencyRelation {
         String name, index;
         String[] aliases;
     }
 
-    public static class IndexedItem {
-        public String name, type, parent, child, icon, var, tier, genericKey;
+    public class IndexedItem {
+        public Map<String, SubIndexedItem> subIndexes = new TreeMap<>();
+        public String name, type, parent, child, tier, genericKey, icon;
         public int frame;
 
-        void add(Item item, String genericKey) {
+        public IndexedItem(Item item) {
             name = item.name;
             parent = item.parentCategory;
             frame = item.frameType;
-            this.genericKey = genericKey;
 
+            genericKey = resolveSpecificKey(item.key);
 
             if (item.icon != null) icon = formatIconURL(item.icon);
             if (item.typeLine != null) type = item.typeLine;
             if (item.childCategory != null) child = item.childCategory;
-            if (item.variation != null) var = item.variation;
             if (item.tier != null) tier = item.tier;
+        }
+
+        private String subIndex(Item item) {
+            String subIndex = Integer.toHexString(subIndexes.size());
+            subIndex = ("00" + subIndex).substring(subIndex.length());
+
+            SubIndexedItem subIndexedItem = new SubIndexedItem(item);
+            subIndexes.put(subIndex, subIndexedItem);
+
+            return subIndex;
         }
 
         /**
@@ -86,6 +96,24 @@ public class RelationManager {
         }
     }
 
+    public static class SubIndexedItem {
+        public String var, specificKey, lvl, quality, links, corrupted;
+
+        public SubIndexedItem (Item item) {
+            specificKey = item.key;
+
+            if (item.variation != null) var = item.variation;
+            if (item.links > 4) links = Integer.toString(item.links);
+
+            if (item.frameType == 4) {
+                // Gson wants to serialize uninitialized integers and booleans
+                quality = Integer.toString(item.quality);
+                lvl = Integer.toString(item.level);
+                corrupted = Boolean.toString(item.corrupted);
+            }
+        }
+    }
+
     private Gson gson = Main.getGson();
 
     public Map<String, String> currencyIndexToName = new HashMap<>();
@@ -93,8 +121,9 @@ public class RelationManager {
     public Map<String, String> currencyAliasToIndex = new HashMap<>();
     public Map<String, String> currencyAliasToName = new HashMap<>();
 
-    private Map<String, String> itemKeyToIndex = new HashMap<>();
-    public Map<String, IndexedItem> itemIndexToData = new TreeMap<>();
+    private Map<String, String> specificItemKeyToFullIndex = new HashMap<>();
+    private Map<String, String> genericItemKeyToSuperIndex = new HashMap<>();
+    public Map<String, IndexedItem> genericItemIndexToData = new TreeMap<>();
 
     public Map<String, List<String>> categories = new HashMap<>();
     public List<String> leagues = new ArrayList<>();
@@ -241,9 +270,14 @@ public class RelationManager {
             Map<String, IndexedItem> relations = gson.fromJson(reader, listType);
 
             // Lambda loop
-            relations.forEach((index, item) -> {
-                itemKeyToIndex.put(item.genericKey, index);
-                itemIndexToData.put(index, item);
+            relations.forEach((superIndex, superItem) -> {
+                superItem.subIndexes.forEach((subIndex, subItem) -> {
+                    String index = superIndex + "-" + subIndex;
+                    specificItemKeyToFullIndex.put(subItem.specificKey, index);
+                });
+
+                genericItemKeyToSuperIndex.put(superItem.genericKey, superIndex);
+                genericItemIndexToData.put(superIndex, superItem);
             });
 
         } catch (IOException ex) {
@@ -273,9 +307,9 @@ public class RelationManager {
         // Save item relations to file
         File itemFile = new File("./data/itemData.json");
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(itemFile), "UTF-8"))) {
-            gson.toJson(itemIndexToData, writer);
+            gson.toJson(genericItemIndexToData, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to icoRelations.json", 3);
+            Main.ADMIN.log_("Could not write to itemData.json", 3);
             ex.printStackTrace();
         }
 
@@ -285,6 +319,15 @@ public class RelationManager {
             gson.toJson(categories, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to categories.json", 3);
+            ex.printStackTrace();
+        }
+
+        // Save leagues to file
+        File leagueFile = new File("./data/leagues.json");
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(leagueFile), "UTF-8"))) {
+            gson.toJson(leagues, writer);
+        } catch (IOException ex) {
+            Main.ADMIN.log_("Could not write to leagues.json", 3);
             ex.printStackTrace();
         }
     }
@@ -301,56 +344,69 @@ public class RelationManager {
      */
     public String indexItem(Item item) {
         // Manage item category list
-        List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
-        if (item.childCategory != null && !childCategories.contains(item.childCategory)) childCategories.add(item.childCategory);
-        categories.putIfAbsent(item.parentCategory, childCategories);
+        if (item.childCategory != null) {
+            List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
+            if (!childCategories.contains(item.childCategory)) {
+                childCategories.add(item.childCategory);
+                categories.putIfAbsent(item.parentCategory, childCategories);
+            }
+        }
 
-        // Manage item league list
+        // Manage item league list as a precaution. This list gets replaced by pathofexile's official league list
+        // every 60 minutes
         if (!leagues.contains(item.league)) leagues.add(item.league);
 
         // If item has no icon, don't index it
         if (item.icon == null) return "-";
 
-        // Generalize key String key = resolveSpecificKey(item.key);
-
         // If icon is already present, return icon index. Otherwise create an instance of IndexedItem and add
         // IndexedItem instance to maps and return its index
-        String genericKey = resolveSpecificKey(item.key);
         String index;
-        if (itemKeyToIndex.containsKey(genericKey)) {
-            index = itemKeyToIndex.get(genericKey);
+        String genericKey = resolveSpecificKey(item.key);
+        if (specificItemKeyToFullIndex.containsKey(item.key)) {
+            index = specificItemKeyToFullIndex.get(item.key);
+        } else if (genericItemKeyToSuperIndex.containsKey(genericKey)) {
+            String superIndex = genericItemKeyToSuperIndex.get(genericKey);
+            IndexedItem indexedGenericItem = genericItemIndexToData.get(superIndex);
+
+            String subIndex = indexedGenericItem.subIndex(item);
+            index = genericItemKeyToSuperIndex.get(genericKey) + "-" + subIndex;
+
+            specificItemKeyToFullIndex.put(item.key, index);
         } else {
-            IndexedItem indexedItem = new IndexedItem();
-            indexedItem.add(item, genericKey);
+            String superIndex = Integer.toHexString(genericItemKeyToSuperIndex.size());
+            superIndex = ("0000" + superIndex).substring(superIndex.length());
 
-            index = Integer.toHexString(itemKeyToIndex.size());
-            index = ("0000" + index).substring(index.length());
+            IndexedItem indexedItem = new IndexedItem(item);
+            String subIndex = indexedItem.subIndex(item);
+            index = superIndex + "-" + subIndex;
 
-            itemKeyToIndex.put(genericKey, index);
-            itemIndexToData.put(index, indexedItem);
+            genericItemKeyToSuperIndex.put(genericKey, superIndex);
+            genericItemIndexToData.put(superIndex, indexedItem);
+            specificItemKeyToFullIndex.put(item.key, index);
         }
 
         return index;
     }
 
     /**
-     * Searches key-to-index database for a match based on input. Requires an unique key
+     * Searches key-to-index database for a match based on input. Requires a unique key
      *
      * @param key Item key (must contain league info)
-     * @return Index if successful, "-" if unsuccessful
+     * @return Index and subIndex if successful, "-" if unsuccessful
      */
     public String getIndexFromKey(String key) {
-        String resolvedKey = resolveSpecificKey(key);
-        return itemKeyToIndex.getOrDefault(resolvedKey, "-");
+        return specificItemKeyToFullIndex.getOrDefault(key, "-");
     }
 
     /**
      * Generalizes a specific key. E.g: "Standard|gems:activegem|Flame Dash|4|l:10|q:20|c:0"
      * is turned into: "gems:activegem|Flame Dash|4"
      *
+     * @param key Specific item key with league and category and additional info
      * @return Generalized item key
      */
-    public String resolveSpecificKey(String key) {
+    public static String resolveSpecificKey(String key) {
         // "Hardcore Bestiary|armour:chest|Shroud of the Lightless:Carnal Armour|3|var:1 socket"
 
         StringBuilder genericKey = new StringBuilder();

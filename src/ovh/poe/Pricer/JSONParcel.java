@@ -2,6 +2,7 @@ package ovh.poe.Pricer;
 
 import ovh.poe.Main;
 import ovh.poe.RelationManager.IndexedItem;
+import ovh.poe.RelationManager.SubIndexedItem;
 
 import java.util.*;
 
@@ -17,10 +18,10 @@ public class JSONParcel {
 
     public static class JSONItem {
         public double mean, median, mode;
-        public int count, quantity;
+        public int count, quantity, frame;
         public String index, specificKey;
         public String corrupted, lvl, quality, links;
-        public String genericKey, parent, child, icon, name, type, var, tier, frame;
+        public String genericKey, parent, child, name, type, var, tier, icon;
         public HistoryItem history = new HistoryItem();
 
         public void copy (Entry entry) {
@@ -59,32 +60,33 @@ public class JSONParcel {
                 // Set change
                 if (history.spark.size() > 0) {
                     history.change = history.spark.get(history.spark.size() - 1) - history.spark.get(0);
-                    history.change = Math.round(history.change * 10000.0) / 100.0;
+                    history.change = Math.round(history.change * 100.0) / 100.0;
                 }
             }
 
             // Check if there's a match for the specific index
-            if (Main.RELATIONS.itemIndexToData.containsKey(index)) {
-                IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
-                frame = Integer.toString(indexedItem.frame);
+            String superIndex = index.substring(0, index.indexOf("-"));
+            if (Main.RELATIONS.genericItemIndexToData.containsKey(superIndex)) {
+                IndexedItem indexedItem = Main.RELATIONS.genericItemIndexToData.get(superIndex);
+                frame = indexedItem.frame;
                 genericKey = indexedItem.genericKey;
                 parent = indexedItem.parent;
                 child = indexedItem.child;
                 icon = indexedItem.icon;
                 name = indexedItem.name;
                 type = indexedItem.type;
-                var = indexedItem.var;
                 tier = indexedItem.tier;
-            }
 
-            // Get some data (eg links/lvl/quality/corrupted) from item key
-            // "Standard|weapons:twosword|Starforge:Infernal Sword|3|links:6"
-            String[] splitKey = entry.getKey().split("\\|");
-            for (int i = 3; i < splitKey.length; i++) {
-                if (splitKey[i].contains("links:")) links = splitKey[i].split(":")[1];
-                else if (splitKey[i].contains("l:")) lvl = splitKey[i].split(":")[1];
-                else if (splitKey[i].contains("q:")) quality = splitKey[i].split(":")[1];
-                else if (splitKey[i].contains("c:")) corrupted = splitKey[i].split(":")[1];
+                String subIndex = index.substring(index.indexOf("-") + 1);
+                SubIndexedItem subIndexedItem = indexedItem.subIndexes.get(subIndex);
+
+                if (subIndexedItem.corrupted != null) corrupted = subIndexedItem.corrupted.equals("true") ? "1" : "0";
+                if (subIndexedItem.quality != null) quality = subIndexedItem.quality;
+                if (subIndexedItem.links != null) links = subIndexedItem.links;
+                if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
+                if (subIndexedItem.var != null) var = subIndexedItem.var;
+            } else {
+                frame = -1;
             }
         }
     }

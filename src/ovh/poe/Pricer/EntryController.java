@@ -185,7 +185,7 @@ public class EntryController {
 
         // Run once every 10min
         if ((System.currentTimeMillis() - tenCounter) > 3600000) {
-            if (tenCounter < 1) tenCounter = System.currentTimeMillis();
+            if (tenCounter - System.currentTimeMillis() < 1) tenCounter = System.currentTimeMillis();
             else tenCounter += 10 * 60 * 1000;
 
             tenBool = true;
@@ -193,7 +193,7 @@ public class EntryController {
 
         // Run once every 60min
         if ((System.currentTimeMillis() - sixtyCounter) > 3600000) {
-            if (sixtyCounter < 1) sixtyCounter = System.currentTimeMillis();
+            if (sixtyCounter - System.currentTimeMillis() < 1) sixtyCounter = System.currentTimeMillis();
             else sixtyCounter += 60 * 60 * 1000;
 
             sixtyBool = true;
@@ -204,7 +204,7 @@ public class EntryController {
 
         // Run once every 24h
         if ((System.currentTimeMillis() - twentyFourCounter) > 86400000) {
-            if (twentyFourCounter < 1) twentyFourCounter = System.currentTimeMillis();
+            if (twentyFourCounter - System.currentTimeMillis() < 1) twentyFourCounter = System.currentTimeMillis();
             else twentyFourCounter += 24 * 60 * 60 * 1000;
 
             twentyFourBool = true;
@@ -306,8 +306,8 @@ public class EntryController {
                     File file = new File("./data/output/" + league.getKey(), category.getKey() + ".json");
 
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+                    gson.toJson(category.getValue(), writer);
 
-                    writer.write(gson.toJson(category.getValue()));
                     writer.flush();
                     writer.close();
                 } catch (IOException ex) {

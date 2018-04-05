@@ -228,7 +228,7 @@ public class AdminSuite {
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
 
-    static String timeStamp() {
+    public static String timeStamp() {
         StringBuilder stringBuilder = new StringBuilder();
 
         // Refresh calendar
@@ -247,7 +247,7 @@ public class AdminSuite {
         return stringBuilder.toString();
     }
 
-    static String dateStamp() {
+    public static String dateStamp() {
         StringBuilder stringBuilder = new StringBuilder();
 
         // Refresh calendar
@@ -266,7 +266,7 @@ public class AdminSuite {
         return stringBuilder.toString();
     }
 
-    static String getFlair(int flair) {
+    public static String getFlair(int flair) {
         switch (flair) {
             case -1:
                 return "[STATUS]";
