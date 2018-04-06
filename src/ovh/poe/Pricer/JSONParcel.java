@@ -38,16 +38,28 @@ public class JSONParcel {
                 double lowestSpark = 99999;
 
                 for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                    // Add all values to history
                     history.mean.add(dailyEntry.mean);
                     history.median.add(dailyEntry.median);
                     history.mode.add(dailyEntry.mode);
                     history.quantity.add(dailyEntry.quantity);
 
-                    // Find the lowest mean entry
+                    // Find the lowest mean entry for sparkline
                     if (dailyEntry.mean < lowestSpark) lowestSpark = dailyEntry.mean;
                 }
 
-                // Get the absolute value of lowestSpark as the JS plugin can't handle negative values
+                // Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
+                history.mean.add(mean);
+                history.median.add(median);
+                history.mode.add(mode);
+                // Remove excess elements
+                if (history.mean.size() > 7) history.mean.subList(0, history.mean.size() - 7).clear();
+                if (history.median.size() > 7) history.median.subList(0, history.median.size() - 7).clear();
+                if (history.mode.size() > 7) history.mode.subList(0, history.mode.size() - 7).clear();
+                // Again, find the lowest mean entry for sparkline
+                if (mean < lowestSpark) lowestSpark = mean;
+
+                // Get the absolute value of lowestSpark as the JS sparkline plugin can't handle negative values
                 if (lowestSpark < 0) lowestSpark *= -1;
 
                 // Get variation from lowest value
@@ -85,8 +97,6 @@ public class JSONParcel {
                 if (subIndexedItem.links != null) links = subIndexedItem.links;
                 if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
                 if (subIndexedItem.var != null) var = subIndexedItem.var;
-            } else {
-                frame = -1;
             }
         }
     }
