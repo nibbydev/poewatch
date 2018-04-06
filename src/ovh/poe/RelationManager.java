@@ -135,6 +135,7 @@ public class RelationManager {
         readCurrencyRelationsFromFile();
         readItemDataFromFile();
         readCategoriesFromFile();
+        readLeaguesFromFile();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -244,6 +245,7 @@ public class RelationManager {
             }
 
         } catch (IOException ex) {
+            Main.ADMIN.log_("Couldn't load currencyRelations.json", 3);
             ex.printStackTrace();
         }
     }
@@ -271,12 +273,13 @@ public class RelationManager {
             });
 
         } catch (IOException ex) {
-            // Doesn't matter if the file exists or not. It will be written to later.
+            Main.ADMIN.log_("Couldn't load itemData.json", 3);
+            ex.printStackTrace();
         }
     }
 
     /**
-     * Reads item relation data from file
+     * Reads item categories from file
      */
     private void readCategoriesFromFile() {
         File file = new File("./data/categories.json");
@@ -286,7 +289,24 @@ public class RelationManager {
             Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();
             categories = gson.fromJson(reader, listType);
         } catch (IOException ex) {
-            // Doesn't matter if the file exists or not. It will be written to later.
+            Main.ADMIN.log_("Couldn't load categories.json", 3);
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Reads leagues from file
+     */
+    private void readLeaguesFromFile() {
+        File file = new File("./data/leagues.json");
+
+        // Open up the reader
+        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+            Type listType = new TypeToken<List<String>>(){}.getType();
+            leagues = gson.fromJson(reader, listType);
+        } catch (IOException ex) {
+            Main.ADMIN.log_("Couldn't load leagues.json", 3);
+            ex.printStackTrace();
         }
     }
 
