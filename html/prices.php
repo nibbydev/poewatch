@@ -17,6 +17,13 @@
 <?php
   include "assets/php/header.php";
 ?>
+  <div class="container-fluid p-0">
+    <div class="row justify-content-end m-0 py-1 pr-3 second-navbar">
+      <div class="col text-right">
+        <span>Selected league: <button class='btn btn-link p-0'>Bestiary</button></span>
+      </div>
+    </div>
+  </div>
   
 <div class="container-fluid">    
   <div class="row">
@@ -29,7 +36,6 @@
 
       </div>
     </div>
-
     <div class="col-lg-8 main-content"> 
       <div class="row mb-3">
         <div class="col-lg-4"> 
@@ -41,9 +47,8 @@
 
         </div>
       </div>
-
       <div class="row mb-3">
-        <div class="col-lg-6"> 
+        <div class="col-sm-6"> 
           <h4>League</h4>
           <select class="form-control custom-select" id="search-league">
 
@@ -54,7 +59,7 @@
 
           </select>
         </div>
-        <div class="col-lg-6">
+        <div class="col-sm-6">
           <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub">
 
@@ -71,17 +76,6 @@
         </div>
       </div>
       <div class="row mb-3">
-        <div class="col-md-6">
-          <h4>Low count</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-            <label class="btn btn-outline-secondary active">
-              <input type="radio" name="confidence" value="1" checked>Hide
-            </label>
-            <label class="btn btn-outline-secondary">
-              <input type="radio" name="confidence" value="">Show
-            </label>
-          </div>
-        </div>
         <div class="col-md-6 link-fields">
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
@@ -98,7 +92,7 @@
         </div>
       </div>
       <div class="row mb-3 gem-fields">
-        <div class="col-md-4">
+        <div class="col-sm-4">
           <h4>Level</h4>
           <div class="form-group">
             <select class="form-control" id="select-level">
@@ -113,7 +107,7 @@
             </select>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-sm-4">
           <h4>Quality</h4>
           <div class="form-group">
             <select class="form-control" id="select-quality">
@@ -125,7 +119,7 @@
             </select>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-sm-4">
           <h4>Corrupted</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
             <label class="btn btn-outline-secondary active">
@@ -141,9 +135,20 @@
         </div>
       </div>
       <div class="row mb-3">
-        <div class="col-lg">
+        <div class="col-sm-9">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+        </div>
+        <div class="col-sm-3">
+          <h4>Low count</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+            <label class="btn btn-outline-secondary active">
+              <input type="radio" name="confidence" value="1" checked>Hide
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="confidence" value="">Show
+            </label>
+          </div>
         </div>
       </div>
       <div class="row mb-3">

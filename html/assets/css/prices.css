@@ -96,3 +96,7 @@ canvas {
   width: 100% !important;
   height: auto !important;
 }
+
+.second-navbar {
+  background-color: #282c30;
+}
