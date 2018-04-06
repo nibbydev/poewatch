@@ -345,7 +345,7 @@ function parseItem(item, index) {
 
   // Format gem fields
   var gemFields = "";
-  if (item["frame"] === "4") {
+  if (item["frame"] === 4) {
     gemFields += "lvl" in item ? "<td>" + item["lvl"] + "</td>" : "<td>0</td>";
     gemFields += "quality" in item ? "<td>" + item["quality"] + "</td>" : "<td>0</td>";
 
@@ -437,7 +437,7 @@ function sortResults() {
     } else if ("links" in item) continue;
 
     // Sort gems, I guess
-    if (item["frame"] === "4") {
+    if (item["frame"] === 4) {
       if (FILTER.gemLvl !== "") {
         if (item["lvl"] != FILTER.gemLvl) continue;
       }
