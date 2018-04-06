@@ -68,18 +68,11 @@
       if ($PARAM_child && array_key_exists("child", $item) && $PARAM_child !== $item["child"]) continue;
       
       $counter++;
+
       // Set starting position
       if ($PARAM_from > 0 && $counter <= $PARAM_from) continue;
       // Set ending position
       if ($PARAM_to > 0 && $counter > $PARAM_to) break;
-
-      if (!$PARAM_parent) $item["parent"] = $categoryName;
-
-      if (array_key_exists("links", $item)) $item["links"] = $item["links"];
-      if (array_key_exists("lvl", $item)) $item["lvl"] = $item["lvl"];
-      if (array_key_exists("quality", $item)) $item["quality"] = $item["quality"];
-      if (array_key_exists("tier", $item)) $item["tier"] = $item["tier"];
-      if (array_key_exists("corrupted", $item)) $item["corrupted"] = $item["corrupted"];
 
       // If user requested specific exclude
       if ($PARAM_exclude) {
@@ -93,10 +86,8 @@
         $item = $filtered_item;
       }
 
-      if (empty($item)) continue;
-
       // Add item to response payload
-      array_push($payload, $item);
+      if (!empty($item)) array_push($payload, $item);
     }
   }
 
