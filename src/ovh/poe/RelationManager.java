@@ -219,16 +219,6 @@ public class RelationManager {
         leagues.clear();
         leagues.addAll(Arrays.asList(tempList));
 
-        // Save leagues to file
-        new File("./data/").mkdirs();
-        File leagueFile = new File("./data", "leagues.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(leagueFile), "UTF-8"))) {
-            gson.toJson(leagues, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to leagues.json", 3);
-            ex.printStackTrace();
-        }
-
         Main.ADMIN.log_("League list updated", 1);
     }
 
