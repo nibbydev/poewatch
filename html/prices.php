@@ -88,7 +88,7 @@
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-secondary active">
-              <input type="radio" name="links" value="" checked>None
+              <input type="radio" name="links" value="0" checked>None
             </label>
             <label class="btn btn-outline-secondary">
               <input type="radio" name="links" value="5">5L
@@ -193,6 +193,7 @@
 <script type="text/javascript" src="assets/js/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.min.js"></script>
 <script type="text/javascript" src="assets/js/main.js"></script>
+<script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
 </body>
 </html>

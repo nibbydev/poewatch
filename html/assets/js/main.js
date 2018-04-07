@@ -6,7 +6,7 @@
 let FILTER;
 var ITEMS = [];
 
-const INITIAL_LOAD_AMOUNT = 100;
+const INITIAL_LOAD_AMOUNT = 150;
 const PRICE_PERCISION = 100;
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
@@ -51,11 +51,11 @@ $(document).ready(function() {
     category: getUrlParameter("category").toLowerCase(),
     sub: selectorSub.find(":selected").text().toLowerCase(),
     hideLowConfidence: true,
-    links: "",
-    search: "",
-    gemLvl: "",
-    gemQuality: "",
-    gemCorrupted: ""
+    links: '0',
+    search: '',
+    gemLvl: '',
+    gemQuality: '',
+    gemCorrupted: ''
   };
 
   // Define league event listener
@@ -106,6 +106,8 @@ $(document).ready(function() {
   $("#radio-links").on("change", function(){
     FILTER.links = $("input[name=links]:checked", this).val();
     console.log(FILTER.links);
+    ITEMS = [];
+    makeRequest(0, INITIAL_LOAD_AMOUNT);
     sortResults();
   });
 
@@ -286,6 +288,8 @@ function getAllDays(length) {
     "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
   ];
   var a = [];
+
+  length--;
   
   for (let index = length; index > 0; index--) {
     var s = new Date();
@@ -293,21 +297,29 @@ function getAllDays(length) {
     a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
   }
 
+  a.push("Currently");
+
   return a;
 };
 
 
 function makeRequest(from, to) {
+  var data = {
+    league: FILTER.league, 
+    parent: FILTER.category,
+    child: FILTER.sub,
+    from: from,
+    to: to,
+    exclude: "mode,index"
+  };
+
+  if (FILTER.category === "weapons" || FILTER.category === "armour") {
+    data["links"] = FILTER.links;
+  }
+
   var request = $.ajax({
     url: "http://api.poe.ovh/get",
-    data: {
-      league: FILTER.league, 
-      parent: FILTER.category,
-      child: FILTER.sub,
-      from: from,
-      to: to,
-      exclude: "mode,index"
-    },
+    data: data,
     type: "GET",
     async: true,
     dataTypes: "json"
@@ -432,9 +444,9 @@ function sortResults() {
     if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
 
     // Hide items with different links
-    if (FILTER.links) {
-      if (!("links" in item) || item["links"] !== FILTER.links) continue;
-    } else if ("links" in item) continue;
+    //if (FILTER.links) {
+    //  if (!("links" in item) || item["links"] !== FILTER.links) continue;
+    //} else if ("links" in item) continue;
 
     // Sort gems, I guess
     if (item["frame"] === 4) {
