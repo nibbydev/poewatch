@@ -13,14 +13,27 @@
   <script type="text/javascript" src="assets/js/main.js"></script>
 </head>
 <body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a href="/" class="navbar-brand">Poe.Ovh</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
+          <li class="nav-item"><a class="nav-link active" href="prices">Prices</a></li>
+          <li class="nav-item"><a class="nav-link" href="api">API</a></li>
+          <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-<?php
-  include "assets/php/header.php";
-?>
   <div class="container-fluid p-0">
     <div class="row justify-content-end m-0 py-1 pr-3 second-navbar">
       <div class="col text-right">
-        <span>Selected league: <button class='btn btn-link p-0'>Bestiary</button></span>
+        <span>Selected league: <a class="p-0" href="#">Bestiary</a></span>
       </div>
     </div>
   </div>
@@ -64,8 +77,7 @@
           <select class="form-control custom-select" id="search-sub">
 
             <?php 
-              $pageTitle = trim(strtolower($_GET["category"]));
-              if (!$pageTitle) $pageTitle = "currency";
+              $pageTitle = array_key_exists("category", $_GET) ? trim(strtolower($_GET["category"])) : "currency";
               $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/categories.json"), true );
               echo "<option>All</option>";
               if (!array_key_exists($pageTitle, $jsonFile)) return;

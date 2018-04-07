@@ -10,10 +10,22 @@
   <script src="assets/js/bootstrap.min.js"></script>
 </head>
 <body>
-
-<?php
-  include "assets/php/header.php";
-?>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a href="/" class="navbar-brand">Poe.Ovh</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
+          <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
+          <li class="nav-item"><a class="nav-link active" href="api">API</a></li>
+          <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
   
 <div class="container-fluid">    
   <div class="row">
