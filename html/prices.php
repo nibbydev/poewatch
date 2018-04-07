@@ -187,11 +187,9 @@
     </div>
   </div>
 </div>
-
-<?php 
-  include "assets/php/footer.php";
-?>
-
+<footer class="container-fluid bg-dark text-center">
+  <p>Poe.ovh © 2018</p>
+</footer>
 <script type="text/javascript" src="assets/js/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.min.js"></script>
 <script type="text/javascript" src="assets/js/main.js"></script>

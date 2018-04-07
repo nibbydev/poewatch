@@ -315,11 +315,9 @@
     </div>
   </div>
 </div>
-
-<?php
-  include "assets/php/footer.php";
-?>
-
+<footer class="container-fluid bg-dark text-center">
+  <p>Poe.ovh © 2018</p>
+</footer>
 <script src="assets/js/jquery.min.js"></script>
 </body>
 </html>
