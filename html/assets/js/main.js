@@ -73,6 +73,8 @@ $(document).ready(function() {
   var selectorSub = $("#search-sub");
   var buttonLoadAll = $("#button-loadall");
 
+  readCookies();
+
   FILTER = {
     league: selectorLeague.find(":selected").text().toLowerCase(),
     category: getUrlParameter("category").toLowerCase(),
@@ -89,7 +91,9 @@ $(document).ready(function() {
   selectorLeague.change(function(){
     FILTER.league = $(this).find(":selected").text();
     console.log(FILTER.league);
-    // Empty item history
+    
+    document.cookie = "league="+FILTER.league;
+
     ITEMS = [];
 
     makeRequest(0, INITIAL_LOAD_AMOUNT);
@@ -164,6 +168,33 @@ $(document).ready(function() {
 
   makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
+
+
+function readCookies() {
+  var league = getCookie("league");
+  console.log("Got league from cookie: " + league);
+  
+  $("#search-league option").filter(function() { 
+    return ($(this).text() == league);
+  }).prop("selected", true);
+}
+
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+      }
+  }
+  return "";
+}
 
 
 function onRowClick(event) {
