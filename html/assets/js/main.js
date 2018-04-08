@@ -46,7 +46,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
       <table class="table table-bordered table-sm details-table">
         <tbody>
           <tr id='details-row-quantity'>
-            <td>Avg. listed per 24h</td>
+            <td>Average listed per 24h</td>
           </tr>
           <tr id='details-row-1d'>
             <td>Price change since yesterday</td>
@@ -75,9 +75,12 @@ $(document).ready(function() {
 
   readCookies();
 
+  var category = getUrlParameter("category");
+  if (!category) return;
+
   FILTER = {
     league: selectorLeague.find(":selected").text().toLowerCase(),
-    category: getUrlParameter("category").toLowerCase(),
+    category: category.toLowerCase(),
     sub: selectorSub.find(":selected").text().toLowerCase(),
     hideLowConfidence: true,
     links: '0',
@@ -231,17 +234,19 @@ function onRowClick(event) {
   // Here goes chartJS code
   placeCharts(parentIndex);
 
+  var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+
   $("#details-row-quantity",  expandedRow).append("<td>"+ITEMS[parentIndex]["quantity"]+"</td>");
-  $("#details-row-mean",      expandedRow).append("<td>"+ITEMS[parentIndex]["mean"]+"</td>");
-  $("#details-row-median",    expandedRow).append("<td>"+ITEMS[parentIndex]["median"]+"</td>");
-  $("#details-row-mode",      expandedRow).append("<td>"+ITEMS[parentIndex]["mode"]+"</td>");
+  $("#details-row-mean",      expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["mean"]+"</td>");
+  $("#details-row-median",    expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["median"]+"</td>");
+  $("#details-row-mode",      expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["mode"]+"</td>");
 
   let history = ITEMS[parentIndex]["history"]["mean"];
   var chaosChangeDay = roundPrice(ITEMS[parentIndex]["mean"] - history[history.length - 1]);
   var chaosChangeWeek = roundPrice(ITEMS[parentIndex]["mean"] - history[0]);
 
-  $("#details-row-1d", expandedRow).append("<td>"+(chaosChangeDay > 0 ? '+' : '')+chaosChangeDay+"</td>");
-  $("#details-row-1w", expandedRow).append("<td>"+(chaosChangeWeek > 0 ? '+' : '')+chaosChangeWeek+"</td>");
+  $("#details-row-1d",        expandedRow).append("<td>"+chaosIcon+(chaosChangeDay > 0 ? '+' : '')+chaosChangeDay+"</td>");
+  $("#details-row-1w",        expandedRow).append("<td>"+chaosIcon+(chaosChangeWeek > 0 ? '+' : '')+chaosChangeWeek+"</td>");
 
   target.addClass("parent-row");
   expandedRow.addClass("selected-row");
@@ -425,7 +430,7 @@ function parseItem(item, index) {
   if ("type" in item) nameField += ", " + item["type"];
   if ("var" in item) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
   if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-  if (item["history"]["mean"].length < 7) nameField += " <span class='badge custom-badge-green'>New</span>";
+  if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-dark'>New</span>";
   nameField += "</span>";
 
   // Format gem fields
