@@ -80,23 +80,32 @@
   white-space: nowrap;
 }
 
-.sparklinebox .sparkline {
-  padding: 0,5px,0,0;
-}
+.sparklinebox .sparkline {padding: 0,5px,0,0}
 
-.chart-large {
-  height: 250px;
-}
-
-.chart-small {
-  height: 110px;
-}
+.chart-large {height: 250px}
+.chart-small {height: 110px}
 
 canvas {
   width: 100% !important;
   height: auto !important;
 }
 
-.second-navbar {
-  background-color: #282c30;
+/* Styling for second navbar */
+.second-navbar {background-color: #282c30}
+.second-navbar select.btn {
+  -webkit-appearance: button;
+     -moz-appearance: button;
 }
+
+/* Styling for small details table */
+.details-table, 
+.details-table > tbody > tr > td {
+  border: 1px solid #ccc;
+  vertical-align: middle;
+  padding: 2px 2px 2px 4px;
+  background-color: #eee;
+  color: #222;
+}
+
+/* Styling for foil uniques */
+.item-foil {color: #4c9b4c}

@@ -16,21 +16,49 @@ const MAJOR_CHANGE = 100;
 var parentRow, expandedRow;
 var expandedRowTemplate = `<tr><td colspan='100'>
   <div class='row m-1'>
-    <div class='col-sm'>
+    <div class='col-md'>
       <h4>Chaos value</h4>
       <div class='chart-small'><canvas id="chart-price"></canvas></div>
     </div>
-    <div class='col-sm'>
-      <h4>Quantity</h4>
+    <div class='col-md'>
+      <h4>Listed per 24h</h4>
       <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
     </div>
   </div>
+  <hr>
   <div class='row m-1 mt-2'>
     <div class='col-sm'>
-      <h4>Some additional data</h4>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pharetra, enim eget accumsan finibus, lectus orci molestie enim, ut placerat nisi arcu vel urna. In ac condimentum magna, eu maximus lectus.</p>
+      <table class="table table-bordered table-sm details-table">
+        <tbody>
+          <tr id='details-row-mean'>
+            <td>Current mean</td>
+          </tr>
+          <tr id='details-row-median'>
+            <td>Current median</td>
+          </tr>
+          <tr id='details-row-mode'>
+            <td>Current mode</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class='col-sm'>
+      <table class="table table-bordered table-sm details-table">
+        <tbody>
+          <tr id='details-row-quantity'>
+            <td>Avg. listed per 24h</td>
+          </tr>
+          <tr id='details-row-1d'>
+            <td>Price change since yesterday</td>
+          </tr>
+          <tr id='details-row-1w'>
+            <td>Price change since a week</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+  <hr>
   <div class='row m-1 mb-3'>
     <div class='col-sm'>
       <h4>Past leagues (WIP, not an actual chart)</h4>
@@ -40,7 +68,6 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   </div>
 </td></tr>`;
 
-// Load conversion rates on page load
 $(document).ready(function() {
   var selectorLeague = $("#search-league");
   var selectorSub = $("#search-sub");
@@ -141,6 +168,12 @@ $(document).ready(function() {
 
 function onRowClick(event) {
   var target = $(event.currentTarget);
+  var parentIndex = parseInt(target.attr("value"));
+
+  // If user clicked on the smaller embedded table
+  if (isNaN(parentIndex)) return;
+
+  console.log("Clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
 
   // Close row if user clicked on parentRow
   if (target.is(parentRow)) {
@@ -164,11 +197,20 @@ function onRowClick(event) {
   expandedRow = $(expandedRowTemplate);
   target.closest("tr").after(expandedRow);
 
-  var parentIndex = parseInt(target.attr("value"));
-  console.log("Clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
-
   // Here goes chartJS code
   placeCharts(parentIndex);
+
+  $("#details-row-quantity",  expandedRow).append("<td>"+ITEMS[parentIndex]["quantity"]+"</td>");
+  $("#details-row-mean",      expandedRow).append("<td>"+ITEMS[parentIndex]["mean"]+"</td>");
+  $("#details-row-median",    expandedRow).append("<td>"+ITEMS[parentIndex]["median"]+"</td>");
+  $("#details-row-mode",      expandedRow).append("<td>"+ITEMS[parentIndex]["mode"]+"</td>");
+
+  let history = ITEMS[parentIndex]["history"]["mean"];
+  var chaosChangeDay = roundPrice(ITEMS[parentIndex]["mean"] - history[history.length - 1]);
+  var chaosChangeWeek = roundPrice(ITEMS[parentIndex]["mean"] - history[0]);
+
+  $("#details-row-1d", expandedRow).append("<td>"+(chaosChangeDay > 0 ? '+' : '')+chaosChangeDay+"</td>");
+  $("#details-row-1w", expandedRow).append("<td>"+(chaosChangeWeek > 0 ? '+' : '')+chaosChangeWeek+"</td>");
 
   target.addClass("parent-row");
   expandedRow.addClass("selected-row");
@@ -288,16 +330,12 @@ function getAllDays(length) {
     "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
   ];
   var a = [];
-
-  length--;
   
   for (let index = length; index > 0; index--) {
     var s = new Date();
     var n = new Date(s.setDate(s.getDate() - index))
     a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
   }
-
-  a.push("Currently");
 
   return a;
 };
@@ -309,8 +347,7 @@ function makeRequest(from, to) {
     parent: FILTER.category,
     child: FILTER.sub,
     from: from,
-    to: to,
-    exclude: "mode,index"
+    to: to
   };
 
   if (FILTER.category === "weapons" || FILTER.category === "armour") {
@@ -328,6 +365,8 @@ function makeRequest(from, to) {
   request.done(function(json) {
     ITEMS = ITEMS.concat(json);
     sortResults();
+
+    console.log("size: " + ITEMS.length);
     
     // Enable "show more" button
     if (ITEMS.length === INITIAL_LOAD_AMOUNT) $(".loadall").show();
@@ -350,10 +389,13 @@ function parseItem(item, index) {
   var iconField = "<span class='table-img-container text-center mr-2'><img src='" + tmpIcon + "'></span>";
 
   // Format name and variant/links badge
-  var nameField = item["name"];
+  var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
+  nameField += item["name"];
   if ("type" in item) nameField += ", " + item["type"];
   if ("var" in item) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
   if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+  if (item["history"]["mean"].length < 7) nameField += " <span class='badge custom-badge-green'>New</span>";
+  nameField += "</span>";
 
   // Format gem fields
   var gemFields = "";

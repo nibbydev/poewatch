@@ -27,9 +27,19 @@
   </nav>
 
   <div class="container-fluid p-0">
-    <div class="row justify-content-end m-0 py-1 pr-3 second-navbar">
+    <div class="row m-0 py-1 pr-3 second-navbar">
       <div class="col text-right">
-        <span>Selected league: <a class="p-0" href="#">Bestiary</a></span>
+        <div class="form-group m-0">
+          <label for="search-league" class="m-0">Selected league: </label>
+          <select class="btn px-1 py-0" id="search-league">
+            
+            <?php 
+              $jsonFile = json_decode( file_get_contents( dirname(getcwd(), 2) . "/data/leagues.json"), true );
+              foreach ($jsonFile as $leagueName) echo "<option>" . $leagueName . "</option>";
+            ?>
+
+          </select>
+        </div>
       </div>
     </div>
   </div>
@@ -57,18 +67,7 @@
         </div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-6"> 
-          <h4>League</h4>
-          <select class="form-control custom-select" id="search-league">
-
-            <?php 
-              $jsonFile = json_decode( file_get_contents( dirname(getcwd(), 2) . "/data/leagues.json"), true );
-              foreach ($jsonFile as $leagueName) echo "<option>" . $leagueName . "</option>";
-            ?>
-
-          </select>
-        </div>
-        <div class="col-sm-6">
+        <div class="col-sm-9">
           <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub">
 
@@ -82,9 +81,22 @@
 
           </select>
         </div>
+
+        <div class="col-sm">
+          <h4>Low count</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+            <label class="btn btn-outline-secondary active">
+              <input type="radio" name="confidence" value="1" checked>Hide
+            </label>
+            <label class="btn btn-outline-secondary">
+              <input type="radio" name="confidence" value="">Show
+            </label>
+          </div>
+        </div>
+
       </div>
       <div class="row mb-3">
-        <div class="col-md-6 link-fields">
+        <div class="col-sm link-fields">
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-secondary active">
@@ -143,20 +155,9 @@
         </div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-9">
+        <div class="col-sm">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-        </div>
-        <div class="col-sm-3">
-          <h4>Low count</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-            <label class="btn btn-outline-secondary active">
-              <input type="radio" name="confidence" value="1" checked>Hide
-            </label>
-            <label class="btn btn-outline-secondary">
-              <input type="radio" name="confidence" value="">Show
-            </label>
-          </div>
         </div>
       </div>
       <div class="row mb-3">
