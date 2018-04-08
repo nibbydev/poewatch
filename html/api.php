@@ -3,6 +3,7 @@
 <head>
   <title>Poe.ovh - API</title>
   <meta charset="utf-8">
+  <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
@@ -10,7 +11,10 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a href="/" class="navbar-brand">Poe.Ovh</a>
+      <a href="/" class="navbar-brand">
+        <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+        Poe.Ovh
+      </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>

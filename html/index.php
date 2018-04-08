@@ -3,14 +3,18 @@
 <head>
   <title>Poe.ovh</title>
   <meta charset="utf-8">
+  <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a href="/" class="navbar-brand">Poe.Ovh</a>
+      <a href="/" class="navbar-brand">
+        <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+        Poe.Ovh
+      </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -24,7 +28,6 @@
       </div>
     </div>
   </nav>
-  
 <div class="container-fluid">    
   <div class="row">
     <div class="col-lg-3"> 
@@ -41,8 +44,6 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <h2 class="card-title">Poe.Ovh</h2>
-              <hr>
               <h5>Overview</h5>
               <p>Collects data over time from various items on Path of Exile and shows their average price. This page is still in development and there has not been any official releases yet.</p>
               <h5>What's to come</h5>
