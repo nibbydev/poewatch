@@ -60,12 +60,13 @@
       </div>
     </div>
     <div class="col-lg-8 main-content"> 
-      <div class="row mb-3">
-        <div class="col-lg-4"> 
+      <div class="row mb">
+        <div class="col-lg"> 
 
           <?php
-            $pageTitle = ucwords(strtolower(trim($_GET["category"])));
-            echo "<h1>" . $pageTitle . "</h1>";
+            if (array_key_exists("category", $_GET)) {
+              echo "<h1>".ucwords($_GET["category"])."</h1>";
+            }
           ?>
 
         </div>
@@ -196,8 +197,8 @@
   <p>Poe.ovh © 2018</p>
 </footer>
 <script type="text/javascript" src="assets/js/jquery.min.js"></script>
-<script type="text/javascript" src="assets/js/sparkline.min.js"></script>
 <script type="text/javascript" src="assets/js/main.js"></script>
+<script type="text/javascript" src="assets/js/sparkline.min.js"></script>
 <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
 </body>
