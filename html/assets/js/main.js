@@ -7,6 +7,8 @@ let FILTER;
 var ITEMS = [];
 var LEAGUES = [];
 var CATEGORIES = {};
+const HISTORY_LEAGUES = ["Abyss", "Harbinger", "Legacy", "Breach"];
+let HISTORY_CHART;
 
 const INITIAL_LOAD_AMOUNT = 150;
 const PRICE_PERCISION = 100;
@@ -63,8 +65,11 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   <hr>
   <div class='row m-1 mb-3'>
     <div class='col-sm'>
-      <h4>Past leagues (WIP, not an actual chart)</h4>
-      <div class='form-group'><select class='form-control'><option>Legacy</option><option>Breach</option><option>Harbinger</option></select></div>
+      <h4>Past leagues (WIP)</h4>
+      <div class='form-group'>
+        <select class='form-control' id='history-league-select'>
+        </select>
+      </div>
       <div class='chart-large'><canvas id="chart-past"></canvas></div>
     </div>
   </div>
@@ -187,6 +192,7 @@ function readServiceContainers() {
   });
 }
 
+
 function fillSelectors(category) {
   $("#page-title").text(toTitleCase(category));
 
@@ -214,6 +220,7 @@ function fillSelectors(category) {
   tableHeaderContent += "<th scope='col'>Count</th>";
   $("#searchResults > thead > tr").append(tableHeaderContent);
 }
+
 
 function toTitleCase(str) {
   return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -280,11 +287,27 @@ function onRowClick(event) {
   expandedRow = $(expandedRowTemplate);
   target.closest("tr").after(expandedRow);
 
-  // Here goes chartJS code
+  // Add league options to template
+  var historyLeagueSelector = $("#history-league-select");
+  $.each(HISTORY_LEAGUES, function(index, league) {   
+    historyLeagueSelector.append($("<option></option>").attr("value", index).text(toTitleCase(league))); 
+  });
+
+  // Create event listener for league selector
+  historyLeagueSelector.change(function(){
+    var selectedLeauge = HISTORY_LEAGUES[historyLeagueSelector.find(":selected").val()];
+    makeHistoryRequest(selectedLeauge, ITEMS[parentIndex]["specificKey"]);
+  });
+
+  // Get currently selected league and make request
+  var selectedLeauge = HISTORY_LEAGUES[historyLeagueSelector.find(":selected").val()];
+  makeHistoryRequest(selectedLeauge, ITEMS[parentIndex]["specificKey"]);
+
+  // Place ChartJS charts inside the expanded row
   placeCharts(parentIndex);
 
+  // Fill expanded row with item data
   var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
-
   $("#details-row-quantity",  expandedRow).append("<td>"+ITEMS[parentIndex]["quantity"]+"</td>");
   $("#details-row-mean",      expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["mean"]+"</td>");
   $("#details-row-median",    expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["median"]+"</td>");
@@ -301,6 +324,26 @@ function onRowClick(event) {
   expandedRow.addClass("selected-row");
   
   parentRow = target;
+}
+
+
+function makeHistoryRequest(league, key) {
+  var request = $.ajax({
+    url: "http://api.poe.ovh/history",
+    data: {
+      league: league, 
+      key: key
+    },
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(payload) {
+    HISTORY_CHART.data.labels = payload["tags"];
+    HISTORY_CHART.data.datasets[0].data = payload["prices"];
+    HISTORY_CHART.update();
+  });
 }
 
 
@@ -361,14 +404,13 @@ function placeCharts(index) {
     }
   }
 
-  var randData = randNumbers(90, 50, 10);
   var pastData = {
     type: "line",
     data: {
-      labels: getAllDays(randData.length),
+      labels: [],
       datasets: [{
         label: "Price in chaos",
-        data: randData,
+        data: [],
         backgroundColor: "rgba(0, 0, 0, 0.2)",
         borderColor: "#222",
         borderWidth: 1,
@@ -395,7 +437,7 @@ function placeCharts(index) {
 
   new Chart(document.getElementById("chart-price"), priceData);
   new Chart(document.getElementById("chart-quantity"), quantData);
-  new Chart(document.getElementById("chart-past"), pastData);
+  HISTORY_CHART = new Chart(document.getElementById("chart-past"), pastData);
 }
 
 
