@@ -34,7 +34,7 @@
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
         <?php 
-          include "assets/php/menu.php"
+          include "assets/php/menu.php";
         ?>
 
       </div>

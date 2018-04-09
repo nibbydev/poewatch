@@ -5,6 +5,8 @@
 
 let FILTER;
 var ITEMS = [];
+var LEAGUES = [];
+var CATEGORIES = {};
 
 const INITIAL_LOAD_AMOUNT = 150;
 const PRICE_PERCISION = 100;
@@ -69,19 +71,15 @@ var expandedRowTemplate = `<tr><td colspan='100'>
 </td></tr>`;
 
 $(document).ready(function() {
-  var selectorLeague = $("#search-league");
-  var selectorSub = $("#search-sub");
-  var buttonLoadAll = $("#button-loadall");
-
-  readCookies();
-
-  var category = getUrlParameter("category");
+  var category = getUrlParameter("category").toLowerCase();
   if (!category) return;
 
+  readServiceContainers();
+
   FILTER = {
-    league: selectorLeague.find(":selected").text().toLowerCase(),
-    category: category.toLowerCase(),
-    sub: selectorSub.find(":selected").text().toLowerCase(),
+    league: LEAGUES[0],
+    category: category,
+    sub: "all",
     hideLowConfidence: true,
     links: '0',
     search: '',
@@ -90,30 +88,30 @@ $(document).ready(function() {
     gemCorrupted: ''
   };
 
+  fillSelectors(category);
+  readCookies();
+
+  makeRequest(0, INITIAL_LOAD_AMOUNT);
+
   // Define league event listener
-  selectorLeague.change(function(){
+  $("#search-league").change(function(){
     FILTER.league = $(this).find(":selected").text();
     console.log(FILTER.league);
-    
     document.cookie = "league="+FILTER.league;
-
     ITEMS = [];
-
     makeRequest(0, INITIAL_LOAD_AMOUNT);
   });
 
   // Define subcategory event listener
-  selectorSub.change(function(){
+  $("#search-sub").change(function(){
     FILTER.sub = $(this).find(":selected").text();
     console.log(FILTER.sub);
-    // Empty item history
     ITEMS = [];
-
     makeRequest(0, INITIAL_LOAD_AMOUNT);
   });
 
   // Define load more event listener
-  buttonLoadAll.on("click", function(){
+  $("#button-loadall").on("click", function(){
     console.log("loadmore");
     makeRequest(INITIAL_LOAD_AMOUNT, 0);
     $(this).hide();
@@ -168,14 +166,65 @@ $(document).ready(function() {
   });
 
   checkFields();
-
-  makeRequest(0, INITIAL_LOAD_AMOUNT);
 }); 
+
+
+function readServiceContainers() {
+  $(".service-container").each(function() {
+    var container = $(this);
+    var id = container.attr("id");
+    var payload = container.data("payload");
+    payload = payload.replace(/'/g, '"');
+
+    switch (id) {
+      case "service-leagues":
+        LEAGUES = JSON.parse(payload);
+        break;
+      case "service-categories":
+        CATEGORIES = JSON.parse(payload);
+        break;
+    }
+  });
+}
+
+function fillSelectors(category) {
+  $("#page-title").text(toTitleCase(category));
+
+  var leagueSelector = $("#search-league");
+  $.each(LEAGUES, function(index, league) {   
+    leagueSelector.append($("<option></option>").attr("value", index).text(league)); 
+  });
+
+  var categorySelector = $("#search-sub");
+  categorySelector.append($("<option></option>").attr("value", 0).text("All")); 
+
+  $.each(CATEGORIES[category], function(index, child) {   
+    categorySelector.append($("<option></option>").attr("value", index + 1).text(toTitleCase(child))); 
+  });
+
+  // Add price table headers
+  var tableHeaderContent = "<th scope='col'>Item</th>";
+  if (category === "gems") {
+    tableHeaderContent += "<th scope='col'>Lvl</th>";
+    tableHeaderContent += "<th scope='col'>Qual</th>";
+    tableHeaderContent += "<th scope='col'>Corr</th>";
+  }
+  tableHeaderContent += "<th scope='col'>Price</th>";
+  tableHeaderContent += "<th scope='col'>Change</th>";
+  tableHeaderContent += "<th scope='col'>Count</th>";
+  $("#searchResults > thead > tr").append(tableHeaderContent);
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+}
 
 
 function readCookies() {
   var league = getCookie("league");
-  console.log("Got league from cookie: " + league);
+  if (league) console.log("Got league from cookie: " + league);
+
+  FILTER.league = league.toLowerCase();
   
   $("#search-league option").filter(function() { 
     return ($(this).text() == league);
