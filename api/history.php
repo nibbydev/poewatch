@@ -2,32 +2,35 @@
 // Set header to json
 header('Content-Type: application/json');
 
-if (array_key_exists("league", $_GET)) {
-  $PARAM_league = ucwords(strtolower(trim(preg_replace("/[^A-Za-z ]/", '', $_GET["league"]))));
-  if (!$PARAM_league) die("{'error': 'Invalid params', 'field': 'league'}");
-} else die("{'error': 'Invalid params', 'field': 'league'}");
+if (array_key_exists("category", $_GET)) {
+  $PARAM_category = strtolower(trim(preg_replace("/[^A-Za-z-]/", '', $_GET["category"])));
+  if (!$PARAM_category) die("{'error': 'Invalid params', 'field': 'category'}");
+} else die("{'error': 'Invalid params', 'field': 'category'}");
 
-if (array_key_exists("key", $_GET)) {
-  $PARAM_key = preg_replace("/[^A-Za-z0-9|:' ]/", '', $_GET["key"]);
-  if (!$PARAM_key) die("{'error': 'Invalid params', 'field': 'key'}");
-} else die("{'error': 'Invalid params', 'field': 'key'}");
+if (array_key_exists("index", $_GET)) {
+  $PARAM_index = preg_replace("/[^A-Za-z0-9-]/", '', $_GET["index"]);
+  if (!$PARAM_index) die("{'error': 'Invalid params', 'field': 'index'}");
+} else die("{'error': 'Invalid params', 'field': 'index'}");
 
+// Test parameter lengths
+if (strlen($PARAM_index) > 20) die("{'error': 'Invalid params', 'field': 'index'}");
+if (strlen($PARAM_category) > 20) die("{'error': 'Invalid params', 'field': 'category'}");
 
-$splitKey = explode('|', $PARAM_key);
-if (count($splitKey) < 4) die("{'error': 'Invalid params', 'field': 'key'}");
+// Test index integrity
+$splitIndex = explode('-', $PARAM_index);
+if (sizeof($splitIndex) !== 2) die("{'error': 'Invalid params', 'field': 'index'}");
+else if (strlen($splitIndex[0]) !== 4) die("{'error': 'Invalid params', 'field': 'index'}");
+else if (strlen($splitIndex[1]) !== 2) die("{'error': 'Invalid params', 'field': 'index'}");
 
-$category = strtolower(trim($splitKey[1]));
-$genericKey = implode('|', array_slice($splitKey, 2));
+// Form file name
+$fileName = dirname(getcwd(), 2) . "/data/history/$PARAM_category.json";
 
-//echo $PARAM_league . "\n";
-//echo $category . "\n";
-//echo $genericKey . "\n";
+// Check if file exists
+if (!file_exists($fileName)) die("{'error': 'Invalid params', 'field': 'category'}");
 
-if ($category !== "currency") $category = "items";
+// Get JSON
+$json = json_decode( file_get_contents( $fileName ) , true );
 
-$fileName = dirname(getcwd(), 2) . "/data/history/$PARAM_league.$category.json";
-$json = json_decode( file_get_contents( $fileName) , true );
-
-if (array_key_exists($genericKey, $json)) {
-  echo json_encode($json[$genericKey]);
+if (array_key_exists($PARAM_index, $json)) {
+  echo json_encode($json[$PARAM_index]);
 } else die("{\"prices\": [], \"tags\": []}");

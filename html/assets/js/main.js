@@ -7,7 +7,7 @@ let FILTER;
 var ITEMS = [];
 var LEAGUES = [];
 var CATEGORIES = {};
-const HISTORY_LEAGUES = ["Abyss", "Harbinger", "Legacy", "Breach"];
+var HISTORY_DATA = {};
 let HISTORY_CHART;
 
 const INITIAL_LOAD_AMOUNT = 150;
@@ -65,7 +65,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   <hr>
   <div class='row m-1 mb-3'>
     <div class='col-sm'>
-      <h4>Past leagues (WIP)</h4>
+      <h4>Past leagues</h4>
       <div class='form-group'>
         <select class='form-control' id='history-league-select'>
         </select>
@@ -229,8 +229,9 @@ function toTitleCase(str) {
 
 function readCookies() {
   var league = getCookie("league");
-  if (league) console.log("Got league from cookie: " + league);
+  if (!league) return; 
 
+  console.log("Got league from cookie: " + league);
   FILTER.league = league.toLowerCase();
   
   $("#search-league option").filter(function() { 
@@ -287,21 +288,27 @@ function onRowClick(event) {
   expandedRow = $(expandedRowTemplate);
   target.closest("tr").after(expandedRow);
 
-  // Add league options to template
-  var historyLeagueSelector = $("#history-league-select");
-  $.each(HISTORY_LEAGUES, function(index, league) {   
-    historyLeagueSelector.append($("<option></option>").attr("value", index).text(toTitleCase(league))); 
-  });
-
   // Create event listener for league selector
+  var historyLeagueSelector = $("#history-league-select");
   historyLeagueSelector.change(function(){
-    var selectedLeauge = HISTORY_LEAGUES[historyLeagueSelector.find(":selected").val()];
-    makeHistoryRequest(selectedLeauge, ITEMS[parentIndex]["specificKey"]);
+    var selectedLeauge = historyLeagueSelector.find(":selected").val();
+
+    if (selectedLeauge in HISTORY_DATA) {
+      HISTORY_CHART.data.labels = HISTORY_DATA[selectedLeauge]["tags"];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[selectedLeauge]["prices"];
+      HISTORY_CHART.update();
+    }
+
+    // TODO: left off here, need to update makeHistoryRequest() parameters so that instead of league i pass 
+    // category:subcategory and then in history.php it should do cat:sub -> cat-sub and then gotta update the 
+    // event listener so itd only make 1 request when a person clicks on it but updates the charts when a 
+    // different league is selected
   });
 
-  // Get currently selected league and make request
-  var selectedLeauge = HISTORY_LEAGUES[historyLeagueSelector.find(":selected").val()];
-  makeHistoryRequest(selectedLeauge, ITEMS[parentIndex]["specificKey"]);
+  // Make request
+  var fullCategory = ITEMS[parentIndex].parent;
+  if (ITEMS[parentIndex].child) fullCategory += "-" + ITEMS[parentIndex].child;
+  makeHistoryRequest(fullCategory, ITEMS[parentIndex]["index"]);
 
   // Place ChartJS charts inside the expanded row
   placeCharts(parentIndex);
@@ -327,12 +334,12 @@ function onRowClick(event) {
 }
 
 
-function makeHistoryRequest(league, key) {
+function makeHistoryRequest(category, index) {
   var request = $.ajax({
     url: "http://api.poe.ovh/history",
     data: {
-      league: league, 
-      key: key
+      category: category, 
+      index: index
     },
     type: "GET",
     async: true,
@@ -340,9 +347,19 @@ function makeHistoryRequest(league, key) {
   });
 
   request.done(function(payload) {
-    HISTORY_CHART.data.labels = payload["tags"];
-    HISTORY_CHART.data.datasets[0].data = payload["prices"];
+    HISTORY_DATA = payload;
+
+    var leagues = Object.keys(HISTORY_DATA);
+
+    HISTORY_CHART.data.labels = payload[leagues[0]]["tags"];
+    HISTORY_CHART.data.datasets[0].data = payload[leagues[0]]["prices"];
     HISTORY_CHART.update();
+
+    // Add league options to template
+    var historyLeagueSelector = $("#history-league-select");
+    $.each(leagues, function(index, league) {   
+      historyLeagueSelector.append($("<option></option>").attr("value", league).text(toTitleCase(league))); 
+    });
   });
 }
 
