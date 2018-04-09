@@ -44,7 +44,12 @@
             <div class="card-body">
               <h2 class="card-title">About</h2>
               <hr>
-              <p>Yeah, most on the info is on the front page.</p>
+              <h5>Got a question/suggestion?</h5>
+              <p>Drop me a message @ Siegrest#1851</p>
+              
+              <hr>
+              <h5>Legal text</h5>
+              <p>Price history for the leagues Abyss, Breach, Essence, Harbinger and Legacy is provided by <a href="http://poe.ninja">poe.ninja</a>.</p>
             </div>
           </div>
         </div>
