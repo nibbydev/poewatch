@@ -339,7 +339,7 @@ public class Item extends Mappers.BaseItem {
 
         // This was an error somehow, somewhere
         if (sockets == null) {
-            discard = true;
+            links = 0;
             return;
         }
 
