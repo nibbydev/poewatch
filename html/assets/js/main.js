@@ -32,7 +32,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   </div>
   <hr>
   <div class='row m-1 mt-2'>
-    <div class='col-sm'>
+    <div class='col-md'>
       <table class="table table-bordered table-sm details-table">
         <tbody>
           <tr id='details-row-mean'>
@@ -47,7 +47,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
         </tbody>
       </table>
     </div>
-    <div class='col-sm'>
+    <div class='col-md'>
       <table class="table table-bordered table-sm details-table">
         <tbody>
           <tr id='details-row-quantity'>
@@ -67,10 +67,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   <div class='row m-1 mb-3'>
     <div class='col-sm'>
       <h4>Past leagues</h4>
-      <div class='form-group'>
-        <select class='form-control' id='history-league-select'>
-        </select>
-      </div>
+      <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
       <div class='chart-large'><canvas id="chart-past"></canvas></div>
     </div>
   </div>
@@ -290,20 +287,15 @@ function onRowClick(event) {
   target.closest("tr").after(expandedRow);
 
   // Create event listener for league selector
-  var historyLeagueSelector = $("#history-league-select");
-  historyLeagueSelector.change(function(){
-    HISTORY_LEAGUE = historyLeagueSelector.find(":selected").val();
+  var historyLeagueRadio = $("#history-league-radio");
+  historyLeagueRadio.change(function(){
+    HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
 
     if (HISTORY_LEAGUE in HISTORY_DATA) {
       HISTORY_CHART.data.labels = HISTORY_DATA[HISTORY_LEAGUE]["labels"];
       HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[HISTORY_LEAGUE]["values"];
       HISTORY_CHART.update();
     }
-
-    // TODO: left off here, need to update makeHistoryRequest() parameters so that instead of league i pass 
-    // category:subcategory and then in history.php it should do cat:sub -> cat-sub and then gotta update the 
-    // event listener so itd only make 1 request when a person clicks on it but updates the charts when a 
-    // different league is selected
   });
 
   // Make request
@@ -354,8 +346,9 @@ function makeHistoryRequest(category, index) {
       console.log(payload);
       
       var chartArea = $(".chart-large");
-      chartArea.after("<h5 class='text-center'>No results</h5>");
+      chartArea.after("<h5 class='text-center my-3'>No results</h5>");
       chartArea.remove();
+      $("#history-league-radio").remove();
 
       return;
     }
@@ -372,11 +365,14 @@ function makeHistoryRequest(category, index) {
     HISTORY_CHART.data.datasets[0].data = payload[selectedLeague]["values"];
     HISTORY_CHART.update();
 
-    // Add league options to template
-    var historyLeagueSelector = $("#history-league-select");
+    var historyLeagueRadio = $("#history-league-radio");
     $.each(leagues, function(index, league) {
-      var selected = (HISTORY_LEAGUE === league ? " selected" : "");
-      historyLeagueSelector.append($("<option"+selected+"></option>").attr("value", league).text(toTitleCase(league))); 
+      var selected = (selectedLeague === league ? " active" : "");
+
+      var button = "<label class='btn btn-outline-secondary"+selected+"'>";
+      button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
+
+      historyLeagueRadio.append(button); 
     });
   });
 }
@@ -510,7 +506,7 @@ function getAllDays(length) {
   }
 
   return a;
-};
+}
 
 
 function makeRequest(from, to) {
@@ -630,7 +626,7 @@ function getUrlParameter(sParam) {
       return sParameterName[1] === undefined ? true : sParameterName[1];
     }
   }
-};
+}
 
 
 function roundPrice(price) {
