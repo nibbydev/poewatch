@@ -54,10 +54,10 @@ var expandedRowTemplate = `<tr><td colspan='100'>
             <td>Average listed per 24h</td>
           </tr>
           <tr id='details-row-1d'>
-            <td>Price change since yesterday</td>
+            <td>Price since yesterday</td>
           </tr>
           <tr id='details-row-1w'>
-            <td>Price change since a week</td>
+            <td>Price since 1 week</td>
           </tr>
         </tbody>
       </table>
@@ -454,7 +454,9 @@ function placeCharts(index) {
       }]
     },
     options: {
-      legend: {display: false},
+      legend: {
+        display: false
+      },
       responsive: true,
       maintainAspectRatio: false,
       animation: {duration: 0},
@@ -465,7 +467,15 @@ function placeCharts(index) {
         mode: "index"
       },
       scales: {
-        yAxes: [{ticks: {beginAtZero:true}}]
+        yAxes: [{ticks: {beginAtZero:true}}],
+        xAxes: [{
+          ticks: {
+            autoSkip: false,
+            callback: function(value, index, values) {
+              return (index % 7 === 0) ? value : null;
+            }
+          }
+        }]
       }
     }
   }
