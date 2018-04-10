@@ -9,6 +9,7 @@ var LEAGUES = [];
 var CATEGORIES = {};
 var HISTORY_DATA = {};
 let HISTORY_CHART;
+let HISTORY_LEAGUE;
 
 const INITIAL_LOAD_AMOUNT = 150;
 const PRICE_PERCISION = 100;
@@ -291,11 +292,11 @@ function onRowClick(event) {
   // Create event listener for league selector
   var historyLeagueSelector = $("#history-league-select");
   historyLeagueSelector.change(function(){
-    var selectedLeauge = historyLeagueSelector.find(":selected").val();
+    HISTORY_LEAGUE = historyLeagueSelector.find(":selected").val();
 
-    if (selectedLeauge in HISTORY_DATA) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[selectedLeauge]["tags"];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[selectedLeauge]["prices"];
+    if (HISTORY_LEAGUE in HISTORY_DATA) {
+      HISTORY_CHART.data.labels = HISTORY_DATA[HISTORY_LEAGUE]["labels"];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[HISTORY_LEAGUE]["values"];
       HISTORY_CHART.update();
     }
 
@@ -349,16 +350,33 @@ function makeHistoryRequest(category, index) {
   request.done(function(payload) {
     HISTORY_DATA = payload;
 
+    if ("error" in payload) {
+      console.log(payload);
+      
+      var chartArea = $(".chart-large");
+      chartArea.after("<h5 class='text-center'>No results</h5>");
+      chartArea.remove();
+
+      return;
+    }
+
     var leagues = Object.keys(HISTORY_DATA);
 
-    HISTORY_CHART.data.labels = payload[leagues[0]]["tags"];
-    HISTORY_CHART.data.datasets[0].data = payload[leagues[0]]["prices"];
+    if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
+
+    let selectedLeague;
+    if (HISTORY_LEAGUE in HISTORY_DATA) selectedLeague = HISTORY_LEAGUE;
+    else selectedLeague = leagues[0];
+
+    HISTORY_CHART.data.labels = payload[selectedLeague]["labels"];
+    HISTORY_CHART.data.datasets[0].data = payload[selectedLeague]["values"];
     HISTORY_CHART.update();
 
     // Add league options to template
     var historyLeagueSelector = $("#history-league-select");
-    $.each(leagues, function(index, league) {   
-      historyLeagueSelector.append($("<option></option>").attr("value", league).text(toTitleCase(league))); 
+    $.each(leagues, function(index, league) {
+      var selected = (HISTORY_LEAGUE === league ? " selected" : "");
+      historyLeagueSelector.append($("<option"+selected+"></option>").attr("value", league).text(toTitleCase(league))); 
     });
   });
 }
