@@ -273,7 +273,7 @@ public class Entry {
 
             // Check if item doesn't fall under the current (but widened) price range
             if (median > 0 && inc_counter > 0 && dec_counter / inc_counter < 0.5) {
-                if (raw.price > median * (3 + threshold_multiplier) || raw.price < median / (3 + threshold_multiplier)) {
+                if (raw.price > median * (2 + threshold_multiplier) || raw.price < median / (2 + threshold_multiplier)) {
                     continue;
                 }
             }
@@ -315,7 +315,7 @@ public class Entry {
             double price = db_items.get(i - offset).price;
 
             // If price is more than double or less than half the median, remove it
-            if (price > median * (2 + threshold_multiplier) || price < median / (2 + threshold_multiplier)) {
+            if (price > median * (1 + threshold_multiplier) || price < median / (1 + threshold_multiplier)) {
                 // Remove the item
                 db_items.remove(i - offset);
 
@@ -341,13 +341,13 @@ public class Entry {
         mode = findModeItems();
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
-        if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 80)
+        if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 90)
             threshold_multiplier += 0.1;
         else if (inc_counter > 0)
             threshold_multiplier -= 0.01;
 
         // Don't let it grow infinitely
-        if (threshold_multiplier > 7) threshold_multiplier = 7;
+        if (threshold_multiplier > 4) threshold_multiplier = 4;
         if (threshold_multiplier < 0) threshold_multiplier = 0;
     }
 
