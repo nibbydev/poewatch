@@ -369,7 +369,7 @@ function makeHistoryRequest(category, index) {
     $.each(leagues, function(index, league) {
       var selected = (selectedLeague === league ? " active" : "");
 
-      var button = "<label class='btn btn-outline-secondary"+selected+"'>";
+      var button = "<label class='btn btn-outline-dark"+selected+"'>";
       button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
 
       historyLeagueRadio.append(button); 
@@ -402,7 +402,23 @@ function placeCharts(index) {
       responsiveAnimationDuration: 0,
       tooltips: {
         intersect: false,
-        mode: "index"
+        mode: "index",
+        callbacks: {
+          title: function(tooltipItem, data) {
+            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']];
+          }
+        },
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
       }
     }
   }
@@ -430,7 +446,23 @@ function placeCharts(index) {
       responsiveAnimationDuration: 0,
       tooltips: {
         intersect: false,
-        mode: "index"
+        mode: "index",
+        callbacks: {
+          title: function(tooltipItem, data) {
+            return "Quantity: " + data['datasets'][0]['data'][tooltipItem[0]['index']];
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']];
+          }
+        },
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
       }
     }
   }
@@ -460,7 +492,23 @@ function placeCharts(index) {
       responsiveAnimationDuration: 0,
       tooltips: {
         intersect: false,
-        mode: "index"
+        mode: "index",
+        callbacks: {
+          title: function(tooltipItem, data) {
+            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
+          },
+          label: function(tooltipItem, data) {
+            return "Day " + data['labels'][tooltipItem['index']];
+          }
+        },
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
       },
       scales: {
         yAxes: [{ticks: {beginAtZero:true}}],
@@ -468,7 +516,8 @@ function placeCharts(index) {
           ticks: {
             autoSkip: false,
             callback: function(value, index, values) {
-              return (index % 7 === 0) ? value : null;
+              //return (index % 7 === 0) ? value : null;
+              return (index % 7 === 0) ? "Week " + (~~(index / 7) + 1) : null;
             }
           }
         }]
