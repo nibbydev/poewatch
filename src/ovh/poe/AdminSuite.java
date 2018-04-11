@@ -154,8 +154,16 @@ public class AdminSuite {
         }
     }
 
-    private void getAllFiles(File dir, List<File> fileList) {
+    /**
+     * Recursively populates provided list with file objects from provided folder and its subfolders
+     *
+     * @param dir Directory which to scan
+     * @param fileList List of files to populate
+     */
+    public static void getAllFiles(File dir, List<File> fileList) {
         File[] files = dir.listFiles();
+
+        if (files == null) return;
 
         for (File file : files) {
             fileList.add(file);

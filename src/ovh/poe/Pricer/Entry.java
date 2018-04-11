@@ -131,7 +131,7 @@ public class Entry {
         }
     }
 
-    private String key, index = "-";
+    private String league, key, index = "-";
     private int total_counter, inc_counter, dec_counter, quantity;
     private double mean, median, mode, threshold_multiplier;
 
@@ -168,6 +168,7 @@ public class Entry {
      */
     public void add(Item item, String accountName) {
         if (key == null) key = item.key;
+        if (league == null) league = item.league;
 
         // If missing, get item's index
         if (index.equals("-")) index = Main.RELATIONS.indexItem(item);
@@ -235,6 +236,8 @@ public class Entry {
      * Adds values from db_raw array to prices database array
      */
     private void parse() {
+        Map<String, Entry> leagueMap = Main.ENTRY_CONTROLLER.getEntryMap().getOrDefault(league, new HashMap<>());
+
         // Loop through entries
         for (RawEntry raw : db_raw) {
             // If a user already has listed the same item before, ignore it
@@ -250,14 +253,13 @@ public class Entry {
             // If the item was not listed for chaos orbs ("0" == Chaos Orb), then find the value in chaos
             if (!raw.priceType.equals("0")) {
                 // Get the database key of the currency the item was listed for
-                String currencyKey = key.substring(0, key.indexOf("|")) + "|currency|" +
-                        Main.RELATIONS.currencyIndexToName.get(raw.priceType) + "|5";
+                String currencyKey = "currency|" + Main.RELATIONS.currencyIndexToName.get(raw.priceType) + "|5";
 
                 // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
-                if (!Main.ENTRY_CONTROLLER.getEntryMap().containsKey(currencyKey)) continue;
+                if (!leagueMap.containsKey(currencyKey)) continue;
 
                 // Get the currency item entry the item was listed in
-                Entry currencyEntry = Main.ENTRY_CONTROLLER.getEntryMap().get(currencyKey);
+                Entry currencyEntry = leagueMap.get(currencyKey);
 
                 // If the currency the item was listed in has very few listings then ignore this item
                 if (currencyEntry.getCount() < 20) continue;
@@ -776,5 +778,13 @@ public class Entry {
 
     public List<DailyEntry> getDb_weekly() {
         return db_weekly;
+    }
+
+    public void setLeague(String league) {
+        this.league = league;
+    }
+
+    public String getLeague() {
+        return league;
     }
 }

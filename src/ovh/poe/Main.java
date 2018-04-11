@@ -173,7 +173,7 @@ public class Main {
      */
     private static void buildFolderFileStructure() {
         // Make sure output folders exist
-        new File("./http/api/data").mkdirs();
+        new File("./data/database").mkdirs();
         new File("./http/html").mkdirs();
         new File("./data/output").mkdirs();
         new File("./backups").mkdirs();

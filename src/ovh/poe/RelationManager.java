@@ -100,7 +100,8 @@ public class RelationManager {
         public String var, specificKey, lvl, quality, links, corrupted;
 
         public SubIndexedItem (Item item) {
-            specificKey = item.key.substring(item.key.indexOf('|') + 1);
+            //specificKey = item.key.substring(item.key.indexOf('|') + 1);
+            specificKey = item.key;
 
             if (item.variation != null) var = item.variation;
             if (item.links > 4) links = Integer.toString(item.links);
@@ -373,9 +374,8 @@ public class RelationManager {
         // IndexedItem instance to maps and return its index
         String index;
         String genericKey = resolveSpecificKey(item.key);
-        String keyWithoutLeague = item.key.substring(item.key.indexOf('|') + 1);
-        if (specificItemKeyToFullIndex.containsKey(keyWithoutLeague)) {
-            index = specificItemKeyToFullIndex.get(keyWithoutLeague);
+        if (specificItemKeyToFullIndex.containsKey(item.key)) {
+            index = specificItemKeyToFullIndex.get(item.key);
         } else if (genericItemKeyToSuperIndex.containsKey(genericKey)) {
             String superIndex = genericItemKeyToSuperIndex.get(genericKey);
             IndexedItem indexedGenericItem = genericItemIndexToData.get(superIndex);
@@ -383,7 +383,7 @@ public class RelationManager {
             String subIndex = indexedGenericItem.subIndex(item);
             index = genericItemKeyToSuperIndex.get(genericKey) + "-" + subIndex;
 
-            specificItemKeyToFullIndex.put(keyWithoutLeague, index);
+            specificItemKeyToFullIndex.put(item.key, index);
         } else {
             String superIndex = Integer.toHexString(genericItemKeyToSuperIndex.size());
             superIndex = ("0000" + superIndex).substring(superIndex.length());
@@ -394,7 +394,7 @@ public class RelationManager {
 
             genericItemKeyToSuperIndex.put(genericKey, superIndex);
             genericItemIndexToData.put(superIndex, indexedItem);
-            specificItemKeyToFullIndex.put(keyWithoutLeague, index);
+            specificItemKeyToFullIndex.put(item.key, index);
         }
 
         return index;
@@ -403,12 +403,11 @@ public class RelationManager {
     /**
      * Searches key-to-index database for a match based on input. Requires a unique key
      *
-     * @param key Item key (must contain league info)
+     * @param key Item key
      * @return Index and subIndex if successful, "-" if unsuccessful
      */
     public String getIndexFromKey(String key) {
-        String keyWithoutLeague = key.substring(key.indexOf('|') + 1);
-        return specificItemKeyToFullIndex.getOrDefault(keyWithoutLeague, "-");
+        return specificItemKeyToFullIndex.getOrDefault(key, "-");
     }
 
     /**
@@ -419,7 +418,7 @@ public class RelationManager {
      * @return Generalized item key
      */
     public static String resolveSpecificKey(String key) {
-        // "Hardcore Bestiary|armour:chest|Shroud of the Lightless:Carnal Armour|3|var:1 socket"
+        // "armour:chest|Shroud of the Lightless:Carnal Armour|3|var:1 socket"
 
         StringBuilder genericKey = new StringBuilder();
         String[] splitKey = key.split("\\|");
@@ -429,14 +428,14 @@ public class RelationManager {
         //genericKey.append("|");
 
         // Add item name
-        genericKey.append(splitKey[2]);
+        genericKey.append(splitKey[1]);
         genericKey.append("|");
 
         // Add item frameType
-        genericKey.append(splitKey[3]);
+        genericKey.append(splitKey[2]);
 
         // Add var info, if present (eg Impresence has different icons based on variation)
-        for (int i = 4; i < splitKey.length; i++) {
+        for (int i = 3; i < splitKey.length; i++) {
             if (splitKey[i].contains("var:")) {
                 genericKey.append("|");
                 genericKey.append(splitKey[i]);

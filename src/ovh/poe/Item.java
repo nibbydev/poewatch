@@ -94,8 +94,8 @@ public class Item extends Mappers.BaseItem {
     private void buildKey() {
         StringBuilder key = new StringBuilder();
 
-        key.append(league);
-        key.append('|');
+        //key.append(league);
+        //key.append('|');
         key.append(parentCategory);
 
         // If present, add childCategory to database key

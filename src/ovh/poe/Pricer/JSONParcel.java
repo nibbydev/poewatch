@@ -108,11 +108,10 @@ public class JSONParcel {
 
         // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
         String[] splitKey = entry.getKey().split("\\|");
-        String parentCategoryName = splitKey[1].split(":")[0];
-        String leagueName = splitKey[0];
+        String parentCategoryName = splitKey[0].split(":")[0];
 
-        if (!leagues.containsKey(leagueName)) leagues.put(leagueName, new TreeMap<>());
-        Map<String, List<JSONItem>> league = leagues.get(leagueName);
+        if (!leagues.containsKey(entry.getLeague())) leagues.put(entry.getLeague(), new TreeMap<>());
+        Map<String, List<JSONItem>> league = leagues.get(entry.getLeague());
 
         if (!league.containsKey(parentCategoryName)) league.put(parentCategoryName, new ArrayList<>());
         List<JSONItem> category = league.get(parentCategoryName);
