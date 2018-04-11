@@ -100,7 +100,7 @@ public class RelationManager {
         public String var, specificKey, lvl, quality, links, corrupted;
 
         public SubIndexedItem (Item item) {
-            specificKey = item.key;
+            specificKey = item.key.substring(item.key.indexOf('|') + 1);
 
             if (item.variation != null) var = item.variation;
             if (item.links > 4) links = Integer.toString(item.links);
@@ -373,8 +373,9 @@ public class RelationManager {
         // IndexedItem instance to maps and return its index
         String index;
         String genericKey = resolveSpecificKey(item.key);
-        if (specificItemKeyToFullIndex.containsKey(item.key)) {
-            index = specificItemKeyToFullIndex.get(item.key);
+        String keyWithoutLeague = item.key.substring(item.key.indexOf('|') + 1);
+        if (specificItemKeyToFullIndex.containsKey(keyWithoutLeague)) {
+            index = specificItemKeyToFullIndex.get(keyWithoutLeague);
         } else if (genericItemKeyToSuperIndex.containsKey(genericKey)) {
             String superIndex = genericItemKeyToSuperIndex.get(genericKey);
             IndexedItem indexedGenericItem = genericItemIndexToData.get(superIndex);
@@ -382,7 +383,7 @@ public class RelationManager {
             String subIndex = indexedGenericItem.subIndex(item);
             index = genericItemKeyToSuperIndex.get(genericKey) + "-" + subIndex;
 
-            specificItemKeyToFullIndex.put(item.key, index);
+            specificItemKeyToFullIndex.put(keyWithoutLeague, index);
         } else {
             String superIndex = Integer.toHexString(genericItemKeyToSuperIndex.size());
             superIndex = ("0000" + superIndex).substring(superIndex.length());
@@ -393,7 +394,7 @@ public class RelationManager {
 
             genericItemKeyToSuperIndex.put(genericKey, superIndex);
             genericItemIndexToData.put(superIndex, indexedItem);
-            specificItemKeyToFullIndex.put(item.key, index);
+            specificItemKeyToFullIndex.put(keyWithoutLeague, index);
         }
 
         return index;
@@ -406,7 +407,8 @@ public class RelationManager {
      * @return Index and subIndex if successful, "-" if unsuccessful
      */
     public String getIndexFromKey(String key) {
-        return specificItemKeyToFullIndex.getOrDefault(key, "-");
+        String keyWithoutLeague = key.substring(key.indexOf('|') + 1);
+        return specificItemKeyToFullIndex.getOrDefault(keyWithoutLeague, "-");
     }
 
     /**
@@ -423,8 +425,8 @@ public class RelationManager {
         String[] splitKey = key.split("\\|");
 
         // Add item category
-        genericKey.append(splitKey[1]);
-        genericKey.append("|");
+        //genericKey.append(splitKey[1]);
+        //genericKey.append("|");
 
         // Add item name
         genericKey.append(splitKey[2]);
