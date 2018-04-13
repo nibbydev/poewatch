@@ -52,9 +52,9 @@ public class Mappers {
     }
 
     /**
-     * Properties object
+     * Property object
      */
-    public class Properties {
+    public class Property {
         public String name;
         public List<List<String>> values;
     }
@@ -75,7 +75,7 @@ public class Mappers {
         public boolean identified, corrupted, enchanted;
         public String icon, league, id, name, typeLine;
         public String note;
-        public List<Properties> properties;
+        public List<Property> properties;
         public List<Socket> sockets;
         public List<String> explicitMods;
 

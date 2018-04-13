@@ -71,7 +71,7 @@ public class Item extends Mappers.BaseItem {
 
         // Attempt to find map tier from properties
         if (parentCategory.equals("maps") && properties != null) {
-            for (Mappers.Properties prop : properties) {
+            for (Mappers.Property prop : properties) {
                 if (prop.name.equals("Map Tier")) {
                     try {
                         tier = prop.values.get(0).get(0);
@@ -273,7 +273,7 @@ public class Item extends Mappers.BaseItem {
         int qual = 0;
 
         // Attempt to extract lvl and quality from item info
-        for (Mappers.Properties prop : properties) {
+        for (Mappers.Property prop : properties) {
             if (prop.name.equals("Level")) {
                 lvl = Integer.parseInt(prop.values.get(0).get(0).split(" ")[0]);
             } else if (prop.name.equals("Quality")) {
@@ -497,6 +497,19 @@ public class Item extends Mappers.BaseItem {
                     variation = "1 socket";
                 else if (explicitMods.get(0).equals("Has 2 Abyssal Sockets"))
                     variation = "2 sockets";
+                break;
+
+            case "The Beachhead":
+                // Attempt to find map tier
+                for (Mappers.Property property : properties) {
+                    if (property.name.equals("Map Tier")) {
+                        if (!property.values.isEmpty()) {
+                            if (!property.values.get(0).isEmpty()) {
+                                variation = property.values.get(0).get(0);
+                            }
+                        }
+                    }
+                }
                 break;
         }
     }
