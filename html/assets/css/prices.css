@@ -1,3 +1,7 @@
+/*------------------------------------------------------------------------------------------------------------
+// Price table formatting
+//----------------------------------------------------------------------------------------------------------*/
+
 .table-img-container {
   display: inline-block;
   width: 30px;
@@ -9,6 +13,48 @@
   max-width: 30px;
   vertical-align: middle;
 }
+
+/* Styling for central table */
+.price-table, 
+.price-table > thead > tr > th,
+.price-table > tbody > tr > td {
+  border: 1px solid #ccc;
+  vertical-align: middle;
+  padding: 2px 2px 2px 4px;
+}
+
+.price-table > tbody > tr:hover {
+  background-color: #eee;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Expanded row styling
+//----------------------------------------------------------------------------------------------------------*/
+
+.price-table tr.parent-row {
+  background-color: #212529 !important;
+  color: #ddd;
+}
+.price-table > tbody > tr.parent-row > td {
+  border: 1px solid #444;
+}
+.price-table tr.selected-row {
+  background-color: #eee;
+}
+
+/* Styling for small details table */
+.details-table, 
+.details-table > tbody > tr > td {
+  border: 1px solid #ccc;
+  vertical-align: middle;
+  padding: 2px 2px 2px 4px;
+  background-color: #eee;
+  color: #222;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Badges
+//----------------------------------------------------------------------------------------------------------*/
 
 /* Custom badge colors */
 .custom-badge-red {
@@ -36,39 +82,10 @@
   background-color: rgb(194, 194, 194);
 }
 
-/* Hide some search controls */
-.link-fields, 
-.gem-fields,
-.loadall {
-  display: none;
-}
+/*------------------------------------------------------------------------------------------------------------
+// Graphs and sparklines
+//----------------------------------------------------------------------------------------------------------*/
 
-/* Styling for central table */
-.price-table, 
-.price-table > thead > tr > th,
-.price-table > tbody > tr > td {
-  border: 1px solid #ccc;
-  vertical-align: middle;
-  padding: 2px 2px 2px 4px;
-}
-
-.price-table > tbody > tr:hover {
-  background-color: #eee;
-}
-
-/* Styling for expanded table rows */
-.price-table tr.parent-row {
-  background-color: #212529 !important;
-  color: #ddd;
-}
-.price-table > tbody > tr.parent-row > td {
-  border: 1px solid #444;
-}
-.price-table tr.selected-row {
-  background-color: #eee;
-}
-
-/* Sparkline styling */
 .sparkline-green {stroke: #4c9b4c}
 .sparkline-red {stroke: #dc2b33}
 .sparkline-orange {stroke: #e36023}
@@ -90,6 +107,17 @@ canvas {
   height: auto !important;
 }
 
+/*------------------------------------------------------------------------------------------------------------
+// Misc
+//----------------------------------------------------------------------------------------------------------*/
+
+/* Hide some search controls */
+.link-fields, 
+.gem-fields,
+.loadall {
+  display: none;
+}
+
 /* Styling for second navbar */
 .second-navbar {background-color: #282c30}
 .second-navbar select.btn {
@@ -97,15 +125,8 @@ canvas {
      -moz-appearance: button;
 }
 
-/* Styling for small details table */
-.details-table, 
-.details-table > tbody > tr > td {
-  border: 1px solid #ccc;
-  vertical-align: middle;
-  padding: 2px 2px 2px 4px;
-  background-color: #eee;
-  color: #222;
-}
-
 /* Styling for foil uniques */
 .item-foil {color: #4c9b4c}
+
+/* Styling for item types */
+.item-type{color: #888}
