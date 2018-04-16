@@ -608,9 +608,9 @@ function parseItem(item, index) {
   // Format name and variant/links badge
   var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
   nameField += item["name"];
-  if ("type" in item) nameField += ", " + item["type"];
+  if ("type" in item) nameField += "<span class='item-type'>, " + item["type"] + "</span>";
   if ("var" in item) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
-  if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+  else if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
   if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-dark'>New</span>";
   nameField += "</span>";
 

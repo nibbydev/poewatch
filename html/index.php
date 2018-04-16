@@ -63,6 +63,7 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
+              <div><em>14/04/2018</em> - Fix Beachhead variants not being indexed</div>
               <div><em>10/04/2018</em> - Fix Kaom's Heart not being indexed</div>
               <div><em>09/04/2018</em> - Add item price history graphs</div>
               <div><em>08/04/2018</em> - Create and add logo</div>
