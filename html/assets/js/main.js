@@ -33,7 +33,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
   <hr>
   <div class='row m-1 mt-2'>
     <div class='col-md'>
-      <table class="table table-bordered table-sm details-table">
+      <table class="table table-sm details-table">
         <tbody>
           <tr id='details-row-mean'>
             <td>Current mean</td>
@@ -48,7 +48,7 @@ var expandedRowTemplate = `<tr><td colspan='100'>
       </table>
     </div>
     <div class='col-md'>
-      <table class="table table-bordered table-sm details-table">
+      <table class="table table-sm details-table">
         <tbody>
           <tr id='details-row-quantity'>
             <td>Average listed per 24h</td>
@@ -97,8 +97,8 @@ $(document).ready(function() {
   makeRequest(0, INITIAL_LOAD_AMOUNT);
 
   // Define league event listener
-  $("#search-league").change(function(){
-    FILTER.league = $(this).find(":selected").text();
+  $("#search-league").on("change", function(){
+    FILTER.league = $("input[name=league]:checked", this).val();
     console.log(FILTER.league);
     document.cookie = "league="+FILTER.league;
     ITEMS = [];
@@ -195,15 +195,17 @@ function fillSelectors(category) {
   $("#page-title").text(toTitleCase(category));
 
   var leagueSelector = $("#search-league");
-  $.each(LEAGUES, function(index, league) {   
-    leagueSelector.append($("<option></option>").attr("value", index).text(league)); 
+  $.each(LEAGUES, function(index, league) {
+    var button = "<label class='btn btn-sm btn-outline-secondary p-0 px-1'>";
+    button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
+    leagueSelector.append(button); 
   });
 
   var categorySelector = $("#search-sub");
   categorySelector.append($("<option></option>").attr("value", 0).text("All")); 
 
   $.each(CATEGORIES[category], function(index, child) {   
-    categorySelector.append($("<option></option>").attr("value", index + 1).text(toTitleCase(child))); 
+    categorySelector.append($("<option></option>").attr("value", index + 1).text(toTitleCase(child)));
   });
 
   // Add price table headers
@@ -227,14 +229,21 @@ function toTitleCase(str) {
 
 function readCookies() {
   var league = getCookie("league");
-  if (!league) return; 
+  if (!league) {
+
+    $("#search-league input").filter(function() { 
+      return ($(this).val() === FILTER.league);
+    }).prop("active", true).trigger("click");
+
+    return; 
+  }
 
   console.log("Got league from cookie: " + league);
   FILTER.league = league.toLowerCase();
   
-  $("#search-league option").filter(function() { 
-    return ($(this).text() == league);
-  }).prop("selected", true);
+  $("#search-league input").filter(function() { 
+    return ($(this).val() === league);
+  }).prop("active", true).trigger("click");
 }
 
 
@@ -386,8 +395,8 @@ function placeCharts(index) {
       datasets: [{
         label: "Price in chaos",
         data: ITEMS[index]["history"]["mean"],
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: "#222",
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        borderColor: "#fff",
         borderWidth: 1,
         lineTension: 0,
         pointRadius: 0
@@ -430,8 +439,8 @@ function placeCharts(index) {
       datasets: [{
         label: "Quantity",
         data: ITEMS[index]["history"]["quantity"],
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: "#222",
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        borderColor: "#fff",
         borderWidth: 1,
         lineTension: 0,
         pointRadius: 0
@@ -474,8 +483,8 @@ function placeCharts(index) {
       datasets: [{
         label: "Price in chaos",
         data: [],
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: "#222",
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        borderColor: "#fff",
         borderWidth: 1,
         lineTension: 0,
         pointRadius: 0
@@ -516,7 +525,6 @@ function placeCharts(index) {
           ticks: {
             autoSkip: false,
             callback: function(value, index, values) {
-              //return (index % 7 === 0) ? value : null;
               return (index % 7 === 0) ? "Week " + (~~(index / 7) + 1) : null;
             }
           }

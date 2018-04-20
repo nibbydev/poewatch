@@ -34,9 +34,7 @@
     <div class="row m-0 py-1 pr-3 second-navbar">
       <div class="col text-right">
         <div class="form-group m-0">
-          <label for="search-league" class="m-0">Selected league: </label>
-          <select class="btn px-1 py-0" id="search-league">
-          </select>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
         </div>
       </div>
     </div>
