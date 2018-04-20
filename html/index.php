@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid">
       <a href="/" class="navbar-brand">
         <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
@@ -74,7 +74,7 @@
     </div>
   </div>
 </div>
-<footer class="container-fluid bg-dark text-center">
+<footer class="container-fluid text-center">
   <p>Poe.ovh © 2018</p>
 </footer>
 <script src="assets/js/jquery.min.js"></script>

@@ -1,54 +1,69 @@
+/*------------------------------------------------------------------------------------------------------------
+// Main block formatting
+//----------------------------------------------------------------------------------------------------------*/
+
 .main-content {
   margin-top: 30px;
 }
 
-.form-controlform-control {
-  background-color: #ddd;
-  color: #222;
+body {
+  background-color: #181818;
+  color: #ddd;
 }
 
 .custom-card {
-  background-color: #ddd;
-  color: #222;
+  background-color: #333;
 }
+
+hr {
+  border-color: #282828;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Form elements
+//----------------------------------------------------------------------------------------------------------*/
+
+input.form-control,select.form-control {
+  background-color: transparent !important;
+  border: 1px solid #333 !important;
+  color: #ddd !important;
+}
+
+option {
+  background-color: #333;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Navbars
+//----------------------------------------------------------------------------------------------------------*/
 
 /* Remove the navbar's default margin-bottom and rounded borders */ 
 .navbar {
   margin-bottom: 0;
   border-radius: 0;
+  background-color: #222;
 }
 
 /* Set white text and some padding */
 footer {
-  color: #ddd;
   padding: 15px;
+  background-color: #222;
 }
+
+/*------------------------------------------------------------------------------------------------------------
+// Sidebar
+//----------------------------------------------------------------------------------------------------------*/
 
 /* Overwrite sidebar button active style background */
-.list-group-item.sidebar-link.active {background-color: #777}
-
-
+.sidebar-link {background-color: #333}
+.sidebar-link.active, .sidebar-link:hover {background-color: #444}
 .sidebar-left {
   max-width: 300px;
-}
-
-#sidebar-link-container {
   margin: 20px 0 20px 0;
 }
-
-.sidebar-link {background-color: #ddd}
-
-#sidebar-link-container a {
-  color: #222;
+.sidebar-left a {
+  color: #ccc;
   border: transparent;
-}
-
-.list-group-item.sidebar-link.active {
-  background-color: #eee;
-}
-
-#sidebar-link-container a:hover {
-  background-color: #eee;
 }
 
 .sidebar-img-container {
@@ -57,15 +72,13 @@ footer {
   height: 30px;
   margin-right: 10px;
 }
-
 .sidebar-img-container img {
   max-height: 30px;
 }
 
-body {
-  background-color: #222;
-  color: #ddd;
-}
+/*------------------------------------------------------------------------------------------------------------
+// Misc
+//----------------------------------------------------------------------------------------------------------*/
 
 /* On small screens, set height to 'auto' for sidenav and grid */
 @media screen and (max-width: 992px) {

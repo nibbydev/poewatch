@@ -41,7 +41,7 @@
     <div class="row">
         <div class="col-lg">
           <div class="alert alert-warning" role="alert">
-            <h3 class="alert-heading">Attention!</h3>
+            <h3 class="alert-heading text-center">Attention!</h3>
             <p>This site is still a work in progress. Data is wiped regularly, API endpoints may change, layout will change.</p>
           </div>
         </div>
@@ -50,7 +50,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <h2 class="card-title">About</h2>
+              <h2 class="card-title text-center">About</h2>
               <hr>
               <h5>Got a question/suggestion or notice something wrong with an item?</h5>
               <p>Drop me a message @ Siegrest#1851</p>
@@ -58,7 +58,6 @@
               <h5>FAQ</h5>
               <p><em>Where do you get your prices?</em><br>The public stash API over at pathofexile.com. Prices are automatically generated from the items players list for sale.</p>
               <p><em>How up to date are the prices?</em><br>All data is recalculated in 1 minute intervals. Prices on the website are always the most recent unless stated otherwise.</p>
-              
               <hr>
               <h5>Legal text</h5>
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
