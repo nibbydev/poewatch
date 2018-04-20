@@ -211,8 +211,8 @@ public class Entry {
             hourlyEntry.add(mean, median, mode);
             db_daily.add(hourlyEntry);
 
-            total_counter += inc_counter - dec_counter;
-            quantity += inc_counter - dec_counter;
+            total_counter += inc_counter;
+            quantity += inc_counter;
             inc_counter = dec_counter = 0;
         }
 
