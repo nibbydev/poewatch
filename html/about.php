@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe.ovh</title>
+  <title>Poe.ovh - About</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,53 +20,47 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a class="nav-link active" href="/">Front</a></li>
+          <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
           <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
           <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-          <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+          <li class="nav-item"><a class="nav-link active" href="about">About</a></li>
         </ul>
       </div>
     </div>
   </nav>
+  
 <div class="container-fluid">    
   <div class="row">
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
-
-        <?php 
-          include "assets/php/menu.php";
-        ?>
-
+        <?php include "assets/php/menu.php" ?>
       </div>
     </div>
-    <div class="col-lg-8 main-content"> 
-      <div class="row mb-3">
+
+    <div class="col-lg-8 main-content">
+    <div class="row">
         <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-body">
-              <h2 class="text-center">Poe.ovh</h2>
-              <hr>
-              <h5>Overview</h5>
-              <p>This is a site that collects data over time from various items in Path of Exile and calculates their average price. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
-              <h5>What's to come</h5>
-              <p>The general goal is to have this site combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> without relying on any APIs (apart from the official stash API, of course).</a></p>
-              <h5>The API</h5>
-              <p>Link's in the navbar up top. It's pretty self-explanatory. Most API pages are listed there and info should be generally pretty up to date. There probably will be some small chances to the API but nothing major</p>
-              <p>Update: It's pretty out of date now.</p>
-            </div>
+          <div class="alert alert-warning" role="alert">
+            <h3 class="alert-heading text-center">Attention!</h3>
+            <p>This site is still a work in progress. Data is wiped regularly, API endpoints may change, layout will change.</p>
           </div>
         </div>
-      </div>
+      </div> 
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <h2 class="text-center">News</h2>
+              <h2 class="card-title text-center">About</h2>
               <hr>
-              <div><em>14/04/2018</em> - Fix Beachhead variants not being indexed</div>
-              <div><em>10/04/2018</em> - Fix Kaom's Heart not being indexed</div>
-              <div><em>09/04/2018</em> - Add item price history graphs</div>
-              <div><em>08/04/2018</em> - Create and add logo</div>
+              <h5>Got a question/suggestion or notice something wrong with an item?</h5>
+              <p>Drop me a message @ Siegrest#1851</p>
+              <hr>
+              <h5>FAQ</h5>
+              <p><em>Where do you get your prices?</em><br>The public stash API over at pathofexile.com. Prices are automatically generated from the items players list for sale.</p>
+              <p><em>How up to date are the prices?</em><br>All data is recalculated in 1 minute intervals. Prices on the website are always the most recent unless stated otherwise.</p>
+              <hr>
+              <h5>Legal text</h5>
+              <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
             </div>
           </div>
         </div>
