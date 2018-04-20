@@ -2,22 +2,26 @@ package ovh.poe.Pricer;
 
 import ovh.poe.Main;
 import ovh.poe.RelationManager.IndexedItem;
+import ovh.poe.RelationManager.SubIndexedItem;
 
 import java.util.*;
 
 public class JSONParcel {
     private static class HistoryItem {
+        public List<Double> spark = new ArrayList<>();
         public List<Double> mean = new ArrayList<>();
         public List<Double> median = new ArrayList<>();
         public List<Double> mode = new ArrayList<>();
         public List<Integer> quantity = new ArrayList<>();
+        public double change;
     }
 
     public static class JSONItem {
         public double mean, median, mode;
-        public int count, frame, quantity;
-        public String child, icon, name, type, var, index;
-        public String corrupted, lvl, quality, links, tier;
+        public int count, quantity, frame;
+        public String index, specificKey;
+        public String corrupted, lvl, quality, links;
+        public String genericKey, parent, child, name, type, var, tier, icon;
         public HistoryItem history = new HistoryItem();
 
         public void copy (Entry entry) {
@@ -27,35 +31,72 @@ public class JSONParcel {
             count = entry.getCount() + entry.getInc_counter();
             quantity = entry.getQuantity();
             index = entry.getItemIndex();
+            specificKey = entry.getKey();
 
             // Copy the history over
-            for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
-                history.mean.add(dailyEntry.mean);
-                history.median.add(dailyEntry.median);
-                history.mode.add(dailyEntry.mode);
-                history.quantity.add(dailyEntry.quantity);
+            if (entry.getDb_weekly().size() > 0) {
+                double lowestSpark = 99999;
+
+                for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                    // Add all values to history
+                    history.mean.add(dailyEntry.mean);
+                    history.median.add(dailyEntry.median);
+                    history.mode.add(dailyEntry.mode);
+                    history.quantity.add(dailyEntry.quantity);
+
+                    // Find the lowest mean entry for sparkline
+                    if (dailyEntry.mean < lowestSpark) lowestSpark = dailyEntry.mean;
+                }
+
+                /*// Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
+                history.mean.add(mean);
+                history.median.add(median);
+                history.mode.add(mode);
+                // Remove excess elements
+                if (history.mean.size() > 7) history.mean.subList(0, history.mean.size() - 7).clear();
+                if (history.median.size() > 7) history.median.subList(0, history.median.size() - 7).clear();
+                if (history.mode.size() > 7) history.mode.subList(0, history.mode.size() - 7).clear();
+                // Again, find the lowest mean entry for sparkline
+                if (mean < lowestSpark) lowestSpark = mean;*/
+
+                // Get the absolute value of lowestSpark as the JS sparkline plugin can't handle negative values
+                if (lowestSpark < 0) lowestSpark *= -1;
+
+                // Get variation from lowest value
+                for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                    double newSpark = lowestSpark != 0 ? dailyEntry.mean / lowestSpark - 1 : 0.0;
+                    newSpark = Math.round(newSpark * 10000.0) / 100.0;
+                    history.spark.add(newSpark);
+                }
+
+                // Set change
+                if (history.spark.size() > 0) {
+                    history.change = history.spark.get(history.spark.size() - 1) - history.spark.get(0);
+                    history.change = Math.round(history.change * 100.0) / 100.0;
+                }
             }
 
             // Check if there's a match for the specific index
-            if (Main.RELATIONS.itemIndexToData.containsKey(index)) {
-                IndexedItem indexedItem = Main.RELATIONS.itemIndexToData.get(index);
+            String superIndex = index.substring(0, index.indexOf("-"));
+            if (Main.RELATIONS.genericItemIndexToData.containsKey(superIndex)) {
+                IndexedItem indexedItem = Main.RELATIONS.genericItemIndexToData.get(superIndex);
                 frame = indexedItem.frame;
+                genericKey = indexedItem.genericKey;
+                parent = indexedItem.parent;
                 child = indexedItem.child;
                 icon = indexedItem.icon;
                 name = indexedItem.name;
                 type = indexedItem.type;
-                var = indexedItem.var;
                 tier = indexedItem.tier;
-            }
 
-            // Get some data (eg links/lvl/quality/corrupted) from item key
-            // "Standard|weapons:twosword|Starforge:Infernal Sword|3|links:6"
-            String[] splitKey = entry.getKey().split("\\|");
-            for (int i = 3; i < splitKey.length; i++) {
-                if (splitKey[i].contains("links:")) links = splitKey[i].split(":")[1];
-                else if (splitKey[i].contains("l:")) lvl = splitKey[i].split(":")[1];
-                else if (splitKey[i].contains("q:")) quality = splitKey[i].split(":")[1];
-                else if (splitKey[i].contains("c:")) corrupted = splitKey[i].split(":")[1];
+                String subIndex = index.substring(index.indexOf("-") + 1);
+                SubIndexedItem subIndexedItem = indexedItem.subIndexes.get(subIndex);
+
+                if (subIndexedItem.corrupted != null) corrupted = subIndexedItem.corrupted.equals("true") ? "1" : "0";
+                if (subIndexedItem.quality != null) quality = subIndexedItem.quality;
+                if (subIndexedItem.links != null) links = subIndexedItem.links;
+                if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
+                if (subIndexedItem.var != null) var = subIndexedItem.var;
             }
         }
     }
@@ -67,11 +108,10 @@ public class JSONParcel {
 
         // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
         String[] splitKey = entry.getKey().split("\\|");
-        String parentCategoryName = splitKey[1].split(":")[0];
-        String leagueName = splitKey[0];
+        String parentCategoryName = splitKey[0].split(":")[0];
 
-        if (!leagues.containsKey(leagueName)) leagues.put(leagueName, new TreeMap<>());
-        Map<String, List<JSONItem>> league = leagues.get(leagueName);
+        if (!leagues.containsKey(entry.getLeague())) leagues.put(entry.getLeague(), new TreeMap<>());
+        Map<String, List<JSONItem>> league = leagues.get(entry.getLeague());
 
         if (!league.containsKey(parentCategoryName)) league.put(parentCategoryName, new ArrayList<>());
         List<JSONItem> category = league.get(parentCategoryName);

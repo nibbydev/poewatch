@@ -113,6 +113,7 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    reindex - clear the item info database\n"
+                + "    backup - backup commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -150,6 +151,9 @@ public class Main {
                             System.out.println("[Info] Reindexing cancelled");
                         }
                         break;
+                    case "backup":
+                        commandBackup(userInput);
+                        break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
                         break;
@@ -169,9 +173,10 @@ public class Main {
      */
     private static void buildFolderFileStructure() {
         // Make sure output folders exist
-        new File("./http/api/data").mkdirs();
+        new File("./data/database").mkdirs();
         new File("./http/html").mkdirs();
         new File("./data/output").mkdirs();
+        new File("./backups").mkdirs();
 
         // Create ./config.cfg if missing
         saveResource("/", "config.cfg");
@@ -335,6 +340,39 @@ public class Main {
         }
 
         return userInput.equals("yes");
+    }
+
+    /**
+     * Allows creating specific backups from the CLI
+     *
+     * @param userInput Input string
+     */
+    private static void commandBackup(String[] userInput) {
+        String helpString = "[INFO] Available backup commands:\n";
+        helpString += "    'backup data' - Backup database.txt file\n";
+        helpString += "    'backup output' - Backup everything in output directory\n";
+        helpString += "    'backup all' - Backup everything in data directory\n";
+
+        if (userInput.length < 2) {
+            System.out.println(helpString);
+            return;
+        }
+
+        switch (userInput[1]) {
+            case "data":
+                ADMIN.backup(new File("./data/database.txt"), "cli_database");
+                ADMIN.backup(new File("./data/itemData.json"), "cli_itemdata");
+                break;
+            case "output":
+                ADMIN.backup(new File("./data/output"), "cli_output");
+                break;
+            case "all":
+                ADMIN.backup(new File("./data/"), "cli_all");
+                break;
+            default:
+                System.out.println(helpString);
+                break;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------

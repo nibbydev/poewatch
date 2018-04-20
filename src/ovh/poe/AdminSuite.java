@@ -1,5 +1,14 @@
 package ovh.poe;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -126,10 +135,108 @@ public class AdminSuite {
     }
 
     //------------------------------------------------------------------------------------------------------------
+    // Backups. Original code by Deron Eriksson taken on 29 March, 2018 from
+    // http://www.avajava.com/tutorials/lessons/how-do-i-zip-a-directory-and-all-its-contents.html
+    //------------------------------------------------------------------------------------------------------------
+
+    public void backup(File dir2zip, String outputZipFileName) {
+        String stamp = dateStamp() + timeStamp().replaceAll(":", ".");
+        String outputFileName = "./backups/" + outputZipFileName + "_" + stamp + ".zip";
+
+        if (dir2zip.isFile()) {
+            zipOneFile(dir2zip, new File(outputFileName));
+            Main.ADMIN.log_("Created backup: " + dir2zip.getName(), 0);
+        } else {
+            List<File> fileList = new ArrayList<>();
+            getAllFiles(dir2zip, fileList);
+            writeZipFile(outputFileName, dir2zip, fileList);
+            Main.ADMIN.log_("Created backup: " + dir2zip.getName(), 0);
+        }
+    }
+
+    /**
+     * Recursively populates provided list with file objects from provided folder and its subfolders
+     *
+     * @param dir Directory which to scan
+     * @param fileList List of files to populate
+     */
+    public static void getAllFiles(File dir, List<File> fileList) {
+        File[] files = dir.listFiles();
+
+        if (files == null) return;
+
+        for (File file : files) {
+            fileList.add(file);
+
+            if (file.isDirectory()) {
+                getAllFiles(file, fileList);
+            }
+        }
+    }
+
+    private void writeZipFile(String fileName, File directoryToZip, List<File> fileList) {
+
+        try {
+            FileOutputStream fos = new FileOutputStream(fileName);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            for (File file : fileList) {
+                if (!file.isDirectory()) { // we only zip files, not directories
+                    addToZip(directoryToZip, file, zos);
+                }
+            }
+
+            zos.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addToZip(File directoryToZip, File file, ZipOutputStream zos) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
+
+        String zipFilePath = file.getCanonicalPath().substring(directoryToZip.getCanonicalPath().length() + 1,
+                file.getCanonicalPath().length());
+        ZipEntry zipEntry = new ZipEntry(zipFilePath);
+        zos.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zos.write(bytes, 0, length);
+        }
+
+        zos.closeEntry();
+        fis.close();
+    }
+
+    private void zipOneFile(File inputFile, File outputFile) {
+        try {
+            ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(outputFile));
+            FileInputStream fileInputStream = new FileInputStream(inputFile);
+
+            zipOutputStream.putNextEntry(new ZipEntry(inputFile.getName()));
+
+            byte[] bytes = new byte[1024];
+            int length;
+            while ((length = fileInputStream.read(bytes)) >= 0) {
+                zipOutputStream.write(bytes, 0, length);
+            }
+
+            zipOutputStream.closeEntry();
+            zipOutputStream.close();
+            fileInputStream.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
 
-    static String timeStamp() {
+    public static String timeStamp() {
         StringBuilder stringBuilder = new StringBuilder();
 
         // Refresh calendar
@@ -148,7 +255,7 @@ public class AdminSuite {
         return stringBuilder.toString();
     }
 
-    static String dateStamp() {
+    public static String dateStamp() {
         StringBuilder stringBuilder = new StringBuilder();
 
         // Refresh calendar
@@ -167,7 +274,7 @@ public class AdminSuite {
         return stringBuilder.toString();
     }
 
-    static String getFlair(int flair) {
+    public static String getFlair(int flair) {
         switch (flair) {
             case -1:
                 return "[STATUS]";
