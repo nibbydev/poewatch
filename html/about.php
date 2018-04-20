@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
@@ -71,6 +71,6 @@
 <footer class="container-fluid bg-dark text-center">
   <p>Poe.ovh © 2018</p>
 </footer>
-<script src="assets/js/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>
 </html>
