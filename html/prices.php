@@ -45,56 +45,59 @@
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
-        <?php 
-          include "assets/php/menu.php" ;
-        ?>
+        <?php include ( "assets/php/menu.php" ) ?>
 
       </div>
     </div>
     <div class="col-lg-8 main-content"> 
+
+      <!-- Title row -->
       <div class="row mb">
         <div class="col-lg"> 
-          <h1 id="page-title">.</h1>
+          <h1 class="mb-3"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h1>
         </div>
       </div>
-      <div class="row mb">
-        <div class="col-sm">
-          <h4>Sub-category</h4>
-          <select class="form-control custom-select" id="search-sub"></select>
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-sm">
-          <h4>Low count</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-            <label class="btn btn-outline-secondary active">
-              <input type="radio" name="confidence" value="1" checked>Hide
-            </label>
-            <label class="btn btn-outline-secondary">
-              <input type="radio" name="confidence" value="">Show
-            </label>
-          </div>
-        </div>
+      <!--/Title row/-->
 
-      </div>
+      <!-- Link field row -->
+      <?php if (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
       <div class="row mb-3">
         <div class="col-sm link-fields">
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
-            <label class="btn btn-outline-secondary active">
+            <label class="btn btn-outline-dark active">
               <input type="radio" name="links" value="" checked>None
             </label>
-            <label class="btn btn-outline-secondary">
+            <label class="btn btn-outline-dark">
               <input type="radio" name="links" value="5">5L
             </label>
-            <label class="btn btn-outline-secondary">
+            <label class="btn btn-outline-dark">
               <input type="radio" name="links" value="6">6L
             </label>
           </div>
         </div>
       </div>
+      <?php endif; ?>
+      <!--/Link field row/-->
+
+      <!-- Gem field row -->
+      <?php if (isset($_GET["category"]) && $_GET["category"] === "gems"): ?>
       <div class="row mb-3 gem-fields">
-        <div class="col-sm-4">
+        <div class="col-sm">
+          <h4>Corrupted</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
+            <label class="btn btn-outline-dark active">
+              <input type="radio" name="corrupted" value="">Either
+            </label>
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="corrupted" value="0">No
+            </label>
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="corrupted" value="1" checked>Yes
+            </label>
+          </div>
+        </div>
+        <div class="col-sm">
           <h4>Level</h4>
           <div class="form-group">
             <select class="form-control" id="select-level">
@@ -109,7 +112,7 @@
             </select>
           </div>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm">
           <h4>Quality</h4>
           <div class="form-group">
             <select class="form-control" id="select-quality">
@@ -121,28 +124,35 @@
             </select>
           </div>
         </div>
-        <div class="col-sm-4">
-          <h4>Corrupted</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
-            <label class="btn btn-outline-secondary active">
-              <input type="radio" name="corrupted" value="">Either
+      </div>
+      <?php endif; ?>
+      <!--/Gem field row/-->
+      
+      <!-- Generic field row -->
+      <div class="row mb-3">
+        <div class="col-sm-3">
+          <h4>Low count</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+            <label class="btn btn-outline-dark active">
+              <input type="radio" name="confidence" value="1" checked>Hide
             </label>
-            <label class="btn btn-outline-secondary">
-              <input type="radio" name="corrupted" value="0">No
-            </label>
-            <label class="btn btn-outline-secondary">
-              <input type="radio" name="corrupted" value="1" checked>Yes
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="confidence" value="">Show
             </label>
           </div>
         </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-sm">
+        <div class="col-sm-4">
+          <h4>Sub-category</h4>
+          <select class="form-control custom-select" id="search-sub"></select>
+        </div>
+        <div class="col-sm-5">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
         </div>
       </div>
-      <div class="row mb-3">
+      <!--/Generic field row/-->
+
+      <div class="row mb-3 pt-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">

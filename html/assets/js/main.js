@@ -168,8 +168,6 @@ $(document).ready(function() {
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
     onRowClick(event);
   });
-
-  checkFields();
 }); 
 
 
@@ -193,8 +191,6 @@ function readServiceContainers() {
 
 
 function fillSelectors(category) {
-  $("#page-title").text(toTitleCase(category));
-
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
     var button = "<label class='btn btn-sm btn-outline-secondary p-0 px-1'>";
@@ -308,8 +304,8 @@ function onRowClick(event) {
     }
   });
 
-// Place ChartJS charts inside the expanded row
-placeCharts(parentIndex);
+  // Place ChartJS charts inside the expanded row
+  placeCharts(parentIndex);
 
   // Make request if data not present
   if (ITEMS[parentIndex]["index"] in HISTORY_DATA) {
@@ -601,17 +597,12 @@ function makeRequest() {
     console.log("got " + ITEMS.length + " items");
     
     // Enable "show more" button
-    if (ITEMS.length > PARSE_AMOUNT) $(".loadall").show();
+    if (ITEMS.length > PARSE_AMOUNT) {
+      var loadAllDiv = $(".loadall");
+      $("button", loadAllDiv).text("Load more (" + (ITEMS.length - PARSE_AMOUNT) + ")");
+      loadAllDiv.show();
+    }
   });
-}
-
-
-function checkFields() {
-  if (FILTER.category === "armour" || FILTER.category === "weapons") {
-    $(".link-fields").removeClass("link-fields");
-  } else if (FILTER.category === "gems") {
-    $(".gem-fields").removeClass("gem-fields");
-  }
 }
 
 
