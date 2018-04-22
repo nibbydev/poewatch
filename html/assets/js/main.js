@@ -168,8 +168,6 @@ $(document).ready(function() {
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
     onRowClick(event);
   });
-
-  checkFields();
 }); 
 
 
@@ -193,11 +191,9 @@ function readServiceContainers() {
 
 
 function fillSelectors(category) {
-  $("#page-title").text(toTitleCase(category));
-
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
-    var button = "<label class='btn btn-sm btn-outline-secondary p-0 px-1'>";
+    var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
     button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
     leagueSelector.append(button); 
   });
@@ -301,20 +297,26 @@ function onRowClick(event) {
   historyLeagueRadio.change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
 
-    if (HISTORY_LEAGUE in HISTORY_DATA) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[HISTORY_LEAGUE]["labels"];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[HISTORY_LEAGUE]["values"];
+    if (HISTORY_LEAGUE in HISTORY_DATA[ITEMS[parentIndex]["index"]]) {
+      HISTORY_CHART.data.labels = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["labels"];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["values"];
       HISTORY_CHART.update();
     }
   });
 
-  // Make request
-  var fullCategory = ITEMS[parentIndex].parent;
-  if (ITEMS[parentIndex].child) fullCategory += "-" + ITEMS[parentIndex].child;
-  makeHistoryRequest(fullCategory, ITEMS[parentIndex]["index"]);
-
   // Place ChartJS charts inside the expanded row
   placeCharts(parentIndex);
+
+  // Make request if data not present
+  if (ITEMS[parentIndex]["index"] in HISTORY_DATA) {
+    console.log("history from: memory");
+    displayHistory(ITEMS[parentIndex]["index"]);
+  } else {
+    console.log("history from: source");
+    var fullCategory = ITEMS[parentIndex].parent;
+    if (ITEMS[parentIndex].child) fullCategory += "-" + ITEMS[parentIndex].child;
+    makeHistoryRequest(fullCategory, ITEMS[parentIndex]["index"]);
+  }
 
   // Fill expanded row with item data
   var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
@@ -350,40 +352,44 @@ function makeHistoryRequest(category, index) {
   });
 
   request.done(function(payload) {
-    HISTORY_DATA = payload;
+    HISTORY_DATA[index] = payload;
+    displayHistory(index);
+  });
+}
 
-    if ("error" in payload) {
-      console.log(payload);
-      
-      var chartArea = $(".chart-large");
-      chartArea.after("<h5 class='text-center my-3'>No results</h5>");
-      chartArea.remove();
-      $("#history-league-radio").remove();
 
-      return;
-    }
+function displayHistory(index) {
+  if ("error" in HISTORY_DATA[index]) {
+    console.log("History data: no results");
 
-    var leagues = Object.keys(HISTORY_DATA);
+    var chartArea = $(".chart-large");
+    chartArea.after("<h5 class='text-center my-3'>No results</h5>");
+    chartArea.remove();
+    $("#history-league-radio").remove();
 
-    if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
+    return;
+  }
 
-    let selectedLeague;
-    if (HISTORY_LEAGUE in HISTORY_DATA) selectedLeague = HISTORY_LEAGUE;
-    else selectedLeague = leagues[0];
+  var leagues = Object.keys(HISTORY_DATA[index]);
 
-    HISTORY_CHART.data.labels = payload[selectedLeague]["labels"];
-    HISTORY_CHART.data.datasets[0].data = payload[selectedLeague]["values"];
-    HISTORY_CHART.update();
+  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
 
-    var historyLeagueRadio = $("#history-league-radio");
-    $.each(leagues, function(index, league) {
-      var selected = (selectedLeague === league ? " active" : "");
+  let selectedLeague;
+  if (HISTORY_LEAGUE in HISTORY_DATA[index]) selectedLeague = HISTORY_LEAGUE;
+  else selectedLeague = leagues[0];
 
-      var button = "<label class='btn btn-outline-secondary"+selected+"'>";
-      button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
+  HISTORY_CHART.data.labels = HISTORY_DATA[index][selectedLeague]["labels"];
+  HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague]["values"];
+  HISTORY_CHART.update();
 
-      historyLeagueRadio.append(button); 
-    });
+  var historyLeagueRadio = $("#history-league-radio");
+  $.each(leagues, function(index, league) {
+    var selected = (selectedLeague === league ? " active" : "");
+
+    var button = "<label class='btn btn-outline-dark"+selected+"'>";
+    button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
+
+    historyLeagueRadio.append(button); 
   });
 }
 
@@ -585,20 +591,15 @@ function makeRequest() {
     ITEMS = ITEMS.concat(json);
     sortResults();
 
-    console.log("size: " + ITEMS.length);
+    console.log("got " + ITEMS.length + " items");
     
     // Enable "show more" button
-    if (ITEMS.length > PARSE_AMOUNT) $(".loadall").show();
+    if (ITEMS.length > PARSE_AMOUNT) {
+      var loadAllDiv = $(".loadall");
+      $("button", loadAllDiv).text("Load more (" + (ITEMS.length - PARSE_AMOUNT) + ")");
+      loadAllDiv.show();
+    }
   });
-}
-
-
-function checkFields() {
-  if (FILTER.category === "armour" || FILTER.category === "weapons") {
-    $(".link-fields").removeClass("link-fields");
-  } else if (FILTER.category === "gems") {
-    $(".gem-fields").removeClass("gem-fields");
-  }
 }
 
 

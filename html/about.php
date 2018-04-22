@@ -57,7 +57,7 @@
               <hr>
               <h5>FAQ</h5>
               <p><em>Where do you get your prices?</em><br>The public stash API over at pathofexile.com. Prices are automatically generated from the items players list for sale.</p>
-              <p><em>How up to date are the prices?</em><br>All data is recalculated in 1 minute intervals. Prices on the website are always the most recent unless stated otherwise.</p>
+              <p><em>How up to date are the prices?</em><br>All data is recalculated in 5 minute intervals. Prices on the website are always the most recent unless stated otherwise.</p>
               <hr>
               <h5>Legal text</h5>
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
