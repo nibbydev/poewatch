@@ -338,7 +338,7 @@ function onRowClick(event) {
 
 function makeHistoryRequest(category, index) {
   var request = $.ajax({
-    url: "http://api.poe.ovh/history",
+    url: "http://api.poe-stats.com/history",
     data: {
       category: category, 
       index: index
@@ -378,7 +378,7 @@ function makeHistoryRequest(category, index) {
     $.each(leagues, function(index, league) {
       var selected = (selectedLeague === league ? " active" : "");
 
-      var button = "<label class='btn btn-outline-dark"+selected+"'>";
+      var button = "<label class='btn btn-outline-secondary"+selected+"'>";
       button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
 
       historyLeagueRadio.append(button); 
@@ -580,7 +580,7 @@ function makeRequest(from, to) {
   }
 
   var request = $.ajax({
-    url: "http://api.poe.ovh/get",
+    url: "http://api.poe-stats.com/get",
     data: data,
     type: "GET",
     async: true,
@@ -610,7 +610,7 @@ function checkFields() {
 
 function parseItem(item, index) {
   // Format icon
-  var tmpIcon = item["icon"] ? item["icon"] : "http://poe.ovh/assets/img/missing.png";
+  var tmpIcon = item["icon"] ? item["icon"] : "http://poe-stats.com/assets/img/missing.png";
   var iconField = "<span class='table-img-container text-center mr-2'><img src='" + tmpIcon + "'></span>";
 
   // Format name and variant/links badge

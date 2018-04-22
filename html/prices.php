@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe.ovh - Prices</title>
+  <title>Poe-Stats - Prices</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
     <div class="container-fluid">
       <a href="/" class="navbar-brand">
         <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        Poe.Ovh
+        Poe-Stats
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -163,7 +163,7 @@
   </div>
 </div>
 <footer class="container-fluid text-center">
-  <p>Poe.ovh © 2018</p>
+  <p>Poe-Stats © 2018</p>
 </footer>
 
 <div class="service-container" id="service-leagues" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagues.json" ) ); ?>">

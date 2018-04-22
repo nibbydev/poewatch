@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe.ovh</title>
+  <title>Poe-Stats</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +13,7 @@
     <div class="container-fluid">
       <a href="/" class="navbar-brand">
         <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        Poe.Ovh
+        Poe-Stats
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -44,7 +44,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <h2 class="text-center">Poe.ovh</h2>
+              <h2 class="text-center">Poe-Stats</h2>
               <hr>
               <h5>Overview</h5>
               <p>This is a site that collects data over time from various items in Path of Exile and calculates their average price. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
@@ -75,7 +75,7 @@
   </div>
 </div>
 <footer class="container-fluid text-center">
-  <p>Poe.ovh © 2018</p>
+  <p>Poe-Stats © 2018</p>
 </footer>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>
