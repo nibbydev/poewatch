@@ -166,8 +166,8 @@
   <p>Poe-Stats © 2018</p>
 </footer>
 
-<div class="service-container" id="service-leagues" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagues.json" ) ); ?>">
-<div class="service-container" id="service-categories" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/categories.json" ) ); ?>">
+<div class="service-container" id="service-leagues" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagues.json" ) ); ?>"></div>
+<div class="service-container" id="service-categories" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/categories.json" ) ); ?>"></div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/main.js"></script>
