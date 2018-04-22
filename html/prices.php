@@ -60,8 +60,7 @@
       <div class="row mb">
         <div class="col-sm">
           <h4>Sub-category</h4>
-          <select class="form-control custom-select" id="search-sub">
-          </select>
+          <select class="form-control custom-select" id="search-sub"></select>
         </div>
       </div>
       <div class="row mb-3">
@@ -83,7 +82,7 @@
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-secondary active">
-              <input type="radio" name="links" value="0" checked>None
+              <input type="radio" name="links" value="" checked>None
             </label>
             <label class="btn btn-outline-secondary">
               <input type="radio" name="links" value="5">5L

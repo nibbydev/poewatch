@@ -11,7 +11,8 @@ var HISTORY_DATA = {};
 let HISTORY_CHART;
 let HISTORY_LEAGUE;
 
-const INITIAL_LOAD_AMOUNT = 150;
+var PARSE_AMOUNT = 100;
+
 const PRICE_PERCISION = 100;
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
@@ -84,17 +85,17 @@ $(document).ready(function() {
     category: category,
     sub: "all",
     hideLowConfidence: true,
-    links: '0',
-    search: '',
-    gemLvl: '',
-    gemQuality: '',
-    gemCorrupted: ''
+    links: "",
+    search: "",
+    gemLvl: "",
+    gemQuality: "",
+    gemCorrupted: ""
   };
 
   fillSelectors(category);
   readCookies();
 
-  makeRequest(0, INITIAL_LOAD_AMOUNT);
+  makeRequest();
 
   // Define league event listener
   $("#search-league").on("change", function(){
@@ -102,22 +103,24 @@ $(document).ready(function() {
     console.log(FILTER.league);
     document.cookie = "league="+FILTER.league;
     ITEMS = [];
-    makeRequest(0, INITIAL_LOAD_AMOUNT);
+    makeRequest();
   });
 
   // Define subcategory event listener
   $("#search-sub").change(function(){
-    FILTER.sub = $(this).find(":selected").text();
-    console.log(FILTER.sub);
-    ITEMS = [];
-    makeRequest(0, INITIAL_LOAD_AMOUNT);
+    FILTER.sub = $(this).find(":selected").val();
+    console.log("sub-category: '" + FILTER.sub + "'");
+    sortResults();
   });
 
-  // Define load more event listener
-  $("#button-loadall").on("click", function(){
-    console.log("loadmore");
-    makeRequest(INITIAL_LOAD_AMOUNT, 0);
-    $(this).hide();
+  // Define load all button listener
+  var loadall = $(".loadall");
+  $(loadall, "button").on("click", function(){
+    console.log("loadall");
+    loadall.hide();
+
+    PARSE_AMOUNT = -1;
+    sortResults();
   });
 
   // Define searchbar event listener
@@ -141,8 +144,6 @@ $(document).ready(function() {
   $("#radio-links").on("change", function(){
     FILTER.links = $("input[name=links]:checked", this).val();
     console.log(FILTER.links);
-    ITEMS = [];
-    makeRequest(0, INITIAL_LOAD_AMOUNT);
     sortResults();
   });
 
@@ -202,10 +203,10 @@ function fillSelectors(category) {
   });
 
   var categorySelector = $("#search-sub");
-  categorySelector.append($("<option></option>").attr("value", 0).text("All")); 
+  categorySelector.append($("<option></option>").attr("value", "all").text("All")); 
 
   $.each(CATEGORIES[category], function(index, child) {   
-    categorySelector.append($("<option></option>").attr("value", index + 1).text(toTitleCase(child)));
+    categorySelector.append($("<option></option>").attr("value", child).text(toTitleCase(child)));
   });
 
   // Add price table headers
@@ -566,18 +567,11 @@ function getAllDays(length) {
 }
 
 
-function makeRequest(from, to) {
+function makeRequest() {
   var data = {
     league: FILTER.league, 
-    parent: FILTER.category,
-    child: FILTER.sub,
-    from: from,
-    to: to
+    category: FILTER.category
   };
-
-  if (FILTER.category === "weapons" || FILTER.category === "armour") {
-    data["links"] = FILTER.links;
-  }
 
   var request = $.ajax({
     url: "http://api.poe-stats.com/get",
@@ -594,7 +588,7 @@ function makeRequest(from, to) {
     console.log("size: " + ITEMS.length);
     
     // Enable "show more" button
-    if (ITEMS.length === INITIAL_LOAD_AMOUNT) $(".loadall").show();
+    if (ITEMS.length > PARSE_AMOUNT) $(".loadall").show();
   });
 }
 
@@ -701,19 +695,25 @@ function sortResults() {
   // Empty the table
   $("#searchResults > tbody").empty();
 
+  var parsed_count = 0;
+
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
 
+    if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
+
     // Hide harbinger pieces of shit. This is temporary
     if (item["child"] === "piece") continue;
-
     // Hide low confidence items
     if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
+    // Hide sub-categories
+    if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) continue;
 
     // Hide items with different links
-    //if (FILTER.links) {
-    //  if (!("links" in item) || item["links"] !== FILTER.links) continue;
-    //} else if ("links" in item) continue;
+    if (FILTER.links) {
+      if (!("links" in item)) continue;
+      else if (item["links"] !== FILTER.links) continue;
+    } else if ("links" in item) continue;
 
     // Sort gems, I guess
     if (item["frame"] === 4) {
@@ -743,14 +743,15 @@ function sortResults() {
     }
 
     // If item has not been parsed, parse it 
-    var temp = false;
+    var attachSparkLine = false;
     if (!("tableData" in item)) {
       item["tableData"] = $(parseItem(item, index));
-      temp = true;
+      attachSparkLine = true;
     }
 
     $("#searchResults").append(item["tableData"]);
+    parsed_count++;
 
-    if (temp) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["spark"]);
+    if (attachSparkLine) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["spark"]);
   }
 }
