@@ -318,8 +318,6 @@ function onRowClick(event) {
     makeHistoryRequest(fullCategory, ITEMS[parentIndex]["index"]);
   }
 
-  
-
   // Fill expanded row with item data
   var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
   $("#details-row-quantity",  expandedRow).append("<td>"+ITEMS[parentIndex]["quantity"]+"</td>");
@@ -355,24 +353,23 @@ function makeHistoryRequest(category, index) {
 
   request.done(function(payload) {
     HISTORY_DATA[index] = payload;
-
-    if ("error" in payload) {
-      console.log(payload["error"]);
-      
-      var chartArea = $(".chart-large");
-      chartArea.after("<h5 class='text-center my-3'>No results</h5>");
-      chartArea.remove();
-      $("#history-league-radio").remove();
-
-      return;
-    }
-
     displayHistory(index);
   });
 }
 
 
 function displayHistory(index) {
+  if ("error" in HISTORY_DATA[index]) {
+    console.log("History data: no results");
+
+    var chartArea = $(".chart-large");
+    chartArea.after("<h5 class='text-center my-3'>No results</h5>");
+    chartArea.remove();
+    $("#history-league-radio").remove();
+
+    return;
+  }
+
   var leagues = Object.keys(HISTORY_DATA[index]);
 
   if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
