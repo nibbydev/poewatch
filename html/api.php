@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>poe-stats.com - API</title>
+  <title>Poe-Stats - API</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +13,7 @@
     <div class="container-fluid">
       <a href="/" class="navbar-brand">
         <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        poe-stats.com
+        Poe-Stats
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -44,7 +44,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.api.poe-stats/get</h2>
+              <h2>api.poe-stats/get</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
@@ -319,7 +319,7 @@
   </div>
 </div>
 <footer class="container-fluid text-center">
-  <p>poe-stats.com © 2018</p>
+  <p>Poe-Stats © 2018</p>
 </footer>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>

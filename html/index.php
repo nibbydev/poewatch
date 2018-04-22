@@ -47,12 +47,11 @@
               <h2 class="text-center">Poe-Stats</h2>
               <hr>
               <h5>Overview</h5>
-              <p>This is a site that collects data over time from various items in Path of Exile and calculates their average price. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
-              <h5>What's to come</h5>
-              <p>The general goal is to have this site combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> without relying on any APIs (apart from the official stash API, of course).</a></p>
+              <p>This site collects data over time from various items (uniques, gems, currency and the like) in Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
+              <h5>The general idea</h5>
+              <p>The general goal is to combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> with the smallest possible budget.</a></p>
               <h5>The API</h5>
-              <p>Link's in the navbar up top. It's pretty self-explanatory. Most API pages are listed there and info should be generally pretty up to date. There probably will be some small chances to the API but nothing major</p>
-              <p>Update: It's pretty out of date now.</p>
+              <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
             </div>
           </div>
         </div>
@@ -63,6 +62,7 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
+              <div><em>22/04/2018</em> - Implemented Cloudfront. Content delivery now roughly 1000% faster</div>
               <div><em>14/04/2018</em> - Fix Beachhead variants not being indexed</div>
               <div><em>10/04/2018</em> - Fix Kaom's Heart not being indexed</div>
               <div><em>09/04/2018</em> - Add item price history graphs</div>
