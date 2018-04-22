@@ -2,7 +2,7 @@
 $jsonFile = json_decode( file_get_contents("assets/json/menu.json"), true );
 
 foreach ($jsonFile as $item) {
-  $category = empty($_GET["category"]) ? "" : strtolower(trim($_GET["category"]));
+  $category = isset($_GET["category"]) ? strtolower(trim($_GET["category"])) : "";
   $href = $item["href"];
   $img = $item["img"];
   $title = $item["title"];

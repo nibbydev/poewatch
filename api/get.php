@@ -68,7 +68,11 @@
   foreach ($categoryJSON as $categoryName => $tmp_val) {
     if ($PARAM_parent && $PARAM_parent !== $categoryName) continue;
 
-    $jsonFile = json_decode( file_get_contents(dirname(getcwd(), 2) . "/data/output/" . $PARAM_league . "/" . $categoryName . ".json") , true );
+    // Check if file exists
+    $jsonFilePath = dirname(getcwd(), 2) . "/data/output/$PARAM_league/$categoryName.json";
+    if (!file_exists($jsonFilePath)) die("{\"error\": \"Invalid params\"}");
+
+    $jsonFile = json_decode( file_get_contents( $jsonFilePath ), true );
 
     // Loop through items in a category
     foreach ($jsonFile as $item) {
