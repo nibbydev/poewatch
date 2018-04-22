@@ -193,7 +193,7 @@ function readServiceContainers() {
 function fillSelectors(category) {
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
-    var button = "<label class='btn btn-sm btn-outline-secondary p-0 px-1'>";
+    var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
     button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
     leagueSelector.append(button); 
   });
@@ -386,7 +386,7 @@ function displayHistory(index) {
   $.each(leagues, function(index, league) {
     var selected = (selectedLeague === league ? " active" : "");
 
-    var button = "<label class='btn btn-outline-secondary"+selected+"'>";
+    var button = "<label class='btn btn-outline-dark"+selected+"'>";
     button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
 
     historyLeagueRadio.append(button); 
