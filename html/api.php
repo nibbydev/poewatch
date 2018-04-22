@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe.ovh - API</title>
+  <title>poe-stats.com - API</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +13,7 @@
     <div class="container-fluid">
       <a href="/" class="navbar-brand">
         <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        Poe.Ovh
+        poe-stats.com
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -44,7 +44,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>poe.ovh/get</h2>
+              <h2>api.api.poe-stats/get</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
@@ -224,11 +224,11 @@
                 </table>
               </div>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour&exclude=icon,history,index">Example (exclude)</a>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=armour">Example (parent)</a>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/get?league=bestiary&parent=all">Example (all)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/get?league=bestiary&parent=armour&child=boots&from=5&to=20">Example (indexes)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/get?league=bestiary&parent=armour&child=boots">Example (child)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/get?league=bestiary&parent=armour&exclude=icon,history,index">Example (exclude)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/get?league=bestiary&parent=armour">Example (parent)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/get?league=bestiary&parent=all">Example (all)</a>
             </div>
           </div>
         </div>
@@ -237,13 +237,13 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>poe.ovh/id</h2>
+              <h2>api.poe-stats.com/id</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides users access to the Change ID from the top of the river. Shows status of the river. Last update time is in milliseconds.</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/id">Example</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/id">Example</a>
             </div>
           </div>
         </div>
@@ -252,7 +252,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>poe.ovh/itemdata</h2>
+              <h2>api.poe-stats.com/itemdata</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
@@ -279,8 +279,8 @@
                 </table>
               </div>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/itemdata?index=00fa,053e,0729">Example (specific)</a>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/itemdata">Example (all)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/itemdata?index=00fa,053e,0729">Example (specific)</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/itemdata">Example (all)</a>
             </div>
           </div>
         </div>
@@ -289,13 +289,13 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>poe.ovh/categories</h2>
+              <h2>api.poe-stats.com/categories</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of catetgories currently in use. Updated dynamically.</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/categories">Example</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/categories">Example</a>
             </div>
           </div>
         </div>
@@ -304,13 +304,13 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>poe.ovh/leagues</h2>
+              <h2>api.poe-stats.com/leagues</h2>
             </div>
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated every 30 minutes.</p>
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-dark mt-1" href="http://api.poe.ovh/leagues">Example</a>
+              <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/leagues">Example</a>
             </div>
           </div>
         </div>
@@ -319,7 +319,7 @@
   </div>
 </div>
 <footer class="container-fluid text-center">
-  <p>Poe.ovh © 2018</p>
+  <p>poe-stats.com © 2018</p>
 </footer>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>
