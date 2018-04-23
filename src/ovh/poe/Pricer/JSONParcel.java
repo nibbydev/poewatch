@@ -97,6 +97,9 @@ public class JSONParcel {
                 if (subIndexedItem.links != null) links = subIndexedItem.links;
                 if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
                 if (subIndexedItem.var != null) var = subIndexedItem.var;
+
+                // Enchantments override the name here
+                if (subIndexedItem.name != null) name = subIndexedItem.name;
             }
         }
     }

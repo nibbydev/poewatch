@@ -83,12 +83,12 @@ public class Mappers {
         // "category": {"jewels": []}
         // "category": {"armour": ["gloves"]}
         public Object category;
-        public Object enchantMods;
+        public List<String> enchantMods;
 
         public void fix() {
             id = id.substring(0, 16);
             name = name.substring(name.lastIndexOf(">") + 1);
-            enchanted = enchantMods != null;
+            enchanted = (enchantMods != null);
         }
     }
 }

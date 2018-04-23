@@ -28,7 +28,7 @@ public class RelationManager {
         public int frame;
 
         public IndexedItem(Item item) {
-            name = item.name;
+            if (item.frameType != -1) name = item.name;
             parent = item.parentCategory;
             frame = item.frameType;
 
@@ -56,7 +56,7 @@ public class RelationManager {
          * @param icon An item's bloated URL
          * @return Formatted icon URL
          */
-        String formatIconURL(String icon) {
+        public String formatIconURL(String icon) {
             String[] splitURL = icon.split("\\?");
             String fullIcon = splitURL[0];
 
@@ -97,14 +97,31 @@ public class RelationManager {
     }
 
     public static class SubIndexedItem {
-        public String var, specificKey, lvl, quality, links, corrupted;
+        public String var, specificKey, lvl, quality, links, corrupted, name;
 
         public SubIndexedItem (Item item) {
             //specificKey = item.key.substring(item.key.indexOf('|') + 1);
             specificKey = item.key;
 
-            if (item.variation != null) var = item.variation;
+            if (item.variation != null) {
+                var = item.variation;
+
+                if (item.frameType == -1) {
+                    name = resolveSpecificKey(item.key);
+
+                    // Replace all instances of "#" with the associated value
+                    for (String value : var.split("-")) {
+                        name = name.replaceFirst("#", value);
+                    }
+                }
+            } else {
+                if (item.frameType == -1) {
+                    name = resolveSpecificKey(item.key);
+                }
+            }
+
             if (item.links > 4) links = Integer.toString(item.links);
+
 
             if (item.frameType == 4) {
                 // Gson wants to serialize uninitialized integers and booleans
@@ -368,7 +385,10 @@ public class RelationManager {
         if (!leagues.contains(item.league)) leagues.add(item.league);
 
         // If item has no icon, don't index it
-        if (item.icon == null) return "-";
+        if (item.icon == null) {
+            // Enchants can't have icons
+            if (item.frameType != -1) return "-";
+        }
 
         // If icon is already present, return icon index. Otherwise create an instance of IndexedItem and add
         // IndexedItem instance to maps and return its index
@@ -429,9 +449,12 @@ public class RelationManager {
 
         // Add item name
         genericKey.append(splitKey[1]);
-        genericKey.append("|");
+
+        // If it's an enchant, don't add frametype nor var info
+        if (splitKey[2].equals("-1")) return genericKey.toString();
 
         // Add item frameType
+        genericKey.append("|");
         genericKey.append(splitKey[2]);
 
         // Add var info, if present (eg Impresence has different icons based on variation)
