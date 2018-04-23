@@ -20,7 +20,7 @@ const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
 var parentRow, expandedRow;
-var expandedRowTemplate = `<tr><td colspan='100'>
+var expandedRowTemplate = `<tr class='selected-row'><td colspan='100'>
   <div class='row m-1'>
     <div class='col-md'>
       <h4>Chaos value</h4>
@@ -290,32 +290,19 @@ function onRowClick(event) {
   }
 
   expandedRow = $(expandedRowTemplate);
-  target.closest("tr").after(expandedRow);
-
-  // Create event listener for league selector
-  var historyLeagueRadio = $("#history-league-radio");
-  historyLeagueRadio.change(function(){
-    HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
-
-    if (HISTORY_LEAGUE in HISTORY_DATA[ITEMS[parentIndex]["index"]]) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["labels"];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["values"];
-      HISTORY_CHART.update();
-    }
-  });
-
   // Place ChartJS charts inside the expanded row
-  placeCharts(parentIndex);
+  //placeCharts(parentIndex, expandedRow);
 
   // Make request if data not present
   if (ITEMS[parentIndex]["index"] in HISTORY_DATA) {
     console.log("history from: memory");
-    displayHistory(ITEMS[parentIndex]["index"]);
+    placeCharts(parentIndex, expandedRow);
+    displayHistory(ITEMS[parentIndex]["index"], expandedRow);
   } else {
     console.log("history from: source");
     var fullCategory = ITEMS[parentIndex].parent;
     if (ITEMS[parentIndex].child) fullCategory += "-" + ITEMS[parentIndex].child;
-    makeHistoryRequest(fullCategory, ITEMS[parentIndex]["index"]);
+    makeHistoryRequest(fullCategory, parentIndex, expandedRow);
   }
 
   // Fill expanded row with item data
@@ -333,13 +320,27 @@ function onRowClick(event) {
   $("#details-row-1w",        expandedRow).append("<td>"+chaosIcon+(chaosChangeWeek > 0 ? '+' : '')+chaosChangeWeek+"</td>");
 
   target.addClass("parent-row");
-  expandedRow.addClass("selected-row");
-  
+  target.after(expandedRow);
+
+  // Create event listener for league selector
+  var historyLeagueRadio = $("#history-league-radio", expandedRow);
+  historyLeagueRadio.change(function(){
+    HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
+
+    if (HISTORY_LEAGUE in HISTORY_DATA[ITEMS[parentIndex]["index"]]) {
+      HISTORY_CHART.data.labels = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["labels"];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["values"];
+      HISTORY_CHART.update();
+    }
+  });
+
   parentRow = target;
 }
 
 
-function makeHistoryRequest(category, index) {
+function makeHistoryRequest(category, parentIndex, expandedRow) {
+  var index = ITEMS[parentIndex]["index"];
+
   var request = $.ajax({
     url: "http://api.poe-stats.com/history",
     data: {
@@ -353,19 +354,20 @@ function makeHistoryRequest(category, index) {
 
   request.done(function(payload) {
     HISTORY_DATA[index] = payload;
-    displayHistory(index);
+    placeCharts(parentIndex, expandedRow);
+    displayHistory(index, expandedRow);
   });
 }
 
 
-function displayHistory(index) {
+function displayHistory(index, expandedRow) {
   if ("error" in HISTORY_DATA[index]) {
     console.log("History data: no results");
 
-    var chartArea = $(".chart-large");
-    chartArea.after("<h5 class='text-center my-3'>No results</h5>");
-    chartArea.remove();
-    $("#history-league-radio").remove();
+    var chartArea = $(".chart-large", expandedRow);
+    chartArea.append("<h5 class='text-center my-3'>No results</h5>");
+    $("#chart-past", expandedRow).remove();
+    $("#history-league-radio", expandedRow).remove();
 
     return;
   }
@@ -382,7 +384,7 @@ function displayHistory(index) {
   HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague]["values"];
   HISTORY_CHART.update();
 
-  var historyLeagueRadio = $("#history-league-radio");
+  var historyLeagueRadio = $("#history-league-radio", expandedRow);
   $.each(leagues, function(index, league) {
     var selected = (selectedLeague === league ? " active" : "");
 
@@ -394,7 +396,7 @@ function displayHistory(index) {
 }
 
 
-function placeCharts(index) {
+function placeCharts(index, expandedRow) {
   var priceData = {
     type: "line",
     data: {
@@ -402,7 +404,7 @@ function placeCharts(index) {
       datasets: [{
         label: "Price in chaos",
         data: ITEMS[index]["history"]["mean"],
-        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
         borderColor: "#fff",
         borderWidth: 1,
         lineTension: 0,
@@ -446,7 +448,7 @@ function placeCharts(index) {
       datasets: [{
         label: "Quantity",
         data: ITEMS[index]["history"]["quantity"],
-        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
         borderColor: "#fff",
         borderWidth: 1,
         lineTension: 0,
@@ -490,7 +492,7 @@ function placeCharts(index) {
       datasets: [{
         label: "Price in chaos",
         data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
         borderColor: "#fff",
         borderWidth: 1,
         lineTension: 0,
@@ -540,9 +542,9 @@ function placeCharts(index) {
     }
   }
 
-  new Chart(document.getElementById("chart-price"), priceData);
-  new Chart(document.getElementById("chart-quantity"), quantData);
-  HISTORY_CHART = new Chart(document.getElementById("chart-past"), pastData);
+  new Chart($("#chart-price", expandedRow), priceData);
+  new Chart($("#chart-quantity", expandedRow), quantData);
+  HISTORY_CHART = new Chart($("#chart-past", expandedRow), pastData);
 }
 
 
@@ -629,11 +631,18 @@ function parseItem(item, index) {
     }
   }
 
+  // Create sparkline
+  var sparkColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
+  var sparkLine = document.createElement("svg");
+  sparkLine.setAttribute("class", "sparkline " + sparkColorClass);
+  sparkLine.setAttribute("width", 60);
+  sparkLine.setAttribute("height", 25);
+  sparkLine.setAttribute("stroke-width", 3);
+  sparkline.sparkline(sparkLine, item["history"]["spark"]);
+
   // Format price and sparkline field
   var priceField = "<div class='sparklinebox'>";
-  var sparkColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
-  priceField += "<svg class='sparkline "+sparkColorClass+"' width='60' height='25' stroke-width='3' id='sparkline-"+index+"'></svg>";
-  priceField += "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+  priceField += sparkLine.outerHTML + "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
   priceField += roundPrice(item["mean"]);
   priceField += "</div>";
 
@@ -694,9 +703,11 @@ function roundPrice(price) {
 
 function sortResults() {
   // Empty the table
-  $("#searchResults > tbody").empty();
+  var table = $("#searchResults");
+  $("tbody", table).empty();
 
   var parsed_count = 0;
+  var tableDataBuffer = "";
 
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
@@ -704,7 +715,7 @@ function sortResults() {
     if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
 
     // Hide harbinger pieces of shit. This is temporary
-    if (item["child"] === "piece") continue;
+    //if (item["child"] === "piece") continue;
     // Hide low confidence items
     if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
     // Hide sub-categories
@@ -732,27 +743,48 @@ function sortResults() {
       // Sort based on corruption selector
       if (FILTER.gemCorrupted === "1" && item["corrupted"] !== "1") continue;
       else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") continue;
+    
+    } else if (FILTER.category === "currency") {
+      // Hide some fairly useless currency
+      if (item["frame"] === 5) {
+        var discard = false;
+        switch (item["name"]) {
+          case "Imprint":
+          case "Scroll Fragment":
+          case "Alteration Shard":
+          case "Binding Shard":
+          case "Horizon Shard":
+          case "Engineer's Shard":
+          case "Chaos Shard":
+          case "Regal Shard":
+          case "Alchemy Shard":
+          case "Transmutation Shard":
+            discard = true;
+            break;
+          default:
+            break;
+        }
+        if (discard) continue;
+  
+      } else if (item["frame"] === 3 && FILTER.sub === "all") {
+        // Hide harbinger pieces under category 'all'
+        continue;
+      }
     }
 
+    // String search
     if (FILTER.search) {
       var nameBool = ("name" in item && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
-      var parentBool = ("parent" in item && item["parent"].toLowerCase().indexOf(FILTER.search) !== -1);
-      var childBool = ("child" in item && item["child"].toLowerCase().indexOf(FILTER.search) !== -1);
       var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
-
-      if (!nameBool && !parentBool && !childBool && !typeBool) continue;
+      if (!nameBool && !typeBool) continue;
     }
 
     // If item has not been parsed, parse it 
-    var attachSparkLine = false;
-    if (!("tableData" in item)) {
-      item["tableData"] = $(parseItem(item, index));
-      attachSparkLine = true;
-    }
+    if (!("tableData" in item)) item["tableData"] = parseItem(item, index);
 
-    $("#searchResults").append(item["tableData"]);
+    tableDataBuffer += item["tableData"];
     parsed_count++;
-
-    if (attachSparkLine) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["spark"]);
   }
+
+  table.append(tableDataBuffer);
 }
