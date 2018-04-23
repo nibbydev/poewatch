@@ -705,10 +705,9 @@ function sortResults() {
   // Empty the table
   var table = $("#searchResults");
   $("tbody", table).empty();
-  //$("#searchResults > tbody").empty();
 
   var parsed_count = 0;
-  var tableData = "";
+  var tableDataBuffer = "";
 
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
@@ -744,6 +743,33 @@ function sortResults() {
       // Sort based on corruption selector
       if (FILTER.gemCorrupted === "1" && item["corrupted"] !== "1") continue;
       else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") continue;
+    
+    } else if (FILTER.category === "currency") {
+      // Hide some fairly useless currency
+      if (item["frame"] === 5) {
+        var discard = false;
+        switch (item["name"]) {
+          case "Imprint":
+          case "Scroll Fragment":
+          case "Alteration Shard":
+          case "Binding Shard":
+          case "Horizon Shard":
+          case "Engineer's Shard":
+          case "Chaos Shard":
+          case "Regal Shard":
+          case "Alchemy Shard":
+          case "Transmutation Shard":
+            discard = true;
+            break;
+          default:
+            break;
+        }
+        if (discard) continue;
+  
+      } else if (item["frame"] === 3 && FILTER.sub === "all") {
+        // Hide harbinger pieces under category 'all'
+        continue;
+      }
     }
 
     // String search
@@ -756,9 +782,9 @@ function sortResults() {
     // If item has not been parsed, parse it 
     if (!("tableData" in item)) item["tableData"] = parseItem(item, index);
 
-    tableData += item["tableData"];
+    tableDataBuffer += item["tableData"];
     parsed_count++;
   }
 
-  $("#searchResults").append(tableData);
+  table.append(tableDataBuffer);
 }
