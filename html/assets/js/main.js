@@ -629,11 +629,18 @@ function parseItem(item, index) {
     }
   }
 
+  // Create sparkline
+  var sparkColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
+  var sparkLine = document.createElement("svg");
+  sparkLine.setAttribute("class", "sparkline " + sparkColorClass);
+  sparkLine.setAttribute("width", 60);
+  sparkLine.setAttribute("height", 25);
+  sparkLine.setAttribute("stroke-width", 3);
+  sparkline.sparkline(sparkLine, item["history"]["spark"]);
+
   // Format price and sparkline field
   var priceField = "<div class='sparklinebox'>";
-  var sparkColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
-  priceField += "<svg class='sparkline "+sparkColorClass+"' width='60' height='25' stroke-width='3' id='sparkline-"+index+"'></svg>";
-  priceField += "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+  priceField += sparkLine.outerHTML + "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
   priceField += roundPrice(item["mean"]);
   priceField += "</div>";
 
@@ -694,9 +701,12 @@ function roundPrice(price) {
 
 function sortResults() {
   // Empty the table
-  $("#searchResults > tbody").empty();
+  var table = $("#searchResults");
+  $("tbody", table).empty();
+  //$("#searchResults > tbody").empty();
 
   var parsed_count = 0;
+  var tableData = "";
 
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
@@ -704,7 +714,7 @@ function sortResults() {
     if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
 
     // Hide harbinger pieces of shit. This is temporary
-    if (item["child"] === "piece") continue;
+    //if (item["child"] === "piece") continue;
     // Hide low confidence items
     if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
     // Hide sub-categories
@@ -734,25 +744,19 @@ function sortResults() {
       else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") continue;
     }
 
+    // String search
     if (FILTER.search) {
       var nameBool = ("name" in item && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
-      var parentBool = ("parent" in item && item["parent"].toLowerCase().indexOf(FILTER.search) !== -1);
-      var childBool = ("child" in item && item["child"].toLowerCase().indexOf(FILTER.search) !== -1);
       var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
-
-      if (!nameBool && !parentBool && !childBool && !typeBool) continue;
+      if (!nameBool && !typeBool) continue;
     }
 
     // If item has not been parsed, parse it 
-    var attachSparkLine = false;
-    if (!("tableData" in item)) {
-      item["tableData"] = $(parseItem(item, index));
-      attachSparkLine = true;
-    }
+    if (!("tableData" in item)) item["tableData"] = parseItem(item, index);
 
-    $("#searchResults").append(item["tableData"]);
+    tableData += item["tableData"];
     parsed_count++;
-
-    if (attachSparkLine) sparkline.sparkline(document.querySelector("#sparkline-" + index), item["history"]["spark"]);
   }
+
+  $("#searchResults").append(tableData);
 }
