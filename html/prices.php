@@ -161,8 +161,7 @@
                 <tbody></tbody>
               </table>
               <div class="loadall">
-                <p class="text-center"><span class="badge badge-danger">Warning:</span> Some categories (e.g. gems) have ~5000 entries. It will be slow</p>
-                <button type="button" class="btn btn-dark btn-block" id="button-loadall">Load more</button>
+                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
               </div>
             </div>
           </div>
