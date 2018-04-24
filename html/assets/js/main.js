@@ -75,7 +75,7 @@ var expandedRowTemplate = `<tr class='selected-row'><td colspan='100'>
 </td></tr>`;
 
 $(document).ready(function() {
-  var category = getUrlParameter("category").toLowerCase();
+  var category = getUrlParameter("category");
   if (!category) return;
 
   readServiceContainers();
@@ -692,7 +692,7 @@ function getUrlParameter(sParam) {
     sParameterName = sURLVariables[i].split('=');
 
     if (sParameterName[0] === sParam) {
-      return sParameterName[1] === undefined ? true : sParameterName[1];
+      return sParameterName[1] === undefined ? true : sParameterName[1].trim().toLowerCase();
     }
   }
 }
