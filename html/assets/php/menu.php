@@ -28,7 +28,7 @@ $imgs = array(
   "http://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/Claws/TouchOfAnguish.png?scale=1&w=1&h=1"
 );
 $titles = array(
-  "Enchantments",
+  "Enchantments <span class='badge badge-light'>New</span>",
   "Accessories",
   "Armour",
   "Currency",

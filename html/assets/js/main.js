@@ -607,16 +607,16 @@ function makeRequest() {
 
 function parseItem(item, index) {
   // Format icon
-  var tmpIcon = item["icon"] ? item["icon"] : "http://poe-stats.com/assets/img/missing.png";
+  var tmpIcon = item["icon"] ? item["icon"] : (item["frame"] === -1 ? "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1" : "http://poe-stats.com/assets/img/missing.png");
   var iconField = "<span class='table-img-container text-center mr-2'><img src='" + tmpIcon + "'></span>";
 
   // Format name and variant/links badge
   var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
   nameField += item["name"];
   if ("type" in item) nameField += "<span class='item-type'>, " + item["type"] + "</span>";
-  if ("var" in item) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+  if ("var" in item && item["frame"] !== -1) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
   else if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-  if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-dark'>New</span>";
+  if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-light'>New</span>";
   nameField += "</span>";
 
   // Format gem fields
