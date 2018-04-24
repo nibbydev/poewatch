@@ -2,3 +2,15 @@
     Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods: "GET"
 </IfModule>
+
+Options -Indexes
+
+ErrorDocument 400 /
+ErrorDocument 403 /
+ErrorDocument 404 /
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule !.*\.php$ %{REQUEST_FILENAME}.php [QSA,L]
+</IfModule>
