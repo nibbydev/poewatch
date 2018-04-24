@@ -50,6 +50,13 @@
       </div>
     </div>
     <div class="col-lg-8 main-content"> 
+      <div class="row mb">
+        <div class="col-lg"> 
+          <div class="alert custom-card" role="alert">
+            <h3 class="alert-heading text-center">[ allan please add advertisement ]</h3>
+          </div>
+        </div>
+      </div>
 
       <!-- Title row -->
       <div class="row mb">

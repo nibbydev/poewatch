@@ -33,9 +33,7 @@
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
         
-        <?php 
-          include "assets/php/menu.php";
-        ?>
+        <?php include ( "assets/php/menu.php" ) ?>
 
       </div>
     </div>
