@@ -58,10 +58,29 @@ public class Item extends Mappers.BaseItem {
                 break;
 
             case 5: // Filter out chaos orbs
-                if (name.equals("Chaos Orb")) {
-                    discard = true;
-                    return;
+                // Discard specific currency items
+                switch (name) {
+                    case "Chaos Orb":
+                    case "Imprint":
+                    case "Scroll Fragment":
+                    case "Alteration Shard":
+                    case "Binding Shard":
+                    case "Horizon Shard":
+                    case "Engineer's Shard":
+                    case "Chaos Shard":
+                    case "Regal Shard":
+                    case "Alchemy Shard":
+                    case "Transmutation Shard":
+                        discard = true;
+                        return;
+                    default:
+                        break;
                 }
+                break;
+
+            case -1:
+                checkEnchant();
+                break;
 
             default: // Everything else will pass through here
                 checkSixLink();
@@ -152,6 +171,9 @@ public class Item extends Mappers.BaseItem {
         if (note == null || note.equals("")) {
             // Filter out items without prices
             discard = true;
+        } else if (enchanted) {
+            // For pricing items based on their enchants
+            frameType = -1;
         } else if (frameType == 1 || frameType == 2 || frameType == 7) {
             // Filter out unpriceable items
             discard = true;
@@ -163,9 +185,6 @@ public class Item extends Mappers.BaseItem {
             discard = true;
         } else if (league.equals("false")) {
             // This is a bug in the API
-            discard = true;
-        } else if (enchanted) {
-            // Enchanted items usually have a much, much higher price
             discard = true;
         }
     }
@@ -512,6 +531,32 @@ public class Item extends Mappers.BaseItem {
                 }
                 break;
         }
+    }
+
+    /**
+     * Parses item as an enchant
+     */
+    private void checkEnchant() {
+        parentCategory = "enchantments";
+        icon = null;
+        //childCategory = null;
+        typeLine = null;
+
+        if (enchantMods.size() < 1) {
+            discard = true;
+            return;
+        }
+
+        name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
+
+        // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle
+        if (name.contains("\n")) name = name.replace("\n", " ");
+
+        // Var contains the enchant value (e.g "var:1-160" or "var:120")
+        String numberString = enchantMods.get(0).replaceAll("[^-.0-9]+", " ");
+        String numbers = String.join("-", numberString.trim().split(" "));
+
+        if (!numbers.equals("")) variation = numbers;
     }
 
     /**

@@ -17,7 +17,7 @@ public class JSONParcel {
     }
 
     public static class JSONItem {
-        public double mean, median, mode;
+        public double mean, median, mode, exalted;
         public int count, quantity, frame;
         public String index, specificKey;
         public String corrupted, lvl, quality, links;
@@ -32,6 +32,20 @@ public class JSONParcel {
             quantity = entry.getQuantity();
             index = entry.getItemIndex();
             specificKey = entry.getKey();
+
+            // If there's an exalted price, find the item's price in exalted
+            Map<String, Entry> tempEntryMap = Main.ENTRY_CONTROLLER.getEntryMap().get(entry.getLeague());
+            if (tempEntryMap.containsKey("currency|Exalted Orb|5")) {
+                // Get the currency item entry the item was listed in
+                Entry tempCurrencyEntry = tempEntryMap.get("currency|Exalted Orb|5");
+                double tempExaltedPrice = tempCurrencyEntry.getMean();
+
+                // If the currency the item was listed in has very few listings then ignore this item
+                if (tempCurrencyEntry.getCount() > 20 && tempExaltedPrice > 0) {
+                    double tempExaltedMean = mean / tempExaltedPrice;
+                    exalted = Math.round(tempExaltedMean * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+                }
+            }
 
             // Copy the history over
             if (entry.getDb_weekly().size() > 0) {
@@ -97,6 +111,9 @@ public class JSONParcel {
                 if (subIndexedItem.links != null) links = subIndexedItem.links;
                 if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
                 if (subIndexedItem.var != null) var = subIndexedItem.var;
+
+                // Enchantments override the name here
+                if (subIndexedItem.name != null) name = subIndexedItem.name;
             }
         }
     }
