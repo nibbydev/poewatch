@@ -91,27 +91,6 @@
             <div class="card-body">
               <h5 class="card-title">Description</h5>
               <p class="card-text">Allows retrieving item data based on indexes. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
-              <h5 class="card-title">Fields</h5>
-              <div class="custom-table">
-                <table class="table table-hover table-sm">
-                  <thead>
-                    <tr>
-                      <th>Param</th>
-                      <th>Required</th>
-                      <th>Description</th>
-                      <th>Example</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>index</td>
-                      <td>No</td>
-                      <td>Get specific indexes</td>
-                      <td>00fa,053e,0729</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/itemdata?index=00fa,053e,0729">Example (specific)</a>
               <a class="btn btn-dark mt-1" href="http://api.poe-stats.com/itemdata">Example (all)</a>
