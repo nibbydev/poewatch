@@ -98,13 +98,13 @@
 .sparkline-orange {stroke: #e36023}
 .sparkline {fill: none}
 
-.sparklinebox {
+.pricebox {
   display: flex;
   align-items: center;
   white-space: nowrap;
 }
 
-.sparklinebox .sparkline {padding: 0,5px,0,0}
+.pricebox .sparkline {padding: 0,5px,0,0}
 
 .chart-large {height: 250px}
 .chart-small {height: 110px}

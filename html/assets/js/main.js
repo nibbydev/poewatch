@@ -212,7 +212,7 @@ function fillSelectors(category) {
     tableHeaderContent += "<th scope='col'>Qual</th>";
     tableHeaderContent += "<th scope='col'>Corr</th>";
   }
-  tableHeaderContent += "<th scope='col'>Price</th>";
+  tableHeaderContent += "<th scope='col' colspan='2'>Price</th>";
   tableHeaderContent += "<th scope='col'>Change</th>";
   tableHeaderContent += "<th scope='col'>Count</th>";
   $("#searchResults > thead > tr").append(tableHeaderContent);
@@ -641,10 +641,17 @@ function parseItem(item, index) {
   sparkline.sparkline(sparkLine, item["history"]["spark"]);
 
   // Format price and sparkline field
-  var priceField = "<div class='sparklinebox'>";
+  var priceField = "<div class='pricebox'>";
   priceField += sparkLine.outerHTML + "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
   priceField += roundPrice(item["mean"]);
   priceField += "</div>";
+
+  var exaltedField = "<div class ='pricebox'>";
+  if ("exalted" in item && item["exalted"] >= 1) {
+    exaltedField += "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+    exaltedField += roundPrice(item["exalted"]);
+  }
+  exaltedField += "</div>";
 
   // Format change field
   var tmpChange;
@@ -666,6 +673,7 @@ function parseItem(item, index) {
   "<td>" +  iconField + nameField + "</td>" + 
   gemFields +
   "<td>" + priceField + "</td>" + 
+  "<td>" + exaltedField + "</td>" + 
   "<td>" + changeField + "</td>" + 
   "<td>" + countField + "</td>" + 
   "</tr>";
