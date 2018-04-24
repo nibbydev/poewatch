@@ -133,11 +133,3 @@ canvas {
 
 /* Styling for item types */
 .item-type{color: #888}
-
-/* Second navbar radio border */
-.btn-outline-dark {border-color: #555}
-/* Second navbar radio border hover */
-.btn-outline-dark:hover {
-  background-color: #333;
-  border-color: #555;
-}
