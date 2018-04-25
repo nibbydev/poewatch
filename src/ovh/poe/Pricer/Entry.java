@@ -189,7 +189,7 @@ public class Entry {
 
         // Build statistics and databases
         parse();
-        purge();
+        //purge();
         build();
 
         // Runs every 10 minutes
@@ -269,14 +269,7 @@ public class Entry {
             }
 
             // Hard-cap item prices
-            if (raw.price > 50000.0 || raw.price < 0.001) continue;
-
-            // Check if item doesn't fall under the current (but widened) price range
-            if (median > 0 && inc_counter > 0 && dec_counter / inc_counter < 0.5) {
-                if (raw.price > median * (2 + threshold_multiplier) || raw.price < median / (2 + threshold_multiplier)) {
-                    continue;
-                }
-            }
+            if (raw.price > 80000.0 || raw.price < 0.001) continue;
 
             // Round em up
             raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
@@ -284,10 +277,13 @@ public class Entry {
             // Add entry to the database
             ItemEntry itemEntry = new ItemEntry();
             itemEntry.add(raw.price, raw.accountName, raw.id);
-            db_items.add(itemEntry);
 
-            // Increment total added item counter
-            inc_counter++;
+            if ( check(itemEntry) ) {
+                db_items.add(itemEntry);
+                inc_counter++;
+            } else {
+                dec_counter++;
+            }
         }
 
         // Clear raw data after extracting and converting values
@@ -295,37 +291,45 @@ public class Entry {
     }
 
     /**
-     * Removes improper entries from databases
+     * Checks if entries should be added to the database
+     *
+     * @param entry Item entry to be evaluated
+     * @return True if should be added, false if not
      */
-    private void purge() {
-        // Precautions
-        if (db_items.isEmpty()) return;
-        // If too few items have been found then it probably doesn't have a median price
-        if (total_counter + inc_counter < 10) return;
+    private boolean check(ItemEntry entry) {
+        // No items have been listed
+        if (db_items.isEmpty()) return true;
         // No median price found
-        if (median <= 0) return;
-        // 90% of added items are discarded
-        if (inc_counter > 0 && dec_counter / inc_counter * 100 > 90) return;
+        if (mean <= 0) return true;
 
-        // Loop through database_prices, if the price is lower than the boundaries, remove the first instance of the
-        // price and its related account name and ID
-        int offset = 0;
-        int oldSize = db_items.size();
-        for (int i = 0; i < oldSize; i++) {
-            double price = db_items.get(i - offset).price;
+        // If price is more than double or less than half the median, remove it. Since we removed elements with
+        // index i we need to adjust for the rest of them that fell back one place
+        if (entry.price > mean * (1 + threshold_multiplier) || entry.price < mean / (1 + threshold_multiplier)) {
+            return false;
+        }
 
-            // If price is more than double or less than half the median, remove it
-            if (price > median * (1 + threshold_multiplier) || price < median / (1 + threshold_multiplier)) {
-                // Remove the item
-                db_items.remove(i - offset);
+        // If the item  has been available for the past 2 days, check if price is much higher or lower than the
+        // average price was 10 minutes ago
+        if (db_weekly.size() > 2 && !db_hourly.isEmpty()) {
+            double tmpPastMean = db_hourly.get(db_hourly.size() - 1).mean;
+            double tmpPercent = entry.price / tmpPastMean * 100;
 
-                // Since we removed elements with index i we need to adjust for the rest of them that fell back one place
-                offset++;
+            // Find parent category from item key
+            String tmpCategory = key.substring(0, key.indexOf("|"));
+            String parent = tmpCategory.contains(":") ? tmpCategory.substring(0, tmpCategory.indexOf(":")) : tmpCategory;
+
+            switch (parent) {
+                case "enchantments":
+                    return tmpPercent > 10 && tmpPercent < 300;
+                case "currency":
+                case "essence":
+                    return tmpPercent > 80 && tmpPercent < 120;
+                default:
+                    return tmpPercent > 40 && tmpPercent < 200;
             }
         }
 
-        // Increment discard counter by how many were discarded
-        if (offset > 0) dec_counter += offset;
+        return true;
     }
 
     /**
