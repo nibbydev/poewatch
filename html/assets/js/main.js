@@ -193,7 +193,7 @@ function readServiceContainers() {
 function fillSelectors(category) {
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
-    var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
+    var button = "<label class='btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1'>";
     button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
     leagueSelector.append(button); 
   });
@@ -212,7 +212,8 @@ function fillSelectors(category) {
     tableHeaderContent += "<th scope='col'>Qual</th>";
     tableHeaderContent += "<th scope='col'>Corr</th>";
   }
-  tableHeaderContent += "<th scope='col' colspan='2'>Price</th>";
+  tableHeaderContent += "<th scope='col'>Chaos</th>";
+  tableHeaderContent += "<th scope='col'>Exalted</th>";
   tableHeaderContent += "<th scope='col'>Change</th>";
   tableHeaderContent += "<th scope='col'>Count</th>";
   $("#searchResults > thead > tr").append(tableHeaderContent);
