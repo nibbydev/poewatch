@@ -98,13 +98,13 @@
 .sparkline-orange {stroke: #e36023}
 .sparkline {fill: none}
 
-.sparklinebox {
+.pricebox {
   display: flex;
   align-items: center;
   white-space: nowrap;
 }
 
-.sparklinebox .sparkline {padding: 0,5px,0,0}
+.pricebox .sparkline {padding: 0,5px,0,0}
 
 .chart-large {height: 250px}
 .chart-small {height: 110px}
@@ -133,11 +133,3 @@ canvas {
 
 /* Styling for item types */
 .item-type{color: #888}
-
-/* Second navbar radio border */
-.btn-outline-dark {border-color: #555}
-/* Second navbar radio border hover */
-.btn-outline-dark:hover {
-  background-color: #333;
-  border-color: #555;
-}

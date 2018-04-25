@@ -28,14 +28,12 @@
       </div>
     </div>
   </nav>
-<div class="container-fluid">    
+<div class="container-fluid">
   <div class="row">
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
-        <?php 
-          include "assets/php/menu.php";
-        ?>
+        <?php include ( "assets/php/menu.php" ) ?>
 
       </div>
     </div>
@@ -62,6 +60,9 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
+              <div><em>24/04/2018</em> - Added Cloudflare</div>
+              <div><em>24/04/2018</em> - Added exalted prices</div>
+              <div><em>23/04/2018</em> - Added support for enchantments</div>
               <div><em>22/04/2018</em> - Changed domains</div>
               <div><em>14/04/2018</em> - Fix Beachhead variants not being indexed</div>
               <div><em>10/04/2018</em> - Fix Kaom's Heart not being indexed</div>

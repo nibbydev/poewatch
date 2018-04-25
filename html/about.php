@@ -33,12 +33,14 @@
   <div class="row">
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
-        <?php include "assets/php/menu.php" ?>
+        
+        <?php include ( "assets/php/menu.php" ) ?>
+        
       </div>
     </div>
 
     <div class="col-lg-8 main-content">
-    <div class="row">
+      <div class="row">
         <div class="col-lg">
           <div class="alert alert-warning" role="alert">
             <h3 class="alert-heading text-center">Attention!</h3>

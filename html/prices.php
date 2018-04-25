@@ -50,6 +50,15 @@
       </div>
     </div>
     <div class="col-lg-8 main-content"> 
+      <div class="row mb">
+        <div class="col-lg"> 
+          <div class="alert custom-card" role="alert">
+            <h3 class="alert-heading text-center">[ allan please add advertisement ]</h3>
+            <hr>
+            <p class="mb-0 text-center item-type">(i'm jk there won't be any)</p>
+          </div>
+        </div>
+      </div>
 
       <!-- Title row -->
       <div class="row mb">
@@ -161,7 +170,7 @@
                 <tbody></tbody>
               </table>
               <div class="loadall">
-                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
+                <button type="button" class="btn btn-block btn-outline-dark btn-outline-dark-alt" id="button-loadall">Load more</button>
               </div>
             </div>
           </div>

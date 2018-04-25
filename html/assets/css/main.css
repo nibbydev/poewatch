@@ -54,6 +54,16 @@ option {
   border-color: #333;
 }
 
+/* Second navbar radio border */
+.btn-outline-dark-alt {
+  border-color: #555;
+}
+/* Second navbar radio border hover */
+.btn-outline-dark-alt:hover {
+  background-color: #333;
+  border-color: #555;
+}
+
 /*------------------------------------------------------------------------------------------------------------
 // Navbars
 //----------------------------------------------------------------------------------------------------------*/
@@ -95,6 +105,24 @@ footer {
 }
 .sidebar-img-container img {
   max-height: 30px;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Table formatting
+//----------------------------------------------------------------------------------------------------------*/
+
+.api-data-table {
+  background-color: #444;
+  color: #ddd;
+}
+
+.api-data-table .table td {
+  border-top: 1px solid #383838;
+}
+
+.api-data-table .table thead th {
+  border-bottom: 1px solid #383838;
+  border-top: transparent;
 }
 
 /*------------------------------------------------------------------------------------------------------------

@@ -75,7 +75,7 @@ var expandedRowTemplate = `<tr class='selected-row'><td colspan='100'>
 </td></tr>`;
 
 $(document).ready(function() {
-  var category = getUrlParameter("category").toLowerCase();
+  var category = getUrlParameter("category");
   if (!category) return;
 
   readServiceContainers();
@@ -193,7 +193,7 @@ function readServiceContainers() {
 function fillSelectors(category) {
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
-    var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
+    var button = "<label class='btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1'>";
     button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
     leagueSelector.append(button); 
   });
@@ -212,7 +212,8 @@ function fillSelectors(category) {
     tableHeaderContent += "<th scope='col'>Qual</th>";
     tableHeaderContent += "<th scope='col'>Corr</th>";
   }
-  tableHeaderContent += "<th scope='col'>Price</th>";
+  tableHeaderContent += "<th scope='col'>Chaos</th>";
+  tableHeaderContent += "<th scope='col'>Exalted</th>";
   tableHeaderContent += "<th scope='col'>Change</th>";
   tableHeaderContent += "<th scope='col'>Count</th>";
   $("#searchResults > thead > tr").append(tableHeaderContent);
@@ -607,16 +608,16 @@ function makeRequest() {
 
 function parseItem(item, index) {
   // Format icon
-  var tmpIcon = item["icon"] ? item["icon"] : "http://poe-stats.com/assets/img/missing.png";
+  var tmpIcon = item["icon"] ? item["icon"] : (item["frame"] === -1 ? "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1" : "http://poe-stats.com/assets/img/missing.png");
   var iconField = "<span class='table-img-container text-center mr-2'><img src='" + tmpIcon + "'></span>";
 
   // Format name and variant/links badge
   var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
   nameField += item["name"];
   if ("type" in item) nameField += "<span class='item-type'>, " + item["type"] + "</span>";
-  if ("var" in item) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+  if ("var" in item && item["frame"] !== -1) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
   else if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-  if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-dark'>New</span>";
+  if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-light'>New</span>";
   nameField += "</span>";
 
   // Format gem fields
@@ -641,10 +642,17 @@ function parseItem(item, index) {
   sparkline.sparkline(sparkLine, item["history"]["spark"]);
 
   // Format price and sparkline field
-  var priceField = "<div class='sparklinebox'>";
+  var priceField = "<div class='pricebox'>";
   priceField += sparkLine.outerHTML + "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
   priceField += roundPrice(item["mean"]);
   priceField += "</div>";
+
+  var exaltedField = "<div class ='pricebox'>";
+  if ("exalted" in item && item["exalted"] >= 1) {
+    exaltedField += "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+    exaltedField += roundPrice(item["exalted"]);
+  }
+  exaltedField += "</div>";
 
   // Format change field
   var tmpChange;
@@ -666,6 +674,7 @@ function parseItem(item, index) {
   "<td>" +  iconField + nameField + "</td>" + 
   gemFields +
   "<td>" + priceField + "</td>" + 
+  "<td>" + exaltedField + "</td>" + 
   "<td>" + changeField + "</td>" + 
   "<td>" + countField + "</td>" + 
   "</tr>";
@@ -684,7 +693,7 @@ function getUrlParameter(sParam) {
     sParameterName = sURLVariables[i].split('=');
 
     if (sParameterName[0] === sParam) {
-      return sParameterName[1] === undefined ? true : sParameterName[1];
+      return sParameterName[1] === undefined ? true : sParameterName[1].trim().toLowerCase();
     }
   }
 }
