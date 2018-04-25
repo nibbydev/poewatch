@@ -132,8 +132,9 @@ $(document).ready(function() {
 
   // Define low confidence radio button event listener
   $("#radio-confidence").on("change", function(){
-    let newValue = $("input[name=confidence]:checked", this).val();
+    let newValue = $("input:checked", this).val();
     console.log(newValue);
+    
     if (newValue != FILTER.hideLowConfidence) {
       FILTER.hideLowConfidence = !FILTER.hideLowConfidence;
       sortResults();
@@ -614,7 +615,7 @@ function parseItem(item, index) {
   // Format name and variant/links badge
   var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
   nameField += item["name"];
-  if ("type" in item) nameField += "<span class='item-type'>, " + item["type"] + "</span>";
+  if ("type" in item) nameField += "<span class='subtext-1'>, " + item["type"] + "</span>";
   if ("var" in item && item["frame"] !== -1) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
   else if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
   if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-light'>New</span>";
@@ -723,8 +724,6 @@ function sortResults() {
 
     if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
 
-    // Hide harbinger pieces of shit. This is temporary
-    //if (item["child"] === "piece") continue;
     // Hide low confidence items
     if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
     // Hide sub-categories

@@ -42,8 +42,9 @@
     <div class="col-lg-8 main-content">
       <div class="row">
         <div class="col-lg">
-          <div class="alert alert-warning" role="alert">
+          <div class="alert custom-card" role="alert">
             <h3 class="alert-heading text-center">Attention!</h3>
+            <hr>
             <p>This site is still a work in progress. Data is wiped regularly, API endpoints may change, layout will change.</p>
           </div>
         </div>

@@ -60,14 +60,15 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
-              <div><em>24/04/2018</em> - Added Cloudflare</div>
-              <div><em>24/04/2018</em> - Added exalted prices</div>
-              <div><em>23/04/2018</em> - Added support for enchantments</div>
-              <div><em>22/04/2018</em> - Changed domains</div>
+              <div><em>25/04/2018</em> - Update API pages</div>
+              <div><em>24/04/2018</em> - Enable Cloudflare</div>
+              <div><em>24/04/2018</em> - Add exalted prices</div>
+              <div><em>23/04/2018</em> - Add support for enchantments</div>
+              <div><em>22/04/2018</em> - Change domains</div>
               <div><em>14/04/2018</em> - Fix Beachhead variants not being indexed</div>
               <div><em>10/04/2018</em> - Fix Kaom's Heart not being indexed</div>
               <div><em>09/04/2018</em> - Add item price history graphs</div>
-              <div><em>08/04/2018</em> - Create and add logo</div>
+              <div><em>08/04/2018</em> - Create + add logo</div>
             </div>
           </div>
         </div>

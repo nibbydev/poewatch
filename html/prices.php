@@ -55,7 +55,7 @@
           <div class="alert custom-card" role="alert">
             <h3 class="alert-heading text-center">[ allan please add advertisement ]</h3>
             <hr>
-            <p class="mb-0 text-center item-type">(i'm jk there won't be any)</p>
+            <p class="mb-0 text-center subtext-1">(i'm jk there won't be any)</p>
           </div>
         </div>
       </div>
@@ -143,10 +143,10 @@
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
             <label class="btn btn-outline-dark active">
-              <input type="radio" name="confidence" value="1" checked>Hide
+              <input type="radio" name="confidence" value="1" checked><a>Hide</a>
             </label>
             <label class="btn btn-outline-dark">
-              <input type="radio" name="confidence" value="">Show
+              <input type="radio" name="confidence" value=""><a>Show</a>
             </label>
           </div>
         </div>
