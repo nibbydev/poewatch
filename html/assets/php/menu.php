@@ -50,5 +50,5 @@ for ($i = 0; $i < sizeof($titles); $i++) {
   $title = $titles[$i];
   $active = ($category && strpos(strtolower(trim($title)), $category) !== false) ? " active" : "";
   
-  echo "<a class='list-group-item sidebar-link$active' href='$href'><div class='sidebar-img-container text-center'><img src='$img'></div>$title</a>";
+  echo "<div class='col-xl-12 col-lg-3 col-md-4 col-sm-6'><a href='$href'><div class='custom-menu-item p-2$active'><div class='custom-menu-img-container text-center ml-1 mr-2'><img src='$img'></div>$title</div></a></div>";
 }

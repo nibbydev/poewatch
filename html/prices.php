@@ -46,16 +46,17 @@
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-lg-3"> 
-      <div class="list-group sidebar-left" id="sidebar-link-container">
+    <div class="col-xl-3"> 
+      <div class="row mt-4 mb-xl-4">
 
-        <?php include ( "assets/php/menu.php" ) ?>
+          <?php include ( "assets/php/menu.php" ) ?>
 
       </div>
     </div>
-    <div class="col-lg-8 main-content"> 
     <!--/Menu/-->
-    <!-- Title row -->
+    <!-- Main content -->
+    <div class="col-xl-8 col-lg mt-4"> 
+      <!-- Title row -->
       <div class="row mb">
         <div class="col-lg"> 
           <div class="alert custom-card" role="alert">
@@ -174,6 +175,7 @@
       </div>
       <!--/Main table/-->
     </div>
+    <!--/Main content/-->
   </div>
 </div>
 <!--/Page body/-->

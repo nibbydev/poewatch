@@ -34,16 +34,16 @@
 <div class="container-fluid">
   <div class="row">
     <!-- Menu -->
-    <div class="col-lg-3"> 
-      <div class="list-group sidebar-left" id="sidebar-link-container">
+    <div class="col-xl-3"> 
+      <div class="row mt-4 mb-xl-4">
 
-        <?php include ( "assets/php/menu.php" ) ?>
+          <?php include ( "assets/php/menu.php" ) ?>
 
       </div>
     </div>
     <!--/Menu/-->
-    <!-- Main table -->
-    <div class="col-lg-8 main-content"> 
+    <!-- Main content -->
+    <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
@@ -80,7 +80,7 @@
         </div>
       </div>
     </div>
-    <!--/Main table/-->
+    <!--/Main content/-->
   </div>
 </div>
 <!--/Page body/-->
