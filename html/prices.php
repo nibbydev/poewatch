@@ -57,13 +57,13 @@
     <!-- Main content -->
     <div class="col-xl-8 col-lg mt-4"> 
       <!-- Title row -->
-      <div class="row mb justify-content-lg-center justify-content-md-center">
+      <div class="row d-none d-xl-block">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="alert custom-card" role="alert">
             <h2 class="alert-heading text-center"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h2>
             <hr>
             <?php if (isset($_GET["category"]) && $_GET["category"] === "enchantments"): ?>
-            <p class="mb-0 text-center subtext-1">[ Encahntment prices <i>might</i> be inaccurate at this point in time ]</p>
+            <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
             <?php else: ?>
             <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
             <?php endif; ?>
@@ -75,7 +75,7 @@
       
       <!-- Gem field row -->
       <div class="row mb-3 gem-fields">
-        <div class="col-sm">
+        <div class="col-6 col-md-4 mb-2 order-1 order-sm-1 order-md-1 mb-3">
           <h4>Corrupted</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
             <label class="btn btn-outline-dark active">
@@ -89,22 +89,22 @@
             </label>
           </div>
         </div>
-        <div class="col-sm">
+        <div class="col-6 col-md-4 mb-2 order-3 order-sm-3 order-md-2">
           <h4>Level</h4>
           <div class="form-group">
             <select class="form-control" id="select-level">
-              <option value="">All</option>
+              <option value="" selected="selected">All</option>
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
               <option value="10">10</option>
               <option value="20">20</option>
-              <option value="21" selected="selected">21</option>
+              <option value="21">21</option>
             </select>
           </div>
         </div>
-        <div class="col-sm">
+        <div class="col-6 col-md-4 mb-2 order-5 order-sm-5 order-md-3">
           <h4>Quality</h4>
           <div class="form-group">
             <select class="form-control" id="select-quality">
@@ -116,16 +116,8 @@
             </select>
           </div>
         </div>
-      </div>
-      <!--/Gem field row/-->
 
-      <?php endif; ?>
-      
-      <?php if (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
-
-      <!-- Link + generic field row -->
-      <div class="row mb-3">
-        <div class="col-6 col-md-3 mb-sm-2">
+        <div class="col-6 col-md-4 mb-2 order-2 order-sm-2 order-md-4 mb-3">
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
             <label class="btn btn-outline-dark active">
@@ -136,7 +128,33 @@
             </label>
           </div>
         </div>
-        <div class="col-6 col-md-3 mb-sm-2 link-fields">
+        <div class="col-6 col-md-4 mb-2 order-4 order-sm-4 order-md-5">
+          <h4>Sub-category</h4>
+          <select class="form-control custom-select" id="search-sub"></select>
+        </div>
+        <div class="col-6 col-md-4 mb-2 order-6 order-sm-6 order-md-6">
+          <h4>Search</h4>
+          <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+        </div>
+      </div>
+      <!--/Gem field row/-->
+
+      <?php elseif (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
+
+      <!-- Link + generic field row -->
+      <div class="row mb-3">
+        <div class="col-6 col-md-3 mb-2">
+          <h4>Low count</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+            <label class="btn btn-outline-dark active">
+              <input type="radio" name="confidence" value="1" checked><a>Hide</a>
+            </label>
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="confidence" value=""><a>Show</a>
+            </label>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 mb-2 link-fields">
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-dark active">
@@ -150,11 +168,11 @@
             </label>
           </div>
         </div>
-        <div class="col-6 col-md-3 mb-sm-2">
+        <div class="col-6 col-md-3 mb-2">
           <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub"></select>
         </div>
-        <div class="col-6 col-md-3 mb-sm-2">
+        <div class="col-6 col-md-3 mb-2">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
         </div>
@@ -165,7 +183,7 @@
 
       <!-- Generic field row -->
       <div class="row mb-3">
-        <div class="col-sm-3">
+        <div class="col-6 col-md-3 mb-2">
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
             <label class="btn btn-outline-dark active">
@@ -176,11 +194,11 @@
             </label>
           </div>
         </div>
-        <div class="col-sm-4">
+        <div class="col-6 col-md-3 mb-2 offset-md-3">
           <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub"></select>
         </div>
-        <div class="col-sm-5">
+        <div class="col-6 col-md-3 mb-2 offset-md-0 offset-6">
           <h4>Search</h4>
           <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
         </div>
