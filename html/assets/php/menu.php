@@ -42,6 +42,21 @@ $titles = array(
   "Weapons"
 );
 
+$classes = array(
+  "rounded-top",
+  "rounded-xl-0 rounded-lg-top rounded-md-top rounded-sm-top rounded-0",
+  "rounded-xl-0 rounded-lg-top rounded-md-top rounded-sm-0 rounded-0",
+  "rounded-xl-0 rounded-lg-top rounded-md-0 rounded-sm-0 rounded-0",
+  "rounded-0",
+  "rounded-0",
+  "rounded-0",
+  "rounded-0",
+  "rounded-xl-0 rounded-lg-bottom rounded-md-0 rounded-sm-0 rounded-0",
+  "rounded-xl-0 rounded-lg-bottom rounded-md-bottom rounded-sm-0 rounded-0",
+  "rounded-xl-0 rounded-lg-bottom rounded-md-bottom rounded-sm-bottom rounded-0",
+  "rounded-bottom"
+);
+
 $category = isset($_GET["category"]) ? strtolower(trim($_GET["category"])) : "";
 
 for ($i = 0; $i < sizeof($titles); $i++) { 
@@ -49,6 +64,20 @@ for ($i = 0; $i < sizeof($titles); $i++) {
   $img = $imgs[$i];
   $title = $titles[$i];
   $active = ($category && strpos(strtolower(trim($title)), $category) !== false) ? " active" : "";
-  
-  echo "<div class='col-xl-12 col-lg-3 col-md-4 col-sm-6'><a href='$href'><div class='custom-menu-item p-2$active'><div class='custom-menu-img-container text-center ml-1 mr-2'><img src='$img'></div>$title</div></a></div>";
+  $class = $classes[$i];
+
+$template = <<<ITEM
+  <div class="col-xl-12 col-lg-3 col-md-4 col-sm-6">
+    <a href="$href">
+      <div class="custom-menu-item p-2 $class $active">
+        <div class="custom-menu-img-container text-center ml-1 mr-2">
+          <img src="$img">
+        </div>
+        $title
+      </div>
+    </a>
+  </div>
+ITEM;
+
+  echo $template;
 }

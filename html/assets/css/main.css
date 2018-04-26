@@ -81,28 +81,6 @@ footer {
 // Sidebar
 //----------------------------------------------------------------------------------------------------------*/
 
-/* Overwrite sidebar button active style background */
-.sidebar-link {background-color: #333}
-.sidebar-link.active, .sidebar-link:hover {background-color: #444}
-.sidebar-left {
-  max-width: 300px;
-  margin: 20px 0 20px 0;
-}
-.sidebar-left a {
-  color: #ccc;
-  border: transparent;
-}
-
-.sidebar-img-container {
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  margin-right: 10px;
-}
-.sidebar-img-container img {
-  max-height: 30px;
-}
-
 .custom-menu-item {
   width: 100%;
   background-color:#333;
@@ -122,16 +100,7 @@ footer {
   max-height: 30px;
 }
 
-
-
-.custom-menu-item-2 {
-  background-color:#333;
-  color: #ccc;
-}
-
-
-
-
+a:hover {text-decoration: none !important}
 
 /*------------------------------------------------------------------------------------------------------------
 // Table formatting
