@@ -57,38 +57,23 @@
     <!-- Main content -->
     <div class="col-xl-8 col-lg mt-4"> 
       <!-- Title row -->
-      <div class="row mb">
-        <div class="col-lg"> 
+      <div class="row mb justify-content-lg-center justify-content-md-center">
+        <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="alert custom-card" role="alert">
-            <h1 class="alert-heading text-center"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h1>
+            <h2 class="alert-heading text-center"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h2>
             <hr>
+            <?php if (isset($_GET["category"]) && $_GET["category"] === "enchantments"): ?>
+            <p class="mb-0 text-center subtext-1">[ Encahntment prices <i>might</i> be inaccurate at this point in time ]</p>
+            <?php else: ?>
             <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
+            <?php endif; ?>
           </div>
         </div>
       </div>
       <!--/Title row/-->
-      <!-- Link field row -->
-      <?php if (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
-      <div class="row mb-3">
-        <div class="col-sm link-fields">
-          <h4>Links</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
-            <label class="btn btn-outline-dark active">
-              <input type="radio" name="links" value="" checked>None
-            </label>
-            <label class="btn btn-outline-dark">
-              <input type="radio" name="links" value="5">5L
-            </label>
-            <label class="btn btn-outline-dark">
-              <input type="radio" name="links" value="6">6L
-            </label>
-          </div>
-        </div>
-      </div>
-      <?php endif; ?>
-      <!--/Link field row/-->
-      <!-- Gem field row -->
       <?php if (isset($_GET["category"]) && $_GET["category"] === "gems"): ?>
+      
+      <!-- Gem field row -->
       <div class="row mb-3 gem-fields">
         <div class="col-sm">
           <h4>Corrupted</h4>
@@ -132,8 +117,52 @@
           </div>
         </div>
       </div>
-      <?php endif; ?>
       <!--/Gem field row/-->
+
+      <?php endif; ?>
+      
+      <?php if (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
+
+      <!-- Link + generic field row -->
+      <div class="row mb-3">
+        <div class="col-6 col-md-3 mb-sm-2">
+          <h4>Low count</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+            <label class="btn btn-outline-dark active">
+              <input type="radio" name="confidence" value="1" checked><a>Hide</a>
+            </label>
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="confidence" value=""><a>Show</a>
+            </label>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 mb-sm-2 link-fields">
+          <h4>Links</h4>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
+            <label class="btn btn-outline-dark active">
+              <input type="radio" name="links" value="" checked>None
+            </label>
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="links" value="5">5L
+            </label>
+            <label class="btn btn-outline-dark">
+              <input type="radio" name="links" value="6">6L
+            </label>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 mb-sm-2">
+          <h4>Sub-category</h4>
+          <select class="form-control custom-select" id="search-sub"></select>
+        </div>
+        <div class="col-6 col-md-3 mb-sm-2">
+          <h4>Search</h4>
+          <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+        </div>
+      </div>
+      <!--/Link + generic field row/-->
+
+      <?php else: ?>
+
       <!-- Generic field row -->
       <div class="row mb-3">
         <div class="col-sm-3">
@@ -157,6 +186,8 @@
         </div>
       </div>
       <!--/Generic field row/-->
+
+      <?php endif; ?>
       <!-- Main table -->
       <div class="row mb-3 pt-3">
         <div class="col-lg">
