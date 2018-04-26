@@ -48,7 +48,7 @@ for ($i = 0; $i < sizeof($titles); $i++) {
   $href = $hrefs[$i];
   $img = $imgs[$i];
   $title = $titles[$i];
-  $active = $category === strtolower(trim($title)) ? " active" : "";
-
+  $active = strpos(strtolower(trim($title)), $category) !== false ? " active" : "";
+  
   echo "<a class='list-group-item sidebar-link$active' href='$href'><div class='sidebar-img-container text-center'><img src='$img'></div>$title</a>";
 }
