@@ -44,17 +44,39 @@ $titles = array(
 
 $classes = array(
   "rounded-top",
-  "rounded-xl-0 rounded-lg-top rounded-md-top rounded-sm-top rounded-0",
-  "rounded-xl-0 rounded-lg-top rounded-md-top rounded-sm-0 rounded-0",
-  "rounded-xl-0 rounded-lg-top rounded-md-0 rounded-sm-0 rounded-0",
   "rounded-0",
+  "rounded-xl-0 rounded-lg-bottom rounded-md-0 rounded-sm-0",
+
+  "rounded-xl-0 rounded-lg-top rounded-lg-bottom-0 rounded-md-bottom rounded-sm-0",
+  "rounded-xl-0 rounded-lg-0 rounded-md-top rounded-sm-0",
+  "rounded-xl-0 rounded-lg-bottom rounded-md-0 rounded-sm-bottom",
+
+  "rounded-xl-0 rounded-lg-top rounded-md-0 rounded-sm-top",
+  "rounded-xl-0 rounded-lg-0 rounded-md-bottom rounded-sm-0",
+  "rounded-xl-0 rounded-lg-bottom rounded-lg-top-0 rounded-md-top rounded-sm-0",
+  
+  "rounded-xl-0 rounded-lg-top rounded-md-0 rounded-sm-0",
   "rounded-0",
-  "rounded-0",
-  "rounded-0",
-  "rounded-xl-0 rounded-lg-bottom rounded-md-0 rounded-sm-0 rounded-0",
-  "rounded-xl-0 rounded-lg-bottom rounded-md-bottom rounded-sm-0 rounded-0",
-  "rounded-xl-0 rounded-lg-bottom rounded-md-bottom rounded-sm-bottom rounded-0",
   "rounded-bottom"
+);
+
+
+$orders = array(
+  "order-1",
+  "order-2 order-sm-3 order-md-4 order-lg-5 order-xl-2",
+  "order-3 order-sm-5 order-md-7 order-lg-9 order-xl-3",
+
+  "order-4 order-sm-7 order-md-10 order-lg-2 order-xl-4",
+  "order-5 order-sm-9 order-md-2 order-lg-6 order-xl-5",
+  "order-6 order-sm-11 order-md-5 order-lg-10 order-xl-6",
+
+  "order-7 order-sm-2 order-md-8 order-lg-3 order-xl-7",
+  "order-8 order-sm-4 order-md-11 order-lg-7 order-xl-8",
+  "order-9 order-sm-6 order-md-3 order-lg-11 order-xl-9",
+
+  "order-10 order-sm-8 order-md-6 order-lg-4 order-xl-10",
+  "order-11 order-sm-10 order-md-9 order-lg-8 order-xl-11",
+  "order-12"
 );
 
 $category = isset($_GET["category"]) ? strtolower(trim($_GET["category"])) : "";
@@ -65,9 +87,10 @@ for ($i = 0; $i < sizeof($titles); $i++) {
   $title = $titles[$i];
   $active = ($category && strpos(strtolower(trim($title)), $category) !== false) ? " active" : "";
   $class = $classes[$i];
+  $order = $orders[$i];
 
 $template = <<<ITEM
-  <div class="col-xl-12 col-lg-3 col-md-4 col-sm-6">
+  <div class="col-xl-12 col-lg-3 col-md-4 col-sm-6 $order">
     <a href="$href">
       <div class="custom-menu-item p-2 $class $active">
         <div class="custom-menu-img-container text-center ml-1 mr-2">

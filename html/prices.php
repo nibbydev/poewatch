@@ -207,7 +207,7 @@
 
       <?php endif; ?>
       <!-- Main table -->
-      <div class="row mb-3 pt-3">
+      <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
