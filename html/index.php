@@ -9,27 +9,31 @@
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-      <a href="/" class="navbar-brand">
-        <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        Poe-Stats
-      </a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a class="nav-link active" href="/">Front</a></li>
-          <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
-          <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-          <li class="nav-item"><a class="nav-link" href="about">About</a></li>
-        </ul>
-      </div>
+<!-- Primary navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a href="/" class="navbar-brand">
+      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+      Poe-Stats
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link active" href="/">Front</a></li>
+        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
+        <li class="nav-item"><a class="nav-link" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
+<!--/Primary navbar/-->
+<!-- Page body -->
 <div class="container-fluid">
   <div class="row">
+    <!-- Menu -->
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
@@ -37,6 +41,8 @@
 
       </div>
     </div>
+    <!--/Menu/-->
+    <!-- Main table -->
     <div class="col-lg-8 main-content"> 
       <div class="row mb-3">
         <div class="col-lg">
@@ -74,11 +80,15 @@
         </div>
       </div>
     </div>
+    <!--/Main table/-->
   </div>
 </div>
+<!--/Page body/-->
+<!-- Footer -->
 <footer class="container-fluid text-center">
   <p>Poe-Stats © 2018</p>
 </footer>
+<!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>
 </html>

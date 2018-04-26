@@ -10,38 +10,42 @@
   <link rel="stylesheet" href="assets/css/prices.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-      <a href="/" class="navbar-brand">
-        <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        Poe-Stats
-      </a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
-          <li class="nav-item"><a class="nav-link active" href="prices">Prices</a></li>
-          <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-          <li class="nav-item"><a class="nav-link" href="about">About</a></li>
-        </ul>
-      </div>
+<!-- Primary navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a href="/" class="navbar-brand">
+      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+      Poe-Stats
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
+        <li class="nav-item"><a class="nav-link active" href="prices">Prices</a></li>
+        <li class="nav-item"><a class="nav-link" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+      </ul>
     </div>
-  </nav>
-
-  <div class="container-fluid p-0">
-    <div class="row m-0 py-1 pr-3 second-navbar">
-      <div class="col text-right">
-        <div class="form-group m-0">
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
-        </div>
+  </div>
+</nav>
+<!--/Primary navbar/-->
+<!-- Secondary navbar -->
+<div class="container-fluid p-0">
+  <div class="row m-0 py-1 pr-3 second-navbar">
+    <div class="col text-right">
+      <div class="form-group m-0">
+        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
       </div>
     </div>
   </div>
-  
+</div>
+<!--/Secondary navbar/-->
+<!-- Page body -->
 <div class="container-fluid">    
   <div class="row">
+    <!-- Menu -->
     <div class="col-lg-3"> 
       <div class="list-group sidebar-left" id="sidebar-link-container">
 
@@ -50,24 +54,18 @@
       </div>
     </div>
     <div class="col-lg-8 main-content"> 
+    <!--/Menu/-->
+    <!-- Title row -->
       <div class="row mb">
         <div class="col-lg"> 
           <div class="alert custom-card" role="alert">
-            <h3 class="alert-heading text-center">[ allan please add advertisement ]</h3>
+            <h1 class="alert-heading text-center"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h1>
             <hr>
-            <p class="mb-0 text-center subtext-1">(i'm jk there won't be any)</p>
+            <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
           </div>
         </div>
       </div>
-
-      <!-- Title row -->
-      <div class="row mb">
-        <div class="col-lg"> 
-          <h1 class="mb-3"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h1>
-        </div>
-      </div>
       <!--/Title row/-->
-
       <!-- Link field row -->
       <?php if (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
       <div class="row mb-3">
@@ -88,7 +86,6 @@
       </div>
       <?php endif; ?>
       <!--/Link field row/-->
-
       <!-- Gem field row -->
       <?php if (isset($_GET["category"]) && $_GET["category"] === "gems"): ?>
       <div class="row mb-3 gem-fields">
@@ -136,7 +133,6 @@
       </div>
       <?php endif; ?>
       <!--/Gem field row/-->
-      
       <!-- Generic field row -->
       <div class="row mb-3">
         <div class="col-sm-3">
@@ -160,7 +156,7 @@
         </div>
       </div>
       <!--/Generic field row/-->
-
+      <!-- Main table -->
       <div class="row mb-3 pt-3">
         <div class="col-lg">
           <div class="card custom-card">
@@ -176,16 +172,20 @@
           </div>
         </div>
       </div>
+      <!--/Main table/-->
     </div>
   </div>
 </div>
+<!--/Page body/-->
+<!-- Footer -->
 <footer class="container-fluid text-center">
   <p>Poe-Stats © 2018</p>
 </footer>
-
+<!--/Footer/-->
+<!-- Service containers -->
 <div class="service-container" id="service-leagues" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagues.json" ) ); ?>"></div>
 <div class="service-container" id="service-categories" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/categories.json" ) ); ?>"></div>
-
+<!--/Service containers/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/main.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
