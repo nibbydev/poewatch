@@ -66,6 +66,7 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
+              <div><em>27/04/2018</em> - Add live updates</div>
               <div><em>26/04/2018</em> - Improve page responsiveness</div>
               <div><em>25/04/2018</em> - Update API pages</div>
               <div><em>24/04/2018</em> - Enable Cloudflare</div>

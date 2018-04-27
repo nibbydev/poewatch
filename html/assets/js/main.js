@@ -12,6 +12,7 @@ let HISTORY_CHART;
 let HISTORY_LEAGUE;
 
 var PARSE_AMOUNT = 100;
+var FLAG_LIVE = false;
 
 const PRICE_PERCISION = 100;
 const COUNT_HIGH = 25;
@@ -94,7 +95,6 @@ $(document).ready(function() {
 
   fillSelectors(category);
   readCookies();
-
   makeRequest();
 
   // Define league event listener
@@ -169,7 +169,26 @@ $(document).ready(function() {
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
     onRowClick(event);
   });
+
+  // Define live search toggle listener
+  $("#live-updates").on("change", function(){
+    FLAG_LIVE = $("input[name=live]:checked", this).val() == "true";
+    console.log("Live updates: " + FLAG_LIVE);
+    document.cookie = "live="+FLAG_LIVE;
+  });
+
+  // Live update checker
+  window.setInterval(timedRequestCallback, 65 * 1000);
 }); 
+
+
+function timedRequestCallback() {
+  if (FLAG_LIVE) {
+    console.log("Automatic update");
+    ITEMS = [];
+    makeRequest();
+  }
+}
 
 
 function readServiceContainers() {
@@ -227,22 +246,29 @@ function toTitleCase(str) {
 
 
 function readCookies() {
+  var live = getCookie("live")
+  if (live) {
+    console.log("Got live flag from cookie: " + live);
+    FLAG_LIVE = live == "true";
+
+    $("#live-updates input").filter(function() { 
+      return ($(this).val() === live);
+    }).prop("active", true).trigger("click");
+  }
+
   var league = getCookie("league");
   if (!league) {
-
     $("#search-league input").filter(function() { 
       return ($(this).val() === FILTER.league);
     }).prop("active", true).trigger("click");
-
-    return; 
+  } else {
+    console.log("Got league from cookie: " + league);
+    FILTER.league = league.toLowerCase();
+    
+    $("#search-league input").filter(function() { 
+      return ($(this).val() === league);
+    }).prop("active", true).trigger("click");
   }
-
-  console.log("Got league from cookie: " + league);
-  FILTER.league = league.toLowerCase();
-  
-  $("#search-league input").filter(function() { 
-    return ($(this).val() === league);
-  }).prop("active", true).trigger("click");
 }
 
 

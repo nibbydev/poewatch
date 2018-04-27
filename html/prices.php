@@ -32,12 +32,19 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
-<div class="container-fluid p-0">
-  <div class="row m-0 py-1 pr-3 second-navbar">
-    <div class="col text-right">
-      <div class="form-group m-0">
-        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
-      </div>
+<div class="container-fluid second-navbar m-0 py-1 pr-3r">
+  <div class="form-group search-league m-0 ml-3">
+    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
+  </div>
+  <div class="form-group live-updates m-0">
+    <label for="live-updates" class="m-0">Live updates</label>
+    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="live-updates">
+      <label class="btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1">
+        <input name="live" type="radio" value="true">On
+      </label>
+      <label class="btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1 active">
+        <input name="live" type="radio" value="false">Off
+      </label>
     </div>
   </div>
 </div>
