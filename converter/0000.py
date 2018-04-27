@@ -2,7 +2,7 @@ from os import mkdir
 
 
 def init():
-    mkdir("./out")
+    mkdir("./out-0000")
 
     file_list = {}
 
@@ -13,7 +13,7 @@ def init():
             data = split_line[1]
 
             if league not in file_list:
-                file_list[league] = open("./out/" + league + ".csv", "w")
+                file_list[league] = open("./out-0000/" + league + ".csv", "w")
 
             file_list[league].write(data)
 
