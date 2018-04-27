@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import ovh.poe.Mappers;
 import ovh.poe.Item;
 import ovh.poe.Main;
+import ovh.poe.Misc;
 
 import java.io.*;
 import java.util.*;
@@ -26,7 +27,7 @@ public class EntryController {
     private final Gson gson = Main.getGson();
 
     private long lastRunTime = System.currentTimeMillis();
-    public volatile boolean flagPause, clearIndexes, tenBool, sixtyBool, twentyFourBool;
+    public volatile boolean flagPause, tenBool, sixtyBool, twentyFourBool;
     private long twentyFourCounter, sixtyCounter, tenCounter;
 
     //------------------------------------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ public class EntryController {
     private void saveStartParameters() {
         File paramFile = new File("./data/status.csv");
 
-        try (BufferedWriter writer = defineWriter(paramFile)) {
+        try (BufferedWriter writer = Misc.defineWriter(paramFile)) {
             if (writer == null) return;
 
             String buffer = "writeTime: " + System.currentTimeMillis() + "\n";
@@ -67,7 +68,7 @@ public class EntryController {
     private void loadStartParameters() {
         File paramFile = new File("./data/status.csv");
 
-        try (BufferedReader reader = defineReader(paramFile)) {
+        try (BufferedReader reader = Misc.defineReader(paramFile)) {
             if (reader == null) return;
 
             String line;
@@ -96,22 +97,6 @@ public class EntryController {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Initializes entryMap with current leagues and categories
-     */
-    private void buildEntryMapStructure() {
-        for (String league : Main.RELATIONS.leagues) {
-            LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
-
-            for (String category : Main.RELATIONS.categories.keySet()) {
-                CategoryMap categoryMap = leagueMap.getOrDefault(category, new CategoryMap());
-                leagueMap.putIfAbsent(category, categoryMap);
-            }
-
-            entryMap.putIfAbsent(league, leagueMap);
-        }
-    }
-
-    /**
      * Load in currency data on app start and fill entryMap with leagues
      */
     private void loadDatabases() {
@@ -123,7 +108,7 @@ public class EntryController {
                 continue;
             }
 
-            try (BufferedReader reader = defineReader(currencyFile)) {
+            try (BufferedReader reader = Misc.defineReader(currencyFile)) {
                 if (reader == null) continue;
 
                 LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
@@ -167,8 +152,8 @@ public class EntryController {
                 File tmpLeagueFile = new File("./data/database/"+league+"/"+category+".tmp");
 
                 // Define IO objects
-                BufferedReader reader = defineReader(leagueFile);
-                BufferedWriter writer = defineWriter(tmpLeagueFile);
+                BufferedReader reader = Misc.defineReader(leagueFile);
+                BufferedWriter writer = Misc.defineWriter(tmpLeagueFile);
                 if (writer == null) continue;
 
                 if (reader != null) {
@@ -332,7 +317,7 @@ public class EntryController {
         JSONParcel.clear();
 
         // Switch off flags
-        tenBool = sixtyBool = twentyFourBool = clearIndexes = false;
+        tenBool = sixtyBool = twentyFourBool = false;
         flipPauseFlag();
 
         saveStartParameters();
@@ -366,7 +351,7 @@ public class EntryController {
                 CategoryMap categoryMap = leagueMap.getOrDefault(item.parentCategory, new CategoryMap());
 
                 String index = Main.RELATIONS.indexItem(item);
-                if (index == null) continue; // Some currency items have their icons deleted by parseItem()
+                if (index == null) continue; // Some currency items have invalid icons
 
                 Entry entry = categoryMap.getOrDefault(index, new Entry());
                 entry.add(item, stash.accountName, index);
@@ -413,41 +398,6 @@ public class EntryController {
     //------------------------------------------------------------------------------------------------------------
     // Internal utility methods
     //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Create a BufferedReader instance
-     *
-     * @param inputFile File to read
-     * @return Created BufferedReader instance
-     */
-    private BufferedReader defineReader(File inputFile) {
-        if (!inputFile.exists())
-            return null;
-
-        // Open up the reader (it's fine if the file is missing)
-        try {
-            return new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Creates a BufferedWriter instance
-     *
-     * @param outputFile File to write
-     * @return Created BufferedWriter instance
-     */
-    private BufferedWriter defineWriter(File outputFile) {
-        // Open up the writer (if this throws an exception holy fuck something went massively wrong)
-        try {
-            return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return null;
-        }
-    }
 
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters

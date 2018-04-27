@@ -182,9 +182,6 @@ public class Entry {
      * Caller method. Calls other methods
      */
     public void cycle() {
-        // Check what to do with item index
-        if (Main.ENTRY_CONTROLLER.clearIndexes) index = null;
-
         // Build statistics and databases
         parse();
         build();
@@ -247,11 +244,11 @@ public class Entry {
             }
             if (discard) continue;
 
-            // If the item was not listed for chaos orbs ("0" == Chaos Orb), then find the value in chaos
-            if (!raw.priceType.equals("0")) {
+            // If the item was not listed for chaos orbs, then find the value in chaos
+            if (!raw.priceType.equals("Chaos Orb")) {
                 if (currencyMap == null) continue;
 
-                String fullIndex = Main.RELATIONS.currencyIndexToFullIndex.getOrDefault(raw.priceType, null);
+                String fullIndex = Main.RELATIONS.currencyNameToFullIndex.getOrDefault(raw.priceType, null);
                 if (fullIndex == null) continue;
 
                 Entry currencyEntry = currencyMap.getOrDefault(fullIndex, null);

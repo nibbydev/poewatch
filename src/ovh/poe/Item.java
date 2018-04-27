@@ -12,6 +12,8 @@ public class Item extends Mappers.BaseItem {
     public double price;
     public int links, level, quality;
 
+    public boolean doNotIndex;
+
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
     /////////////////////////////////////////////////////////
@@ -217,7 +219,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!RELATIONS.currencyAliasToIndex.containsKey(noteList[2])) {
+        if (!RELATIONS.currencyAliasToName.containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -227,13 +229,13 @@ public class Item extends Mappers.BaseItem {
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
             typeLine = RELATIONS.currencyAliasToName.get(noteList[2]);
-            priceType = "1";
+            priceType = "Chaos Orb";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
-            icon = null;
+            doNotIndex = true;
         } else {
             this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
-            priceType = RELATIONS.currencyAliasToIndex.get(noteList[2]);
+            priceType = RELATIONS.currencyAliasToName.get(noteList[2]);
         }
     }
 

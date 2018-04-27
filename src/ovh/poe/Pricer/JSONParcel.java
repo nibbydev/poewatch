@@ -1,7 +1,6 @@
 package ovh.poe.Pricer;
 
 import ovh.poe.Main;
-import ovh.poe.RelationManager;
 import ovh.poe.RelationManager.IndexedItem;
 import ovh.poe.RelationManager.SubIndexedItem;
 
@@ -37,7 +36,8 @@ public class JSONParcel {
             // Find the item's price in exalted
             EntryController.CategoryMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
             if (tmp_currencyMap != null) {
-                Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(RelationManager.exaltedIndex, null);
+                String exaltedIndex = Main.RELATIONS.currencyNameToFullIndex.getOrDefault("Exalted Orb", null);
+                Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(exaltedIndex, null);
 
                 if (tmp_exaltedEntry != null) {
                     double tmp_exaltedPrice = tmp_exaltedEntry.getMean();
@@ -95,8 +95,8 @@ public class JSONParcel {
 
             // Check if there's a match for the specific index
             String superIndex = index.substring(0, index.indexOf("-"));
-            if (Main.RELATIONS.genericItemIndexToData.containsKey(superIndex)) {
-                IndexedItem indexedItem = Main.RELATIONS.genericItemIndexToData.get(superIndex);
+            if (Main.RELATIONS.itemSubIndexToData.containsKey(superIndex)) {
+                IndexedItem indexedItem = Main.RELATIONS.itemSubIndexToData.get(superIndex);
                 frame = indexedItem.frame;
                 genericKey = indexedItem.genericKey;
                 parent = indexedItem.parent;

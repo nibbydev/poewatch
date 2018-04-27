@@ -29,6 +29,8 @@ public class Main {
         // Make sure basic folder structure exists
         buildFolderFileStructure();
 
+        CONFIG = new ConfigReader("config.cfg");
+
         // Init admin suite
         ADMIN = new AdminSuite();
 
@@ -36,8 +38,6 @@ public class Main {
         RELATIONS = new RelationManager();
         RELATIONS.getLeagueList();
 
-        // Initialize objects
-        CONFIG = new ConfigReader("config.cfg");
         WORKER_CONTROLLER = new WorkerController();
         ENTRY_CONTROLLER = new EntryController();
 
@@ -115,7 +115,6 @@ public class Main {
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
-                + "    reindex - clear the item info database\n"
                 + "    backup - backup commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
@@ -145,14 +144,6 @@ public class Main {
                         break;
                     case "about":
                         commandAbout();
-                        break;
-                    case "reindex":
-                        if (commandConfirm()) {
-                            System.out.println("[WARN] Item index database will be cleared on next cycle");
-                            ENTRY_CONTROLLER.clearIndexes = true;
-                        } else {
-                            System.out.println("[Info] Reindexing cancelled");
-                        }
                         break;
                     case "backup":
                         commandBackup(userInput);
