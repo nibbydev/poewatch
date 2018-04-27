@@ -2,10 +2,6 @@
 // Main block formatting
 //----------------------------------------------------------------------------------------------------------*/
 
-.main-content {
-  margin-top: 30px;
-}
-
 body {
   background-color: #181818;
   color: #ddd;
@@ -85,26 +81,31 @@ footer {
 // Sidebar
 //----------------------------------------------------------------------------------------------------------*/
 
-/* Overwrite sidebar button active style background */
-.sidebar-link {background-color: #333}
-.sidebar-link.active, .sidebar-link:hover {background-color: #444}
-.sidebar-left {
-  max-width: 300px;
-  margin: 20px 0 20px 0;
-}
-.sidebar-left a {
+.custom-menu-item {
+  width: 100%;
+  background-color:#333;
   color: #ccc;
-  border: transparent;
+}
+.custom-menu-item.active, 
+.custom-menu-item:hover {
+  background-color: #444;
 }
 
-.sidebar-img-container {
+.custom-menu-img-container {
   display: inline-block;
   width: 30px;
   height: 30px;
-  margin-right: 10px;
 }
-.sidebar-img-container img {
+.custom-menu-img-container img {
   max-height: 30px;
+}
+
+a:hover {text-decoration: none !important}
+
+@media (min-width: 992px) {
+  .custom-menu-item {
+    max-width: 300px;
+  }
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -140,3 +141,6 @@ footer {
     max-width: unset;
   }
 }
+
+/* Styling for item types */
+.subtext-1{color: #888}

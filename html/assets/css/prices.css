@@ -28,6 +28,18 @@
 }
 
 /*------------------------------------------------------------------------------------------------------------
+// Second navbar
+//----------------------------------------------------------------------------------------------------------*/
+
+.second-navbar {display: inline-block}
+
+.second-navbar .live-updates {float: right}
+#live-updates {margin-bottom: 1px}
+
+.second-navbar .search-league {float: right}
+#search-league {margin-bottom: 1px}
+
+/*------------------------------------------------------------------------------------------------------------
 // Expanded row styling
 //----------------------------------------------------------------------------------------------------------*/
 
@@ -130,6 +142,3 @@ canvas {
 
 /* Styling for foil uniques */
 .item-foil {color: #4c9b4c}
-
-/* Styling for item types */
-.item-type{color: #888}

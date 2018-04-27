@@ -9,35 +9,41 @@
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-      <a href="/" class="navbar-brand">
-        <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
-        Poe-Stats
-      </a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
-          <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
-          <li class="nav-item"><a class="nav-link active" href="api">API</a></li>
-          <li class="nav-item"><a class="nav-link" href="about">About</a></li>
-        </ul>
-      </div>
+<!-- Primary navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a href="/" class="navbar-brand">
+      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+      Poe-Stats
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
+        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
+        <li class="nav-item"><a class="nav-link active" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
+<!--/Primary navbar/-->
+<!-- Page body -->
 <div class="container-fluid">    
   <div class="row">
-    <div class="col-lg-3"> 
-      <div class="list-group sidebar-left" id="sidebar-link-container">
-        
-        <?php include ( "assets/php/menu.php" ) ?>
+    <!-- Menu -->
+    <div class="col-xl-3"> 
+      <div class="row mt-4 mb-xl-4">
+
+          <?php include ( "assets/php/menu.php" ) ?>
 
       </div>
     </div>
-    <div class="col-lg-8 main-content"> 
+    <!--/Menu/-->
+    <!-- Main content -->
+    <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
       <!-- API: id -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -46,16 +52,20 @@
               <h2>api.poe-stats.com/id</h2>
             </div>
             <div class="card-body">
+              <!-- Description -->
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides some basic data about the serice, such as: the latest change ID from the top of the river, time in MS the change ID was fetched, current status of the service.</p>
+              <!--/Description/-->
+              <hr>
+              <!-- Examples -->
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/id">Id</a>
+              <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
       <!--/API: id/-->
-
       <!-- API: leagues -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -64,16 +74,20 @@
               <h2>api.poe-stats.com/leagues</h2>
             </div>
             <div class="card-body">
+              <!-- Description -->
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated dynamically and also every 30 minutes from the official api.</p>
+              <!--/Description/-->
+              <hr>
+              <!-- Examples -->
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/leagues">Leagues</a>
+              <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
       <!--/API: leagues/-->
-
       <!-- API: categories -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -82,16 +96,20 @@
               <h2>api.poe-stats.com/categories</h2>
             </div>
             <div class="card-body">
+              <!-- Description -->
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of catetgories currently in use. Updated dynamically.</p>
-              <h5 class="card-title">Categories</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/categories">Example</a>
+              <!--/Description/-->
+              <hr>
+              <!-- Examples -->
+              <h5 class="card-title">Examples</h5>
+              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/categories">Categories</a>
+              <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
       <!--/API: categories/-->
-
       <!-- API: itemdata -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -100,16 +118,20 @@
               <h2>api.poe-stats.com/itemdata</h2>
             </div>
             <div class="card-body">
+              <!-- Description -->
               <h5 class="card-title">Description</h5>
               <p class="card-text">For all your poe-stats-index-to-item-data-mappings needs. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
+              <!--/Description/-->
+              <hr>
+              <!-- Examples -->
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/itemdata">Item data</a>
+              <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
       <!--/API: itemdata/-->
-
       <!-- API: get -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -118,8 +140,11 @@
               <h2>api.poe-stats.com/get</h2>
             </div>
             <div class="card-body">
+              <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive. Updated every minute.</p>
+              <p class="card-text">Main interface for the price API. Items are listed in decreasing order from most expensive to least expensive. Updated every minute. Capitalization does not matter for request fields.</p>
+              <!--/Description/-->
+              <hr>
               <!-- Request fields -->
               <h5 class="card-title">Request fields</h5>
               <div class="card api-data-table px-2 pt-1 mb-2">
@@ -129,26 +154,24 @@
                       <th>Param</th>
                       <th>Required</th>
                       <th>Description</th>
-                      <th>Example</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>league</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>One of the active primary leagues</td>
-                      <td>hardcore bestiary</td>
                     </tr>
                     <tr>
                       <td>category</td>
-                      <td>Yes</td>
-                      <td>Parent cateogry (see category API)</td>
-                      <td>armour</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Primary cateogry (see category API)</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <!--/Request fields/-->
+              <hr>
               <!-- Response fields -->
               <h5 class="card-title">Response fields - generic</h5>
               <div class="card api-data-table px-2 pt-1 mb-2">
@@ -163,108 +186,127 @@
                   <tbody>
                     <tr>
                       <td>mean</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Price of item in chaos calculated as mean</td>
                     </tr>
                     <tr>
                       <td>median</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Price of item in chaos calculated as median</td>
                     </tr>
                     <tr>
                       <td>mode</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Price of item in chaos calculated as mode</td>
                     </tr>
                     <tr>
                       <td>exalted</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Price of item in exalted calculated as mode</td>
                     </tr>
                     <tr>
                       <td>count</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Total amount of items listed during league</td>
                     </tr>
                     <tr>
                       <td>quantity</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Avg amount of items listed in 24h (past the last 7d, as mean)</td>
                     </tr>
                     <tr>
                       <td>frame</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Frametype of item (-1 for enchantments)</td>
                     </tr>
                     <tr>
                       <td>index</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Hexadecimal index in two parts used to keep track of item. First 4 digits specify the base item. Followed by a dash, two more digits mark item's variant.</td>
                     </tr>
                     <tr>
                       <td>specificKey</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Unique item key that consists of all item's possible variables (e.g see gems)</td>
                     </tr>
                     <tr>
                       <td>genericKey</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Non-unique item key that consists of some of item's variables (e.g see gems)</td>
                     </tr>
                     <tr>
                       <td>parent</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Parent category of item</td>
                     </tr>
                     <tr>
                       <td>child</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Child category of item</td>
                     </tr>
                     <tr>
                       <td>name</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Name of item</td>
                     </tr>
                     <tr>
                       <td>icon</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Item's icon</td>
                     </tr>
                     <tr>
                       <td>history</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>Data from past 7 days, excluding current day. `change` corresponds to `spark` and marks difference between past week.</td>
                     </tr>
                     <tr>
                       <td>type</td>
-                      <td>No</td>
-                      <td>If present, the item's typeline</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>Typeline of the item, if present</td>
                     </tr>
                     <tr>
                       <td>var</td>
-                      <td>No</td>
-                      <td>If present, the item's variant (e.g "spells"/"attacks" for Vessel of Vinktar)</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>Variant of the item (e.g "spells"/"attacks" for Vessel of Vinktar), if present</td>
                     </tr>
                     <tr>
-                      <td>corrupted</td>
-                      <td>No</td>
-                      <td>Gems only. Corruption flag (i.e "1" for true, "0" for false)</td>
-                    </tr>
-                    <tr>
-                      <td>lvl</td>
-                      <td>No</td>
-                      <td>Gems only. Gem's level</td>
-                    </tr>
-                    <tr>
-                      <td>quality</td>
-                      <td>No</td>
-                      <td>Gems only. Gem's quality</td>
+                      <td>links</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>Largest link group of the item as string, if present</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <h5 class="card-title">Response fields - enchantments</h5>
+              <h5 class="card-title">Response fields - gems <span class="subtext-1">(Fields unique to gem entries)</span></h5>
+              <div class="card api-data-table px-2 pt-1 mb-2">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Param</th>
+                      <th>Persistent</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>corrupted</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Corruption flag ("1" for corrupted, "0" for uncorrupted)</td>
+                    </tr>
+                    <tr>
+                      <td>lvl</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Level of gem as string</td>
+                    </tr>
+                    <tr>
+                      <td>quality</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Quality of gem as string</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <h5 class="card-title">Response fields - enchantments <span class="subtext-1">(Fields unique to enchantment entries)</span></h5>
               <div class="card api-data-table px-2 pt-1 mb-2">
                 <table class="table table-sm">
                   <thead>
@@ -277,31 +319,67 @@
                   <tbody>
                     <tr>
                       <td>frame</td>
-                      <td>Yes</td>
+                      <td><span class='badge badge-success'>✓</span></td>
                       <td>As enchantments don't explicitly have a frametype, this is set to -1 to be compatible with the rest of the API.</td>
                     </tr>
                     <tr>
                       <td>var</td>
-                      <td>No</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
                       <td>The value of the enchantment. E.g "90" from "90% of Glacial Cascade Physical..." or "88-132" from "Adds 88 to 132 Chaos Damage if..."</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <!--/Response fields/-->
+              <hr>
+              <!-- Error fields -->
+              <h5 class="card-title">Response fields - errors <span class="subtext-1">(Responses upon entering invalid paramters)</span></h5>
+              <div class="card api-data-table px-2 pt-1 mb-2">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Param</th>
+                      <th>Persistent</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>error</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Contains generic error message</td>
+                    </tr>
+                    <tr>
+                      <td>field</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>Contains name of invalid field</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--/Error fields/-->
+              <hr>
+              <!-- Examples -->
               <h5 class="card-title">Examples</h5>
               <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/get?league=standard&category=armour">Armour</a>
+              <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
       <!--/API: get/-->
     </div>
+    <!--/Main content/-->
   </div>
 </div>
+<!--/Page body/-->
+<!-- Footer -->
 <footer class="container-fluid text-center">
   <p>Poe-Stats © 2018</p>
 </footer>
+<!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="assets/css/responsive.css">
 </body>
 </html>

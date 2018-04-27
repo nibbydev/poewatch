@@ -12,6 +12,7 @@ let HISTORY_CHART;
 let HISTORY_LEAGUE;
 
 var PARSE_AMOUNT = 100;
+var FLAG_LIVE = false;
 
 const PRICE_PERCISION = 100;
 const COUNT_HIGH = 25;
@@ -94,7 +95,6 @@ $(document).ready(function() {
 
   fillSelectors(category);
   readCookies();
-
   makeRequest();
 
   // Define league event listener
@@ -132,8 +132,9 @@ $(document).ready(function() {
 
   // Define low confidence radio button event listener
   $("#radio-confidence").on("change", function(){
-    let newValue = $("input[name=confidence]:checked", this).val();
+    let newValue = $("input:checked", this).val();
     console.log(newValue);
+    
     if (newValue != FILTER.hideLowConfidence) {
       FILTER.hideLowConfidence = !FILTER.hideLowConfidence;
       sortResults();
@@ -168,7 +169,26 @@ $(document).ready(function() {
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
     onRowClick(event);
   });
+
+  // Define live search toggle listener
+  $("#live-updates").on("change", function(){
+    FLAG_LIVE = $("input[name=live]:checked", this).val() == "true";
+    console.log("Live updates: " + FLAG_LIVE);
+    document.cookie = "live="+FLAG_LIVE;
+  });
+
+  // Live update checker
+  window.setInterval(timedRequestCallback, 65 * 1000);
 }); 
+
+
+function timedRequestCallback() {
+  if (FLAG_LIVE) {
+    console.log("Automatic update");
+    ITEMS = [];
+    makeRequest();
+  }
+}
 
 
 function readServiceContainers() {
@@ -226,22 +246,29 @@ function toTitleCase(str) {
 
 
 function readCookies() {
+  var live = getCookie("live")
+  if (live) {
+    console.log("Got live flag from cookie: " + live);
+    FLAG_LIVE = live == "true";
+
+    $("#live-updates input").filter(function() { 
+      return ($(this).val() === live);
+    }).prop("active", true).trigger("click");
+  }
+
   var league = getCookie("league");
   if (!league) {
-
     $("#search-league input").filter(function() { 
       return ($(this).val() === FILTER.league);
     }).prop("active", true).trigger("click");
-
-    return; 
+  } else {
+    console.log("Got league from cookie: " + league);
+    FILTER.league = league.toLowerCase();
+    
+    $("#search-league input").filter(function() { 
+      return ($(this).val() === league);
+    }).prop("active", true).trigger("click");
   }
-
-  console.log("Got league from cookie: " + league);
-  FILTER.league = league.toLowerCase();
-  
-  $("#search-league input").filter(function() { 
-    return ($(this).val() === league);
-  }).prop("active", true).trigger("click");
 }
 
 
@@ -614,7 +641,7 @@ function parseItem(item, index) {
   // Format name and variant/links badge
   var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
   nameField += item["name"];
-  if ("type" in item) nameField += "<span class='item-type'>, " + item["type"] + "</span>";
+  if ("type" in item) nameField += "<span class='subtext-1'>, " + item["type"] + "</span>";
   if ("var" in item && item["frame"] !== -1) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
   else if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
   if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-light'>New</span>";
@@ -723,8 +750,6 @@ function sortResults() {
 
     if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
 
-    // Hide harbinger pieces of shit. This is temporary
-    //if (item["child"] === "piece") continue;
     // Hide low confidence items
     if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
     // Hide sub-categories
