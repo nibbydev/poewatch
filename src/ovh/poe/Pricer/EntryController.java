@@ -1,7 +1,6 @@
 package ovh.poe.Pricer;
 
 import com.google.gson.Gson;
-import ovh.poe.AdminSuite;
 import ovh.poe.Mappers;
 import ovh.poe.Item;
 import ovh.poe.Main;
@@ -13,7 +12,15 @@ import java.util.*;
  * Manages database
  */
 public class EntryController {
-    private final Map<String, Map<String, Entry>> entryMap = new HashMap<>();
+    // Generic map. Has mappings of: [league name - league map]
+    static class EntryMap extends HashMap<String, LeagueMap> { }
+    // League map. Has mappings of: [category name - index map]
+    static class LeagueMap extends HashMap<String, CategoryMap> { }
+    // Category map. Has mappings of: [index - Entry]
+    static class CategoryMap extends HashMap<String, Entry> { }
+
+    private final EntryMap entryMap = new EntryMap();
+
     private final JSONParcel JSONParcel = new JSONParcel();
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();
@@ -31,7 +38,6 @@ public class EntryController {
      */
     public EntryController() {
         loadStartParameters();
-        // Load in data from CSV file
         loadDatabases();
     }
 
@@ -89,25 +95,48 @@ public class EntryController {
     // Methods for multi-db file structure
     //------------------------------------------------------------------------------------------------------------
 
-    // Load in currency data on app start
-    private void loadDatabases() {
-        File dbFolder = new File("./data/database");
-        List<File> dbFiles = new ArrayList<>();
-        AdminSuite.getAllFiles(dbFolder, dbFiles);
+    /**
+     * Initializes entryMap with current leagues and categories
+     */
+    private void buildEntryMapStructure() {
+        for (String league : Main.RELATIONS.leagues) {
+            LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
 
-        for (File dbFile : dbFiles) {
-            try (BufferedReader reader = defineReader(dbFile)) {
+            for (String category : Main.RELATIONS.categories.keySet()) {
+                CategoryMap categoryMap = leagueMap.getOrDefault(category, new CategoryMap());
+                leagueMap.putIfAbsent(category, categoryMap);
+            }
+
+            entryMap.putIfAbsent(league, leagueMap);
+        }
+    }
+
+    /**
+     * Load in currency data on app start and fill entryMap with leagues
+     */
+    private void loadDatabases() {
+        for (String league : Main.RELATIONS.leagues) {
+            File currencyFile = new File("./data/database/" + league + "/currency.csv");
+
+            if (!currencyFile.exists()) {
+                System.out.println("Missing currency file for league: " + league);
+                continue;
+            }
+
+            try (BufferedReader reader = defineReader(currencyFile)) {
                 if (reader == null) continue;
 
-                String league = dbFile.getName().substring(0, dbFile.getName().indexOf("."));
-                Map<String, Entry> leagueMap = entryMap.getOrDefault(league, new HashMap<>());
+                LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
+                CategoryMap categoryMap = leagueMap.getOrDefault("currency", new CategoryMap());
 
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    String key = line.substring(0, line.indexOf("::"));
-                    if (key.contains("currency|")) leagueMap.put(key, new Entry(line));
+                    String index = line.substring(0, line.indexOf("::"));
+                    Entry entry = new Entry(line, league);
+                    categoryMap.put(index, entry);
                 }
 
+                leagueMap.putIfAbsent(league, categoryMap);
                 entryMap.putIfAbsent(league, leagueMap);
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -115,130 +144,107 @@ public class EntryController {
         }
     }
 
+
+    /**
+     * Writes all collected data to file
+     */
     private void cycle() {
-        File dbFolder = new File("./data/database");
-        List<File> dbFiles = new ArrayList<>();
-        AdminSuite.getAllFiles(dbFolder, dbFiles);
-        List<String> parsedLeagues = new ArrayList<>();
+        for (String league : Main.RELATIONS.leagues) {
+            LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
+            File leagueFolder = new File("./data/database/"+league+"/");
 
-        // Loop through database files
-        for (File dbFile : dbFiles) {
-            String league = dbFile.getName().substring(0, dbFile.getName().indexOf("."));
-            Map<String, Entry> leagueMap = entryMap.getOrDefault(league, new HashMap<>());
-
-            // Add current working league to list
-            parsedLeagues.add(league);
-
-            File dbFileTmp = null;
-            try {
-                dbFileTmp = new File(dbFile.getCanonicalPath() + ".tmp");
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            if (!leagueFolder.exists()) {
+                System.out.println("[asdf] Missing folder for league '"+league+"'");
+                leagueFolder.mkdirs();
             }
-            if (dbFileTmp == null) continue;
 
-            BufferedReader reader = defineReader(dbFile);
-            if (reader == null) continue;
-            BufferedWriter writer = defineWriter(dbFileTmp);
-            if (writer == null) continue;
+            for (String category : Main.RELATIONS.categories.keySet()) {
+                CategoryMap categoryMap = leagueMap.getOrDefault(category, new CategoryMap());
+                Set<String> tmp_unparsedIndexes = new HashSet<>(categoryMap.keySet());
+                File leagueFile = new File("./data/database/"+league+"/"+category+".csv");
 
-            try {
-                // Make copy of entryMap's key set for the current league
-                Set<String> unparsedKeys = new HashSet<>(leagueMap.keySet());
+                // The file data will be stored in
+                File tmpLeagueFile = new File("./data/database/"+league+"/"+category+".tmp");
 
-                // Add items that are present in the CSV file
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String key = line.substring(0, line.indexOf("::"));
-                    Entry entry;
+                // Define IO objects
+                BufferedReader reader = defineReader(leagueFile);
+                BufferedWriter writer = defineWriter(tmpLeagueFile);
+                if (writer == null) continue;
 
-                    if (leagueMap.containsKey(key)) {
-                        // Remove all keys that were present in the file
-                        unparsedKeys.remove(key);
+                if (reader != null) {
+                    try {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            String index = line.substring(0, line.indexOf("::"));
+                            Entry entry;
 
-                        if (key.contains("currency|")) {
-                            entry = leagueMap.getOrDefault(key, new Entry(line));
-                        } else {
-                            entry = leagueMap.remove(key);
-                            entry.parseLine(line);
+                            if (categoryMap.containsKey(index)) {
+                                // Remove processed indexes from the set so that only entries that were found in the map
+                                // but not the file will remain
+                                tmp_unparsedIndexes.remove(index);
+
+                                if (category.equals("currency")) {
+                                    entry = categoryMap.get(index);
+                                } else {
+                                    entry = categoryMap.remove(index);
+                                    entry.parseLine(line);
+                                }
+                            } else {
+                                entry = new Entry(line, league);
+                            }
+
+                            entry.setLeague(league);
+                            entry.cycle();
+                            JSONParcel.add(entry);
+
+                            String writeLine = entry.buildLine();
+                            if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getIndex(), 0);
+                            else writer.write(writeLine);
                         }
-                    } else {
-                        entry = new Entry(line);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
                     }
-
-                    entry.setLeague(league);
-                    entry.cycle();
-                    JSONParcel.add(entry);
-
-                    String writeLine = entry.buildLine();
-                    if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getKey(), 0);
-                    else writer.write(writeLine);
+                } else {
+                    System.out.println("Missing database '"+category+"' for '"+league+"'");
                 }
 
-                // Add items that were present in entryMap but not the CSV file
-                for (String key : unparsedKeys) {
-                    Entry entry;
-                    if (key.contains("currency|")) entry = leagueMap.get(key);
-                    else entry = leagueMap.remove(key);
-
-                    entry.setLeague(league);
-                    entry.cycle();
-                    JSONParcel.add(entry);
-
-                    String writeLine = entry.buildLine();
-                    if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getKey(), 0);
-                    else writer.write(writeLine);
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            } finally {
                 try {
-                    reader.close();
+                    for (String index : tmp_unparsedIndexes) {
+                        Entry entry;
+
+                        if (category.equals("currency")) entry = categoryMap.get(index);
+                        else entry = categoryMap.remove(index);
+
+                        entry.setLeague(league);
+                        entry.cycle();
+                        JSONParcel.add(entry);
+
+                        String writeLine = entry.buildLine();
+                        if (writeLine == null) Main.ADMIN.log_("Deleted entry: "+entry.getIndex(), 0);
+                        else writer.write(writeLine);
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+                // Close file
+                try {
+                    if (reader != null) reader.close();
                     writer.flush();
                     writer.close();
                 } catch (IOException ex) {
-                    Main.ADMIN.log_(ex.getMessage(), 3);
+                    ex.printStackTrace();
                 }
-            }
 
-            if (!dbFile.delete()) Main.ADMIN.log_("Unable to remove database.tmp", 4);
-            if (!dbFileTmp.renameTo(dbFile)) Main.ADMIN.log_("Unable to rename database.tmp", 4);
-        }
-
-        for (Map.Entry<String, Map<String, Entry>> tmpMap : entryMap.entrySet()) {
-            String league = tmpMap.getKey();
-            Map<String, Entry> leagueMap = tmpMap.getValue();
-
-            // Skip the leagues that were already present in the CSV files
-            if (parsedLeagues.contains(league)) continue;
-
-            File dbFile = new File(dbFolder, league + ".csv");
-            BufferedWriter writer = defineWriter(dbFile);
-            if (writer == null) continue;
-
-            try {
-                // Add items that were present in entryMap but not the CSV file
-                for (String key : new HashSet<>(leagueMap.keySet())) {
-                    Entry entry;
-                    if (key.contains("currency|")) entry = leagueMap.get(key);
-                    else entry = leagueMap.remove(key);
-
-                    entry.setLeague(league);
-                    entry.cycle();
-                    JSONParcel.add(entry);
-
-                    String writeLine = entry.buildLine();
-                    if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getKey(), 0);
-                    else writer.write(writeLine);
+                // Remove original file
+                if (leagueFile.exists() && !leagueFile.delete()) {
+                    String errorMsg = "Unable to remove '"+league+"/"+category+"/"+leagueFile.getName()+"'";
+                    Main.ADMIN.log_(errorMsg, 4);
                 }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            } finally {
-                try {
-                    writer.flush();
-                    writer.close();
-                } catch (IOException ex) {
-                    Main.ADMIN.log_(ex.getMessage(), 3);
+                // Rename temp file to original file
+                if (tmpLeagueFile.exists() && !tmpLeagueFile.renameTo(leagueFile)) {
+                    String errorMsg = "Unable to rename '"+league+"/"+category+"/"+tmpLeagueFile.getName()+"'";
+                    Main.ADMIN.log_(errorMsg, 4);
                 }
             }
         }
@@ -352,14 +358,21 @@ public class EntryController {
                     }
                 }
 
-                // Parse item data
                 item.fix();
                 item.parseItem();
                 if (item.discard) continue;
 
-                Map<String, Entry> leagueMap = entryMap.getOrDefault(item.league, new HashMap<>());
-                leagueMap.putIfAbsent(item.key, new Entry());
-                leagueMap.get(item.key).add(item, stash.accountName);
+                LeagueMap leagueMap = entryMap.getOrDefault(item.league, new LeagueMap());
+                CategoryMap categoryMap = leagueMap.getOrDefault(item.parentCategory, new CategoryMap());
+
+                String index = Main.RELATIONS.indexItem(item);
+                if (index == null) continue; // Some currency items have their icons deleted by parseItem()
+
+                Entry entry = categoryMap.getOrDefault(index, new Entry());
+                entry.add(item, stash.accountName, index);
+
+                categoryMap.putIfAbsent(index, entry);
+                leagueMap.putIfAbsent(item.parentCategory, categoryMap);
                 entryMap.putIfAbsent(item.league, leagueMap);
             }
         }
@@ -440,7 +453,13 @@ public class EntryController {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public Map<String, Map<String, Entry>> getEntryMap() {
-        return entryMap;
+    public CategoryMap getCurrencyMap (String league) {
+        LeagueMap leagueMap = entryMap.getOrDefault(league, null);
+        if (leagueMap == null) return null;
+
+        CategoryMap categoryMap = leagueMap.getOrDefault("currency", null);
+        if (categoryMap == null) return null;
+
+        return categoryMap;
     }
 }

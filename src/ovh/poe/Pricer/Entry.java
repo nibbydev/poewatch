@@ -2,6 +2,7 @@ package ovh.poe.Pricer;
 
 import ovh.poe.Item;
 import ovh.poe.Main;
+import ovh.poe.RelationManager;
 
 import java.util.*;
 
@@ -131,7 +132,7 @@ public class Entry {
         }
     }
 
-    private String league, key, index = "-";
+    private String league, index;
     private int total_counter, inc_counter, dec_counter, quantity;
     private double mean, median, mode, threshold_multiplier;
 
@@ -150,7 +151,8 @@ public class Entry {
      *
      * @param line Database entry from the CSV-format file
      */
-    Entry(String line) {
+    Entry (String line, String league) {
+        if (this.league == null) this.league = league;
         parseLine(line);
     }
 
@@ -166,12 +168,9 @@ public class Entry {
      * @param item Item object
      * @param accountName Account name of the seller
      */
-    public void add(Item item, String accountName) {
-        if (key == null) key = item.key;
+    public void add(Item item, String accountName, String index) {
+        if (this.index == null) this.index = index;
         if (league == null) league = item.league;
-
-        // If missing, get item's index
-        if (index.equals("-")) index = Main.RELATIONS.indexItem(item);
 
         // Add new value to raw data array
         RawEntry rawDataItem = new RawEntry();
@@ -184,12 +183,10 @@ public class Entry {
      */
     public void cycle() {
         // Check what to do with item index
-        if (Main.ENTRY_CONTROLLER.clearIndexes) index = "-";
-        else if (index.equals("-")) index = Main.RELATIONS.getIndexFromKey(key);
+        if (Main.ENTRY_CONTROLLER.clearIndexes) index = null;
 
         // Build statistics and databases
         parse();
-        //purge();
         build();
 
         // Runs every 10 minutes
@@ -236,7 +233,7 @@ public class Entry {
      * Adds values from db_raw array to prices database array
      */
     private void parse() {
-        Map<String, Entry> leagueMap = Main.ENTRY_CONTROLLER.getEntryMap().getOrDefault(league, new HashMap<>());
+        EntryController.CategoryMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
@@ -252,16 +249,14 @@ public class Entry {
 
             // If the item was not listed for chaos orbs ("0" == Chaos Orb), then find the value in chaos
             if (!raw.priceType.equals("0")) {
-                // Get the database key of the currency the item was listed for
-                String currencyKey = "currency|" + Main.RELATIONS.currencyIndexToName.get(raw.priceType) + "|5";
+                if (currencyMap == null) continue;
 
-                // If there does not exist a relation between listed currency to Chaos Orbs, ignore the item
-                if (!leagueMap.containsKey(currencyKey)) continue;
+                String fullIndex = Main.RELATIONS.currencyIndexToFullIndex.getOrDefault(raw.priceType, null);
+                if (fullIndex == null) continue;
 
-                // Get the currency item entry the item was listed in
-                Entry currencyEntry = leagueMap.get(currencyKey);
+                Entry currencyEntry = currencyMap.getOrDefault(fullIndex, null);
+                if (currencyEntry == null) continue;
 
-                // If the currency the item was listed in has very few listings then ignore this item
                 if (currencyEntry.getCount() < 20) continue;
 
                 // Convert the item's price into Chaos Orbs
@@ -315,11 +310,13 @@ public class Entry {
             double tmpPastMean = db_hourly.get(db_hourly.size() - 1).mean;
             double tmpPercent = entry.price / tmpPastMean * 100;
 
-            // Find parent category from item key
-            String tmpCategory = key.substring(0, key.indexOf("|"));
-            String parent = tmpCategory.contains(":") ? tmpCategory.substring(0, tmpCategory.indexOf(":")) : tmpCategory;
+            RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
+            if (indexedItem == null) {
+                System.out.println("null: "+index);
+                return false;
+            }
 
-            switch (parent) {
+            switch (indexedItem.parent) {
                 case "enchantments":
                     return tmpPercent > 10 && tmpPercent < 200;
                 case "currency":
@@ -497,13 +494,12 @@ public class Entry {
      */
     public String buildLine() {
         /* (Spliterator: "::")
-            0 - key
+            0 - index
             1 - stats (Spliterator: "," and ":")
                 count
                 inc
                 dec
                 multiplier
-                index
                 quantity
             2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
@@ -524,12 +520,10 @@ public class Entry {
                 2 - mode
          */
 
-        //if (db_items.isEmpty()) return null;
-
         StringBuilder stringBuilder = new StringBuilder();
 
         // Add key
-        stringBuilder.append(key);
+        stringBuilder.append(index);
         stringBuilder.append("::");
 
         // Add statistics
@@ -541,8 +535,6 @@ public class Entry {
         stringBuilder.append(dec_counter);
         stringBuilder.append(",multiplier:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
-        stringBuilder.append(",index:");
-        stringBuilder.append(index);
         stringBuilder.append(",quantity:");
         stringBuilder.append(quantity);
 
@@ -622,13 +614,12 @@ public class Entry {
      */
     public void parseLine(String line) {
         /* (Spliterator: "::")
-            0 - key
+            0 - index
             1 - stats (Spliterator: "," and ":")
                 count
                 inc
                 dec
                 multiplier
-                index
                 quantity
             2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
@@ -651,8 +642,8 @@ public class Entry {
 
         String[] splitLine = line.split("::");
 
-        // Add key if missing
-        if (key == null) key = splitLine[0];
+        // Add index if missing
+        if (index == null && !RelationManager.isIndex(splitLine[0])) index = splitLine[0];
 
         // Import statistical values
         if (!splitLine[1].equals("-")) {
@@ -673,9 +664,6 @@ public class Entry {
                         break;
                     case "multiplier":
                         threshold_multiplier = Double.parseDouble(splitDataItem[1]);
-                        break;
-                    case "index":
-                        index = splitDataItem[1];
                         break;
                     case "quantity":
                         quantity = Integer.parseInt(splitDataItem[1]);
@@ -707,7 +695,7 @@ public class Entry {
             for (String entry : splitLine[3].split("\\|")) {
                 DailyEntry dailyEntry = new DailyEntry();
                 dailyEntry.add(entry);
-                db_weekly.add(dailyEntry);
+                temp.add(dailyEntry);
             }
 
             db_weekly.addAll(0, temp);
@@ -762,10 +750,6 @@ public class Entry {
         return mode;
     }
 
-    public String getKey() {
-        return key;
-    }
-
     public int getCount() {
         return total_counter;
     }
@@ -774,7 +758,7 @@ public class Entry {
         return inc_counter;
     }
 
-    public String getItemIndex() {
+    public String getIndex() {
         return index;
     }
 

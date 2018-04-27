@@ -1,6 +1,7 @@
 package ovh.poe.Pricer;
 
 import ovh.poe.Main;
+import ovh.poe.RelationManager;
 import ovh.poe.RelationManager.IndexedItem;
 import ovh.poe.RelationManager.SubIndexedItem;
 
@@ -30,20 +31,22 @@ public class JSONParcel {
             mode = entry.getMode();
             count = entry.getCount() + entry.getInc_counter();
             quantity = entry.getQuantity();
-            index = entry.getItemIndex();
-            specificKey = entry.getKey();
+            index = entry.getIndex();
+            specificKey = Main.RELATIONS.specificIndexToData(entry.getIndex()).specificKey;
 
-            // If there's an exalted price, find the item's price in exalted
-            Map<String, Entry> tempEntryMap = Main.ENTRY_CONTROLLER.getEntryMap().get(entry.getLeague());
-            if (tempEntryMap.containsKey("currency|Exalted Orb|5")) {
-                // Get the currency item entry the item was listed in
-                Entry tempCurrencyEntry = tempEntryMap.get("currency|Exalted Orb|5");
-                double tempExaltedPrice = tempCurrencyEntry.getMean();
+            // Find the item's price in exalted
+            EntryController.CategoryMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
+            if (tmp_currencyMap != null) {
+                Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(RelationManager.exaltedIndex, null);
 
-                // If the currency the item was listed in has very few listings then ignore this item
-                if (tempCurrencyEntry.getCount() > 20 && tempExaltedPrice > 0) {
-                    double tempExaltedMean = mean / tempExaltedPrice;
-                    exalted = Math.round(tempExaltedMean * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+                if (tmp_exaltedEntry != null) {
+                    double tmp_exaltedPrice = tmp_exaltedEntry.getMean();
+
+                    // If the currency the item was listed in has very few listings then ignore this item
+                    if (tmp_exaltedEntry.getCount() > 20 && tmp_exaltedPrice > 0) {
+                        double tempExaltedMean = mean / tmp_exaltedPrice;
+                        exalted = Math.round(tempExaltedMean * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+                    }
                 }
             }
 
@@ -121,21 +124,20 @@ public class JSONParcel {
     public Map<String, Map<String, List<JSONItem>>> leagues = new HashMap<>();
 
     public void add(Entry entry) {
-        if (entry.getItemIndex().equals("-")) return;
+        if (entry.getIndex() == null) return;
 
-        // "Hardcore Bestiary|currency:orbs|Orb of Transmutation|5"
-        String[] splitKey = entry.getKey().split("\\|");
-        String parentCategoryName = splitKey[0].split(":")[0];
+        IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(entry.getIndex());
+        if (indexedItem == null) return;
 
-        if (!leagues.containsKey(entry.getLeague())) leagues.put(entry.getLeague(), new TreeMap<>());
-        Map<String, List<JSONItem>> league = leagues.get(entry.getLeague());
+        Map<String, List<JSONItem>> league = leagues.getOrDefault(entry.getLeague(), new TreeMap<>());
+        List<JSONItem> category = league.getOrDefault(indexedItem.parent, new ArrayList<>());
 
-        if (!league.containsKey(parentCategoryName)) league.put(parentCategoryName, new ArrayList<>());
-        List<JSONItem> category = league.get(parentCategoryName);
+        JSONItem jsonItem = new JSONItem();
+        jsonItem.copy(entry);
 
-        JSONItem item = new JSONItem();
-        item.copy(entry);
-        category.add(item);
+        category.add(jsonItem);
+        league.putIfAbsent(indexedItem.parent, category);
+        leagues.putIfAbsent(entry.getLeague(), league);
     }
 
     public void sort() {

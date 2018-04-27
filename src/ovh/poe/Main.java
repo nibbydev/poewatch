@@ -26,17 +26,20 @@ public class Main {
         gsonBuilder = new GsonBuilder();
         gsonBuilder.disableHtmlEscaping();
 
+        // Make sure basic folder structure exists
+        buildFolderFileStructure();
+
         // Init admin suite
         ADMIN = new AdminSuite();
 
-        // Make sure basic folder structure exists
-        buildFolderFileStructure();
+        // Init relation manager
+        RELATIONS = new RelationManager();
+        RELATIONS.getLeagueList();
 
         // Initialize objects
         CONFIG = new ConfigReader("config.cfg");
         WORKER_CONTROLLER = new WorkerController();
         ENTRY_CONTROLLER = new EntryController();
-        RELATIONS = new RelationManager();
 
         // Parse CLI parameters
         parseCommandParameters(args);
@@ -174,8 +177,8 @@ public class Main {
     private static void buildFolderFileStructure() {
         // Make sure output folders exist
         new File("./data/database").mkdirs();
-        new File("./http/html").mkdirs();
         new File("./data/output").mkdirs();
+        new File("./data/current_history").mkdirs();
         new File("./backups").mkdirs();
 
         // Create ./config.cfg if missing

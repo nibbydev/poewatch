@@ -143,8 +143,12 @@ public class RelationManager {
     private Map<String, String> genericItemKeyToSuperIndex = new HashMap<>();
     public Map<String, IndexedItem> genericItemIndexToData = new TreeMap<>();
 
+    public Map<String, String> currencyIndexToFullIndex = new HashMap<>();
+
     public Map<String, List<String>> categories = new HashMap<>();
     public List<String> leagues = new ArrayList<>();
+
+    public static String exaltedIndex;
 
     /**
      * Reads currency and item data from file on object init
@@ -154,6 +158,9 @@ public class RelationManager {
         readItemDataFromFile();
         readCategoriesFromFile();
         readLeaguesFromFile();
+
+        // Get Exalted Orb's full index for JSONParcel
+        exaltedIndex = currencyIndexToFullIndex.get(currencyNameToIndex.get("Exalted Orb"));
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -264,7 +271,6 @@ public class RelationManager {
 
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load currencyRelations.json", 3);
-            ex.printStackTrace();
         }
     }
 
@@ -284,6 +290,12 @@ public class RelationManager {
                 superItem.subIndexes.forEach((subIndex, subItem) -> {
                     String index = superIndex + "-" + subIndex;
                     specificItemKeyToFullIndex.put(subItem.specificKey, index);
+
+                    // Add currency indexes to a special map
+                    if (superItem.frame == 5) {
+                        String currencyIndex = currencyNameToIndex.getOrDefault(superItem.name, null);
+                        if (currencyIndex != null) currencyIndexToFullIndex.put(currencyIndex, index);
+                    }
                 });
 
                 genericItemKeyToSuperIndex.put(superItem.genericKey, superIndex);
@@ -292,7 +304,6 @@ public class RelationManager {
 
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load itemData.json", 3);
-            ex.printStackTrace();
         }
     }
 
@@ -308,7 +319,6 @@ public class RelationManager {
             categories = gson.fromJson(reader, listType);
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load categories.json", 3);
-            ex.printStackTrace();
         }
     }
 
@@ -324,7 +334,6 @@ public class RelationManager {
             leagues = gson.fromJson(reader, listType);
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load leagues.json", 3);
-            ex.printStackTrace();
         }
     }
 
@@ -372,12 +381,10 @@ public class RelationManager {
      */
     public String indexItem(Item item) {
         // Manage item category list
-        if (item.childCategory != null) {
+        if (item.parentCategory != null) {
             List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
-            if (!childCategories.contains(item.childCategory)) {
-                childCategories.add(item.childCategory);
-                categories.putIfAbsent(item.parentCategory, childCategories);
-            }
+            if (!childCategories.contains(item.childCategory)) childCategories.add(item.childCategory);
+            categories.putIfAbsent(item.parentCategory, childCategories);
         }
 
         // Manage item league list as a precaution. This list gets replaced by pathofexile's official league list
@@ -387,7 +394,7 @@ public class RelationManager {
         // If item has no icon, don't index it
         if (item.icon == null) {
             // Enchants can't have icons
-            if (item.frameType != -1) return "-";
+            if (item.frameType != -1) return null;
         }
 
         // If icon is already present, return icon index. Otherwise create an instance of IndexedItem and add
@@ -467,5 +474,44 @@ public class RelationManager {
         }
 
         return genericKey.toString();
+    }
+
+    /**
+     * Allows returning the SubIndexedItem entry from a complete index
+     *
+     * @param index Index of item. Must have length of 7
+     * @return Requested indexed item entry or null on failure
+     */
+    public IndexedItem genericIndexToData(String index) {
+        if (isIndex(index)) return null;
+
+        String primaryIndex = index.substring(0, 4);
+
+        return genericItemIndexToData.getOrDefault(primaryIndex, null);
+    }
+
+    public SubIndexedItem specificIndexToData(String index) {
+        if (isIndex(index)) return null;
+
+        String primaryIndex = index.substring(0, 4);
+        String secondaryIndex = index.substring(5);
+
+        IndexedItem indexedItem = genericItemIndexToData.getOrDefault(primaryIndex, null);
+        if (indexedItem == null) return null;
+
+        SubIndexedItem subIndexedItem = indexedItem.subIndexes.getOrDefault(secondaryIndex, null);
+        if (subIndexedItem == null) return null;
+
+        return subIndexedItem;
+    }
+
+    /**
+     * Very primitive method to check if provided string is an index.
+     *
+     * @param index String to check
+     * @return True if not an index
+     */
+    public static boolean isIndex(String index) {
+        return index.length() != 7 || index.charAt(4) != '-';
     }
 }
