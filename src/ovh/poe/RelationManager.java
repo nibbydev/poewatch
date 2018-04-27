@@ -360,34 +360,30 @@ public class RelationManager {
     }
 
     /**
-     * Generalizes a specific key. E.g: "Standard|gems:activegem|Flame Dash|4|l:10|q:20|c:0"
-     * is turned into: "gems:activegem|Flame Dash|4"
+     * Generalizes a specific key. E.g: "Flame Dash|4|l:10|q:20|c:0"
+     * is turned into: "Flame Dash|4"
      *
      * @param key Specific item key with league and category and additional info
      * @return Generalized item key
      */
     public static String resolveSpecificKey(String key) {
-        // "armour:chest|Shroud of the Lightless:Carnal Armour|3|var:1 socket"
+        // "Shroud of the Lightless:Carnal Armour|3|var:1 socket"
 
         StringBuilder genericKey = new StringBuilder();
         String[] splitKey = key.split("\\|");
 
-        // Add item category
-        //genericKey.append(splitKey[1]);
-        //genericKey.append("|");
-
         // Add item name
-        genericKey.append(splitKey[1]);
+        genericKey.append(splitKey[0]);
 
         // If it's an enchant, don't add frametype nor var info
-        if (splitKey[2].equals("-1")) return genericKey.toString();
+        if (splitKey[1].equals("-1")) return genericKey.toString();
 
         // Add item frameType
         genericKey.append("|");
-        genericKey.append(splitKey[2]);
+        genericKey.append(splitKey[1]);
 
         // Add var info, if present (eg Impresence has different icons based on variation)
-        for (int i = 3; i < splitKey.length; i++) {
+        for (int i = 2; i < splitKey.length; i++) {
             if (splitKey[i].contains("var:")) {
                 genericKey.append("|");
                 genericKey.append(splitKey[i]);

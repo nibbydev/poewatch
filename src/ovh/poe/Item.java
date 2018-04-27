@@ -115,18 +115,7 @@ public class Item extends Mappers.BaseItem {
     private void buildKey() {
         StringBuilder key = new StringBuilder();
 
-        //key.append(league);
-        //key.append('|');
-        key.append(parentCategory);
-
-        // If present, add childCategory to database key
-        if (childCategory != null) {
-            key.append(':');
-            key.append(childCategory);
-        }
-
-        // Add item's name to database key
-        key.append('|');
+        // Add item's name
         key.append(name);
 
         // If present, add typeline to database key
@@ -162,7 +151,7 @@ public class Item extends Mappers.BaseItem {
             else key.append(0);
         }
 
-        // Convert stringbuilder to string
+        // Convert to string
         this.key = key.toString();
     }
 
