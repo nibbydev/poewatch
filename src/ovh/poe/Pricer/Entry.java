@@ -278,9 +278,10 @@ public class Entry {
             ItemEntry itemEntry = new ItemEntry();
             itemEntry.add(raw.price, raw.accountName, raw.id);
 
+            inc_counter++;
+
             if ( check(itemEntry) ) {
                 db_items.add(itemEntry);
-                inc_counter++;
             } else {
                 dec_counter++;
             }
@@ -320,8 +321,9 @@ public class Entry {
 
             switch (parent) {
                 case "enchantments":
-                    return tmpPercent > 10 && tmpPercent < 300;
+                    return tmpPercent > 10 && tmpPercent < 200;
                 case "currency":
+                    return tmpPercent > 90 && tmpPercent < 110;
                 case "essence":
                     return tmpPercent > 80 && tmpPercent < 120;
                 default:
@@ -346,7 +348,7 @@ public class Entry {
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
         if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 90)
-            threshold_multiplier += 0.1;
+            threshold_multiplier += 0.01;
         else if (inc_counter > 0)
             threshold_multiplier -= 0.01;
 
