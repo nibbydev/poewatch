@@ -218,7 +218,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <table class="table price-table table-hover" id="searchResults">
+              <table class="table price-table table-striped table-hover" id="searchResults">
                 <thead><tr></tr></thead>
                 <tbody></tbody>
               </table>
