@@ -77,9 +77,9 @@ public class Entry {
     }
 
     public static class DailyEntry {
-        double mean, median, mode;
-        int quantity;
-        String raw;
+        private double mean, median, mode;
+        private int quantity;
+        private String raw;
 
         void add(String raw) {
             // Eg "8.241,5.0,5.0,3283", mean median mode quantity respectively
@@ -103,6 +103,26 @@ public class Entry {
         public String toString() {
             if (raw == null) return mean + "," + median + "," + mode + "," + quantity;
             else return raw;
+        }
+
+        //---------------------------------------------------
+        // Getters and setters
+        //---------------------------------------------------
+
+        public double getMean() {
+            return mean;
+        }
+
+        public double getMedian() {
+            return median;
+        }
+
+        public double getMode() {
+            return mode;
+        }
+
+        public int getQuantity() {
+            return quantity;
         }
     }
 
@@ -216,8 +236,14 @@ public class Entry {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
             db_daily.add(dailyEntry);
+
+            // Add this entry to league history
+            //Main.HISTORY_CONTROLLER.add(index, this);
+
             quantity = 0;
         }
+
+        Main.HISTORY_CONTROLLER.add(index, this);
 
         // Limit list sizes
         cap();
@@ -320,7 +346,7 @@ public class Entry {
 
         // If price is more than double or less than half the median, remove it. Since we removed elements with
         // index i we need to adjust for the rest of them that fell back one place
-        if (entry.price > median * (1 + threshold_multiplier) || entry.price < median / (1 + threshold_multiplier)) {
+        if (entry.price > median * (1.15 + threshold_multiplier) || entry.price < median / (1.15 + threshold_multiplier)) {
             return false;
         }
 
@@ -542,6 +568,11 @@ public class Entry {
                 1 - median
                 2 - mode
          */
+
+        if (index == null || index.equals("null")) {
+            Main.ADMIN.log_("MISSING INDEX", 4);
+            return null;
+        }
 
         StringBuilder stringBuilder = new StringBuilder();
 

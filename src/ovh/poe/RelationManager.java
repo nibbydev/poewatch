@@ -274,30 +274,30 @@ public class RelationManager {
         // Save item relations to file
         File itemFile = new File("./data/itemData.json");
         try (Writer writer = Misc.defineWriter(itemFile)) {
-            if (writer == null) throw new IOException("File '" + itemFile.getName() + "' error");
+            if (writer == null) throw new IOException();
             gson.toJson(itemSubIndexToData, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to itemData.json", 3);
+            Main.ADMIN.log_("Could not write to '"+itemFile.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
 
         // Save item categories to file
         File categoryFile = new File("./data/categories.json");
         try (Writer writer = Misc.defineWriter(categoryFile)) {
-            if (writer == null) throw new IOException("File '" + categoryFile.getName() + "' error");
+            if (writer == null) throw new IOException();
             gson.toJson(categories, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to categories.json", 3);
+            Main.ADMIN.log_("Could not write to '"+categoryFile.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
 
         // Save leagues to file
         File leagueFile = new File("./data/leagues.json");
         try (Writer writer = Misc.defineWriter(leagueFile)) {
-            if (writer == null) throw new IOException("File '" + leagueFile.getName() + "' error");
+            if (writer == null) throw new IOException();
             gson.toJson(leagues, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to leagues.json", 3);
+            Main.ADMIN.log_("Could not write to '"+leagueFile.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
     }

@@ -62,13 +62,13 @@ public class JSONParcel {
 
                 for (Entry.DailyEntry dailyEntry : entry.getDb_daily()) {
                     // Add all values to history
-                    history.mean.add(dailyEntry.mean);
-                    history.median.add(dailyEntry.median);
-                    history.mode.add(dailyEntry.mode);
-                    history.quantity.add(dailyEntry.quantity);
+                    history.mean.add(dailyEntry.getMean());
+                    history.median.add(dailyEntry.getMedian());
+                    history.mode.add(dailyEntry.getMode());
+                    history.quantity.add(dailyEntry.getQuantity());
 
                     // Find the lowest mean entry for sparkline
-                    if (dailyEntry.mean < lowestSpark) lowestSpark = dailyEntry.mean;
+                    if (dailyEntry.getMean() < lowestSpark) lowestSpark = dailyEntry.getMean();
                 }
 
                 // Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
@@ -91,7 +91,7 @@ public class JSONParcel {
 
                 // Get variation from lowest value
                 for (Entry.DailyEntry dailyEntry : entry.getDb_daily()) {
-                    double newSpark = lowestSpark != 0 ? dailyEntry.mean / lowestSpark - 1 : 0.0;
+                    double newSpark = lowestSpark != 0 ? dailyEntry.getMean() / lowestSpark - 1 : 0.0;
                     newSpark = Math.round(newSpark * 10000.0) / 100.0;
                     history.spark.add(newSpark);
                 }

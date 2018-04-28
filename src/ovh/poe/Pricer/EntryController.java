@@ -154,6 +154,12 @@ public class EntryController {
                 // The file data will be stored in
                 File tmpLeagueFile = new File("./data/database/"+league+"/"+category+".tmp");
 
+                // If it's time, prep history controller
+                if (twentyFourBool) {
+                    Main.HISTORY_CONTROLLER.configure(league, category);
+                    Main.HISTORY_CONTROLLER.readFile();
+                }
+
                 // Define IO objects
                 BufferedReader reader = Misc.defineReader(leagueFile);
                 BufferedWriter writer = Misc.defineWriter(tmpLeagueFile);
@@ -233,6 +239,11 @@ public class EntryController {
                 if (tmpLeagueFile.exists() && !tmpLeagueFile.renameTo(leagueFile)) {
                     String errorMsg = "Unable to rename '"+league+"/"+category+"/"+tmpLeagueFile.getName()+"'";
                     Main.ADMIN.log_(errorMsg, 4);
+                }
+
+                // If it's time, close history controller
+                if (twentyFourBool) {
+                    Main.HISTORY_CONTROLLER.writeFile();
                 }
             }
         }
@@ -400,7 +411,6 @@ public class EntryController {
                 } catch (IOException ex) {
                     Main.ADMIN._log(ex, 3);
                 }
-
             }
         }
     }

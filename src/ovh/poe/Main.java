@@ -16,6 +16,7 @@ public class Main {
     public static EntryController ENTRY_CONTROLLER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
+    public static HistoryController HISTORY_CONTROLLER;
 
     /**
      * The main class. Run this to run the program
@@ -40,6 +41,7 @@ public class Main {
 
         WORKER_CONTROLLER = new WorkerController();
         ENTRY_CONTROLLER = new EntryController();
+        HISTORY_CONTROLLER = new HistoryController();
 
         // Parse CLI parameters
         parseCommandParameters(args);
