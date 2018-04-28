@@ -87,15 +87,15 @@ public class RelationManager {
 
     private Gson gson = Main.getGson();
 
-    public Map<String, String> currencyAliasToName = new HashMap<>();
-    public Map<String, String> currencyNameToFullIndex = new HashMap<>();
+    private Map<String, String> currencyAliasToName = new HashMap<>();
+    private Map<String, String> currencyNameToFullIndex = new HashMap<>();
 
     private Map<String, String> itemSpecificKeyToFullIndex = new HashMap<>();
     private Map<String, String> itemGenericKeyToSuperIndex = new HashMap<>();
-    public Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
+    private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
-    public Map<String, List<String>> categories = new HashMap<>();
-    public List<String> leagues = new ArrayList<>();
+    private Map<String, List<String>> categories = new HashMap<>();
+    private List<String> leagues = new ArrayList<>();
 
     /**
      * Reads currency and item data from file on object init
@@ -114,7 +114,7 @@ public class RelationManager {
      * Downloads a list of active leagues from pathofexile.com, sorts them, adds them to 'List<String> leagues' and
      * writes them to './data/leagues.json'
      */
-    public void getLeagueList() {
+    public void downloadLeagueList() {
         List<LeagueListElement> leagueList = null;
         InputStream stream = null;
 
@@ -436,5 +436,29 @@ public class RelationManager {
      */
     public static boolean isIndex(String index) {
         return index.length() != 7 || index.charAt(4) != '-';
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public Map<String, String> getCurrencyNameToFullIndex() {
+        return currencyNameToFullIndex;
+    }
+
+    public Map<String, IndexedItem> getItemSubIndexToData() {
+        return itemSubIndexToData;
+    }
+
+    public List<String> getLeagues() {
+        return leagues;
+    }
+
+    public Map<String, List<String>> getCategories() {
+        return categories;
+    }
+
+    public Map<String, String> getCurrencyAliasToName() {
+        return currencyAliasToName;
     }
 }

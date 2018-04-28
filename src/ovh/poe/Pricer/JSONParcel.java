@@ -42,7 +42,7 @@ public class JSONParcel {
             // Find the item's price in exalted
             EntryController.IndexMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
             if (tmp_currencyMap != null) {
-                String exaltedIndex = Main.RELATIONS.currencyNameToFullIndex.getOrDefault("Exalted Orb", null);
+                String exaltedIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault("Exalted Orb", null);
                 Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(exaltedIndex, null);
 
                 if (tmp_exaltedEntry != null) {
@@ -105,8 +105,8 @@ public class JSONParcel {
 
             // Check if there's a match for the specific index
             String superIndex = index.substring(0, index.indexOf("-"));
-            if (Main.RELATIONS.itemSubIndexToData.containsKey(superIndex)) {
-                IndexedItem indexedItem = Main.RELATIONS.itemSubIndexToData.get(superIndex);
+            if (Main.RELATIONS.getItemSubIndexToData().containsKey(superIndex)) {
+                IndexedItem indexedItem = Main.RELATIONS.getItemSubIndexToData().get(superIndex);
                 frame = indexedItem.frame;
                 key = indexedItem.genericKey;
                 parent = indexedItem.parent;

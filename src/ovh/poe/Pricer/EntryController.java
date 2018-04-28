@@ -100,7 +100,7 @@ public class EntryController {
      * Load in currency data on app start and fill leagueMap with leagues
      */
     private void loadDatabases() {
-        for (String league : Main.RELATIONS.leagues) {
+        for (String league : Main.RELATIONS.getLeagues()) {
             File currencyFile = new File("./data/database/"+league+"/currency.csv");
 
             if (!currencyFile.exists()) {
@@ -137,7 +137,7 @@ public class EntryController {
      * Writes all collected data to file
      */
     private void cycle() {
-        for (String league : Main.RELATIONS.leagues) {
+        for (String league : Main.RELATIONS.getLeagues()) {
             CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
             File leagueFolder = new File("./data/database/"+league+"/");
 
@@ -146,7 +146,7 @@ public class EntryController {
                 leagueFolder.mkdirs();
             }
 
-            for (String category : Main.RELATIONS.categories.keySet()) {
+            for (String category : Main.RELATIONS.getCategories().keySet()) {
                 IndexMap indexMap = categoryMap.getOrDefault(category, new IndexMap());
                 Set<String> tmp_unparsedIndexes = new HashSet<>(indexMap.keySet());
                 File leagueFile = new File("./data/database/"+league+"/"+category+".csv");
@@ -270,7 +270,7 @@ public class EntryController {
             sixtyBool = true;
 
             // Get a list of active leagues from pathofexile.com's api
-            Main.RELATIONS.getLeagueList();
+            Main.RELATIONS.downloadLeagueList();
         }
 
         // Run once every 24h

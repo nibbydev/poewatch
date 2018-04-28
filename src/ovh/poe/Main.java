@@ -36,7 +36,7 @@ public class Main {
 
         // Init relation manager
         RELATIONS = new RelationManager();
-        RELATIONS.getLeagueList();
+        RELATIONS.downloadLeagueList();
 
         WORKER_CONTROLLER = new WorkerController();
         ENTRY_CONTROLLER = new EntryController();
