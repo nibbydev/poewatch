@@ -101,7 +101,7 @@ public class EntryController {
      */
     private void loadDatabases() {
         for (String league : Main.RELATIONS.leagues) {
-            File currencyFile = new File("./data/database/" + league + "/currency.csv");
+            File currencyFile = new File("./data/database/"+league+"/currency.csv");
 
             if (!currencyFile.exists()) {
                 System.out.println("Missing currency file for league: " + league);
@@ -109,7 +109,10 @@ public class EntryController {
             }
 
             try (BufferedReader reader = Misc.defineReader(currencyFile)) {
-                if (reader == null) continue;
+                if (reader == null) {
+                    System.out.println("Could not create currency reader for: " + league);
+                    continue;
+                }
 
                 CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
                 IndexMap indexMap = categoryMap.getOrDefault("currency", new IndexMap());
@@ -121,7 +124,7 @@ public class EntryController {
                     indexMap.put(index, entry);
                 }
 
-                categoryMap.putIfAbsent(league, indexMap);
+                categoryMap.putIfAbsent("currency", indexMap);
                 leagueMap.putIfAbsent(league, categoryMap);
             } catch (IOException ex) {
                 ex.printStackTrace();
