@@ -64,16 +64,20 @@ public class JSONParcel {
                     if (dailyEntry.mean < lowestSpark) lowestSpark = dailyEntry.mean;
                 }
 
-                /*// Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
-                history.mean.add(mean);
-                history.median.add(median);
-                history.mode.add(mode);
-                // Remove excess elements
-                if (history.mean.size() > 7) history.mean.subList(0, history.mean.size() - 7).clear();
-                if (history.median.size() > 7) history.median.subList(0, history.median.size() - 7).clear();
-                if (history.mode.size() > 7) history.mode.subList(0, history.mode.size() - 7).clear();
-                // Again, find the lowest mean entry for sparkline
-                if (mean < lowestSpark) lowestSpark = mean;*/
+                // Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
+                if (Main.CONFIG.addCurrenctPricesToHistory) {
+                    history.mean.add(mean);
+                    history.median.add(median);
+                    history.mode.add(mode);
+                    history.quantity.add(quantity);
+                    // Remove excess elements
+                    if (history.mean.size() > 7) history.mean.subList(0, history.mean.size() - 7).clear();
+                    if (history.median.size() > 7) history.median.subList(0, history.median.size() - 7).clear();
+                    if (history.mode.size() > 7) history.mode.subList(0, history.mode.size() - 7).clear();
+                    if (history.quantity.size() > 7) history.quantity.subList(0, history.quantity.size() - 7).clear();
+                    // Again, find the lowest mean entry for sparkline
+                    if (mean < lowestSpark) lowestSpark = mean;
+                }
 
                 // Get the absolute value of lowestSpark as the JS sparkline plugin can't handle negative values
                 if (lowestSpark < 0) lowestSpark *= -1;
