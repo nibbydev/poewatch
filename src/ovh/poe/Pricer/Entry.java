@@ -265,7 +265,7 @@ public class Entry {
 
             inc_counter++;
 
-            if ( check(itemEntry) ) {
+            if ( checkEntry(itemEntry) ) {
                 db_items.add(itemEntry);
             } else {
                 dec_counter++;
@@ -279,7 +279,7 @@ public class Entry {
     /**
      * If a user already has listed the same item before, ignore it
      *
-     * @param raw
+     * @param raw RawEntry to check and then store
      * @return True if should be discarded
      */
     private boolean checkRaw(RawEntry raw) {
@@ -312,19 +312,19 @@ public class Entry {
      * @param entry Item entry to be evaluated
      * @return True if should be added, false if not
      */
-    private boolean check(ItemEntry entry) {
+    private boolean checkEntry(ItemEntry entry) {
         // No items have been listed
         if (db_items.isEmpty()) return true;
-        // No median price found
-        if (mean <= 0) return true;
+        // No average price found
+        if (mean <= 0 || median <= 0) return true;
 
         // If price is more than double or less than half the median, remove it. Since we removed elements with
         // index i we need to adjust for the rest of them that fell back one place
-        if (entry.price > mean * (1 + threshold_multiplier) || entry.price < mean / (1 + threshold_multiplier)) {
+        if (entry.price > median * (1 + threshold_multiplier) || entry.price < median / (1 + threshold_multiplier)) {
             return false;
         }
 
-        // If the item  has been available for the past 2 days, check if price is much higher or lower than the
+        // If the item  has been available for the past 2 days, checkEntry if price is much higher or lower than the
         // average price was 10 minutes ago
         if (db_daily.size() > 2 && !db_minutely.isEmpty()) {
             double tmpPastMean = db_minutely.get(db_minutely.size() - 1).mean;
@@ -364,10 +364,13 @@ public class Entry {
         mode = findModeItems();
 
         // If more items were removed than added and at least 6 were removed, update counter by 0.1
-        if (inc_counter > 0 && dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 90)
-            threshold_multiplier += 0.01;
-        else if (inc_counter > 0)
-            threshold_multiplier -= 0.01;
+        if (inc_counter > 0) {
+            if (dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 90) {
+                threshold_multiplier += 0.1;
+            } else {
+                threshold_multiplier -= 0.01;
+            }
+        }
 
         // Don't let it grow infinitely
         if (threshold_multiplier > 4) threshold_multiplier = 4;

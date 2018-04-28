@@ -58,7 +58,7 @@ public class EntryController {
 
             writer.write(buffer);
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -88,7 +88,7 @@ public class EntryController {
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -104,13 +104,13 @@ public class EntryController {
             File currencyFile = new File("./data/database/"+league+"/currency.csv");
 
             if (!currencyFile.exists()) {
-                System.out.println("Missing currency file for league: " + league);
+                Main.ADMIN.log_("Missing currency file for league: "+league, 2);
                 continue;
             }
 
             try (BufferedReader reader = Misc.defineReader(currencyFile)) {
                 if (reader == null) {
-                    System.out.println("Could not create currency reader for: " + league);
+                    Main.ADMIN.log_("Could not create currency reader for: "+league, 2);
                     continue;
                 }
 
@@ -127,7 +127,7 @@ public class EntryController {
                 categoryMap.putIfAbsent("currency", indexMap);
                 leagueMap.putIfAbsent(league, categoryMap);
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Main.ADMIN._log(ex, 4);
             }
         }
     }
@@ -142,7 +142,7 @@ public class EntryController {
             File leagueFolder = new File("./data/database/"+league+"/");
 
             if (!leagueFolder.exists()) {
-                System.out.println("[asdf] Missing folder for league '"+league+"'");
+                Main.ADMIN.log_("Missing folder for league: "+league, 2);
                 leagueFolder.mkdirs();
             }
 
@@ -190,10 +190,10 @@ public class EntryController {
                             else writer.write(writeLine);
                         }
                     } catch (IOException ex) {
-                        ex.printStackTrace();
+                        Main.ADMIN._log(ex, 4);
                     }
                 } else {
-                    System.out.println("Missing database '"+category+"' for '"+league+"'");
+                    Main.ADMIN.log_("Missing database '"+category+"' for '"+league+"'", 2);
                 }
 
                 try {
@@ -212,7 +212,7 @@ public class EntryController {
                         else writer.write(writeLine);
                     }
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    Main.ADMIN._log(ex, 4);
                 }
 
                 // Close file
@@ -221,7 +221,7 @@ public class EntryController {
                     writer.flush();
                     writer.close();
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    Main.ADMIN._log(ex, 4);
                 }
 
                 // Remove original file
@@ -398,7 +398,7 @@ public class EntryController {
                     writer.flush();
                     writer.close();
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    Main.ADMIN._log(ex, 3);
                 }
 
             }

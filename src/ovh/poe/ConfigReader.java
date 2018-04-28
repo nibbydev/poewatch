@@ -46,7 +46,9 @@ public class ConfigReader {
         if (!file.exists())
             return;
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader bufferedReader = Misc.defineReader(file)) {
+            if (bufferedReader == null) return;
+
             while ((line = bufferedReader.readLine()) != null) {
                 if (line.equals(""))
                     continue;
@@ -94,12 +96,12 @@ public class ConfigReader {
                         pricePrecision = Math.pow(10, Integer.parseInt(value));
                         break;
                     default:
-                        System.out.println("[ERROR] Unknown config key: (" + key + ") and value (" + value + ")");
+                        Main.ADMIN.log_("Unknown config key '"+key+"' with value '"+value+"'", 3);
                         break;
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         }
     }
 }

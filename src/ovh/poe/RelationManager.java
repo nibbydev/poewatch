@@ -16,7 +16,7 @@ public class RelationManager {
     private class LeagueListElement { String id;}
 
     private class CurrencyRelation {
-        String name, index;
+        String name;
         String[] aliases;
     }
 
@@ -154,12 +154,12 @@ public class RelationManager {
             leagueList = gson.fromJson(stringBuilderBuffer.toString(), listType);
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         } finally {
             try {
                 if (stream != null) stream.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Main.ADMIN._log(ex, 3);
             }
         }
 
@@ -212,7 +212,7 @@ public class RelationManager {
             }
 
         } catch (IOException ex) {
-            Main.ADMIN.log_(ex.toString(), 3);
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -278,7 +278,7 @@ public class RelationManager {
             gson.toJson(itemSubIndexToData, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to itemData.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         }
 
         // Save item categories to file
@@ -288,7 +288,7 @@ public class RelationManager {
             gson.toJson(categories, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to categories.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         }
 
         // Save leagues to file
@@ -298,7 +298,7 @@ public class RelationManager {
             gson.toJson(leagues, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to leagues.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         }
     }
 

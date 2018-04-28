@@ -26,13 +26,13 @@ public class Main {
         gsonBuilder = new GsonBuilder();
         gsonBuilder.disableHtmlEscaping();
 
+        // Init admin suite
+        ADMIN = new AdminSuite();
+
         // Make sure basic folder structure exists
         buildFolderFileStructure();
 
         CONFIG = new ConfigReader("config.cfg");
-
-        // Init admin suite
-        ADMIN = new AdminSuite();
 
         // Init relation manager
         RELATIONS = new RelationManager();
@@ -65,12 +65,11 @@ public class Main {
     private static void parseCommandParameters(String[] args) {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
-        // TODO: improve this a bit
         if (!newArgs.contains("-workers")) {
-            System.out.println("Missing CLI option:\n    -workers <1-5>");
+            Main.ADMIN.log_("Missing CLI option: -workers <1-5>", 5);
             System.exit(0);
         } else if (!newArgs.contains("-id")) {
-            System.out.println("Missing CLI option:\n    -id <'new'/'local'/custom>");
+            Main.ADMIN.log_("Missing CLI option: -id <'new'/'local'/custom>", 5);
             System.exit(0);
         }
 
@@ -153,7 +152,7 @@ public class Main {
                         break;
                 }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Main.ADMIN._log(ex, 4);
             }
         }
     }
@@ -193,11 +192,9 @@ public class Main {
         String workingDir = System.getProperty("user.dir");
         File out = new File(workingDir + outputDirectory, outputName);
 
-        // No real need to overwrite on startup
         if (out.exists()) return;
 
-        // Notify if any files were created
-        System.out.println("[INFO] Created file: " + outputDirectory + outputName);
+        Main.ADMIN.log_("Created file: " + outputDirectory + outputName, 1);
 
         // Define I/O so they can be closed later
         BufferedInputStream reader = null;
@@ -217,7 +214,7 @@ public class Main {
                 writer.write(buffer, 0, length);
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 4);
         } finally {
             try {
                 if (reader != null)
@@ -228,7 +225,7 @@ public class Main {
                     writer.close();
                 }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Main.ADMIN._log(ex, 4);
             }
         }
     }
@@ -328,8 +325,8 @@ public class Main {
             System.out.println("[Info] Are you sure? (yes/no)");
             userInput = reader.readLine();
         } catch (IOException ex) {
-            System.out.println("[Error] Couldn't read user input for verification");
-            ex.printStackTrace();
+            Main.ADMIN.log_("Couldn't read user input for verification", 3);
+            Main.ADMIN._log(ex, 4);
             return false;
         }
 

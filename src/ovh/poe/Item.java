@@ -97,8 +97,8 @@ public class Item extends Mappers.BaseItem {
                     try {
                         tier = prop.values.get(0).get(0);
                     } catch (Exception ex) {
-                        System.out.println("[ERROR] Couldn't parse tier:");
-                        ex.printStackTrace();
+                        Main.ADMIN.log_("Couldn't parse tier:", 2);
+                        Main.ADMIN._log(ex, 2);
                     }
                     break;
                 }

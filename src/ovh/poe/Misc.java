@@ -19,7 +19,7 @@ public class Misc {
         try {
             return new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
             return null;
         }
     }
@@ -35,7 +35,7 @@ public class Misc {
         try {
             return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8"));
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
             return null;
         }
     }
@@ -83,5 +83,17 @@ public class Misc {
         }
 
         return fullIcon;
+    }
+
+    /**
+     * Allows converting exception stack traces to strings
+     *
+     * @param ex Exception to convert to string
+     * @return Exception as string
+     */
+    public static String stackTraceToString(Exception ex) {
+        StringWriter stringWriter = new StringWriter();
+        ex.printStackTrace(new PrintWriter(stringWriter));
+        return stringWriter.toString();
     }
 }

@@ -87,6 +87,10 @@ public class AdminSuite {
         if (log.size() > 2048) log.subList(0, log.size() - 2048).clear();
     }
 
+    public void _log(Exception ex, int flair) {
+        log_(Misc.stackTraceToString(ex), flair);
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Statistical methods
     //------------------------------------------------------------------------------------------------------------
