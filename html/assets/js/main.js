@@ -15,6 +15,8 @@ var PARSE_AMOUNT = 100;
 var FLAG_LIVE = false;
 
 const PRICE_PERCISION = 100;
+const COUNT_ENCH_HIGH = 100;
+const COUNT_ENCH_MED = 50;
 const COUNT_HIGH = 25;
 const COUNT_MED = 15;
 const MINOR_CHANGE = 50;
@@ -692,9 +694,15 @@ function parseItem(item, index) {
 
   // Format count badge
   var countField;
-  if (item["count"] >= COUNT_HIGH) countField = "<span class='badge custom-badge-gray'>" + item["count"] + "</span>";
-  else if (item["count"] >= COUNT_MED) countField = "<span class='badge custom-badge-orange'>" + item["count"] + "</span>";
-  else countField = "<span class='badge custom-badge-red'>" + item["count"] + "</span>";
+  if (item["frame"] === -1) {
+    if (item["count"] >= COUNT_ENCH_HIGH) countField = "<span class='badge custom-badge-gray'>" + item["count"] + "</span>";
+    else if (item["count"] >= COUNT_ENCH_MED) countField = "<span class='badge custom-badge-orange'>" + item["count"] + "</span>";
+    else countField = "<span class='badge custom-badge-red'>" + item["count"] + "</span>";
+  } else {
+    if (item["count"] >= COUNT_HIGH) countField = "<span class='badge custom-badge-gray'>" + item["count"] + "</span>";
+    else if (item["count"] >= COUNT_MED) countField = "<span class='badge custom-badge-orange'>" + item["count"] + "</span>";
+    else countField = "<span class='badge custom-badge-red'>" + item["count"] + "</span>";
+  }
 
   // Add it all together
   var returnString = "<tr value=" + ITEMS.indexOf(item) + ">" +
@@ -751,7 +759,11 @@ function sortResults() {
     if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
 
     // Hide low confidence items
-    if (FILTER.hideLowConfidence && item["count"] < COUNT_MED) continue;
+    if (FILTER.hideLowConfidence) {
+      if (item["frame"] === -1 && item["count"] < COUNT_ENCH_MED) continue;
+      else if (item["count"] < COUNT_MED) continue;
+    }
+    
     // Hide sub-categories
     if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) continue;
 
