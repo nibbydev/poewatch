@@ -137,6 +137,7 @@ public class Entry {
     private double mean, median, mode, threshold_multiplier;
 
     private List<RawEntry> db_raw = new ArrayList<>();
+    private List<RawEntry> db_temp = new ArrayList<>(Main.CONFIG.dbTempSize);
     private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
     private List<DailyEntry> db_daily = new ArrayList<>(7);
     private List<HourlyEntry> db_hourly = new ArrayList<>(24);
@@ -234,15 +235,7 @@ public class Entry {
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
-            // If a user already has listed the same item before, ignore it
-            boolean discard = false;
-            for (ItemEntry itemEntry : db_items) {
-                if (itemEntry.accountName.equals(raw.accountName) || itemEntry.id.equals(raw.id)) {
-                    discard = true;
-                    break;
-                }
-            }
-            if (discard) continue;
+            if (checkRaw(raw)) continue;
 
             // If the item was not listed for chaos orbs, then find the value in chaos
             if (!raw.priceType.equals("Chaos Orb")) {
@@ -281,6 +274,36 @@ public class Entry {
 
         // Clear raw data after extracting and converting values
         db_raw.clear();
+    }
+
+    /**
+     * If a user already has listed the same item before, ignore it
+     *
+     * @param raw
+     * @return True if should be discarded
+     */
+    private boolean checkRaw(RawEntry raw) {
+        try {
+            for (RawEntry tempEntry : db_temp) {
+                if (tempEntry.accountName.equals(raw.accountName) || tempEntry.id.equals(raw.id)) {
+                    return true;
+                }
+            }
+
+            for (ItemEntry itemEntry : db_items) {
+                if (itemEntry.accountName.equals(raw.accountName) || itemEntry.id.equals(raw.id)) {
+                    return true;
+                }
+            }
+        } finally {
+            db_temp.add(raw);
+
+            if (db_temp.size() > Main.CONFIG.dbTempSize) {
+                db_temp.subList(0, db_temp.size() - Main.CONFIG.dbTempSize).clear();
+            }
+        }
+
+        return false;
     }
 
     /**

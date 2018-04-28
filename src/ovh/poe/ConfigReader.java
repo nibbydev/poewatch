@@ -13,16 +13,17 @@ public class ConfigReader {
     public int workerLimit = 5;
     public int downloadChunkSize = 128;
     public int downloadDelay = 800;
-    public int readTimeOut = 3000;
+    public int readTimeOut = 7000;
     public int connectTimeOut = 10000;
     public int pricerControllerSleepCycle = 60;
     public int dataEntryCycleLimit = 10;
     public int baseDataSize = 100;
-    public int hourlyDataSize = 60;
+    public int hourlyDataSize = 64;
     public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
 
     public boolean addCurrentPricesToHistory = false;
+    public int dbTempSize = 16;
 
     /**
      * Calls method that loads in config values on class init
