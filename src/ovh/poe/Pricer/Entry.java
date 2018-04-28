@@ -138,9 +138,9 @@ public class Entry {
 
     private List<RawEntry> db_raw = new ArrayList<>();
     private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
-    private List<DailyEntry> db_weekly = new ArrayList<>(7);
-    private List<HourlyEntry> db_daily = new ArrayList<>(24);
-    private List<TenMinuteEntry> db_hourly = new ArrayList<>(6);
+    private List<DailyEntry> db_daily = new ArrayList<>(7);
+    private List<HourlyEntry> db_hourly = new ArrayList<>(24);
+    private List<TenMinuteEntry> db_minutely = new ArrayList<>(6);
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -190,9 +190,9 @@ public class Entry {
         if (Main.ENTRY_CONTROLLER.tenBool) {
             TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
             tenMinuteEntry.add(mean, median, mode);
-            db_hourly.add(tenMinuteEntry);
+            db_minutely.add(tenMinuteEntry);
 
-            // Since the build() method overwrote mean, median and mode so an entry could be added to db_hourly, these
+            // Since the build() method overwrote mean, median and mode so an entry could be added to db_minutely, these
             // variables should be overwritten once again
             mean = findMeanHourly();
             median = findMedianHourly();
@@ -203,7 +203,7 @@ public class Entry {
         if (Main.ENTRY_CONTROLLER.sixtyBool) {
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
-            db_daily.add(hourlyEntry);
+            db_hourly.add(hourlyEntry);
 
             total_counter += inc_counter;
             quantity += inc_counter;
@@ -214,7 +214,7 @@ public class Entry {
         if (Main.ENTRY_CONTROLLER.twentyFourBool) {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
-            db_weekly.add(dailyEntry);
+            db_daily.add(dailyEntry);
             quantity = 0;
         }
 
@@ -230,7 +230,7 @@ public class Entry {
      * Adds values from db_raw array to prices database array
      */
     private void parse() {
-        EntryController.CategoryMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
+        EntryController.IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
@@ -303,8 +303,8 @@ public class Entry {
 
         // If the item  has been available for the past 2 days, check if price is much higher or lower than the
         // average price was 10 minutes ago
-        if (db_weekly.size() > 2 && !db_hourly.isEmpty()) {
-            double tmpPastMean = db_hourly.get(db_hourly.size() - 1).mean;
+        if (db_daily.size() > 2 && !db_minutely.isEmpty()) {
+            double tmpPastMean = db_minutely.get(db_minutely.size() - 1).mean;
             double tmpPercent = entry.price / tmpPastMean * 100;
 
             RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
@@ -362,16 +362,16 @@ public class Entry {
             db_items.subList(0, db_items.size() - Main.CONFIG.baseDataSize).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.tenBool && db_hourly.size() > 6) {
-            db_hourly.subList(0, db_hourly.size() - 6).clear();
+        if (Main.ENTRY_CONTROLLER.tenBool && db_minutely.size() > 6) {
+            db_minutely.subList(0, db_minutely.size() - 6).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.sixtyBool && db_daily.size() > 24) {
-            db_daily.subList(0, db_daily.size() - 24).clear();
+        if (Main.ENTRY_CONTROLLER.sixtyBool && db_hourly.size() > 24) {
+            db_hourly.subList(0, db_hourly.size() - 24).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.twentyFourBool && db_weekly.size() > 7) {
-            db_weekly.subList(0, db_weekly.size() - 7).clear();
+        if (Main.ENTRY_CONTROLLER.twentyFourBool && db_daily.size() > 7) {
+            db_daily.subList(0, db_daily.size() - 7).clear();
         }
     }
 
@@ -380,14 +380,14 @@ public class Entry {
     //------------------------------------------------------------------------------------------------------------
 
     private int findMeanQuantity() {
-        if (db_weekly.isEmpty()) return 0;
+        if (db_daily.isEmpty()) return 0;
 
         int mean = 0;
-        for (DailyEntry entry : db_weekly) {
+        for (DailyEntry entry : db_daily) {
             mean += entry.quantity;
         }
 
-        return mean / db_weekly.size();
+        return mean / db_daily.size();
     }
 
     private double findMeanItems() {
@@ -436,22 +436,22 @@ public class Entry {
     }
 
     private double findMeanHourly() {
-        if (db_hourly.isEmpty()) return 0;
+        if (db_minutely.isEmpty()) return 0;
 
         double mean = 0.0;
-        for (TenMinuteEntry entry : db_hourly) {
+        for (TenMinuteEntry entry : db_minutely) {
             mean += entry.mean;
         }
-        mean = Math.round(mean / db_hourly.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        mean = Math.round(mean / db_minutely.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
 
         return mean;
     }
 
     private double findMedianHourly() {
-        if (db_hourly.isEmpty()) return 0;
+        if (db_minutely.isEmpty()) return 0;
 
         ArrayList<Double> tempList = new ArrayList<>();
-        for (TenMinuteEntry entry : db_hourly) {
+        for (TenMinuteEntry entry : db_minutely) {
             tempList.add(entry.median);
         }
 
@@ -464,10 +464,10 @@ public class Entry {
     private double findModeHourly() {
         double maxValue = 0, maxCount = 0;
 
-        for (TenMinuteEntry entry_1 : db_hourly) {
+        for (TenMinuteEntry entry_1 : db_minutely) {
             int count = 0;
 
-            for (TenMinuteEntry entry_2 : db_hourly) {
+            for (TenMinuteEntry entry_2 : db_minutely) {
                 if (entry_2.mode == entry_1.mode) ++count;
             }
 
@@ -555,26 +555,10 @@ public class Entry {
         stringBuilder.append("::");
 
         // Add hourly entries
-        if (db_weekly.isEmpty()) {
-            stringBuilder.append("-");
-        } else {
-            for (DailyEntry entry : db_weekly) {
-                stringBuilder.append(entry.toString());
-                stringBuilder.append("|");
-            }
-
-            // Remove the overflow "|"
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        }
-
-        // Add delimiter
-        stringBuilder.append("::");
-
-        // Add hourly entries
         if (db_daily.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            for (HourlyEntry entry : db_daily) {
+            for (DailyEntry entry : db_daily) {
                 stringBuilder.append(entry.toString());
                 stringBuilder.append("|");
             }
@@ -590,7 +574,23 @@ public class Entry {
         if (db_hourly.isEmpty()) {
             stringBuilder.append("-");
         } else {
-            for (TenMinuteEntry entry : db_hourly) {
+            for (HourlyEntry entry : db_hourly) {
+                stringBuilder.append(entry.toString());
+                stringBuilder.append("|");
+            }
+
+            // Remove the overflow "|"
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
+        // Add delimiter
+        stringBuilder.append("::");
+
+        // Add hourly entries
+        if (db_minutely.isEmpty()) {
+            stringBuilder.append("-");
+        } else {
+            for (TenMinuteEntry entry : db_minutely) {
                 stringBuilder.append(entry.toString());
                 stringBuilder.append("|");
             }
@@ -695,7 +695,7 @@ public class Entry {
                 temp.add(dailyEntry);
             }
 
-            db_weekly.addAll(0, temp);
+            db_daily.addAll(0, temp);
         }
 
         // Import daily values
@@ -708,7 +708,7 @@ public class Entry {
                 temp.add(hourlyEntry);
             }
 
-            db_daily.addAll(0, temp);
+            db_hourly.addAll(0, temp);
         }
 
 
@@ -722,7 +722,7 @@ public class Entry {
                 temp.add(tenMinuteEntry);
             }
 
-            db_hourly.addAll(0, temp);
+            db_minutely.addAll(0, temp);
 
             // Using the imported values, calculate the prices
             mean = findMeanHourly();
@@ -763,12 +763,12 @@ public class Entry {
         return findMeanQuantity();
     }
 
-    public List<DailyEntry> getDb_weekly() {
-        return db_weekly;
+    public List<DailyEntry> getDb_daily() {
+        return db_daily;
     }
 
     public void setLeague(String league) {
-        this.league = league;
+        if (this.league == null) this.league = league;
     }
 
     public String getLeague() {

@@ -13,14 +13,14 @@ import java.util.*;
  * Manages database
  */
 public class EntryController {
-    // Generic map. Has mappings of: [league name - league map]
-    static class EntryMap extends HashMap<String, LeagueMap> { }
-    // League map. Has mappings of: [category name - index map]
+    // League map. Has mappings of: [league name - category map]
     static class LeagueMap extends HashMap<String, CategoryMap> { }
-    // Category map. Has mappings of: [index - Entry]
-    static class CategoryMap extends HashMap<String, Entry> { }
+    // Category map. Has mappings of: [category name - index map]
+    static class CategoryMap extends HashMap<String, IndexMap> { }
+    // Index map. Has mappings of: [index - Entry]
+    static class IndexMap extends HashMap<String, Entry> { }
 
-    private final EntryMap entryMap = new EntryMap();
+    private final LeagueMap leagueMap = new LeagueMap();
 
     private final JSONParcel JSONParcel = new JSONParcel();
     private final Object monitor = new Object();
@@ -97,7 +97,7 @@ public class EntryController {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Load in currency data on app start and fill entryMap with leagues
+     * Load in currency data on app start and fill leagueMap with leagues
      */
     private void loadDatabases() {
         for (String league : Main.RELATIONS.leagues) {
@@ -111,18 +111,18 @@ public class EntryController {
             try (BufferedReader reader = Misc.defineReader(currencyFile)) {
                 if (reader == null) continue;
 
-                LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
-                CategoryMap categoryMap = leagueMap.getOrDefault("currency", new CategoryMap());
+                CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
+                IndexMap indexMap = categoryMap.getOrDefault("currency", new IndexMap());
 
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String index = line.substring(0, line.indexOf("::"));
                     Entry entry = new Entry(line, league);
-                    categoryMap.put(index, entry);
+                    indexMap.put(index, entry);
                 }
 
+                categoryMap.putIfAbsent(league, indexMap);
                 leagueMap.putIfAbsent(league, categoryMap);
-                entryMap.putIfAbsent(league, leagueMap);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -135,7 +135,7 @@ public class EntryController {
      */
     private void cycle() {
         for (String league : Main.RELATIONS.leagues) {
-            LeagueMap leagueMap = entryMap.getOrDefault(league, new LeagueMap());
+            CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
             File leagueFolder = new File("./data/database/"+league+"/");
 
             if (!leagueFolder.exists()) {
@@ -144,8 +144,8 @@ public class EntryController {
             }
 
             for (String category : Main.RELATIONS.categories.keySet()) {
-                CategoryMap categoryMap = leagueMap.getOrDefault(category, new CategoryMap());
-                Set<String> tmp_unparsedIndexes = new HashSet<>(categoryMap.keySet());
+                IndexMap indexMap = categoryMap.getOrDefault(category, new IndexMap());
+                Set<String> tmp_unparsedIndexes = new HashSet<>(indexMap.keySet());
                 File leagueFile = new File("./data/database/"+league+"/"+category+".csv");
 
                 // The file data will be stored in
@@ -163,15 +163,15 @@ public class EntryController {
                             String index = line.substring(0, line.indexOf("::"));
                             Entry entry;
 
-                            if (categoryMap.containsKey(index)) {
+                            if (indexMap.containsKey(index)) {
                                 // Remove processed indexes from the set so that only entries that were found in the map
                                 // but not the file will remain
                                 tmp_unparsedIndexes.remove(index);
 
                                 if (category.equals("currency")) {
-                                    entry = categoryMap.get(index);
+                                    entry = indexMap.getOrDefault(index, new Entry(line, league));
                                 } else {
-                                    entry = categoryMap.remove(index);
+                                    entry = indexMap.remove(index);
                                     entry.parseLine(line);
                                 }
                             } else {
@@ -197,8 +197,8 @@ public class EntryController {
                     for (String index : tmp_unparsedIndexes) {
                         Entry entry;
 
-                        if (category.equals("currency")) entry = categoryMap.get(index);
-                        else entry = categoryMap.remove(index);
+                        if (category.equals("currency")) entry = indexMap.get(index);
+                        else entry = indexMap.remove(index);
 
                         entry.setLeague(league);
                         entry.cycle();
@@ -347,18 +347,18 @@ public class EntryController {
                 item.parseItem();
                 if (item.discard) continue;
 
-                LeagueMap leagueMap = entryMap.getOrDefault(item.league, new LeagueMap());
-                CategoryMap categoryMap = leagueMap.getOrDefault(item.parentCategory, new CategoryMap());
+                CategoryMap categoryMap = leagueMap.getOrDefault(item.league, new CategoryMap());
+                IndexMap indexMap = categoryMap.getOrDefault(item.parentCategory, new IndexMap());
 
                 String index = Main.RELATIONS.indexItem(item);
                 if (index == null) continue; // Some currency items have invalid icons
 
-                Entry entry = categoryMap.getOrDefault(index, new Entry());
+                Entry entry = indexMap.getOrDefault(index, new Entry());
                 entry.add(item, stash.accountName, index);
 
-                categoryMap.putIfAbsent(index, entry);
-                leagueMap.putIfAbsent(item.parentCategory, categoryMap);
-                entryMap.putIfAbsent(item.league, leagueMap);
+                indexMap.putIfAbsent(index, entry);
+                categoryMap.putIfAbsent(item.parentCategory, indexMap);
+                leagueMap.putIfAbsent(item.league, categoryMap);
             }
         }
     }
@@ -403,13 +403,13 @@ public class EntryController {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public CategoryMap getCurrencyMap (String league) {
-        LeagueMap leagueMap = entryMap.getOrDefault(league, null);
-        if (leagueMap == null) return null;
-
-        CategoryMap categoryMap = leagueMap.getOrDefault("currency", null);
+    public IndexMap getCurrencyMap (String league) {
+        CategoryMap categoryMap = leagueMap.getOrDefault(league, null);
         if (categoryMap == null) return null;
 
-        return categoryMap;
+        IndexMap indexMap = categoryMap.getOrDefault("currency", null);
+        if (indexMap == null) return null;
+
+        return indexMap;
     }
 }

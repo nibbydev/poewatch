@@ -19,9 +19,9 @@ public class JSONParcel {
     public static class JSONItem {
         public double mean, median, mode, exalted;
         public int count, quantity, frame;
-        public String index, specificKey;
+        public String index;
         public String corrupted, lvl, quality, links;
-        public String genericKey, parent, child, name, type, var, tier, icon;
+        public String key, parent, child, name, type, var, tier, icon;
         public HistoryItem history = new HistoryItem();
 
         public void copy (Entry entry) {
@@ -31,10 +31,9 @@ public class JSONParcel {
             count = entry.getCount() + entry.getInc_counter();
             quantity = entry.getQuantity();
             index = entry.getIndex();
-            specificKey = Main.RELATIONS.specificIndexToData(entry.getIndex()).specificKey;
 
             // Find the item's price in exalted
-            EntryController.CategoryMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
+            EntryController.IndexMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
             if (tmp_currencyMap != null) {
                 String exaltedIndex = Main.RELATIONS.currencyNameToFullIndex.getOrDefault("Exalted Orb", null);
                 Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(exaltedIndex, null);
@@ -51,10 +50,10 @@ public class JSONParcel {
             }
 
             // Copy the history over
-            if (entry.getDb_weekly().size() > 0) {
+            if (entry.getDb_daily().size() > 0) {
                 double lowestSpark = 99999;
 
-                for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                for (Entry.DailyEntry dailyEntry : entry.getDb_daily()) {
                     // Add all values to history
                     history.mean.add(dailyEntry.mean);
                     history.median.add(dailyEntry.median);
@@ -80,7 +79,7 @@ public class JSONParcel {
                 if (lowestSpark < 0) lowestSpark *= -1;
 
                 // Get variation from lowest value
-                for (Entry.DailyEntry dailyEntry : entry.getDb_weekly()) {
+                for (Entry.DailyEntry dailyEntry : entry.getDb_daily()) {
                     double newSpark = lowestSpark != 0 ? dailyEntry.mean / lowestSpark - 1 : 0.0;
                     newSpark = Math.round(newSpark * 10000.0) / 100.0;
                     history.spark.add(newSpark);
@@ -98,7 +97,7 @@ public class JSONParcel {
             if (Main.RELATIONS.itemSubIndexToData.containsKey(superIndex)) {
                 IndexedItem indexedItem = Main.RELATIONS.itemSubIndexToData.get(superIndex);
                 frame = indexedItem.frame;
-                genericKey = indexedItem.genericKey;
+                key = indexedItem.genericKey;
                 parent = indexedItem.parent;
                 child = indexedItem.child;
                 icon = indexedItem.icon;
