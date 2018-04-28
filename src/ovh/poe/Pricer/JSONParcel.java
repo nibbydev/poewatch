@@ -72,7 +72,7 @@ public class JSONParcel {
                 }
 
                 // Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
-                if (Main.CONFIG.addCurrenctPricesToHistory) {
+                if (Main.CONFIG.addCurrentPricesToHistory) {
                     history.mean.add(mean);
                     history.median.add(median);
                     history.mode.add(mode);

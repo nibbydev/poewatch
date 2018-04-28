@@ -22,7 +22,7 @@ public class ConfigReader {
     public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
 
-    public boolean addCurrenctPricesToHistory = false;
+    public boolean addCurrentPricesToHistory = false;
 
     /**
      * Calls method that loads in config values on class init
