@@ -380,27 +380,30 @@ public class EntryController {
      * Writes JSONParcel object to JSON file
      */
     private void writeJSONToFile() {
-        for (Map.Entry<String, Map<String, List<JSONParcel.JSONItem>>> league : JSONParcel.leagues.entrySet()) {
-            for (Map.Entry<String, List<JSONParcel.JSONItem>> category : league.getValue().entrySet()) {
-                try {
-                    new File("./data/output/" + league.getKey()).mkdirs();
-                    File file = new File("./data/output/" + league.getKey(), category.getKey() + ".json");
+        for (String league : JSONParcel.getJsonLeagueMap().keySet()) {
+            JSONParcel.JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
 
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-                    gson.toJson(category.getValue(), writer);
+            for (String category : jsonCategoryMap.keySet()) {
+                JSONParcel.JSONItemList jsonItems = jsonCategoryMap.get(category);
+
+                try {
+                    new File("./data/output/"+league).mkdirs();
+                    File file = new File("./data/output/"+league+"/"+category+".json");
+
+                    BufferedWriter writer = Misc.defineWriter(file);
+                    if (writer == null) throw new IOException("File '"+league+"' error");
+
+                    gson.toJson(jsonItems, writer);
 
                     writer.flush();
                     writer.close();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
+
             }
         }
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Internal utility methods
-    //------------------------------------------------------------------------------------------------------------
 
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters

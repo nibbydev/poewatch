@@ -7,6 +7,13 @@ import ovh.poe.RelationManager.SubIndexedItem;
 import java.util.*;
 
 public class JSONParcel {
+    // League map. Has mappings of: [league name - category map]
+    static class JSONLeagueMap extends HashMap<String, JSONCategoryMap> { }
+    // Category map. Has mappings of: [category name - item map]
+    static class JSONCategoryMap extends HashMap<String, JSONItemList> { }
+    // Index map. Has list of: [JSONItem]
+    static class JSONItemList extends ArrayList<JSONItem> { }
+
     private static class HistoryItem {
         public List<Double> spark = new ArrayList<>();
         public List<Double> mean = new ArrayList<>();
@@ -16,7 +23,7 @@ public class JSONParcel {
         public double change;
     }
 
-    public static class JSONItem {
+    private static class JSONItem {
         public double mean, median, mode, exalted;
         public int count, quantity, frame;
         public String index;
@@ -124,54 +131,66 @@ public class JSONParcel {
         }
     }
 
-    public Map<String, Map<String, List<JSONItem>>> leagues = new HashMap<>();
+    private JSONLeagueMap jsonLeagueMap = new JSONLeagueMap();
+
+    //------------------------------------------------------------------------------------------------------------
+    // Utility methods
+    //------------------------------------------------------------------------------------------------------------
 
     public void add(Entry entry) {
         if (entry.getIndex() == null) return;
-
         IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(entry.getIndex());
         if (indexedItem == null) return;
 
-        Map<String, List<JSONItem>> league = leagues.getOrDefault(entry.getLeague(), new TreeMap<>());
-        List<JSONItem> category = league.getOrDefault(indexedItem.parent, new ArrayList<>());
+        JSONCategoryMap jsonCategoryMap = jsonLeagueMap.getOrDefault(entry.getLeague(), new JSONCategoryMap());
+        JSONItemList jsonItems = jsonCategoryMap.getOrDefault(indexedItem.parent, new JSONItemList());
 
         JSONItem jsonItem = new JSONItem();
         jsonItem.copy(entry);
 
-        category.add(jsonItem);
-        league.putIfAbsent(indexedItem.parent, category);
-        leagues.putIfAbsent(entry.getLeague(), league);
+        jsonItems.add(jsonItem);
+        jsonCategoryMap.putIfAbsent(indexedItem.parent, jsonItems);
+        jsonLeagueMap.putIfAbsent(entry.getLeague(), jsonCategoryMap);
     }
 
     public void sort() {
-        for (String leagueKey : leagues.keySet()) {
-            Map<String, List<JSONItem>> league = leagues.get(leagueKey);
+        for (String league : jsonLeagueMap.keySet()) {
+            JSONCategoryMap jsonCategoryMap = jsonLeagueMap.get(league);
 
-            for (String categoryKey : league.keySet()) {
-                List<JSONItem> category = league.get(categoryKey);
-                List<JSONItem> sortedCategory = new ArrayList<>();
+            for (String category : jsonCategoryMap.keySet()) {
+                JSONItemList jsonItems = jsonCategoryMap.get(category);
+                JSONItemList jsonItems_sorted = new JSONItemList();
 
-                while (!category.isEmpty()) {
+                while (!jsonItems.isEmpty()) {
                     JSONItem mostExpensiveItem = null;
 
-                    for (JSONItem item : category) {
-                        if (mostExpensiveItem == null)
+                    for (JSONItem item : jsonItems) {
+                        if (mostExpensiveItem == null) {
                             mostExpensiveItem = item;
-                        else if (item.mean > mostExpensiveItem.mean)
+                        } else if (item.mean > mostExpensiveItem.mean) {
                             mostExpensiveItem = item;
+                        }
                     }
 
-                    category.remove(mostExpensiveItem);
-                    sortedCategory.add(mostExpensiveItem);
+                    jsonItems.remove(mostExpensiveItem);
+                    jsonItems_sorted.add(mostExpensiveItem);
                 }
 
-                // Write sortedCategory to league map
-                league.put(categoryKey, sortedCategory);
+                // Write jsonItems_sorted to category map
+                jsonCategoryMap.put(category, jsonItems_sorted);
             }
         }
     }
 
     public void clear () {
-        leagues.clear();
+        jsonLeagueMap.clear();
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public JSONLeagueMap getJsonLeagueMap() {
+        return jsonLeagueMap;
     }
 }
