@@ -13,9 +13,7 @@ import java.util.*;
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    private class LeagueListElement {
-        String id, startAt, endAt;
-    }
+    private class LeagueListElement { String id;}
 
     private class CurrencyRelation {
         String name, index;
@@ -225,7 +223,9 @@ public class RelationManager {
         File file = new File("./data/itemData.json");
 
         // Open up the reader
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
             Type listType = new TypeToken<Map<String, IndexedItem>>(){}.getType();
             Map<String, IndexedItem> relations = gson.fromJson(reader, listType);
 
@@ -257,7 +257,9 @@ public class RelationManager {
         File file = new File("./data/categories.json");
 
         // Open up the reader
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
             Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();
             categories = gson.fromJson(reader, listType);
         } catch (IOException ex) {
@@ -271,7 +273,8 @@ public class RelationManager {
     public void saveData() {
         // Save item relations to file
         File itemFile = new File("./data/itemData.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(itemFile), "UTF-8"))) {
+        try (Writer writer = Misc.defineWriter(itemFile)) {
+            if (writer == null) throw new IOException("File '" + itemFile.getName() + "' error");
             gson.toJson(itemSubIndexToData, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to itemData.json", 3);
@@ -280,7 +283,8 @@ public class RelationManager {
 
         // Save item categories to file
         File categoryFile = new File("./data/categories.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(categoryFile), "UTF-8"))) {
+        try (Writer writer = Misc.defineWriter(categoryFile)) {
+            if (writer == null) throw new IOException("File '" + categoryFile.getName() + "' error");
             gson.toJson(categories, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to categories.json", 3);
@@ -289,7 +293,8 @@ public class RelationManager {
 
         // Save leagues to file
         File leagueFile = new File("./data/leagues.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(leagueFile), "UTF-8"))) {
+        try (Writer writer = Misc.defineWriter(leagueFile)) {
+            if (writer == null) throw new IOException("File '" + leagueFile.getName() + "' error");
             gson.toJson(leagues, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to leagues.json", 3);
