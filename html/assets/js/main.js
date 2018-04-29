@@ -384,9 +384,7 @@ function onRowClick(event) {
     displayHistory(ITEMS[parentIndex]["index"], expandedRow);
   } else {
     console.log("history from: source");
-    var fullCategory = ITEMS[parentIndex].parent;
-    if (ITEMS[parentIndex].child) fullCategory += "-" + ITEMS[parentIndex].child;
-    makeHistoryRequest(fullCategory, parentIndex, expandedRow);
+    makeHistoryRequest(ITEMS[parentIndex].parent, parentIndex, expandedRow);
   }
 
   // Fill expanded row with item data
@@ -412,8 +410,8 @@ function onRowClick(event) {
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
 
     if (HISTORY_LEAGUE in HISTORY_DATA[ITEMS[parentIndex]["index"]]) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["labels"];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE]["values"];
+      HISTORY_CHART.data.labels = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE];
       HISTORY_CHART.update();
     }
   });
@@ -464,8 +462,8 @@ function displayHistory(index, expandedRow) {
   if (HISTORY_LEAGUE in HISTORY_DATA[index]) selectedLeague = HISTORY_LEAGUE;
   else selectedLeague = leagues[0];
 
-  HISTORY_CHART.data.labels = HISTORY_DATA[index][selectedLeague]["labels"];
-  HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague]["values"];
+  HISTORY_CHART.data.labels = HISTORY_DATA[index][selectedLeague];
+  HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague];
   HISTORY_CHART.update();
 
   var historyLeagueRadio = $("#history-league-radio", expandedRow);
@@ -600,7 +598,7 @@ function placeCharts(index, expandedRow) {
             return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
           },
           label: function(tooltipItem, data) {
-            return "Day " + data['labels'][tooltipItem['index']];
+            return "Day " + tooltipItem['index'];
           }
         },
         backgroundColor: '#fff',

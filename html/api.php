@@ -76,7 +76,7 @@
             <div class="card-body">
               <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated dynamically and also every 30 minutes from the official api.</p>
+              <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated dynamically and also every 30 minutes from the official API.</p>
               <!--/Description/-->
               <hr>
               <!-- Examples -->
@@ -88,6 +88,66 @@
         </div>
       </div>
       <!--/API: leagues/-->
+      <!-- API: league durations -->
+      <div class="row mb-3">
+        <div class="col-lg">
+          <div class="card custom-card">
+            <div class="card-header">
+              <h2>api.poe-stats.com/duration</h2>
+            </div>
+            <div class="card-body">
+              <!-- Description -->
+              <h5 class="card-title">Description</h5>
+              <p class="card-text">Provides a list of current active leagues as well as their durations. Updated every 30 minutes from the official API. If the duration is impossible to calculate, -1 will be used as a replacement.</p>
+              <!--/Description/-->
+              <hr>
+              <!-- Response fields -->
+              <h5 class="card-title">Response fields</h5>
+              <div class="card api-data-table px-2 pt-1 mb-2">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Param</th>
+                      <th>Persistent</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>name</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Name of the league</td>
+                    </tr>
+                    <tr>
+                      <td>elapsed</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Days since the league began</td>
+                    </tr>
+                    <tr>
+                      <td>remaining</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Days until the end of the league</td>
+                    </tr>
+                    <tr>
+                      <td>total</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Total duration of league in days</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--/Response fields/-->
+              <hr>
+              <!-- Examples -->
+              <h5 class="card-title">Examples</h5>
+              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/duration">Durations</a>
+              <!--/Examples/-->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--/API: league durations/-->
+
       <!-- API: categories -->
       <div class="row mb-3">
         <div class="col-lg">
