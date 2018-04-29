@@ -10,7 +10,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class HistoryController {
     // Index map. Has mappings of: [index - HistoryItem]
@@ -48,7 +47,7 @@ public class HistoryController {
             return -1;
         } else {
             for (RelationManager.LeagueDurationElement durationElement : durationElements) {
-                if (durationElement.name.equals(league)) return durationElement.daysElapsed;
+                if (durationElement.name.equals(league)) return durationElement.elapsed;
             }
         }
 

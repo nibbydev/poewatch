@@ -208,7 +208,7 @@ public class Entry {
         build();
 
         // Runs every 10 minutes
-        if (Main.ENTRY_CONTROLLER.tenBool) {
+        if (Main.ENTRY_CONTROLLER.isTenBool()) {
             TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
             tenMinuteEntry.add(mean, median, mode);
             db_minutely.add(tenMinuteEntry);
@@ -221,7 +221,7 @@ public class Entry {
         }
 
         // Runs every 60 minutes
-        if (Main.ENTRY_CONTROLLER.sixtyBool) {
+        if (Main.ENTRY_CONTROLLER.isSixtyBool()) {
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
             db_hourly.add(hourlyEntry);
@@ -232,18 +232,17 @@ public class Entry {
         }
 
         // Runs every 24 hours
-        if (Main.ENTRY_CONTROLLER.twentyFourBool) {
+        if (Main.ENTRY_CONTROLLER.isTwentyFourBool()) {
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
             db_daily.add(dailyEntry);
 
             // Add this entry to league history
-            //Main.HISTORY_CONTROLLER.add(index, this);
+            Main.HISTORY_CONTROLLER.add(index, this);
 
             quantity = 0;
         }
 
-        Main.HISTORY_CONTROLLER.add(index, this);
 
         // Limit list sizes
         cap();
@@ -364,11 +363,11 @@ public class Entry {
 
             switch (indexedItem.parent) {
                 case "enchantments":
-                    return tmpPercent > 10 && tmpPercent < 200;
+                    return tmpPercent > 5 && tmpPercent < 140;
                 case "currency":
-                    return tmpPercent > 90 && tmpPercent < 110;
+                    return tmpPercent > 50 && tmpPercent < 110;
                 case "essence":
-                    return tmpPercent > 80 && tmpPercent < 120;
+                    return tmpPercent > 50 && tmpPercent < 120;
                 default:
                     return tmpPercent > 40 && tmpPercent < 200;
             }
@@ -414,15 +413,15 @@ public class Entry {
             db_items.subList(0, db_items.size() - Main.CONFIG.baseDataSize).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.tenBool && db_minutely.size() > 6) {
+        if (Main.ENTRY_CONTROLLER.isTenBool() && db_minutely.size() > 6) {
             db_minutely.subList(0, db_minutely.size() - 6).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.sixtyBool && db_hourly.size() > 24) {
+        if (Main.ENTRY_CONTROLLER.isSixtyBool() && db_hourly.size() > 24) {
             db_hourly.subList(0, db_hourly.size() - 24).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.twentyFourBool && db_daily.size() > 7) {
+        if (Main.ENTRY_CONTROLLER.isTwentyFourBool() && db_daily.size() > 7) {
             db_daily.subList(0, db_daily.size() - 7).clear();
         }
     }

@@ -1,12 +1,14 @@
 package ovh.poe.Pricer;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import ovh.poe.Mappers;
 import ovh.poe.Item;
 import ovh.poe.Main;
 import ovh.poe.Misc;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -27,7 +29,7 @@ public class EntryController {
     private final Gson gson = Main.getGson();
 
     private long lastRunTime = System.currentTimeMillis();
-    public volatile boolean flagPause, tenBool, sixtyBool, twentyFourBool;
+    private volatile boolean flagPause, tenBool, sixtyBool, twentyFourBool;
     private long twentyFourCounter, sixtyCounter, tenCounter;
 
     //------------------------------------------------------------------------------------------------------------
@@ -427,5 +429,21 @@ public class EntryController {
         if (indexMap == null) return null;
 
         return indexMap;
+    }
+
+    public boolean isTenBool() {
+        return tenBool;
+    }
+
+    public boolean isSixtyBool() {
+        return sixtyBool;
+    }
+
+    public boolean isTwentyFourBool() {
+        return twentyFourBool;
+    }
+
+    public boolean isFlagPause() {
+        return flagPause;
     }
 }

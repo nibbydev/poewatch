@@ -7,20 +7,42 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    private class LeagueListElement { String id;}
+    private static class LeagueEntry {
+        String id, startAt, endAt;
 
-    private class CurrencyRelation {
+        /**
+         * Converts string date found in league api to Date object
+         * @param date ISO 8601 standard yyyy-MM-dd'T'HH:mm:ss'Z' date
+         * @return Created Date object
+         */
+        public static Date parseDate(String date) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            try {
+                return format.parse(date);
+            } catch (ParseException ex) {
+                Main.ADMIN._log(ex, 3);
+            }
+
+            return null;
+        }
+    }
+
+    private static class CurrencyRelation {
         String name;
         String[] aliases;
     }
 
-    public class IndexedItem {
+    public static class IndexedItem {
         public Map<String, SubIndexedItem> subIndexes = new TreeMap<>();
         public String name, type, parent, child, tier, genericKey, icon;
         public int frame;
@@ -85,6 +107,11 @@ public class RelationManager {
         }
     }
 
+    public static class LeagueDurationElement {
+        public int elapsed, remaining, total;
+        public String name;
+    }
+
     private Gson gson = Main.getGson();
 
     private Map<String, String> currencyAliasToName = new HashMap<>();
@@ -95,7 +122,9 @@ public class RelationManager {
     private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
     private Map<String, List<String>> categories = new HashMap<>();
+    private List<LeagueEntry> leagueEntries;
     private List<String> leagues = new ArrayList<>();
+    private List<LeagueDurationElement> leagueDurationMap;
 
     /**
      * Reads currency and item data from file on object init
@@ -107,7 +136,7 @@ public class RelationManager {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Common I/O
+    // League list management
     //------------------------------------------------------------------------------------------------------------
 
     /**
@@ -115,7 +144,7 @@ public class RelationManager {
      * writes them to './data/leagues.json'
      */
     public void downloadLeagueList() {
-        List<LeagueListElement> leagueList = null;
+        List<LeagueEntry> leagueList = null;
         InputStream stream = null;
 
         try {
@@ -150,7 +179,7 @@ public class RelationManager {
             }
 
             // Attempt to parse league list
-            Type listType = new TypeToken<List<LeagueListElement>>(){}.getType();
+            Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
             leagueList = gson.fromJson(stringBuilderBuffer.toString(), listType);
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
@@ -164,11 +193,14 @@ public class RelationManager {
         }
 
         // If download was unsuccessful, return
-        if (leagueList == null || leagueList.size() < 3) return;
+        if (leagueList == null || leagueList.size() < 2) return;
+
+        leagueEntries = leagueList;
+        fillLeagueDurationMap();
 
         // Clear and fill list
         leagues.clear();
-        for (LeagueListElement element : leagueList) {
+        for (LeagueEntry element : leagueList) {
             if (!element.id.contains("SSF")) leagues.add(element.id);
         }
 
@@ -191,6 +223,97 @@ public class RelationManager {
 
         Main.ADMIN.log_("League list updated", 1);
     }
+
+    /**
+     * Calculates how many days a league has been active for, how many days until the end of a league and how many days
+     * the league will run;
+     *
+     * @param league League name with correct capitalization
+     * @return Filled LeagueDurationElement object or null on error
+     */
+    private LeagueDurationElement daysSinceLeague(String league) {
+        if (leagueEntries == null) return null;
+
+        LeagueEntry leagueEntry = null;
+        for (LeagueEntry tmp_leagueEntry: leagueEntries) {
+            if (tmp_leagueEntry.id.equals(league)) leagueEntry = tmp_leagueEntry;
+        }
+
+        if (leagueEntry == null) return null;
+
+        Date startDate = leagueEntry.startAt == null ? null : LeagueEntry.parseDate(leagueEntry.startAt);
+        Date endDate = leagueEntry.endAt == null ? null : LeagueEntry.parseDate(leagueEntry.endAt);
+        Date currentDate = new Date();
+
+        LeagueDurationElement leagueDurationElement = new LeagueDurationElement();
+        leagueDurationElement.name = league;
+
+        if (startDate == null || endDate == null) {
+            leagueDurationElement.total = -1;
+        } else {
+            long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
+            leagueDurationElement.total = (int) (totalDifference / (24 * 60 * 60 * 1000));
+        }
+
+        if (startDate == null) {
+            leagueDurationElement.elapsed = 0;
+        } else {
+            long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
+            leagueDurationElement.elapsed = (int)(startDifference / (24 * 60 * 60 * 1000));
+        }
+
+        if (endDate == null) {
+            leagueDurationElement.remaining = -1;
+        } else {
+            long endDifference = Math.abs(endDate.getTime() - currentDate.getTime());
+            leagueDurationElement.remaining = (int) (endDifference / (24 * 60 * 60 * 1000));
+        }
+
+        return leagueDurationElement;
+    }
+
+    /**
+     * Fills leagueDurationMap with data from leagueEntries
+     */
+    private void fillLeagueDurationMap() {
+        if (leagueEntries == null) return;
+
+        List<LeagueDurationElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
+
+        for (LeagueEntry leagueEntry : leagueEntries) {
+            LeagueDurationElement leagueDurationElement = daysSinceLeague(leagueEntry.id);
+
+            if (leagueDurationElement == null) {
+                Main.ADMIN.log_("Something went horribly wrong with league dates", 5);
+                return;
+            }
+
+            tmp_leagueDurationMap.add(leagueDurationElement);
+        }
+
+        leagueDurationMap = tmp_leagueDurationMap;
+
+        saveLeagueDurationMapToFile();
+    }
+
+    /**
+     * Saves contents of leagueDurationMap to file
+     */
+    private void saveLeagueDurationMapToFile() {
+        File durationFile = new File("./data/duration.json");
+
+        try (Writer writer = Misc.defineWriter(durationFile)) {
+            if (writer == null) throw new IOException();
+            gson.toJson(leagueDurationMap, writer);
+        } catch (IOException ex) {
+            Main.ADMIN.log_("Could not write to '"+durationFile.getName()+"'", 3);
+            Main.ADMIN._log(ex, 3);
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Common I/O
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Reads currency relation data from file
@@ -460,5 +583,9 @@ public class RelationManager {
 
     public Map<String, String> getCurrencyAliasToName() {
         return currencyAliasToName;
+    }
+
+    public List<LeagueDurationElement> getLeagueDurationMap() {
+        return leagueDurationMap;
     }
 }

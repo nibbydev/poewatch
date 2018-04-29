@@ -170,7 +170,7 @@ public class Main {
         // Make sure output folders exist
         new File("./data/database").mkdirs();
         new File("./data/output").mkdirs();
-        new File("./data/current_history").mkdirs();
+        new File("./data/history").mkdirs();
         new File("./backups").mkdirs();
 
         // Create ./config.cfg if missing
