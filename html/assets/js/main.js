@@ -13,6 +13,10 @@ let HISTORY_LEAGUE;
 
 var PARSE_AMOUNT = 100;
 var FLAG_LIVE = false;
+var COUNTER = {
+  lowCount: 0,
+  categories: {}
+};
 
 const PRICE_PERCISION = 100;
 const COUNT_ENCH_HIGH = 100;
@@ -141,6 +145,15 @@ $(document).ready(function() {
       FILTER.hideLowConfidence = !FILTER.hideLowConfidence;
       sortResults();
     }
+
+    /*var tempLabel = $("label", this);
+    if ( $("input", tempLabel[0]).is(":checked") ) {
+      $("span", tempLabel[0]).text("Hide");
+      $("span", tempLabel[1]).text("Show" + " (" + COUNTER.lowCount + ")");
+    } else {
+      $("span", tempLabel[0]).text("Hide" + " (" + COUNTER.lowCount + ")");
+      $("span", tempLabel[1]).text("Show");
+    }*/
   });
 
   // Define link radio button event listener
@@ -180,16 +193,57 @@ $(document).ready(function() {
   });
 
   // Live update checker
-  window.setInterval(timedRequestCallback, 65 * 1000);
+  window.setInterval(timedRequestCallback, 61 * 1000);
 }); 
 
 
+/*function countItems() {
+  for (let i = 0; i < ITEMS.length; i++) {
+    const item = ITEMS[i];
+
+    if ("child" in item) {
+      if (item["child"] in COUNTER.categories) {
+        COUNTER.categories[item["child"]]++;
+      } else {
+        COUNTER.categories[item["child"]] = 1;
+      }
+    }
+    
+    if (item["count"] < COUNT_MED) COUNTER.lowCount++;
+  }
+
+  COUNTER.categories["all"] = ITEMS.length;
+
+  // Update item counter under confidence toggle radio
+  var test = $("#radio-confidence label");
+  $("span", test[1]).text("Show" + " (" + COUNTER.lowCount + ")");
+
+  console.log(COUNTER);
+}*/
+
+
 function timedRequestCallback() {
-  if (FLAG_LIVE) {
-    console.log("Automatic update");
+  if (!FLAG_LIVE) return;
+
+  console.log("Automatic update");
+
+  var data = {
+    league: FILTER.league, 
+    category: FILTER.category
+  };
+
+  var request = $.ajax({
+    url: "http://api.poe-stats.com/get",
+    data: data,
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(json) {
     ITEMS = [];
     makeRequest();
-  }
+  });
 }
 
 
@@ -620,7 +674,7 @@ function makeRequest() {
   });
 
   request.done(function(json) {
-    ITEMS = ITEMS.concat(json);
+    ITEMS = json;
     sortResults();
 
     console.log("got " + ITEMS.length + " items");
@@ -758,72 +812,8 @@ function sortResults() {
 
     if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
 
-    // Hide low confidence items
-    if (FILTER.hideLowConfidence) {
-      if (item["frame"] === -1 && item["count"] < COUNT_ENCH_MED) continue;
-      else if (item["count"] < COUNT_MED) continue;
-    }
-    
-    // Hide sub-categories
-    if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) continue;
-
-    // Hide items with different links
-    if (FILTER.links) {
-      if (!("links" in item)) continue;
-      else if (item["links"] !== FILTER.links) continue;
-    } else if ("links" in item) continue;
-
-    // Sort gems, I guess
-    if (item["frame"] === 4) {
-      if (FILTER.gemLvl !== "") {
-        if (item["lvl"] != FILTER.gemLvl) continue;
-      }
-      if (FILTER.gemQuality !== "") {
-        if (FILTER.gemQuality) {
-          if (!("quality" in item)) continue;
-          if (item["quality"] != FILTER.gemQuality) continue;
-        } else {
-          if ("quality" in item && item["quality"] > 0) continue;
-        }
-      }
-      // Sort based on corruption selector
-      if (FILTER.gemCorrupted === "1" && item["corrupted"] !== "1") continue;
-      else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") continue;
-    
-    } else if (FILTER.category === "currency") {
-      // Hide some fairly useless currency
-      if (item["frame"] === 5) {
-        var discard = false;
-        switch (item["name"]) {
-          case "Imprint":
-          case "Scroll Fragment":
-          case "Alteration Shard":
-          case "Binding Shard":
-          case "Horizon Shard":
-          case "Engineer's Shard":
-          case "Chaos Shard":
-          case "Regal Shard":
-          case "Alchemy Shard":
-          case "Transmutation Shard":
-            discard = true;
-            break;
-          default:
-            break;
-        }
-        if (discard) continue;
-  
-      } else if (item["frame"] === 3 && FILTER.sub === "all") {
-        // Hide harbinger pieces under category 'all'
-        continue;
-      }
-    }
-
-    // String search
-    if (FILTER.search) {
-      var nameBool = ("name" in item && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
-      var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
-      if (!nameBool && !typeBool) continue;
-    }
+    // Check if item should be displayed in the search
+    if ( checkHideItem(item) ) continue;
 
     // If item has not been parsed, parse it 
     if (!("tableData" in item)) item["tableData"] = parseItem(item, index);
@@ -833,4 +823,71 @@ function sortResults() {
   }
 
   table.append(tableDataBuffer);
+}
+
+
+function checkHideItem(item) {
+  // Hide low confidence items
+  if (FILTER.hideLowConfidence) {
+    if (item["frame"] === -1 && item["count"] < COUNT_ENCH_MED) return true;
+    else if (item["count"] < COUNT_MED) return true;
+  }
+
+  // Hide sub-categories
+  if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) return true;
+
+  // Hide items with different links
+  if (FILTER.links) {
+    if (!("links" in item)) return true;
+    else if (item["links"] !== FILTER.links) return true;
+  } else if ("links" in item) return true;
+
+  // Sort gems, I guess
+  if (item["frame"] === 4) {
+    if (FILTER.gemLvl !== "") {
+      if (item["lvl"] != FILTER.gemLvl) return true;
+    }
+    if (FILTER.gemQuality !== "") {
+      if (FILTER.gemQuality) {
+        if (!("quality" in item)) return true;
+        if (item["quality"] != FILTER.gemQuality) return true;
+      } else {
+        if ("quality" in item && item["quality"] > 0) return true;
+      }
+    }
+    // Sort based on corruption selector
+    if (FILTER.gemCorrupted === "1" && item["corrupted"] !== "1") return true;
+    else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") return true;
+  
+  } else if (FILTER.category === "currency") {
+    // Hide some fairly useless currency
+    if (item["frame"] === 5) {
+      switch (item["name"]) {
+        case "Imprint":
+        case "Scroll Fragment":
+        case "Alteration Shard":
+        case "Binding Shard":
+        case "Horizon Shard":
+        case "Engineer's Shard":
+        case "Chaos Shard":
+        case "Regal Shard":
+        case "Alchemy Shard":
+        case "Transmutation Shard":
+          return true;
+        default:
+          break;
+      }
+
+    } else if (item["frame"] === 3 && FILTER.sub === "all") {
+      // Hide harbinger pieces under category 'all'
+      return true;
+    }
+  }
+
+  // String search
+  if (FILTER.search) {
+    var nameBool = ("name" in item && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
+    var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
+    if (!nameBool && !typeBool) return true;
+  }
 }
