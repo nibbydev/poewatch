@@ -88,12 +88,12 @@
         </div>
       </div>
       <!--/API: leagues/-->
-      <!-- API: league durations -->
+      <!-- API: league length -->
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/duration</h2>
+              <h2>api.poe-stats.com/length</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
@@ -114,24 +114,24 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td>name</td>
+                      <td>id</td>
                       <td><span class='badge badge-success'>✓</span></td>
                       <td>Name of the league</td>
                     </tr>
                     <tr>
-                      <td>elapsed</td>
+                      <td>elapse</td>
                       <td><span class='badge badge-success'>✓</span></td>
                       <td>Days since the league began</td>
                     </tr>
                     <tr>
-                      <td>remaining</td>
+                      <td>remain</td>
                       <td><span class='badge badge-success'>✓</span></td>
                       <td>Days until the end of the league</td>
                     </tr>
                     <tr>
                       <td>total</td>
                       <td><span class='badge badge-success'>✓</span></td>
-                      <td>Total duration of league in days</td>
+                      <td>Total length of league in days</td>
                     </tr>
                   </tbody>
                 </table>
@@ -140,14 +140,13 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/duration">Durations</a>
+              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/length">Durations</a>
               <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
-      <!--/API: league durations/-->
-
+      <!--/API: league length/-->
       <!-- API: categories -->
       <div class="row mb-3">
         <div class="col-lg">
