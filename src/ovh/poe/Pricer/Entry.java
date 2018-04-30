@@ -243,7 +243,6 @@ public class Entry {
             quantity = 0;
         }
 
-
         // Limit list sizes
         cap();
     }
