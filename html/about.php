@@ -57,6 +57,18 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
+            <h5 id="leagueProgressHeader">League progress</h5>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-secondary" role="progressbar" id="leagueProgressBar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-lg">
+          <div class="card custom-card">
+            <div class="card-body">
               <h2 class="card-title text-center">About</h2>
               <hr>
               <h5>Got a question/suggestion or notice something wrong with an item?</h5>
@@ -64,7 +76,7 @@
               <hr>
               <h5>FAQ</h5>
               <p><em>Where do you get your prices?</em><br>The public stash API over at pathofexile.com. Prices are automatically generated from the items players list for sale.</p>
-              <p><em>How up to date are the prices?</em><br>All data is recalculated in 5 minute intervals. Prices on the website are always the most recent unless stated otherwise.</p>
+              <p><em>How up to date are the prices?</em><br>All data is recalculated within 60 second intervals. Prices on the website are always the most recent unless stated otherwise.</p>
               <hr>
               <h5>Legal text</h5>
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
@@ -85,5 +97,14 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="assets/css/responsive.css">
+<script type="text/javascript">
+$(document).ready(function() {
+  $.each(JSON.parse( "<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/length.json" ) ); ?>".replace(/'/g, '"') ), function(index, element) {
+    if (element["id"].indexOf("SSF") !== -1 || element["id"] === "Standard" || element["id"].indexOf("Hardcore") !== -1) return;
+    $("#leagueProgressBar").css("width", Math.round(element["elapse"] / element["total"] * 100)+"%");
+    $("#leagueProgressHeader").text("League progress ("+element["elapse"]+" days out of "+element["total"]+", "+element["remain"]+" remaining)");
+  });
+})
+</script>
 </body>
 </html>

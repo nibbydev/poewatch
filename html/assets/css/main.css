@@ -144,3 +144,5 @@ a:hover {text-decoration: none !important}
 
 /* Styling for item types */
 .subtext-1{color: #888}
+
+#leagueProgressBar {width: 0%}
