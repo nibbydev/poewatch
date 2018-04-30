@@ -142,3 +142,21 @@ canvas {
 
 /* Styling for foil uniques */
 .item-foil {color: #4c9b4c}
+
+.progressbar-live {
+  margin-top: -0.35rem !important;
+  height: 5px;
+  border-radius: 0px;
+  background-color: #222;
+}
+
+#progressbar-live {
+  animation-duration: 60s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes progressbar-live {
+  from {width: 0%;}
+  to {width: 100%;}
+}

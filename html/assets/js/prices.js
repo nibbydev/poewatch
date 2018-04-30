@@ -10,9 +10,9 @@ var CATEGORIES = {};
 var HISTORY_DATA = {};
 let HISTORY_CHART;
 let HISTORY_LEAGUE;
+let INTERVAL;
 
 var PARSE_AMOUNT = 100;
-var FLAG_LIVE = false;
 var COUNTER = {
   lowCount: 0,
   categories: {}
@@ -187,13 +187,19 @@ $(document).ready(function() {
 
   // Define live search toggle listener
   $("#live-updates").on("change", function(){
-    FLAG_LIVE = $("input[name=live]:checked", this).val() == "true";
-    console.log("Live updates: " + FLAG_LIVE);
-    document.cookie = "live="+FLAG_LIVE;
-  });
+    var live = $("input[name=live]:checked", this).val() == "true";
+    console.log("Live updates: " + live);
+    document.cookie = "live="+live;
 
-  // Live update checker
-  window.setInterval(timedRequestCallback, 61 * 1000);
+    var bar = $("#progressbar-live");
+    if (live) {
+      bar.css("animation-name", "progressbar-live");
+      INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
+    } else {
+      bar.css("animation-name", "");
+      clearInterval(INTERVAL);
+    }
+  });
 }); 
 
 
@@ -223,8 +229,6 @@ $(document).ready(function() {
 
 
 function timedRequestCallback() {
-  if (!FLAG_LIVE) return;
-
   console.log("Automatic update");
 
   var data = {
@@ -305,7 +309,11 @@ function readCookies() {
   var live = getCookie("live")
   if (live) {
     console.log("Got live flag from cookie: " + live);
-    FLAG_LIVE = live == "true";
+
+    if (live == "true") {
+      INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
+      $("#progressbar-live").css("animation-name", "progressbar-live");
+    }
 
     $("#live-updates input").filter(function() { 
       return ($(this).val() === live);

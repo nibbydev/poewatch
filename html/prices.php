@@ -32,7 +32,7 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
-<div class="container-fluid second-navbar m-0 py-1 pr-3r">
+<div class="container-fluid second-navbar m-0 py-1 pr-3">
   <div class="form-group search-league m-0 ml-3">
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
   </div>
@@ -49,6 +49,11 @@
   </div>
 </div>
 <!--/Secondary navbar/-->
+<div class="container-fluid p-0 m-0">  
+  <div class="progress progressbar-live m-0">
+    <div class="progress-bar bg-secondary" role="progressbar" id="progressbar-live"></div>
+  </div>
+</div>
 <!-- Page body -->
 <div class="container-fluid">    
   <div class="row">
