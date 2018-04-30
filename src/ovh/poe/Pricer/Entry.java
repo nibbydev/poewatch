@@ -815,7 +815,7 @@ public class Entry {
         return index;
     }
 
-    public int getQuantity() {
+    public int calcQuantity() {
         return findMeanQuantity();
     }
 

@@ -36,7 +36,7 @@ public class JSONParcel {
             median = entry.getMedian();
             mode = entry.getMode();
             count = entry.getCount() + entry.getInc_counter();
-            quantity = entry.getQuantity();
+            quantity = entry.calcQuantity();
             index = entry.getIndex();
 
             // Find the item's price in exalted

@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,20 +15,21 @@ public class HistoryController {
     private static class IndexMap extends HashMap<String, HistoryItem> { }
 
     private static class HistoryItem {
-        private ArrayList<Double> mean;
-        private ArrayList<Double> median;
-        private ArrayList<Double> mode;
-        private ArrayList<Integer> quantity;
-        private ArrayList<Integer> count;
+        private double[] mean;
+        private double[] median;
+        private double[] mode;
+        private int[] quantity;
+        private int[] count;
     }
 
+    private IndexMap indexMap;
     private File inputFile;
     private File outputFile;
-    private IndexMap indexMap = new IndexMap();
     private Gson gson = Main.getGson();
     private String league, category;
-    private static final int daysInALeague = 3 * 30;
-    private int daysSinceLeagueStart;
+    private int currentLeagueDay;
+    private int totalLeagueLength;
+    private int daysInStandard = 90;
 
     public void configure(String league, String category) {
         this.category = category;
@@ -38,20 +38,25 @@ public class HistoryController {
         inputFile = new File("./data/history/"+league+"/"+category+".json");
         outputFile = new File("./data/history/"+league+"/"+category+".tmp");
 
-        daysSinceLeagueStart = getDaysSinceLeagueStart();
+        getLeagueLengths();
+
+        indexMap = null;
     }
 
-    private int getDaysSinceLeagueStart() {
+    private void getLeagueLengths() {
         List<RelationManager.LeagueLengthElement> lengthElements = Main.RELATIONS.getLeagueLengthMap();
-        if (lengthElements == null) {
-            return -1;
-        } else {
+        if (lengthElements != null) {
             for (RelationManager.LeagueLengthElement lengthElement : lengthElements) {
-                if (lengthElement.id.equals(league)) return lengthElement.elapse;
+                if (lengthElement.id.equals(league)) {
+                    currentLeagueDay = lengthElement.elapse;
+                    totalLeagueLength = lengthElement.total;
+                    return;
+                }
             }
         }
 
-        return -1;
+        currentLeagueDay = -1;
+        totalLeagueLength = -1;
     }
 
     public void readFile() {
@@ -66,6 +71,7 @@ public class HistoryController {
             indexMap = gson.fromJson(reader, IndexMap.class);
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load '"+inputFile.getName()+"' ('"+league+"')", 3);
+            indexMap = new IndexMap();
         }
     }
 
@@ -79,51 +85,45 @@ public class HistoryController {
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem());
         Entry.DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
 
-        if (historyItem.mean == null) historyItem.mean = new ArrayList<>(daysSinceLeagueStart);
-        if (historyItem.median == null) historyItem.median = new ArrayList<>(daysSinceLeagueStart);
-        if (historyItem.mode == null) historyItem.mode = new ArrayList<>(daysSinceLeagueStart);
-        if (historyItem.quantity == null) historyItem.quantity = new ArrayList<>(daysSinceLeagueStart);
-        if (historyItem.count == null) historyItem.count = new ArrayList<>(daysSinceLeagueStart);
-
-        if (historyItem.mean.size() < daysSinceLeagueStart) {
-            for (int i = 0; i < daysSinceLeagueStart; i++) {
-                historyItem.mean.add(0, 0.0);
-                historyItem.median.add(0, 0.0);
-                historyItem.mode.add(0, 0.0);
-                historyItem.quantity.add(0, 0);
-                historyItem.count.add(0, 0);
+        if (league.equals("Standard") || league.equals("Hardcore")) {
+            if (historyItem.mean == null) {
+                historyItem.mean        = new double[daysInStandard];
+                historyItem.median      = new double[daysInStandard];
+                historyItem.mode        = new double[daysInStandard];
+                historyItem.quantity    = new int[daysInStandard];
+                historyItem.count       = new int[daysInStandard];
             }
+
+            System.arraycopy(historyItem.mean,      1, historyItem.mean,        0, historyItem.mean.length - 1);
+            System.arraycopy(historyItem.median,    1, historyItem.median,      0, historyItem.mean.length - 1);
+            System.arraycopy(historyItem.mode,      1, historyItem.mode,        0, historyItem.mean.length - 1);
+            System.arraycopy(historyItem.quantity,  1, historyItem.quantity,    0, historyItem.mean.length - 1);
+            System.arraycopy(historyItem.count,     1, historyItem.count,       0, historyItem.mean.length - 1);
+
+            int lastIndex = daysInStandard - 1;
+
+            historyItem.mean[lastIndex]      = dailyEntry.getMean();
+            historyItem.median[lastIndex]    = dailyEntry.getMedian();
+            historyItem.mode[lastIndex]      = dailyEntry.getMode();
+            historyItem.quantity[lastIndex]  = dailyEntry.getQuantity();
+            historyItem.count[lastIndex]     = entry.getCount();
+        } else {
+            if (historyItem.mean == null) {
+                historyItem.mean        = new double[totalLeagueLength];
+                historyItem.median      = new double[totalLeagueLength];
+                historyItem.mode        = new double[totalLeagueLength];
+                historyItem.quantity    = new int[totalLeagueLength];
+                historyItem.count       = new int[totalLeagueLength];
+            }
+
+            historyItem.mean[currentLeagueDay]      = dailyEntry.getMean();
+            historyItem.median[currentLeagueDay]    = dailyEntry.getMedian();
+            historyItem.mode[currentLeagueDay]      = dailyEntry.getMode();
+            historyItem.quantity[currentLeagueDay]  = dailyEntry.getQuantity();
+            historyItem.count[currentLeagueDay]     = entry.getCount();
         }
-
-        historyItem.mean.add(dailyEntry.getMean());
-        historyItem.median.add(dailyEntry.getMedian());
-        historyItem.mode.add(dailyEntry.getMode());
-        historyItem.quantity.add(dailyEntry.getQuantity());
-        historyItem.count.add(entry.getCount());
-
-        cap(historyItem);
 
         indexMap.putIfAbsent(index, historyItem);
-    }
-
-    private void cap(HistoryItem historyItem) {
-        if (!league.equals("Standard") && !league.equals("Hardcore")) return;
-
-        if (historyItem.mean.size() > daysInALeague) {
-            historyItem.mean.subList(0, historyItem.mean.size() - daysInALeague).clear();
-        }
-        if (historyItem.median.size() > daysInALeague) {
-            historyItem.median.subList(0, historyItem.median.size() - daysInALeague).clear();
-        }
-        if (historyItem.mode.size() > daysInALeague) {
-            historyItem.mode.subList(0, historyItem.mode.size() - daysInALeague).clear();
-        }
-        if (historyItem.quantity.size() > daysInALeague) {
-            historyItem.quantity.subList(0, historyItem.quantity.size() - daysInALeague).clear();
-        }
-        if (historyItem.count.size() > daysInALeague) {
-            historyItem.count.subList(0, historyItem.count.size() - daysInALeague).clear();
-        }
     }
 
     public void writeFile() {

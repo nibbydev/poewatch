@@ -248,6 +248,10 @@ public class EntryController {
                     Main.HISTORY_CONTROLLER.writeFile();
                 }
             }
+
+            // Commit a sin. This program is made for a box with 512-1024 MBs of memory. Java would run out of heap
+            // space without a garbage collection suggestion. Also, it runs only every 24 hours.
+            if (twentyFourBool) System.gc();
         }
     }
 
