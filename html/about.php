@@ -80,6 +80,7 @@
               <hr>
               <h5>Legal text</h5>
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
+              <p>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</p>
             </div>
           </div>
         </div>
