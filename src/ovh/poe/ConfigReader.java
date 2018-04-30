@@ -28,7 +28,7 @@ public class ConfigReader {
     /**
      * Calls method that loads in config values on class init
      *
-     * @param fileName Config file name in relation to local path
+     * @param fileName Config file id in relation to local path
      */
     ConfigReader(String fileName) {
         readFile(fileName);
@@ -37,7 +37,7 @@ public class ConfigReader {
     /**
      * Reads values from CSV config file, overwrites static class values
      *
-     * @param fileName Config file name in relation to local path
+     * @param fileName Config file id in relation to local path
      */
     private void readFile(String fileName) {
         String line, key, value;

@@ -187,7 +187,7 @@ public class Entry {
      * Adds entries to the db_raw and database_itemIDs lists
      *
      * @param item Item object
-     * @param accountName Account name of the seller
+     * @param accountName Account id of the seller
      */
     public void add(Item item, String accountName, String index) {
         if (this.index == null) this.index = index;
@@ -363,9 +363,9 @@ public class Entry {
 
             switch (indexedItem.parent) {
                 case "enchantments":
-                    return tmpPercent > 5 && tmpPercent < 140;
+                    return tmpPercent > 10 && tmpPercent < 140;
                 case "currency":
-                    return tmpPercent > 50 && tmpPercent < 110;
+                    return tmpPercent > 90 && tmpPercent < 110;
                 case "essence":
                     return tmpPercent > 50 && tmpPercent < 120;
                 default:
@@ -551,7 +551,7 @@ public class Entry {
                 quantity
             2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
-                1 - account name
+                1 - account id
                 2 - item id
             3 - weekly (Spliterator: "|" and ",")
                 0 - mean
@@ -676,7 +676,7 @@ public class Entry {
                 quantity
             2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
-                1 - account name
+                1 - account id
                 2 - item id
             3 - weekly (Spliterator: "|" and ",")
                 0 - mean

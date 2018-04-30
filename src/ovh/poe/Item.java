@@ -115,7 +115,7 @@ public class Item extends Mappers.BaseItem {
     private void buildKey() {
         StringBuilder key = new StringBuilder();
 
-        // Add item's name
+        // Add item's id
         key.append(name);
 
         // If present, add typeline to database key
@@ -229,10 +229,10 @@ public class Item extends Mappers.BaseItem {
     }
 
     /**
-     * Format the item's full name and finds the item type
+     * Format the item's full id and finds the item type
      */
     private void formatNameAndItemType() {
-        // Format item name and/or typeline
+        // Format item id and/or typeline
         if (name.equals("")) {
             name = typeLine;
             typeLine = null;

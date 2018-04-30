@@ -7,9 +7,9 @@ import ovh.poe.RelationManager.SubIndexedItem;
 import java.util.*;
 
 public class JSONParcel {
-    // League map. Has mappings of: [league name - category map]
+    // League map. Has mappings of: [league id - category map]
     static class JSONLeagueMap extends HashMap<String, JSONCategoryMap> { }
-    // Category map. Has mappings of: [category name - item map]
+    // Category map. Has mappings of: [category id - item map]
     static class JSONCategoryMap extends HashMap<String, JSONItemList> { }
     // Index map. Has list of: [JSONItem]
     static class JSONItemList extends ArrayList<JSONItem> { }
@@ -125,7 +125,7 @@ public class JSONParcel {
                 if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
                 if (subIndexedItem.var != null) var = subIndexedItem.var;
 
-                // Enchantments override the name here
+                // Enchantments override the id here
                 if (subIndexedItem.name != null) name = subIndexedItem.name;
             }
         }

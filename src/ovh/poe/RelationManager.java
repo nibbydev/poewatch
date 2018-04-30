@@ -107,9 +107,9 @@ public class RelationManager {
         }
     }
 
-    public static class LeagueDurationElement {
-        public int elapsed, remaining, total;
-        public String name;
+    public static class LeagueLengthElement {
+        public int elapse, remain, total;
+        public String id;
     }
 
     private Gson gson = Main.getGson();
@@ -124,7 +124,7 @@ public class RelationManager {
     private Map<String, List<String>> categories = new HashMap<>();
     private List<LeagueEntry> leagueEntries;
     private List<String> leagues = new ArrayList<>();
-    private List<LeagueDurationElement> leagueDurationMap;
+    private List<LeagueLengthElement> leagueLengthMap;
 
     /**
      * Reads currency and item data from file on object init
@@ -228,10 +228,10 @@ public class RelationManager {
      * Calculates how many days a league has been active for, how many days until the end of a league and how many days
      * the league will run;
      *
-     * @param league League name with correct capitalization
-     * @return Filled LeagueDurationElement object or null on error
+     * @param league League id with correct capitalization
+     * @return Filled LeagueLengthElement object or null on error
      */
-    private LeagueDurationElement daysSinceLeague(String league) {
+    private LeagueLengthElement daysSinceLeague(String league) {
         if (leagueEntries == null) return null;
 
         LeagueEntry leagueEntry = null;
@@ -245,68 +245,68 @@ public class RelationManager {
         Date endDate = leagueEntry.endAt == null ? null : LeagueEntry.parseDate(leagueEntry.endAt);
         Date currentDate = new Date();
 
-        LeagueDurationElement leagueDurationElement = new LeagueDurationElement();
-        leagueDurationElement.name = league;
+        LeagueLengthElement leagueLengthElement = new LeagueLengthElement();
+        leagueLengthElement.id = league;
 
         if (startDate == null || endDate == null) {
-            leagueDurationElement.total = -1;
+            leagueLengthElement.total = -1;
         } else {
             long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
-            leagueDurationElement.total = (int) (totalDifference / (24 * 60 * 60 * 1000));
+            leagueLengthElement.total = (int) (totalDifference / (24 * 60 * 60 * 1000));
         }
 
         if (startDate == null) {
-            leagueDurationElement.elapsed = 0;
+            leagueLengthElement.elapse = 0;
         } else {
             long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
-            leagueDurationElement.elapsed = (int)(startDifference / (24 * 60 * 60 * 1000));
+            leagueLengthElement.elapse = (int)(startDifference / (24 * 60 * 60 * 1000));
         }
 
         if (endDate == null) {
-            leagueDurationElement.remaining = -1;
+            leagueLengthElement.remain = -1;
         } else {
             long endDifference = Math.abs(endDate.getTime() - currentDate.getTime());
-            leagueDurationElement.remaining = (int) (endDifference / (24 * 60 * 60 * 1000));
+            leagueLengthElement.remain = (int) (endDifference / (24 * 60 * 60 * 1000));
         }
 
-        return leagueDurationElement;
+        return leagueLengthElement;
     }
 
     /**
-     * Fills leagueDurationMap with data from leagueEntries
+     * Fills leagueLengthMap with data from leagueEntries
      */
     private void fillLeagueDurationMap() {
         if (leagueEntries == null) return;
 
-        List<LeagueDurationElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
+        List<LeagueLengthElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
 
         for (LeagueEntry leagueEntry : leagueEntries) {
-            LeagueDurationElement leagueDurationElement = daysSinceLeague(leagueEntry.id);
+            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry.id);
 
-            if (leagueDurationElement == null) {
+            if (leagueLengthElement == null) {
                 Main.ADMIN.log_("Something went horribly wrong with league dates", 5);
                 return;
             }
 
-            tmp_leagueDurationMap.add(leagueDurationElement);
+            tmp_leagueDurationMap.add(leagueLengthElement);
         }
 
-        leagueDurationMap = tmp_leagueDurationMap;
+        leagueLengthMap = tmp_leagueDurationMap;
 
         saveLeagueDurationMapToFile();
     }
 
     /**
-     * Saves contents of leagueDurationMap to file
+     * Saves contents of leagueLengthMap to file
      */
     private void saveLeagueDurationMapToFile() {
-        File durationFile = new File("./data/duration.json");
+        File lengthFile = new File("./data/length.json");
 
-        try (Writer writer = Misc.defineWriter(durationFile)) {
+        try (Writer writer = Misc.defineWriter(lengthFile)) {
             if (writer == null) throw new IOException();
-            gson.toJson(leagueDurationMap, writer);
+            gson.toJson(leagueLengthMap, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+durationFile.getName()+"'", 3);
+            Main.ADMIN.log_("Could not write to '"+ lengthFile.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
     }
@@ -500,7 +500,7 @@ public class RelationManager {
         StringBuilder genericKey = new StringBuilder();
         String[] splitKey = key.split("\\|");
 
-        // Add item name
+        // Add item id
         genericKey.append(splitKey[0]);
 
         // If it's an enchant, don't add frametype nor var info
@@ -585,7 +585,7 @@ public class RelationManager {
         return currencyAliasToName;
     }
 
-    public List<LeagueDurationElement> getLeagueDurationMap() {
-        return leagueDurationMap;
+    public List<LeagueLengthElement> getLeagueLengthMap() {
+        return leagueLengthMap;
     }
 }

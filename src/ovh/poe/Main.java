@@ -187,7 +187,7 @@ public class Main {
      * @param name            filename
      */
     private static void saveResource(String outputDirectory, String name) {
-        // Remove id from file name
+        // Remove id from file id
         String outputName = name.split("---")[0];
 
         // Get the current path
@@ -308,7 +308,7 @@ public class Main {
      * Prints about page
      */
     private static void commandAbout() {
-        String about = "Project name: PoE stash API JSON statistics generator\n"
+        String about = "Project id: PoE stash API JSON statistics generator\n"
                 + "Made by: Siegrest\n"
                 + "Licenced under MIT licence, 2018\n";
         System.out.println(about);

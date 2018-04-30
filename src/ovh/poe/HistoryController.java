@@ -25,7 +25,7 @@ public class HistoryController {
 
     private File inputFile;
     private File outputFile;
-    private IndexMap indexMap;
+    private IndexMap indexMap = new IndexMap();
     private Gson gson = Main.getGson();
     private String league, category;
     private static final int daysInALeague = 3 * 30;
@@ -42,12 +42,12 @@ public class HistoryController {
     }
 
     private int getDaysSinceLeagueStart() {
-        List<RelationManager.LeagueDurationElement> durationElements = Main.RELATIONS.getLeagueDurationMap();
-        if (durationElements == null) {
+        List<RelationManager.LeagueLengthElement> lengthElements = Main.RELATIONS.getLeagueLengthMap();
+        if (lengthElements == null) {
             return -1;
         } else {
-            for (RelationManager.LeagueDurationElement durationElement : durationElements) {
-                if (durationElement.name.equals(league)) return durationElement.elapsed;
+            for (RelationManager.LeagueLengthElement lengthElement : lengthElements) {
+                if (lengthElement.id.equals(league)) return lengthElement.elapse;
             }
         }
 
@@ -59,8 +59,6 @@ public class HistoryController {
             Main.ADMIN.log_("No variables defined for HistoryController ('"+league+"','"+category+"')", 3);
             return;
         }
-
-        indexMap = new IndexMap();
 
         // Open up the reader
         try (Reader reader = Misc.defineReader(inputFile)) {
@@ -81,19 +79,19 @@ public class HistoryController {
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem());
         Entry.DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
 
-        if (historyItem.mean == null) historyItem.mean = new ArrayList<>();
-        if (historyItem.median == null) historyItem.median = new ArrayList<>();
-        if (historyItem.mode == null) historyItem.mode = new ArrayList<>();
-        if (historyItem.quantity == null) historyItem.quantity = new ArrayList<>();
-        if (historyItem.count == null) historyItem.count = new ArrayList<>();
+        if (historyItem.mean == null) historyItem.mean = new ArrayList<>(daysSinceLeagueStart);
+        if (historyItem.median == null) historyItem.median = new ArrayList<>(daysSinceLeagueStart);
+        if (historyItem.mode == null) historyItem.mode = new ArrayList<>(daysSinceLeagueStart);
+        if (historyItem.quantity == null) historyItem.quantity = new ArrayList<>(daysSinceLeagueStart);
+        if (historyItem.count == null) historyItem.count = new ArrayList<>(daysSinceLeagueStart);
 
         if (historyItem.mean.size() < daysSinceLeagueStart) {
             for (int i = 0; i < daysSinceLeagueStart; i++) {
-                historyItem.mean.add(0.0);
-                historyItem.median.add(0.0);
-                historyItem.mode.add(0.0);
-                historyItem.quantity.add(0);
-                historyItem.count.add(0);
+                historyItem.mean.add(0, 0.0);
+                historyItem.median.add(0, 0.0);
+                historyItem.mode.add(0, 0.0);
+                historyItem.quantity.add(0, 0);
+                historyItem.count.add(0, 0);
             }
         }
 
@@ -161,7 +159,7 @@ public class HistoryController {
         // Clean up
         inputFile =  null;
         outputFile = null;
-        indexMap = null;
+        indexMap.clear();
         league =  null;
         category =  null;
     }

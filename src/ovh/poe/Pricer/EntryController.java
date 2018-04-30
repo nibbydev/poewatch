@@ -15,9 +15,9 @@ import java.util.*;
  * Manages database
  */
 public class EntryController {
-    // League map. Has mappings of: [league name - category map]
+    // League map. Has mappings of: [league id - category map]
     static class LeagueMap extends HashMap<String, CategoryMap> { }
-    // Category map. Has mappings of: [category name - index map]
+    // Category map. Has mappings of: [category id - index map]
     static class CategoryMap extends HashMap<String, IndexMap> { }
     // Index map. Has mappings of: [index - Entry]
     static class IndexMap extends HashMap<String, Entry> { }
