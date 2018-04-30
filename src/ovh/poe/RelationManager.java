@@ -7,22 +7,42 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    public class LeagueListElement {
+    private static class LeagueEntry {
         String id, startAt, endAt;
+
+        /**
+         * Converts string date found in league api to Date object
+         * @param date ISO 8601 standard yyyy-MM-dd'T'HH:mm:ss'Z' date
+         * @return Created Date object
+         */
+        public static Date parseDate(String date) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            try {
+                return format.parse(date);
+            } catch (ParseException ex) {
+                Main.ADMIN._log(ex, 3);
+            }
+
+            return null;
+        }
     }
 
-    public class CurrencyRelation {
-        String name, index;
+    private static class CurrencyRelation {
+        String name;
         String[] aliases;
     }
 
-    public class IndexedItem {
+    public static class IndexedItem {
         public Map<String, SubIndexedItem> subIndexes = new TreeMap<>();
         public String name, type, parent, child, tier, genericKey, icon;
         public int frame;
@@ -34,7 +54,7 @@ public class RelationManager {
 
             genericKey = resolveSpecificKey(item.key);
 
-            if (item.icon != null) icon = formatIconURL(item.icon);
+            if (item.icon != null) icon = Misc.formatIconURL(item.icon);
             if (item.typeLine != null) type = item.typeLine;
             if (item.childCategory != null) child = item.childCategory;
             if (item.tier != null) tier = item.tier;
@@ -48,51 +68,6 @@ public class RelationManager {
             subIndexes.put(subIndex, subIndexedItem);
 
             return subIndex;
-        }
-
-        /**
-         * Removes any unnecessary fields from the item's icon
-         *
-         * @param icon An item's bloated URL
-         * @return Formatted icon URL
-         */
-        public String formatIconURL(String icon) {
-            String[] splitURL = icon.split("\\?");
-            String fullIcon = splitURL[0];
-
-            if (splitURL.length > 1) {
-                StringBuilder paramBuilder = new StringBuilder();
-
-                for (String param : splitURL[1].split("&")) {
-                    String[] splitParam = param.split("=");
-
-                    switch (splitParam[0]) {
-                        case "scale":
-                        case "w":
-                        case "h":
-                        case "mr": // shaped
-                        case "mn": // background
-                        case "mt": // tier
-                        case "relic":
-                            paramBuilder.append("&");
-                            paramBuilder.append(splitParam[0]);
-                            paramBuilder.append("=");
-                            paramBuilder.append(splitParam[1]);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                // If there are parameters that should be kept, add them to fullIcon
-                if (paramBuilder.length() > 0) {
-                    // Replace the first "&" symbol with "?"
-                    paramBuilder.setCharAt(0, '?');
-                    fullIcon += paramBuilder.toString();
-                }
-            }
-
-            return fullIcon;
         }
     }
 
@@ -132,40 +107,44 @@ public class RelationManager {
         }
     }
 
+    public static class LeagueLengthElement {
+        public int elapse, remain, total;
+        public String id;
+    }
+
     private Gson gson = Main.getGson();
 
-    public Map<String, String> currencyIndexToName = new HashMap<>();
-    public Map<String, String> currencyNameToIndex = new HashMap<>();
-    public Map<String, String> currencyAliasToIndex = new HashMap<>();
-    public Map<String, String> currencyAliasToName = new HashMap<>();
+    private Map<String, String> currencyAliasToName = new HashMap<>();
+    private Map<String, String> currencyNameToFullIndex = new HashMap<>();
 
-    private Map<String, String> specificItemKeyToFullIndex = new HashMap<>();
-    private Map<String, String> genericItemKeyToSuperIndex = new HashMap<>();
-    public Map<String, IndexedItem> genericItemIndexToData = new TreeMap<>();
+    private Map<String, String> itemSpecificKeyToFullIndex = new HashMap<>();
+    private Map<String, String> itemGenericKeyToSuperIndex = new HashMap<>();
+    private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
-    public Map<String, List<String>> categories = new HashMap<>();
-    public List<String> leagues = new ArrayList<>();
+    private Map<String, List<String>> categories = new HashMap<>();
+    private List<LeagueEntry> leagueEntries;
+    private List<String> leagues = new ArrayList<>();
+    private List<LeagueLengthElement> leagueLengthMap;
 
     /**
      * Reads currency and item data from file on object init
      */
     RelationManager() {
-        readCurrencyRelationsFromFile();
         readItemDataFromFile();
+        readCurrencyRelationsFromFile();
         readCategoriesFromFile();
-        readLeaguesFromFile();
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Common I/O
+    // League list management
     //------------------------------------------------------------------------------------------------------------
 
     /**
      * Downloads a list of active leagues from pathofexile.com, sorts them, adds them to 'List<String> leagues' and
      * writes them to './data/leagues.json'
      */
-    public void getLeagueList() {
-        List<LeagueListElement> leagueList = null;
+    public void downloadLeagueList() {
+        List<LeagueEntry> leagueList = null;
         InputStream stream = null;
 
         try {
@@ -182,13 +161,13 @@ public class RelationManager {
 
             // Define some elements
             StringBuilder stringBuilderBuffer = new StringBuilder();
-            byte[] byteBuffer = new byte[128];
+            byte[] byteBuffer = new byte[64];
             int byteCount;
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, Main.CONFIG.downloadChunkSize)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0,64)) != -1) {
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != Main.CONFIG.downloadChunkSize) {
+                if (byteCount != 64) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
@@ -200,24 +179,28 @@ public class RelationManager {
             }
 
             // Attempt to parse league list
-            Type listType = new TypeToken<List<LeagueListElement>>(){}.getType();
+            Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
             leagueList = gson.fromJson(stringBuilderBuffer.toString(), listType);
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
+            Main.ADMIN._log(ex, 3);
         } finally {
             try {
                 if (stream != null) stream.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Main.ADMIN._log(ex, 3);
             }
         }
 
         // If download was unsuccessful, return
-        if (leagueList == null || leagueList.size() < 3) return;
+        if (leagueList == null || leagueList.size() < 2) return;
+
+        leagueEntries = leagueList;
+        fillLeagueDurationMap();
 
         // Clear and fill list
         leagues.clear();
-        for (LeagueListElement element : leagueList) {
+        for (LeagueEntry element : leagueList) {
             if (!element.id.contains("SSF")) leagues.add(element.id);
         }
 
@@ -242,29 +225,117 @@ public class RelationManager {
     }
 
     /**
+     * Calculates how many days a league has been active for, how many days until the end of a league and how many days
+     * the league will run;
+     *
+     * @param league League id with correct capitalization
+     * @return Filled LeagueLengthElement object or null on error
+     */
+    private LeagueLengthElement daysSinceLeague(String league) {
+        if (leagueEntries == null) return null;
+
+        LeagueEntry leagueEntry = null;
+        for (LeagueEntry tmp_leagueEntry: leagueEntries) {
+            if (tmp_leagueEntry.id.equals(league)) leagueEntry = tmp_leagueEntry;
+        }
+
+        if (leagueEntry == null) return null;
+
+        Date startDate = leagueEntry.startAt == null ? null : LeagueEntry.parseDate(leagueEntry.startAt);
+        Date endDate = leagueEntry.endAt == null ? null : LeagueEntry.parseDate(leagueEntry.endAt);
+        Date currentDate = new Date();
+
+        LeagueLengthElement leagueLengthElement = new LeagueLengthElement();
+        leagueLengthElement.id = league;
+
+        if (startDate == null || endDate == null) {
+            leagueLengthElement.total = -1;
+        } else {
+            long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
+            leagueLengthElement.total = (int) (totalDifference / (24 * 60 * 60 * 1000));
+        }
+
+        if (startDate == null) {
+            leagueLengthElement.elapse = 0;
+        } else {
+            long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
+            leagueLengthElement.elapse = (int)(startDifference / (24 * 60 * 60 * 1000));
+        }
+
+        if (endDate == null) {
+            leagueLengthElement.remain = -1;
+        } else {
+            long endDifference = Math.abs(endDate.getTime() - currentDate.getTime());
+            leagueLengthElement.remain = (int) (endDifference / (24 * 60 * 60 * 1000));
+        }
+
+        return leagueLengthElement;
+    }
+
+    /**
+     * Fills leagueLengthMap with data from leagueEntries
+     */
+    private void fillLeagueDurationMap() {
+        if (leagueEntries == null) return;
+
+        List<LeagueLengthElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
+
+        for (LeagueEntry leagueEntry : leagueEntries) {
+            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry.id);
+
+            if (leagueLengthElement == null) {
+                Main.ADMIN.log_("Something went horribly wrong with league dates", 5);
+                return;
+            }
+
+            tmp_leagueDurationMap.add(leagueLengthElement);
+        }
+
+        leagueLengthMap = tmp_leagueDurationMap;
+
+        saveLeagueDurationMapToFile();
+    }
+
+    /**
+     * Saves contents of leagueLengthMap to file
+     */
+    private void saveLeagueDurationMapToFile() {
+        File lengthFile = new File("./data/length.json");
+
+        try (Writer writer = Misc.defineWriter(lengthFile)) {
+            if (writer == null) throw new IOException();
+            gson.toJson(leagueLengthMap, writer);
+        } catch (IOException ex) {
+            Main.ADMIN.log_("Could not write to '"+ lengthFile.getName()+"'", 3);
+            Main.ADMIN._log(ex, 3);
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Common I/O
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
      * Reads currency relation data from file
      */
     private void readCurrencyRelationsFromFile() {
         File file = new File("./data/currencyRelations.json");
 
         // Open up the reader
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
             Type listType = new TypeToken<ArrayList<CurrencyRelation>>(){}.getType();
             List<CurrencyRelation> relations = gson.fromJson(reader, listType);
 
             for (CurrencyRelation relation : relations) {
-                currencyIndexToName.put(relation.index, relation.name);
-                currencyNameToIndex.put(relation.name, relation.index);
-
                 for (String alias : relation.aliases) {
-                    currencyAliasToIndex.put(alias, relation.index);
                     currencyAliasToName.put(alias, relation.name);
                 }
             }
 
         } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load currencyRelations.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -275,7 +346,9 @@ public class RelationManager {
         File file = new File("./data/itemData.json");
 
         // Open up the reader
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
             Type listType = new TypeToken<Map<String, IndexedItem>>(){}.getType();
             Map<String, IndexedItem> relations = gson.fromJson(reader, listType);
 
@@ -283,16 +356,20 @@ public class RelationManager {
             relations.forEach((superIndex, superItem) -> {
                 superItem.subIndexes.forEach((subIndex, subItem) -> {
                     String index = superIndex + "-" + subIndex;
-                    specificItemKeyToFullIndex.put(subItem.specificKey, index);
+                    itemSpecificKeyToFullIndex.put(subItem.specificKey, index);
+
+                    // Add currency indexes to a special map
+                    if (superItem.frame == 5) {
+                        currencyNameToFullIndex.put(superItem.name, index);
+                    }
                 });
 
-                genericItemKeyToSuperIndex.put(superItem.genericKey, superIndex);
-                genericItemIndexToData.put(superIndex, superItem);
+                itemGenericKeyToSuperIndex.put(superItem.genericKey, superIndex);
+                itemSubIndexToData.put(superIndex, superItem);
             });
 
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load itemData.json", 3);
-            ex.printStackTrace();
         }
     }
 
@@ -303,28 +380,13 @@ public class RelationManager {
         File file = new File("./data/categories.json");
 
         // Open up the reader
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
             Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();
             categories = gson.fromJson(reader, listType);
         } catch (IOException ex) {
             Main.ADMIN.log_("Couldn't load categories.json", 3);
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * Reads leagues from file
-     */
-    private void readLeaguesFromFile() {
-        File file = new File("./data/leagues.json");
-
-        // Open up the reader
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-            Type listType = new TypeToken<List<String>>(){}.getType();
-            leagues = gson.fromJson(reader, listType);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load leagues.json", 3);
-            ex.printStackTrace();
         }
     }
 
@@ -334,29 +396,32 @@ public class RelationManager {
     public void saveData() {
         // Save item relations to file
         File itemFile = new File("./data/itemData.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(itemFile), "UTF-8"))) {
-            gson.toJson(genericItemIndexToData, writer);
+        try (Writer writer = Misc.defineWriter(itemFile)) {
+            if (writer == null) throw new IOException();
+            gson.toJson(itemSubIndexToData, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to itemData.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN.log_("Could not write to '"+itemFile.getName()+"'", 3);
+            Main.ADMIN._log(ex, 3);
         }
 
         // Save item categories to file
         File categoryFile = new File("./data/categories.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(categoryFile), "UTF-8"))) {
+        try (Writer writer = Misc.defineWriter(categoryFile)) {
+            if (writer == null) throw new IOException();
             gson.toJson(categories, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to categories.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN.log_("Could not write to '"+categoryFile.getName()+"'", 3);
+            Main.ADMIN._log(ex, 3);
         }
 
         // Save leagues to file
         File leagueFile = new File("./data/leagues.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(leagueFile), "UTF-8"))) {
+        try (Writer writer = Misc.defineWriter(leagueFile)) {
+            if (writer == null) throw new IOException();
             gson.toJson(leagues, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to leagues.json", 3);
-            ex.printStackTrace();
+            Main.ADMIN.log_("Could not write to '"+leagueFile.getName()+"'", 3);
+            Main.ADMIN._log(ex, 3);
         }
     }
 
@@ -372,49 +437,41 @@ public class RelationManager {
      */
     public String indexItem(Item item) {
         // Manage item category list
-        if (item.childCategory != null) {
-            List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
-            if (!childCategories.contains(item.childCategory)) {
-                childCategories.add(item.childCategory);
-                categories.putIfAbsent(item.parentCategory, childCategories);
-            }
-        }
+        List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
+        if (item.childCategory != null && !childCategories.contains(item.childCategory)) childCategories.add(item.childCategory);
+        categories.putIfAbsent(item.parentCategory, childCategories);
 
         // Manage item league list as a precaution. This list gets replaced by pathofexile's official league list
         // every 60 minutes
         if (!leagues.contains(item.league)) leagues.add(item.league);
 
-        // If item has no icon, don't index it
-        if (item.icon == null) {
-            // Enchants can't have icons
-            if (item.frameType != -1) return "-";
-        }
-
-        // If icon is already present, return icon index. Otherwise create an instance of IndexedItem and add
-        // IndexedItem instance to maps and return its index
         String index;
         String genericKey = resolveSpecificKey(item.key);
-        if (specificItemKeyToFullIndex.containsKey(item.key)) {
-            index = specificItemKeyToFullIndex.get(item.key);
-        } else if (genericItemKeyToSuperIndex.containsKey(genericKey)) {
-            String superIndex = genericItemKeyToSuperIndex.get(genericKey);
-            IndexedItem indexedGenericItem = genericItemIndexToData.get(superIndex);
+        if (itemSpecificKeyToFullIndex.containsKey(item.key)) {
+            // Return index if item is already indexed
+            return itemSpecificKeyToFullIndex.get(item.key);
+        } else if (item.doNotIndex) {
+            // If there wasn't an already existing index, return null without indexing
+            return null;
+        } else if (itemGenericKeyToSuperIndex.containsKey(genericKey)) {
+            String superIndex = itemGenericKeyToSuperIndex.get(genericKey);
+            IndexedItem indexedGenericItem = itemSubIndexToData.get(superIndex);
 
             String subIndex = indexedGenericItem.subIndex(item);
-            index = genericItemKeyToSuperIndex.get(genericKey) + "-" + subIndex;
+            index = itemGenericKeyToSuperIndex.get(genericKey) + "-" + subIndex;
 
-            specificItemKeyToFullIndex.put(item.key, index);
+            itemSpecificKeyToFullIndex.put(item.key, index);
         } else {
-            String superIndex = Integer.toHexString(genericItemKeyToSuperIndex.size());
+            String superIndex = Integer.toHexString(itemGenericKeyToSuperIndex.size());
             superIndex = ("0000" + superIndex).substring(superIndex.length());
 
             IndexedItem indexedItem = new IndexedItem(item);
             String subIndex = indexedItem.subIndex(item);
             index = superIndex + "-" + subIndex;
 
-            genericItemKeyToSuperIndex.put(genericKey, superIndex);
-            genericItemIndexToData.put(superIndex, indexedItem);
-            specificItemKeyToFullIndex.put(item.key, index);
+            itemGenericKeyToSuperIndex.put(genericKey, superIndex);
+            itemSubIndexToData.put(superIndex, indexedItem);
+            itemSpecificKeyToFullIndex.put(item.key, index);
         }
 
         return index;
@@ -424,41 +481,37 @@ public class RelationManager {
      * Searches key-to-index database for a match based on input. Requires a unique key
      *
      * @param key Item key
-     * @return Index and subIndex if successful, "-" if unsuccessful
+     * @return Index and subIndex if successful, null if unsuccessful
      */
     public String getIndexFromKey(String key) {
-        return specificItemKeyToFullIndex.getOrDefault(key, "-");
+        return itemSpecificKeyToFullIndex.getOrDefault(key, null);
     }
 
     /**
-     * Generalizes a specific key. E.g: "Standard|gems:activegem|Flame Dash|4|l:10|q:20|c:0"
-     * is turned into: "gems:activegem|Flame Dash|4"
+     * Generalizes a specific key. E.g: "Flame Dash|4|l:10|q:20|c:0"
+     * is turned into: "Flame Dash|4"
      *
      * @param key Specific item key with league and category and additional info
      * @return Generalized item key
      */
     public static String resolveSpecificKey(String key) {
-        // "armour:chest|Shroud of the Lightless:Carnal Armour|3|var:1 socket"
+        // "Shroud of the Lightless:Carnal Armour|3|var:1 socket"
 
         StringBuilder genericKey = new StringBuilder();
         String[] splitKey = key.split("\\|");
 
-        // Add item category
-        //genericKey.append(splitKey[1]);
-        //genericKey.append("|");
-
-        // Add item name
-        genericKey.append(splitKey[1]);
+        // Add item id
+        genericKey.append(splitKey[0]);
 
         // If it's an enchant, don't add frametype nor var info
-        if (splitKey[2].equals("-1")) return genericKey.toString();
+        if (splitKey[1].equals("-1")) return genericKey.toString();
 
         // Add item frameType
         genericKey.append("|");
-        genericKey.append(splitKey[2]);
+        genericKey.append(splitKey[1]);
 
         // Add var info, if present (eg Impresence has different icons based on variation)
-        for (int i = 3; i < splitKey.length; i++) {
+        for (int i = 2; i < splitKey.length; i++) {
             if (splitKey[i].contains("var:")) {
                 genericKey.append("|");
                 genericKey.append(splitKey[i]);
@@ -467,5 +520,72 @@ public class RelationManager {
         }
 
         return genericKey.toString();
+    }
+
+    /**
+     * Allows returning the SubIndexedItem entry from a complete index
+     *
+     * @param index Index of item. Must have length of 7
+     * @return Requested indexed item entry or null on failure
+     */
+    public IndexedItem genericIndexToData(String index) {
+        if (isIndex(index)) return null;
+
+        String primaryIndex = index.substring(0, 4);
+
+        return itemSubIndexToData.getOrDefault(primaryIndex, null);
+    }
+
+    public SubIndexedItem specificIndexToData(String index) {
+        if (isIndex(index)) return null;
+
+        String primaryIndex = index.substring(0, 4);
+        String secondaryIndex = index.substring(5);
+
+        IndexedItem indexedItem = itemSubIndexToData.getOrDefault(primaryIndex, null);
+        if (indexedItem == null) return null;
+
+        SubIndexedItem subIndexedItem = indexedItem.subIndexes.getOrDefault(secondaryIndex, null);
+        if (subIndexedItem == null) return null;
+
+        return subIndexedItem;
+    }
+
+    /**
+     * Very primitive method to check if provided string is an index.
+     *
+     * @param index String to check
+     * @return True if not an index
+     */
+    public static boolean isIndex(String index) {
+        return index.length() != 7 || index.charAt(4) != '-';
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public Map<String, String> getCurrencyNameToFullIndex() {
+        return currencyNameToFullIndex;
+    }
+
+    public Map<String, IndexedItem> getItemSubIndexToData() {
+        return itemSubIndexToData;
+    }
+
+    public List<String> getLeagues() {
+        return leagues;
+    }
+
+    public Map<String, List<String>> getCategories() {
+        return categories;
+    }
+
+    public Map<String, String> getCurrencyAliasToName() {
+        return currencyAliasToName;
+    }
+
+    public List<LeagueLengthElement> getLeagueLengthMap() {
+        return leagueLengthMap;
     }
 }

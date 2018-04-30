@@ -167,7 +167,7 @@ public class Worker extends Thread {
                 if (stream != null)
                     stream.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Main.ADMIN._log(ex, 3);
             }
         }
 

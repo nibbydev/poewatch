@@ -12,6 +12,8 @@ public class Item extends Mappers.BaseItem {
     public double price;
     public int links, level, quality;
 
+    public boolean doNotIndex;
+
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
     /////////////////////////////////////////////////////////
@@ -95,8 +97,8 @@ public class Item extends Mappers.BaseItem {
                     try {
                         tier = prop.values.get(0).get(0);
                     } catch (Exception ex) {
-                        System.out.println("[ERROR] Couldn't parse tier:");
-                        ex.printStackTrace();
+                        Main.ADMIN.log_("Couldn't parse tier:", 2);
+                        Main.ADMIN._log(ex, 2);
                     }
                     break;
                 }
@@ -113,18 +115,7 @@ public class Item extends Mappers.BaseItem {
     private void buildKey() {
         StringBuilder key = new StringBuilder();
 
-        //key.append(league);
-        //key.append('|');
-        key.append(parentCategory);
-
-        // If present, add childCategory to database key
-        if (childCategory != null) {
-            key.append(':');
-            key.append(childCategory);
-        }
-
-        // Add item's name to database key
-        key.append('|');
+        // Add item's id
         key.append(name);
 
         // If present, add typeline to database key
@@ -160,7 +151,7 @@ public class Item extends Mappers.BaseItem {
             else key.append(0);
         }
 
-        // Convert stringbuilder to string
+        // Convert to string
         this.key = key.toString();
     }
 
@@ -217,7 +208,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!RELATIONS.currencyAliasToIndex.containsKey(noteList[2])) {
+        if (!RELATIONS.getCurrencyAliasToName().containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -226,22 +217,22 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
-            typeLine = RELATIONS.currencyAliasToName.get(noteList[2]);
-            priceType = "1";
+            typeLine = RELATIONS.getCurrencyAliasToName().get(noteList[2]);
+            priceType = "Chaos Orb";
             this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
-            icon = null;
+            doNotIndex = true;
         } else {
             this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
-            priceType = RELATIONS.currencyAliasToIndex.get(noteList[2]);
+            priceType = RELATIONS.getCurrencyAliasToName().get(noteList[2]);
         }
     }
 
     /**
-     * Format the item's full name and finds the item type
+     * Format the item's full id and finds the item type
      */
     private void formatNameAndItemType() {
-        // Format item name and/or typeline
+        // Format item id and/or typeline
         if (name.equals("")) {
             name = typeLine;
             typeLine = null;

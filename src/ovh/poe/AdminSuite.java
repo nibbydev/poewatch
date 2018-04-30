@@ -12,7 +12,6 @@ import java.util.zip.ZipOutputStream;
 import com.google.gson.Gson;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Calendar;
 
 public class AdminSuite {
@@ -72,6 +71,12 @@ public class AdminSuite {
     // Logging methods. All of these have slightly different content and need to be formatted.
     //------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Logs messages to internal array and file
+     *
+     * @param msg Message to be logged
+     * @param flair Flair to be attached
+     */
     public void log_(String msg, int flair) {
         LogMessage logMsg = new LogMessage(msg, flair);
         System.out.println(logMsg.toString());
@@ -79,6 +84,10 @@ public class AdminSuite {
 
         // Limit log messages
         if (log.size() > 2048) log.subList(0, log.size() - 2048).clear();
+    }
+
+    public void _log(Exception ex, int flair) {
+        log_(Misc.stackTraceToString(ex), flair);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -112,7 +121,8 @@ public class AdminSuite {
     public void saveChangeID() {
         // Saves change id to file
         File file = new File("./data/changeID.json");
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
+        try (Writer writer = Misc.defineWriter(file)) {
+            if (writer == null) throw new IOException("File '" + file.getName() + "' error");
             gson.toJson(changeIDElement, writer);
         } catch (IOException ex) {
             Main.ADMIN.log_("Could not write to changeID.json", 3);
@@ -245,9 +255,9 @@ public class AdminSuite {
         // Form [HH:MM:SS]
         stringBuilder.append("[");
         stringBuilder.append(String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY)));
-        stringBuilder.append(":");
+        stringBuilder.append(".");
         stringBuilder.append(String.format("%02d", calendar.get(Calendar.MINUTE)));
-        stringBuilder.append(":");
+        stringBuilder.append(".");
         stringBuilder.append(String.format("%02d", calendar.get(Calendar.SECOND)));
         stringBuilder.append("]");
 

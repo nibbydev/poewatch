@@ -13,19 +13,22 @@ public class ConfigReader {
     public int workerLimit = 5;
     public int downloadChunkSize = 128;
     public int downloadDelay = 800;
-    public int readTimeOut = 3000;
+    public int readTimeOut = 7000;
     public int connectTimeOut = 10000;
     public int pricerControllerSleepCycle = 60;
     public int dataEntryCycleLimit = 10;
     public int baseDataSize = 100;
-    public int hourlyDataSize = 60;
+    public int hourlyDataSize = 64;
     public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
+
+    public boolean addCurrentPricesToHistory = false;
+    public int dbTempSize = 16;
 
     /**
      * Calls method that loads in config values on class init
      *
-     * @param fileName Config file name in relation to local path
+     * @param fileName Config file id in relation to local path
      */
     ConfigReader(String fileName) {
         readFile(fileName);
@@ -34,7 +37,7 @@ public class ConfigReader {
     /**
      * Reads values from CSV config file, overwrites static class values
      *
-     * @param fileName Config file name in relation to local path
+     * @param fileName Config file id in relation to local path
      */
     private void readFile(String fileName) {
         String line, key, value;
@@ -43,7 +46,9 @@ public class ConfigReader {
         if (!file.exists())
             return;
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader bufferedReader = Misc.defineReader(file)) {
+            if (bufferedReader == null) return;
+
             while ((line = bufferedReader.readLine()) != null) {
                 if (line.equals(""))
                     continue;
@@ -91,12 +96,12 @@ public class ConfigReader {
                         pricePrecision = Math.pow(10, Integer.parseInt(value));
                         break;
                     default:
-                        System.out.println("[ERROR] Unknown config key: (" + key + ") and value (" + value + ")");
+                        Main.ADMIN.log_("Unknown config key '"+key+"' with value '"+value+"'", 3);
                         break;
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         }
     }
 }

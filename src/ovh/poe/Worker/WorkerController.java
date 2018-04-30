@@ -209,7 +209,7 @@ public class WorkerController extends Thread {
             // Map the JSON string to an object
             response = gson.fromJson(response, Mappers.ChangeID.class).get();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Main.ADMIN._log(ex, 3);
         }
 
         return response;
