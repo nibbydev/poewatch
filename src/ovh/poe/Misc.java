@@ -40,6 +40,10 @@ public class Misc {
         }
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Generic methods
+    //------------------------------------------------------------------------------------------------------------
+
     /**
      * Removes any unnecessary fields from the item's icon
      *
@@ -95,5 +99,45 @@ public class Misc {
         StringWriter stringWriter = new StringWriter();
         ex.printStackTrace(new PrintWriter(stringWriter));
         return stringWriter.toString();
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Primitive array manipulation
+    //------------------------------------------------------------------------------------------------------------
+
+    public static void shiftArrayLeft(int[] array, int amount) {
+        if (amount < 0) {
+            amount = amount % array.length * -1;
+            int[] tmp = new int[amount];
+
+            System.arraycopy(array, array.length - amount, tmp, 0, amount);
+            System.arraycopy(array, 0, array, amount, array.length - amount);
+            System.arraycopy(tmp, 0, array, 0, amount);
+        } else {
+            amount = amount % array.length;
+            int[] tmp = new int[amount];
+
+            System.arraycopy(array, 0, tmp, 0, amount);
+            System.arraycopy(array, amount, array, 0, array.length - amount);
+            System.arraycopy(tmp, 0, array, array.length - amount, amount);
+        }
+    }
+
+    public static void shiftArrayLeft(double[] array, int amount) {
+        if (amount < 0) {
+            amount = amount % array.length * -1;
+            double[] tmp = new double[amount];
+
+            System.arraycopy(array, array.length - amount, tmp, 0, amount);
+            System.arraycopy(array, 0, array, amount, array.length - amount);
+            System.arraycopy(tmp, 0, array, 0, amount);
+        } else {
+            amount = amount % array.length;
+            double[] tmp = new double[amount];
+
+            System.arraycopy(array, 0, tmp, 0, amount);
+            System.arraycopy(array, amount, array, 0, array.length - amount);
+            System.arraycopy(tmp, 0, array, array.length - amount, amount);
+        }
     }
 }

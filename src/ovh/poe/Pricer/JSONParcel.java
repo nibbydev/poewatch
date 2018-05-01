@@ -1,6 +1,7 @@
 package ovh.poe.Pricer;
 
 import ovh.poe.Main;
+import ovh.poe.Misc;
 import ovh.poe.RelationManager.IndexedItem;
 import ovh.poe.RelationManager.SubIndexedItem;
 
@@ -15,12 +16,20 @@ public class JSONParcel {
     static class JSONItemList extends ArrayList<JSONItem> { }
 
     private static class HistoryItem {
-        public List<Double> spark = new ArrayList<>();
-        public List<Double> mean = new ArrayList<>();
-        public List<Double> median = new ArrayList<>();
-        public List<Double> mode = new ArrayList<>();
-        public List<Integer> quantity = new ArrayList<>();
-        public double change;
+        private double[] spark;
+        private double[] mean;
+        private double[] median;
+        private double[] mode;
+        private int[] quantity;
+        private double change;
+
+        private HistoryItem(int size) {
+            spark       = new double[size];
+            mean        = new double[size];
+            median      = new double[size];
+            mode        = new double[size];
+            quantity    = new int[size];
+        }
     }
 
     private static class JSONItem {
@@ -29,7 +38,7 @@ public class JSONParcel {
         public String index;
         public String corrupted, lvl, quality, links;
         public String key, parent, child, name, type, var, tier, icon;
-        public HistoryItem history = new HistoryItem();
+        public HistoryItem history;
 
         public void copy (Entry entry) {
             mean = entry.getMean();
@@ -49,39 +58,48 @@ public class JSONParcel {
                     double tmp_exaltedPrice = tmp_exaltedEntry.getMean();
 
                     // If the currency the item was listed in has very few listings then ignore this item
-                    if (tmp_exaltedEntry.getCount() > 20 && tmp_exaltedPrice > 0) {
+                    if (tmp_exaltedPrice > 0) {
                         double tempExaltedMean = mean / tmp_exaltedPrice;
                         exalted = Math.round(tempExaltedMean * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
                     }
                 }
             }
 
+            int dbDailySize = entry.getDb_daily().size();
+
             // Copy the history over
-            if (entry.getDb_daily().size() > 0) {
+            if (dbDailySize > 0) {
+                history = new HistoryItem(dbDailySize);
                 double lowestSpark = 99999;
 
-                for (Entry.DailyEntry dailyEntry : entry.getDb_daily()) {
+                List<Entry.DailyEntry> dailyEntries = entry.getDb_daily();
+
+                for (int i = 0; i < dbDailySize; i++) {
+                    Entry.DailyEntry dailyEntry = dailyEntries.get(i);
+
                     // Add all values to history
-                    history.mean.add(dailyEntry.getMean());
-                    history.median.add(dailyEntry.getMedian());
-                    history.mode.add(dailyEntry.getMode());
-                    history.quantity.add(dailyEntry.getQuantity());
+                    history.mean[i]     = dailyEntry.getMean();
+                    history.median[i]   = dailyEntry.getMedian();
+                    history.mode[i]     = dailyEntry.getMode();
+                    history.quantity[i] = dailyEntry.getQuantity();
 
                     // Find the lowest mean entry for sparkline
-                    if (dailyEntry.getMean() < lowestSpark) lowestSpark = dailyEntry.getMean();
+                    if (lowestSpark > dailyEntry.getMean()) lowestSpark = dailyEntry.getMean();
                 }
 
                 // Add current mean/median/mode values to history (but not quantity as that's the mean quantity)
                 if (Main.CONFIG.addCurrentPricesToHistory) {
-                    history.mean.add(mean);
-                    history.median.add(median);
-                    history.mode.add(mode);
-                    history.quantity.add(quantity);
-                    // Remove excess elements
-                    if (history.mean.size() > 7) history.mean.subList(0, history.mean.size() - 7).clear();
-                    if (history.median.size() > 7) history.median.subList(0, history.median.size() - 7).clear();
-                    if (history.mode.size() > 7) history.mode.subList(0, history.mode.size() - 7).clear();
-                    if (history.quantity.size() > 7) history.quantity.subList(0, history.quantity.size() - 7).clear();
+                    Misc.shiftArrayLeft(history.mean,       1);
+                    Misc.shiftArrayLeft(history.median,     1);
+                    Misc.shiftArrayLeft(history.mode,       1);
+                    Misc.shiftArrayLeft(history.quantity,   1);
+
+                    history.mean[dbDailySize - 1]     = mean;
+                    history.median[dbDailySize - 1]   = median;
+                    history.mode[dbDailySize - 1]     = mode;
+                    history.quantity[dbDailySize - 1] = quantity;
+
+
                     // Again, find the lowest mean entry for sparkline
                     if (mean < lowestSpark) lowestSpark = mean;
                 }
@@ -90,16 +108,15 @@ public class JSONParcel {
                 if (lowestSpark < 0) lowestSpark *= -1;
 
                 // Get variation from lowest value
-                for (Entry.DailyEntry dailyEntry : entry.getDb_daily()) {
+                for (int i = 0; i < dbDailySize; i++) {
+                    Entry.DailyEntry dailyEntry = dailyEntries.get(i);
                     double newSpark = lowestSpark != 0 ? dailyEntry.getMean() / lowestSpark - 1 : 0.0;
-                    newSpark = Math.round(newSpark * 10000.0) / 100.0;
-                    history.spark.add(newSpark);
+                    history.spark[i] = Math.round(newSpark * 10000.0) / 100.0;
                 }
 
                 // Set change
-                if (history.spark.size() > 0) {
-                    history.change = history.spark.get(history.spark.size() - 1) - history.spark.get(0);
-                    history.change = Math.round(history.change * 100.0) / 100.0;
+                if (history.spark.length > 1) {
+                    history.change = Math.round( (history.spark[dbDailySize - 1] - history.spark[0]) * 100.0) / 100.0;
                 }
             }
 
