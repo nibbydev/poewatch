@@ -278,7 +278,7 @@ public class Entry {
             }
 
             // Hard-cap item prices
-            if (raw.price > 80000.0 || raw.price < 0.001) continue;
+            if (raw.price > 120000.0 || raw.price < 0.001) continue;
 
             // Round em up
             raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
@@ -309,14 +309,20 @@ public class Entry {
     private boolean checkRaw(RawEntry raw) {
         try {
             for (RawEntry tempEntry : db_temp) {
-                if (tempEntry.accountName.equals(raw.accountName) || tempEntry.id.equals(raw.id)) {
-                    return true;
+                if (tempEntry.id.equals(raw.id)) return true;
+
+                // Don't check account name if less than 10 are listed each day
+                if (quantity > 10) {
+                    if (tempEntry.accountName.equals(raw.accountName)) return true;
                 }
             }
 
             for (ItemEntry itemEntry : db_items) {
-                if (itemEntry.accountName.equals(raw.accountName) || itemEntry.id.equals(raw.id)) {
-                    return true;
+                if (itemEntry.id.equals(raw.id)) return true;
+
+                // Don't check account name if less than 10 are listed each day
+                if (quantity > 10) {
+                    if (itemEntry.accountName.equals(raw.accountName)) return true;
                 }
             }
         } finally {
@@ -364,7 +370,11 @@ public class Entry {
                 case "enchantments":
                     return tmpPercent > 10 && tmpPercent < 140;
                 case "currency":
-                    return tmpPercent > 90 && tmpPercent < 110;
+                    if (tmpPastMean > 300) {
+                        return tmpPercent > 80 && tmpPercent < 140;
+                    } else {
+                        return tmpPercent > 90 && tmpPercent < 110;
+                    }
                 case "essence":
                     return tmpPercent > 50 && tmpPercent < 120;
                 default:
