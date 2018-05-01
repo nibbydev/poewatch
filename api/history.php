@@ -36,7 +36,8 @@ foreach ( $leagueDirs as $leagueDir ) {
   $json = json_decode( file_get_contents( $categoryFile ) , true );
   
   if ( array_key_exists($PARAM_index, $json) ) {
-    $league = end( explode("/", $leagueDir) );
+    $splitDir = explode("/", $leagueDir);
+    $league = end( $splitDir );
     $payload[$league] = $json[$PARAM_index];
   }
 }
