@@ -202,54 +202,9 @@ $(document).ready(function() {
   });
 }); 
 
-
-/*function countItems() {
-  for (let i = 0; i < ITEMS.length; i++) {
-    const item = ITEMS[i];
-
-    if ("child" in item) {
-      if (item["child"] in COUNTER.categories) {
-        COUNTER.categories[item["child"]]++;
-      } else {
-        COUNTER.categories[item["child"]] = 1;
-      }
-    }
-    
-    if (item["count"] < COUNT_MED) COUNTER.lowCount++;
-  }
-
-  COUNTER.categories["all"] = ITEMS.length;
-
-  // Update item counter under confidence toggle radio
-  var test = $("#radio-confidence label");
-  $("span", test[1]).text("Show" + " (" + COUNTER.lowCount + ")");
-
-  console.log(COUNTER);
-}*/
-
-
-function timedRequestCallback() {
-  console.log("Automatic update");
-
-  var data = {
-    league: FILTER.league, 
-    category: FILTER.category
-  };
-
-  var request = $.ajax({
-    url: "http://api.poe-stats.com/get",
-    data: data,
-    type: "GET",
-    async: true,
-    dataTypes: "json"
-  });
-
-  request.done(function(json) {
-    ITEMS = [];
-    makeRequest();
-  });
-}
-
+//------------------------------------------------------------------------------------------------------------
+// Data prep
+//------------------------------------------------------------------------------------------------------------
 
 function readServiceContainers() {
   $(".service-container").each(function() {
@@ -268,7 +223,6 @@ function readServiceContainers() {
     }
   });
 }
-
 
 function fillSelectors(category) {
   var leagueSelector = $("#search-league");
@@ -298,12 +252,6 @@ function fillSelectors(category) {
   tableHeaderContent += "<th scope='col'>Count</th>";
   $("#searchResults > thead > tr").append(tableHeaderContent);
 }
-
-
-function toTitleCase(str) {
-  return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-}
-
 
 function readCookies() {
   var live = getCookie("live")
@@ -335,23 +283,9 @@ function readCookies() {
   }
 }
 
-
-function getCookie(cname) {
-  var name = cname + "=";
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for(var i = 0; i <ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') {
-          c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-      }
-  }
-  return "";
-}
-
+//------------------------------------------------------------------------------------------------------------
+// Expanded row
+//------------------------------------------------------------------------------------------------------------
 
 function onRowClick(event) {
   var target = $(event.currentTarget);
@@ -406,7 +340,7 @@ function onRowClick(event) {
   var chaosChangeDay = roundPrice(ITEMS[parentIndex]["mean"] - history[history.length - 1]);
   var chaosChangeWeek = roundPrice(ITEMS[parentIndex]["mean"] - history[0]);
 
-  $("#details-row-1d",        expandedRow).append("<td>"+chaosIcon+(chaosChangeDay > 0 ? '+' : '')+chaosChangeDay+"</td>");
+  $("#details-row-1d",        expandedRow).append("<td>"+chaosIcon+(chaosChangeDay  > 0 ? '+' : '')+chaosChangeDay+"</td>");
   $("#details-row-1w",        expandedRow).append("<td>"+chaosIcon+(chaosChangeWeek > 0 ? '+' : '')+chaosChangeWeek+"</td>");
 
   target.addClass("parent-row");
@@ -426,65 +360,6 @@ function onRowClick(event) {
 
   parentRow = target;
 }
-
-
-function makeHistoryRequest(category, parentIndex, expandedRow) {
-  var index = ITEMS[parentIndex]["index"];
-
-  var request = $.ajax({
-    url: "http://api.poe-stats.com/history",
-    data: {
-      category: category, 
-      index: index
-    },
-    type: "GET",
-    async: true,
-    dataTypes: "json"
-  });
-
-  request.done(function(payload) {
-    HISTORY_DATA[index] = payload;
-    placeCharts(parentIndex, expandedRow);
-    displayHistory(index, expandedRow);
-  });
-}
-
-
-function displayHistory(index, expandedRow) {
-  if ("error" in HISTORY_DATA[index]) {
-    console.log("History data: no results");
-
-    var chartArea = $(".chart-large", expandedRow);
-    chartArea.append("<h5 class='text-center my-3'>No results</h5>");
-    $("#chart-past", expandedRow).remove();
-    $("#history-league-radio", expandedRow).remove();
-
-    return;
-  }
-
-  var leagues = Object.keys(HISTORY_DATA[index]);
-
-  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
-
-  let selectedLeague;
-  if (HISTORY_LEAGUE in HISTORY_DATA[index]) selectedLeague = HISTORY_LEAGUE;
-  else selectedLeague = leagues[0];
-
-  HISTORY_CHART.data.labels = HISTORY_DATA[index][selectedLeague];
-  HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague];
-  HISTORY_CHART.update();
-
-  var historyLeagueRadio = $("#history-league-radio", expandedRow);
-  $.each(leagues, function(index, league) {
-    var selected = (selectedLeague === league ? " active" : "");
-
-    var button = "<label class='btn btn-outline-dark"+selected+"'>";
-    button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
-
-    historyLeagueRadio.append(button); 
-  });
-}
-
 
 function placeCharts(index, expandedRow) {
   var priceData = {
@@ -637,33 +512,44 @@ function placeCharts(index, expandedRow) {
   HISTORY_CHART = new Chart($("#chart-past", expandedRow), pastData);
 }
 
+function displayHistory(index, expandedRow) {
+  if ("error" in HISTORY_DATA[index]) {
+    console.log("History data: no results");
 
-function randNumbers(size, add, mult) {
-  var numbers = [];
-  
-  for (var i = 0; i < size; i += 1) {
-    numbers.push(add + Math.random() * mult);
-  }
-  
-  return numbers;
-}
+    var chartArea = $(".chart-large", expandedRow);
+    chartArea.append("<h5 class='text-center my-3'>No results</h5>");
+    $("#chart-past", expandedRow).remove();
+    $("#history-league-radio", expandedRow).remove();
 
-
-function getAllDays(length) {
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
-  ];
-  var a = [];
-  
-  for (let index = length; index > 0; index--) {
-    var s = new Date();
-    var n = new Date(s.setDate(s.getDate() - index))
-    a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
+    return;
   }
 
-  return a;
+  var leagues = Object.keys(HISTORY_DATA[index]);
+
+  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
+
+  let selectedLeague;
+  if (HISTORY_LEAGUE in HISTORY_DATA[index]) selectedLeague = HISTORY_LEAGUE;
+  else selectedLeague = leagues[0];
+
+  HISTORY_CHART.data.labels = HISTORY_DATA[index][selectedLeague];
+  HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague];
+  HISTORY_CHART.update();
+
+  var historyLeagueRadio = $("#history-league-radio", expandedRow);
+  $.each(leagues, function(index, league) {
+    var selected = (selectedLeague === league ? " active" : "");
+
+    var button = "<label class='btn btn-outline-dark"+selected+"'>";
+    button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
+
+    historyLeagueRadio.append(button); 
+  });
 }
 
+//------------------------------------------------------------------------------------------------------------
+// Requests
+//------------------------------------------------------------------------------------------------------------
 
 function makeRequest() {
   var data = {
@@ -694,6 +580,30 @@ function makeRequest() {
   });
 }
 
+function makeHistoryRequest(category, parentIndex, expandedRow) {
+  var index = ITEMS[parentIndex]["index"];
+
+  var request = $.ajax({
+    url: "http://api.poe-stats.com/history",
+    data: {
+      category: category, 
+      index: index
+    },
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(payload) {
+    HISTORY_DATA[index] = payload;
+    placeCharts(parentIndex, expandedRow);
+    displayHistory(index, expandedRow);
+  });
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Item data parsing and displaying
+//------------------------------------------------------------------------------------------------------------
 
 function parseItem(item, index) {
   // Format icon
@@ -750,7 +660,7 @@ function parseItem(item, index) {
   else if (item["history"]["change"] > MINOR_CHANGE) tmpChange = "custom-badge-green-lo";
   else if (item["history"]["change"] < -1*MINOR_CHANGE) tmpChange = "custom-badge-orange-lo";
   else tmpChange = "custom-badge-gray";
-  var changeField = "<span class='badge "+tmpChange+"'>"+item["history"]["change"]+"%</span>";
+  var changeField = "<span class='badge "+tmpChange+"'>"+Math.round(item["history"]["change"])+"%</span>";
 
   // Format count badge
   var countField;
@@ -777,6 +687,9 @@ function parseItem(item, index) {
   return returnString;
 }
 
+//------------------------------------------------------------------------------------------------------------
+// Utility functions
+//------------------------------------------------------------------------------------------------------------
 
 function getUrlParameter(sParam) {
   var sPageURL = decodeURIComponent(window.location.search.substring(1)),
@@ -793,7 +706,6 @@ function getUrlParameter(sParam) {
   }
 }
 
-
 function roundPrice(price) {
   const numberWithCommas = (x) => {
     var parts = x.toString().split(".");
@@ -804,6 +716,56 @@ function roundPrice(price) {
   return numberWithCommas(Math.round(price * PRICE_PERCISION) / PRICE_PERCISION);
 }
 
+function randNumbers(size, add, mult) {
+  var numbers = [];
+  
+  for (var i = 0; i < size; i += 1) {
+    numbers.push(add + Math.random() * mult);
+  }
+  
+  return numbers;
+}
+
+function getAllDays(length) {
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
+  ];
+  var a = [];
+  
+  for (let index = length; index > 1; index--) {
+    var s = new Date();
+    var n = new Date(s.setDate(s.getDate() - index))
+    a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
+  }
+  
+  a.push("Atm");
+
+  return a;
+}
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+      }
+  }
+  return "";
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Sorting and searching
+//------------------------------------------------------------------------------------------------------------
 
 function sortResults() {
   // Empty the table
@@ -830,7 +792,6 @@ function sortResults() {
 
   table.append(tableDataBuffer);
 }
-
 
 function checkHideItem(item) {
   // Hide low confidence items
@@ -896,4 +857,54 @@ function checkHideItem(item) {
     var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
     if (!nameBool && !typeBool) return true;
   }
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Other
+//------------------------------------------------------------------------------------------------------------
+
+function countItems() {
+  for (let i = 0; i < ITEMS.length; i++) {
+    const item = ITEMS[i];
+
+    if ("child" in item) {
+      if (item["child"] in COUNTER.categories) {
+        COUNTER.categories[item["child"]]++;
+      } else {
+        COUNTER.categories[item["child"]] = 1;
+      }
+    }
+    
+    if (item["count"] < COUNT_MED) COUNTER.lowCount++;
+  }
+
+  COUNTER.categories["all"] = ITEMS.length;
+
+  // Update item counter under confidence toggle radio
+  var test = $("#radio-confidence label");
+  $("span", test[1]).text("Show" + " (" + COUNTER.lowCount + ")");
+
+  console.log(COUNTER);
+}
+
+function timedRequestCallback() {
+  console.log("Automatic update");
+
+  var data = {
+    league: FILTER.league, 
+    category: FILTER.category
+  };
+
+  var request = $.ajax({
+    url: "http://api.poe-stats.com/get",
+    data: data,
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(json) {
+    ITEMS = [];
+    makeRequest();
+  });
 }
