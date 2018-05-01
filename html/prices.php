@@ -58,7 +58,7 @@
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-xl-3"> 
+    <div class="col-xl-3 custom-sidebar-column"> 
       <div class="row mt-4 mb-xl-4">
 
           <?php include ( "assets/php/menu.php" ) ?>

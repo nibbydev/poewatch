@@ -34,7 +34,7 @@
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-xl-3"> 
+    <div class="col-xl-3 custom-sidebar-column"> 
       <div class="row mt-4 mb-xl-4">
 
           <?php include ( "assets/php/menu.php" ) ?>
@@ -93,7 +93,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/length</h2>
+              <h2>api.poe-stats.com/length <span class='badge badge-light'>New</span></h2>
             </div>
             <div class="card-body">
               <!-- Description -->

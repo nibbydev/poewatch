@@ -102,8 +102,8 @@ footer {
 
 a:hover {text-decoration: none !important}
 
-@media (min-width: 992px) {
-  .custom-menu-item {
+@media (min-width: 1200px) {
+  .custom-sidebar-column {
     max-width: 300px;
   }
 }

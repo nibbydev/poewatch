@@ -35,7 +35,7 @@
   <div class="row">
     <!-- Menu -->
     <div class="col-xl-3"> 
-      <div class="row mt-4 mb-xl-4">
+      <div class="row mt-4 mb-xl-4 custom-sidebar-column">
 
           <?php include ( "assets/php/menu.php" ) ?>
 
