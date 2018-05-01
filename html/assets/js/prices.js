@@ -26,8 +26,13 @@ const COUNT_MED = 15;
 const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
+const ICON_ENCHANTMENT = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
+const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&scaleIndex=1&w=1&h=1";
+const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1";
+const ICON_MISSING = "http://poe-stats.com/assets/img/missing.png";
+
 var parentRow, expandedRow;
-var expandedRowTemplate = `<tr class='selected-row'><td colspan='100'>
+var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
   <div class='row m-1'>
     <div class='col-md'>
       <h4>Chaos value</h4>
@@ -80,6 +85,38 @@ var expandedRowTemplate = `<tr class='selected-row'><td colspan='100'>
     </div>
   </div>
 </td></tr>`;
+
+var TEMPLATE_name = `
+<td>
+  <span class='table-img-container text-center mr-2'><img src='{{icon}}'></span>
+  <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+</td>`;
+
+var TEMPLATE_prices = `
+<td>
+  <div class='pricebox'>
+    {{sparkline}}{{chaos_icon}}{{chaos_price}}
+  </div>
+</td>
+<td>
+  <div class='pricebox'>
+    {{ex_icon}}{{ex_price}}
+  </div>
+</td>`;
+
+var TEMPLATE_gemFields = `
+<td>{{lvl}}</td>
+<td>{{quality}}</td>
+<td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>`;
+  
+var TEMPLATE_changeField = `
+<td><span class='badge {{color}}'>{{percent}}%</span></td>`;
+
+var TEMPLATE_countField = `
+<td><span class='badge custom-badge-{{color}}'>{{count}}</span></td>`;
+
+var TEMPLATE_row = `
+<tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{count}}</tr>`;
 
 $(document).ready(function() {
   var category = getUrlParameter("category");
@@ -315,7 +352,7 @@ function onRowClick(event) {
     parentRow.removeAttr("class");
   }
 
-  expandedRow = $(expandedRowTemplate);
+  expandedRow = $(TEMPLATE_expandedRow);
   // Place ChartJS charts inside the expanded row
   //placeCharts(parentIndex, expandedRow);
 
@@ -606,85 +643,172 @@ function makeHistoryRequest(category, parentIndex, expandedRow) {
 //------------------------------------------------------------------------------------------------------------
 
 function parseItem(item, index) {
-  // Format icon
-  var tmpIcon = item["icon"] ? item["icon"] : (item["frame"] === -1 ? "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1" : "http://poe-stats.com/assets/img/missing.png");
-  var iconField = "<span class='table-img-container text-center mr-2'><img src='" + tmpIcon + "'></span>";
-
   // Format name and variant/links badge
-  var nameField = "<span"+(item["frame"] === 9 ? " class='item-foil'" : "")+">";
-  nameField += item["name"];
-  if ("type" in item) nameField += "<span class='subtext-1'>, " + item["type"] + "</span>";
-  if ("var" in item && item["frame"] !== -1) nameField += " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
-  else if ("tier" in item) nameField += " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-  if (item["history"]["mean"].length < 7) nameField += " <span class='badge badge-light'>New</span>";
-  nameField += "</span>";
+  var nameField = buildNameField(item);
 
   // Format gem fields
-  var gemFields = "";
-  if (item["frame"] === 4) {
-    gemFields += "lvl" in item ? "<td>" + item["lvl"] + "</td>" : "<td>0</td>";
-    gemFields += "quality" in item ? "<td>" + item["quality"] + "</td>" : "<td>0</td>";
+  var gemFields = buildGemFields(item);
+  
+  // Format price and sparkline field
+  var priceFields = buildPriceFields(item);
 
-    if ("corrupted" in item) {
-      if (item["corrupted"] === "1") gemFields += "<td><span class='badge custom-badge-red'>Yes</span></td>";
-      else gemFields += "<td><span class='badge custom-badge-green'>No</span></td>";
+  // Format change field
+  var changeField = buildChangeField(item);
+
+  // Format count badge
+  var countField = buildCountField(item);
+
+  return TEMPLATE_row.trim().replace("{{id}}", index)
+    .replace("{{name}}", nameField)
+    .replace("{{gem}}", gemFields)
+    .replace("{{price}}", priceFields)
+    .replace("{{change}}", changeField)
+    .replace("{{count}}", countField);
+}
+
+function buildNameField(item) {
+  let template = TEMPLATE_name.trim();
+
+  if ( item["icon"] ) {
+    template = template.replace("{{icon}}", item["icon"]);
+  } else if ( item["frame"] === -1 ) {
+    template = template.replace("{{icon}}", ICON_ENCHANTMENT);
+  } else {
+    template = template.replace("{{icon}}", ICON_MISSING);
+  }
+
+  if (item["frame"] === 9) {
+    template = template.replace("{{foil}}", "class='item-foil'");
+  } else {
+    template = template.replace("{{foil}}", "");
+  }
+
+  template = template.replace("{{name}}", item["name"]);
+
+  if ("type" in item) {
+    let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
+    template = template.replace("{{type}}", tmp);
+  } else {
+    template = template.replace("{{type}}", "");
+  }
+
+  if ("var" in item && item["frame"] !== -1) {
+    let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+    template = template.replace("{{var_or_tier}}", tmp);
+  } else if ("tier" in item) {
+    let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+    template = template.replace("{{var_or_tier}}", tmp);
+  } else {
+    template = template.replace("{{var_or_tier}}", "");
+  }
+
+  if (item["history"]["mean"].length < 7) {
+    let tmp = "<span class='badge badge-light'>New</span>";
+    template = template.replace("{{new}}", tmp);
+  } else {
+    template = template.replace("{{new}}", "");
+  }
+  
+  return template;
+}
+
+function buildGemFields(item) {
+  if (item["frame"] !== 4) return "";
+
+  template = TEMPLATE_gemFields.trim();
+
+  template = template.replace("{{lvl}}",      item["lvl"]);
+  template = template.replace("{{quality}}",  item["quality"]);
+  
+  if (item["corrupted"] === "1") {
+    template = template.replace("{{color}}",  "red");
+    template = template.replace("{{corr}}",   "Yes");
+  } else {
+    template = template.replace("{{color}}",  "green");
+    template = template.replace("{{corr}}",   "No");
+  }
+
+  return template;
+}
+
+function buildSparkLine(item) {
+  var svgColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
+  
+  let svg = document.createElement("svg");
+  
+  svg.setAttribute("class", "sparkline " + svgColorClass);
+  svg.setAttribute("width", 60);
+  svg.setAttribute("height", 25);
+  svg.setAttribute("stroke-width", 3);
+
+  sparkline.sparkline(svg, item["history"]["spark"]);
+
+  return svg.outerHTML;
+}
+
+function buildPriceFields(item) {
+  var template = TEMPLATE_prices.trim();
+
+  let sparkLine = buildSparkLine( item );
+  template = template.replace("{{sparkline}}", sparkLine);
+  template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
+  template = template.replace("{{chaos_icon}}", "<img src='" + ICON_CHAOS + "'>");
+
+  if ("exalted" in item && item["exalted"] >= 1) {
+    template = template.replace("{{ex_icon}}", "<img src='" + ICON_EXALTED + "'>");
+    template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
+  } else {
+    template = template.replace("{{ex_icon}}", "");
+    template = template.replace("{{ex_price}}", "");
+  }
+  
+  return template
+}
+
+function buildChangeField(item) {
+  let template = TEMPLATE_changeField.trim();
+
+  if (item["history"]["change"] > MAJOR_CHANGE) {
+    template = template.replace("{{color}}", "custom-badge-green");
+  } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
+    template = template.replace("{{color}}", "custom-badge-orange");
+  } else if (item["history"]["change"] > MINOR_CHANGE) {
+    template = template.replace("{{color}}", "custom-badge-green-lo");
+  } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
+    template = template.replace("{{color}}", "custom-badge-orange-lo");
+  } else {
+    template = template.replace("{{color}}", "custom-badge-gray");
+  }
+
+  template = template.replace("{{percent}}", Math.round(item["history"]["change"]));
+
+  return template;
+}
+
+function buildCountField(item) {
+  let template = TEMPLATE_countField.trim();
+
+  if (item["frame"] === -1) {
+    if (item["count"] >= COUNT_ENCH_HIGH) {
+      template = template.replace("{{color}}", "gray");
+    } else if (item["count"] >= COUNT_ENCH_MED) {
+      template = template.replace("{{color}}", "orange");
+    } else {
+      template = template.replace("{{color}}", "red");
+    }
+  } else {
+    if (item["count"] >= COUNT_HIGH) {
+      template = template.replace("{{color}}", "gray");
+    } else if (item["count"] >= COUNT_MED) {
+      template = template.replace("{{color}}", "orange");
+    } else {
+      template = template.replace("{{color}}", "red");
     }
   }
 
-  // Create sparkline
-  var sparkColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
-  var sparkLine = document.createElement("svg");
-  sparkLine.setAttribute("class", "sparkline " + sparkColorClass);
-  sparkLine.setAttribute("width", 60);
-  sparkLine.setAttribute("height", 25);
-  sparkLine.setAttribute("stroke-width", 3);
-  sparkline.sparkline(sparkLine, item["history"]["spark"]);
+  template = template.replace("{{count}}", item["count"]);
 
-  // Format price and sparkline field
-  var priceField = "<div class='pricebox'>";
-  priceField += sparkLine.outerHTML + "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
-  priceField += roundPrice(item["mean"]);
-  priceField += "</div>";
-
-  var exaltedField = "<div class ='pricebox'>";
-  if ("exalted" in item && item["exalted"] >= 1) {
-    exaltedField += "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
-    exaltedField += roundPrice(item["exalted"]);
-  }
-  exaltedField += "</div>";
-
-  // Format change field
-  var tmpChange;
-  if (item["history"]["change"] > MAJOR_CHANGE) tmpChange = "custom-badge-green";
-  else if (item["history"]["change"] < -1*MAJOR_CHANGE) tmpChange = "custom-badge-orange";
-  else if (item["history"]["change"] > MINOR_CHANGE) tmpChange = "custom-badge-green-lo";
-  else if (item["history"]["change"] < -1*MINOR_CHANGE) tmpChange = "custom-badge-orange-lo";
-  else tmpChange = "custom-badge-gray";
-  var changeField = "<span class='badge "+tmpChange+"'>"+Math.round(item["history"]["change"])+"%</span>";
-
-  // Format count badge
-  var countField;
-  if (item["frame"] === -1) {
-    if (item["count"] >= COUNT_ENCH_HIGH) countField = "<span class='badge custom-badge-gray'>" + item["count"] + "</span>";
-    else if (item["count"] >= COUNT_ENCH_MED) countField = "<span class='badge custom-badge-orange'>" + item["count"] + "</span>";
-    else countField = "<span class='badge custom-badge-red'>" + item["count"] + "</span>";
-  } else {
-    if (item["count"] >= COUNT_HIGH) countField = "<span class='badge custom-badge-gray'>" + item["count"] + "</span>";
-    else if (item["count"] >= COUNT_MED) countField = "<span class='badge custom-badge-orange'>" + item["count"] + "</span>";
-    else countField = "<span class='badge custom-badge-red'>" + item["count"] + "</span>";
-  }
-
-  // Add it all together
-  var returnString = "<tr value=" + ITEMS.indexOf(item) + ">" +
-  "<td>" +  iconField + nameField + "</td>" + 
-  gemFields +
-  "<td>" + priceField + "</td>" + 
-  "<td>" + exaltedField + "</td>" + 
-  "<td>" + changeField + "</td>" + 
-  "<td>" + countField + "</td>" + 
-  "</tr>";
-
-  return returnString;
+  return template;
 }
 
 //------------------------------------------------------------------------------------------------------------
