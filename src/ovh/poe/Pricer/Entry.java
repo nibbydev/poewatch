@@ -357,8 +357,8 @@ public class Entry {
         // If the item  has been available for the past 2 days, checkEntry if price is much higher or lower than the
         // average price was 10 minutes ago
         if (db_daily.size() > 2 && !db_minutely.isEmpty()) {
-            double tmpPastMean = db_minutely.get(db_minutely.size() - 1).mean;
-            double tmpPercent = entry.price / tmpPastMean * 100;
+            double tmpPastMedian = db_minutely.get(db_minutely.size() - 1).median;
+            double tmpPercent = entry.price / tmpPastMedian * 100;
 
             RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
             if (indexedItem == null) {
@@ -368,9 +368,9 @@ public class Entry {
 
             switch (indexedItem.parent) {
                 case "enchantments":
-                    return tmpPercent > 10 && tmpPercent < 140;
+                    return tmpPercent > 5 && tmpPercent < 140;
                 case "currency":
-                    if (tmpPastMean > 300) {
+                    if (tmpPastMedian > 300) {
                         return tmpPercent > 80 && tmpPercent < 140;
                     } else {
                         return tmpPercent > 90 && tmpPercent < 110;

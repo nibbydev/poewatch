@@ -49,9 +49,9 @@ public class HistoryController {
         List<RelationManager.LeagueLengthElement> lengthElements = Main.RELATIONS.getLeagueLengthMap();
         if (lengthElements != null) {
             for (RelationManager.LeagueLengthElement lengthElement : lengthElements) {
-                if (lengthElement.id.equals(league)) {
-                    currentLeagueDay = lengthElement.elapse;
-                    totalLeagueLength = lengthElement.total;
+                if (lengthElement.getId().equals(league)) {
+                    currentLeagueDay = lengthElement.getElapse();
+                    totalLeagueLength = lengthElement.getTotal();
                     return;
                 }
             }

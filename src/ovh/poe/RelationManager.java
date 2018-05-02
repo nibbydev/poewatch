@@ -108,8 +108,33 @@ public class RelationManager {
     }
 
     public static class LeagueLengthElement {
-        public int elapse, remain, total;
-        public String id;
+        private String start, end;
+        private int elapse, remain, total;
+        private String id;
+
+        public int getElapse() {
+            return elapse;
+        }
+
+        public int getRemain() {
+            return remain;
+        }
+
+        public int getTotal() {
+            return total;
+        }
+
+        public String getEnd() {
+            return end;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getStart() {
+            return start;
+        }
     }
 
     private Gson gson = Main.getGson();
@@ -196,7 +221,7 @@ public class RelationManager {
         if (leagueList == null || leagueList.size() < 2) return;
 
         leagueEntries = leagueList;
-        fillLeagueDurationMap();
+        fillLeagueLengthMap();
 
         // Clear and fill list
         leagues.clear();
@@ -247,6 +272,8 @@ public class RelationManager {
 
         LeagueLengthElement leagueLengthElement = new LeagueLengthElement();
         leagueLengthElement.id = league;
+        leagueLengthElement.start = leagueEntry.startAt;
+        leagueLengthElement.end = leagueEntry.endAt;
 
         if (startDate == null || endDate == null) {
             leagueLengthElement.total = -1;
@@ -275,7 +302,7 @@ public class RelationManager {
     /**
      * Fills leagueLengthMap with data from leagueEntries
      */
-    private void fillLeagueDurationMap() {
+    private void fillLeagueLengthMap() {
         if (leagueEntries == null) return;
 
         List<LeagueLengthElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
