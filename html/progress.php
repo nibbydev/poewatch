@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - About</title>
+  <title>Poe-Stats - Progress</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/favico.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,8 +24,9 @@
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
-        <li class="nav-item"><a class="nav-link active" href="about">About</a></li>
+        <li class="nav-item"><a class="nav-link active" href="progress">Progress</a></li>
+        <li class="nav-item"><a class="nav-link" href="about">About</a></li>
+
       </ul>
     </div>
   </div>
@@ -45,31 +46,16 @@
     <!--/Menu/-->
     <!-- Main content -->
     <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
-      <div class="row">
-        <div class="col-lg">
-          <div class="alert custom-card" role="alert">
-            <h3 class="alert-heading text-center">Attention!</h3>
-            <hr>
-            <p>This site is still a work in progress. Data is wiped regularly, API endpoints may change, layout will change.</p>
-          </div>
-        </div>
-      </div> 
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <h2 class="card-title text-center">About</h2>
+              <h2 id="title" class="text-center">League progress</h2>
               <hr>
-              <h5>Got a question/suggestion or notice something wrong with an item?</h5>
-              <p>Drop me a message @ Siegrest#1851</p>
-              <hr>
-              <h5>FAQ</h5>
-              <p><em>Where do you get your prices?</em><br>The public stash API over at pathofexile.com. Prices are automatically generated from the items players list for sale.</p>
-              <p><em>How up to date are the prices?</em><br>All data is recalculated within 60 second intervals. Prices on the website are always the most recent unless stated otherwise.</p>
-              <hr>
-              <h5>Legal text</h5>
-              <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
-              <p>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</p>
+              <h4 id="counter" class="text-center mb-3"></h4>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-secondary" role="progressbar" id="leagueProgressBar"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -87,5 +73,61 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="assets/css/responsive.css">
+
+<script>
+function CountDownTimer(st, nd, id, pb) {
+  var start = new Date(st);
+  var end = new Date(nd);
+
+  var idE = $(id);
+  var pbE = $(pb);
+
+  var _second = 1000;
+  var _minute = _second * 60;
+  var _hour = _minute * 60;
+  var _day = _hour * 24;
+  var timer;
+
+  function showRemaining() {
+    var now = new Date();
+    var distance = end - now;
+    var percentage = Math.round((now - start) / (end - start) * 1000) / 10;
+
+    if (distance < 0) {
+
+      clearInterval(timer);
+      idE.text("Expired");
+
+      return;
+    }
+    var days = Math.floor(distance / _day);
+    var hours = Math.floor((distance % _day) / _hour);
+    var minutes = Math.floor((distance % _hour) / _minute);
+    var seconds = Math.floor((distance % _minute) / _second);
+
+    var tmp = "";
+    if (days > 0) tmp += days + " days, ";
+    if (hours > 0) tmp += hours + " hours, ";
+    if (minutes > 0) tmp += minutes + " minutes, ";
+    tmp += seconds + " seconds";
+
+    idE.text(tmp);
+    pbE.css("width", percentage+"%");
+  }
+
+  showRemaining();
+  timer = setInterval(showRemaining, 1000);
+}
+
+$(document).ready(function() {
+  var elements = JSON.parse( "<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/length.json" ) ); ?>".replace(/'/g, '"') );
+  $.each(elements, function(index, element) {
+    if (element["id"].indexOf("SSF") !== -1 || element["id"] === "Standard" || element["id"].indexOf("Hardcore") !== -1) return;
+    $("#title").text("League progress: " + element["id"]);
+    CountDownTimer(element["start"], element["end"], "#counter", "#leagueProgressBar");
+    return;
+  });
+})
+</script>
 </body>
 </html>

@@ -25,6 +25,7 @@
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link active" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
     </div>

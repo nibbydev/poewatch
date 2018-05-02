@@ -24,6 +24,7 @@
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link active" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
     </div>
@@ -59,7 +60,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-darkmt-1" href="http://api.poe-stats.com/id">Id</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/id">Id</a>
               <!--/Examples/-->
             </div>
           </div>
