@@ -59,7 +59,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/id">Id</a>
+              <a class="btn btn-outline-darkmt-1" href="http://api.poe-stats.com/id">Id</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -81,7 +81,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/leagues">Leagues</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagues">Leagues</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -133,6 +133,16 @@
                       <td><span class='badge badge-success'>✓</span></td>
                       <td>Total length of league in days</td>
                     </tr>
+                    <tr>
+                      <td>start</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>If present, indicates when the league started in ISO 8601 yyyy-MM-dd'T'HH:mm:ss'Z' standard</td>
+                    </tr>
+                    <tr>
+                      <td>end</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>If present, indicates when the league will end in ISO 8601 yyyy-MM-dd'T'HH:mm:ss'Z' standard</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -140,7 +150,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/length">Durations</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/length">Durations</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -162,7 +172,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/categories">Categories</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/categories">Categories</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -184,7 +194,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/itemdata">Item data</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/itemdata">Item data</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -420,7 +430,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/get?league=standard&category=armour">Armour</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/get?league=standard&category=armour">Armour</a>
               <!--/Examples/-->
             </div>
           </div>

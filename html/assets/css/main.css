@@ -31,12 +31,12 @@ option {
 
 .btn-outline-dark {
   color: #ddd;
-  border-color: #333;
+  border-color: #555;
 }
 
 .btn-outline-dark:hover {
   background-color: #333;
-  border-color: #333;
+  border-color: #555;
 }
 
 /* Disable focus borders */ 
@@ -48,16 +48,6 @@ option {
 .show > .btn-outline-dark.dropdown-toggle {
   background-color: rgba(255, 255, 255, 0.2);
   border-color: #333;
-}
-
-/* Second navbar radio border */
-.btn-outline-dark-alt {
-  border-color: #555;
-}
-/* Second navbar radio border hover */
-.btn-outline-dark-alt:hover {
-  background-color: #333;
-  border-color: #555;
 }
 
 /*------------------------------------------------------------------------------------------------------------

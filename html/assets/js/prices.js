@@ -264,7 +264,7 @@ function readServiceContainers() {
 function fillSelectors(category) {
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
-    var button = "<label class='btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1'>";
+    var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
     button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
     leagueSelector.append(button); 
   });

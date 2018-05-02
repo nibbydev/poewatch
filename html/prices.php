@@ -39,10 +39,10 @@
   <div class="form-group live-updates m-0">
     <label for="live-updates" class="m-0">Live updates</label>
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="live-updates">
-      <label class="btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1">
+      <label class="btn btn-sm btn-outline-dark p-0 px-1">
         <input name="live" type="radio" value="true">On
       </label>
-      <label class="btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1 active">
+      <label class="btn btn-sm btn-outline-dark p-0 px-1 active">
         <input name="live" type="radio" value="false">Off
       </label>
     </div>
@@ -228,7 +228,7 @@
                 <tbody></tbody>
               </table>
               <div class="loadall">
-                <button type="button" class="btn btn-block btn-outline-dark btn-outline-dark-alt" id="button-loadall">Load more</button>
+                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
               </div>
             </div>
           </div>
