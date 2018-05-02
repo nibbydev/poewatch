@@ -27,8 +27,8 @@ const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
 const ICON_ENCHANTMENT = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
-const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&scaleIndex=1&w=1&h=1";
-const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1";
+const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1";
+const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "http://poe-stats.com/assets/img/missing.png";
 
 var parentRow, expandedRow;
@@ -88,19 +88,22 @@ var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
 
 var TEMPLATE_name = `
 <td>
-  <span class='table-img-container text-center mr-2'><img src='{{icon}}'></span>
+  <span class='table-img-container mr-1'><img src='{{icon}}'></span>
   <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
 </td>`;
 
 var TEMPLATE_prices = `
 <td>
   <div class='pricebox'>
-    {{sparkline}}{{chaos_icon}}{{chaos_price}}
+    {{sparkline}}
+    <span class='table-img-container mr-1'>{{chaos_icon}}</span>
+    {{chaos_price}}
   </div>
 </td>
 <td>
   <div class='pricebox'>
-    {{ex_icon}}{{ex_price}}
+  <span class='table-img-container mr-1'>{{ex_icon}}</span>
+  {{ex_price}}
   </div>
 </td>`;
 
@@ -367,11 +370,11 @@ function onRowClick(event) {
   }
 
   // Fill expanded row with item data
-  var chaosIcon = "<img src='http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&scaleIndex=1&w=1&h=1'>";
+  var chaosIcon = "<span class='table-img-container mr-1'><img src='" + ICON_CHAOS + "'></span>";
   $("#details-row-quantity",  expandedRow).append("<td>"+ITEMS[parentIndex]["quantity"]+"</td>");
-  $("#details-row-mean",      expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["mean"]+"</td>");
-  $("#details-row-median",    expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["median"]+"</td>");
-  $("#details-row-mode",      expandedRow).append("<td>"+chaosIcon+ITEMS[parentIndex]["mode"]+"</td>");
+  $("#details-row-mean",      expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["mean"])+"</td>");
+  $("#details-row-median",    expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["median"])+"</td>");
+  $("#details-row-mode",      expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["mode"])+"</td>");
 
   let history = ITEMS[parentIndex]["history"]["mean"];
   var chaosChangeDay = roundPrice(ITEMS[parentIndex]["mean"] - history[history.length - 1]);
