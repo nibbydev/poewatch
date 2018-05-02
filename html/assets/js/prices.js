@@ -29,8 +29,9 @@ const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyA
 const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "http://poe-stats.com/assets/img/missing.png";
 
-var parentRow, expandedRow;
-var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
+var ROW_parent, ROW_expanded;
+var TEMPLATE_expandedRow = `
+<tr class='selected-row'><td colspan='100'>
   <div class='row m-1'>
     <div class='col-md'>
       <h4>Chaos value</h4>
@@ -46,14 +47,17 @@ var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
     <div class='col-md'>
       <table class="table table-sm details-table">
         <tbody>
-          <tr id='details-row-mean'>
+          <tr>
             <td>Current mean</td>
+            <td>{{mean}}</td>
           </tr>
-          <tr id='details-row-median'>
+          <tr>
             <td>Current median</td>
+            <td>{{median}}</td>
           </tr>
-          <tr id='details-row-mode'>
+          <tr>
             <td>Current mode</td>
+            <td>{{mode}}</td>
           </tr>
         </tbody>
       </table>
@@ -61,14 +65,17 @@ var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
     <div class='col-md'>
       <table class="table table-sm details-table">
         <tbody>
-          <tr id='details-row-count'>
+          <tr>
             <td>Total amount listed</td>
+            <td>{{count}}</td>
           </tr>
-          <tr id='details-row-1d'>
+          <tr>
             <td>Price since yesterday</td>
+            <td>{{1d}}</td>
           </tr>
-          <tr id='details-row-1w'>
+          <tr>
             <td>Price since 1 week</td>
+            <td>{{1w}}</td>
           </tr>
         </tbody>
       </table>
@@ -327,76 +334,75 @@ function readCookies() {
 
 function onRowClick(event) {
   var target = $(event.currentTarget);
-  var parentIndex = parseInt(target.attr("value"));
+  var index = parseInt(target.attr("value"));
 
   // If user clicked on the smaller embedded table
-  if (isNaN(parentIndex)) return;
+  if ( isNaN(index) ) return;
 
-  console.log("Clicked on row: " + parentIndex + " (" + ITEMS[parentIndex]["name"] + ")");
+  var item = ITEMS[index];
 
-  // Close row if user clicked on parentRow
-  if (target.is(parentRow)) {
+  console.log("Clicked on row: " + index + " (" + item["name"] + ")");
+
+  // Close expanded row if user clicked on a parentRow
+  if (target.is(ROW_parent)) {
     console.log("Closed row");
-    expandedRow.remove();
-    parentRow.removeAttr("class");
-    parentRow = null;
-    expandedRow = null;
+    ROW_expanded.remove();
+    ROW_parent.removeAttr("class");
+    ROW_parent = null;
+    ROW_expanded = null;
     return;
   }
 
   // Don't add a new row if user clicked on expandedRow
-  if (target.is(expandedRow)) return;
+  if ( target.is(ROW_expanded) ) return;
 
   // If there's an expanded row open somewhere, remove it
-  if (expandedRow) {
-    expandedRow.remove();
-    parentRow.removeAttr("class");
+  if (ROW_expanded) {
+    ROW_expanded.remove();
+    ROW_parent.removeAttr("class");
   }
 
-  expandedRow = $(TEMPLATE_expandedRow);
-  // Place ChartJS charts inside the expanded row
-  //placeCharts(parentIndex, expandedRow);
+  let tmp = "<span class='table-img-container mr-1'><img src='" + ICON_CHAOS + "'></span>";
+  let history = item["history"]["mean"];
+  let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
+  let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
 
-  // Make request if data not present
-  if (ITEMS[parentIndex]["index"] in HISTORY_DATA) {
+  let template = TEMPLATE_expandedRow.trim()
+    .replace("{{mean}}",    tmp + roundPrice(item["mean"]))
+    .replace("{{median}}",  tmp + roundPrice(item["median"]))
+    .replace("{{mode}}",    tmp + roundPrice(item["mode"]))
+    .replace("{{count}}",         roundPrice(item["count"]))
+    .replace("{{1d}}",      tmp + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
+    .replace("{{1w}}",      tmp + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
+
+  // Set gvar
+  ROW_expanded = $(template);
+
+  // Load history data
+  if (item["index"] in HISTORY_DATA) {
     console.log("history from: memory");
-    placeCharts(parentIndex, expandedRow);
-    displayHistory(ITEMS[parentIndex]["index"], expandedRow);
+    placeCharts(index, ROW_expanded);
+    displayHistory(item["index"], ROW_expanded);
   } else {
     console.log("history from: source");
-    makeHistoryRequest(ITEMS[parentIndex].parent, parentIndex, expandedRow);
+    makeHistoryRequest(item["parent"], index, ROW_expanded);
   }
 
-  // Fill expanded row with item data
-  var chaosIcon = "<span class='table-img-container mr-1'><img src='" + ICON_CHAOS + "'></span>";
-  $("#details-row-count",  expandedRow).append("<td>"+ITEMS[parentIndex]["count"]+"</td>");
-  $("#details-row-mean",      expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["mean"])+"</td>");
-  $("#details-row-median",    expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["median"])+"</td>");
-  $("#details-row-mode",      expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["mode"])+"</td>");
-
-  let history = ITEMS[parentIndex]["history"]["mean"];
-  var chaosChangeDay = roundPrice(ITEMS[parentIndex]["mean"] - history[history.length - 1]);
-  var chaosChangeWeek = roundPrice(ITEMS[parentIndex]["mean"] - history[0]);
-
-  $("#details-row-1d",        expandedRow).append("<td>"+chaosIcon+(chaosChangeDay  > 0 ? '+' : '')+chaosChangeDay+"</td>");
-  $("#details-row-1w",        expandedRow).append("<td>"+chaosIcon+(chaosChangeWeek > 0 ? '+' : '')+chaosChangeWeek+"</td>");
-
   target.addClass("parent-row");
-  target.after(expandedRow);
+  target.after(ROW_expanded);
+  ROW_parent = target;
 
   // Create event listener for league selector
-  var historyLeagueRadio = $("#history-league-radio", expandedRow);
+  var historyLeagueRadio = $("#history-league-radio", ROW_expanded);
   historyLeagueRadio.change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
 
-    if (HISTORY_LEAGUE in HISTORY_DATA[ITEMS[parentIndex]["index"]]) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[ITEMS[parentIndex]["index"]][HISTORY_LEAGUE];
+    if (HISTORY_LEAGUE in HISTORY_DATA[item["index"]]) {
+      HISTORY_CHART.data.labels = HISTORY_DATA[item["index"]][HISTORY_LEAGUE];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[item["index"]][HISTORY_LEAGUE];
       HISTORY_CHART.update();
     }
   });
-
-  parentRow = target;
 }
 
 function placeCharts(index, expandedRow) {
