@@ -19,10 +19,8 @@ var COUNTER = {
 };
 
 const PRICE_PERCISION = 100;
-const COUNT_ENCH_HIGH = 100;
-const COUNT_ENCH_MED = 50;
-const COUNT_HIGH = 25;
-const COUNT_MED = 15;
+const QUANT_HIGH = 7;
+const QUANT_MED = 3;
 const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
@@ -63,8 +61,8 @@ var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
     <div class='col-md'>
       <table class="table table-sm details-table">
         <tbody>
-          <tr id='details-row-quantity'>
-            <td>Average listed per 24h</td>
+          <tr id='details-row-count'>
+            <td>Total amount listed</td>
           </tr>
           <tr id='details-row-1d'>
             <td>Price since yesterday</td>
@@ -88,7 +86,7 @@ var TEMPLATE_expandedRow = `<tr class='selected-row'><td colspan='100'>
 
 var TEMPLATE_name = `
 <td>
-  <span class='table-img-container mr-1'><img src='{{icon}}'></span>
+  <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
   <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
 </td>`;
 
@@ -96,13 +94,13 @@ var TEMPLATE_prices = `
 <td>
   <div class='pricebox'>
     {{sparkline}}
-    <span class='table-img-container mr-1'>{{chaos_icon}}</span>
+    <span class='table-img-container text-center mr-1'>{{chaos_icon}}</span>
     {{chaos_price}}
   </div>
 </td>
 <td>
   <div class='pricebox'>
-  <span class='table-img-container mr-1'>{{ex_icon}}</span>
+  <span class='table-img-container text-center mr-1'>{{ex_icon}}</span>
   {{ex_price}}
   </div>
 </td>`;
@@ -115,11 +113,11 @@ var TEMPLATE_gemFields = `
 var TEMPLATE_changeField = `
 <td><span class='badge {{color}}'>{{percent}}%</span></td>`;
 
-var TEMPLATE_countField = `
-<td><span class='badge custom-badge-{{color}}'>{{count}}</span></td>`;
+var TEMPLATE_quantField = `
+<td><span class='badge custom-badge-{{color}}'>{{quant}}</span></td>`;
 
 var TEMPLATE_row = `
-<tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{count}}</tr>`;
+<tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>`;
 
 $(document).ready(function() {
   var category = getUrlParameter("category");
@@ -371,7 +369,7 @@ function onRowClick(event) {
 
   // Fill expanded row with item data
   var chaosIcon = "<span class='table-img-container mr-1'><img src='" + ICON_CHAOS + "'></span>";
-  $("#details-row-quantity",  expandedRow).append("<td>"+ITEMS[parentIndex]["quantity"]+"</td>");
+  $("#details-row-count",  expandedRow).append("<td>"+ITEMS[parentIndex]["count"]+"</td>");
   $("#details-row-mean",      expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["mean"])+"</td>");
   $("#details-row-median",    expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["median"])+"</td>");
   $("#details-row-mode",      expandedRow).append("<td>"+chaosIcon+roundPrice(ITEMS[parentIndex]["mode"])+"</td>");
@@ -683,14 +681,14 @@ function parseItem(item, index) {
   var changeField = buildChangeField(item);
 
   // Format count badge
-  var countField = buildCountField(item);
+  var quantField = buildQuantField(item);
 
   return TEMPLATE_row.trim().replace("{{id}}", index)
     .replace("{{name}}", nameField)
     .replace("{{gem}}", gemFields)
     .replace("{{price}}", priceFields)
     .replace("{{change}}", changeField)
-    .replace("{{count}}", countField);
+    .replace("{{quant}}", quantField);
 }
 
 function buildNameField(item) {
@@ -812,28 +810,18 @@ function buildChangeField(item) {
   return template;
 }
 
-function buildCountField(item) {
-  let template = TEMPLATE_countField.trim();
+function buildQuantField(item) {
+  let template = TEMPLATE_quantField.trim();
 
-  if (item["frame"] === -1) {
-    if (item["count"] >= COUNT_ENCH_HIGH) {
-      template = template.replace("{{color}}", "gray");
-    } else if (item["count"] >= COUNT_ENCH_MED) {
-      template = template.replace("{{color}}", "orange");
-    } else {
-      template = template.replace("{{color}}", "red");
-    }
+  if (item["quantity"] >= QUANT_HIGH) {
+    template = template.replace("{{color}}", "gray");
+  } else if (item["quantity"] >= QUANT_MED) {
+    template = template.replace("{{color}}", "orange");
   } else {
-    if (item["count"] >= COUNT_HIGH) {
-      template = template.replace("{{color}}", "gray");
-    } else if (item["count"] >= COUNT_MED) {
-      template = template.replace("{{color}}", "orange");
-    } else {
-      template = template.replace("{{color}}", "red");
-    }
+    template = template.replace("{{color}}", "red");
   }
 
-  template = template.replace("{{count}}", item["count"]);
+  template = template.replace("{{quant}}", item["quantity"]);
 
   return template;
 }
@@ -947,8 +935,7 @@ function sortResults() {
 function checkHideItem(item) {
   // Hide low confidence items
   if (FILTER.hideLowConfidence) {
-    if (item["frame"] === -1 && item["count"] < COUNT_ENCH_MED) return true;
-    else if (item["count"] < COUNT_MED) return true;
+    if (item["quantity"] < QUANT_MED) return true;
   }
 
   // Hide sub-categories
@@ -1026,7 +1013,7 @@ function countItems() {
       }
     }
     
-    if (item["count"] < COUNT_MED) COUNTER.lowCount++;
+    if (item["quantity"] < QUANT_MED) COUNTER.lowCount++;
   }
 
   COUNTER.categories["all"] = ITEMS.length;
