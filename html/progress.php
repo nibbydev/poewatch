@@ -45,8 +45,26 @@
     </div>
     <!--/Menu/-->
     <!-- Main content -->
-    <div id="main" class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
-
+    <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
+      <div class="row mb-3">
+        <div class="col-lg">
+          <div class="card custom-card">
+            <div class="card-body">
+              <h2 class="text-center">Progress</h2>
+              <hr>
+              <span>Shows a list of currently active main leagues, their start and end dates, progressbars and countdowns until their end.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-lg">
+          <div class="card custom-card">
+            <div class="card-body" id="main">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <!--/Main content/-->
   </div>

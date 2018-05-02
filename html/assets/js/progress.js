@@ -1,18 +1,12 @@
 var TEMPLATE = `
-<div class="row mb-3">
-  <div class="col-lg">
-    <div class="card custom-card">
-      <div class="card-body">
-        <h2 class="text-center">{{title}}</h2>
-        <hr>
-        <h4 id="counter-{{id}}" class="text-center mb-3"></h4>
-        <div class="progress" style="height: 20px;">
-          <div class="progress-bar bg-secondary" role="progressbar" id="bar-{{id}}"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>`;
+<h4>{{title}}</h4>
+<p class="mb-1">{{start}}</p>
+<p class="mb-1">{{end}}</p>
+<p id="counter-{{id}}" class="mb-2 mt-3"></p>
+<div class="progress" style="height: 20px;">
+  <div class="progress-bar bg-secondary" role="progressbar" id="bar-{{id}}"></div>
+</div>
+<hr>`;
 
 function AddCountDownTimer(st, nd, index) {
   var start = new Date(st);
@@ -64,11 +58,15 @@ $(document).ready(function() {
   var elements = JSON.parse( payload.replace(/'/g, '"') );
 
   $.each(elements, function(index, element) {
-    if (element["id"].indexOf("SSF") !== -1 || element["id"] === "Standard" || element["id"].indexOf("Hardcore") !== -1) return;
+    if (element["id"].indexOf("SSF") !== -1 || element["id"] === "Standard" || element["id"] === "Hardcore") return;
 
     let template = TEMPLATE.trim();
 
-    template = template.replace("{{title}}", "League progress: " + element["id"]);
+    template = template.replace("{{title}}", element["id"]);
+
+    template = template.replace("{{start}}", "Started on: " + formatDate(element["start"]));
+    template = template.replace("{{end}}", "Ends on: " + formatDate(element["end"]));
+
     template = template.replace("{{id}}", index);
     template = template.replace("{{id}}", index); // I am lazy
 
@@ -77,8 +75,23 @@ $(document).ready(function() {
     AddCountDownTimer(element["start"], element["end"], index);
     return;
   });
+
+  $("hr:last-child", main).remove();
 });
 
+function formatDate(dt) {
+  var date = new Date(dt);
 
+  var monthNames = [
+    "Jan", "Feb", "Mar",
+    "Apr", "May", "Jun", 
+    "Jul", "Aug", "Sep",
+    "Oct", "Nov", "Dec"
+  ];
 
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
 
+  return day + " " + monthNames[monthIndex] + " " + year;
+}
