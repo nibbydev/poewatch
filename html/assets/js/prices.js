@@ -638,6 +638,30 @@ function makeHistoryRequest(category, parentIndex, expandedRow) {
   });
 }
 
+function timedRequestCallback() {
+  console.log("Automatic update");
+
+  var data = {
+    league: FILTER.league, 
+    category: FILTER.category
+  };
+
+  var request = $.ajax({
+    url: "http://api.poe-stats.com/get",
+    data: data,
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(json) {
+    ITEMS = json;
+    sortResults();
+
+    console.log("got " + ITEMS.length + " items");
+  });
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Item data parsing and displaying
 //------------------------------------------------------------------------------------------------------------
@@ -1009,26 +1033,4 @@ function countItems() {
   $("span", test[1]).text("Show" + " (" + COUNTER.lowCount + ")");
 
   console.log(COUNTER);
-}
-
-function timedRequestCallback() {
-  console.log("Automatic update");
-
-  var data = {
-    league: FILTER.league, 
-    category: FILTER.category
-  };
-
-  var request = $.ajax({
-    url: "http://api.poe-stats.com/get",
-    data: data,
-    type: "GET",
-    async: true,
-    dataTypes: "json"
-  });
-
-  request.done(function(json) {
-    ITEMS = [];
-    makeRequest();
-  });
 }
