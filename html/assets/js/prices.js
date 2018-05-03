@@ -281,7 +281,7 @@ function fillSelectors(category) {
   categorySelector.append($("<option></option>").attr("value", "all").text("All")); 
 
   $.each(CATEGORIES[category], function(index, child) {   
-    categorySelector.append($("<option></option>").attr("value", child).text(toTitleCase(child)));
+    categorySelector.append($("<option></option>").attr("value", child).text(formatCategory(child)));
   });
 
   // Add price table headers
@@ -1011,6 +1011,68 @@ function formatLeague(name) {
   if (~name.indexOf(" Event")) return name.substring(0, name.indexOf(" Event"));
   else if (~name.indexOf("Hardcore ")) return "HC " + name.substring(9);
   else return name;
+}
+
+function formatCategory(name) {
+  switch (name) {
+    case "activegem":
+      return "Skill Gems";
+    case "supportgem":
+      return "Support Gems";
+    case "vaalgem":
+      return "Vaal gems";
+
+    case "twomace":
+      return "2H Maces";
+    case "onemace":
+      return "1H Maces";
+
+    case "twosword":
+      return "2H Swords";
+    case "onesword":
+      return "1H Swords";
+
+    case "twoaxe":
+      return "2H Axes";
+    case "oneaxe":
+      return "1H Axes";
+
+    case "wand":
+      return "Wands";
+    case "bow":
+      return "Bows";
+    case "rod":
+      return "Rods";
+    case "dagger":
+      return "Daggers";
+    case "claw":
+      return "Claws";
+    case "staff":
+      return "Staves";
+
+    case "boots":
+      return "Boots";
+    case "helmet":
+      return "Helmets";
+    case "chest":
+      return "Body Armours";
+    case "gloves":
+      return "Gloves";
+    case "shield":
+      return "Shields";
+    case "quiver":
+      return "Quivers";
+
+    case "ring":
+      return "Rings";
+    case "amulet":
+      return "Amulets";
+    case "belt":
+      return "Belts";
+
+    default:
+      return toTitleCase(name);
+  }
 }
 
 function countItems() {
