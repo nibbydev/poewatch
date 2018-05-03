@@ -68,7 +68,7 @@
     </div>
     <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-xl-8 col-lg mt-4"> 
+    <div class="col-xl-9 col-lg mt-4"> 
       <!-- Title row -->
       <div class="row d-none d-xl-block">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 

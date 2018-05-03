@@ -35,7 +35,7 @@
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-xl-3"> 
+    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
       <div class="row mt-4 mb-xl-4 custom-sidebar-column">
 
           <?php include ( "assets/php/menu.php" ) ?>
@@ -44,13 +44,13 @@
     </div>
     <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
+    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
       <div class="row">
         <div class="col-lg">
           <div class="alert custom-card" role="alert">
             <h3 class="alert-heading text-center">Attention!</h3>
             <hr>
-            <p>This site is still a work in progress. Data is wiped regularly, API endpoints may change, layout will change.</p>
+            <p>This site is still a work in progress. Since there have not been any official releases to date and the service is currently in its testing phase, prices may be inaccurate, data may be wiped regularly, API endpoints may change, layout will change.</p>
           </div>
         </div>
       </div> 

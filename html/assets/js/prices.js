@@ -92,7 +92,7 @@ var TEMPLATE_expandedRow = `
 </td></tr>`;
 
 var TEMPLATE_name = `
-<td>
+<td class="wide-table-col">
   <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
   <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
 </td>`;
@@ -118,10 +118,10 @@ var TEMPLATE_gemFields = `
 <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>`;
   
 var TEMPLATE_changeField = `
-<td><span class='badge {{color}}'>{{percent}}%</span></td>`;
+<td><span class='badge custom-badge-block custom-badge-{{color}}'>{{percent}}%</span></td>`;
 
 var TEMPLATE_quantField = `
-<td><span class='badge custom-badge-{{color}}'>{{quant}}</span></td>`;
+<td class="pr-2"><span class='badge custom-badge-block custom-badge-{{color}}'>{{quant}}</span></td>`;
 
 var TEMPLATE_row = `
 <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>`;
@@ -777,15 +777,15 @@ function parseItem(item, index) {
     let template = TEMPLATE_changeField.trim();
   
     if (item["history"]["change"] > MAJOR_CHANGE) {
-      template = template.replace("{{color}}", "custom-badge-green");
+      template = template.replace("{{color}}", "green");
     } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
-      template = template.replace("{{color}}", "custom-badge-orange");
+      template = template.replace("{{color}}", "orange");
     } else if (item["history"]["change"] > MINOR_CHANGE) {
-      template = template.replace("{{color}}", "custom-badge-green-lo");
+      template = template.replace("{{color}}", "green-lo");
     } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
-      template = template.replace("{{color}}", "custom-badge-orange-lo");
+      template = template.replace("{{color}}", "orange-lo");
     } else {
-      template = template.replace("{{color}}", "custom-badge-gray");
+      template = template.replace("{{color}}", "gray");
     }
   
     template = template.replace("{{percent}}", Math.round(item["history"]["change"]));

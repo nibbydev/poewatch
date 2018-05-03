@@ -36,8 +36,8 @@
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-xl-3"> 
-      <div class="row mt-4 mb-xl-4 custom-sidebar-column">
+    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
+      <div class="row mt-4 mb-xl-4">
 
           <?php include ( "assets/php/menu.php" ) ?>
 
@@ -45,7 +45,7 @@
     </div>
     <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
+    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
