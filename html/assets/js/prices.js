@@ -121,7 +121,7 @@ var TEMPLATE_changeField = `
 <td><span class='badge custom-badge-block custom-badge-{{color}}'>{{percent}}%</span></td>`;
 
 var TEMPLATE_quantField = `
-<td class="pr-2"><span class='badge custom-badge-block custom-badge-{{color}}'>{{quant}}</span></td>`;
+<td><span class='badge custom-badge-block custom-badge-{{color}}'>{{quant}}</span></td>`;
 
 var TEMPLATE_row = `
 <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>`;

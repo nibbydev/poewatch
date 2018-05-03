@@ -20,7 +20,7 @@
 .price-table > tbody > tr > td {
   border: 0px solid #222;
   vertical-align: middle;
-  padding: 2px 2px 2px 4px;
+  padding: 1px 0.5rem 1px 0.5rem;
 }
 
 .price-table > tbody > tr:hover {
