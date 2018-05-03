@@ -273,7 +273,7 @@ function fillSelectors(category) {
   var leagueSelector = $("#search-league");
   $.each(LEAGUES, function(index, league) {
     var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
-    button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
+    button += "<input type='radio' name='league' value='"+league+"'>"+formatLeague(league)+"</label>";
     leagueSelector.append(button); 
   });
 
@@ -674,6 +674,141 @@ function timedRequestCallback() {
 //------------------------------------------------------------------------------------------------------------
 
 function parseItem(item, index) {
+  function buildNameField(item) {
+    let template = TEMPLATE_name.trim();
+  
+    if ( item["icon"] ) {
+      template = template.replace("{{icon}}", item["icon"]);
+    } else if ( item["frame"] === -1 ) {
+      template = template.replace("{{icon}}", ICON_ENCHANTMENT);
+    } else {
+      template = template.replace("{{icon}}", ICON_MISSING);
+    }
+  
+    if (item["frame"] === 9) {
+      template = template.replace("{{foil}}", "class='item-foil'");
+    } else {
+      template = template.replace("{{foil}}", "");
+    }
+  
+    template = template.replace("{{name}}", item["name"]);
+  
+    if ("type" in item) {
+      let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
+      template = template.replace("{{type}}", tmp);
+    } else {
+      template = template.replace("{{type}}", "");
+    }
+  
+    if ("var" in item && item["frame"] !== -1) {
+      let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+      template = template.replace("{{var_or_tier}}", tmp);
+    } else if ("tier" in item) {
+      let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+      template = template.replace("{{var_or_tier}}", tmp);
+    } else {
+      template = template.replace("{{var_or_tier}}", "");
+    }
+  
+    if (item["history"]["mean"].length < 7) {
+      let tmp = "<span class='badge badge-light'>New</span>";
+      template = template.replace("{{new}}", tmp);
+    } else {
+      template = template.replace("{{new}}", "");
+    }
+    
+    return template;
+  }
+  
+  function buildGemFields(item) {
+    if (item["frame"] !== 4) return "";
+  
+    template = TEMPLATE_gemFields.trim();
+  
+    template = template.replace("{{lvl}}",      item["lvl"]);
+    template = template.replace("{{quality}}",  item["quality"]);
+    
+    if (item["corrupted"] === "1") {
+      template = template.replace("{{color}}",  "red");
+      template = template.replace("{{corr}}",   "Yes");
+    } else {
+      template = template.replace("{{color}}",  "green");
+      template = template.replace("{{corr}}",   "No");
+    }
+  
+    return template;
+  }
+  
+  function buildSparkLine(item) {
+    var svgColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
+    
+    let svg = document.createElement("svg");
+    
+    svg.setAttribute("class", "sparkline " + svgColorClass);
+    svg.setAttribute("width", 60);
+    svg.setAttribute("height", 25);
+    svg.setAttribute("stroke-width", 3);
+  
+    sparkline.sparkline(svg, item["history"]["spark"]);
+  
+    return svg.outerHTML;
+  }
+  
+  function buildPriceFields(item) {
+    var template = TEMPLATE_prices.trim();
+  
+    let sparkLine = buildSparkLine( item );
+    template = template.replace("{{sparkline}}", sparkLine);
+    template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
+    template = template.replace("{{chaos_icon}}", "<img src='" + ICON_CHAOS + "'>");
+  
+    if ("exalted" in item && item["exalted"] >= 1) {
+      template = template.replace("{{ex_icon}}", "<img src='" + ICON_EXALTED + "'>");
+      template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
+    } else {
+      template = template.replace("{{ex_icon}}", "");
+      template = template.replace("{{ex_price}}", "");
+    }
+    
+    return template
+  }
+  
+  function buildChangeField(item) {
+    let template = TEMPLATE_changeField.trim();
+  
+    if (item["history"]["change"] > MAJOR_CHANGE) {
+      template = template.replace("{{color}}", "custom-badge-green");
+    } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
+      template = template.replace("{{color}}", "custom-badge-orange");
+    } else if (item["history"]["change"] > MINOR_CHANGE) {
+      template = template.replace("{{color}}", "custom-badge-green-lo");
+    } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
+      template = template.replace("{{color}}", "custom-badge-orange-lo");
+    } else {
+      template = template.replace("{{color}}", "custom-badge-gray");
+    }
+  
+    template = template.replace("{{percent}}", Math.round(item["history"]["change"]));
+  
+    return template;
+  }
+  
+  function buildQuantField(item) {
+    let template = TEMPLATE_quantField.trim();
+  
+    if (item["quantity"] >= QUANT_HIGH) {
+      template = template.replace("{{color}}", "gray");
+    } else if (item["quantity"] >= QUANT_MED) {
+      template = template.replace("{{color}}", "orange");
+    } else {
+      template = template.replace("{{color}}", "red");
+    }
+  
+    template = template.replace("{{quant}}", item["quantity"]);
+  
+    return template;
+  }
+
   // Format name and variant/links badge
   var nameField = buildNameField(item);
 
@@ -690,146 +825,11 @@ function parseItem(item, index) {
   var quantField = buildQuantField(item);
 
   return TEMPLATE_row.trim().replace("{{id}}", index)
-    .replace("{{name}}", nameField)
-    .replace("{{gem}}", gemFields)
-    .replace("{{price}}", priceFields)
-    .replace("{{change}}", changeField)
-    .replace("{{quant}}", quantField);
-}
-
-function buildNameField(item) {
-  let template = TEMPLATE_name.trim();
-
-  if ( item["icon"] ) {
-    template = template.replace("{{icon}}", item["icon"]);
-  } else if ( item["frame"] === -1 ) {
-    template = template.replace("{{icon}}", ICON_ENCHANTMENT);
-  } else {
-    template = template.replace("{{icon}}", ICON_MISSING);
-  }
-
-  if (item["frame"] === 9) {
-    template = template.replace("{{foil}}", "class='item-foil'");
-  } else {
-    template = template.replace("{{foil}}", "");
-  }
-
-  template = template.replace("{{name}}", item["name"]);
-
-  if ("type" in item) {
-    let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
-    template = template.replace("{{type}}", tmp);
-  } else {
-    template = template.replace("{{type}}", "");
-  }
-
-  if ("var" in item && item["frame"] !== -1) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
-  } else if ("tier" in item) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
-  } else {
-    template = template.replace("{{var_or_tier}}", "");
-  }
-
-  if (item["history"]["mean"].length < 7) {
-    let tmp = "<span class='badge badge-light'>New</span>";
-    template = template.replace("{{new}}", tmp);
-  } else {
-    template = template.replace("{{new}}", "");
-  }
-  
-  return template;
-}
-
-function buildGemFields(item) {
-  if (item["frame"] !== 4) return "";
-
-  template = TEMPLATE_gemFields.trim();
-
-  template = template.replace("{{lvl}}",      item["lvl"]);
-  template = template.replace("{{quality}}",  item["quality"]);
-  
-  if (item["corrupted"] === "1") {
-    template = template.replace("{{color}}",  "red");
-    template = template.replace("{{corr}}",   "Yes");
-  } else {
-    template = template.replace("{{color}}",  "green");
-    template = template.replace("{{corr}}",   "No");
-  }
-
-  return template;
-}
-
-function buildSparkLine(item) {
-  var svgColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
-  
-  let svg = document.createElement("svg");
-  
-  svg.setAttribute("class", "sparkline " + svgColorClass);
-  svg.setAttribute("width", 60);
-  svg.setAttribute("height", 25);
-  svg.setAttribute("stroke-width", 3);
-
-  sparkline.sparkline(svg, item["history"]["spark"]);
-
-  return svg.outerHTML;
-}
-
-function buildPriceFields(item) {
-  var template = TEMPLATE_prices.trim();
-
-  let sparkLine = buildSparkLine( item );
-  template = template.replace("{{sparkline}}", sparkLine);
-  template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
-  template = template.replace("{{chaos_icon}}", "<img src='" + ICON_CHAOS + "'>");
-
-  if ("exalted" in item && item["exalted"] >= 1) {
-    template = template.replace("{{ex_icon}}", "<img src='" + ICON_EXALTED + "'>");
-    template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
-  } else {
-    template = template.replace("{{ex_icon}}", "");
-    template = template.replace("{{ex_price}}", "");
-  }
-  
-  return template
-}
-
-function buildChangeField(item) {
-  let template = TEMPLATE_changeField.trim();
-
-  if (item["history"]["change"] > MAJOR_CHANGE) {
-    template = template.replace("{{color}}", "custom-badge-green");
-  } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
-    template = template.replace("{{color}}", "custom-badge-orange");
-  } else if (item["history"]["change"] > MINOR_CHANGE) {
-    template = template.replace("{{color}}", "custom-badge-green-lo");
-  } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
-    template = template.replace("{{color}}", "custom-badge-orange-lo");
-  } else {
-    template = template.replace("{{color}}", "custom-badge-gray");
-  }
-
-  template = template.replace("{{percent}}", Math.round(item["history"]["change"]));
-
-  return template;
-}
-
-function buildQuantField(item) {
-  let template = TEMPLATE_quantField.trim();
-
-  if (item["quantity"] >= QUANT_HIGH) {
-    template = template.replace("{{color}}", "gray");
-  } else if (item["quantity"] >= QUANT_MED) {
-    template = template.replace("{{color}}", "orange");
-  } else {
-    template = template.replace("{{color}}", "red");
-  }
-
-  template = template.replace("{{quant}}", item["quantity"]);
-
-  return template;
+    .replace("{{name}}",    nameField)
+    .replace("{{gem}}",     gemFields)
+    .replace("{{price}}",   priceFields)
+    .replace("{{change}}",  changeField)
+    .replace("{{quant}}",   quantField);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -1006,6 +1006,12 @@ function checkHideItem(item) {
 //------------------------------------------------------------------------------------------------------------
 // Other
 //------------------------------------------------------------------------------------------------------------
+
+function formatLeague(name) {
+  if (~name.indexOf(" Event")) return name.substring(0, name.indexOf(" Event"));
+  else if (~name.indexOf("Hardcore ")) return "HC " + name.substring(9);
+  else return name;
+}
 
 function countItems() {
   for (let i = 0; i < ITEMS.length; i++) {
