@@ -11,7 +11,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-sm navbar-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
@@ -73,8 +73,6 @@
       <div class="row d-none d-xl-block">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="alert custom-card" role="alert">
-            <h2 class="alert-heading text-center"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h2>
-            <hr>
             <?php if (isset($_GET["category"]) && $_GET["category"] === "enchantments"): ?>
             <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
             <?php else: ?>

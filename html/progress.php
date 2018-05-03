@@ -10,7 +10,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-sm navbar-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
@@ -50,7 +50,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <span>A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end.</span>
+              <p class="mb-0">A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end. All dates displayed are in your local timezone.</p>
             </div>
           </div>
         </div>

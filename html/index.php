@@ -10,7 +10,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-sm navbar-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
