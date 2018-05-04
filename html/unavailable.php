@@ -51,5 +51,10 @@
   </div>
 </div>
 <!--/Page body/-->
+<!-- Footer -->
+<footer class="container-fluid text-center">
+  <p>Poe-Stats © 2018</p>
+</footer>
+<!--/Footer/-->
 </body>
 </html>
