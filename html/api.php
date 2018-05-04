@@ -10,10 +10,10 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-sm navbar-dark">
+<nav class="navbar navbar-expand-md navbar-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
-      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
       Poe-Stats
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,8 +22,8 @@
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
-        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
-        <li class="nav-item"><a class="nav-link active" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="prices">Prices (not released)</a></li>
+        <li class="nav-item"><a class="nav-link active" href="api">API (not released)</a></li>
         <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
