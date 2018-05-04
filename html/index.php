@@ -51,6 +51,7 @@
             <div class="card-body">
               <h2 class="text-center">Poe-Stats</h2>
               <hr>
+              <img src="assets/img/img1.png" class="main-img-1 ml-3">
               <h5>Overview</h5>
               <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
               <h5>The general idea</h5>
@@ -67,6 +68,8 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
+              <div><em>03/05/2018</em> - Redesign page breakpoints</div>
+              <div><em>03/05/2018</em> - Rework Progress page</div>
               <div><em>02/05/2018</em> - Add Progress page</div>
               <div><em>01/05/2018</em> - Add dynamic sparklines (now display current price)</div>
               <div><em>30/04/2018</em> - Add animated progressbar for live updates</div>
