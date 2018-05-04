@@ -3,15 +3,16 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
-let FILTER;
+var FILTER;
 var ITEMS = [];
 var LEAGUES = [];
 var CATEGORIES = {};
 var HISTORY_DATA = {};
-let HISTORY_CHART;
-let HISTORY_LEAGUE;
-let INTERVAL;
+var HISTORY_CHART;
+var HISTORY_LEAGUE;
+var INTERVAL;
 
+var ROW_parent, ROW_expanded;
 var PARSE_AMOUNT = 100;
 var COUNTER = {
   lowCount: 0,
@@ -29,7 +30,6 @@ const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyA
 const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "http://poe-stats.com/assets/img/missing.png";
 
-var ROW_parent, ROW_expanded;
 var TEMPLATE_expandedRow = `
 <tr class='selected-row'><td colspan='100'>
   <div class='row m-1'>
@@ -99,17 +99,10 @@ var TEMPLATE_name = `
 
 var TEMPLATE_prices = `
 <td>
-  <div class='pricebox'>
-    {{sparkline}}
-    <span class='table-img-container text-center mr-1'>{{chaos_icon}}</span>
-    {{chaos_price}}
-  </div>
+  <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
 </td>
 <td>
-  <div class='pricebox'>
-  <span class='table-img-container text-center mr-1'>{{ex_icon}}</span>
-  {{ex_price}}
-  </div>
+  <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
 </td>`;
 
 var TEMPLATE_gemFields = `
@@ -125,6 +118,18 @@ var TEMPLATE_quantField = `
 
 var TEMPLATE_row = `
 <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>`;
+
+var TEMPLATE_th = `<th scope='col'>{{name}}</th>`;
+
+var TEMPLATE_option = `<option value="{{value}}">{{name}}</option>`;
+
+var TEMPLATE_leagueBtn = `
+<label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
+  <input type="radio" name="league" value="{{value}}">{{name}}
+</label>`;
+
+var TEMPLATE_imgContainer = `
+<span class='table-img-container text-center mr-1'><img src={{img}}></span>`;
 
 $(document).ready(function() {
   var category = getUrlParameter("category");
@@ -270,32 +275,44 @@ function readServiceContainers() {
 }
 
 function fillSelectors(category) {
-  var leagueSelector = $("#search-league");
+  let tmp_leagueBtnString = "";
+
   $.each(LEAGUES, function(index, league) {
-    var button = "<label class='btn btn-sm btn-outline-dark p-0 px-1'>";
-    button += "<input type='radio' name='league' value='"+league+"'>"+formatLeague(league)+"</label>";
-    leagueSelector.append(button); 
+    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
+      .replace("{{active}}", "")
+      .replace("{{value}}", league)
+      .replace("{{name}}", formatLeague(league));
   });
 
-  var categorySelector = $("#search-sub");
-  categorySelector.append($("<option></option>").attr("value", "all").text("All")); 
+  $("#search-league").append(tmp_leagueBtnString);
+
+  let tmp_selString = TEMPLATE_option.trim()
+    .replace("{{value}}", "all")
+    .replace("{{name}}", "All");
 
   $.each(CATEGORIES[category], function(index, child) {   
-    categorySelector.append($("<option></option>").attr("value", child).text(formatCategory(child)));
+    tmp_selString += TEMPLATE_option.trim()
+      .replace("{{value}}", child)
+      .replace("{{name}}", formatCategory(child));
   });
 
+  $("#search-sub").append(tmp_selString);
+
   // Add price table headers
-  var tableHeaderContent = "<th scope='col'>Item</th>";
+  let tmp_thString = TEMPLATE_th.trim().replace("{{name}}", "Item");
+
   if (category === "gems") {
-    tableHeaderContent += "<th scope='col'>Lvl</th>";
-    tableHeaderContent += "<th scope='col'>Qual</th>";
-    tableHeaderContent += "<th scope='col'>Corr</th>";
+    tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Lvl");
+    tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Qual");
+    tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Corr");
   }
-  tableHeaderContent += "<th scope='col'>Chaos</th>";
-  tableHeaderContent += "<th scope='col'>Exalted</th>";
-  tableHeaderContent += "<th scope='col'>Change</th>";
-  tableHeaderContent += "<th scope='col'>Count</th>";
-  $("#searchResults > thead > tr").append(tableHeaderContent);
+
+  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Chaos")
+  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Exalted")
+  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Change")
+  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Count")
+
+  $("#searchResults > thead > tr").append(tmp_thString);
 }
 
 function readCookies() {
@@ -362,18 +379,18 @@ function onRowClick(event) {
     ROW_parent.removeAttr("class");
   }
 
-  let tmp = "<span class='table-img-container mr-1'><img src='" + ICON_CHAOS + "'></span>";
+  let chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
   let history = item["history"]["mean"];
   let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
   let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
 
   let template = TEMPLATE_expandedRow.trim()
-    .replace("{{mean}}",    tmp + roundPrice(item["mean"]))
-    .replace("{{median}}",  tmp + roundPrice(item["median"]))
-    .replace("{{mode}}",    tmp + roundPrice(item["mode"]))
-    .replace("{{count}}",         roundPrice(item["count"]))
-    .replace("{{1d}}",      tmp + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
-    .replace("{{1w}}",      tmp + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
+    .replace("{{mean}}",    chaosContainer + roundPrice(item["mean"]))
+    .replace("{{median}}",  chaosContainer + roundPrice(item["median"]))
+    .replace("{{mode}}",    chaosContainer + roundPrice(item["mode"]))
+    .replace("{{count}}",                    roundPrice(item["count"]))
+    .replace("{{1d}}",      chaosContainer + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
+    .replace("{{1w}}",      chaosContainer + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
 
   // Set gvar
   ROW_expanded = $(template);
@@ -393,8 +410,7 @@ function onRowClick(event) {
   ROW_parent = target;
 
   // Create event listener for league selector
-  var historyLeagueRadio = $("#history-league-radio", ROW_expanded);
-  historyLeagueRadio.change(function(){
+  $("#history-league-radio", ROW_expanded).change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
 
     if (HISTORY_LEAGUE in HISTORY_DATA[item["index"]]) {
@@ -580,15 +596,16 @@ function displayHistory(index, expandedRow) {
   HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague];
   HISTORY_CHART.update();
 
-  var historyLeagueRadio = $("#history-league-radio", expandedRow);
+  let tmp_leagueBtnString = "";
+
   $.each(leagues, function(index, league) {
-    var selected = (selectedLeague === league ? " active" : "");
-
-    var button = "<label class='btn btn-outline-dark"+selected+"'>";
-    button += "<input type='radio' name='league' value='"+league+"'>"+league+"</label>";
-
-    historyLeagueRadio.append(button); 
+    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
+      .replace("{{active}}", (selectedLeague === league ? "active" : ""))
+      .replace("{{value}}", league)
+      .replace("{{name}}", formatLeague(league));
   });
+
+  $("#history-league-radio", expandedRow).append(tmp_leagueBtnString);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -756,21 +773,23 @@ function parseItem(item, index) {
   
   function buildPriceFields(item) {
     var template = TEMPLATE_prices.trim();
+    var chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+    var exContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
   
     let sparkLine = buildSparkLine( item );
     template = template.replace("{{sparkline}}", sparkLine);
     template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
-    template = template.replace("{{chaos_icon}}", "<img src='" + ICON_CHAOS + "'>");
+    template = template.replace("{{chaos_icon}}", chaosContainer);
   
     if ("exalted" in item && item["exalted"] >= 1) {
-      template = template.replace("{{ex_icon}}", "<img src='" + ICON_EXALTED + "'>");
+      template = template.replace("{{ex_icon}}", exContainer);
       template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
     } else {
       template = template.replace("{{ex_icon}}", "");
       template = template.replace("{{ex_price}}", "");
     }
     
-    return template
+    return template;
   }
   
   function buildChangeField(item) {
@@ -908,6 +927,74 @@ function toTitleCase(str) {
   return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 
+function formatLeague(name) {
+  if (~name.indexOf(" Event")) return name.substring(0, name.indexOf(" Event"));
+  else if (~name.indexOf("Hardcore ")) return "HC " + name.substring(9);
+  else return name;
+}
+
+function formatCategory(name) {
+  switch (name) {
+    case "activegem":
+      return "Skill Gems";
+    case "supportgem":
+      return "Support Gems";
+    case "vaalgem":
+      return "Vaal gems";
+
+    case "twomace":
+      return "2H Maces";
+    case "onemace":
+      return "1H Maces";
+
+    case "twosword":
+      return "2H Swords";
+    case "onesword":
+      return "1H Swords";
+
+    case "twoaxe":
+      return "2H Axes";
+    case "oneaxe":
+      return "1H Axes";
+
+    case "wand":
+      return "Wands";
+    case "bow":
+      return "Bows";
+    case "rod":
+      return "Rods";
+    case "dagger":
+      return "Daggers";
+    case "claw":
+      return "Claws";
+    case "staff":
+      return "Staves";
+
+    case "boots":
+      return "Boots";
+    case "helmet":
+      return "Helmets";
+    case "chest":
+      return "Body Armours";
+    case "gloves":
+      return "Gloves";
+    case "shield":
+      return "Shields";
+    case "quiver":
+      return "Quivers";
+
+    case "ring":
+      return "Rings";
+    case "amulet":
+      return "Amulets";
+    case "belt":
+      return "Belts";
+
+    default:
+      return toTitleCase(name);
+  }
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Sorting and searching
 //------------------------------------------------------------------------------------------------------------
@@ -1006,74 +1093,6 @@ function checkHideItem(item) {
 //------------------------------------------------------------------------------------------------------------
 // Other
 //------------------------------------------------------------------------------------------------------------
-
-function formatLeague(name) {
-  if (~name.indexOf(" Event")) return name.substring(0, name.indexOf(" Event"));
-  else if (~name.indexOf("Hardcore ")) return "HC " + name.substring(9);
-  else return name;
-}
-
-function formatCategory(name) {
-  switch (name) {
-    case "activegem":
-      return "Skill Gems";
-    case "supportgem":
-      return "Support Gems";
-    case "vaalgem":
-      return "Vaal gems";
-
-    case "twomace":
-      return "2H Maces";
-    case "onemace":
-      return "1H Maces";
-
-    case "twosword":
-      return "2H Swords";
-    case "onesword":
-      return "1H Swords";
-
-    case "twoaxe":
-      return "2H Axes";
-    case "oneaxe":
-      return "1H Axes";
-
-    case "wand":
-      return "Wands";
-    case "bow":
-      return "Bows";
-    case "rod":
-      return "Rods";
-    case "dagger":
-      return "Daggers";
-    case "claw":
-      return "Claws";
-    case "staff":
-      return "Staves";
-
-    case "boots":
-      return "Boots";
-    case "helmet":
-      return "Helmets";
-    case "chest":
-      return "Body Armours";
-    case "gloves":
-      return "Gloves";
-    case "shield":
-      return "Shields";
-    case "quiver":
-      return "Quivers";
-
-    case "ring":
-      return "Rings";
-    case "amulet":
-      return "Amulets";
-    case "belt":
-      return "Belts";
-
-    default:
-      return toTitleCase(name);
-  }
-}
 
 function countItems() {
   for (let i = 0; i < ITEMS.length; i++) {
