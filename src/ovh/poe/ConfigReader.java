@@ -24,7 +24,8 @@ public class ConfigReader {
 
     public boolean addCurrentPricesToHistory = true;
     public int dbTempSize = 16;
-    public int calcShiftPerc = 80;
+    public int calcShiftPercent = 80;
+    public int calcNewShiftPercent = 60;
 
     /**
      * Calls method that loads in config values on class init

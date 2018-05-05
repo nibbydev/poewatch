@@ -568,8 +568,13 @@ public class Entry {
         Collections.sort(tempList);
 
         if (db_items.size() > 1) {
-            int startIndex = db_items.size() * Main.CONFIG.calcShiftPerc / 100;
-            return tempList.subList(0, startIndex);
+            if (db_daily.size() < 2) {
+                int startIndex = db_items.size() * Main.CONFIG.calcNewShiftPercent / 100;
+                return tempList.subList(0, startIndex);
+            } else {
+                int startIndex = db_items.size() * Main.CONFIG.calcShiftPercent / 100;
+                return tempList.subList(0, startIndex);
+            }
         } else {
             return tempList;
         }
