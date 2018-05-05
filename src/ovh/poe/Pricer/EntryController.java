@@ -272,7 +272,7 @@ public class EntryController {
         flipPauseFlag();
 
         // Run once every 10min
-        if ((System.currentTimeMillis() - tenCounter) > 3600000) {
+        if ((System.currentTimeMillis() - tenCounter) > 600000) {
             if (tenCounter - System.currentTimeMillis() < 1) tenCounter = System.currentTimeMillis();
             else tenCounter += 10 * 60 * 1000;
 
@@ -315,10 +315,11 @@ public class EntryController {
 
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (JSON:" + String.format("%5d", time_json) + " ms) (sort:" + String.format("%5d", time_sort) + " ms)";
-        Main.ADMIN.log_(timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
+        String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) + " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
+        Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();

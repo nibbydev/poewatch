@@ -222,6 +222,14 @@ public class Entry {
 
         // Runs every 60 minutes
         if (Main.ENTRY_CONTROLLER.isSixtyBool()) {
+
+            // These don't align up due to manual intervention
+            if (!Main.ENTRY_CONTROLLER.isTenBool()) {
+                mean = findMeanHourly();
+                median = findMedianHourly();
+                mode = findModeHourly();
+            }
+
             HourlyEntry hourlyEntry = new HourlyEntry();
             hourlyEntry.add(mean, median, mode);
             db_hourly.add(hourlyEntry);
@@ -233,6 +241,14 @@ public class Entry {
 
         // Runs every 24 hours
         if (Main.ENTRY_CONTROLLER.isTwentyFourBool()) {
+
+            // These don't align up due to manual intervention
+            if (!Main.ENTRY_CONTROLLER.isTenBool()) {
+                mean = findMeanHourly();
+                median = findMedianHourly();
+                mode = findModeHourly();
+            }
+
             DailyEntry dailyEntry = new DailyEntry();
             dailyEntry.add(mean, median, mode, quantity);
             db_daily.add(dailyEntry);
