@@ -49,15 +49,15 @@ public class RelationManager {
 
         public IndexedItem(Item item) {
             if (item.frameType != -1) name = item.name;
-            parent = item.parentCategory;
+            parent = item.getParentCategory();
             frame = item.frameType;
 
-            genericKey = resolveSpecificKey(item.key);
+            genericKey = resolveSpecificKey(item.getKey());
 
             if (item.icon != null) icon = Misc.formatIconURL(item.icon);
             if (item.typeLine != null) type = item.typeLine;
-            if (item.childCategory != null) child = item.childCategory;
-            if (item.tier != null) tier = item.tier;
+            if (item.getChildCategory() != null) child = item.getChildCategory();
+            if (item.getTier() != null) tier = item.getTier();
         }
 
         private String subIndex(Item item) {
@@ -76,13 +76,13 @@ public class RelationManager {
 
         public SubIndexedItem (Item item) {
             //specificKey = item.key.substring(item.key.indexOf('|') + 1);
-            specificKey = item.key;
+            specificKey = item.getKey();
 
-            if (item.variation != null) {
-                var = item.variation;
+            if (item.getVariation() != null) {
+                var = item.getVariation();
 
                 if (item.frameType == -1) {
-                    name = resolveSpecificKey(item.key);
+                    name = resolveSpecificKey(item.getKey());
 
                     // Replace all instances of "#" with the associated value
                     for (String value : var.split("-")) {
@@ -91,17 +91,17 @@ public class RelationManager {
                 }
             } else {
                 if (item.frameType == -1) {
-                    name = resolveSpecificKey(item.key);
+                    name = resolveSpecificKey(item.getKey());
                 }
             }
 
-            if (item.links > 4) links = Integer.toString(item.links);
+            if (item.getLinks() > 4) links = Integer.toString(item.getLinks());
 
 
             if (item.frameType == 4) {
                 // Gson wants to serialize uninitialized integers and booleans
-                quality = Integer.toString(item.quality);
-                lvl = Integer.toString(item.level);
+                quality = Integer.toString(item.getQuality());
+                lvl = Integer.toString(item.getLevel());
                 corrupted = Boolean.toString(item.corrupted);
             }
         }
@@ -464,20 +464,20 @@ public class RelationManager {
      */
     public String indexItem(Item item) {
         // Manage item category list
-        List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
-        if (item.childCategory != null && !childCategories.contains(item.childCategory)) childCategories.add(item.childCategory);
-        categories.putIfAbsent(item.parentCategory, childCategories);
+        List<String> childCategories = categories.getOrDefault(item.getParentCategory(), new ArrayList<>());
+        if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
+        categories.putIfAbsent(item.getParentCategory(), childCategories);
 
         // Manage item league list as a precaution. This list gets replaced by pathofexile's official league list
         // every 60 minutes
         if (!leagues.contains(item.league)) leagues.add(item.league);
 
         String index;
-        String genericKey = resolveSpecificKey(item.key);
-        if (itemSpecificKeyToFullIndex.containsKey(item.key)) {
+        String genericKey = resolveSpecificKey(item.getKey());
+        if (itemSpecificKeyToFullIndex.containsKey(item.getKey())) {
             // Return index if item is already indexed
-            return itemSpecificKeyToFullIndex.get(item.key);
-        } else if (item.doNotIndex) {
+            return itemSpecificKeyToFullIndex.get(item.getKey());
+        } else if (item.isDoNotIndex()) {
             // If there wasn't an already existing index, return null without indexing
             return null;
         } else if (itemGenericKeyToSuperIndex.containsKey(genericKey)) {
@@ -487,7 +487,7 @@ public class RelationManager {
             String subIndex = indexedGenericItem.subIndex(item);
             index = itemGenericKeyToSuperIndex.get(genericKey) + "-" + subIndex;
 
-            itemSpecificKeyToFullIndex.put(item.key, index);
+            itemSpecificKeyToFullIndex.put(item.getKey(), index);
         } else {
             String superIndex = Integer.toHexString(itemGenericKeyToSuperIndex.size());
             superIndex = ("0000" + superIndex).substring(superIndex.length());
@@ -498,7 +498,7 @@ public class RelationManager {
 
             itemGenericKeyToSuperIndex.put(genericKey, superIndex);
             itemSubIndexToData.put(superIndex, indexedItem);
-            itemSpecificKeyToFullIndex.put(item.key, index);
+            itemSpecificKeyToFullIndex.put(item.getKey(), index);
         }
 
         return index;

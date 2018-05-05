@@ -19,11 +19,12 @@ public class ConfigReader {
     public int dataEntryCycleLimit = 10;
     public int baseDataSize = 100;
     public int hourlyDataSize = 64;
-    public int medianLeftShift = 3;
+    //public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
 
     public boolean addCurrentPricesToHistory = true;
     public int dbTempSize = 16;
+    public int calcShiftPerc = 80;
 
     /**
      * Calls method that loads in config values on class init
@@ -90,7 +91,7 @@ public class ConfigReader {
                         hourlyDataSize = Integer.parseInt(value);
                         break;
                     case "medianLeftShift":
-                        medianLeftShift = Integer.parseInt(value);
+                        //medianLeftShift = Integer.parseInt(value);
                         break;
                     case "pricePrecision":
                         pricePrecision = Math.pow(10, Integer.parseInt(value));

@@ -366,10 +366,10 @@ public class EntryController {
 
                 item.fix();
                 item.parseItem();
-                if (item.discard) continue;
+                if (item.isDiscard()) continue;
 
                 CategoryMap categoryMap = leagueMap.getOrDefault(item.league, new CategoryMap());
-                IndexMap indexMap = categoryMap.getOrDefault(item.parentCategory, new IndexMap());
+                IndexMap indexMap = categoryMap.getOrDefault(item.getParentCategory(), new IndexMap());
 
                 String index = Main.RELATIONS.indexItem(item);
                 if (index == null) continue; // Some currency items have invalid icons
@@ -378,7 +378,7 @@ public class EntryController {
                 entry.add(item, stash.accountName, index);
 
                 indexMap.putIfAbsent(index, entry);
-                categoryMap.putIfAbsent(item.parentCategory, indexMap);
+                categoryMap.putIfAbsent(item.getParentCategory(), indexMap);
                 leagueMap.putIfAbsent(item.league, categoryMap);
             }
         }

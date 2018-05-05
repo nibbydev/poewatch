@@ -44,8 +44,8 @@ public class JSONParcel {
             mean = entry.getMean();
             median = entry.getMedian();
             mode = entry.getMode();
-            count = entry.getCount() + entry.getInc_counter();
-            quantity = entry.calcQuantity();
+            count = entry.getCount() + entry.getInc();
+            quantity = entry.getQuantity();
             index = entry.getIndex();
 
             // Find the item's price in exalted
@@ -124,6 +124,8 @@ public class JSONParcel {
                 if (history.spark.length > 1) {
                     history.change = Math.round( (history.spark[dbDailySize - 1] - history.spark[0]) * 100.0) / 100.0;
                 }
+            } else {
+                history = new HistoryItem(0);
             }
 
             // Check if there's a match for the specific index
