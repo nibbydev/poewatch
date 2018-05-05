@@ -337,7 +337,7 @@ function readCookies() {
     }).prop("active", true).trigger("click");
   } else {
     console.log("Got league from cookie: " + league);
-    FILTER.league = league.toLowerCase();
+    FILTER.league = league;
     
     $("#search-league input").filter(function() { 
       return ($(this).val() === league);
