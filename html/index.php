@@ -22,8 +22,8 @@
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item"><a class="nav-link active" href="/">Front</a></li>
-        <li class="nav-item"><a class="nav-link" href="prices">Prices (not released)</a></li>
-        <li class="nav-item"><a class="nav-link" href="api">API (not released)</a></li>
+        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
+        <li class="nav-item"><a class="nav-link" href="api">API</a></li>
         <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
@@ -68,6 +68,8 @@
             <div class="card-body">
               <h2 class="text-center">News</h2>
               <hr>
+              <div><em>05/05/2018</em> - Rewrote backend price filters</div>
+              <div><em>04/05/2018</em> - Enable Index and About pages</div>
               <div><em>03/05/2018</em> - Redesign page breakpoints</div>
               <div><em>03/05/2018</em> - Rework Progress page</div>
               <div><em>02/05/2018</em> - Add Progress page</div>

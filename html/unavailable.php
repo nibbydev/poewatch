@@ -22,8 +22,8 @@
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
-        <li class="nav-item"><a class="nav-link" href="prices">Prices (not released)</a></li>
-        <li class="nav-item"><a class="nav-link" href="api">API (not released)</a></li>
+        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
+        <li class="nav-item"><a class="nav-link" href="api">API</a></li>
         <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
@@ -41,8 +41,8 @@
           <div class="alert custom-card text-center" role="alert">
             <h3 class="alert-heading">Attention!</h3>
             <hr>
-            <p>This site is in development!</p>
-            <p>The requested resource has been disabled as it is not ready for release at this point in time.</p>
+            <p>This site is under development!</p>
+            <p>The requested resource has been disabled as it is not yet ready for release.</p>
           </div>
         </div>
       </div> 
