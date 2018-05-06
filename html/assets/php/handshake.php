@@ -1,7 +1,9 @@
 <?php
 
+include_once ("config.php");
+
 if ( isset($_POST["code"]) ) {
-  if ( $_POST["code"] === "notverysecure") {
+  if ( in_array($_POST["code"], $randomStrings) ) {
     $_SESSION["logged_in"] = True;
     unset( $_SESSION["error"] );
   } else {
