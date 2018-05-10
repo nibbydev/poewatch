@@ -166,7 +166,7 @@ public class WorkerController extends Thread {
      */
     public String getLatestChangeID() {
         // Get data from API
-        String idOne = downloadChangeID("http://api.poe.ninja/api/Data/GetStats");
+        String idOne = downloadChangeID("http://poe.ninja/api/Data/GetStats");
         String idTwo = downloadChangeID("http://poe-rates.com/actions/getLastChangeId.php");
         String idThree = downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
 
