@@ -272,17 +272,16 @@ public class EntryController {
         flipPauseFlag();
 
         // Run once every 10min
-        if ((System.currentTimeMillis() - tenCounter) > 600000) {
-            if (tenCounter - System.currentTimeMillis() < 1) tenCounter = System.currentTimeMillis();
-            else tenCounter += 10 * 60 * 1000;
-
+        if ((System.currentTimeMillis() - tenCounter) > 10 * 60 * 1000) {
+            int multiplier = (int)(System.currentTimeMillis() - tenCounter) / (10 * 60 * 1000);
+            tenCounter += (10 * 60 * 1000) * multiplier;
             tenBool = true;
         }
 
         // Run once every 60min
-        if ((System.currentTimeMillis() - sixtyCounter) > 3600000) {
-            if (sixtyCounter - System.currentTimeMillis() < 1) sixtyCounter = System.currentTimeMillis();
-            else sixtyCounter += 60 * 60 * 1000;
+        if ((System.currentTimeMillis() - sixtyCounter) > 60 * 60 * 1000) {
+            int multiplier = (int)(System.currentTimeMillis() - sixtyCounter) / (60 * 60 * 1000);
+            sixtyCounter += (60 * 60 * 1000) * multiplier;
 
             sixtyBool = true;
 
@@ -291,9 +290,9 @@ public class EntryController {
         }
 
         // Run once every 24h
-        if ((System.currentTimeMillis() - twentyFourCounter) > 86400000) {
-            if (twentyFourCounter - System.currentTimeMillis() < 1) twentyFourCounter = System.currentTimeMillis();
-            else twentyFourCounter += 24 * 60 * 60 * 1000;
+        if ((System.currentTimeMillis() - twentyFourCounter) > 24 * 60 * 60 * 1000) {
+            int multiplier = (int)(System.currentTimeMillis() - twentyFourCounter) / (24 * 60 * 60 * 1000);
+            twentyFourCounter += (24 * 60 * 60 * 1000) * multiplier;
 
             twentyFourBool = true;
         }
