@@ -484,7 +484,8 @@ public class Entry {
                         if (tmpPastMedian > 300) {
                             return tmpPercent > 80 && tmpPercent < 140;
                         } else {
-                            return tmpPercent > 90 && tmpPercent < 110;
+                            //return tmpPercent > 90 && tmpPercent < 110;
+                            return tmpPercent < 200;
                         }
                     case "essence":
                         return tmpPercent > 50 && tmpPercent < 120;
@@ -572,8 +573,9 @@ public class Entry {
                 int startIndex = db_items.size() * Main.CONFIG.calcNewShiftPercent / 100;
                 return tempList.subList(0, startIndex);
             } else {
-                int startIndex = db_items.size() * Main.CONFIG.calcShiftPercent / 100;
-                return tempList.subList(0, startIndex);
+                int endIndex = db_items.size() * Main.CONFIG.calcShiftPercent / 100;
+                int startIndex = (tempList.size() - endIndex) / 2;
+                return tempList.subList(startIndex, endIndex);
             }
         } else {
             return tempList;
