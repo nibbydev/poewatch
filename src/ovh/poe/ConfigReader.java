@@ -22,7 +22,6 @@ public class ConfigReader {
     //public int medianLeftShift = 3;
     public double pricePrecision = 1000.0;
 
-    public boolean addCurrentPricesToHistory = true;
     public int dbTempSize = 16;
     public int calcShiftPercent = 80;
     public int calcNewShiftPercent = 60;
