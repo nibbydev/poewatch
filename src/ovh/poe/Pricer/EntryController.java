@@ -266,23 +266,22 @@ public class EntryController {
         // Run every minute (-ish)
         if (System.currentTimeMillis() - lastRunTime < Main.CONFIG.pricerControllerSleepCycle * 1000) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
-        if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
+        //if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
 
         // Run once every 10min
-        if ((System.currentTimeMillis() - tenCounter) > 3600000) {
-            if (tenCounter - System.currentTimeMillis() < 1) tenCounter = System.currentTimeMillis();
-            else tenCounter += 10 * 60 * 1000;
-
+        if ((System.currentTimeMillis() - tenCounter) > 10 * 60 * 1000) {
+            int multiplier = (int)(System.currentTimeMillis() - tenCounter) / (10 * 60 * 1000);
+            tenCounter += (10 * 60 * 1000) * multiplier;
             tenBool = true;
         }
 
         // Run once every 60min
-        if ((System.currentTimeMillis() - sixtyCounter) > 3600000) {
-            if (sixtyCounter - System.currentTimeMillis() < 1) sixtyCounter = System.currentTimeMillis();
-            else sixtyCounter += 60 * 60 * 1000;
+        if ((System.currentTimeMillis() - sixtyCounter) > 60 * 60 * 1000) {
+            int multiplier = (int)(System.currentTimeMillis() - sixtyCounter) / (60 * 60 * 1000);
+            sixtyCounter += (60 * 60 * 1000) * multiplier;
 
             sixtyBool = true;
 
@@ -291,9 +290,9 @@ public class EntryController {
         }
 
         // Run once every 24h
-        if ((System.currentTimeMillis() - twentyFourCounter) > 86400000) {
-            if (twentyFourCounter - System.currentTimeMillis() < 1) twentyFourCounter = System.currentTimeMillis();
-            else twentyFourCounter += 24 * 60 * 60 * 1000;
+        if ((System.currentTimeMillis() - twentyFourCounter) > 24 * 60 * 60 * 1000) {
+            int multiplier = (int)(System.currentTimeMillis() - twentyFourCounter) / (24 * 60 * 60 * 1000);
+            twentyFourCounter += (24 * 60 * 60 * 1000) * multiplier;
 
             twentyFourBool = true;
         }
@@ -315,10 +314,11 @@ public class EntryController {
 
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = " (Cycle:" + String.format("%5d", time_cycle) + " ms) (JSON:" + String.format("%5d", time_json) + " ms) (sort:" + String.format("%5d", time_sort) + " ms)";
-        Main.ADMIN.log_(timeElapsedDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
+        String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) + " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
+        Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
@@ -365,10 +365,10 @@ public class EntryController {
 
                 item.fix();
                 item.parseItem();
-                if (item.discard) continue;
+                if (item.isDiscard()) continue;
 
                 CategoryMap categoryMap = leagueMap.getOrDefault(item.league, new CategoryMap());
-                IndexMap indexMap = categoryMap.getOrDefault(item.parentCategory, new IndexMap());
+                IndexMap indexMap = categoryMap.getOrDefault(item.getParentCategory(), new IndexMap());
 
                 String index = Main.RELATIONS.indexItem(item);
                 if (index == null) continue; // Some currency items have invalid icons
@@ -377,7 +377,7 @@ public class EntryController {
                 entry.add(item, stash.accountName, index);
 
                 indexMap.putIfAbsent(index, entry);
-                categoryMap.putIfAbsent(item.parentCategory, indexMap);
+                categoryMap.putIfAbsent(item.getParentCategory(), indexMap);
                 leagueMap.putIfAbsent(item.league, categoryMap);
             }
         }

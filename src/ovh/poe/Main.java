@@ -37,7 +37,12 @@ public class Main {
 
         // Init relation manager
         RELATIONS = new RelationManager();
+
         RELATIONS.downloadLeagueList();
+        if (RELATIONS.getLeagueLengthMap() == null) {
+            Main.ADMIN.log_("Unable to get league list", 5);
+            System.exit(0);
+        }
 
         WORKER_CONTROLLER = new WorkerController();
         ENTRY_CONTROLLER = new EntryController();

@@ -30,8 +30,10 @@ public class HistoryController {
     private int currentLeagueDay;
     private int totalLeagueLength;
     private int daysInStandard = 90;
+    private boolean isPermanentLeague;
 
     public void configure(String league, String category) {
+        isPermanentLeague = league.equals("Standard") || league.equals("Hardcore");
         this.category = category;
         this.league = league;
 
@@ -47,9 +49,9 @@ public class HistoryController {
         List<RelationManager.LeagueLengthElement> lengthElements = Main.RELATIONS.getLeagueLengthMap();
         if (lengthElements != null) {
             for (RelationManager.LeagueLengthElement lengthElement : lengthElements) {
-                if (lengthElement.id.equals(league)) {
-                    currentLeagueDay = lengthElement.elapse;
-                    totalLeagueLength = lengthElement.total;
+                if (lengthElement.getId().equals(league)) {
+                    currentLeagueDay = lengthElement.getElapse();
+                    totalLeagueLength = lengthElement.getTotal();
                     return;
                 }
             }
@@ -76,52 +78,49 @@ public class HistoryController {
     }
 
     public void add(String index, Entry entry) {
-        if (indexMap == null) {
-            return;
-        } else if (entry.getDb_daily().isEmpty()) {
-            return;
+        if (indexMap == null) return;
+        if (entry.getDb_daily().isEmpty()) return;
+
+        int baseSize, lastIndex;
+        if (isPermanentLeague) {
+            baseSize = daysInStandard;
+        } else {
+            baseSize = totalLeagueLength;
         }
 
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem());
         Entry.DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
 
-        if (league.equals("Standard") || league.equals("Hardcore")) {
-            if (historyItem.mean == null) {
-                historyItem.mean        = new double[daysInStandard];
-                historyItem.median      = new double[daysInStandard];
-                historyItem.mode        = new double[daysInStandard];
-                historyItem.quantity    = new int[daysInStandard];
-                historyItem.count       = new int[daysInStandard];
-            }
+        // If mean was null then the index didn't exist in the map (if the file failed to load or it is a new item that
+        // doesn't exist in the file yet) and all other variables are null as well
+        if (historyItem.mean == null) {
+            historyItem.mean        = new double[baseSize];
+            historyItem.median      = new double[baseSize];
+            historyItem.mode        = new double[baseSize];
+            historyItem.quantity    = new int[baseSize];
+            historyItem.count       = new int[baseSize];
+        }
 
+        // If it's a permanent league (i.e it has no fixed amount of days, then the arrays should be shifted left by
+        // one every time a new value is added)
+        if (isPermanentLeague) {
             System.arraycopy(historyItem.mean,      1, historyItem.mean,        0, historyItem.mean.length - 1);
             System.arraycopy(historyItem.median,    1, historyItem.median,      0, historyItem.mean.length - 1);
             System.arraycopy(historyItem.mode,      1, historyItem.mode,        0, historyItem.mean.length - 1);
             System.arraycopy(historyItem.quantity,  1, historyItem.quantity,    0, historyItem.mean.length - 1);
             System.arraycopy(historyItem.count,     1, historyItem.count,       0, historyItem.mean.length - 1);
 
-            int lastIndex = daysInStandard - 1;
-
-            historyItem.mean[lastIndex]      = dailyEntry.getMean();
-            historyItem.median[lastIndex]    = dailyEntry.getMedian();
-            historyItem.mode[lastIndex]      = dailyEntry.getMode();
-            historyItem.quantity[lastIndex]  = dailyEntry.getQuantity();
-            historyItem.count[lastIndex]     = entry.getCount();
+            lastIndex = daysInStandard - 1;
         } else {
-            if (historyItem.mean == null) {
-                historyItem.mean        = new double[totalLeagueLength];
-                historyItem.median      = new double[totalLeagueLength];
-                historyItem.mode        = new double[totalLeagueLength];
-                historyItem.quantity    = new int[totalLeagueLength];
-                historyItem.count       = new int[totalLeagueLength];
-            }
-
-            historyItem.mean[currentLeagueDay]      = dailyEntry.getMean();
-            historyItem.median[currentLeagueDay]    = dailyEntry.getMedian();
-            historyItem.mode[currentLeagueDay]      = dailyEntry.getMode();
-            historyItem.quantity[currentLeagueDay]  = dailyEntry.getQuantity();
-            historyItem.count[currentLeagueDay]     = entry.getCount();
+            lastIndex = currentLeagueDay;
         }
+
+        // Add all the current values to the specified positions
+        historyItem.mean[lastIndex]      = dailyEntry.getMean();
+        historyItem.median[lastIndex]    = dailyEntry.getMedian();
+        historyItem.mode[lastIndex]      = dailyEntry.getMode();
+        historyItem.quantity[lastIndex]  = dailyEntry.getQuantity();
+        historyItem.count[lastIndex]     = entry.getCount();
 
         indexMap.putIfAbsent(index, historyItem);
     }
@@ -159,8 +158,8 @@ public class HistoryController {
         // Clean up
         inputFile =  null;
         outputFile = null;
-        indexMap.clear();
         league =  null;
         category =  null;
+        indexMap = null;
     }
 }

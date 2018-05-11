@@ -49,15 +49,15 @@ public class RelationManager {
 
         public IndexedItem(Item item) {
             if (item.frameType != -1) name = item.name;
-            parent = item.parentCategory;
+            parent = item.getParentCategory();
             frame = item.frameType;
 
-            genericKey = resolveSpecificKey(item.key);
+            genericKey = resolveSpecificKey(item.getKey());
 
             if (item.icon != null) icon = Misc.formatIconURL(item.icon);
             if (item.typeLine != null) type = item.typeLine;
-            if (item.childCategory != null) child = item.childCategory;
-            if (item.tier != null) tier = item.tier;
+            if (item.getChildCategory() != null) child = item.getChildCategory();
+            if (item.getTier() != null) tier = item.getTier();
         }
 
         private String subIndex(Item item) {
@@ -76,13 +76,13 @@ public class RelationManager {
 
         public SubIndexedItem (Item item) {
             //specificKey = item.key.substring(item.key.indexOf('|') + 1);
-            specificKey = item.key;
+            specificKey = item.getKey();
 
-            if (item.variation != null) {
-                var = item.variation;
+            if (item.getVariation() != null) {
+                var = item.getVariation();
 
                 if (item.frameType == -1) {
-                    name = resolveSpecificKey(item.key);
+                    name = resolveSpecificKey(item.getKey());
 
                     // Replace all instances of "#" with the associated value
                     for (String value : var.split("-")) {
@@ -91,25 +91,50 @@ public class RelationManager {
                 }
             } else {
                 if (item.frameType == -1) {
-                    name = resolveSpecificKey(item.key);
+                    name = resolveSpecificKey(item.getKey());
                 }
             }
 
-            if (item.links > 4) links = Integer.toString(item.links);
+            if (item.getLinks() > 4) links = Integer.toString(item.getLinks());
 
 
             if (item.frameType == 4) {
                 // Gson wants to serialize uninitialized integers and booleans
-                quality = Integer.toString(item.quality);
-                lvl = Integer.toString(item.level);
+                quality = Integer.toString(item.getQuality());
+                lvl = Integer.toString(item.getLevel());
                 corrupted = Boolean.toString(item.corrupted);
             }
         }
     }
 
     public static class LeagueLengthElement {
-        public int elapse, remain, total;
-        public String id;
+        private String start, end;
+        private int elapse, remain, total;
+        private String id;
+
+        public int getElapse() {
+            return elapse;
+        }
+
+        public int getRemain() {
+            return remain;
+        }
+
+        public int getTotal() {
+            return total;
+        }
+
+        public String getEnd() {
+            return end;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getStart() {
+            return start;
+        }
     }
 
     private Gson gson = Main.getGson();
@@ -122,7 +147,6 @@ public class RelationManager {
     private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
     private Map<String, List<String>> categories = new HashMap<>();
-    private List<LeagueEntry> leagueEntries;
     private List<String> leagues = new ArrayList<>();
     private List<LeagueLengthElement> leagueLengthMap;
 
@@ -184,6 +208,9 @@ public class RelationManager {
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
             Main.ADMIN._log(ex, 3);
+
+            readLeaguesFromFile();
+            return;
         } finally {
             try {
                 if (stream != null) stream.close();
@@ -195,58 +222,64 @@ public class RelationManager {
         // If download was unsuccessful, return
         if (leagueList == null || leagueList.size() < 2) return;
 
-        leagueEntries = leagueList;
-        fillLeagueDurationMap();
+        fillLeagueMaps(leagueList);
 
-        // Clear and fill list
-        leagues.clear();
-        for (LeagueEntry element : leagueList) {
-            if (!element.id.contains("SSF")) leagues.add(element.id);
+        Main.ADMIN.log_("League list updated", 1);
+    }
+
+    private void readLeaguesFromFile() {
+        File file = new File("./data/length.json");
+
+        // Open up the reader
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
+            Type listType = new TypeToken<List<LeagueLengthElement>>(){}.getType();
+            leagueLengthMap = gson.fromJson(reader, listType);
+
+            leagues.clear();
+            for (LeagueLengthElement leagueLengthElement : leagueLengthMap) {
+                if (!leagueLengthElement.id.contains("SSF")) leagues.add(leagueLengthElement.id);
+            }
+        } catch (IOException ex) {
+            Main.ADMIN.log_("Couldn't load '" + file.getName() + "'", 3);
         }
+    }
 
-        // Sort the list for aesthetic purposes
-        String[] tempList = new String[leagues.size()];
+    private void sortLeagues(List<String> leagues) {
+        String[] sortedLeagues = new String[leagues.size()];
         int counter = 0;
+
         for (String league : leagues) {
-            if (league.equals("Hardcore")) tempList[leagues.size() - 1] = league;
-            else if (league.equals("Standard")) tempList[leagues.size() - 2] = league;
-            else if (league.contains("Hardcore ")) tempList[leagues.size() - 3] = league;
+            if (league.equals("Hardcore")) sortedLeagues[leagues.size() - 1] = league;
+            else if (league.equals("Standard")) sortedLeagues[leagues.size() - 2] = league;
+            else if (league.contains("Hardcore ")) sortedLeagues[leagues.size() - 3] = league;
             else {
-                tempList[counter] = league;
+                sortedLeagues[counter] = league;
                 counter++;
             }
         }
 
-        // Write the new list to the global var
         leagues.clear();
-        leagues.addAll(Arrays.asList(tempList));
-
-        Main.ADMIN.log_("League list updated", 1);
+        leagues.addAll(Arrays.asList(sortedLeagues));
     }
 
     /**
      * Calculates how many days a league has been active for, how many days until the end of a league and how many days
      * the league will run;
      *
-     * @param league League id with correct capitalization
+     * @param leagueEntry LeagueEntry element
      * @return Filled LeagueLengthElement object or null on error
      */
-    private LeagueLengthElement daysSinceLeague(String league) {
-        if (leagueEntries == null) return null;
-
-        LeagueEntry leagueEntry = null;
-        for (LeagueEntry tmp_leagueEntry: leagueEntries) {
-            if (tmp_leagueEntry.id.equals(league)) leagueEntry = tmp_leagueEntry;
-        }
-
-        if (leagueEntry == null) return null;
-
+    private LeagueLengthElement daysSinceLeague(LeagueEntry leagueEntry) {
         Date startDate = leagueEntry.startAt == null ? null : LeagueEntry.parseDate(leagueEntry.startAt);
         Date endDate = leagueEntry.endAt == null ? null : LeagueEntry.parseDate(leagueEntry.endAt);
         Date currentDate = new Date();
 
         LeagueLengthElement leagueLengthElement = new LeagueLengthElement();
-        leagueLengthElement.id = league;
+        leagueLengthElement.id = leagueEntry.id;
+        leagueLengthElement.start = leagueEntry.startAt;
+        leagueLengthElement.end = leagueEntry.endAt;
 
         if (startDate == null || endDate == null) {
             leagueLengthElement.total = -1;
@@ -275,22 +308,27 @@ public class RelationManager {
     /**
      * Fills leagueLengthMap with data from leagueEntries
      */
-    private void fillLeagueDurationMap() {
+    private void fillLeagueMaps(List<LeagueEntry> leagueEntries) {
         if (leagueEntries == null) return;
+        leagues.clear();
 
         List<LeagueLengthElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
 
         for (LeagueEntry leagueEntry : leagueEntries) {
-            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry.id);
+            if (!leagueEntry.id.contains("SSF")) continue;
+
+            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry);
 
             if (leagueLengthElement == null) {
                 Main.ADMIN.log_("Something went horribly wrong with league dates", 5);
-                return;
+                continue;
             }
 
             tmp_leagueDurationMap.add(leagueLengthElement);
+            leagues.add(leagueEntry.id);
         }
 
+        sortLeagues(leagues);
         leagueLengthMap = tmp_leagueDurationMap;
 
         saveLeagueDurationMapToFile();
@@ -437,20 +475,20 @@ public class RelationManager {
      */
     public String indexItem(Item item) {
         // Manage item category list
-        List<String> childCategories = categories.getOrDefault(item.parentCategory, new ArrayList<>());
-        if (item.childCategory != null && !childCategories.contains(item.childCategory)) childCategories.add(item.childCategory);
-        categories.putIfAbsent(item.parentCategory, childCategories);
+        List<String> childCategories = categories.getOrDefault(item.getParentCategory(), new ArrayList<>());
+        if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
+        categories.putIfAbsent(item.getParentCategory(), childCategories);
 
         // Manage item league list as a precaution. This list gets replaced by pathofexile's official league list
         // every 60 minutes
         if (!leagues.contains(item.league)) leagues.add(item.league);
 
         String index;
-        String genericKey = resolveSpecificKey(item.key);
-        if (itemSpecificKeyToFullIndex.containsKey(item.key)) {
+        String genericKey = resolveSpecificKey(item.getKey());
+        if (itemSpecificKeyToFullIndex.containsKey(item.getKey())) {
             // Return index if item is already indexed
-            return itemSpecificKeyToFullIndex.get(item.key);
-        } else if (item.doNotIndex) {
+            return itemSpecificKeyToFullIndex.get(item.getKey());
+        } else if (item.isDoNotIndex()) {
             // If there wasn't an already existing index, return null without indexing
             return null;
         } else if (itemGenericKeyToSuperIndex.containsKey(genericKey)) {
@@ -460,7 +498,7 @@ public class RelationManager {
             String subIndex = indexedGenericItem.subIndex(item);
             index = itemGenericKeyToSuperIndex.get(genericKey) + "-" + subIndex;
 
-            itemSpecificKeyToFullIndex.put(item.key, index);
+            itemSpecificKeyToFullIndex.put(item.getKey(), index);
         } else {
             String superIndex = Integer.toHexString(itemGenericKeyToSuperIndex.size());
             superIndex = ("0000" + superIndex).substring(superIndex.length());
@@ -471,7 +509,7 @@ public class RelationManager {
 
             itemGenericKeyToSuperIndex.put(genericKey, superIndex);
             itemSubIndexToData.put(superIndex, indexedItem);
-            itemSpecificKeyToFullIndex.put(item.key, index);
+            itemSpecificKeyToFullIndex.put(item.getKey(), index);
         }
 
         return index;

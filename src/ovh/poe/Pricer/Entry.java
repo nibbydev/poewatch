@@ -11,28 +11,51 @@ import java.util.*;
  */
 public class Entry {
     private static class RawEntry {
-        String accountName, priceType, id;
-        double price;
+        private String accountName, priceType, id;
+        private double price;
 
-        void add (Item item, String accountName) {
-            this.price = item.price;
+        public void add (Item item, String accountName) {
+            this.price = item.getPrice();
             this.id = item.id;
             this.accountName = accountName;
-            this.priceType = item.priceType;
+            this.priceType = item.getPriceType();
+        }
+
+        //---------------------------------------------------
+        // Getters and setters
+        //---------------------------------------------------
+
+        public String getId() {
+            return id;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public String getAccountName() {
+            return accountName;
+        }
+
+        public String getPriceType() {
+            return priceType;
         }
     }
 
     private static class HourlyEntry {
-        double mean, median, mode;
-        String raw;
+        private double mean, median, mode;
+        private int inc, dec;
+        private String raw;
 
-        void add (double mean, double median, double mode) {
+        public void add (double mean, double median, double mode, int inc, int dec) {
             this.mean = mean;
             this.median = median;
             this.mode = mode;
+            this.inc = inc;
+            this.dec = dec;
         }
 
-        void add(String raw) {
+        public void add(String raw) {
             // Eg "8.241,5.0,5.0", mean median mode respectively
             this.raw = raw;
 
@@ -40,26 +63,58 @@ public class Entry {
             mean = Double.parseDouble(splitRaw[0]);
             median = Double.parseDouble(splitRaw[1]);
             mode = Double.parseDouble(splitRaw[2]);
+
+            // TODO: remove if statement
+            if (splitRaw.length > 3) inc = Integer.parseInt(splitRaw[3]);
+            if (splitRaw.length > 4) dec = Integer.parseInt(splitRaw[4]);
         }
 
         @Override
         public String toString() {
-            if (raw == null) return mean + "," + median + "," + mode;
+            if (raw == null) return mean + "," + median + "," + mode + "," + inc + "," + dec;
             else return raw;
+        }
+
+        //---------------------------------------------------
+        // Getters and setters
+        //---------------------------------------------------
+
+        public double getMean() {
+            return mean;
+        }
+
+        public double getMedian() {
+            return median;
+        }
+
+        public double getMode() {
+            return mode;
+        }
+
+        public int getInc() {
+            return inc;
+        }
+
+        public int getDec() {
+            return dec;
+        }
+
+        public String getRaw() {
+            return raw;
         }
     }
 
     private static class TenMinuteEntry {
-        double mean, median, mode;
-        String raw;
+        private double mean, median, mode;
+        private String raw;
 
-        void add (double mean, double median, double mode) {
+        public void add (double mean, double median, double mode) {
             this.mean = mean;
             this.median = median;
             this.mode = mode;
         }
 
-        void add(String raw) {
+        public void add(String raw) {
             // Eg "8.241,5.0,5.0", mean median mode respectively
             this.raw = raw;
 
@@ -73,6 +128,26 @@ public class Entry {
         public String toString() {
             if (raw == null) return mean + "," + median + "," + mode;
             else return raw;
+        }
+
+        //---------------------------------------------------
+        // Getters and setters
+        //---------------------------------------------------
+
+        public double getMean() {
+            return mean;
+        }
+
+        public double getMedian() {
+            return median;
+        }
+
+        public double getMode() {
+            return mode;
+        }
+
+        public String getRaw() {
+            return raw;
         }
     }
 
@@ -124,13 +199,17 @@ public class Entry {
         public int getQuantity() {
             return quantity;
         }
+
+        public String getRaw() {
+            return raw;
+        }
     }
 
     private static class ItemEntry {
-        double price;
-        String accountName, id, raw;
+        private double price;
+        private String accountName, id, raw;
 
-        void add (String raw) {
+        public void add (String raw) {
             this.raw = raw;
             String[] splitRaw = raw.split(",");
 
@@ -139,7 +218,7 @@ public class Entry {
             this.id = splitRaw[2];
         }
 
-        void add (double price, String accountName, String id) {
+        public void add (double price, String accountName, String id) {
             this.price = price;
             this.accountName = accountName;
             this.id = id;
@@ -150,10 +229,30 @@ public class Entry {
             if (raw == null) return price + "," + accountName + "," + id;
             else return raw;
         }
+
+        //---------------------------------------------------
+        // Getters and setters
+        //---------------------------------------------------
+
+        public String getId() {
+            return id;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public String getAccountName() {
+            return accountName;
+        }
+
+        public String getRaw() {
+            return raw;
+        }
     }
 
     private String league, index;
-    private int total_counter, inc_counter, dec_counter, quantity;
+    private int total_counter, inc, dec, quantity;
     private double mean, median, mode, threshold_multiplier;
 
     private List<RawEntry> db_raw = new ArrayList<>();
@@ -222,27 +321,40 @@ public class Entry {
 
         // Runs every 60 minutes
         if (Main.ENTRY_CONTROLLER.isSixtyBool()) {
+
+            // These don't align up due to manual intervention
+            if (!Main.ENTRY_CONTROLLER.isTenBool()) {
+                mean = findMeanHourly();
+                median = findMedianHourly();
+                mode = findModeHourly();
+            }
+
             HourlyEntry hourlyEntry = new HourlyEntry();
-            hourlyEntry.add(mean, median, mode);
+            hourlyEntry.add(mean, median, mode, inc, dec);
             db_hourly.add(hourlyEntry);
 
-            total_counter += inc_counter;
-            quantity += inc_counter;
-            inc_counter = dec_counter = 0;
+            total_counter += inc;
+            inc = dec = 0;
+            quantity = calcQuantity();
         }
 
         // Runs every 24 hours
         if (Main.ENTRY_CONTROLLER.isTwentyFourBool()) {
+
+            // These don't align up due to manual intervention
+            if (!Main.ENTRY_CONTROLLER.isTenBool()) {
+                mean = findMeanHourly();
+                median = findMedianHourly();
+                mode = findModeHourly();
+            }
+
             DailyEntry dailyEntry = new DailyEntry();
-            dailyEntry.add(mean, median, mode, quantity);
+            dailyEntry.add(mean, median, mode, calcQuantity() + inc);
             db_daily.add(dailyEntry);
 
             // Add this entry to league history
             Main.HISTORY_CONTROLLER.add(index, this);
-
-            quantity = 0;
         }
-
 
         // Limit list sizes
         cap();
@@ -279,7 +391,7 @@ public class Entry {
             }
 
             // Hard-cap item prices
-            if (raw.price > 80000.0 || raw.price < 0.001) continue;
+            if (raw.price > 120000.0 || raw.price < 0.001) continue;
 
             // Round em up
             raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
@@ -288,12 +400,12 @@ public class Entry {
             ItemEntry itemEntry = new ItemEntry();
             itemEntry.add(raw.price, raw.accountName, raw.id);
 
-            inc_counter++;
+            inc++;
 
             if ( checkEntry(itemEntry) ) {
                 db_items.add(itemEntry);
             } else {
-                dec_counter++;
+                dec++;
             }
         }
 
@@ -310,14 +422,20 @@ public class Entry {
     private boolean checkRaw(RawEntry raw) {
         try {
             for (RawEntry tempEntry : db_temp) {
-                if (tempEntry.accountName.equals(raw.accountName) || tempEntry.id.equals(raw.id)) {
-                    return true;
+                if (tempEntry.id.equals(raw.id)) return true;
+
+                // Don't check account name if less than 10 are listed each day
+                if (quantity > 10) {
+                    if (tempEntry.accountName.equals(raw.accountName)) return true;
                 }
             }
 
             for (ItemEntry itemEntry : db_items) {
-                if (itemEntry.accountName.equals(raw.accountName) || itemEntry.id.equals(raw.id)) {
-                    return true;
+                if (itemEntry.id.equals(raw.id)) return true;
+
+                // Don't check account name if less than 10 are listed each day
+                if (quantity > 10) {
+                    if (itemEntry.accountName.equals(raw.accountName)) return true;
                 }
             }
         } finally {
@@ -342,34 +460,40 @@ public class Entry {
         if (db_items.isEmpty()) return true;
         // No average price found
         if (mean <= 0 || median <= 0) return true;
+        // Very few items have been listed
+        if (total_counter < 15) return true;
 
-        // If price is more than double or less than half the median, remove it. Since we removed elements with
-        // index i we need to adjust for the rest of them that fell back one place
-        if (entry.price > median * (1.15 + threshold_multiplier) || entry.price < median / (1.15 + threshold_multiplier)) {
+        RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
+        if (indexedItem == null) {
+            System.out.println("null: "+index);
             return false;
         }
 
         // If the item  has been available for the past 2 days, checkEntry if price is much higher or lower than the
         // average price was 10 minutes ago
-        if (db_daily.size() > 2 && !db_minutely.isEmpty()) {
-            double tmpPastMean = db_minutely.get(db_minutely.size() - 1).mean;
-            double tmpPercent = entry.price / tmpPastMean * 100;
+        if (!db_minutely.isEmpty()) {
+            double tmpPastMedian = db_minutely.get(db_minutely.size() - 1).median;
+            if (tmpPastMedian == 0) return true;
+            double tmpPercent = entry.price / tmpPastMedian * 100;
 
-            RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
-            if (indexedItem == null) {
-                System.out.println("null: "+index);
-                return false;
-            }
-
-            switch (indexedItem.parent) {
-                case "enchantments":
-                    return tmpPercent > 10 && tmpPercent < 140;
-                case "currency":
-                    return tmpPercent > 90 && tmpPercent < 110;
-                case "essence":
-                    return tmpPercent > 50 && tmpPercent < 120;
-                default:
-                    return tmpPercent > 40 && tmpPercent < 200;
+            if (db_daily.size() > 1) {
+                switch (indexedItem.parent) {
+                    case "enchantments":
+                        return tmpPercent < 140;
+                    case "currency":
+                        if (tmpPastMedian > 300) {
+                            return tmpPercent > 80 && tmpPercent < 140;
+                        } else {
+                            //return tmpPercent > 90 && tmpPercent < 110;
+                            return tmpPercent < 200;
+                        }
+                    case "essence":
+                        return tmpPercent > 50 && tmpPercent < 120;
+                    default:
+                        return tmpPercent > 40 && tmpPercent < 200;
+                }
+            } else {
+                return tmpPercent < 200;
             }
         }
 
@@ -384,21 +508,21 @@ public class Entry {
         if (db_items.isEmpty()) return;
 
         // Calculate mean and median values
-        mean = findMeanItems();
-        median = findMedianItems();
-        mode = findModeItems();
+        List<Double> sortedItemPrices = sortItemPrices();
 
-        // If more items were removed than added and at least 6 were removed, update counter by 0.1
-        if (inc_counter > 0) {
-            if (dec_counter > 0 && (dec_counter / (double)inc_counter) * 100.0 > 90) {
-                threshold_multiplier += 0.1;
-            } else {
-                threshold_multiplier -= 0.01;
-            }
+        mean = findMeanItems(sortedItemPrices);
+        median = findMedianItems(sortedItemPrices);
+        mode = findModeItems(sortedItemPrices);
+
+        // If more items were removed than added, update counter
+        if (dec * 2 > inc) {
+            threshold_multiplier += 0.1;
+        } else {
+            threshold_multiplier -= 0.1;
         }
 
         // Don't let it grow infinitely
-        if (threshold_multiplier > 4) threshold_multiplier = 4;
+        if (threshold_multiplier > 10) threshold_multiplier = 10;
         if (threshold_multiplier < 0) threshold_multiplier = 0;
     }
 
@@ -430,56 +554,65 @@ public class Entry {
     // Mean/median/mode calculation TODO: look for a better solution
     //------------------------------------------------------------------------------------------------------------
 
-    private int findMeanQuantity() {
-        if (db_daily.isEmpty()) return 0;
-
-        int mean = 0;
-        for (DailyEntry entry : db_daily) {
-            mean += entry.quantity;
+    private int calcQuantity() {
+        int tmp = 0;
+        for (HourlyEntry entry : db_hourly) {
+            tmp += entry.inc;
         }
 
-        return mean / db_daily.size();
+        return tmp;
     }
 
-    private double findMeanItems() {
-        if (db_items.isEmpty()) return 0;
-
-        double mean = 0.0;
-        for (ItemEntry entry : db_items) {
-            mean += entry.price;
-        }
-        mean = Math.round(mean / db_items.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
-
-        return mean;
-    }
-
-    private double findMedianItems() {
-        if (db_items.isEmpty()) return 0;
-
-        ArrayList<Double> tempList = new ArrayList<>();
-        for (ItemEntry entry : db_items) {
-            tempList.add(entry.price);
-        }
-
+    private List<Double> sortItemPrices() {
+        List<Double> tempList = new ArrayList<>();
+        for (ItemEntry entry : db_items) tempList.add(entry.price);
         Collections.sort(tempList);
 
-        return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision)
-                / Main.CONFIG.pricePrecision;
+        if (db_items.size() > 1) {
+            if (db_daily.size() < 2) {
+                int startIndex = db_items.size() * Main.CONFIG.calcNewShiftPercent / 100;
+                return tempList.subList(0, startIndex);
+            } else {
+                int endIndex = db_items.size() * Main.CONFIG.calcShiftPercent / 100;
+                int startIndex = (tempList.size() - endIndex) / 2;
+                return tempList.subList(startIndex, endIndex);
+            }
+        } else {
+            return tempList;
+        }
     }
 
-    private double findModeItems() {
+    private double findMeanItems(List<Double> sortedItemPrices) {
+        if (sortedItemPrices.isEmpty()) return 0;
+
+        double mean = 0.0;
+        for (Double entry : sortedItemPrices) mean += entry;
+
+        return Math.round(mean / sortedItemPrices.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+    }
+
+    private double findMedianItems(List<Double> sortedItemPrices) {
+        if (sortedItemPrices.isEmpty()) return 0;
+
+        int medianIndex = sortedItemPrices.size() / 2;
+        return Math.round(sortedItemPrices.get(medianIndex) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+    }
+
+    private double findModeItems(List<Double> sortedItemPrices) {
+        if (sortedItemPrices.isEmpty()) return 0;
+
         double maxValue = 0, maxCount = 0;
 
-        for (ItemEntry entry_1 : db_items) {
+        for (Double entry1 : sortedItemPrices) {
             int count = 0;
 
-            for (ItemEntry entry_2 : db_items) {
-                if (entry_2.price == entry_1.price) ++count;
+            for (Double entry2 : sortedItemPrices) {
+                if (entry1.equals(entry2)) ++count;
             }
 
             if (count > maxCount) {
                 maxCount = count;
-                maxValue = entry_1.price;
+                maxValue = entry1;
             }
         }
 
@@ -508,23 +641,23 @@ public class Entry {
 
         Collections.sort(tempList);
 
-        return Math.round(tempList.get(tempList.size() / Main.CONFIG.medianLeftShift) * Main.CONFIG.pricePrecision)
-                / Main.CONFIG.pricePrecision;
+        int medianIndex = tempList.size() / 2;
+        return Math.round(tempList.get(medianIndex) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
     }
 
     private double findModeHourly() {
         double maxValue = 0, maxCount = 0;
 
-        for (TenMinuteEntry entry_1 : db_minutely) {
+        for (TenMinuteEntry entry1 : db_minutely) {
             int count = 0;
 
-            for (TenMinuteEntry entry_2 : db_minutely) {
-                if (entry_2.mode == entry_1.mode) ++count;
+            for (TenMinuteEntry entry2 : db_minutely) {
+                if (entry2.mode == entry1.mode) ++count;
             }
 
             if (count > maxCount) {
                 maxCount = count;
-                maxValue = entry_1.mode;
+                maxValue = entry1.mode;
             }
         }
 
@@ -548,7 +681,6 @@ public class Entry {
                 inc
                 dec
                 multiplier
-                quantity
             2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account id
@@ -583,13 +715,11 @@ public class Entry {
         stringBuilder.append("count:");
         stringBuilder.append(total_counter);
         stringBuilder.append(",inc:");
-        stringBuilder.append(inc_counter);
+        stringBuilder.append(inc);
         stringBuilder.append(",dec:");
-        stringBuilder.append(dec_counter);
+        stringBuilder.append(dec);
         stringBuilder.append(",multiplier:");
         stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
-        stringBuilder.append(",quantity:");
-        stringBuilder.append(quantity);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -673,7 +803,6 @@ public class Entry {
                 inc
                 dec
                 multiplier
-                quantity
             2 - db_items entries (Spliterator: "|" and ",")
                 0 - price
                 1 - account id
@@ -710,16 +839,13 @@ public class Entry {
                         total_counter = Integer.parseInt(splitDataItem[1]);
                         break;
                     case "inc":
-                        inc_counter += Integer.parseInt(splitDataItem[1]);
+                        inc += Integer.parseInt(splitDataItem[1]);
                         break;
                     case "dec":
-                        dec_counter += Integer.parseInt(splitDataItem[1]);
+                        dec += Integer.parseInt(splitDataItem[1]);
                         break;
                     case "multiplier":
                         threshold_multiplier = Double.parseDouble(splitDataItem[1]);
-                        break;
-                    case "quantity":
-                        quantity = Integer.parseInt(splitDataItem[1]);
                         break;
                     default:
                         Main.ADMIN.log_("Unknown field: " + splitDataItem[0], 3);
@@ -765,6 +891,9 @@ public class Entry {
             }
 
             db_hourly.addAll(0, temp);
+
+            // Using the imported values, calculate daily quantity
+            quantity = calcQuantity();
         }
 
 
@@ -803,20 +932,20 @@ public class Entry {
         return mode;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
     public int getCount() {
         return total_counter;
     }
 
-    public int getInc_counter() {
-        return inc_counter;
+    public int getInc() {
+        return inc;
     }
 
     public String getIndex() {
         return index;
-    }
-
-    public int calcQuantity() {
-        return findMeanQuantity();
     }
 
     public List<DailyEntry> getDb_daily() {

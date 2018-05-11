@@ -7,12 +7,12 @@ import static ovh.poe.Main.RELATIONS;
  * Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
  */
 public class Item extends Mappers.BaseItem {
-    public volatile boolean discard = false;
-    public String priceType, parentCategory, childCategory, key, variation, tier;
-    public double price;
-    public int links, level, quality;
+    private volatile boolean discard = false;
+    private String priceType, parentCategory, childCategory, key, variation, tier;
+    private double price;
+    private int links, level, quality;
 
-    public boolean doNotIndex;
+    private boolean doNotIndex;
 
     /////////////////////////////////////////////////////////
     // Methods used to convert/calculate/extract item data //
@@ -61,23 +61,7 @@ public class Item extends Mappers.BaseItem {
 
             case 5: // Filter out chaos orbs
                 // Discard specific currency items
-                switch (name) {
-                    case "Chaos Orb":
-                    case "Imprint":
-                    case "Scroll Fragment":
-                    case "Alteration Shard":
-                    case "Binding Shard":
-                    case "Horizon Shard":
-                    case "Engineer's Shard":
-                    case "Chaos Shard":
-                    case "Regal Shard":
-                    case "Alchemy Shard":
-                    case "Transmutation Shard":
-                        discard = true;
-                        return;
-                    default:
-                        break;
-                }
+                checkCurrency();
                 break;
 
             case -1:
@@ -572,5 +556,104 @@ public class Item extends Mappers.BaseItem {
         if (!splitString[1].equals("[]")) {
             childCategory =  splitString[1].substring(1, splitString[1].length() - 1).toLowerCase();
         }
+    }
+
+    /**
+     * Contains some basic rules for currency
+     */
+    private void checkCurrency() {
+        switch (name) {
+            case "Chaos Orb":
+            case "Imprint":
+            case "Scroll Fragment":
+            case "Alteration Shard":
+            case "Binding Shard":
+            case "Horizon Shard":
+            case "Engineer's Shard":
+            case "Chaos Shard":
+            case "Regal Shard":
+            case "Alchemy Shard":
+            case "Transmutation Shard":
+                discard = true;
+                break;
+            case "Portal Scroll":
+            case "Scroll of Wisdom":
+                if (price > 0.1) discard = true;
+                break;
+            case "Chromatic Orb":
+            case "Cartographer's Chisel":
+            case "Armourer's Scrap":
+            case "Jeweller's Orb":
+            case "Orb of Alteration":
+            case "Orb of Augmentation":
+            case "Blacksmith's Whetstone":
+                if (price > 1) discard = true;
+                break;
+            case "Mirror of Kalandra":
+                if (price < 500) discard = true;
+                break;
+            case "Orb of Regret":
+            case "Vaal Orb":
+            case "Regal Orb":
+                if (price < 0.2) discard = true;
+                break;
+            case "Divine Orb":
+            case "Ancient Orb":
+            case "Exalted Orb":
+                if (price < 2) discard = true;
+                break;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public String getPriceType() {
+        return priceType;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public int getLinks() {
+        return links;
+    }
+
+    public int getQuality() {
+        return quality;
+    }
+
+    public String getChildCategory() {
+        return childCategory;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getParentCategory() {
+        return parentCategory;
+    }
+
+    public String getTier() {
+        return tier;
+    }
+
+    public String getVariation() {
+        return variation;
+    }
+
+    public boolean isDoNotIndex() {
+        return doNotIndex;
+    }
+
+    public boolean isDiscard() {
+        return discard;
     }
 }
