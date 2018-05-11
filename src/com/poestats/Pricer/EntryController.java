@@ -1,14 +1,12 @@
-package ovh.poe.Pricer;
+package com.poestats.Pricer;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import ovh.poe.Mappers;
-import ovh.poe.Item;
-import ovh.poe.Main;
-import ovh.poe.Misc;
+import com.poestats.Item;
+import com.poestats.Main;
+import com.poestats.Mappers;
+import com.poestats.Misc;
 
 import java.io.*;
-import java.lang.reflect.Type;
 import java.util.*;
 
 /**

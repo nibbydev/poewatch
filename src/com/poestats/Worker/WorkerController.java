@@ -1,8 +1,8 @@
-package ovh.poe.Worker;
+package com.poestats.Worker;
 
 import com.google.gson.Gson;
-import ovh.poe.Mappers;
-import ovh.poe.Main;
+import com.poestats.Main;
+import com.poestats.Mappers;
 
 import java.io.InputStream;
 import java.net.URL;

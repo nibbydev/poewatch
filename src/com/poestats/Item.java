@@ -1,7 +1,7 @@
-package ovh.poe;
+package com.poestats;
 
-import static ovh.poe.Main.CONFIG;
-import static ovh.poe.Main.RELATIONS;
+import static com.poestats.Main.CONFIG;
+import static com.poestats.Main.RELATIONS;
 
 /**
  * Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data

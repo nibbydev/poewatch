@@ -1,4 +1,4 @@
-package ovh.poe;
+package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

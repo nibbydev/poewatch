@@ -1,7 +1,7 @@
-package ovh.poe;
+package com.poestats;
 
 import com.google.gson.Gson;
-import ovh.poe.Pricer.Entry;
+import com.poestats.Pricer.Entry;
 
 import java.io.File;
 import java.io.IOException;

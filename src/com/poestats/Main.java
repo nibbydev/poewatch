@@ -1,9 +1,9 @@
-package ovh.poe;
+package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ovh.poe.Pricer.EntryController;
-import ovh.poe.Worker.WorkerController;
+import com.poestats.Pricer.EntryController;
+import com.poestats.Worker.WorkerController;
 
 import java.io.*;
 import java.util.ArrayList;

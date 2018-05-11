@@ -1,8 +1,8 @@
-package ovh.poe.Pricer;
+package com.poestats.Pricer;
 
-import ovh.poe.Item;
-import ovh.poe.Main;
-import ovh.poe.RelationManager;
+import com.poestats.Item;
+import com.poestats.Main;
+import com.poestats.RelationManager;
 
 import java.util.*;
 
