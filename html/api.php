@@ -1,6 +1,6 @@
 <?php
   session_start();
-  if ( !isset($_SESSION["logged_in"]) ) header('location: unavailable');
+  if ( !isset($_SESSION["logged_in"]) ) header('location: login');
 ?>
 <!DOCTYPE html>
 <html lang="en">
