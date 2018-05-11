@@ -7,7 +7,10 @@
 <head>
   <title>Poe-Stats - API</title>
   <meta charset="utf-8">
-  <link rel="icon" type="image/png" href="assets/img/favico.png">
+  <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
+  <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="assets/img/ico/32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="assets/img/ico/16.png" sizes="16x16">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
