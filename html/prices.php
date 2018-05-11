@@ -1,3 +1,7 @@
+<?php
+  session_start();
+  if ( !isset($_SESSION["logged_in"]) ) header('location: unavailable');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,10 +15,10 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-md navbar-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
-      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
       Poe-Stats
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,6 +29,7 @@
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link active" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
     </div>
@@ -32,28 +37,33 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
-<div class="container-fluid second-navbar m-0 py-1 pr-3r">
+<div class="container-fluid second-navbar m-0 py-1 pr-3">
   <div class="form-group search-league m-0 ml-3">
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
   </div>
   <div class="form-group live-updates m-0">
     <label for="live-updates" class="m-0">Live updates</label>
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="live-updates">
-      <label class="btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1">
+      <label class="btn btn-sm btn-outline-dark p-0 px-1">
         <input name="live" type="radio" value="true">On
       </label>
-      <label class="btn btn-sm btn-outline-dark btn-outline-dark-alt p-0 px-1 active">
+      <label class="btn btn-sm btn-outline-dark p-0 px-1 active">
         <input name="live" type="radio" value="false">Off
       </label>
     </div>
   </div>
 </div>
 <!--/Secondary navbar/-->
+<div class="container-fluid p-0 m-0">  
+  <div class="progress progressbar-live m-0">
+    <div class="progress-bar bg-secondary" role="progressbar" id="progressbar-live"></div>
+  </div>
+</div>
 <!-- Page body -->
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-xl-3"> 
+    <div class="col-xl-3 custom-sidebar-column"> 
       <div class="row mt-4 mb-xl-4">
 
           <?php include ( "assets/php/menu.php" ) ?>
@@ -62,13 +72,11 @@
     </div>
     <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-xl-8 col-lg mt-4"> 
+    <div class="col-xl-9 col-lg mt-4"> 
       <!-- Title row -->
       <div class="row d-none d-xl-block">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="alert custom-card" role="alert">
-            <h2 class="alert-heading text-center"><?php echo isset($_GET["category"]) ? ucwords($_GET["category"]) : "Prices" ?></h2>
-            <hr>
             <?php if (isset($_GET["category"]) && $_GET["category"] === "enchantments"): ?>
             <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
             <?php else: ?>
@@ -218,12 +226,12 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-body">
-              <table class="table price-table table-hover" id="searchResults">
+              <table class="table price-table table-striped table-hover" id="searchResults">
                 <thead><tr></tr></thead>
                 <tbody></tbody>
               </table>
               <div class="loadall">
-                <button type="button" class="btn btn-block btn-outline-dark btn-outline-dark-alt" id="button-loadall">Load more</button>
+                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
               </div>
             </div>
           </div>
@@ -245,7 +253,7 @@
 <div class="service-container" id="service-categories" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/categories.json" ) ); ?>"></div>
 <!--/Service containers/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script type="text/javascript" src="assets/js/main.js"></script>
+<script type="text/javascript" src="assets/js/prices.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>

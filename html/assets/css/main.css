@@ -2,9 +2,15 @@
 // Main block formatting
 //----------------------------------------------------------------------------------------------------------*/
 
+html {
+  position: relative;
+  min-height: 100%;
+}
+
 body {
   background-color: #181818;
   color: #ddd;
+  margin-bottom: 70px;
 }
 
 .custom-card {
@@ -31,12 +37,12 @@ option {
 
 .btn-outline-dark {
   color: #ddd;
-  border-color: #333;
+  border-color: #555;
 }
 
 .btn-outline-dark:hover {
   background-color: #333;
-  border-color: #333;
+  border-color: #555;
 }
 
 /* Disable focus borders */ 
@@ -50,14 +56,8 @@ option {
   border-color: #333;
 }
 
-/* Second navbar radio border */
-.btn-outline-dark-alt {
-  border-color: #555;
-}
-/* Second navbar radio border hover */
-.btn-outline-dark-alt:hover {
-  background-color: #333;
-  border-color: #555;
+.form-group input {
+  background-color: #222 !important;
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -75,6 +75,10 @@ option {
 footer {
   padding: 15px;
   background-color: #222;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 70px;
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -102,8 +106,8 @@ footer {
 
 a:hover {text-decoration: none !important}
 
-@media (min-width: 992px) {
-  .custom-menu-item {
+@media (min-width: 1200px) {
+  .custom-sidebar-column {
     max-width: 300px;
   }
 }
@@ -127,6 +131,22 @@ a:hover {text-decoration: none !important}
 }
 
 /*------------------------------------------------------------------------------------------------------------
+// Progress bars
+//----------------------------------------------------------------------------------------------------------*/
+
+#leagueProgressBar {
+  width: 0%;
+}
+
+.progress {
+  background-color: #444;
+}
+
+.progress-bar {
+  background-color: #888;
+}
+
+/*------------------------------------------------------------------------------------------------------------
 // Misc
 //----------------------------------------------------------------------------------------------------------*/
 
@@ -144,3 +164,75 @@ a:hover {text-decoration: none !important}
 
 /* Styling for item types */
 .subtext-1{color: #888}
+
+.main-img-1 {
+  float: right;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Colors
+//----------------------------------------------------------------------------------------------------------*/
+
+/*
+// Badges
+*/
+
+.custom-badge-red {
+  color: #222;
+  background-color: rgb(202, 90, 90);
+}
+.custom-badge-orange {
+  color: #222;
+  background-color:rgb(202, 163, 90);
+}
+.custom-badge-orange-lo {
+  color: #222;
+  background-color:rgb(192, 185, 146);
+}
+.custom-badge-green {
+  color: #222;
+  background-color: rgb(112, 202, 90);
+}
+.custom-badge-green-lo {
+  color: #222;
+  background-color: rgb(155, 192, 146);
+}
+.custom-badge-gray {
+  color: #222;
+  background-color: rgba(161, 161, 161, 0.603);
+}
+
+/*
+// Text
+*/
+
+.custom-text-red {
+  color: rgb(202, 90, 90);
+}
+.custom-text-orange {
+  color:rgb(202, 163, 90);
+}
+.custom-text-orange-lo {
+  color:rgb(192, 185, 146);
+}
+.custom-text-green {
+  color: rgb(112, 202, 90);
+}
+.custom-text-green-lo {
+  color: rgb(155, 192, 146);
+}
+.custom-text-gray {
+  color: rgb(161, 161, 161);
+}
+.custom-text-dark {
+  color: rgb(88, 88, 88);
+}
+
+/*
+// Other
+*/
+
+.custom-badge-block {
+  display: block;
+  max-width: 64px;
+}

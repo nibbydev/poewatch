@@ -1,3 +1,7 @@
+<?php
+  session_start();
+  if ( !isset($_SESSION["logged_in"]) ) header('location: unavailable');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,10 +14,10 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-md navbar-dark">
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
-      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2" alt="">
+      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
       Poe-Stats
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +28,7 @@
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link active" href="api">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
     </div>
@@ -34,7 +39,7 @@
 <div class="container-fluid">    
   <div class="row">
     <!-- Menu -->
-    <div class="col-xl-3"> 
+    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
       <div class="row mt-4 mb-xl-4">
 
           <?php include ( "assets/php/menu.php" ) ?>
@@ -43,7 +48,7 @@
     </div>
     <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-xl-8 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
+    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
       <!-- API: id -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -59,7 +64,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/id">Id</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/id">Id</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -76,18 +81,87 @@
             <div class="card-body">
               <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated dynamically and also every 30 minutes from the official api.</p>
+              <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated dynamically and also every 30 minutes from the official API.</p>
               <!--/Description/-->
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/leagues">Leagues</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagues">Leagues</a>
               <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
       <!--/API: leagues/-->
+      <!-- API: league length -->
+      <div class="row mb-3">
+        <div class="col-lg">
+          <div class="card custom-card">
+            <div class="card-header">
+              <h2>api.poe-stats.com/length <span class='badge badge-light'>New</span></h2>
+            </div>
+            <div class="card-body">
+              <!-- Description -->
+              <h5 class="card-title">Description</h5>
+              <p class="card-text">Provides a list of current active leagues as well as their durations. Updated every 30 minutes from the official API. If the duration is impossible to calculate, -1 will be used as a replacement.</p>
+              <!--/Description/-->
+              <hr>
+              <!-- Response fields -->
+              <h5 class="card-title">Response fields</h5>
+              <div class="card api-data-table px-2 pt-1 mb-2">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Param</th>
+                      <th>Persistent</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>id</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Name of the league</td>
+                    </tr>
+                    <tr>
+                      <td>elapse</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Days since the league began</td>
+                    </tr>
+                    <tr>
+                      <td>remain</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Days until the end of the league</td>
+                    </tr>
+                    <tr>
+                      <td>total</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Total length of league in days</td>
+                    </tr>
+                    <tr>
+                      <td>start</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>If present, indicates when the league started in ISO 8601 yyyy-MM-dd'T'HH:mm:ss'Z' standard</td>
+                    </tr>
+                    <tr>
+                      <td>end</td>
+                      <td><span class='badge badge-danger'>✕</span></td>
+                      <td>If present, indicates when the league will end in ISO 8601 yyyy-MM-dd'T'HH:mm:ss'Z' standard</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--/Response fields/-->
+              <hr>
+              <!-- Examples -->
+              <h5 class="card-title">Examples</h5>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/length">Durations</a>
+              <!--/Examples/-->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--/API: league length/-->
       <!-- API: categories -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -103,7 +177,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/categories">Categories</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/categories">Categories</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -125,7 +199,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/itemdata">Item data</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/itemdata">Item data</a>
               <!--/Examples/-->
             </div>
           </div>
@@ -361,7 +435,7 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark btn-outline-dark-alt mt-1" href="http://api.poe-stats.com/get?league=standard&category=armour">Armour</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/get?league=standard&category=armour">Armour</a>
               <!--/Examples/-->
             </div>
           </div>

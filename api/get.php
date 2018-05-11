@@ -3,7 +3,7 @@
 header("Content-Type: application/json");
 
 if (array_key_exists("league", $_GET)) {
-  $PARAM_league = ucwords(strtolower(trim(preg_replace("/[^A-Za-z ]/", "", $_GET["league"]))));
+  $PARAM_league = trim(preg_replace("/[^A-Za-z0-9( )]/", "", $_GET["league"]));
   if (!$PARAM_league) die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
 } else die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
 
