@@ -1,3 +1,11 @@
+<?php
+  if ( isset($_GET["category"]) ) {
+    $category = $_GET["category"];
+  } else {
+    header('location:/prices?category=currency');
+    die();
+  }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,7 +84,7 @@
       <div class="row d-none d-xl-block">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="alert custom-card" role="alert">
-            <?php if (isset($_GET["category"]) && $_GET["category"] === "enchantments"): ?>
+            <?php if ($category === "enchantments"): ?>
             <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
             <?php else: ?>
             <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
@@ -85,7 +93,7 @@
         </div>
       </div>
       <!--/Title row/-->
-      <?php if (isset($_GET["category"]) && $_GET["category"] === "gems"): ?>
+      <?php if ($category === "gems"): ?>
       
       <!-- Gem field row -->
       <div class="row mb-3 gem-fields">
@@ -130,7 +138,6 @@
             </select>
           </div>
         </div>
-
         <div class="col-6 col-md-4 mb-2 order-2 order-sm-2 order-md-4 mb-3">
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
@@ -153,7 +160,7 @@
       </div>
       <!--/Gem field row/-->
 
-      <?php elseif (isset($_GET["category"]) && ($_GET["category"] === "armour" || $_GET["category"] === "weapons")): ?>
+      <?php elseif ($category === "armour" || $category === "weapons"): ?>
 
       <!-- Link + generic field row -->
       <div class="row mb-3">
