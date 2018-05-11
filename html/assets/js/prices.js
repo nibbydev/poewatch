@@ -747,10 +747,10 @@ function parseItem(item, index) {
     
     if (item["corrupted"] === "1") {
       template = template.replace("{{color}}",  "red");
-      template = template.replace("{{corr}}",   "Yes");
+      template = template.replace("{{corr}}",   "✓");
     } else {
       template = template.replace("{{color}}",  "green");
-      template = template.replace("{{corr}}",   "No");
+      template = template.replace("{{corr}}",   "✕");
     }
   
     return template;

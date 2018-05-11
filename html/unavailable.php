@@ -34,8 +34,17 @@
 <!-- Page body -->
 <div class="container-fluid">    
   <div class="row">
+    <!-- Menu -->
+    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
+      <div class="row mt-4 mb-xl-4">
+
+          <?php include ( "assets/php/menu.php" ) ?>
+
+      </div>
+    </div>
+    <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-10 offset-1 mt-4">
+    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
       <div class="row">
         <div class="col-lg">
           <div class="alert custom-card text-center" role="alert">
