@@ -147,7 +147,6 @@ public class RelationManager {
     private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
     private Map<String, List<String>> categories = new HashMap<>();
-    private List<LeagueEntry> leagueEntries;
     private List<String> leagues = new ArrayList<>();
     private List<LeagueLengthElement> leagueLengthMap;
 
@@ -209,6 +208,9 @@ public class RelationManager {
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
             Main.ADMIN._log(ex, 3);
+
+            readLeaguesFromFile();
+            return;
         } finally {
             try {
                 if (stream != null) stream.close();
@@ -220,58 +222,62 @@ public class RelationManager {
         // If download was unsuccessful, return
         if (leagueList == null || leagueList.size() < 2) return;
 
-        leagueEntries = leagueList;
-        fillLeagueLengthMap();
+        fillLeagueMaps(leagueList);
 
-        // Clear and fill list
-        leagues.clear();
-        for (LeagueEntry element : leagueList) {
-            if (!element.id.contains("SSF")) leagues.add(element.id);
+        Main.ADMIN.log_("League list updated", 1);
+    }
+
+    private void readLeaguesFromFile() {
+        File file = new File("./data/length.json");
+
+        // Open up the reader
+        try (Reader reader = Misc.defineReader(file)) {
+            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+
+            Type listType = new TypeToken<List<LeagueLengthElement>>(){}.getType();
+            leagueLengthMap = gson.fromJson(reader, listType);
+
+            leagues.clear();
+            for (LeagueLengthElement leagueLengthElement : leagueLengthMap) {
+                if (!leagueLengthElement.id.contains("SSF")) leagues.add(leagueLengthElement.id);
+            }
+        } catch (IOException ex) {
+            Main.ADMIN.log_("Couldn't load '" + file.getName() + "'", 3);
         }
+    }
 
-        // Sort the list for aesthetic purposes
-        String[] tempList = new String[leagues.size()];
+    private void sortLeagues(List<String> leagues) {
+        String[] sortedLeagues = new String[leagues.size()];
         int counter = 0;
+
         for (String league : leagues) {
-            if (league.equals("Hardcore")) tempList[leagues.size() - 1] = league;
-            else if (league.equals("Standard")) tempList[leagues.size() - 2] = league;
-            else if (league.contains("Hardcore ")) tempList[leagues.size() - 3] = league;
+            if (league.equals("Hardcore")) sortedLeagues[leagues.size() - 1] = league;
+            else if (league.equals("Standard")) sortedLeagues[leagues.size() - 2] = league;
+            else if (league.contains("Hardcore ")) sortedLeagues[leagues.size() - 3] = league;
             else {
-                tempList[counter] = league;
+                sortedLeagues[counter] = league;
                 counter++;
             }
         }
 
-        // Write the new list to the global var
         leagues.clear();
-        leagues.addAll(Arrays.asList(tempList));
-
-        Main.ADMIN.log_("League list updated", 1);
+        leagues.addAll(Arrays.asList(sortedLeagues));
     }
 
     /**
      * Calculates how many days a league has been active for, how many days until the end of a league and how many days
      * the league will run;
      *
-     * @param league League id with correct capitalization
+     * @param leagueEntry LeagueEntry element
      * @return Filled LeagueLengthElement object or null on error
      */
-    private LeagueLengthElement daysSinceLeague(String league) {
-        if (leagueEntries == null) return null;
-
-        LeagueEntry leagueEntry = null;
-        for (LeagueEntry tmp_leagueEntry: leagueEntries) {
-            if (tmp_leagueEntry.id.equals(league)) leagueEntry = tmp_leagueEntry;
-        }
-
-        if (leagueEntry == null) return null;
-
+    private LeagueLengthElement daysSinceLeague(LeagueEntry leagueEntry) {
         Date startDate = leagueEntry.startAt == null ? null : LeagueEntry.parseDate(leagueEntry.startAt);
         Date endDate = leagueEntry.endAt == null ? null : LeagueEntry.parseDate(leagueEntry.endAt);
         Date currentDate = new Date();
 
         LeagueLengthElement leagueLengthElement = new LeagueLengthElement();
-        leagueLengthElement.id = league;
+        leagueLengthElement.id = leagueEntry.id;
         leagueLengthElement.start = leagueEntry.startAt;
         leagueLengthElement.end = leagueEntry.endAt;
 
@@ -302,22 +308,27 @@ public class RelationManager {
     /**
      * Fills leagueLengthMap with data from leagueEntries
      */
-    private void fillLeagueLengthMap() {
+    private void fillLeagueMaps(List<LeagueEntry> leagueEntries) {
         if (leagueEntries == null) return;
+        leagues.clear();
 
         List<LeagueLengthElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
 
         for (LeagueEntry leagueEntry : leagueEntries) {
-            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry.id);
+            if (!leagueEntry.id.contains("SSF")) continue;
+
+            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry);
 
             if (leagueLengthElement == null) {
                 Main.ADMIN.log_("Something went horribly wrong with league dates", 5);
-                return;
+                continue;
             }
 
             tmp_leagueDurationMap.add(leagueLengthElement);
+            leagues.add(leagueEntry.id);
         }
 
+        sortLeagues(leagues);
         leagueLengthMap = tmp_leagueDurationMap;
 
         saveLeagueDurationMapToFile();

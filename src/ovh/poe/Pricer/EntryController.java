@@ -266,7 +266,7 @@ public class EntryController {
         // Run every minute (-ish)
         if (System.currentTimeMillis() - lastRunTime < Main.CONFIG.pricerControllerSleepCycle * 1000) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
-        if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
+        //if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();

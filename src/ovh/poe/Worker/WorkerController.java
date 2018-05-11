@@ -209,6 +209,7 @@ public class WorkerController extends Thread {
             // Map the JSON string to an object
             response = gson.fromJson(response, Mappers.ChangeID.class).get();
         } catch (Exception ex) {
+            Main.ADMIN.log_("Could not download ChangeID from: " + url, 3);
             Main.ADMIN._log(ex, 3);
         }
 
