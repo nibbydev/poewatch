@@ -55,10 +55,8 @@ public class HistoryController {
             for (LeagueEntry leagueEntry : leagueEntries) {
                 if (!leagueEntry.getId().equals(league)) continue;
 
-                leagueEntry.parse();
-
-                currentLeagueDay = leagueEntry.getElapse();
-                totalLeagueLength = leagueEntry.getTotal();
+                currentLeagueDay = leagueEntry.getElapsedDays();
+                totalLeagueLength = leagueEntry.getTotalDays();
             }
         }
     }

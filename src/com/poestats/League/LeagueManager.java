@@ -41,14 +41,6 @@ public class LeagueManager {
         return stringLeagues != null;
     }
 
-    public void readFromFile() {
-        readLeaguesFromFile();
-    }
-
-    public void writeToFile() {
-        saveDataToFiles();
-    }
-
     public void download() {
         List<LeagueEntry> rawLeagueList = downloadLeagueList();
         if (rawLeagueList == null) return;
@@ -60,6 +52,8 @@ public class LeagueManager {
         for (int i = 0; i < leagues.size(); i++) {
             stringLeagues[i] = leagues.get(i).getId();
         }
+
+        saveDataToFiles();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -189,7 +183,7 @@ public class LeagueManager {
     /**
      * Saves league-related data to files
      */
-    private void saveDataToFiles() {
+    public void saveDataToFiles() {
         File dataFile = new File("./data/leagueData.json");
         try (Writer writer = Misc.defineWriter(dataFile)) {
             if (writer == null) throw new IOException();
@@ -212,7 +206,7 @@ public class LeagueManager {
     /**
      * Reads league-related data from files
      */
-    private void readLeaguesFromFile() {
+    public void readFromFile() {
         File dataFile = new File("./data/leagueData.json");
 
         // Open up the reader

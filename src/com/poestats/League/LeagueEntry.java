@@ -16,51 +16,49 @@ public class LeagueEntry {
 
     // For deserializer
     private String id, startAt, endAt;
-    // User-defined variables
-    private int elapse, remain, total;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
-    public void parse() {
-        findDaysSince();
+    /**
+     * Finds number of days league has been active for
+     *
+     * @return Current league length or 0 on error
+     */
+    public int getElapsedDays() {
+        Date startDate = startAt == null ? null : parseDate(startAt);
+        Date currentDate = new Date();
+
+        if (startDate == null) {
+            return 0;
+        } else {
+            long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
+            return (int)(startDifference / (24 * 60 * 60 * 1000));
+        }
     }
+
+    /**
+     * Finds total days league will elapse
+     *
+     * @return Total league length or -1 on error
+     */
+    public int getTotalDays() {
+        Date startDate = startAt == null ? null : parseDate(startAt);
+        Date endDate = endAt == null ? null : parseDate(endAt);
+
+        if (startDate == null || endDate == null) {
+            return  -1;
+        } else {
+            long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
+            return (int) (totalDifference / (24 * 60 * 60 * 1000));
+        }
+    }
+
 
     //------------------------------------------------------------------------------------------------------------
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Calculates how many days a league has been active for, how many days until the end of a league and how many days
-     * the league will run;
-     */
-    private void findDaysSince() {
-        Date startDate = startAt == null ? null : parseDate(startAt);
-        Date endDate = endAt == null ? null : parseDate(endAt);
-        Date currentDate = new Date();
-
-        if (startDate == null || endDate == null) {
-            total = -1;
-        } else {
-            long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
-            total = (int) (totalDifference / (24 * 60 * 60 * 1000));
-        }
-
-        if (startDate == null) {
-            elapse = 0;
-        } else {
-            long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
-            elapse = (int)(startDifference / (24 * 60 * 60 * 1000));
-        }
-
-        if (endDate == null) {
-            remain = -1;
-        } else {
-            long endDifference = Math.abs(endDate.getTime() - currentDate.getTime());
-            remain = (int) (endDifference / (24 * 60 * 60 * 1000));
-        }
-    }
 
     /**
      * Converts string date found in league api to Date object
@@ -87,13 +85,5 @@ public class LeagueEntry {
 
     public String getId() {
         return id;
-    }
-
-    public int getElapse() {
-        return elapse;
-    }
-
-    public int getTotal() {
-        return total;
     }
 }
