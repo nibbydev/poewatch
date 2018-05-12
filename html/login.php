@@ -58,10 +58,10 @@
             <h3 class="alert-heading">Attention!</h3>
             <hr>
             <div class="row">
-              <div class="col">
+              <div class="col-sm">
                 <p>The requested resource was not found or is not yet ready for public access.</p>
               </div>
-              <div class="col">
+              <div class="col-sm">
                 <p>Please enter your credentials to proceed</p>
                 <!-- Nosey little fucker, aren't you? -->
                 <form method="POST"> 
@@ -69,7 +69,7 @@
                     <input type="email" class="form-control" name="email" placeholder="Email">
                   </div>
                   <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="Password">
+                    <input type="current-password" class="form-control" name="password" placeholder="Password">
                   </div>
                   <?php if (isset($_POST["email"])) echo "<span class=\"badge custom-text-red\">Invalid login.</span>"; ?>
                   <button type="submit" class="btn btn-outline-dark float-right">Submit</button>
