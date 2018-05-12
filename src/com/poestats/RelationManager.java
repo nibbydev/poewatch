@@ -566,7 +566,7 @@ public class RelationManager {
      * @param index Index of item. Must have length of 7
      * @return Requested indexed item entry or null on failure
      */
-    public IndexedItem genericIndexToData(String index) {
+    public IndexedItem indexToGenericData(String index) {
         if (isIndex(index)) return null;
 
         String primaryIndex = index.substring(0, 4);
@@ -574,7 +574,7 @@ public class RelationManager {
         return itemSubIndexToData.getOrDefault(primaryIndex, null);
     }
 
-    public SubIndexedItem specificIndexToData(String index) {
+    public SubIndexedItem indexToSpecificData(String index) {
         if (isIndex(index)) return null;
 
         String primaryIndex = index.substring(0, 4);

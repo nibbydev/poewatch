@@ -369,10 +369,11 @@ public class Entry {
      */
     private void parse() {
         EntryController.IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
+        RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
-            if (checkRaw(raw)) continue;
+            if (checkRaw(raw, indexedItem.frame)) continue;
 
             // If the item was not listed for chaos orbs, then find the value in chaos
             if (!raw.priceType.equals("Chaos Orb")) {
@@ -419,24 +420,19 @@ public class Entry {
      * @param raw RawEntry to check and then store
      * @return True if should be discarded
      */
-    private boolean checkRaw(RawEntry raw) {
+    private boolean checkRaw(RawEntry raw, int frame) {
         try {
+            // Don't check for duplicates if less than 10 are listed each day
+            if (frame == 5 && quantity < 20) return false;
+
             for (RawEntry tempEntry : db_temp) {
                 if (tempEntry.id.equals(raw.id)) return true;
-
-                // Don't check account name if less than 10 are listed each day
-                if (quantity > 10) {
-                    if (tempEntry.accountName.equals(raw.accountName)) return true;
-                }
+                if (tempEntry.accountName.equals(raw.accountName)) return true;
             }
 
             for (ItemEntry itemEntry : db_items) {
                 if (itemEntry.id.equals(raw.id)) return true;
-
-                // Don't check account name if less than 10 are listed each day
-                if (quantity > 10) {
-                    if (itemEntry.accountName.equals(raw.accountName)) return true;
-                }
+                if (itemEntry.accountName.equals(raw.accountName)) return true;
             }
         } finally {
             db_temp.add(raw);
@@ -463,7 +459,7 @@ public class Entry {
         // Very few items have been listed
         if (total_counter < 15) return true;
 
-        RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
+        RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
         if (indexedItem == null) {
             System.out.println("null: "+index);
             return false;

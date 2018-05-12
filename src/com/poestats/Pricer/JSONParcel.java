@@ -173,7 +173,7 @@ public class JSONParcel {
 
     public void add(Entry entry) {
         if (entry.getIndex() == null) return;
-        IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(entry.getIndex());
+        IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(entry.getIndex());
         if (indexedItem == null) return;
 
         JSONCategoryMap jsonCategoryMap = jsonLeagueMap.getOrDefault(entry.getLeague(), new JSONCategoryMap());
