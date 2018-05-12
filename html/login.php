@@ -59,7 +59,7 @@
             <hr>
             <div class="row">
               <div class="col">
-                <p>The requested resource is not yet ready for public access.</p>
+                <p>The requested resource was not found or is not yet ready for public access.</p>
               </div>
               <div class="col">
                 <p>Please enter your credentials to proceed</p>

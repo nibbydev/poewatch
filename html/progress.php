@@ -77,7 +77,7 @@
 </footer>
 <!--/Footer/-->
 <!-- Service containers -->
-<div id="service-data" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/length.json" ) ); ?>"></div>
+<div id="service-data" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagueData.json" ) ); ?>"></div>
 <!--/Service containers/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/progress.js"></script>

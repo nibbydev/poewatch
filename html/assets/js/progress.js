@@ -19,8 +19,8 @@ $(document).ready(function() {
     if (["Standard", "Hardcore"].includes(element["id"])) return;
     else if (~element["id"].indexOf("SSF")) return;
 
-    var start = new Date(element["start"]);
-    var end = new Date(element["end"]);
+    var start = new Date(element["startAt"]);
+    var end = new Date(element["endAt"]);
     var now = new Date();
 
     let tmp = "Time until ";
