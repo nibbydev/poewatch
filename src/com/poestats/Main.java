@@ -9,6 +9,7 @@ import com.poestats.Worker.WorkerController;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class Main {
     private static GsonBuilder gsonBuilder;
@@ -181,10 +182,18 @@ public class Main {
         new File("./backups").mkdirs();
 
         // Create ./config.cfg if missing
-        saveResource("/", "config.cfg");
+        boolean createdConfig = saveResource("/", "config.cfg");
 
         // Create ./currencyRelations.json if missing
-        saveResource("/data/", "currencyRelations.json");
+        boolean createdRelations = saveResource("/data/", "currencyRelations.json");
+
+        if (createdConfig || createdRelations) {
+            Main.ADMIN.log_("Created files on first launch. Configure these and launch again", 1);
+            Main.ADMIN.log_("Press any key to continue...", 0);
+            Scanner sc = new Scanner(System.in);
+            sc.nextLine();
+            System.exit(0);
+        }
     }
 
     /**
@@ -192,8 +201,9 @@ public class Main {
      *
      * @param outputDirectory local path to directory
      * @param name            filename
+     * @return True if created resource
      */
-    private static void saveResource(String outputDirectory, String name) {
+    private static boolean saveResource(String outputDirectory, String name) {
         // Remove id from file id
         String outputName = name.split("---")[0];
 
@@ -201,7 +211,7 @@ public class Main {
         String workingDir = System.getProperty("user.dir");
         File out = new File(workingDir + outputDirectory, outputName);
 
-        if (out.exists()) return;
+        if (out.exists()) return false;
 
         Main.ADMIN.log_("Created file: " + outputDirectory + outputName, 1);
 
@@ -224,6 +234,7 @@ public class Main {
             }
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
+            return false;
         } finally {
             try {
                 if (reader != null)
@@ -237,6 +248,8 @@ public class Main {
                 Main.ADMIN._log(ex, 4);
             }
         }
+
+        return true;
     }
 
     //------------------------------------------------------------------------------------------------------------
