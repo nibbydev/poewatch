@@ -30,7 +30,6 @@ public class HistoryController {
     private String league, category;
     private int currentLeagueDay;
     private int totalLeagueLength;
-    private int daysInStandard = 90;
     private boolean isPermanentLeague;
 
     public void configure(String league, String category) {
@@ -83,7 +82,7 @@ public class HistoryController {
 
         int baseSize, lastIndex;
         if (isPermanentLeague) {
-            baseSize = daysInStandard;
+            baseSize = Config.defaultLeagueLength;
         } else {
             baseSize = totalLeagueLength;
         }
@@ -110,7 +109,7 @@ public class HistoryController {
             System.arraycopy(historyItem.quantity,  1, historyItem.quantity,    0, historyItem.mean.length - 1);
             System.arraycopy(historyItem.count,     1, historyItem.count,       0, historyItem.mean.length - 1);
 
-            lastIndex = daysInStandard - 1;
+            lastIndex = Config.defaultLeagueLength - 1;
         } else {
             lastIndex = currentLeagueDay;
         }

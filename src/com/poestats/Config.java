@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Loads in values from file. Values can be accessed from anywhere in the script
  */
-public class ConfigReader {
+public class Config {
     public int timeZoneOffset = 0;
     public int workerLimit = 5;
     public int downloadChunkSize = 128;
@@ -24,12 +24,14 @@ public class ConfigReader {
     public int calcShiftPercent = 80;
     public int calcNewShiftPercent = 60;
 
+    public static final int defaultLeagueLength = 90;
+
     /**
      * Calls method that loads in config values on class init
      *
      * @param fileName Config file id in relation to local path
      */
-    ConfigReader(String fileName) {
+    Config(String fileName) {
         readFile(fileName);
     }
 

@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 public class Main {
     private static GsonBuilder gsonBuilder;
-    public static ConfigReader CONFIG;
+    public static Config CONFIG;
     public static WorkerController WORKER_CONTROLLER;
     public static EntryController ENTRY_CONTROLLER;
     public static RelationManager RELATIONS;
@@ -36,7 +36,7 @@ public class Main {
         // Make sure basic folder structure exists
         buildFolderFileStructure();
 
-        CONFIG = new ConfigReader("config.cfg");
+        CONFIG = new Config("config.cfg");
         RELATIONS = new RelationManager();
 
         // Init league manager
