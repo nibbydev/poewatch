@@ -271,15 +271,15 @@ public class EntryController {
 
         // Run once every 10min
         if ((System.currentTimeMillis() - tenCounter) > 10 * 60 * 1000) {
-            int multiplier = (int)(System.currentTimeMillis() - tenCounter) / (10 * 60 * 1000);
-            tenCounter += (10 * 60 * 1000) * multiplier;
+            long multiplier = (System.currentTimeMillis() - tenCounter) / (10 * 60 * 1000);
+            tenCounter +=  10 * 60 * 1000 * multiplier;
             tenBool = true;
         }
 
         // Run once every 60min
         if ((System.currentTimeMillis() - sixtyCounter) > 60 * 60 * 1000) {
-            int multiplier = (int)(System.currentTimeMillis() - sixtyCounter) / (60 * 60 * 1000);
-            sixtyCounter += (60 * 60 * 1000) * multiplier;
+            long multiplier = (System.currentTimeMillis() - sixtyCounter) / (60 * 60 * 1000);
+            sixtyCounter += 60 * 60 * 1000 * multiplier;
 
             sixtyBool = true;
 
@@ -289,8 +289,8 @@ public class EntryController {
 
         // Run once every 24h
         if ((System.currentTimeMillis() - twentyFourCounter) > 24 * 60 * 60 * 1000) {
-            int multiplier = (int)(System.currentTimeMillis() - twentyFourCounter) / (24 * 60 * 60 * 1000);
-            twentyFourCounter += (24 * 60 * 60 * 1000) * multiplier;
+            long multiplier = (System.currentTimeMillis() - twentyFourCounter) / (24 * 60 * 60 * 1000);
+            twentyFourCounter += 24 * 60 * 60 * 1000 * multiplier;
 
             twentyFourBool = true;
         }
