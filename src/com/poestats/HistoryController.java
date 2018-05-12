@@ -1,6 +1,7 @@
 package com.poestats;
 
 import com.google.gson.Gson;
+import com.poestats.League.LeagueEntry;
 import com.poestats.Pricer.Entry;
 
 import java.io.File;
@@ -46,19 +47,20 @@ public class HistoryController {
     }
 
     private void getLeagueLengths() {
-        List<RelationManager.LeagueLengthElement> lengthElements = Main.RELATIONS.getLeagueLengthMap();
-        if (lengthElements != null) {
-            for (RelationManager.LeagueLengthElement lengthElement : lengthElements) {
-                if (lengthElement.getId().equals(league)) {
-                    currentLeagueDay = lengthElement.getElapse();
-                    totalLeagueLength = lengthElement.getTotal();
-                    return;
-                }
+        List<LeagueEntry> leagueEntries = Main.LEAGUE_MANAGER.getLeagues();
+        if (leagueEntries == null) {
+            currentLeagueDay = -1;
+            totalLeagueLength = -1;
+        } else {
+            for (LeagueEntry leagueEntry : leagueEntries) {
+                if (!leagueEntry.getId().equals(league)) continue;
+
+                leagueEntry.parse();
+
+                currentLeagueDay = leagueEntry.getElapse();
+                totalLeagueLength = leagueEntry.getTotal();
             }
         }
-
-        currentLeagueDay = -1;
-        totalLeagueLength = -1;
     }
 
     public void readFile() {

@@ -2,6 +2,7 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.poestats.League.LeagueManager;
 import com.poestats.Pricer.EntryController;
 import com.poestats.Worker.WorkerController;
 
@@ -17,6 +18,7 @@ public class Main {
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
     public static HistoryController HISTORY_CONTROLLER;
+    public static LeagueManager LEAGUE_MANAGER;
 
     /**
      * The main class. Run this to run the program
@@ -34,12 +36,12 @@ public class Main {
         buildFolderFileStructure();
 
         CONFIG = new ConfigReader("config.cfg");
-
-        // Init relation manager
         RELATIONS = new RelationManager();
 
-        RELATIONS.downloadLeagueList();
-        if (RELATIONS.getLeagueLengthMap() == null) {
+        // Init league manager
+        LEAGUE_MANAGER = new LeagueManager();
+        boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
+        if (!leagueLoadResult) {
             Main.ADMIN.log_("Unable to get league list", 5);
             System.exit(0);
         }

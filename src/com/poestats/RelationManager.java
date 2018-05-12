@@ -5,38 +5,12 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    private static class LeagueEntry {
-        String id, startAt, endAt;
-
-        /**
-         * Converts string date found in league api to Date object
-         * @param date ISO 8601 standard yyyy-MM-dd'T'HH:mm:ss'Z' date
-         * @return Created Date object
-         */
-        public static Date parseDate(String date) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
-            format.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-            try {
-                return format.parse(date);
-            } catch (ParseException ex) {
-                Main.ADMIN._log(ex, 3);
-            }
-
-            return null;
-        }
-    }
-
     private static class CurrencyRelation {
         String name;
         String[] aliases;
@@ -107,36 +81,6 @@ public class RelationManager {
         }
     }
 
-    public static class LeagueLengthElement {
-        private String start, end;
-        private int elapse, remain, total;
-        private String id;
-
-        public int getElapse() {
-            return elapse;
-        }
-
-        public int getRemain() {
-            return remain;
-        }
-
-        public int getTotal() {
-            return total;
-        }
-
-        public String getEnd() {
-            return end;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getStart() {
-            return start;
-        }
-    }
-
     private Gson gson = Main.getGson();
 
     private Map<String, String> currencyAliasToName = new HashMap<>();
@@ -147,8 +91,7 @@ public class RelationManager {
     private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
     private Map<String, List<String>> categories = new HashMap<>();
-    private List<String> leagues = new ArrayList<>();
-    private List<LeagueLengthElement> leagueLengthMap;
+
 
     /**
      * Reads currency and item data from file on object init
@@ -157,196 +100,6 @@ public class RelationManager {
         readItemDataFromFile();
         readCurrencyRelationsFromFile();
         readCategoriesFromFile();
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // League list management
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Downloads a list of active leagues from pathofexile.com, sorts them, adds them to 'List<String> leagues' and
-     * writes them to './data/leagues.json'
-     */
-    public void downloadLeagueList() {
-        List<LeagueEntry> leagueList = null;
-        InputStream stream = null;
-
-        try {
-            // Define the request
-            URL request = new URL("http://api.pathofexile.com/leagues?type=main&compact=1");
-            HttpURLConnection connection = (HttpURLConnection) request.openConnection();
-
-            // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(Main.CONFIG.readTimeOut);
-            connection.setConnectTimeout(Main.CONFIG.connectTimeOut);
-
-            // Define the streamer (used for reading in chunks)
-            stream = connection.getInputStream();
-
-            // Define some elements
-            StringBuilder stringBuilderBuffer = new StringBuilder();
-            byte[] byteBuffer = new byte[64];
-            int byteCount;
-
-            // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0,64)) != -1) {
-                // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != 64) {
-                    byte[] trimmedByteBuffer = new byte[byteCount];
-                    System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
-
-                    // Trim byteBuffer, convert it into string and add to string buffer
-                    stringBuilderBuffer.append(new String(trimmedByteBuffer));
-                } else {
-                    stringBuilderBuffer.append(new String(byteBuffer));
-                }
-            }
-
-            // Attempt to parse league list
-            Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
-            leagueList = gson.fromJson(stringBuilderBuffer.toString(), listType);
-        } catch (Exception ex) {
-            Main.ADMIN.log_("Failed to download league list", 3);
-            Main.ADMIN._log(ex, 3);
-
-            readLeaguesFromFile();
-            return;
-        } finally {
-            try {
-                if (stream != null) stream.close();
-            } catch (IOException ex) {
-                Main.ADMIN._log(ex, 3);
-            }
-        }
-
-        // If download was unsuccessful, return
-        if (leagueList == null || leagueList.size() < 2) return;
-
-        fillLeagueMaps(leagueList);
-
-        Main.ADMIN.log_("League list updated", 1);
-    }
-
-    private void readLeaguesFromFile() {
-        File file = new File("./data/length.json");
-
-        // Open up the reader
-        try (Reader reader = Misc.defineReader(file)) {
-            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
-
-            Type listType = new TypeToken<List<LeagueLengthElement>>(){}.getType();
-            leagueLengthMap = gson.fromJson(reader, listType);
-
-            leagues.clear();
-            for (LeagueLengthElement leagueLengthElement : leagueLengthMap) {
-                if (!leagueLengthElement.id.contains("SSF")) leagues.add(leagueLengthElement.id);
-            }
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load '" + file.getName() + "'", 3);
-        }
-    }
-
-    private void sortLeagues(List<String> leagues) {
-        String[] sortedLeagues = new String[leagues.size()];
-        int counter = 0;
-
-        for (String league : leagues) {
-            if (league.equals("Hardcore")) sortedLeagues[leagues.size() - 1] = league;
-            else if (league.equals("Standard")) sortedLeagues[leagues.size() - 2] = league;
-            else if (league.contains("Hardcore ")) sortedLeagues[leagues.size() - 3] = league;
-            else {
-                sortedLeagues[counter] = league;
-                counter++;
-            }
-        }
-
-        leagues.clear();
-        leagues.addAll(Arrays.asList(sortedLeagues));
-    }
-
-    /**
-     * Calculates how many days a league has been active for, how many days until the end of a league and how many days
-     * the league will run;
-     *
-     * @param leagueEntry LeagueEntry element
-     * @return Filled LeagueLengthElement object or null on error
-     */
-    private LeagueLengthElement daysSinceLeague(LeagueEntry leagueEntry) {
-        Date startDate = leagueEntry.startAt == null ? null : LeagueEntry.parseDate(leagueEntry.startAt);
-        Date endDate = leagueEntry.endAt == null ? null : LeagueEntry.parseDate(leagueEntry.endAt);
-        Date currentDate = new Date();
-
-        LeagueLengthElement leagueLengthElement = new LeagueLengthElement();
-        leagueLengthElement.id = leagueEntry.id;
-        leagueLengthElement.start = leagueEntry.startAt;
-        leagueLengthElement.end = leagueEntry.endAt;
-
-        if (startDate == null || endDate == null) {
-            leagueLengthElement.total = -1;
-        } else {
-            long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
-            leagueLengthElement.total = (int) (totalDifference / (24 * 60 * 60 * 1000));
-        }
-
-        if (startDate == null) {
-            leagueLengthElement.elapse = 0;
-        } else {
-            long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
-            leagueLengthElement.elapse = (int)(startDifference / (24 * 60 * 60 * 1000));
-        }
-
-        if (endDate == null) {
-            leagueLengthElement.remain = -1;
-        } else {
-            long endDifference = Math.abs(endDate.getTime() - currentDate.getTime());
-            leagueLengthElement.remain = (int) (endDifference / (24 * 60 * 60 * 1000));
-        }
-
-        return leagueLengthElement;
-    }
-
-    /**
-     * Fills leagueLengthMap with data from leagueEntries
-     */
-    private void fillLeagueMaps(List<LeagueEntry> leagueEntries) {
-        if (leagueEntries == null) return;
-        leagues.clear();
-
-        List<LeagueLengthElement> tmp_leagueDurationMap = new ArrayList<>(leagueEntries.size());
-
-        for (LeagueEntry leagueEntry : leagueEntries) {
-            if (!leagueEntry.id.contains("SSF")) continue;
-
-            LeagueLengthElement leagueLengthElement = daysSinceLeague(leagueEntry);
-
-            if (leagueLengthElement == null) {
-                Main.ADMIN.log_("Something went horribly wrong with league dates", 5);
-                continue;
-            }
-
-            tmp_leagueDurationMap.add(leagueLengthElement);
-            leagues.add(leagueEntry.id);
-        }
-
-        sortLeagues(leagues);
-        leagueLengthMap = tmp_leagueDurationMap;
-
-        saveLeagueDurationMapToFile();
-    }
-
-    /**
-     * Saves contents of leagueLengthMap to file
-     */
-    private void saveLeagueDurationMapToFile() {
-        File lengthFile = new File("./data/length.json");
-
-        try (Writer writer = Misc.defineWriter(lengthFile)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(leagueLengthMap, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+ lengthFile.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
-        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -451,16 +204,6 @@ public class RelationManager {
             Main.ADMIN.log_("Could not write to '"+categoryFile.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
-
-        // Save leagues to file
-        File leagueFile = new File("./data/leagues.json");
-        try (Writer writer = Misc.defineWriter(leagueFile)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(leagues, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+leagueFile.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
-        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -478,10 +221,6 @@ public class RelationManager {
         List<String> childCategories = categories.getOrDefault(item.getParentCategory(), new ArrayList<>());
         if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
         categories.putIfAbsent(item.getParentCategory(), childCategories);
-
-        // Manage item league list as a precaution. This list gets replaced by pathofexile's official league list
-        // every 60 minutes
-        if (!leagues.contains(item.league)) leagues.add(item.league);
 
         String index;
         String genericKey = resolveSpecificKey(item.getKey());
@@ -611,19 +350,11 @@ public class RelationManager {
         return itemSubIndexToData;
     }
 
-    public List<String> getLeagues() {
-        return leagues;
-    }
-
     public Map<String, List<String>> getCategories() {
         return categories;
     }
 
     public Map<String, String> getCurrencyAliasToName() {
         return currencyAliasToName;
-    }
-
-    public List<LeagueLengthElement> getLeagueLengthMap() {
-        return leagueLengthMap;
     }
 }
