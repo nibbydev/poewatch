@@ -76,25 +76,52 @@ public class LeagueManager {
 
         List<LeagueEntry> tmpLeagueList = new ArrayList<>(leagueListNoSSF.size());
 
-        // Add leagues
+        // Add softcore events
+        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
+                if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
+                    tmpLeagueList.add(leagueEntry);
+                }
+            }
+        }
+
+        // Add hardcore events
         for (LeagueEntry leagueEntry : leagueListNoSSF) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
                 if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
-                    tmpLeagueList.add(1, leagueEntry);
-                } else {
-                    tmpLeagueList.add(0, leagueEntry);
-                }
-            } else if (leagueEntry.getId().equals("Hardcore")) {
-                tmpLeagueList.add(tmpLeagueList.size() - 1, leagueEntry);
-            } else if (leagueEntry.getId().equals("Standard")) {
-                tmpLeagueList.add(tmpLeagueList.size() - 2, leagueEntry);
-            } else {
-                if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
-                    tmpLeagueList.add(3, leagueEntry);
-                } else {
-                    tmpLeagueList.add(2, leagueEntry);
+                    tmpLeagueList.add(leagueEntry);
                 }
             }
+        }
+
+        // Add main softcore league
+        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
+            if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
+
+            if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
+                tmpLeagueList.add(leagueEntry);
+            }
+        }
+
+        // Add main hardcore league
+        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
+            if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
+
+            if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
+                tmpLeagueList.add(leagueEntry);
+            }
+        }
+
+        // Add Standard
+        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+            if (leagueEntry.getId().equals("Standard")) tmpLeagueList.add(leagueEntry);
+        }
+
+        // Add Hardcore
+        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+            if (leagueEntry.getId().equals("Hardcore")) tmpLeagueList.add(leagueEntry);
         }
 
         return tmpLeagueList;
