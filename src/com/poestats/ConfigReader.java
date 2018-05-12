@@ -8,17 +8,16 @@ import java.io.IOException;
  * Loads in values from file. Values can be accessed from anywhere in the script
  */
 public class ConfigReader {
-    public int timeZoneOffset = 2;
+    public int timeZoneOffset = 0;
     public int workerLimit = 5;
     public int downloadChunkSize = 128;
-    public int downloadDelay = 800;
-    public int readTimeOut = 7000;
+    public int downloadDelay = 1200;
+    public int readTimeOut = 12000;
     public int connectTimeOut = 10000;
     public int pricerControllerSleepCycle = 60;
     public int dataEntryCycleLimit = 10;
-    public int baseDataSize = 100;
-    public int hourlyDataSize = 64;
-    //public int medianLeftShift = 3;
+    public int baseDataSize = 64;
+    public int hourlyDataSize = 30;
     public double pricePrecision = 1000.0;
 
     public int dbTempSize = 16;
