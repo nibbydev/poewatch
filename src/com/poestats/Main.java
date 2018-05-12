@@ -76,11 +76,11 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            Main.ADMIN.log_("Missing CLI option: -workers <1-5>", 5);
-            System.exit(0);
+            WORKER_CONTROLLER.spawnWorkers(3);
+            System.out.println("[INFO] Spawned 3 workers");
         } else if (!newArgs.contains("-id")) {
-            Main.ADMIN.log_("Missing CLI option: -id <'new'/'local'/custom>", 5);
-            System.exit(0);
+            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+            System.out.println("[INFO] New ChangeID added");
         }
 
         for (String arg : newArgs) {
