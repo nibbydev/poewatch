@@ -7,11 +7,16 @@ import com.poestats.Pricer.EntryController;
 import com.poestats.Worker.WorkerController;
 
 import java.io.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
+
     private static GsonBuilder gsonBuilder;
     public static Config CONFIG;
     public static WorkerController WORKER_CONTROLLER;
@@ -20,6 +25,10 @@ public class Main {
     public static AdminSuite ADMIN;
     public static HistoryController HISTORY_CONTROLLER;
     public static LeagueManager LEAGUE_MANAGER;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * The main class. Run this to run the program
@@ -36,7 +45,7 @@ public class Main {
         // Make sure basic folder structure exists
         buildFolderFileStructure();
 
-        CONFIG = new Config("config.cfg");
+        CONFIG = new Config();
         RELATIONS = new RelationManager();
 
         // Init league manager
@@ -76,7 +85,7 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            WORKER_CONTROLLER.spawnWorkers(3);
+            WORKER_CONTROLLER.spawnWorkers(Config.default_workerCount);
             System.out.println("[INFO] Spawned 3 workers");
         } else if (!newArgs.contains("-id")) {
             WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
@@ -142,7 +151,6 @@ public class Main {
                         break;
                     case "exit":
                         System.out.println("[INFO] Shutting down..");
-                        ADMIN.changeIDElement.setStatus(3);
                         ADMIN.saveChangeID();
                         return;
                     case "id":
@@ -172,57 +180,62 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Creates all missing http files and folders on startup
+     * Creates basic file structure on program launch
      */
     private static void buildFolderFileStructure() {
-        // Make sure output folders exist
-        new File("./data/database").mkdirs();
-        new File("./data/output").mkdirs();
-        new File("./data/history").mkdirs();
-        new File("./backups").mkdirs();
+        boolean createdFile = notifyMkDir(Config.folder_data);
+        createdFile = notifyMkDir(Config.folder_database)   || createdFile;
+        createdFile = notifyMkDir(Config.folder_output)     || createdFile;
+        createdFile = notifyMkDir(Config.folder_history)    || createdFile;
+        createdFile = notifyMkDir(Config.folder_backups)    || createdFile;
 
-        // Create ./config.cfg if missing
-        boolean createdConfig = saveResource("/", "config.cfg");
+        createdFile = saveResource(Config.resource_config, Config.file_config)          || createdFile;
+        createdFile = saveResource(Config.resource_relations, Config.file_relations)    || createdFile;
 
-        // Create ./currencyRelations.json if missing
-        boolean createdRelations = saveResource("/data/", "currencyRelations.json");
-
-        if (createdConfig || createdRelations) {
-            Main.ADMIN.log_("Created files on first launch. Configure these and launch again", 1);
-            Main.ADMIN.log_("Press any key to continue...", 0);
-            Scanner sc = new Scanner(System.in);
-            sc.nextLine();
+        if (createdFile) {
+            Main.ADMIN.log_("Created new file(s)/folder(s)!", 0);
+            Main.ADMIN.log_("Configure these and restart the program", 0);
+            Main.ADMIN.log_("Press enter to continue...", 0);
+            try { System.in.read(); } catch (IOException ex) {}
             System.exit(0);
+        }
+    }
+
+    /**
+     * Creates a folder and logs it
+     *
+     * @param file Folder to be created
+     * @return True if success
+     */
+    private static boolean notifyMkDir(File file) {
+        if (file.mkdir()) {
+            try {
+                Main.ADMIN.log_("Created: " + file.getCanonicalPath(), 1);
+            } catch (IOException ex) { }
+
+            return true;
+        } else {
+            return false;
         }
     }
 
     /**
      * Reads files from the .jar and writes them to filepath
      *
-     * @param outputDirectory local path to directory
-     * @param name            filename
+     * @param input URL object to resource
+     * @param output File object to output file
      * @return True if created resource
      */
-    private static boolean saveResource(String outputDirectory, String name) {
-        // Remove id from file id
-        String outputName = name.split("---")[0];
+    private static boolean saveResource(URL input, File output) {
+        if (output.exists()) return false;
 
-        // Get the current path
-        String workingDir = System.getProperty("user.dir");
-        File out = new File(workingDir + outputDirectory, outputName);
-
-        if (out.exists()) return false;
-
-        Main.ADMIN.log_("Created file: " + outputDirectory + outputName, 1);
-
-        // Define I/O so they can be closed later
         BufferedInputStream reader = null;
         OutputStream writer = null;
 
         try {
             // Assign I/O
-            reader = new BufferedInputStream(Main.class.getResourceAsStream("/resources/" + name));
-            writer = new BufferedOutputStream(new FileOutputStream(out));
+            reader = new BufferedInputStream(input.openStream());
+            writer = new BufferedOutputStream(new FileOutputStream(output));
 
             // Define I/O helpers
             byte[] buffer = new byte[1024];
@@ -232,6 +245,8 @@ public class Main {
             while ((length = reader.read(buffer, 0, 1024)) > 0) {
                 writer.write(buffer, 0, length);
             }
+
+            Main.ADMIN.log_("Created file: " + output.getCanonicalPath(), 1);
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
             return false;
@@ -335,36 +350,15 @@ public class Main {
     }
 
     /**
-     * Presents the user with a "Are you sure (yes/no)?" prompt for potentially destructive commands
-     *
-     * @return Result of the question
-     */
-    private static boolean commandConfirm() {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String userInput;
-
-        try {
-            System.out.println("[Info] Are you sure? (yes/no)");
-            userInput = reader.readLine();
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't read user input for verification", 3);
-            Main.ADMIN._log(ex, 4);
-            return false;
-        }
-
-        return userInput.equals("yes");
-    }
-
-    /**
      * Allows creating specific backups from the CLI
      *
      * @param userInput Input string
      */
     private static void commandBackup(String[] userInput) {
         String helpString = "[INFO] Available backup commands:\n";
-        helpString += "    'backup data' - Backup database.txt file\n";
-        helpString += "    'backup output' - Backup everything in output directory\n";
-        helpString += "    'backup all' - Backup everything in data directory\n";
+        helpString += "    'backup 1' - Backup crucial files\n";
+        helpString += "    'backup 2' - Backup everything in output directory\n";
+        helpString += "    'backup 3' - Backup everything in data directory\n";
 
         if (userInput.length < 2) {
             System.out.println(helpString);
@@ -372,14 +366,15 @@ public class Main {
         }
 
         switch (userInput[1]) {
-            case "data":
-                ADMIN.backup(new File("./data/database.txt"), "cli_database");
+            case "1":
+                ADMIN.backup(new File("./data/database"), "cli_output");
+                ADMIN.backup(new File("./data/history"), "cli_history");
                 ADMIN.backup(new File("./data/itemData.json"), "cli_itemdata");
                 break;
-            case "output":
+            case "2":
                 ADMIN.backup(new File("./data/output"), "cli_output");
                 break;
-            case "all":
+            case "3":
                 ADMIN.backup(new File("./data/"), "cli_all");
                 break;
             default:

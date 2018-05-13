@@ -1,6 +1,7 @@
 package com.poestats.Worker;
 
 import com.google.gson.Gson;
+import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Mappers;
 
@@ -28,20 +29,15 @@ public class WorkerController extends Thread {
     public void run() {
         // Run main loop while flag is up
         while (flag_Run) {
-            // Sleep if there is no job to be given out
             if (nextChangeID == null) waitOnMonitor();
 
             // While there's a job that needs to be given out
             while (flag_Run && nextChangeID != null) {
-                // Loop through workers
                 for (Worker worker : workerList) {
-                    // Check if worker is free
                     if (worker.hasJob()) continue;
-                    // Give the new job to the worker
+
                     worker.setJob(nextChangeID);
-                    // Remove old job
                     nextChangeID = null;
-                    // Exit the topmost while loop
                     break;
                 }
 
@@ -67,7 +63,7 @@ public class WorkerController extends Thread {
     private void waitOnMonitor() {
         synchronized (monitor) {
             try {
-                monitor.wait(500);
+                monitor.wait(Config.monitorTimeoutMS);
             } catch (InterruptedException e) {
             }
         }
@@ -110,12 +106,6 @@ public class WorkerController extends Thread {
     public void spawnWorkers(int workerCount) {
         // Get the next available array index
         int nextWorkerIndex = workerList.size();
-
-        // Forbid spawning over limit
-        if (nextWorkerIndex + workerCount > Main.CONFIG.workerLimit) {
-            Main.ADMIN.log_("Maximum amount of workers is " + Main.CONFIG.workerLimit, 3);
-            return;
-        }
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
@@ -204,9 +194,7 @@ public class WorkerController extends Thread {
             response = "0-0-0-0-0";
         }
 
-        // Map data
         try {
-            // Map the JSON string to an object
             response = gson.fromJson(response, Mappers.ChangeID.class).get();
         } catch (Exception ex) {
             Main.ADMIN.log_("Could not download ChangeID from: " + url, 3);
@@ -222,7 +210,7 @@ public class WorkerController extends Thread {
      * @return ChangeID as string
      */
     public String getLocalChangeID() {
-        return downloadChangeID("http://api.poe.ovh/ChangeID");
+        return downloadChangeID("http://api.poe-stats.com/ChangeID");
     }
 
     //------------------------------------------------------------------------------------------------------------

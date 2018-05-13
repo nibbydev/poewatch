@@ -1,6 +1,7 @@
 package com.poestats.League;
 
 
+import com.poestats.Config;
 import com.poestats.Main;
 
 import java.text.ParseException;
@@ -14,7 +15,6 @@ public class LeagueEntry {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    // For deserializer
     private String id, startAt, endAt;
 
     //------------------------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ public class LeagueEntry {
             return 0;
         } else {
             long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
-            return (int)(startDifference / (24 * 60 * 60 * 1000));
+            return (int)(startDifference / Config.league_millisecondsInDay);
         }
     }
 
@@ -51,7 +51,7 @@ public class LeagueEntry {
             return  -1;
         } else {
             long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
-            return (int) (totalDifference / (24 * 60 * 60 * 1000));
+            return (int) (totalDifference / Config.league_millisecondsInDay);
         }
     }
 
@@ -67,7 +67,7 @@ public class LeagueEntry {
      * @return Created Date object
      */
     private Date parseDate(String date) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat(Config.league_timeFormat, Locale.getDefault());
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         try {

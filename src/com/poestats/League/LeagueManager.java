@@ -2,6 +2,7 @@ package com.poestats.League;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Misc;
 
@@ -135,25 +136,24 @@ public class LeagueManager {
 
         try {
             // Define the request
-            URL request = new URL("http://api.pathofexile.com/leagues?type=main&compact=1");
+            URL request = new URL(Config.league_APIBaseURL);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
-            // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(Main.CONFIG.readTimeOut);
-            connection.setConnectTimeout(Main.CONFIG.connectTimeOut);
+            connection.setReadTimeout(Config.league_readTimeoutMS);
+            connection.setConnectTimeout(Config.league_connectTimeoutMS);
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Define some elements
             StringBuilder stringBuilderBuffer = new StringBuilder();
-            byte[] byteBuffer = new byte[64];
+            byte[] byteBuffer = new byte[Config.league_downloadBufferSize];
             int byteCount;
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0,64)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0,Config.league_downloadBufferSize)) != -1) {
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != 64) {
+                if (byteCount != Config.league_downloadBufferSize) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
@@ -184,21 +184,19 @@ public class LeagueManager {
      * Saves league-related data to files
      */
     public void saveDataToFiles() {
-        File dataFile = new File("./data/leagueData.json");
-        try (Writer writer = Misc.defineWriter(dataFile)) {
+        try (Writer writer = Misc.defineWriter(Config.file_leagueData)) {
             if (writer == null) throw new IOException();
             gson.toJson(leagues, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+dataFile.getName()+"'", 3);
+            Main.ADMIN.log_("Could not write to '"+Config.file_leagueData.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
 
-        File stringFile = new File("./data/leagueList.json");
-        try (Writer writer = Misc.defineWriter(stringFile)) {
+        try (Writer writer = Misc.defineWriter(Config.file_leagueList)) {
             if (writer == null) throw new IOException();
             gson.toJson(stringLeagues, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+stringFile.getName()+"'", 3);
+            Main.ADMIN.log_("Could not write to '"+Config.file_leagueList.getName()+"'", 3);
             Main.ADMIN._log(ex, 3);
         }
     }
@@ -207,11 +205,11 @@ public class LeagueManager {
      * Reads league-related data from files
      */
     public void readFromFile() {
-        File dataFile = new File("./data/leagueData.json");
-
-        // Open up the reader
-        try (Reader reader = Misc.defineReader(dataFile)) {
-            if (reader == null) throw new IOException("File '"+dataFile.getName()+"' not found");
+        try (Reader reader = Misc.defineReader(Config.file_leagueData)) {
+            if (reader == null) {
+                Main.ADMIN.log_("File not found: '" + Config.file_leagueData.getCanonicalPath() + "'", 4);
+                return;
+            }
 
             Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
             leagues = gson.fromJson(reader, listType);
@@ -221,7 +219,7 @@ public class LeagueManager {
                 stringLeagues[i] = leagues.get(i).getId();
             }
         } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load '" + dataFile.getName() + "'", 3);
+            Main.ADMIN._log(ex, 4);
         }
     }
 

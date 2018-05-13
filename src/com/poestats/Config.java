@@ -1,108 +1,116 @@
 package com.poestats;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
+import java.net.URL;
+import java.util.regex.Pattern;
 
 /**
  * Loads in values from file. Values can be accessed from anywhere in the script
  */
 public class Config {
+    public static final int default_workerCount = 3;
+
+    //------------------------------------------------------------------------------------------------------------
+    // File and folder locations
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final File folder_root        = new File(".");
+    public static final File folder_data        = new File(folder_root.getPath(), "data");
+    public static final File folder_database    = new File(folder_data.getPath(), "database");
+    public static final File folder_output      = new File(folder_data.getPath(), "output");
+    public static final File folder_history     = new File(folder_data.getPath(), "history");
+    public static final File folder_backups     = new File(folder_root.getPath(), "backups");
+
+    public static final File file_leagueData    = new File(folder_root.getPath(),"leagueData.json");
+    public static final File file_leagueList    = new File(folder_root.getPath(),"leagueList.json");
+    public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
+    public static final File file_relations     = new File(folder_data.getPath(),"currencyRelations.json");
+    public static final File file_itemData      = new File(folder_data.getPath(),"itemData.json");
+    public static final File file_categories    = new File(folder_data.getPath(),"categories.json");
+    public static final File file_changeID      = new File(folder_data.getPath(),"changeID.json");
+    public static final File file_status        = new File(folder_data.getPath(),"status.csv");
+
+    public static final URL  resource_config     = Main.class.getResource("/resources/" + file_config.getName());
+    public static final URL  resource_relations  = Main.class.getResource("/resources/" + file_relations.getName());
+
+    //------------------------------------------------------------------------------------------------------------
+    // Index definitions
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final String index_superBase = "0000";
+    public static final String index_subBase = "00";
+    public static final String index_separator = "-";
+    public static final int index_superSize = index_superBase.length();
+    public static final int index_subSize = index_subBase.length();
+    public static final int index_size = index_superSize + index_separator.length() + index_subSize;
+
+
+    //------------------------------------------------------------------------------------------------------------
+    // Admin
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final int admin_logSize = 2048;
+    public static final int admin_zipBufferSize = 1024;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Workers
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final String worker_APIBaseURL = "http://www.pathofexile.com/api/public-stash-tabs?id=";
+    public static final Pattern worker_changeIDRegexPattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+    public static final int worker_downloadDelayMS = 1200;
+    public static final int worker_downloadBufferSize = 128;
+    public static final int worker_readTimeoutMS = 12000;
+    public static final int worker_connectTimeoutMS = 10000;
+    public static final int worker_lockTimeoutMS = 5000;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Entry
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final int entry_itemsSize = 64;
+    public static final int entry_tempSize = 16;
+    public static final int entry_minutelySize = 6;
+    public static final int entry_hourlySize = 24;
+    public static final int entry_dailySize = 7;
+
+    public static final int entry_shiftPercent = 80;
+    public static final int entry_shiftPercentNew = 60;
+
+    public static final int entryController_sleepMS         = 60 * 1000;
+    public static final int entryController_tenMS           = 10 * 60 * 1000;
+    public static final int entryController_sixtyMS         = 60 * 60 * 1000;
+    public static final int entryController_twentyFourMS    = 24 * 60 * 60 * 1000;
+
+    //------------------------------------------------------------------------------------------------------------
+    // League manager
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final String league_APIBaseURL = "http://api.pathofexile.com/leagues?type=main&compact=1";
+    public static final String league_timeFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final int league_readTimeoutMS = 3000;
+    public static final int league_connectTimeoutMS = 5000;
+    public static final int league_downloadBufferSize = 64;
+    public static final int league_millisecondsInDay = 24 * 60 * 60 * 1000;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Other?
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final int item_pricePrecision = 1000;
+    public static final int misc_defaultLeagueLength = 90;
+    public static final int monitorTimeoutMS = 500;
+    public static final long startTime = System.currentTimeMillis();
+
+
+
+
+
+
+/*
     public int timeZoneOffset = 0;
     public int workerLimit = 5;
-    public int downloadChunkSize = 128;
-    public int downloadDelay = 1200;
-    public int readTimeOut = 12000;
-    public int connectTimeOut = 10000;
-    public int pricerControllerSleepCycle = 60;
     public int dataEntryCycleLimit = 10;
-    public int baseDataSize = 64;
     public int hourlyDataSize = 30;
-    public double pricePrecision = 1000.0;
-
-    public int dbTempSize = 16;
-    public int calcShiftPercent = 80;
-    public int calcNewShiftPercent = 60;
-
-    public static final int defaultLeagueLength = 90;
-
-    /**
-     * Calls method that loads in config values on class init
-     *
-     * @param fileName Config file id in relation to local path
-     */
-    Config(String fileName) {
-        readFile(fileName);
-    }
-
-    /**
-     * Reads values from CSV config file, overwrites static class values
-     *
-     * @param fileName Config file id in relation to local path
-     */
-    private void readFile(String fileName) {
-        String line, key, value;
-        File file = new File(fileName);
-
-        if (!file.exists())
-            return;
-
-        try (BufferedReader bufferedReader = Misc.defineReader(file)) {
-            if (bufferedReader == null) return;
-
-            while ((line = bufferedReader.readLine()) != null) {
-                if (line.equals(""))
-                    continue;
-                else if (line.startsWith("#"))
-                    continue;
-
-                key = line.substring(0, line.indexOf("="));
-                value = line.substring(line.indexOf("=") + 1);
-
-                switch (key) {
-                    case "timeZoneOffset":
-                        timeZoneOffset = Integer.parseInt(value);
-                        break;
-                    case "workerLimit":
-                        workerLimit = Integer.parseInt(value);
-                        break;
-                    case "downloadChunkSize":
-                        downloadChunkSize = Integer.parseInt(value);
-                        break;
-                    case "downloadDelay":
-                        downloadDelay = Integer.parseInt(value);
-                        break;
-                    case "readTimeOut":
-                        readTimeOut = Integer.parseInt(value);
-                        break;
-                    case "connectTimeOut":
-                        connectTimeOut = Integer.parseInt(value);
-                        break;
-                    case "pricerControllerSleepCycle":
-                        pricerControllerSleepCycle = Integer.parseInt(value);
-                        break;
-                    case "dataEntryCycleLimit":
-                        dataEntryCycleLimit = Integer.parseInt(value);
-                        break;
-                    case "baseDataSize":
-                        baseDataSize = Integer.parseInt(value);
-                        break;
-                    case "hourlyDataSize":
-                        hourlyDataSize = Integer.parseInt(value);
-                        break;
-                    case "medianLeftShift":
-                        //medianLeftShift = Integer.parseInt(value);
-                        break;
-                    case "pricePrecision":
-                        pricePrecision = Math.pow(10, Integer.parseInt(value));
-                        break;
-                    default:
-                        Main.ADMIN.log_("Unknown config key '"+key+"' with value '"+value+"'", 3);
-                        break;
-                }
-            }
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 3);
-        }
-    }
+*/
 }

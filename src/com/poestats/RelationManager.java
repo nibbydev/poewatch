@@ -11,6 +11,10 @@ import java.util.*;
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
+    //------------------------------------------------------------------------------------------------------------
+    // Inner classes
+    //------------------------------------------------------------------------------------------------------------
+
     private static class CurrencyRelation {
         String name;
         String[] aliases;
@@ -36,7 +40,7 @@ public class RelationManager {
 
         private String subIndex(Item item) {
             String subIndex = Integer.toHexString(subIndexes.size());
-            subIndex = ("00" + subIndex).substring(subIndex.length());
+            subIndex = (Config.index_subBase + subIndex).substring(subIndex.length());
 
             SubIndexedItem subIndexedItem = new SubIndexedItem(item);
             subIndexes.put(subIndex, subIndexedItem);
@@ -49,7 +53,6 @@ public class RelationManager {
         public String var, specificKey, lvl, quality, links, corrupted, name;
 
         public SubIndexedItem (Item item) {
-            //specificKey = item.key.substring(item.key.indexOf('|') + 1);
             specificKey = item.getKey();
 
             if (item.getVariation() != null) {
@@ -71,7 +74,6 @@ public class RelationManager {
 
             if (item.getLinks() > 4) links = Integer.toString(item.getLinks());
 
-
             if (item.frameType == 4) {
                 // Gson wants to serialize uninitialized integers and booleans
                 quality = Integer.toString(item.getQuality());
@@ -80,6 +82,10 @@ public class RelationManager {
             }
         }
     }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
 
     private Gson gson = Main.getGson();
 
@@ -92,6 +98,9 @@ public class RelationManager {
 
     private Map<String, List<String>> categories = new HashMap<>();
 
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Reads currency and item data from file on object init
@@ -110,11 +119,12 @@ public class RelationManager {
      * Reads currency relation data from file
      */
     private void readCurrencyRelationsFromFile() {
-        File file = new File("./data/currencyRelations.json");
-
         // Open up the reader
-        try (Reader reader = Misc.defineReader(file)) {
-            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+        try (Reader reader = Misc.defineReader(Config.file_relations)) {
+            if (reader == null) {
+                Main.ADMIN.log_("File not found: '" + Config.file_relations.getCanonicalPath() + "'", 4);
+                return;
+            }
 
             Type listType = new TypeToken<ArrayList<CurrencyRelation>>(){}.getType();
             List<CurrencyRelation> relations = gson.fromJson(reader, listType);
@@ -134,11 +144,11 @@ public class RelationManager {
      * Reads item relation data from file
      */
     private void readItemDataFromFile() {
-        File file = new File("./data/itemData.json");
-
-        // Open up the reader
-        try (Reader reader = Misc.defineReader(file)) {
-            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
+        try (Reader reader = Misc.defineReader(Config.file_itemData)) {
+            if (reader == null) {
+                Main.ADMIN.log_("File not found: '" + Config.file_itemData.getCanonicalPath() + "'", 4);
+                return;
+            }
 
             Type listType = new TypeToken<Map<String, IndexedItem>>(){}.getType();
             Map<String, IndexedItem> relations = gson.fromJson(reader, listType);
@@ -160,7 +170,7 @@ public class RelationManager {
             });
 
         } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load itemData.json", 3);
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -168,16 +178,15 @@ public class RelationManager {
      * Reads item categories from file
      */
     private void readCategoriesFromFile() {
-        File file = new File("./data/categories.json");
-
-        // Open up the reader
-        try (Reader reader = Misc.defineReader(file)) {
-            if (reader == null) throw new IOException("File '" + file.getName() + "' not found");
-
+        try (Reader reader = Misc.defineReader(Config.file_categories)) {
+            if (reader == null) {
+                Main.ADMIN.log_("File not found: '" + Config.file_categories.getCanonicalPath() + "'", 4);
+                return;
+            }
             Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();
             categories = gson.fromJson(reader, listType);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load categories.json", 3);
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -185,24 +194,20 @@ public class RelationManager {
      * Saves data to file on program exit
      */
     public void saveData() {
-        // Save item relations to file
-        File itemFile = new File("./data/itemData.json");
-        try (Writer writer = Misc.defineWriter(itemFile)) {
+        // Save item data to file
+        try (Writer writer = Misc.defineWriter(Config.file_itemData)) {
             if (writer == null) throw new IOException();
             gson.toJson(itemSubIndexToData, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+itemFile.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN._log(ex, 4);
         }
 
         // Save item categories to file
-        File categoryFile = new File("./data/categories.json");
-        try (Writer writer = Misc.defineWriter(categoryFile)) {
+        try (Writer writer = Misc.defineWriter(Config.file_categories)) {
             if (writer == null) throw new IOException();
             gson.toJson(categories, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+categoryFile.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN._log(ex, 4);
         }
     }
 
@@ -235,16 +240,16 @@ public class RelationManager {
             IndexedItem indexedGenericItem = itemSubIndexToData.get(superIndex);
 
             String subIndex = indexedGenericItem.subIndex(item);
-            index = itemGenericKeyToSuperIndex.get(genericKey) + "-" + subIndex;
+            index = itemGenericKeyToSuperIndex.get(genericKey) + Config.index_separator + subIndex;
 
             itemSpecificKeyToFullIndex.put(item.getKey(), index);
         } else {
             String superIndex = Integer.toHexString(itemGenericKeyToSuperIndex.size());
-            superIndex = ("0000" + superIndex).substring(superIndex.length());
+            superIndex = (Config.index_superBase + superIndex).substring(superIndex.length());
 
             IndexedItem indexedItem = new IndexedItem(item);
             String subIndex = indexedItem.subIndex(item);
-            index = superIndex + "-" + subIndex;
+            index = superIndex + Config.index_separator + subIndex;
 
             itemGenericKeyToSuperIndex.put(genericKey, superIndex);
             itemSubIndexToData.put(superIndex, indexedItem);
@@ -252,16 +257,6 @@ public class RelationManager {
         }
 
         return index;
-    }
-
-    /**
-     * Searches key-to-index database for a match based on input. Requires a unique key
-     *
-     * @param key Item key
-     * @return Index and subIndex if successful, null if unsuccessful
-     */
-    public String getIndexFromKey(String key) {
-        return itemSpecificKeyToFullIndex.getOrDefault(key, null);
     }
 
     /**
@@ -300,24 +295,30 @@ public class RelationManager {
     }
 
     /**
-     * Allows returning the SubIndexedItem entry from a complete index
+     * Allows returning the IndexedItem entry from a complete index
      *
-     * @param index Index of item. Must have length of 7
+     * @param index Index of item
      * @return Requested indexed item entry or null on failure
      */
     public IndexedItem indexToGenericData(String index) {
         if (isIndex(index)) return null;
 
-        String primaryIndex = index.substring(0, 4);
+        String primaryIndex = index.substring(0, Config.index_superSize);
 
         return itemSubIndexToData.getOrDefault(primaryIndex, null);
     }
 
+    /**
+     * Allows returning the SubIndexedItem entry from a complete index
+     *
+     * @param index Index of item
+     * @return Requested indexed item entry or null on failure
+     */
     public SubIndexedItem indexToSpecificData(String index) {
         if (isIndex(index)) return null;
 
-        String primaryIndex = index.substring(0, 4);
-        String secondaryIndex = index.substring(5);
+        String primaryIndex = index.substring(0, Config.index_superSize);
+        String secondaryIndex = index.substring(Config.index_superSize + 1);
 
         IndexedItem indexedItem = itemSubIndexToData.getOrDefault(primaryIndex, null);
         if (indexedItem == null) return null;
@@ -335,7 +336,8 @@ public class RelationManager {
      * @return True if not an index
      */
     public static boolean isIndex(String index) {
-        return index.length() != 7 || index.charAt(4) != '-';
+        String separator = index.substring(Config.index_superSize, Config.index_size - Config.index_subSize);
+        return index.length() != Config.index_size || !separator.equals(Config.index_separator);
     }
 
     //------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 package com.poestats.Pricer;
 
+import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.RelationManager.IndexedItem;
@@ -8,6 +9,10 @@ import com.poestats.RelationManager.SubIndexedItem;
 import java.util.*;
 
 public class JSONParcel {
+    //------------------------------------------------------------------------------------------------------------
+    // Inner classes
+    //------------------------------------------------------------------------------------------------------------
+
     // League map. Has mappings of: [league id - category map]
     static class JSONLeagueMap extends HashMap<String, JSONCategoryMap> { }
     // Category map. Has mappings of: [category id - item map]
@@ -60,7 +65,7 @@ public class JSONParcel {
                     // If the currency the item was listed in has very few listings then ignore this item
                     if (tmp_exaltedPrice > 0) {
                         double tempExaltedMean = mean / tmp_exaltedPrice;
-                        exalted = Math.round(tempExaltedMean * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+                        exalted = Math.round(tempExaltedMean * Config.item_pricePrecision) / Config.item_pricePrecision;
                     }
                 }
             }
@@ -164,6 +169,10 @@ public class JSONParcel {
             }
         }
     }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
 
     private JSONLeagueMap jsonLeagueMap = new JSONLeagueMap();
 

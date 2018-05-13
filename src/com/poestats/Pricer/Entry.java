@@ -1,5 +1,6 @@
 package com.poestats.Pricer;
 
+import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.RelationManager;
@@ -256,11 +257,11 @@ public class Entry {
     private double mean, median, mode, threshold_multiplier;
 
     private List<RawEntry> db_raw = new ArrayList<>();
-    private List<RawEntry> db_temp = new ArrayList<>(Main.CONFIG.dbTempSize);
-    private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
-    private List<DailyEntry> db_daily = new ArrayList<>(7);
-    private List<HourlyEntry> db_hourly = new ArrayList<>(24);
-    private List<TenMinuteEntry> db_minutely = new ArrayList<>(6);
+    private List<RawEntry> db_temp = new ArrayList<>(Config.entry_tempSize);
+    private List<ItemEntry> db_items = new ArrayList<>(Config.entry_itemsSize);
+    private List<DailyEntry> db_daily = new ArrayList<>(Config.entry_dailySize);
+    private List<HourlyEntry> db_hourly = new ArrayList<>(Config.entry_hourlySize);
+    private List<TenMinuteEntry> db_minutely = new ArrayList<>(Config.entry_minutelySize);
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -395,7 +396,7 @@ public class Entry {
             if (raw.price > 120000.0 || raw.price < 0.001) continue;
 
             // Round em up
-            raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+            raw.price = Math.round(raw.price * Config.item_pricePrecision) / Config.item_pricePrecision;
 
             // Add entry to the database
             ItemEntry itemEntry = new ItemEntry();
@@ -437,8 +438,8 @@ public class Entry {
         } finally {
             db_temp.add(raw);
 
-            if (db_temp.size() > Main.CONFIG.dbTempSize) {
-                db_temp.subList(0, db_temp.size() - Main.CONFIG.dbTempSize).clear();
+            if (db_temp.size() > Config.entry_tempSize) {
+                db_temp.subList(0, db_temp.size() - Config.entry_tempSize).clear();
             }
         }
 
@@ -529,8 +530,8 @@ public class Entry {
         // If an array has more elements than specified, remove everything from the possible last index up until
         // however many excess elements it has
 
-        if (db_items.size() > Main.CONFIG.baseDataSize) {
-            db_items.subList(0, db_items.size() - Main.CONFIG.baseDataSize).clear();
+        if (db_items.size() > Config.entry_itemsSize) {
+            db_items.subList(0, db_items.size() - Config.entry_itemsSize).clear();
         }
 
         if (Main.ENTRY_CONTROLLER.isTenBool() && db_minutely.size() > 6) {
@@ -566,10 +567,10 @@ public class Entry {
 
         if (db_items.size() > 1) {
             if (db_daily.size() < 2) {
-                int startIndex = db_items.size() * Main.CONFIG.calcNewShiftPercent / 100;
+                int startIndex = db_items.size() * Config.entry_shiftPercent / 100;
                 return tempList.subList(0, startIndex);
             } else {
-                int endIndex = db_items.size() * Main.CONFIG.calcShiftPercent / 100;
+                int endIndex = db_items.size() * Config.entry_shiftPercentNew / 100;
                 int startIndex = (tempList.size() - endIndex) / 2;
                 return tempList.subList(startIndex, endIndex);
             }
@@ -584,14 +585,14 @@ public class Entry {
         double mean = 0.0;
         for (Double entry : sortedItemPrices) mean += entry;
 
-        return Math.round(mean / sortedItemPrices.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        return Math.round(mean / sortedItemPrices.size() * Config.item_pricePrecision) / Config.item_pricePrecision;
     }
 
     private double findMedianItems(List<Double> sortedItemPrices) {
         if (sortedItemPrices.isEmpty()) return 0;
 
         int medianIndex = sortedItemPrices.size() / 2;
-        return Math.round(sortedItemPrices.get(medianIndex) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        return Math.round(sortedItemPrices.get(medianIndex) * Config.item_pricePrecision) / Config.item_pricePrecision;
     }
 
     private double findModeItems(List<Double> sortedItemPrices) {
@@ -622,7 +623,7 @@ public class Entry {
         for (TenMinuteEntry entry : db_minutely) {
             mean += entry.mean;
         }
-        mean = Math.round(mean / db_minutely.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        mean = Math.round(mean / db_minutely.size() * Config.item_pricePrecision) / Config.item_pricePrecision;
 
         return mean;
     }
@@ -638,7 +639,7 @@ public class Entry {
         Collections.sort(tempList);
 
         int medianIndex = tempList.size() / 2;
-        return Math.round(tempList.get(medianIndex) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        return Math.round(tempList.get(medianIndex) * Config.item_pricePrecision) / Config.item_pricePrecision;
     }
 
     private double findModeHourly() {
