@@ -5,7 +5,7 @@ import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.Pricer.Entries.DailyEntry;
 import com.poestats.Pricer.Entry;
-import com.poestats.Pricer.EntryController;
+import com.poestats.Pricer.Maps.*;
 import com.poestats.RelationManager;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class JSONItem {
         index = entry.getIndex();
 
         // Find the item's price in exalted
-        EntryController.IndexMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
+        IndexMap tmp_currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(entry.getLeague());
         if (tmp_currencyMap != null) {
             String exaltedIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault("Exalted Orb", null);
             Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(exaltedIndex, null);

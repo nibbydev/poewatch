@@ -2,30 +2,19 @@ package com.poestats.Pricer;
 
 import com.google.gson.Gson;
 import com.poestats.*;
+import com.poestats.Pricer.Maps.*;
 import com.poestats.Pricer.Parcel.*;
-import com.poestats.Pricer.Parcel.sub.JSONCategoryMap;
-import com.poestats.Pricer.Parcel.sub.JSONItemList;
+import com.poestats.Pricer.Parcel.sub.*;
 
 import java.io.*;
 import java.util.*;
 
-/**
- * Manages database
- */
 public class EntryController {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    // League map. Has mappings of: [league id - category map]
-    public static class LeagueMap extends HashMap<String, CategoryMap> { }
-    // Category map. Has mappings of: [category id - index map]
-    public static class CategoryMap extends HashMap<String, IndexMap> { }
-    // Index map. Has mappings of: [index - Entry]
-    public static class IndexMap extends HashMap<String, Entry> { }
-
     private final LeagueMap leagueMap = new LeagueMap();
-
     private final JSONParcel JSONParcel = new JSONParcel();
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();

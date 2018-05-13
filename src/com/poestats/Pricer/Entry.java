@@ -4,6 +4,7 @@ import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Pricer.Entries.*;
+import com.poestats.Pricer.Maps.*;
 import com.poestats.RelationManager;
 
 import java.util.*;
@@ -133,7 +134,7 @@ public class Entry {
      * Adds values from db_raw array to prices database array
      */
     private void parse() {
-        EntryController.IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
+        IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
         RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
 
         // Loop through entries
