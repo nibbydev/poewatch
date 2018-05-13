@@ -309,10 +309,10 @@ public class EntryController {
             Main.ADMIN.log_("24 activated", 0);
 
             // Make a backup before 24h mark passes
+            Main.ADMIN.log_("Starting backup (before)...", 0);
             long time_backup = System.currentTimeMillis();
             Main.ADMIN.backup(Config.folder_data, "daily_before");
-            time_backup = System.currentTimeMillis() - time_backup;
-            Main.ADMIN.log_("Backup (before) took: " + time_backup + " ms", 0);
+            Main.ADMIN.log_("Backup (before) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
         }
 
         // The method that does it all
@@ -330,6 +330,16 @@ public class EntryController {
         writeJSONToFile();
         time_json = System.currentTimeMillis() - time_json;
 
+        Main.RELATIONS.saveData();
+
+        // Backup output folder
+        if (twentyFourBool) {
+            Main.ADMIN.log_("Starting backup (after)...", 0);
+            long time_backup = System.currentTimeMillis();
+            Main.ADMIN.backup(Config.folder_data, "daily_after");
+            Main.ADMIN.log_("Backup (after) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
+        }
+
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
         String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
@@ -340,16 +350,6 @@ public class EntryController {
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
-
-        Main.RELATIONS.saveData();
-
-        // Backup output folder
-        if (twentyFourBool) {
-            long time_backup = System.currentTimeMillis();
-            Main.ADMIN.backup(Config.folder_data, "daily_after");
-            time_backup = System.currentTimeMillis() - time_backup;
-            Main.ADMIN.log_("Backup (after) took: " + time_backup + " ms", 0);
-        }
 
         // Clear the parcel
         JSONParcel.clear();
