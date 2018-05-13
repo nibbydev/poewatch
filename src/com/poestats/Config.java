@@ -4,9 +4,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.regex.Pattern;
 
-/**
- * Loads in values from file. Values can be accessed from anywhere in the script
- */
 public class Config {
     public static final int default_workerCount = 3;
 
@@ -101,16 +98,4 @@ public class Config {
     public static final int misc_defaultLeagueLength = 90;
     public static final int monitorTimeoutMS = 500;
     public static final long startTime = System.currentTimeMillis();
-
-
-
-
-
-
-/*
-    public int timeZoneOffset = 0;
-    public int workerLimit = 5;
-    public int dataEntryCycleLimit = 10;
-    public int hourlyDataSize = 30;
-*/
 }
