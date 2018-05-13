@@ -87,7 +87,8 @@ public class Main {
         if (!newArgs.contains("-workers")) {
             WORKER_CONTROLLER.spawnWorkers(Config.default_workerCount);
             System.out.println("[INFO] Spawned 3 workers");
-        } else if (!newArgs.contains("-id")) {
+        }
+        if (!newArgs.contains("-id")) {
             WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
             System.out.println("[INFO] New ChangeID added");
         }
