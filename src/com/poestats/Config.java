@@ -18,8 +18,8 @@ public class Config {
     public static final File folder_history     = new File(folder_data.getPath(), "history");
     public static final File folder_backups     = new File(folder_root.getPath(), "backups");
 
-    public static final File file_leagueData    = new File(folder_root.getPath(),"leagueData.json");
-    public static final File file_leagueList    = new File(folder_root.getPath(),"leagueList.json");
+    public static final File file_leagueData    = new File(folder_data.getPath(),"leagueData.json");
+    public static final File file_leagueList    = new File(folder_data.getPath(),"leagueList.json");
     public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
     public static final File file_relations     = new File(folder_data.getPath(),"currencyRelations.json");
     public static final File file_itemData      = new File(folder_data.getPath(),"itemData.json");
@@ -40,8 +40,7 @@ public class Config {
     public static final int index_superSize = index_superBase.length();
     public static final int index_subSize = index_subBase.length();
     public static final int index_size = index_superSize + index_separator.length() + index_subSize;
-
-
+    
     //------------------------------------------------------------------------------------------------------------
     // Admin
     //------------------------------------------------------------------------------------------------------------
