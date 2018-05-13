@@ -2,6 +2,9 @@ package com.poestats.Pricer;
 
 import com.google.gson.Gson;
 import com.poestats.*;
+import com.poestats.Pricer.Parcel.*;
+import com.poestats.Pricer.Parcel.sub.JSONCategoryMap;
+import com.poestats.Pricer.Parcel.sub.JSONItemList;
 
 import java.io.*;
 import java.util.*;
@@ -15,11 +18,11 @@ public class EntryController {
     //------------------------------------------------------------------------------------------------------------
 
     // League map. Has mappings of: [league id - category map]
-    static class LeagueMap extends HashMap<String, CategoryMap> { }
+    public static class LeagueMap extends HashMap<String, CategoryMap> { }
     // Category map. Has mappings of: [category id - index map]
-    static class CategoryMap extends HashMap<String, IndexMap> { }
+    public static class CategoryMap extends HashMap<String, IndexMap> { }
     // Index map. Has mappings of: [index - Entry]
-    static class IndexMap extends HashMap<String, Entry> { }
+    public static class IndexMap extends HashMap<String, Entry> { }
 
     private final LeagueMap leagueMap = new LeagueMap();
 
@@ -398,10 +401,10 @@ public class EntryController {
      */
     private void writeJSONToFile() {
         for (String league : JSONParcel.getJsonLeagueMap().keySet()) {
-            JSONParcel.JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
+            JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
 
             for (String category : jsonCategoryMap.keySet()) {
-                JSONParcel.JSONItemList jsonItems = jsonCategoryMap.get(category);
+                JSONItemList jsonItems = jsonCategoryMap.get(category);
 
                 try {
                     if (new File(Config.folder_output, league).mkdir()) {
