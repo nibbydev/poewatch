@@ -2,6 +2,7 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.poestats.League.LeagueEntry;
+import com.poestats.Pricer.Entries.DailyEntry;
 import com.poestats.Pricer.Entry;
 
 import java.io.File;
@@ -110,7 +111,7 @@ public class HistoryController {
         }
 
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem());
-        Entry.DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
+        DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
 
         // If mean was null then the index didn't exist in the map (if the file failed to load or it is a new item that
         // doesn't exist in the file yet) and all other variables are null as well

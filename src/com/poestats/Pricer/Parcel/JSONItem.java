@@ -3,6 +3,7 @@ package com.poestats.Pricer.Parcel;
 import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Misc;
+import com.poestats.Pricer.Entries.DailyEntry;
 import com.poestats.Pricer.Entry;
 import com.poestats.Pricer.EntryController;
 import com.poestats.RelationManager;
@@ -48,10 +49,10 @@ public class JSONItem {
         else history = new HistoryItem(dbDailySize);
 
         double lowestSpark = 99999;
-        List<Entry.DailyEntry> dailyEntries = entry.getDb_daily();
+        List<DailyEntry> dailyEntries = entry.getDb_daily();
 
         for (int i = 0; i < dbDailySize; i++) {
-            Entry.DailyEntry dailyEntry = dailyEntries.get(i);
+            DailyEntry dailyEntry = dailyEntries.get(i);
 
             // Add all values to history
             history.getMean()[i]     = dailyEntry.getMean();
@@ -90,7 +91,7 @@ public class JSONItem {
 
         // Get variation from lowest value
         for (int i = 0; i < dbDailySize; i++) {
-            Entry.DailyEntry dailyEntry = dailyEntries.get(i);
+            DailyEntry dailyEntry = dailyEntries.get(i);
             double newSpark = lowestSpark == 0 ? 0.0 : dailyEntry.getMean() / lowestSpark - 1;
             history.getSpark()[i] = Math.round(newSpark * 10000.0) / 100.0;
         }
