@@ -30,9 +30,8 @@ public class HourlyEntry {
         median = Double.parseDouble(splitRaw[1]);
         mode = Double.parseDouble(splitRaw[2]);
 
-        // TODO: remove if statement
-        if (splitRaw.length > 3) inc = Integer.parseInt(splitRaw[3]);
-        if (splitRaw.length > 4) dec = Integer.parseInt(splitRaw[4]);
+        inc = Integer.parseInt(splitRaw[3]);
+        dec = Integer.parseInt(splitRaw[4]);
     }
 
     @Override

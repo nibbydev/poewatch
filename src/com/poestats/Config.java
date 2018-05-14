@@ -40,7 +40,7 @@ public class Config {
     public static final int index_superSize = index_superBase.length();
     public static final int index_subSize = index_subBase.length();
     public static final int index_size = index_superSize + index_separator.length() + index_subSize;
-    
+
     //------------------------------------------------------------------------------------------------------------
     // Admin
     //------------------------------------------------------------------------------------------------------------

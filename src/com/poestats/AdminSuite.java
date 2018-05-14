@@ -150,8 +150,6 @@ public class AdminSuite {
             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
 
             for (File file : inputFileList) {
-                System.out.println(file.getCanonicalPath());
-
                 if (!file.isDirectory()) {
                     addToZip(file, zipOutputStream);
                 }
