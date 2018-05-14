@@ -79,6 +79,28 @@ public class EntryController {
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
         }
+
+        if ((System.currentTimeMillis() - tenCounter) > Config.entryController_tenMS) {
+            long multiplier = (System.currentTimeMillis() - tenCounter) / Config.entryController_tenMS;
+            tenCounter +=  Config.entryController_tenMS * multiplier;
+        }
+
+        if ((System.currentTimeMillis() - sixtyCounter) > Config.entryController_sixtyMS) {
+            long multiplier = (System.currentTimeMillis() - sixtyCounter) / Config.entryController_sixtyMS;
+            sixtyCounter += Config.entryController_sixtyMS * multiplier;
+        }
+
+        if ((System.currentTimeMillis() - twentyFourCounter) > Config.entryController_twentyFourMS) {
+            long multiplier = (System.currentTimeMillis() - twentyFourCounter) / Config.entryController_twentyFourMS;
+            twentyFourCounter += Config.entryController_twentyFourMS * multiplier;
+        }
+
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
+        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
+        Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
+
+        saveStartParameters();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -261,7 +283,9 @@ public class EntryController {
         if ((System.currentTimeMillis() - tenCounter) > Config.entryController_tenMS) {
             long multiplier = (System.currentTimeMillis() - tenCounter) / Config.entryController_tenMS;
             tenCounter +=  Config.entryController_tenMS * multiplier;
+
             tenBool = true;
+            Main.ADMIN.log_("10 activated", 0);
         }
 
         // Run once every 60min
@@ -270,6 +294,7 @@ public class EntryController {
             sixtyCounter += Config.entryController_sixtyMS * multiplier;
 
             sixtyBool = true;
+            Main.ADMIN.log_("60 activated", 0);
 
             // Get a list of active leagues from pathofexile.com's api
             Main.LEAGUE_MANAGER.download();
@@ -281,6 +306,7 @@ public class EntryController {
             twentyFourCounter += Config.entryController_twentyFourMS * multiplier;
 
             twentyFourBool = true;
+            Main.ADMIN.log_("24 activated", 0);
 
             // Make a backup before 24h mark passes
             long time_backup = System.currentTimeMillis();
