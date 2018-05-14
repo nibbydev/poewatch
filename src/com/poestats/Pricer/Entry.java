@@ -19,7 +19,7 @@ public class Entry {
 
     private String league, index;
     private int total_counter, inc, dec, quantity;
-    private double mean, median, mode, threshold_multiplier;
+    private double mean, median, mode;
 
     private List<RawEntry> db_raw = new ArrayList<>();
     private List<RawEntry> db_temp = new ArrayList<>(Config.entry_tempSize);
@@ -275,17 +275,6 @@ public class Entry {
         mean = findMeanItems(sortedItemPrices);
         median = findMedianItems(sortedItemPrices);
         mode = findModeItems(sortedItemPrices);
-
-        // If more items were removed than added, update counter
-        if (dec * 2 > inc) {
-            threshold_multiplier += 0.1;
-        } else {
-            threshold_multiplier -= 0.1;
-        }
-
-        // Don't let it grow infinitely
-        if (threshold_multiplier > 10) threshold_multiplier = 10;
-        if (threshold_multiplier < 0) threshold_multiplier = 0;
     }
 
     /**
@@ -480,8 +469,6 @@ public class Entry {
         stringBuilder.append(inc);
         stringBuilder.append(",dec:");
         stringBuilder.append(dec);
-        stringBuilder.append(",multiplier:");
-        stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -605,9 +592,6 @@ public class Entry {
                         break;
                     case "dec":
                         dec += Integer.parseInt(splitDataItem[1]);
-                        break;
-                    case "multiplier":
-                        threshold_multiplier = Double.parseDouble(splitDataItem[1]);
                         break;
                     default:
                         Main.ADMIN.log_("Unknown field: " + splitDataItem[0], 3);
