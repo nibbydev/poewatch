@@ -1,22 +1,22 @@
-package ovh.poe;
-
-import static ovh.poe.Main.CONFIG;
-import static ovh.poe.Main.RELATIONS;
+package com.poestats;
 
 /**
  * Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
  */
 public class Item extends Mappers.BaseItem {
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
+
     private volatile boolean discard = false;
     private String priceType, parentCategory, childCategory, key, variation, tier;
     private double price;
     private int links, level, quality;
-
     private boolean doNotIndex;
 
-    /////////////////////////////////////////////////////////
-    // Methods used to convert/calculate/extract item data //
-    /////////////////////////////////////////////////////////
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * "Main" controller, calls other methods
@@ -93,6 +93,10 @@ public class Item extends Mappers.BaseItem {
         buildKey();
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Child methods
+    //------------------------------------------------------------------------------------------------------------
+
     /**
      * Format the item's database key
      */
@@ -131,8 +135,7 @@ public class Item extends Mappers.BaseItem {
             key.append("|q:");
             key.append(quality);
             key.append("|c:");
-            if (corrupted) key.append(1);
-            else key.append(0);
+            key.append(corrupted ? 1 : 0);
         }
 
         // Convert to string
@@ -144,7 +147,6 @@ public class Item extends Mappers.BaseItem {
      */
     private void basicChecks() {
         if (note == null || note.equals("")) {
-            // Filter out items without prices
             discard = true;
         } else if (enchanted) {
             // For pricing items based on their enchants
@@ -192,7 +194,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!RELATIONS.getCurrencyAliasToName().containsKey(noteList[2])) {
+        if (!Main.RELATIONS.getCurrencyAliasToName().containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -201,14 +203,14 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
-            typeLine = RELATIONS.getCurrencyAliasToName().get(noteList[2]);
+            typeLine = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
             priceType = "Chaos Orb";
-            this.price = 1 / (Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision);
+            this.price = 1 / (Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
-            this.price = Math.round(price * CONFIG.pricePrecision) / CONFIG.pricePrecision;
-            priceType = RELATIONS.getCurrencyAliasToName().get(noteList[2]);
+            this.price = Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision;
+            priceType = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
         }
     }
 
@@ -285,7 +287,7 @@ public class Item extends Mappers.BaseItem {
         if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
             if (qual < 6) qual = 0;
             else if (qual < 16) qual = 10;
-            else if (qual >= 16) qual = 20;
+            else qual = 20;
 
             // Quality doesn't matter for lvl 3 and 4
             if (lvl > 2) qual = 0;
@@ -344,7 +346,11 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Find largest single link
-        for (Integer link : links) if (link > this.links) this.links = link;
+        for (Integer link : links) {
+            if (link > this.links) {
+                this.links = link;
+            }
+        }
     }
 
     /**
@@ -522,6 +528,7 @@ public class Item extends Mappers.BaseItem {
             return;
         }
 
+        // Match any negative or positive integer or double
         name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
 
         // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle

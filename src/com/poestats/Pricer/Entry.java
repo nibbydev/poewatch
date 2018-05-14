@@ -1,8 +1,11 @@
-package ovh.poe.Pricer;
+package com.poestats.Pricer;
 
-import ovh.poe.Item;
-import ovh.poe.Main;
-import ovh.poe.RelationManager;
+import com.poestats.Config;
+import com.poestats.Item;
+import com.poestats.Main;
+import com.poestats.Pricer.Entries.*;
+import com.poestats.Pricer.Maps.*;
+import com.poestats.RelationManager;
 
 import java.util.*;
 
@@ -10,257 +13,20 @@ import java.util.*;
  * Price database entry object
  */
 public class Entry {
-    private static class RawEntry {
-        private String accountName, priceType, id;
-        private double price;
-
-        public void add (Item item, String accountName) {
-            this.price = item.getPrice();
-            this.id = item.id;
-            this.accountName = accountName;
-            this.priceType = item.getPriceType();
-        }
-
-        //---------------------------------------------------
-        // Getters and setters
-        //---------------------------------------------------
-
-        public String getId() {
-            return id;
-        }
-
-        public double getPrice() {
-            return price;
-        }
-
-        public String getAccountName() {
-            return accountName;
-        }
-
-        public String getPriceType() {
-            return priceType;
-        }
-    }
-
-    private static class HourlyEntry {
-        private double mean, median, mode;
-        private int inc, dec;
-        private String raw;
-
-        public void add (double mean, double median, double mode, int inc, int dec) {
-            this.mean = mean;
-            this.median = median;
-            this.mode = mode;
-            this.inc = inc;
-            this.dec = dec;
-        }
-
-        public void add(String raw) {
-            // Eg "8.241,5.0,5.0", mean median mode respectively
-            this.raw = raw;
-
-            String[] splitRaw = raw.split(",");
-            mean = Double.parseDouble(splitRaw[0]);
-            median = Double.parseDouble(splitRaw[1]);
-            mode = Double.parseDouble(splitRaw[2]);
-
-            // TODO: remove if statement
-            if (splitRaw.length > 3) inc = Integer.parseInt(splitRaw[3]);
-            if (splitRaw.length > 4) dec = Integer.parseInt(splitRaw[4]);
-        }
-
-        @Override
-        public String toString() {
-            if (raw == null) return mean + "," + median + "," + mode + "," + inc + "," + dec;
-            else return raw;
-        }
-
-        //---------------------------------------------------
-        // Getters and setters
-        //---------------------------------------------------
-
-        public double getMean() {
-            return mean;
-        }
-
-        public double getMedian() {
-            return median;
-        }
-
-        public double getMode() {
-            return mode;
-        }
-
-        public int getInc() {
-            return inc;
-        }
-
-        public int getDec() {
-            return dec;
-        }
-
-        public String getRaw() {
-            return raw;
-        }
-    }
-
-    private static class TenMinuteEntry {
-        private double mean, median, mode;
-        private String raw;
-
-        public void add (double mean, double median, double mode) {
-            this.mean = mean;
-            this.median = median;
-            this.mode = mode;
-        }
-
-        public void add(String raw) {
-            // Eg "8.241,5.0,5.0", mean median mode respectively
-            this.raw = raw;
-
-            String[] splitRaw = raw.split(",");
-            mean = Double.parseDouble(splitRaw[0]);
-            median = Double.parseDouble(splitRaw[1]);
-            mode = Double.parseDouble(splitRaw[2]);
-        }
-
-        @Override
-        public String toString() {
-            if (raw == null) return mean + "," + median + "," + mode;
-            else return raw;
-        }
-
-        //---------------------------------------------------
-        // Getters and setters
-        //---------------------------------------------------
-
-        public double getMean() {
-            return mean;
-        }
-
-        public double getMedian() {
-            return median;
-        }
-
-        public double getMode() {
-            return mode;
-        }
-
-        public String getRaw() {
-            return raw;
-        }
-    }
-
-    public static class DailyEntry {
-        private double mean, median, mode;
-        private int quantity;
-        private String raw;
-
-        void add(String raw) {
-            // Eg "8.241,5.0,5.0,3283", mean median mode quantity respectively
-            this.raw = raw;
-
-            String[] splitRaw = raw.split(",");
-            mean = Double.parseDouble(splitRaw[0]);
-            median = Double.parseDouble(splitRaw[1]);
-            mode = Double.parseDouble(splitRaw[2]);
-            quantity = Integer.parseInt(splitRaw[3]);
-        }
-
-        void add(double mean, double median, double mode, int quantity) {
-            this.mean = mean;
-            this.median = median;
-            this.mode = mode;
-            this.quantity = quantity;
-        }
-
-        @Override
-        public String toString() {
-            if (raw == null) return mean + "," + median + "," + mode + "," + quantity;
-            else return raw;
-        }
-
-        //---------------------------------------------------
-        // Getters and setters
-        //---------------------------------------------------
-
-        public double getMean() {
-            return mean;
-        }
-
-        public double getMedian() {
-            return median;
-        }
-
-        public double getMode() {
-            return mode;
-        }
-
-        public int getQuantity() {
-            return quantity;
-        }
-
-        public String getRaw() {
-            return raw;
-        }
-    }
-
-    private static class ItemEntry {
-        private double price;
-        private String accountName, id, raw;
-
-        public void add (String raw) {
-            this.raw = raw;
-            String[] splitRaw = raw.split(",");
-
-            this.price = Double.parseDouble(splitRaw[0]);
-            this.accountName = splitRaw[1];
-            this.id = splitRaw[2];
-        }
-
-        public void add (double price, String accountName, String id) {
-            this.price = price;
-            this.accountName = accountName;
-            this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            if (raw == null) return price + "," + accountName + "," + id;
-            else return raw;
-        }
-
-        //---------------------------------------------------
-        // Getters and setters
-        //---------------------------------------------------
-
-        public String getId() {
-            return id;
-        }
-
-        public double getPrice() {
-            return price;
-        }
-
-        public String getAccountName() {
-            return accountName;
-        }
-
-        public String getRaw() {
-            return raw;
-        }
-    }
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
 
     private String league, index;
     private int total_counter, inc, dec, quantity;
-    private double mean, median, mode, threshold_multiplier;
+    private double mean, median, mode;
 
     private List<RawEntry> db_raw = new ArrayList<>();
-    private List<RawEntry> db_temp = new ArrayList<>(Main.CONFIG.dbTempSize);
-    private List<ItemEntry> db_items = new ArrayList<>(Main.CONFIG.baseDataSize);
-    private List<DailyEntry> db_daily = new ArrayList<>(7);
-    private List<HourlyEntry> db_hourly = new ArrayList<>(24);
-    private List<TenMinuteEntry> db_minutely = new ArrayList<>(6);
+    private List<RawEntry> db_temp = new ArrayList<>(Config.entry_tempSize);
+    private List<ItemEntry> db_items = new ArrayList<>(Config.entry_itemsSize);
+    private List<DailyEntry> db_daily = new ArrayList<>(Config.entry_dailySize);
+    private List<HourlyEntry> db_hourly = new ArrayList<>(Config.entry_hourlySize);
+    private List<TenMinuteEntry> db_minutely = new ArrayList<>(Config.entry_minutelySize);
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -368,17 +134,18 @@ public class Entry {
      * Adds values from db_raw array to prices database array
      */
     private void parse() {
-        EntryController.IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
+        IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
+        RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
-            if (checkRaw(raw)) continue;
+            if (checkRaw(raw, indexedItem.frame)) continue;
 
             // If the item was not listed for chaos orbs, then find the value in chaos
-            if (!raw.priceType.equals("Chaos Orb")) {
+            if (!raw.getPriceType().equals("Chaos Orb")) {
                 if (currencyMap == null) continue;
 
-                String fullIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault(raw.priceType, null);
+                String fullIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault(raw.getPriceType(), null);
                 if (fullIndex == null) continue;
 
                 Entry currencyEntry = currencyMap.getOrDefault(fullIndex, null);
@@ -387,18 +154,18 @@ public class Entry {
                 if (currencyEntry.getCount() < 20) continue;
 
                 // Convert the item's price into Chaos Orbs
-                raw.price = raw.price * currencyEntry.getMedian();
+                raw.setPrice(raw.getPrice() * currencyEntry.getMedian());
             }
 
             // Hard-cap item prices
-            if (raw.price > 120000.0 || raw.price < 0.001) continue;
+            if (raw.getPrice() > 120000.0 || raw.getPrice() < 0.001) continue;
 
             // Round em up
-            raw.price = Math.round(raw.price * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+            raw.setPrice(Math.round(raw.getPrice() * Config.item_pricePrecision) / Config.item_pricePrecision);
 
             // Add entry to the database
             ItemEntry itemEntry = new ItemEntry();
-            itemEntry.add(raw.price, raw.accountName, raw.id);
+            itemEntry.add(raw.getPrice(), raw.getAccountName(), raw.getId());
 
             inc++;
 
@@ -419,30 +186,25 @@ public class Entry {
      * @param raw RawEntry to check and then store
      * @return True if should be discarded
      */
-    private boolean checkRaw(RawEntry raw) {
+    private boolean checkRaw(RawEntry raw, int frame) {
         try {
-            for (RawEntry tempEntry : db_temp) {
-                if (tempEntry.id.equals(raw.id)) return true;
+            // Don't check for duplicates if less than 10 are listed each day
+            //if (frame == 5 && quantity < 20) return false;
 
-                // Don't check account name if less than 10 are listed each day
-                if (quantity > 10) {
-                    if (tempEntry.accountName.equals(raw.accountName)) return true;
-                }
+            for (RawEntry tempEntry : db_temp) {
+                if (tempEntry.getId().equals(raw.getId())) return true;
+                if (tempEntry.getAccountName().equals(raw.getAccountName())) return true;
             }
 
             for (ItemEntry itemEntry : db_items) {
-                if (itemEntry.id.equals(raw.id)) return true;
-
-                // Don't check account name if less than 10 are listed each day
-                if (quantity > 10) {
-                    if (itemEntry.accountName.equals(raw.accountName)) return true;
-                }
+                if (itemEntry.getId().equals(raw.getId())) return true;
+                if (itemEntry.getAccountName().equals(raw.getAccountName())) return true;
             }
         } finally {
             db_temp.add(raw);
 
-            if (db_temp.size() > Main.CONFIG.dbTempSize) {
-                db_temp.subList(0, db_temp.size() - Main.CONFIG.dbTempSize).clear();
+            if (db_temp.size() > Config.entry_tempSize) {
+                db_temp.subList(0, db_temp.size() - Config.entry_tempSize).clear();
             }
         }
 
@@ -463,7 +225,7 @@ public class Entry {
         // Very few items have been listed
         if (total_counter < 15) return true;
 
-        RelationManager.IndexedItem indexedItem = Main.RELATIONS.genericIndexToData(index);
+        RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
         if (indexedItem == null) {
             System.out.println("null: "+index);
             return false;
@@ -472,9 +234,9 @@ public class Entry {
         // If the item  has been available for the past 2 days, checkEntry if price is much higher or lower than the
         // average price was 10 minutes ago
         if (!db_minutely.isEmpty()) {
-            double tmpPastMedian = db_minutely.get(db_minutely.size() - 1).median;
+            double tmpPastMedian = db_minutely.get(db_minutely.size() - 1).getMedian();
             if (tmpPastMedian == 0) return true;
-            double tmpPercent = entry.price / tmpPastMedian * 100;
+            double tmpPercent = entry.getPrice() / tmpPastMedian * 100;
 
             if (db_daily.size() > 1) {
                 switch (indexedItem.parent) {
@@ -513,17 +275,6 @@ public class Entry {
         mean = findMeanItems(sortedItemPrices);
         median = findMedianItems(sortedItemPrices);
         mode = findModeItems(sortedItemPrices);
-
-        // If more items were removed than added, update counter
-        if (dec * 2 > inc) {
-            threshold_multiplier += 0.1;
-        } else {
-            threshold_multiplier -= 0.1;
-        }
-
-        // Don't let it grow infinitely
-        if (threshold_multiplier > 10) threshold_multiplier = 10;
-        if (threshold_multiplier < 0) threshold_multiplier = 0;
     }
 
     /**
@@ -533,8 +284,8 @@ public class Entry {
         // If an array has more elements than specified, remove everything from the possible last index up until
         // however many excess elements it has
 
-        if (db_items.size() > Main.CONFIG.baseDataSize) {
-            db_items.subList(0, db_items.size() - Main.CONFIG.baseDataSize).clear();
+        if (db_items.size() > Config.entry_itemsSize) {
+            db_items.subList(0, db_items.size() - Config.entry_itemsSize).clear();
         }
 
         if (Main.ENTRY_CONTROLLER.isTenBool() && db_minutely.size() > 6) {
@@ -557,7 +308,7 @@ public class Entry {
     private int calcQuantity() {
         int tmp = 0;
         for (HourlyEntry entry : db_hourly) {
-            tmp += entry.inc;
+            tmp += entry.getInc();
         }
 
         return tmp;
@@ -565,15 +316,15 @@ public class Entry {
 
     private List<Double> sortItemPrices() {
         List<Double> tempList = new ArrayList<>();
-        for (ItemEntry entry : db_items) tempList.add(entry.price);
+        for (ItemEntry entry : db_items) tempList.add(entry.getPrice());
         Collections.sort(tempList);
 
-        if (db_items.size() > 1) {
+        if (db_items.size() > Config.entry_itemsSize * 3 / 4) {
             if (db_daily.size() < 2) {
-                int startIndex = db_items.size() * Main.CONFIG.calcNewShiftPercent / 100;
+                int startIndex = db_items.size() * Config.entry_shiftPercent / 100;
                 return tempList.subList(0, startIndex);
             } else {
-                int endIndex = db_items.size() * Main.CONFIG.calcShiftPercent / 100;
+                int endIndex = db_items.size() * Config.entry_shiftPercentNew / 100;
                 int startIndex = (tempList.size() - endIndex) / 2;
                 return tempList.subList(startIndex, endIndex);
             }
@@ -588,14 +339,14 @@ public class Entry {
         double mean = 0.0;
         for (Double entry : sortedItemPrices) mean += entry;
 
-        return Math.round(mean / sortedItemPrices.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        return Math.round(mean / sortedItemPrices.size() * Config.item_pricePrecision) / Config.item_pricePrecision;
     }
 
     private double findMedianItems(List<Double> sortedItemPrices) {
         if (sortedItemPrices.isEmpty()) return 0;
 
         int medianIndex = sortedItemPrices.size() / 2;
-        return Math.round(sortedItemPrices.get(medianIndex) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        return Math.round(sortedItemPrices.get(medianIndex) * Config.item_pricePrecision) / Config.item_pricePrecision;
     }
 
     private double findModeItems(List<Double> sortedItemPrices) {
@@ -624,9 +375,9 @@ public class Entry {
 
         double mean = 0.0;
         for (TenMinuteEntry entry : db_minutely) {
-            mean += entry.mean;
+            mean += entry.getMean();
         }
-        mean = Math.round(mean / db_minutely.size() * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        mean = Math.round(mean / db_minutely.size() * Config.item_pricePrecision) / Config.item_pricePrecision;
 
         return mean;
     }
@@ -636,13 +387,13 @@ public class Entry {
 
         ArrayList<Double> tempList = new ArrayList<>();
         for (TenMinuteEntry entry : db_minutely) {
-            tempList.add(entry.median);
+            tempList.add(entry.getMedian());
         }
 
         Collections.sort(tempList);
 
         int medianIndex = tempList.size() / 2;
-        return Math.round(tempList.get(medianIndex) * Main.CONFIG.pricePrecision) / Main.CONFIG.pricePrecision;
+        return Math.round(tempList.get(medianIndex) * Config.item_pricePrecision) / Config.item_pricePrecision;
     }
 
     private double findModeHourly() {
@@ -652,12 +403,12 @@ public class Entry {
             int count = 0;
 
             for (TenMinuteEntry entry2 : db_minutely) {
-                if (entry2.mode == entry1.mode) ++count;
+                if (entry2.getMode() == entry1.getMode()) ++count;
             }
 
             if (count > maxCount) {
                 maxCount = count;
-                maxValue = entry1.mode;
+                maxValue = entry1.getMode();
             }
         }
 
@@ -718,8 +469,6 @@ public class Entry {
         stringBuilder.append(inc);
         stringBuilder.append(",dec:");
         stringBuilder.append(dec);
-        stringBuilder.append(",multiplier:");
-        stringBuilder.append(Math.round(threshold_multiplier * 100.0) / 100.0);
 
         // Add delimiter
         stringBuilder.append("::");
@@ -843,9 +592,6 @@ public class Entry {
                         break;
                     case "dec":
                         dec += Integer.parseInt(splitDataItem[1]);
-                        break;
-                    case "multiplier":
-                        threshold_multiplier = Double.parseDouble(splitDataItem[1]);
                         break;
                     default:
                         Main.ADMIN.log_("Unknown field: " + splitDataItem[0], 3);

@@ -1,8 +1,9 @@
-package ovh.poe.Worker;
+package com.poestats.Worker;
 
-import ovh.poe.Mappers;
+import com.poestats.Config;
+import com.poestats.Main;
+import com.poestats.Mappers;
 import com.google.gson.Gson;
-import ovh.poe.Main;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,17 +11,21 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
  */
 public class Worker extends Thread {
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
+
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();
     private volatile boolean flagLocalRun = true;
     private String job;
     private int index;
+    private static long lastPullTime;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -44,8 +49,7 @@ public class Worker extends Thread {
 
             // In case the notify came from some other source or there was a timeout, make sure the worker doesn't
             // continue with an empty job
-            if (job == null)
-                continue;
+            if (job == null) continue;
 
             // Download and parse data according to the changeID.
             replyJSONString = downloadData();
@@ -84,41 +88,38 @@ public class Worker extends Thread {
      */
     private String downloadData() {
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[Main.CONFIG.downloadChunkSize];
+        byte[] byteBuffer = new byte[Config.worker_downloadBufferSize];
         boolean regexLock = true;
         InputStream stream = null;
         int byteCount;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - Main.ADMIN.latestPullTime < Main.CONFIG.downloadDelay) {
-            sleepX((int) (Main.CONFIG.downloadDelay - System.currentTimeMillis() + Main.ADMIN.latestPullTime));
+        while (System.currentTimeMillis() - Worker.lastPullTime < Config.worker_downloadDelayMS) {
+            sleepX((int) (Config.worker_downloadDelayMS - System.currentTimeMillis() + Worker.lastPullTime));
         }
 
-        // Run statistics cycle
-        Main.ADMIN.pullCountTotal++;
-        Main.ADMIN.latestPullTime = System.currentTimeMillis();
-        Main.ADMIN.workerCycle();
+        Worker.lastPullTime = System.currentTimeMillis();
 
         try {
             // Define the request
-            URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
+            URL request = new URL(Config.worker_APIBaseURL + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(Main.CONFIG.readTimeOut);
-            connection.setConnectTimeout(Main.CONFIG.connectTimeOut);
+            connection.setReadTimeout(Config.worker_readTimeoutMS);
+            connection.setConnectTimeout(Config.worker_connectTimeoutMS);
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, Main.CONFIG.downloadChunkSize)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, Config.worker_downloadBufferSize)) != -1) {
                 // Check if run flag is lowered
                 if (!this.flagLocalRun)
                     return "";
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != Main.CONFIG.downloadChunkSize) {
+                if (byteCount != Config.worker_downloadBufferSize) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
@@ -130,8 +131,7 @@ public class Worker extends Thread {
 
                 // Try to find new job number using regex
                 if (regexLock) {
-                    Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
-                    Matcher matcher = pattern.matcher(stringBuilderBuffer.toString());
+                    Matcher matcher = Config.worker_changeIDRegexPattern.matcher(stringBuilderBuffer.toString());
                     if (matcher.find()) {
                         regexLock = false;
 
@@ -154,11 +154,9 @@ public class Worker extends Thread {
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
-                sleepX(5000);
+                sleepX(Config.worker_lockTimeoutMS);
                 Main.WORKER_CONTROLLER.setNextChangeID(job);
             }
-
-            Main.ADMIN.pullCountError++;
 
             // Clear the buffer so that an empty string will be returned instead
             stringBuilderBuffer.setLength(0);
@@ -198,7 +196,7 @@ public class Worker extends Thread {
     private void waitOnMonitor() {
         synchronized (monitor) {
             try {
-                monitor.wait(500);
+                monitor.wait(Config.monitorTimeoutMS);
             } catch (InterruptedException e) {
             }
         }

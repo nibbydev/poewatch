@@ -1,29 +1,20 @@
-package ovh.poe.Pricer;
+package com.poestats.Pricer;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import ovh.poe.Mappers;
-import ovh.poe.Item;
-import ovh.poe.Main;
-import ovh.poe.Misc;
+import com.poestats.*;
+import com.poestats.Pricer.Maps.*;
+import com.poestats.Pricer.Parcel.*;
+import com.poestats.Pricer.Parcel.sub.*;
 
 import java.io.*;
-import java.lang.reflect.Type;
 import java.util.*;
 
-/**
- * Manages database
- */
 public class EntryController {
-    // League map. Has mappings of: [league id - category map]
-    static class LeagueMap extends HashMap<String, CategoryMap> { }
-    // Category map. Has mappings of: [category id - index map]
-    static class CategoryMap extends HashMap<String, IndexMap> { }
-    // Index map. Has mappings of: [index - Entry]
-    static class IndexMap extends HashMap<String, Entry> { }
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
 
     private final LeagueMap leagueMap = new LeagueMap();
-
     private final JSONParcel JSONParcel = new JSONParcel();
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();
@@ -33,7 +24,7 @@ public class EntryController {
     private long twentyFourCounter, sixtyCounter, tenCounter;
 
     //------------------------------------------------------------------------------------------------------------
-    // Upon starting/stopping the program
+    // Main methods
     //------------------------------------------------------------------------------------------------------------
 
     /**
@@ -48,9 +39,7 @@ public class EntryController {
      * Saves current status data in text file
      */
     private void saveStartParameters() {
-        File paramFile = new File("./data/status.csv");
-
-        try (BufferedWriter writer = Misc.defineWriter(paramFile)) {
+        try (BufferedWriter writer = Misc.defineWriter(Config.file_status)) {
             if (writer == null) return;
 
             String buffer = "writeTime: " + System.currentTimeMillis() + "\n";
@@ -68,9 +57,7 @@ public class EntryController {
      * Loads status data from file on program start
      */
     private void loadStartParameters() {
-        File paramFile = new File("./data/status.csv");
-
-        try (BufferedReader reader = Misc.defineReader(paramFile)) {
+        try (BufferedReader reader = Misc.defineReader(Config.file_status)) {
             if (reader == null) return;
 
             String line;
@@ -92,6 +79,28 @@ public class EntryController {
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
         }
+
+        if ((System.currentTimeMillis() - tenCounter) > Config.entryController_tenMS) {
+            long multiplier = (System.currentTimeMillis() - tenCounter) / Config.entryController_tenMS;
+            tenCounter +=  Config.entryController_tenMS * multiplier;
+        }
+
+        if ((System.currentTimeMillis() - sixtyCounter) > Config.entryController_sixtyMS) {
+            long multiplier = (System.currentTimeMillis() - sixtyCounter) / Config.entryController_sixtyMS;
+            sixtyCounter += Config.entryController_sixtyMS * multiplier;
+        }
+
+        if ((System.currentTimeMillis() - twentyFourCounter) > Config.entryController_twentyFourMS) {
+            long multiplier = (System.currentTimeMillis() - twentyFourCounter) / Config.entryController_twentyFourMS;
+            twentyFourCounter += Config.entryController_twentyFourMS * multiplier;
+        }
+
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
+        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
+        Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
+
+        saveStartParameters();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -102,8 +111,8 @@ public class EntryController {
      * Load in currency data on app start and fill leagueMap with leagues
      */
     private void loadDatabases() {
-        for (String league : Main.RELATIONS.getLeagues()) {
-            File currencyFile = new File("./data/database/"+league+"/currency.csv");
+        for (String league : Main.LEAGUE_MANAGER.getStringLeagues()) {
+            File currencyFile = new File(Config.folder_database, league + "/currency.csv");
 
             if (!currencyFile.exists()) {
                 Main.ADMIN.log_("Missing currency file for league: "+league, 2);
@@ -139,22 +148,21 @@ public class EntryController {
      * Writes all collected data to file
      */
     private void cycle() {
-        for (String league : Main.RELATIONS.getLeagues()) {
+        for (String league : Main.LEAGUE_MANAGER.getStringLeagues()) {
             CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
-            File leagueFolder = new File("./data/database/"+league+"/");
+            File leagueFolder = new File(Config.folder_database, league);
 
-            if (!leagueFolder.exists()) {
-                Main.ADMIN.log_("Missing folder for league: "+league, 2);
-                leagueFolder.mkdirs();
+            if (leagueFolder.mkdir()) {
+                Main.ADMIN.log_("Created database folder for league: " + league, 2);
             }
 
             for (String category : Main.RELATIONS.getCategories().keySet()) {
                 IndexMap indexMap = categoryMap.getOrDefault(category, new IndexMap());
                 Set<String> tmp_unparsedIndexes = new HashSet<>(indexMap.keySet());
-                File leagueFile = new File("./data/database/"+league+"/"+category+".csv");
+                File leagueFile = new File(Config.folder_database, league+"/"+category+".csv");
 
                 // The file data will be stored in
-                File tmpLeagueFile = new File("./data/database/"+league+"/"+category+".tmp");
+                File tmpLeagueFile = new File(Config.folder_database, league+"/"+category+".tmp");
 
                 // If it's time, prep history controller
                 if (twentyFourBool) {
@@ -264,7 +272,7 @@ public class EntryController {
      */
     public void run() {
         // Run every minute (-ish)
-        if (System.currentTimeMillis() - lastRunTime < Main.CONFIG.pricerControllerSleepCycle * 1000) return;
+        if (System.currentTimeMillis() - lastRunTime < Config.entryController_sleepMS) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
         //if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
@@ -272,29 +280,39 @@ public class EntryController {
         flipPauseFlag();
 
         // Run once every 10min
-        if ((System.currentTimeMillis() - tenCounter) > 10 * 60 * 1000) {
-            int multiplier = (int)(System.currentTimeMillis() - tenCounter) / (10 * 60 * 1000);
-            tenCounter += (10 * 60 * 1000) * multiplier;
+        if ((System.currentTimeMillis() - tenCounter) > Config.entryController_tenMS) {
+            long multiplier = (System.currentTimeMillis() - tenCounter) / Config.entryController_tenMS;
+            tenCounter +=  Config.entryController_tenMS * multiplier;
+
             tenBool = true;
+            Main.ADMIN.log_("10 activated", 0);
         }
 
         // Run once every 60min
-        if ((System.currentTimeMillis() - sixtyCounter) > 60 * 60 * 1000) {
-            int multiplier = (int)(System.currentTimeMillis() - sixtyCounter) / (60 * 60 * 1000);
-            sixtyCounter += (60 * 60 * 1000) * multiplier;
+        if ((System.currentTimeMillis() - sixtyCounter) > Config.entryController_sixtyMS) {
+            long multiplier = (System.currentTimeMillis() - sixtyCounter) / Config.entryController_sixtyMS;
+            sixtyCounter += Config.entryController_sixtyMS * multiplier;
 
             sixtyBool = true;
+            Main.ADMIN.log_("60 activated", 0);
 
             // Get a list of active leagues from pathofexile.com's api
-            Main.RELATIONS.downloadLeagueList();
+            Main.LEAGUE_MANAGER.download();
         }
 
         // Run once every 24h
-        if ((System.currentTimeMillis() - twentyFourCounter) > 24 * 60 * 60 * 1000) {
-            int multiplier = (int)(System.currentTimeMillis() - twentyFourCounter) / (24 * 60 * 60 * 1000);
-            twentyFourCounter += (24 * 60 * 60 * 1000) * multiplier;
+        if ((System.currentTimeMillis() - twentyFourCounter) > Config.entryController_twentyFourMS) {
+            long multiplier = (System.currentTimeMillis() - twentyFourCounter) / Config.entryController_twentyFourMS;
+            twentyFourCounter += Config.entryController_twentyFourMS * multiplier;
 
             twentyFourBool = true;
+            Main.ADMIN.log_("24 activated", 0);
+
+            // Make a backup before 24h mark passes
+            Main.ADMIN.log_("Starting backup (before)...", 0);
+            long time_backup = System.currentTimeMillis();
+            Main.ADMIN.backup(Config.folder_data, "daily_before");
+            Main.ADMIN.log_("Backup (before) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
         }
 
         // The method that does it all
@@ -312,6 +330,16 @@ public class EntryController {
         writeJSONToFile();
         time_json = System.currentTimeMillis() - time_json;
 
+        Main.RELATIONS.saveData();
+
+        // Backup output folder
+        if (twentyFourBool) {
+            Main.ADMIN.log_("Starting backup (after)...", 0);
+            long time_backup = System.currentTimeMillis();
+            Main.ADMIN.backup(Config.folder_data, "daily_after");
+            Main.ADMIN.log_("Backup (after) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
+        }
+
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%4d", (System.currentTimeMillis() - lastRunTime) / 1000) + " sec]";
         String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
@@ -322,16 +350,6 @@ public class EntryController {
 
         // Set last run time
         lastRunTime = System.currentTimeMillis();
-
-        Main.RELATIONS.saveData();
-
-        // Backup output folder
-        if (twentyFourBool) {
-            long time_backup = System.currentTimeMillis();
-            Main.ADMIN.backup(new File("./data/output"), "daily");
-            time_backup = System.currentTimeMillis() - time_backup;
-            Main.ADMIN.log_("Backup took: " + time_backup + " ms", 0);
-        }
 
         // Clear the parcel
         JSONParcel.clear();
@@ -357,7 +375,7 @@ public class EntryController {
                 while (flagPause) {
                     synchronized (monitor) {
                         try {
-                            monitor.wait(500);
+                            monitor.wait(Config.monitorTimeoutMS);
                         } catch (InterruptedException ex) {
                         }
                     }
@@ -398,14 +416,16 @@ public class EntryController {
      */
     private void writeJSONToFile() {
         for (String league : JSONParcel.getJsonLeagueMap().keySet()) {
-            JSONParcel.JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
+            JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
 
             for (String category : jsonCategoryMap.keySet()) {
-                JSONParcel.JSONItemList jsonItems = jsonCategoryMap.get(category);
+                JSONItemList jsonItems = jsonCategoryMap.get(category);
 
                 try {
-                    new File("./data/output/"+league).mkdirs();
-                    File file = new File("./data/output/"+league+"/"+category+".json");
+                    if (new File(Config.folder_output, league).mkdir()) {
+                        Main.ADMIN.log_("Created output folder for league: " + league, 2);
+                    }
+                    File file = new File(Config.folder_output, league+"/"+category+".json");
 
                     BufferedWriter writer = Misc.defineWriter(file);
                     if (writer == null) throw new IOException("File '"+league+"' error");

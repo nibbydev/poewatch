@@ -1,7 +1,9 @@
-package ovh.poe;
+package com.poestats;
 
 import com.google.gson.Gson;
-import ovh.poe.Pricer.Entry;
+import com.poestats.League.LeagueEntry;
+import com.poestats.Pricer.Entries.DailyEntry;
+import com.poestats.Pricer.Entry;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 
 public class HistoryController {
+    //------------------------------------------------------------------------------------------------------------
+    // Inner classes
+    //------------------------------------------------------------------------------------------------------------
+
     // Index map. Has mappings of: [index - HistoryItem]
     private static class IndexMap extends HashMap<String, HistoryItem> { }
 
@@ -22,6 +28,10 @@ public class HistoryController {
         private int[] count;
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
+
     private IndexMap indexMap;
     private File inputFile;
     private File outputFile;
@@ -29,16 +39,25 @@ public class HistoryController {
     private String league, category;
     private int currentLeagueDay;
     private int totalLeagueLength;
-    private int daysInStandard = 90;
     private boolean isPermanentLeague;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     public void configure(String league, String category) {
         isPermanentLeague = league.equals("Standard") || league.equals("Hardcore");
         this.category = category;
         this.league = league;
 
-        inputFile = new File("./data/history/"+league+"/"+category+".json");
-        outputFile = new File("./data/history/"+league+"/"+category+".tmp");
+        inputFile = new File(Config.folder_history, league+"/"+category+".json");
+        outputFile = new File(Config.folder_history, category+".tmp");
+
+        if (new File(inputFile.getParent()).mkdirs()) {
+            try {
+                Main.ADMIN.log_("Created folder for: " + inputFile.getCanonicalPath(), 1);
+            } catch (IOException ex) { }
+        }
 
         getLeagueLengths();
 
@@ -46,19 +65,18 @@ public class HistoryController {
     }
 
     private void getLeagueLengths() {
-        List<RelationManager.LeagueLengthElement> lengthElements = Main.RELATIONS.getLeagueLengthMap();
-        if (lengthElements != null) {
-            for (RelationManager.LeagueLengthElement lengthElement : lengthElements) {
-                if (lengthElement.getId().equals(league)) {
-                    currentLeagueDay = lengthElement.getElapse();
-                    totalLeagueLength = lengthElement.getTotal();
-                    return;
-                }
+        List<LeagueEntry> leagueEntries = Main.LEAGUE_MANAGER.getLeagues();
+        if (leagueEntries == null) {
+            currentLeagueDay = -1;
+            totalLeagueLength = -1;
+        } else {
+            for (LeagueEntry leagueEntry : leagueEntries) {
+                if (!leagueEntry.getId().equals(league)) continue;
+
+                currentLeagueDay = leagueEntry.getElapsedDays();
+                totalLeagueLength = leagueEntry.getTotalDays();
             }
         }
-
-        currentLeagueDay = -1;
-        totalLeagueLength = -1;
     }
 
     public void readFile() {
@@ -69,10 +87,14 @@ public class HistoryController {
 
         // Open up the reader
         try (Reader reader = Misc.defineReader(inputFile)) {
-            if (reader == null) throw new IOException();
+            if (reader == null) {
+                Main.ADMIN.log_("File not found: '" + Config.file_categories.getCanonicalPath() + "'", 4);
+                throw new IOException();
+            }
+
             indexMap = gson.fromJson(reader, IndexMap.class);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Couldn't load '"+inputFile.getName()+"' ('"+league+"')", 3);
+            Main.ADMIN._log(ex, 4);
             indexMap = new IndexMap();
         }
     }
@@ -83,13 +105,13 @@ public class HistoryController {
 
         int baseSize, lastIndex;
         if (isPermanentLeague) {
-            baseSize = daysInStandard;
+            baseSize = Config.misc_defaultLeagueLength;
         } else {
             baseSize = totalLeagueLength;
         }
 
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem());
-        Entry.DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
+        DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
 
         // If mean was null then the index didn't exist in the map (if the file failed to load or it is a new item that
         // doesn't exist in the file yet) and all other variables are null as well
@@ -110,7 +132,7 @@ public class HistoryController {
             System.arraycopy(historyItem.quantity,  1, historyItem.quantity,    0, historyItem.mean.length - 1);
             System.arraycopy(historyItem.count,     1, historyItem.count,       0, historyItem.mean.length - 1);
 
-            lastIndex = daysInStandard - 1;
+            lastIndex = Config.misc_defaultLeagueLength - 1;
         } else {
             lastIndex = currentLeagueDay;
         }
@@ -134,25 +156,26 @@ public class HistoryController {
             return;
         }
 
-        new File("./data/history/"+league+"/").mkdirs();
-
         try (Writer writer = Misc.defineWriter(outputFile)) {
             if (writer == null) throw new IOException();
             gson.toJson(indexMap, writer);
         } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+outputFile.getName()+"' ('"+league+"')", 3);
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN._log(ex, 4);
         }
 
         // Remove original file
         if (inputFile.exists() && !inputFile.delete()) {
-            String errorMsg = "Unable to remove '"+league+"/"+category+"/"+inputFile.getName()+"'";
-            Main.ADMIN.log_(errorMsg, 4);
+            try {
+                String errorMsg = "Unable to remove: '"+inputFile.getCanonicalPath()+"'";
+                Main.ADMIN.log_(errorMsg, 4);
+            } catch (IOException ex) { }
         }
         // Rename temp file to original file
         if (outputFile.exists() && !outputFile.renameTo(inputFile)) {
-            String errorMsg = "Unable to rename '"+league+"/"+category+"/"+outputFile.getName()+"'";
-            Main.ADMIN.log_(errorMsg, 4);
+            try {
+                String errorMsg = "Unable to remove: '"+outputFile.getCanonicalPath()+"'";
+                Main.ADMIN.log_(errorMsg, 4);
+            } catch (IOException ex) { }
         }
 
         // Clean up

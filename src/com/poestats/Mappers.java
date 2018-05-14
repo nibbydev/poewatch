@@ -1,4 +1,4 @@
-package ovh.poe;
+package com.poestats;
 
 import java.util.*;
 
