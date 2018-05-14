@@ -1058,25 +1058,7 @@ function checkHideItem(item) {
     else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") return true;
   
   } else if (FILTER.category === "currency") {
-    // Hide some fairly useless currency
-    if (item["frame"] === 5) {
-      switch (item["name"]) {
-        case "Imprint":
-        case "Scroll Fragment":
-        case "Alteration Shard":
-        case "Binding Shard":
-        case "Horizon Shard":
-        case "Engineer's Shard":
-        case "Chaos Shard":
-        case "Regal Shard":
-        case "Alchemy Shard":
-        case "Transmutation Shard":
-          return true;
-        default:
-          break;
-      }
-
-    } else if (item["frame"] === 3 && FILTER.sub === "all") {
+    if (item["frame"] === 3 && FILTER.sub === "all") {
       // Hide harbinger pieces under category 'all'
       return true;
     }
