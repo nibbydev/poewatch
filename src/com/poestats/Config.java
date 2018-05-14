@@ -5,8 +5,6 @@ import java.net.URL;
 import java.util.regex.Pattern;
 
 public class Config {
-    public static final int default_workerCount = 3;
-
     //------------------------------------------------------------------------------------------------------------
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
@@ -59,6 +57,7 @@ public class Config {
     public static final int worker_readTimeoutMS = 12000;
     public static final int worker_connectTimeoutMS = 10000;
     public static final int worker_lockTimeoutMS = 5000;
+    public static final int worker_defaultWorkerCount = 3;
 
     //------------------------------------------------------------------------------------------------------------
     // Entry

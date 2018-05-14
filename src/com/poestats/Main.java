@@ -10,7 +10,6 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class Main {
     //------------------------------------------------------------------------------------------------------------
@@ -85,7 +84,7 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            WORKER_CONTROLLER.spawnWorkers(Config.default_workerCount);
+            WORKER_CONTROLLER.spawnWorkers(Config.worker_defaultWorkerCount);
             System.out.println("[INFO] Spawned 3 workers");
         }
         if (!newArgs.contains("-id")) {

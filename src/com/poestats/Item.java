@@ -93,6 +93,10 @@ public class Item extends Mappers.BaseItem {
         buildKey();
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Child methods
+    //------------------------------------------------------------------------------------------------------------
+
     /**
      * Format the item's database key
      */
@@ -131,8 +135,7 @@ public class Item extends Mappers.BaseItem {
             key.append("|q:");
             key.append(quality);
             key.append("|c:");
-            if (corrupted) key.append(1);
-            else key.append(0);
+            key.append(corrupted ? 1 : 0);
         }
 
         // Convert to string
@@ -144,7 +147,6 @@ public class Item extends Mappers.BaseItem {
      */
     private void basicChecks() {
         if (note == null || note.equals("")) {
-            // Filter out items without prices
             discard = true;
         } else if (enchanted) {
             // For pricing items based on their enchants
@@ -285,7 +287,7 @@ public class Item extends Mappers.BaseItem {
         if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
             if (qual < 6) qual = 0;
             else if (qual < 16) qual = 10;
-            else if (qual >= 16) qual = 20;
+            else qual = 20;
 
             // Quality doesn't matter for lvl 3 and 4
             if (lvl > 2) qual = 0;
@@ -344,7 +346,11 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Find largest single link
-        for (Integer link : links) if (link > this.links) this.links = link;
+        for (Integer link : links) {
+            if (link > this.links) {
+                this.links = link;
+            }
+        }
     }
 
     /**
@@ -522,6 +528,7 @@ public class Item extends Mappers.BaseItem {
             return;
         }
 
+        // Match any negative or positive integer or double
         name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
 
         // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle
