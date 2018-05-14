@@ -189,7 +189,7 @@ public class Entry {
     private boolean checkRaw(RawEntry raw, int frame) {
         try {
             // Don't check for duplicates if less than 10 are listed each day
-            if (frame == 5 && quantity < 20) return false;
+            //if (frame == 5 && quantity < 20) return false;
 
             for (RawEntry tempEntry : db_temp) {
                 if (tempEntry.getId().equals(raw.getId())) return true;
@@ -319,7 +319,7 @@ public class Entry {
         for (ItemEntry entry : db_items) tempList.add(entry.getPrice());
         Collections.sort(tempList);
 
-        if (db_items.size() > 1) {
+        if (db_items.size() > Config.entry_itemsSize * 3 / 4) {
             if (db_daily.size() < 2) {
                 int startIndex = db_items.size() * Config.entry_shiftPercent / 100;
                 return tempList.subList(0, startIndex);
