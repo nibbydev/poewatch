@@ -136,6 +136,7 @@ public class JSONItem {
             if (subIndexedItem.links != null) links = subIndexedItem.links;
             if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
             if (subIndexedItem.var != null) var = subIndexedItem.var;
+            if (subIndexedItem.specificKey != null) key = subIndexedItem.specificKey;
 
             // Enchantments override the id here
             if (subIndexedItem.name != null) name = subIndexedItem.name;
