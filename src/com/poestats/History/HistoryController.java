@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.HashMap;
 import java.util.List;
 
 public class HistoryController {
@@ -25,10 +24,6 @@ public class HistoryController {
     private File outputFile;
     private Gson gson = Main.getGson();
     private String league, category;
-
-    private LeagueEntry leagueEntry;
-    private int currentLeagueDay;
-    private int totalLeagueLength;
     private boolean isPermanentLeague;
 
     //------------------------------------------------------------------------------------------------------------
@@ -48,26 +43,11 @@ public class HistoryController {
         if (new File(inputFile.getParent()).mkdirs()) {
             Main.ADMIN.log_("Created folder for: " + inputFile.getPath(), 1);
         }
-
-        List<LeagueEntry> leagueEntries = Main.LEAGUE_MANAGER.getLeagues();
-        if (leagueEntries == null) return;
-
-        for (LeagueEntry leagueEntry : leagueEntries) {
-            if (leagueEntry.getId().equals(league)) {
-                this.leagueEntry = leagueEntry;
-                currentLeagueDay = leagueEntry.getElapsedDays();
-                totalLeagueLength = leagueEntry.getTotalDays();
-                break;
-            }
-        }
     }
 
     public void readFile() {
         if (inputFile == null) {
             Main.ADMIN.log_("No variables defined for HistoryController ('"+league+"','"+category+"')", 3);
-            return;
-        } else if (leagueEntry == null) {
-            Main.ADMIN.log_("Missing LeagueEntry for HistoryController ('"+league+"','"+category+"')", 3);
             return;
         }
 
@@ -89,8 +69,7 @@ public class HistoryController {
         if (indexMap == null) return;
         if (entry.getDb_daily().isEmpty()) return;
 
-        int baseSize = isPermanentLeague ? Config.misc_defaultLeagueLength : totalLeagueLength;
-        int lastIndex = isPermanentLeague ? Config.misc_defaultLeagueLength - 1 : currentLeagueDay;
+        int baseSize = isPermanentLeague ? Config.misc_defaultLeagueLength : 0;
 
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem(baseSize));
         DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
@@ -105,7 +84,34 @@ public class HistoryController {
             System.arraycopy(historyItem.getMode(),      1, historyItem.getMode(),        0, size);
             System.arraycopy(historyItem.getQuantity(),  1, historyItem.getQuantity(),    0, size);
             System.arraycopy(historyItem.getCount(),     1, historyItem.getCount(),       0, size);
+        } else {
+            // Otherwise it's a challenge league of some sort and the arrays should be extended by one
+            int size = historyItem.getMean().length;
+            int extendedSize = size + 1;
+
+            // Create arrays that are 1 element longer than the previous ones
+            double[] extendedMean   = new double[extendedSize];
+            double[] extendedMedian = new double[extendedSize];
+            double[] extendedMode   = new double[extendedSize];
+            int[] extendedQuantity  = new int[extendedSize];
+            int[] extendedCount     = new int[extendedSize];
+
+            // Copy old array contents over to new arrays
+            System.arraycopy(historyItem.getMean(),      0, extendedMean,        0, size);
+            System.arraycopy(historyItem.getMedian(),    0, extendedMedian,      0, size);
+            System.arraycopy(historyItem.getMode(),      0, extendedMode,        0, size);
+            System.arraycopy(historyItem.getQuantity(),  0, extendedQuantity,    0, size);
+            System.arraycopy(historyItem.getCount(),     0, extendedCount,       0, size);
+
+            // Overwrite array pointers in historyItem
+            historyItem.setMean(extendedMean);
+            historyItem.setMedian(extendedMedian);
+            historyItem.setMode(extendedMode);
+            historyItem.setQuantity(extendedQuantity);
+            historyItem.setCount(extendedCount);
         }
+
+        int lastIndex = isPermanentLeague ? Config.misc_defaultLeagueLength - 1 : historyItem.getMean().length - 1;
 
         // Add all the current values to the specified positions
         historyItem.getMean()[lastIndex]      = dailyEntry.getMean();
@@ -135,25 +141,14 @@ public class HistoryController {
 
         // Remove original file
         if (inputFile.exists() && !inputFile.delete()) {
-            try {
-                String errorMsg = "Unable to remove: '"+inputFile.getCanonicalPath()+"'";
-                Main.ADMIN.log_(errorMsg, 4);
-            } catch (IOException ex) { }
+            Main.ADMIN.log_("Unable to remove: '"+inputFile.getPath()+"'", 4);
         }
         // Rename temp file to original file
         if (outputFile.exists() && !outputFile.renameTo(inputFile)) {
-            try {
-                String errorMsg = "Unable to remove: '"+outputFile.getCanonicalPath()+"'";
-                Main.ADMIN.log_(errorMsg, 4);
-            } catch (IOException ex) { }
+            Main.ADMIN.log_("Unable to remove: '"+outputFile.getPath()+"'", 4);
         }
 
-        // Clean up
-        inputFile =  null;
-        outputFile = null;
-        league =  null;
-        category =  null;
-        indexMap = null;
+        reset();
     }
 
     private void reset() {
@@ -162,8 +157,6 @@ public class HistoryController {
         outputFile = null;
         league = null;
         category = null;
-        currentLeagueDay = -1;
-        totalLeagueLength = -1;
         isPermanentLeague = false;
     }
 }
