@@ -1,10 +1,9 @@
 # Compiled class file
 *.class
 /.idea/
-/http/
 /out/
 /src/META-INF/MANIFEST.MF
-/database.txt
+/converter-out/
 
 # Log file
 *.log
