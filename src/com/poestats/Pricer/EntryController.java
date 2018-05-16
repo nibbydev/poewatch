@@ -263,6 +263,36 @@ public class EntryController {
         }
     }
 
+    /**
+     * Writes JSONParcel object to JSON file
+     */
+    private void writeJSONToFile() {
+        for (String league : JSONParcel.getJsonLeagueMap().keySet()) {
+            JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
+
+            for (String category : jsonCategoryMap.keySet()) {
+                JSONItemList jsonItems = jsonCategoryMap.get(category);
+
+                try {
+                    if (new File(Config.folder_output, league).mkdir()) {
+                        Main.ADMIN.log_("Created output folder for league: " + league, 2);
+                    }
+                    File file = new File(Config.folder_output, league+"/"+category+".json");
+
+                    BufferedWriter writer = Misc.defineWriter(file);
+                    if (writer == null) throw new IOException("File '"+league+"' error");
+
+                    gson.toJson(jsonItems, writer);
+
+                    writer.flush();
+                    writer.close();
+                } catch (IOException ex) {
+                    Main.ADMIN._log(ex, 3);
+                }
+            }
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Often called controller methods
     //------------------------------------------------------------------------------------------------------------
@@ -410,37 +440,7 @@ public class EntryController {
             monitor.notifyAll();
         }
     }
-
-    /**
-     * Writes JSONParcel object to JSON file
-     */
-    private void writeJSONToFile() {
-        for (String league : JSONParcel.getJsonLeagueMap().keySet()) {
-            JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
-
-            for (String category : jsonCategoryMap.keySet()) {
-                JSONItemList jsonItems = jsonCategoryMap.get(category);
-
-                try {
-                    if (new File(Config.folder_output, league).mkdir()) {
-                        Main.ADMIN.log_("Created output folder for league: " + league, 2);
-                    }
-                    File file = new File(Config.folder_output, league+"/"+category+".json");
-
-                    BufferedWriter writer = Misc.defineWriter(file);
-                    if (writer == null) throw new IOException("File '"+league+"' error");
-
-                    gson.toJson(jsonItems, writer);
-
-                    writer.flush();
-                    writer.close();
-                } catch (IOException ex) {
-                    Main.ADMIN._log(ex, 3);
-                }
-            }
-        }
-    }
-
+    
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
