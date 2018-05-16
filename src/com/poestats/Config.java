@@ -69,6 +69,9 @@ public class Config {
     public static final int entry_hourlySize = 24;
     public static final int entry_dailySize = 7;
 
+    public static final int entry_pluckPercentLT2 = 10000;
+    public static final int entry_pluckPercentGT2 = 500;
+
     public static final int entry_shiftPercent = 80;
     public static final int entry_shiftPercentNew = 60;
 

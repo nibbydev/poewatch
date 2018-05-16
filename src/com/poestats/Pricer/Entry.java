@@ -70,6 +70,7 @@ public class Entry {
     public void cycle() {
         // Build statistics and databases
         parse();
+        pluck();
         build();
 
         // Runs every 10 minutes
@@ -223,7 +224,7 @@ public class Entry {
         // No average price found
         if (mean <= 0 || median <= 0) return true;
         // Very few items have been listed
-        if (total_counter < 15) return true;
+        //if (total_counter < 15) return true;
 
         RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
         if (indexedItem == null) {
@@ -260,6 +261,40 @@ public class Entry {
         }
 
         return true;
+    }
+
+    /**
+     * Removes entries with much higher prices than the rest
+     */
+    private void pluck() {
+        if (db_daily.size() < 2) return;
+        if (db_minutely.isEmpty()) return;
+
+        double tmpPastMedian = db_minutely.get(db_minutely.size() - 1).getMedian();
+        if (tmpPastMedian == 0) return;
+
+        List<ItemEntry> tmpList = new ArrayList<>();
+
+        // Loop through entries
+        for (ItemEntry item : db_items) {
+            double tmpPercent = item.getPrice() / tmpPastMedian * 100;
+
+            if (tmpPastMedian < 2) {
+                if (tmpPercent > Config.entry_pluckPercentLT2) tmpList.add(item);
+            } else {
+                if (tmpPercent > Config.entry_pluckPercentGT2) tmpList.add(item);
+            }
+        }
+
+        if (!tmpList.isEmpty()) {
+            RelationManager.SubIndexedItem indexedItem = Main.RELATIONS.indexToSpecificData(index);
+
+            for (ItemEntry item : tmpList) {
+                System.out.println("("+league+") '"+indexedItem.specificKey+"' '"+item.getPrice()+"' > '"+ tmpPastMedian +"'");
+                db_items.remove(item);
+                dec++;
+            }
+        }
     }
 
     /**
