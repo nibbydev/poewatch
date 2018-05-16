@@ -292,6 +292,8 @@ public class EntryController {
 
         // Run every minute (-ish)
         if (current - lastRunTime < Config.entryController_sleepMS) return;
+        lastRunTime = System.currentTimeMillis();
+
         // Don't run if there hasn't been a successful run in the past 30 seconds
         //if ((current - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
@@ -362,9 +364,6 @@ public class EntryController {
         String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) +
                 " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
-
-        // Set last run time
-        lastRunTime = System.currentTimeMillis();
 
         // Clear the parcel
         JSONParcel.clear();
