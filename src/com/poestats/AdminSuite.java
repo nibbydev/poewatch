@@ -118,9 +118,7 @@ public class AdminSuite {
             zipFolder(output, fileList);
         }
 
-        try {
-            Main.ADMIN.log_("Created backup of: " + input.getCanonicalPath(), 0);
-        } catch (IOException ex) { }
+        Main.ADMIN.log_("Created backup of: " + input.getPath(), 0);
     }
 
     private void zipFile(File input, File output) {
