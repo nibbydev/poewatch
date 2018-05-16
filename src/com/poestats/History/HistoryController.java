@@ -25,6 +25,8 @@ public class HistoryController {
     private File outputFile;
     private Gson gson = Main.getGson();
     private String league, category;
+
+    private LeagueEntry leagueEntry;
     private int currentLeagueDay;
     private int totalLeagueLength;
     private boolean isPermanentLeague;
@@ -34,35 +36,28 @@ public class HistoryController {
     //------------------------------------------------------------------------------------------------------------
 
     public void configure(String league, String category) {
+        reset();
+
         isPermanentLeague = league.equals("Standard") || league.equals("Hardcore");
         this.category = category;
         this.league = league;
 
         inputFile = new File(Config.folder_history, league+"/"+category+".json");
-        outputFile = new File(Config.folder_history, category+".tmp");
+        outputFile = new File(Config.folder_history, league+"/"+category+".tmp");
 
         if (new File(inputFile.getParent()).mkdirs()) {
-            try {
-                Main.ADMIN.log_("Created folder for: " + inputFile.getCanonicalPath(), 1);
-            } catch (IOException ex) { }
+            Main.ADMIN.log_("Created folder for: " + inputFile.getPath(), 1);
         }
 
-        getLeagueLengths();
-
-        indexMap = null;
-    }
-
-    private void getLeagueLengths() {
         List<LeagueEntry> leagueEntries = Main.LEAGUE_MANAGER.getLeagues();
-        if (leagueEntries == null) {
-            currentLeagueDay = -1;
-            totalLeagueLength = -1;
-        } else {
-            for (LeagueEntry leagueEntry : leagueEntries) {
-                if (!leagueEntry.getId().equals(league)) continue;
+        if (leagueEntries == null) return;
 
+        for (LeagueEntry leagueEntry : leagueEntries) {
+            if (leagueEntry.getId().equals(league)) {
+                this.leagueEntry = leagueEntry;
                 currentLeagueDay = leagueEntry.getElapsedDays();
                 totalLeagueLength = leagueEntry.getTotalDays();
+                break;
             }
         }
     }
@@ -71,12 +66,15 @@ public class HistoryController {
         if (inputFile == null) {
             Main.ADMIN.log_("No variables defined for HistoryController ('"+league+"','"+category+"')", 3);
             return;
+        } else if (leagueEntry == null) {
+            Main.ADMIN.log_("Missing LeagueEntry for HistoryController ('"+league+"','"+category+"')", 3);
+            return;
         }
 
         // Open up the reader
         try (Reader reader = Misc.defineReader(inputFile)) {
             if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_categories.getCanonicalPath() + "'", 4);
+                Main.ADMIN.log_("File not found: '"+Config.file_categories.getPath()+"'", 4);
                 throw new IOException();
             }
 
@@ -170,5 +168,16 @@ public class HistoryController {
         league =  null;
         category =  null;
         indexMap = null;
+    }
+
+    private void reset() {
+        indexMap = null;
+        inputFile = null;
+        outputFile = null;
+        league = null;
+        category = null;
+        currentLeagueDay = -1;
+        totalLeagueLength = -1;
+        isPermanentLeague = false;
     }
 }
