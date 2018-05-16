@@ -470,4 +470,28 @@ public class EntryController {
     public boolean isFlagPause() {
         return flagPause;
     }
+
+    public long getTwentyFourCounter() {
+        return twentyFourCounter;
+    }
+
+    public void setTwentyFourCounter(long twentyFourCounter) {
+        this.twentyFourCounter = twentyFourCounter;
+    }
+
+    public long getTenCounter() {
+        return tenCounter;
+    }
+
+    public void setTenCounter(long tenCounter) {
+        this.tenCounter = tenCounter;
+    }
+
+    public long getSixtyCounter() {
+        return sixtyCounter;
+    }
+
+    public void setSixtyCounter(long sixtyCounter) {
+        this.sixtyCounter = sixtyCounter;
+    }
 }

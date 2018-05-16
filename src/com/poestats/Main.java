@@ -135,6 +135,7 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    backup - backup commands\n"
+                + "    counter - counter commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -165,6 +166,9 @@ public class Main {
                         break;
                     case "backup":
                         commandBackup(userInput);
+                        break;
+                    case "counter":
+                        commandCounter(userInput);
                         break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -382,6 +386,81 @@ public class Main {
                 System.out.println(helpString);
                 break;
         }
+    }
+
+    /**
+     * Holds commands that control time counters
+     *
+     * @param userInput Input string
+     */
+    private static void commandCounter(String[] userInput) {
+        String helpString = "[INFO] Available counter commands:\n";
+        helpString += "    'counter <type> + <amount>' - Add <amount> MS to <type> counter\n";
+        helpString += "    'counter <type> - <amount>' - Remove <amount> MS from <type> counter\n";
+        helpString += "    'counter <type> = <amount>' - Set <type> counter to <amount> MS\n";
+
+        if (userInput.length < 4) {
+            System.out.println(helpString);
+            return;
+        }
+
+        long value, oldValue, newValue;
+        try {
+            value = Long.parseLong(userInput[3]);
+        } catch (Exception ex) {
+            System.out.println("Invalid value");
+            return;
+        }
+
+        switch (userInput[1]) {
+            case "24":
+                oldValue = ENTRY_CONTROLLER.getTwentyFourCounter();
+
+                switch (userInput[2]) {
+                    case "+": newValue = oldValue + value; break;
+                    case "-": newValue = oldValue - value; break;
+                    case "=": newValue = value;            break;
+                    default:
+                        System.out.println("Unknown sign");
+                        return;
+                }
+
+                ENTRY_CONTROLLER.setTwentyFourCounter(newValue);
+                break;
+            case "60":
+                oldValue = ENTRY_CONTROLLER.getSixtyCounter();
+
+                switch (userInput[2]) {
+                    case "+": newValue = oldValue + value; break;
+                    case "-": newValue = oldValue - value; break;
+                    case "=": newValue = value;            break;
+                    default:
+                        System.out.println("Unknown sign");
+                        return;
+                }
+
+                ENTRY_CONTROLLER.setSixtyCounter(newValue);
+                break;
+            case "10":
+                oldValue = ENTRY_CONTROLLER.getTenCounter();
+
+                switch (userInput[2]) {
+                    case "+": newValue = oldValue + value; break;
+                    case "-": newValue = oldValue - value; break;
+                    case "=": newValue = value;            break;
+                    default:
+                        System.out.println("Unknown sign");
+                        return;
+                }
+
+                ENTRY_CONTROLLER.setTenCounter(newValue);
+                break;
+            default:
+                System.out.println("Unknown type");
+                return;
+        }
+
+        System.out.println("Value of '"+userInput[1]+"' changed ("+oldValue+") -> ("+newValue+") [change: "+(newValue-oldValue)+"]");
     }
 
     //------------------------------------------------------------------------------------------------------------
