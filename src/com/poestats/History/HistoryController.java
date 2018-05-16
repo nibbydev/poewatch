@@ -2,7 +2,6 @@ package com.poestats.History;
 
 import com.google.gson.Gson;
 import com.poestats.Config;
-import com.poestats.League.LeagueEntry;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.Pricer.Entries.DailyEntry;
@@ -12,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class HistoryController {
@@ -25,6 +26,7 @@ public class HistoryController {
     private Gson gson = Main.getGson();
     private String league, category;
     private boolean isPermanentLeague;
+    private int entryCount;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -59,9 +61,11 @@ public class HistoryController {
             }
 
             indexMap = gson.fromJson(reader, IndexMap.class);
+            entryCount = findMedianEntryCount();
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
             indexMap = new IndexMap();
+            entryCount = 0;
         }
     }
 
@@ -69,7 +73,7 @@ public class HistoryController {
         if (indexMap == null) return;
         if (entry.getDb_daily().isEmpty()) return;
 
-        int baseSize = isPermanentLeague ? Config.misc_defaultLeagueLength : 0;
+        int baseSize = isPermanentLeague ? Config.misc_defaultLeagueLength : entryCount;
 
         HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem(baseSize));
         DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
@@ -158,5 +162,24 @@ public class HistoryController {
         league = null;
         category = null;
         isPermanentLeague = false;
+        entryCount = 0;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Utility
+    //------------------------------------------------------------------------------------------------------------
+
+    // TODO: *maybe* only use the first index's mean length. Needs performance testing
+    private int findMedianEntryCount() {
+        if (indexMap.isEmpty()) return 0;
+
+        List<Integer> tempList = new ArrayList<>();
+        for (String index : indexMap.keySet()) {
+            tempList.add(indexMap.get(index).getMean().length);
+        }
+
+        Collections.sort(tempList);
+
+        return tempList.get(tempList.size() / 2);
     }
 }
