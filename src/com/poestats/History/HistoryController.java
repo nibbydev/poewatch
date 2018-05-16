@@ -1,7 +1,10 @@
-package com.poestats;
+package com.poestats.History;
 
 import com.google.gson.Gson;
+import com.poestats.Config;
 import com.poestats.League.LeagueEntry;
+import com.poestats.Main;
+import com.poestats.Misc;
 import com.poestats.Pricer.Entries.DailyEntry;
 import com.poestats.Pricer.Entry;
 
@@ -13,21 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class HistoryController {
-    //------------------------------------------------------------------------------------------------------------
-    // Inner classes
-    //------------------------------------------------------------------------------------------------------------
-
-    // Index map. Has mappings of: [index - HistoryItem]
-    private static class IndexMap extends HashMap<String, HistoryItem> { }
-
-    private static class HistoryItem {
-        private double[] mean;
-        private double[] median;
-        private double[] mode;
-        private int[] quantity;
-        private int[] count;
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -115,22 +103,20 @@ public class HistoryController {
 
         // If mean was null then the index didn't exist in the map (if the file failed to load or it is a new item that
         // doesn't exist in the file yet) and all other variables are null as well
-        if (historyItem.mean == null) {
-            historyItem.mean        = new double[baseSize];
-            historyItem.median      = new double[baseSize];
-            historyItem.mode        = new double[baseSize];
-            historyItem.quantity    = new int[baseSize];
-            historyItem.count       = new int[baseSize];
+        if (historyItem.getMean() == null) {
+            historyItem.init(baseSize);
         }
 
         // If it's a permanent league (i.e it has no fixed amount of days, then the arrays should be shifted left by
         // one every time a new value is added)
         if (isPermanentLeague) {
-            System.arraycopy(historyItem.mean,      1, historyItem.mean,        0, historyItem.mean.length - 1);
-            System.arraycopy(historyItem.median,    1, historyItem.median,      0, historyItem.mean.length - 1);
-            System.arraycopy(historyItem.mode,      1, historyItem.mode,        0, historyItem.mean.length - 1);
-            System.arraycopy(historyItem.quantity,  1, historyItem.quantity,    0, historyItem.mean.length - 1);
-            System.arraycopy(historyItem.count,     1, historyItem.count,       0, historyItem.mean.length - 1);
+            int size = historyItem.getMean().length - 1;
+
+            System.arraycopy(historyItem.getMean(),      1, historyItem.getMean(),        0, size);
+            System.arraycopy(historyItem.getMedian(),    1, historyItem.getMedian(),      0, size);
+            System.arraycopy(historyItem.getMode(),      1, historyItem.getMode(),        0, size);
+            System.arraycopy(historyItem.getQuantity(),  1, historyItem.getQuantity(),    0, size);
+            System.arraycopy(historyItem.getCount(),     1, historyItem.getCount(),       0, size);
 
             lastIndex = Config.misc_defaultLeagueLength - 1;
         } else {
@@ -138,11 +124,11 @@ public class HistoryController {
         }
 
         // Add all the current values to the specified positions
-        historyItem.mean[lastIndex]      = dailyEntry.getMean();
-        historyItem.median[lastIndex]    = dailyEntry.getMedian();
-        historyItem.mode[lastIndex]      = dailyEntry.getMode();
-        historyItem.quantity[lastIndex]  = dailyEntry.getQuantity();
-        historyItem.count[lastIndex]     = entry.getCount();
+        historyItem.getMean()[lastIndex]      = dailyEntry.getMean();
+        historyItem.getMedian()[lastIndex]    = dailyEntry.getMedian();
+        historyItem.getMode()[lastIndex]      = dailyEntry.getMode();
+        historyItem.getQuantity()[lastIndex]  = dailyEntry.getQuantity();
+        historyItem.getCount()[lastIndex]     = entry.getCount();
 
         indexMap.putIfAbsent(index, historyItem);
     }
