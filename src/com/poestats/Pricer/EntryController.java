@@ -80,20 +80,7 @@ public class EntryController {
             Main.ADMIN._log(ex, 4);
         }
 
-        if ((System.currentTimeMillis() - tenCounter) > Config.entryController_tenMS) {
-            long multiplier = (System.currentTimeMillis() - tenCounter) / Config.entryController_tenMS;
-            tenCounter +=  Config.entryController_tenMS * multiplier;
-        }
-
-        if ((System.currentTimeMillis() - sixtyCounter) > Config.entryController_sixtyMS) {
-            long multiplier = (System.currentTimeMillis() - sixtyCounter) / Config.entryController_sixtyMS;
-            sixtyCounter += Config.entryController_sixtyMS * multiplier;
-        }
-
-        if ((System.currentTimeMillis() - twentyFourCounter) > Config.entryController_twentyFourMS) {
-            long multiplier = (System.currentTimeMillis() - twentyFourCounter) / Config.entryController_twentyFourMS;
-            twentyFourCounter += Config.entryController_twentyFourMS * multiplier;
-        }
+        fixCounters();
 
         String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
@@ -301,28 +288,26 @@ public class EntryController {
      * Main loop of the pricing service. Can be called whenever, only runs after specific amount of time has passed
      */
     public void run() {
+        long current = System.currentTimeMillis();
+
         // Run every minute (-ish)
-        if (System.currentTimeMillis() - lastRunTime < Config.entryController_sleepMS) return;
+        if (current - lastRunTime < Config.entryController_sleepMS) return;
         // Don't run if there hasn't been a successful run in the past 30 seconds
-        //if ((System.currentTimeMillis() - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
+        //if ((current - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
 
         // Run once every 10min
-        if ((System.currentTimeMillis() - tenCounter) > Config.entryController_tenMS) {
-            long multiplier = (System.currentTimeMillis() - tenCounter) / Config.entryController_tenMS;
-            tenCounter +=  Config.entryController_tenMS * multiplier;
-
+        if (current - tenCounter > Config.entryController_tenMS) {
+            tenCounter += (current - tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
             tenBool = true;
             Main.ADMIN.log_("10 activated", 0);
         }
 
         // Run once every 60min
-        if ((System.currentTimeMillis() - sixtyCounter) > Config.entryController_sixtyMS) {
-            long multiplier = (System.currentTimeMillis() - sixtyCounter) / Config.entryController_sixtyMS;
-            sixtyCounter += Config.entryController_sixtyMS * multiplier;
-
+        if (current - sixtyCounter > Config.entryController_sixtyMS) {
+            sixtyCounter += (current - sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
             sixtyBool = true;
             Main.ADMIN.log_("60 activated", 0);
 
@@ -331,10 +316,8 @@ public class EntryController {
         }
 
         // Run once every 24h
-        if ((System.currentTimeMillis() - twentyFourCounter) > Config.entryController_twentyFourMS) {
-            long multiplier = (System.currentTimeMillis() - twentyFourCounter) / Config.entryController_twentyFourMS;
-            twentyFourCounter += Config.entryController_twentyFourMS * multiplier;
-
+        if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
+            twentyFourCounter += (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
             twentyFourBool = true;
             Main.ADMIN.log_("24 activated", 0);
 
@@ -375,7 +358,8 @@ public class EntryController {
         String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) + " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
+        String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) +
+                " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Set last run time
@@ -440,7 +424,29 @@ public class EntryController {
             monitor.notifyAll();
         }
     }
-    
+
+    /**
+     * Makes sure counters don't fall behind
+     */
+    private void fixCounters() {
+        long current = System.currentTimeMillis();
+
+        if (current - tenCounter > Config.entryController_tenMS) {
+            long gap = (current - tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
+            tenCounter += gap;
+        }
+
+        if (current - sixtyCounter > Config.entryController_sixtyMS) {
+            long gap = (current - sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
+            sixtyCounter += gap;
+        }
+
+        if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
+            long gap = (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
+            twentyFourCounter += gap;
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
