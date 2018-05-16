@@ -89,21 +89,11 @@ public class HistoryController {
         if (indexMap == null) return;
         if (entry.getDb_daily().isEmpty()) return;
 
-        int baseSize, lastIndex;
-        if (isPermanentLeague) {
-            baseSize = Config.misc_defaultLeagueLength;
-        } else {
-            baseSize = totalLeagueLength;
-        }
+        int baseSize = isPermanentLeague ? Config.misc_defaultLeagueLength : totalLeagueLength;
+        int lastIndex = isPermanentLeague ? Config.misc_defaultLeagueLength - 1 : currentLeagueDay;
 
-        HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem());
+        HistoryItem historyItem = indexMap.getOrDefault(index, new HistoryItem(baseSize));
         DailyEntry dailyEntry = entry.getDb_daily().get(entry.getDb_daily().size() - 1);
-
-        // If mean was null then the index didn't exist in the map (if the file failed to load or it is a new item that
-        // doesn't exist in the file yet) and all other variables are null as well
-        if (historyItem.getMean() == null) {
-            historyItem.init(baseSize);
-        }
 
         // If it's a permanent league (i.e it has no fixed amount of days, then the arrays should be shifted left by
         // one every time a new value is added)
@@ -115,10 +105,6 @@ public class HistoryController {
             System.arraycopy(historyItem.getMode(),      1, historyItem.getMode(),        0, size);
             System.arraycopy(historyItem.getQuantity(),  1, historyItem.getQuantity(),    0, size);
             System.arraycopy(historyItem.getCount(),     1, historyItem.getCount(),       0, size);
-
-            lastIndex = Config.misc_defaultLeagueLength - 1;
-        } else {
-            lastIndex = currentLeagueDay;
         }
 
         // Add all the current values to the specified positions

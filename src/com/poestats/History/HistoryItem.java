@@ -15,7 +15,7 @@ public class HistoryItem {
     // Init class
     //------------------------------------------------------------------------------------------------------------
 
-    public void init(int baseSize) {
+    public HistoryItem(int baseSize) {
         mean        = new double[baseSize];
         median      = new double[baseSize];
         mode        = new double[baseSize];
