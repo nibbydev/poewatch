@@ -317,6 +317,7 @@ public class EntryController {
 
         // Run once every 24h
         if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
+            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
             twentyFourCounter += (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
             twentyFourBool = true;
             Main.ADMIN.log_("24 activated", 0);
@@ -443,6 +444,7 @@ public class EntryController {
 
         if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
             long gap = (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
+            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
             twentyFourCounter += gap;
         }
     }
