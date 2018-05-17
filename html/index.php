@@ -65,38 +65,6 @@
           </div>
         </div>
       </div>
-      <div class="row mb-3">
-        <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-body">
-              <h2 class="text-center">News</h2>
-              <hr>
-              <div><em>05/05/2018</em> - Rewrote backend price filters</div>
-              <div><em>04/05/2018</em> - Enable Index and About pages</div>
-              <div><em>03/05/2018</em> - Redesign page breakpoints</div>
-              <div><em>03/05/2018</em> - Rework Progress page</div>
-              <div><em>02/05/2018</em> - Add Progress page</div>
-              <div><em>01/05/2018</em> - Add dynamic sparklines (now display current price)</div>
-              <div><em>30/04/2018</em> - Add animated progressbar for live updates</div>
-              <div><em>30/04/2018</em> - Fix rigid Mirror of Kalandra price</div>
-              <div><em>29/04/2018</em> - Add league duration bar under About page</div>
-              <div><em>29/04/2018</em> - Add league length API</div>
-              <div><em>29/04/2018</em> - Rewrite backend for history data collectors</div>
-              <div><em>27/04/2018</em> - Add live updates</div>
-              <div><em>26/04/2018</em> - Improve page responsiveness</div>
-              <div><em>25/04/2018</em> - Update API pages</div>
-              <div><em>24/04/2018</em> - Enable Cloudflare</div>
-              <div><em>24/04/2018</em> - Add exalted prices</div>
-              <div><em>23/04/2018</em> - Add support for enchantments</div>
-              <div><em>22/04/2018</em> - Change domains</div>
-              <div><em>14/04/2018</em> - Fix Beachhead variants not being indexed</div>
-              <div><em>10/04/2018</em> - Fix Kaom's Heart not being indexed</div>
-              <div><em>09/04/2018</em> - Add item price history graphs</div>
-              <div><em>08/04/2018</em> - Create logo</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
     <!--/Main content/-->
   </div>
