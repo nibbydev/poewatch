@@ -20,6 +20,8 @@ var COUNTER = {
 };
 
 const PRICE_PERCISION = 100;
+const ENCH_QUANT_HIGH = 10;
+const ENCH_QUANT_MED = 5;
 const QUANT_HIGH = 7;
 const QUANT_MED = 3;
 const MINOR_CHANGE = 50;
@@ -814,13 +816,23 @@ function parseItem(item, index) {
   
   function buildQuantField(item) {
     let template = TEMPLATE_quantField.trim();
-  
-    if (item["quantity"] >= QUANT_HIGH) {
-      template = template.replace("{{color}}", "gray");
-    } else if (item["quantity"] >= QUANT_MED) {
-      template = template.replace("{{color}}", "orange");
+
+    if (item["frame"] === -1) {
+      if (item["quantity"] >= ENCH_QUANT_HIGH) {
+        template = template.replace("{{color}}", "gray");
+      } else if (item["quantity"] >= ENCH_QUANT_MED) {
+        template = template.replace("{{color}}", "orange");
+      } else {
+        template = template.replace("{{color}}", "red");
+      }
     } else {
-      template = template.replace("{{color}}", "red");
+      if (item["quantity"] >= QUANT_HIGH) {
+        template = template.replace("{{color}}", "gray");
+      } else if (item["quantity"] >= QUANT_MED) {
+        template = template.replace("{{color}}", "orange");
+      } else {
+        template = template.replace("{{color}}", "red");
+      }
     }
   
     template = template.replace("{{quant}}", item["quantity"]);
@@ -1062,6 +1074,9 @@ function checkHideItem(item) {
       // Hide harbinger pieces under category 'all'
       return true;
     }
+  } else if (item["frame"] === -1) {
+    // Let enchants have a bit different quantity
+    if (item["quantity"] < ENCH_QUANT_MED) return true;
   }
 
   // String search
