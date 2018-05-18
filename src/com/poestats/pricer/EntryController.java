@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.pricer.maps.*;
 import com.poestats.parcel.*;
-import com.poestats.parcel.entries.*;
+import com.poestats.parcel.JSONMaps.*;
 
 import java.io.*;
 import java.util.*;

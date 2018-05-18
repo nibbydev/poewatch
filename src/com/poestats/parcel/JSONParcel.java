@@ -2,9 +2,7 @@ package com.poestats.parcel;
 
 import com.poestats.Main;
 import com.poestats.pricer.Entry;
-import com.poestats.parcel.entries.JSONCategoryMap;
-import com.poestats.parcel.entries.JSONItemList;
-import com.poestats.parcel.entries.JSONLeagueMap;
+import com.poestats.parcel.JSONMaps.*;
 import com.poestats.relations.entries.IndexedItem;
 
 public class JSONParcel {
