@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.poestats.history.HistoryManager;
 import com.poestats.league.LeagueManager;
-import com.poestats.pricer.EntryController;
+import com.poestats.pricer.EntryManager;
 import com.poestats.relations.RelationManager;
 import com.poestats.worker.WorkerManager;
 
@@ -21,7 +21,7 @@ public class Main {
     private static GsonBuilder gsonBuilder;
     public static Config CONFIG;
     public static WorkerManager WORKER_MANAGER;
-    public static EntryController ENTRY_CONTROLLER;
+    public static EntryManager ENTRY_MANAGER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
     public static HistoryManager HISTORY_MANAGER;
@@ -58,7 +58,7 @@ public class Main {
         }
 
         WORKER_MANAGER = new WorkerManager();
-        ENTRY_CONTROLLER = new EntryController();
+        ENTRY_MANAGER = new EntryManager();
         HISTORY_MANAGER = new HistoryManager();
 
         // Parse CLI parameters
@@ -415,7 +415,7 @@ public class Main {
 
         switch (userInput[1]) {
             case "24":
-                oldValue = ENTRY_CONTROLLER.getTwentyFourCounter();
+                oldValue = ENTRY_MANAGER.getTwentyFourCounter();
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -426,10 +426,10 @@ public class Main {
                         return;
                 }
 
-                ENTRY_CONTROLLER.setTwentyFourCounter(newValue);
+                ENTRY_MANAGER.setTwentyFourCounter(newValue);
                 break;
             case "60":
-                oldValue = ENTRY_CONTROLLER.getSixtyCounter();
+                oldValue = ENTRY_MANAGER.getSixtyCounter();
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -440,10 +440,10 @@ public class Main {
                         return;
                 }
 
-                ENTRY_CONTROLLER.setSixtyCounter(newValue);
+                ENTRY_MANAGER.setSixtyCounter(newValue);
                 break;
             case "10":
-                oldValue = ENTRY_CONTROLLER.getTenCounter();
+                oldValue = ENTRY_MANAGER.getTenCounter();
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -454,7 +454,7 @@ public class Main {
                         return;
                 }
 
-                ENTRY_CONTROLLER.setTenCounter(newValue);
+                ENTRY_MANAGER.setTenCounter(newValue);
                 break;
             default:
                 System.out.println("Unknown type");

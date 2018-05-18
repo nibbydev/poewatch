@@ -9,7 +9,7 @@ import com.poestats.parcel.ParcelMaps.*;
 import java.io.*;
 import java.util.*;
 
-public class EntryController {
+public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ public class EntryController {
     /**
      * Loads data in from file on object initialization
      */
-    public EntryController() {
+    public EntryManager() {
         loadStartParameters();
         loadDatabases();
     }

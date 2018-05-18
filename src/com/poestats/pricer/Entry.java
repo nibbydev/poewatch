@@ -76,7 +76,7 @@ public class Entry {
         build();
 
         // Runs every 10 minutes
-        if (Main.ENTRY_CONTROLLER.isTenBool()) {
+        if (Main.ENTRY_MANAGER.isTenBool()) {
             TenMinuteEntry tenMinuteEntry = new TenMinuteEntry();
             tenMinuteEntry.add(mean, median, mode);
             db_minutely.add(tenMinuteEntry);
@@ -89,10 +89,10 @@ public class Entry {
         }
 
         // Runs every 60 minutes
-        if (Main.ENTRY_CONTROLLER.isSixtyBool()) {
+        if (Main.ENTRY_MANAGER.isSixtyBool()) {
 
             // These don't align up due to manual intervention
-            if (!Main.ENTRY_CONTROLLER.isTenBool()) {
+            if (!Main.ENTRY_MANAGER.isTenBool()) {
                 mean = findMeanHourly();
                 median = findMedianHourly();
                 mode = findModeHourly();
@@ -108,10 +108,10 @@ public class Entry {
         }
 
         // Runs every 24 hours
-        if (Main.ENTRY_CONTROLLER.isTwentyFourBool()) {
+        if (Main.ENTRY_MANAGER.isTwentyFourBool()) {
 
             // These don't align up due to manual intervention
-            if (!Main.ENTRY_CONTROLLER.isTenBool()) {
+            if (!Main.ENTRY_MANAGER.isTenBool()) {
                 mean = findMeanHourly();
                 median = findMedianHourly();
                 mode = findModeHourly();
@@ -137,7 +137,7 @@ public class Entry {
      * Adds values from db_raw array to prices database array
      */
     private void parse() {
-        IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
+        IndexMap currencyMap = Main.ENTRY_MANAGER.getCurrencyMap(league);
         IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
 
         // Loop through entries
@@ -325,15 +325,15 @@ public class Entry {
             db_items.subList(0, db_items.size() - Config.entry_itemsSize).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.isTenBool() && db_minutely.size() > 6) {
+        if (Main.ENTRY_MANAGER.isTenBool() && db_minutely.size() > 6) {
             db_minutely.subList(0, db_minutely.size() - 6).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.isSixtyBool() && db_hourly.size() > 24) {
+        if (Main.ENTRY_MANAGER.isSixtyBool() && db_hourly.size() > 24) {
             db_hourly.subList(0, db_hourly.size() - 24).clear();
         }
 
-        if (Main.ENTRY_CONTROLLER.isTwentyFourBool() && db_daily.size() > 7) {
+        if (Main.ENTRY_MANAGER.isTwentyFourBool() && db_daily.size() > 7) {
             db_daily.subList(0, db_daily.size() - 7).clear();
         }
     }

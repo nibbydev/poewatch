@@ -51,9 +51,9 @@ public class WorkerManager extends Thread {
                 }
             }
 
-            // Run ENTRY_CONTROLLER. As that Class has no actual loop and this method executes pretty often, pricer
+            // Run ENTRY_MANAGER. As that Class has no actual loop and this method executes pretty often, pricer
             // controller itself has some checks whether it should run on method call or not
-            Main.ENTRY_CONTROLLER.run();
+            Main.ENTRY_MANAGER.run();
         }
     }
 
