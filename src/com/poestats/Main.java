@@ -2,9 +2,11 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.poestats.League.LeagueManager;
-import com.poestats.Pricer.EntryController;
-import com.poestats.Worker.WorkerController;
+import com.poestats.history.HistoryManager;
+import com.poestats.league.LeagueManager;
+import com.poestats.pricer.EntryManager;
+import com.poestats.relations.RelationManager;
+import com.poestats.worker.WorkerManager;
 
 import java.io.*;
 import java.net.URL;
@@ -18,11 +20,11 @@ public class Main {
 
     private static GsonBuilder gsonBuilder;
     public static Config CONFIG;
-    public static WorkerController WORKER_CONTROLLER;
-    public static EntryController ENTRY_CONTROLLER;
+    public static WorkerManager WORKER_MANAGER;
+    public static EntryManager ENTRY_MANAGER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
-    public static HistoryController HISTORY_CONTROLLER;
+    public static HistoryManager HISTORY_MANAGER;
     public static LeagueManager LEAGUE_MANAGER;
 
     //------------------------------------------------------------------------------------------------------------
@@ -55,21 +57,21 @@ public class Main {
             System.exit(0);
         }
 
-        WORKER_CONTROLLER = new WorkerController();
-        ENTRY_CONTROLLER = new EntryController();
-        HISTORY_CONTROLLER = new HistoryController();
+        WORKER_MANAGER = new WorkerManager();
+        ENTRY_MANAGER = new EntryManager();
+        HISTORY_MANAGER = new HistoryManager();
 
         // Parse CLI parameters
         parseCommandParameters(args);
 
         // Start controller
-        WORKER_CONTROLLER.start();
+        WORKER_MANAGER.start();
 
         // Initiate main command loop, allowing user some control over the program
         commandLoop();
 
         // Stop workers on exit
-        WORKER_CONTROLLER.stopController();
+        WORKER_MANAGER.stopController();
 
         // Save generated item data
         RELATIONS.saveData();
@@ -84,11 +86,11 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            WORKER_CONTROLLER.spawnWorkers(Config.worker_defaultWorkerCount);
+            WORKER_MANAGER.spawnWorkers(Config.worker_defaultWorkerCount);
             System.out.println("[INFO] Spawned 3 workers");
         }
         if (!newArgs.contains("-id")) {
-            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+            WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLatestChangeID());
             System.out.println("[INFO] New ChangeID added");
         }
 
@@ -98,21 +100,21 @@ public class Main {
 
             switch (arg) {
                 case "-workers":
-                    WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
+                    WORKER_MANAGER.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
                     System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
                     break;
                 case "-id":
                     switch (newArgs.get(newArgs.lastIndexOf(arg) + 1)) {
                         case "local":
-                            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                            WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLocalChangeID());
                             System.out.println("[INFO] Local ChangeID added");
                             break;
                         case "new":
-                            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                            WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLatestChangeID());
                             System.out.println("[INFO] New ChangeID added");
                             break;
                         default:
-                            WORKER_CONTROLLER.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
+                            WORKER_MANAGER.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
                             System.out.println("[INFO] Custom ChangeID added");
                             break;
                     }
@@ -134,6 +136,7 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    backup - backup commands\n"
+                + "    counter - counter commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -164,6 +167,9 @@ public class Main {
                         break;
                     case "backup":
                         commandBackup(userInput);
+                        break;
+                    case "counter":
+                        commandCounter(userInput);
                         break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -289,23 +295,23 @@ public class Main {
 
         switch (userInput[1]) {
             case "local":
-                WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLocalChangeID());
                 System.out.println("[INFO] Local ChangeID added");
                 break;
             case "new":
-                WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLatestChangeID());
                 System.out.println("[INFO] New ChangeID added");
                 break;
             default:
-                WORKER_CONTROLLER.setNextChangeID(userInput[1]);
+                WORKER_MANAGER.setNextChangeID(userInput[1]);
                 System.out.println("[INFO] Custom ChangeID added");
                 break;
 
         }
 
         // Wake worker controller
-        synchronized (WORKER_CONTROLLER.getMonitor()) {
-            WORKER_CONTROLLER.getMonitor().notifyAll();
+        synchronized (WORKER_MANAGER.getMonitor()) {
+            WORKER_MANAGER.getMonitor().notifyAll();
         }
     }
 
@@ -327,13 +333,13 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            WORKER_CONTROLLER.printAllWorkers();
+            WORKER_MANAGER.printAllWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
-            WORKER_CONTROLLER.fireWorkers(Integer.parseInt(userInput[2]));
+            WORKER_MANAGER.fireWorkers(Integer.parseInt(userInput[2]));
         } else if (userInput[1].equalsIgnoreCase("add")) {
             System.out.println("[INFO] Adding " + userInput[2] + " worker..");
-            WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(userInput[2]));
+            WORKER_MANAGER.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
         }
@@ -381,6 +387,81 @@ public class Main {
                 System.out.println(helpString);
                 break;
         }
+    }
+
+    /**
+     * Holds commands that control time counters
+     *
+     * @param userInput Input string
+     */
+    private static void commandCounter(String[] userInput) {
+        String helpString = "[INFO] Available counter commands:\n";
+        helpString += "    'counter <type> + <amount>' - Add <amount> MS to <type> counter\n";
+        helpString += "    'counter <type> - <amount>' - Remove <amount> MS from <type> counter\n";
+        helpString += "    'counter <type> = <amount>' - Set <type> counter to <amount> MS\n";
+
+        if (userInput.length < 4) {
+            System.out.println(helpString);
+            return;
+        }
+
+        long value, oldValue, newValue;
+        try {
+            value = Long.parseLong(userInput[3]);
+        } catch (Exception ex) {
+            System.out.println("Invalid value");
+            return;
+        }
+
+        switch (userInput[1]) {
+            case "24":
+                oldValue = ENTRY_MANAGER.getTwentyFourCounter();
+
+                switch (userInput[2]) {
+                    case "+": newValue = oldValue + value; break;
+                    case "-": newValue = oldValue - value; break;
+                    case "=": newValue = value;            break;
+                    default:
+                        System.out.println("Unknown sign");
+                        return;
+                }
+
+                ENTRY_MANAGER.setTwentyFourCounter(newValue);
+                break;
+            case "60":
+                oldValue = ENTRY_MANAGER.getSixtyCounter();
+
+                switch (userInput[2]) {
+                    case "+": newValue = oldValue + value; break;
+                    case "-": newValue = oldValue - value; break;
+                    case "=": newValue = value;            break;
+                    default:
+                        System.out.println("Unknown sign");
+                        return;
+                }
+
+                ENTRY_MANAGER.setSixtyCounter(newValue);
+                break;
+            case "10":
+                oldValue = ENTRY_MANAGER.getTenCounter();
+
+                switch (userInput[2]) {
+                    case "+": newValue = oldValue + value; break;
+                    case "-": newValue = oldValue - value; break;
+                    case "=": newValue = value;            break;
+                    default:
+                        System.out.println("Unknown sign");
+                        return;
+                }
+
+                ENTRY_MANAGER.setTenCounter(newValue);
+                break;
+            default:
+                System.out.println("Unknown type");
+                return;
+        }
+
+        System.out.println("Value of '"+userInput[1]+"' changed ("+oldValue+") -> ("+newValue+") [change: "+(newValue-oldValue)+"]");
     }
 
     //------------------------------------------------------------------------------------------------------------

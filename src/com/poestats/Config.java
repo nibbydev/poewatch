@@ -69,6 +69,9 @@ public class Config {
     public static final int entry_hourlySize = 24;
     public static final int entry_dailySize = 7;
 
+    public static final int entry_pluckPercentLT2 = 10000;
+    public static final int entry_pluckPercentGT2 = 500;
+
     public static final int entry_shiftPercent = 80;
     public static final int entry_shiftPercentNew = 60;
 
@@ -77,8 +80,10 @@ public class Config {
     public static final int entryController_sixtyMS         = 60 * 60 * 1000;
     public static final int entryController_twentyFourMS    = 24 * 60 * 60 * 1000;
 
+    public static final long entryController_counterOffset  = 5 * 60 * 60 * 1000;
+
     //------------------------------------------------------------------------------------------------------------
-    // League manager
+    // league manager
     //------------------------------------------------------------------------------------------------------------
 
     public static final String league_APIBaseURL = "http://api.pathofexile.com/leagues?type=main&compact=1";
