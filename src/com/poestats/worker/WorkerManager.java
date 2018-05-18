@@ -12,7 +12,7 @@ import java.util.ArrayList;
 /**
  * Manages worker objects (eg. distributing jobs, adding/removing workers)
  */
-public class WorkerController extends Thread {
+public class WorkerManager extends Thread {
     private ArrayList<Worker> workerList = new ArrayList<>();
     private final Gson gson = Main.getGson();
     private final Object monitor = new Object();

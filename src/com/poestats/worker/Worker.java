@@ -136,7 +136,7 @@ public class Worker extends Thread {
                         regexLock = false;
 
                         // Add new-found job to queue
-                        Main.WORKER_CONTROLLER.setNextChangeID(matcher.group());
+                        Main.WORKER_MANAGER.setNextChangeID(matcher.group());
 
                         // Add freshest changeID to statistics
                         Main.ADMIN.setChangeID(matcher.group());
@@ -155,7 +155,7 @@ public class Worker extends Thread {
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
                 sleepX(Config.worker_lockTimeoutMS);
-                Main.WORKER_CONTROLLER.setNextChangeID(job);
+                Main.WORKER_MANAGER.setNextChangeID(job);
             }
 
             // Clear the buffer so that an empty string will be returned instead

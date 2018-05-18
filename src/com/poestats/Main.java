@@ -6,7 +6,7 @@ import com.poestats.history.HistoryManager;
 import com.poestats.league.LeagueManager;
 import com.poestats.pricer.EntryController;
 import com.poestats.relations.RelationManager;
-import com.poestats.worker.WorkerController;
+import com.poestats.worker.WorkerManager;
 
 import java.io.*;
 import java.net.URL;
@@ -20,7 +20,7 @@ public class Main {
 
     private static GsonBuilder gsonBuilder;
     public static Config CONFIG;
-    public static WorkerController WORKER_CONTROLLER;
+    public static WorkerManager WORKER_MANAGER;
     public static EntryController ENTRY_CONTROLLER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
@@ -57,7 +57,7 @@ public class Main {
             System.exit(0);
         }
 
-        WORKER_CONTROLLER = new WorkerController();
+        WORKER_MANAGER = new WorkerManager();
         ENTRY_CONTROLLER = new EntryController();
         HISTORY_MANAGER = new HistoryManager();
 
@@ -65,13 +65,13 @@ public class Main {
         parseCommandParameters(args);
 
         // Start controller
-        WORKER_CONTROLLER.start();
+        WORKER_MANAGER.start();
 
         // Initiate main command loop, allowing user some control over the program
         commandLoop();
 
         // Stop workers on exit
-        WORKER_CONTROLLER.stopController();
+        WORKER_MANAGER.stopController();
 
         // Save generated item data
         RELATIONS.saveData();
@@ -86,11 +86,11 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            WORKER_CONTROLLER.spawnWorkers(Config.worker_defaultWorkerCount);
+            WORKER_MANAGER.spawnWorkers(Config.worker_defaultWorkerCount);
             System.out.println("[INFO] Spawned 3 workers");
         }
         if (!newArgs.contains("-id")) {
-            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+            WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLatestChangeID());
             System.out.println("[INFO] New ChangeID added");
         }
 
@@ -100,21 +100,21 @@ public class Main {
 
             switch (arg) {
                 case "-workers":
-                    WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
+                    WORKER_MANAGER.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
                     System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
                     break;
                 case "-id":
                     switch (newArgs.get(newArgs.lastIndexOf(arg) + 1)) {
                         case "local":
-                            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                            WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLocalChangeID());
                             System.out.println("[INFO] Local ChangeID added");
                             break;
                         case "new":
-                            WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                            WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLatestChangeID());
                             System.out.println("[INFO] New ChangeID added");
                             break;
                         default:
-                            WORKER_CONTROLLER.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
+                            WORKER_MANAGER.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
                             System.out.println("[INFO] Custom ChangeID added");
                             break;
                     }
@@ -295,23 +295,23 @@ public class Main {
 
         switch (userInput[1]) {
             case "local":
-                WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLocalChangeID());
+                WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLocalChangeID());
                 System.out.println("[INFO] Local ChangeID added");
                 break;
             case "new":
-                WORKER_CONTROLLER.setNextChangeID(WORKER_CONTROLLER.getLatestChangeID());
+                WORKER_MANAGER.setNextChangeID(WORKER_MANAGER.getLatestChangeID());
                 System.out.println("[INFO] New ChangeID added");
                 break;
             default:
-                WORKER_CONTROLLER.setNextChangeID(userInput[1]);
+                WORKER_MANAGER.setNextChangeID(userInput[1]);
                 System.out.println("[INFO] Custom ChangeID added");
                 break;
 
         }
 
         // Wake worker controller
-        synchronized (WORKER_CONTROLLER.getMonitor()) {
-            WORKER_CONTROLLER.getMonitor().notifyAll();
+        synchronized (WORKER_MANAGER.getMonitor()) {
+            WORKER_MANAGER.getMonitor().notifyAll();
         }
     }
 
@@ -333,13 +333,13 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            WORKER_CONTROLLER.printAllWorkers();
+            WORKER_MANAGER.printAllWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
-            WORKER_CONTROLLER.fireWorkers(Integer.parseInt(userInput[2]));
+            WORKER_MANAGER.fireWorkers(Integer.parseInt(userInput[2]));
         } else if (userInput[1].equalsIgnoreCase("add")) {
             System.out.println("[INFO] Adding " + userInput[2] + " worker..");
-            WORKER_CONTROLLER.spawnWorkers(Integer.parseInt(userInput[2]));
+            WORKER_MANAGER.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
         }
