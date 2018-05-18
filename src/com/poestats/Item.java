@@ -583,7 +583,7 @@ public class Item extends Mappers.BaseItem {
             case "Transmutation Shard":
                 discard = true;
                 break;
-            case "Portal Scroll":
+            /*case "Portal Scroll":
             case "Scroll of Wisdom":
                 if (price > 0.1) discard = true;
                 break;
@@ -608,7 +608,7 @@ public class Item extends Mappers.BaseItem {
             case "Ancient Orb":
             case "Exalted Orb":
                 if (price < 2) discard = true;
-                break;
+                break;*/
         }
     }
 
