@@ -1,7 +1,14 @@
-package com.poestats;
+package com.poestats.relations;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.poestats.Config;
+import com.poestats.Item;
+import com.poestats.Main;
+import com.poestats.Misc;
+import com.poestats.relations.entries.CurrencyRelation;
+import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SubIndexedItem;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -11,78 +18,6 @@ import java.util.*;
  * Maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    //------------------------------------------------------------------------------------------------------------
-    // Inner classes
-    //------------------------------------------------------------------------------------------------------------
-
-    private static class CurrencyRelation {
-        String name;
-        String[] aliases;
-    }
-
-    public static class IndexedItem {
-        public Map<String, SubIndexedItem> subIndexes = new TreeMap<>();
-        public String name, type, parent, child, tier, genericKey, icon;
-        public int frame;
-
-        public IndexedItem(Item item) {
-            if (item.frameType != -1) name = item.name;
-            parent = item.getParentCategory();
-            frame = item.frameType;
-
-            genericKey = resolveSpecificKey(item.getKey());
-
-            if (item.icon != null) icon = Misc.formatIconURL(item.icon);
-            if (item.typeLine != null) type = item.typeLine;
-            if (item.getChildCategory() != null) child = item.getChildCategory();
-            if (item.getTier() != null) tier = item.getTier();
-        }
-
-        private String subIndex(Item item) {
-            String subIndex = Integer.toHexString(subIndexes.size());
-            subIndex = (Config.index_subBase + subIndex).substring(subIndex.length());
-
-            SubIndexedItem subIndexedItem = new SubIndexedItem(item);
-            subIndexes.put(subIndex, subIndexedItem);
-
-            return subIndex;
-        }
-    }
-
-    public static class SubIndexedItem {
-        public String var, specificKey, lvl, quality, links, corrupted, name;
-
-        public SubIndexedItem (Item item) {
-            specificKey = item.getKey();
-
-            if (item.getVariation() != null) {
-                var = item.getVariation();
-
-                if (item.frameType == -1) {
-                    name = resolveSpecificKey(item.getKey());
-
-                    // Replace all instances of "#" with the associated value
-                    for (String value : var.split("-")) {
-                        name = name.replaceFirst("#", value);
-                    }
-                }
-            } else {
-                if (item.frameType == -1) {
-                    name = resolveSpecificKey(item.getKey());
-                }
-            }
-
-            if (item.getLinks() > 4) links = Integer.toString(item.getLinks());
-
-            if (item.frameType == 4) {
-                // Gson wants to serialize uninitialized integers and booleans
-                quality = Integer.toString(item.getQuality());
-                lvl = Integer.toString(item.getLevel());
-                corrupted = Boolean.toString(item.corrupted);
-            }
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -99,13 +34,13 @@ public class RelationManager {
     private Map<String, List<String>> categories = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------
-    // Main methods
+    // Constructors
     //------------------------------------------------------------------------------------------------------------
 
     /**
      * Reads currency and item data from file on object init
      */
-    RelationManager() {
+    public RelationManager() {
         readItemDataFromFile();
         readCurrencyRelationsFromFile();
         readCategoriesFromFile();
@@ -130,8 +65,8 @@ public class RelationManager {
             List<CurrencyRelation> relations = gson.fromJson(reader, listType);
 
             for (CurrencyRelation relation : relations) {
-                for (String alias : relation.aliases) {
-                    currencyAliasToName.put(alias, relation.name);
+                for (String alias : relation.getAliases()) {
+                    currencyAliasToName.put(alias, relation.getName());
                 }
             }
 
@@ -155,17 +90,17 @@ public class RelationManager {
 
             // Lambda loop
             relations.forEach((superIndex, superItem) -> {
-                superItem.subIndexes.forEach((subIndex, subItem) -> {
+                superItem.getSubIndexes().forEach((subIndex, subItem) -> {
                     String index = superIndex + "-" + subIndex;
-                    itemSpecificKeyToFullIndex.put(subItem.specificKey, index);
+                    itemSpecificKeyToFullIndex.put(subItem.getSpecificKey(), index);
 
                     // Add currency indexes to a special map
-                    if (superItem.frame == 5) {
-                        currencyNameToFullIndex.put(superItem.name, index);
+                    if (superItem.getFrame() == 5) {
+                        currencyNameToFullIndex.put(superItem.getName(), index);
                     }
                 });
 
-                itemGenericKeyToSuperIndex.put(superItem.genericKey, superIndex);
+                itemGenericKeyToSuperIndex.put(superItem.getGenericKey(), superIndex);
                 itemSubIndexToData.put(superIndex, superItem);
             });
 
@@ -295,10 +230,10 @@ public class RelationManager {
     }
 
     /**
-     * Allows returning the IndexedItem entry from a complete index
+     * Allows returning the IndexedItem entries from a complete index
      *
      * @param index Index of item
-     * @return Requested indexed item entry or null on failure
+     * @return Requested indexed item entries or null on failure
      */
     public IndexedItem indexToGenericData(String index) {
         if (isIndex(index)) return null;
@@ -309,10 +244,10 @@ public class RelationManager {
     }
 
     /**
-     * Allows returning the SubIndexedItem entry from a complete index
+     * Allows returning the SubIndexedItem entries from a complete index
      *
      * @param index Index of item
-     * @return Requested indexed item entry or null on failure
+     * @return Requested indexed item entries or null on failure
      */
     public SubIndexedItem indexToSpecificData(String index) {
         if (isIndex(index)) return null;
@@ -323,7 +258,7 @@ public class RelationManager {
         IndexedItem indexedItem = itemSubIndexToData.getOrDefault(primaryIndex, null);
         if (indexedItem == null) return null;
 
-        SubIndexedItem subIndexedItem = indexedItem.subIndexes.getOrDefault(secondaryIndex, null);
+        SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().getOrDefault(secondaryIndex, null);
         if (subIndexedItem == null) return null;
 
         return subIndexedItem;

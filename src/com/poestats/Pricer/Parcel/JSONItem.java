@@ -6,7 +6,8 @@ import com.poestats.Misc;
 import com.poestats.Pricer.Entries.DailyEntry;
 import com.poestats.Pricer.Entry;
 import com.poestats.Pricer.Maps.*;
-import com.poestats.RelationManager;
+import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SubIndexedItem;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class JSONItem {
             history.getMode()[i]     = dailyEntry.getMode();
             history.getQuantity()[i] = dailyEntry.getQuantity();
 
-            // Find the lowest mean entry for sparkline
+            // Find the lowest mean entries for sparkline
             if (lowestSpark > dailyEntry.getMean()) lowestSpark = dailyEntry.getMean();
         }
 
@@ -83,7 +84,7 @@ public class JSONItem {
         }
 
         // TODO: change order so this wouldn't be required
-        // Again, find the lowest mean entry for sparkline
+        // Again, find the lowest mean entries for sparkline
         if (mean < lowestSpark) lowestSpark = mean;
 
         // Get the absolute value of lowestSpark as the JS sparkline plugin can't handle negative values
@@ -118,28 +119,28 @@ public class JSONItem {
         // Check if there's a match for the specific index
         String superIndex = index.substring(0, index.indexOf("-"));
         if (Main.RELATIONS.getItemSubIndexToData().containsKey(superIndex)) {
-            RelationManager.IndexedItem indexedItem = Main.RELATIONS.getItemSubIndexToData().get(superIndex);
-            frame = indexedItem.frame;
-            key = indexedItem.genericKey;
-            parent = indexedItem.parent;
-            child = indexedItem.child;
-            icon = indexedItem.icon;
-            name = indexedItem.name;
-            type = indexedItem.type;
-            tier = indexedItem.tier;
+            IndexedItem indexedItem = Main.RELATIONS.getItemSubIndexToData().get(superIndex);
+            frame = indexedItem.getFrame();
+            key = indexedItem.getGenericKey();
+            parent = indexedItem.getParent();
+            child = indexedItem.getChild();
+            icon = indexedItem.getIcon();
+            name = indexedItem.getName();
+            type = indexedItem.getType();
+            tier = indexedItem.getTier();
 
             String subIndex = index.substring(index.indexOf("-") + 1);
-            RelationManager.SubIndexedItem subIndexedItem = indexedItem.subIndexes.get(subIndex);
+            SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().get(subIndex);
 
-            if (subIndexedItem.corrupted != null) corrupted = subIndexedItem.corrupted.equals("true") ? "1" : "0";
-            if (subIndexedItem.quality != null) quality = subIndexedItem.quality;
-            if (subIndexedItem.links != null) links = subIndexedItem.links;
-            if (subIndexedItem.lvl != null) lvl = subIndexedItem.lvl;
-            if (subIndexedItem.var != null) var = subIndexedItem.var;
-            if (subIndexedItem.specificKey != null) key = subIndexedItem.specificKey;
+            if (subIndexedItem.getCorrupted() != null) corrupted = subIndexedItem.getCorrupted().equals("true") ? "1" : "0";
+            if (subIndexedItem.getQuality() != null) quality = subIndexedItem.getQuality();
+            if (subIndexedItem.getLinks() != null) links = subIndexedItem.getLinks();
+            if (subIndexedItem.getLvl() != null) lvl = subIndexedItem.getLvl();
+            if (subIndexedItem.getVar() != null) var = subIndexedItem.getVar();
+            if (subIndexedItem.getSpecificKey() != null) key = subIndexedItem.getSpecificKey();
 
             // Enchantments override the id here
-            if (subIndexedItem.name != null) name = subIndexedItem.name;
+            if (subIndexedItem.getName() != null) name = subIndexedItem.getName();
         }
     }
 }

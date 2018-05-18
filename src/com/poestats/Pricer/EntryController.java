@@ -189,7 +189,7 @@ public class EntryController {
                             JSONParcel.add(entry);
 
                             String writeLine = entry.buildLine();
-                            if (writeLine == null) Main.ADMIN.log_("Deleted entry: " + entry.getIndex(), 0);
+                            if (writeLine == null) Main.ADMIN.log_("Deleted entries: " + entry.getIndex(), 0);
                             else writer.write(writeLine);
                         }
                     } catch (IOException ex) {
@@ -211,7 +211,7 @@ public class EntryController {
                         JSONParcel.add(entry);
 
                         String writeLine = entry.buildLine();
-                        if (writeLine == null) Main.ADMIN.log_("Deleted entry: "+entry.getIndex(), 0);
+                        if (writeLine == null) Main.ADMIN.log_("Deleted entries: "+entry.getIndex(), 0);
                         else writer.write(writeLine);
                     }
                 } catch (IOException ex) {

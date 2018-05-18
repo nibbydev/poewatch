@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.poestats.History.HistoryController;
 import com.poestats.League.LeagueManager;
 import com.poestats.Pricer.EntryController;
+import com.poestats.relations.RelationManager;
 import com.poestats.Worker.WorkerController;
 
 import java.io.*;

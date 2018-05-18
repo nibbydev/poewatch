@@ -5,12 +5,14 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Pricer.Entries.*;
 import com.poestats.Pricer.Maps.*;
-import com.poestats.RelationManager;
+import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.RelationManager;
+import com.poestats.relations.entries.SubIndexedItem;
 
 import java.util.*;
 
 /**
- * Price database entry object
+ * Price database entries object
  */
 public class Entry {
     //------------------------------------------------------------------------------------------------------------
@@ -35,7 +37,7 @@ public class Entry {
     /**
      * Used to load data in on object initialization
      *
-     * @param line Database entry from the CSV-format file
+     * @param line Database entries from the CSV-format file
      */
     Entry (String line, String league) {
         if (this.league == null) this.league = league;
@@ -79,7 +81,7 @@ public class Entry {
             tenMinuteEntry.add(mean, median, mode);
             db_minutely.add(tenMinuteEntry);
 
-            // Since the build() method overwrote mean, median and mode so an entry could be added to db_minutely, these
+            // Since the build() method overwrote mean, median and mode so an entries could be added to db_minutely, these
             // variables should be overwritten once again
             mean = findMeanHourly();
             median = findMedianHourly();
@@ -119,7 +121,7 @@ public class Entry {
             dailyEntry.add(mean, median, mode, calcQuantity() + inc);
             db_daily.add(dailyEntry);
 
-            // Add this entry to league history
+            // Add this entries to league history
             Main.HISTORY_CONTROLLER.add(index, this);
         }
 
@@ -136,11 +138,11 @@ public class Entry {
      */
     private void parse() {
         IndexMap currencyMap = Main.ENTRY_CONTROLLER.getCurrencyMap(league);
-        RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
+        IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
-            if (checkRaw(raw, indexedItem.frame)) continue;
+            if (checkRaw(raw, indexedItem.getFrame())) continue;
 
             // If the item was not listed for chaos orbs, then find the value in chaos
             if (!raw.getPriceType().equals("Chaos Orb")) {
@@ -164,7 +166,7 @@ public class Entry {
             // Round em up
             raw.setPrice(Math.round(raw.getPrice() * Config.item_pricePrecision) / Config.item_pricePrecision);
 
-            // Add entry to the database
+            // Add entries to the database
             ItemEntry itemEntry = new ItemEntry();
             itemEntry.add(raw.getPrice(), raw.getAccountName(), raw.getId());
 
@@ -215,7 +217,7 @@ public class Entry {
     /**
      * Checks if entries should be added to the database
      *
-     * @param entry Item entry to be evaluated
+     * @param entry Item entries to be evaluated
      * @return True if should be added, false if not
      */
     private boolean checkEntry(ItemEntry entry) {
@@ -226,7 +228,7 @@ public class Entry {
         // Very few items have been listed
         //if (total_counter < 15) return true;
 
-        RelationManager.IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
+        IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
         if (indexedItem == null) {
             System.out.println("null: "+index);
             return false;
@@ -240,7 +242,7 @@ public class Entry {
             double tmpPercent = entry.getPrice() / tmpPastMedian * 100;
 
             if (db_daily.size() > 1) {
-                switch (indexedItem.parent) {
+                switch (indexedItem.getParent()) {
                     case "enchantments":
                         return tmpPercent < 140;
                     case "currency":
@@ -287,10 +289,10 @@ public class Entry {
         }
 
         if (!tmpList.isEmpty()) {
-            RelationManager.SubIndexedItem indexedItem = Main.RELATIONS.indexToSpecificData(index);
+            SubIndexedItem indexedItem = Main.RELATIONS.indexToSpecificData(index);
 
             for (ItemEntry item : tmpList) {
-                System.out.println("("+league+") '"+indexedItem.specificKey+"' '"+item.getPrice()+"' > '"+ tmpPastMedian +"'");
+                System.out.println("("+league+") '"+indexedItem.getSpecificKey()+"' '"+item.getPrice()+"' > '"+ tmpPastMedian +"'");
                 db_items.remove(item);
                 dec++;
             }

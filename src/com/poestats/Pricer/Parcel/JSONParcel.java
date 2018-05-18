@@ -5,7 +5,7 @@ import com.poestats.Pricer.Entry;
 import com.poestats.Pricer.Parcel.sub.JSONCategoryMap;
 import com.poestats.Pricer.Parcel.sub.JSONItemList;
 import com.poestats.Pricer.Parcel.sub.JSONLeagueMap;
-import com.poestats.RelationManager.IndexedItem;
+import com.poestats.relations.entries.IndexedItem;
 
 public class JSONParcel {
     //------------------------------------------------------------------------------------------------------------
@@ -24,13 +24,13 @@ public class JSONParcel {
         if (indexedItem == null) return;
 
         JSONCategoryMap jsonCategoryMap = jsonLeagueMap.getOrDefault(entry.getLeague(), new JSONCategoryMap());
-        JSONItemList jsonItems = jsonCategoryMap.getOrDefault(indexedItem.parent, new JSONItemList());
+        JSONItemList jsonItems = jsonCategoryMap.getOrDefault(indexedItem.getParent(), new JSONItemList());
 
         JSONItem jsonItem = new JSONItem();
         jsonItem.copy(entry);
 
         jsonItems.add(jsonItem);
-        jsonCategoryMap.putIfAbsent(indexedItem.parent, jsonItems);
+        jsonCategoryMap.putIfAbsent(indexedItem.getParent(), jsonItems);
         jsonLeagueMap.putIfAbsent(entry.getLeague(), jsonCategoryMap);
     }
 
