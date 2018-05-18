@@ -2,7 +2,7 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.poestats.history.HistoryController;
+import com.poestats.history.HistoryManager;
 import com.poestats.league.LeagueManager;
 import com.poestats.pricer.EntryController;
 import com.poestats.relations.RelationManager;
@@ -24,7 +24,7 @@ public class Main {
     public static EntryController ENTRY_CONTROLLER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
-    public static HistoryController HISTORY_CONTROLLER;
+    public static HistoryManager HISTORY_MANAGER;
     public static LeagueManager LEAGUE_MANAGER;
 
     //------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ public class Main {
 
         WORKER_CONTROLLER = new WorkerController();
         ENTRY_CONTROLLER = new EntryController();
-        HISTORY_CONTROLLER = new HistoryController();
+        HISTORY_MANAGER = new HistoryManager();
 
         // Parse CLI parameters
         parseCommandParameters(args);

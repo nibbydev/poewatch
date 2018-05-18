@@ -153,8 +153,8 @@ public class EntryController {
 
                 // If it's time, prep history controller
                 if (twentyFourBool) {
-                    Main.HISTORY_CONTROLLER.configure(league, category);
-                    Main.HISTORY_CONTROLLER.readFile();
+                    Main.HISTORY_MANAGER.configure(league, category);
+                    Main.HISTORY_MANAGER.readFile();
                 }
 
                 // Define IO objects
@@ -240,7 +240,7 @@ public class EntryController {
 
                 // If it's time, close history controller
                 if (twentyFourBool) {
-                    Main.HISTORY_CONTROLLER.writeFile();
+                    Main.HISTORY_MANAGER.writeFile();
                 }
             }
 

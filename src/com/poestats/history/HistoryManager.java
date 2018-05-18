@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class HistoryController {
+public class HistoryManager {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ public class HistoryController {
 
     public void readFile() {
         if (inputFile == null) {
-            Main.ADMIN.log_("No variables defined for HistoryController ('"+league+"','"+category+"')", 3);
+            Main.ADMIN.log_("No variables defined for HistoryManager ('"+league+"','"+category+"')", 3);
             return;
         }
 
@@ -129,10 +129,10 @@ public class HistoryController {
 
     public void writeFile() {
         if (outputFile == null) {
-            Main.ADMIN.log_("No variables defined for HistoryController ('"+league+"','"+category+"')", 3);
+            Main.ADMIN.log_("No variables defined for HistoryManager ('"+league+"','"+category+"')", 3);
             return;
         } else if (historyMap == null) {
-            Main.ADMIN.log_("No historyMap defined for HistoryController ('"+league+"','"+category+"')", 3);
+            Main.ADMIN.log_("No historyMap defined for HistoryManager ('"+league+"','"+category+"')", 3);
             return;
         }
 

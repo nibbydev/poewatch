@@ -122,7 +122,7 @@ public class Entry {
             db_daily.add(dailyEntry);
 
             // Add this entries to league history
-            Main.HISTORY_CONTROLLER.add(index, this);
+            Main.HISTORY_MANAGER.add(index, this);
         }
 
         // Limit list sizes
