@@ -1,6 +1,6 @@
 package com.poestats.history;
 
-public class HistoryItem {
+public class HistoryEntry {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ public class HistoryItem {
     // Init class
     //------------------------------------------------------------------------------------------------------------
 
-    public HistoryItem(int baseSize) {
+    public HistoryEntry(int baseSize) {
         mean        = new double[baseSize];
         median      = new double[baseSize];
         mode        = new double[baseSize];
