@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.pricer.maps.*;
 import com.poestats.parcel.*;
-import com.poestats.parcel.JSONMaps.*;
+import com.poestats.parcel.ParcelMaps.*;
 
 import java.io.*;
 import java.util.*;
@@ -15,7 +15,7 @@ public class EntryController {
     //------------------------------------------------------------------------------------------------------------
 
     private final LeagueMap leagueMap = new LeagueMap();
-    private final JSONParcel JSONParcel = new JSONParcel();
+    private final Parcel Parcel = new Parcel();
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();
 
@@ -186,7 +186,7 @@ public class EntryController {
 
                             entry.setLeague(league);
                             entry.cycle();
-                            JSONParcel.add(entry);
+                            Parcel.add(entry);
 
                             String writeLine = entry.buildLine();
                             if (writeLine == null) Main.ADMIN.log_("Deleted entries: " + entry.getIndex(), 0);
@@ -208,7 +208,7 @@ public class EntryController {
 
                         entry.setLeague(league);
                         entry.cycle();
-                        JSONParcel.add(entry);
+                        Parcel.add(entry);
 
                         String writeLine = entry.buildLine();
                         if (writeLine == null) Main.ADMIN.log_("Deleted entries: "+entry.getIndex(), 0);
@@ -251,14 +251,14 @@ public class EntryController {
     }
 
     /**
-     * Writes JSONParcel object to JSON file
+     * Writes Parcel object to JSON file
      */
     private void writeJSONToFile() {
-        for (String league : JSONParcel.getJsonLeagueMap().keySet()) {
-            JSONCategoryMap jsonCategoryMap = JSONParcel.getJsonLeagueMap().get(league);
+        for (String league : Parcel.getParcelLeagueMap().keySet()) {
+            ParcelCategoryMap parcelCategoryMap = Parcel.getParcelLeagueMap().get(league);
 
-            for (String category : jsonCategoryMap.keySet()) {
-                JSONItemList jsonItems = jsonCategoryMap.get(category);
+            for (String category : parcelCategoryMap.keySet()) {
+                ParcelItemList jsonItems = parcelCategoryMap.get(category);
 
                 try {
                     if (new File(Config.folder_output, league).mkdir()) {
@@ -338,7 +338,7 @@ public class EntryController {
 
         // Sort JSON
         long time_sort = System.currentTimeMillis();
-        JSONParcel.sort();
+        Parcel.sort();
         time_sort = System.currentTimeMillis() - time_sort;
 
         // Build JSON
@@ -366,7 +366,7 @@ public class EntryController {
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Clear the parcel
-        JSONParcel.clear();
+        Parcel.clear();
 
         // Switch off flags
         tenBool = sixtyBool = twentyFourBool = false;

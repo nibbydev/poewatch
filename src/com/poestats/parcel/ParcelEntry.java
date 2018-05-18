@@ -11,7 +11,7 @@ import com.poestats.relations.entries.SubIndexedItem;
 
 import java.util.List;
 
-public class JSONItem {
+public class ParcelEntry {
     public double mean, median, mode, exalted;
     public int count, quantity, frame;
     public String index;
