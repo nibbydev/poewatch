@@ -1,4 +1,4 @@
-package com.poestats.Pricer.Parcel;
+package com.poestats.parcel;
 
 public class HistoryItem {
     //------------------------------------------------------------------------------------------------------------

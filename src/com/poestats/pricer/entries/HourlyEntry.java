@@ -1,4 +1,4 @@
-package com.poestats.Pricer.Entries;
+package com.poestats.pricer.entries;
 
 public class HourlyEntry {
     //------------------------------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-package com.poestats.Worker;
+package com.poestats.worker;
 
 import com.google.gson.Gson;
 import com.poestats.Config;
@@ -10,7 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 /**
- * Manages Worker objects (eg. distributing jobs, adding/removing workers)
+ * Manages worker objects (eg. distributing jobs, adding/removing workers)
  */
 public class WorkerController extends Thread {
     private ArrayList<Worker> workerList = new ArrayList<>();
@@ -87,7 +87,7 @@ public class WorkerController extends Thread {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Worker management
+    // worker management
     //------------------------------------------------------------------------------------------------------------
     /**
      * Prints out all active workers and their active jobs

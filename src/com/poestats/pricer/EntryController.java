@@ -1,10 +1,10 @@
-package com.poestats.Pricer;
+package com.poestats.pricer;
 
 import com.google.gson.Gson;
 import com.poestats.*;
-import com.poestats.Pricer.Maps.*;
-import com.poestats.Pricer.Parcel.*;
-import com.poestats.Pricer.Parcel.sub.*;
+import com.poestats.pricer.maps.*;
+import com.poestats.parcel.*;
+import com.poestats.parcel.entries.*;
 
 import java.io.*;
 import java.util.*;
@@ -378,7 +378,7 @@ public class EntryController {
     /**
      * Adds entries to the databases
      *
-     * @param reply APIReply object that a Worker has downloaded and deserialized
+     * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
         // Loop through every single item, checking every single one of them

@@ -1,4 +1,4 @@
-package com.poestats.League;
+package com.poestats.league;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

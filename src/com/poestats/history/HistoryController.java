@@ -1,11 +1,11 @@
-package com.poestats.History;
+package com.poestats.history;
 
 import com.google.gson.Gson;
 import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Misc;
-import com.poestats.Pricer.Entries.DailyEntry;
-import com.poestats.Pricer.Entry;
+import com.poestats.pricer.entries.DailyEntry;
+import com.poestats.pricer.Entry;
 
 import java.io.File;
 import java.io.IOException;

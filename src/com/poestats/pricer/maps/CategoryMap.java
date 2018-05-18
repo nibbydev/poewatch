@@ -1,4 +1,4 @@
-package com.poestats.Pricer.Maps;
+package com.poestats.pricer.maps;
 
 import java.util.HashMap;
 

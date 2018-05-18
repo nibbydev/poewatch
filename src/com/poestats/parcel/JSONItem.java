@@ -1,11 +1,11 @@
-package com.poestats.Pricer.Parcel;
+package com.poestats.parcel;
 
 import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Misc;
-import com.poestats.Pricer.Entries.DailyEntry;
-import com.poestats.Pricer.Entry;
-import com.poestats.Pricer.Maps.*;
+import com.poestats.pricer.entries.DailyEntry;
+import com.poestats.pricer.Entry;
+import com.poestats.pricer.maps.*;
 import com.poestats.relations.entries.IndexedItem;
 import com.poestats.relations.entries.SubIndexedItem;
 

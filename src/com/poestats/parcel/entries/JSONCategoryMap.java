@@ -1,4 +1,4 @@
-package com.poestats.Pricer.Parcel.sub;
+package com.poestats.parcel.entries;
 
 import java.util.HashMap;
 

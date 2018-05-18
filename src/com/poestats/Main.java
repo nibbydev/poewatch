@@ -2,11 +2,11 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.poestats.History.HistoryController;
-import com.poestats.League.LeagueManager;
-import com.poestats.Pricer.EntryController;
+import com.poestats.history.HistoryController;
+import com.poestats.league.LeagueManager;
+import com.poestats.pricer.EntryController;
 import com.poestats.relations.RelationManager;
-import com.poestats.Worker.WorkerController;
+import com.poestats.worker.WorkerController;
 
 import java.io.*;
 import java.net.URL;

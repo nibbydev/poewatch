@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 /**
- * Maps indexes and shorthands to currency names and vice versa
+ * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
     //------------------------------------------------------------------------------------------------------------

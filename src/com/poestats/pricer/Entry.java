@@ -1,10 +1,10 @@
-package com.poestats.Pricer;
+package com.poestats.pricer;
 
 import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
-import com.poestats.Pricer.Entries.*;
-import com.poestats.Pricer.Maps.*;
+import com.poestats.pricer.entries.*;
+import com.poestats.pricer.maps.*;
 import com.poestats.relations.entries.IndexedItem;
 import com.poestats.relations.RelationManager;
 import com.poestats.relations.entries.SubIndexedItem;

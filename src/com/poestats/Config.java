@@ -83,7 +83,7 @@ public class Config {
     public static final long entryController_counterOffset  = 5 * 60 * 60 * 1000;
 
     //------------------------------------------------------------------------------------------------------------
-    // League manager
+    // league manager
     //------------------------------------------------------------------------------------------------------------
 
     public static final String league_APIBaseURL = "http://api.pathofexile.com/leagues?type=main&compact=1";

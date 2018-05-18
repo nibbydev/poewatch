@@ -1,4 +1,4 @@
-package com.poestats.Worker;
+package com.poestats.worker;
 
 import com.poestats.Config;
 import com.poestats.Main;
@@ -43,7 +43,7 @@ public class Worker extends Thread {
             // If there's no new job, sleep
             waitOnMonitor();
 
-            // Check if Worker should close after being woken from sleep
+            // Check if worker should close after being woken from sleep
             if(!flagLocalRun)
                 break;
 
@@ -70,7 +70,7 @@ public class Worker extends Thread {
     }
 
     /**
-     * Stops current Worker's process
+     * Stops current worker's process
      */
     public void stopWorker() {
         this.flagLocalRun = false;

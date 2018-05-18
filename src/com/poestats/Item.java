@@ -224,7 +224,7 @@ public class Item extends Mappers.BaseItem {
             typeLine = null;
         }
 
-        // Get item's icon sub-category
+        // Get item's icon entries-category
         String iconCategory;
         if (icon == null) {
             // Misc currency
@@ -234,7 +234,7 @@ public class Item extends Mappers.BaseItem {
             iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
         }
 
-        // Divide certain items to different sub-categories
+        // Divide certain items to different entries-categories
         switch (parentCategory) {
             case "currency":
                 // Prophecy items have the same icon category as currency
@@ -243,7 +243,7 @@ public class Item extends Mappers.BaseItem {
                 else if (iconCategory.equals("piece")) parentCategory = "piece";
                 break;
             case "gems":
-                // Put vaal gems into separate sub-category
+                // Put vaal gems into separate entries-category
                 if (childCategory.equals("activegem") && iconCategory.equals("vaalgems"))
                     childCategory = "vaalgem";
                 break;

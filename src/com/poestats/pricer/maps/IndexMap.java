@@ -1,6 +1,6 @@
-package com.poestats.Pricer.Maps;
+package com.poestats.pricer.maps;
 
-import com.poestats.Pricer.Entry;
+import com.poestats.pricer.Entry;
 
 import java.util.HashMap;
 

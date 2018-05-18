@@ -1,4 +1,4 @@
-package com.poestats.History;
+package com.poestats.history;
 
 public class HistoryItem {
     //------------------------------------------------------------------------------------------------------------
