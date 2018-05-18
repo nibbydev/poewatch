@@ -46,7 +46,7 @@ public class Parcel {
                     for (ParcelEntry item : parcelItemList) {
                         if (mostExpensiveItem == null) {
                             mostExpensiveItem = item;
-                        } else if (item.mean > mostExpensiveItem.mean) {
+                        } else if (item.getMean() > mostExpensiveItem.getMean()) {
                             mostExpensiveItem = item;
                         }
                     }

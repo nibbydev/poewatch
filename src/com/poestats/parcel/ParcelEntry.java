@@ -12,12 +12,20 @@ import com.poestats.relations.entries.SubIndexedItem;
 import java.util.List;
 
 public class ParcelEntry {
-    public double mean, median, mode, exalted;
-    public int count, quantity, frame;
-    public String index;
-    public String corrupted, lvl, quality, links;
-    public String key, parent, child, name, type, var, tier, icon;
-    public HistoryItem history;
+    //------------------------------------------------------------------------------------------------------------
+    // Class variables
+    //------------------------------------------------------------------------------------------------------------
+
+    private double mean, median, mode, exalted;
+    private int count, quantity, frame;
+    private String index;
+    private String corrupted, lvl, quality, links;
+    private String key, parent, child, name, type, var, tier, icon;
+    private HistoryItem history;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Main methods
+    //------------------------------------------------------------------------------------------------------------
 
     public void copy (Entry entry) {
         mean = entry.getMean();
@@ -142,5 +150,181 @@ public class ParcelEntry {
             // Enchantments override the id here
             if (subIndexedItem.getName() != null) name = subIndexedItem.getName();
         }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters
+    //------------------------------------------------------------------------------------------------------------
+
+    public String getVar() {
+        return var;
+    }
+
+    public String getQuality() {
+        return quality;
+    }
+
+    public String getLvl() {
+        return lvl;
+    }
+
+    public String getLinks() {
+        return links;
+    }
+
+    public String getCorrupted() {
+        return corrupted;
+    }
+
+    public int getFrame() {
+        return frame;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getParent() {
+        return parent;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getChild() {
+        return child;
+    }
+
+    public String getTier() {
+        return tier;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getExalted() {
+        return exalted;
+    }
+
+    public double getMean() {
+        return mean;
+    }
+
+    public double getMedian() {
+        return median;
+    }
+
+    public double getMode() {
+        return mode;
+    }
+
+    public HistoryItem getHistory() {
+        return history;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public String getIndex() {
+        return index;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public void setVar(String var) {
+        this.var = var;
+    }
+
+    public void setQuality(String quality) {
+        this.quality = quality;
+    }
+
+    public void setLvl(String lvl) {
+        this.lvl = lvl;
+    }
+
+    public void setLinks(String links) {
+        this.links = links;
+    }
+
+    public void setCorrupted(String corrupted) {
+        this.corrupted = corrupted;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setTier(String tier) {
+        this.tier = tier;
+    }
+
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public void setFrame(int frame) {
+        this.frame = frame;
+    }
+
+    public void setChild(String child) {
+        this.child = child;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public void setMean(double mean) {
+        this.mean = mean;
+    }
+
+    public void setMedian(double median) {
+        this.median = median;
+    }
+
+    public void setMode(double mode) {
+        this.mode = mode;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setExalted(double exalted) {
+        this.exalted = exalted;
+    }
+
+    public void setHistory(HistoryItem history) {
+        this.history = history;
+    }
+
+    public void setIndex(String index) {
+        this.index = index;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 }
