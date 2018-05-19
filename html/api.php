@@ -58,8 +58,35 @@
             <div class="card-body">
               <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides some basic data about the serice, such as: the latest change ID from the top of the river, time in MS the change ID was fetched, current status of the service.</p>
+              <p class="card-text">Provides a lightweight API for the latest change ID from the top of the river and the time in MS the change ID was fetched. Updated realtime.</p>
               <!--/Description/-->
+              <hr>
+              <!-- Response fields -->
+              <h5 class="card-title">Response fields</h5>
+              <div class="card api-data-table px-2 pt-1 pb-1">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Param</th>
+                      <th>Persistent</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>id</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>The change ID</td>
+                    </tr>
+                    <tr>
+                      <td>lastUpdate</td>
+                      <td><span class='badge badge-success'>✓</span></td>
+                      <td>Milliseconds since changeID was updated</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--/Response fields/-->
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
@@ -70,44 +97,44 @@
         </div>
       </div>
       <!--/API: id/-->
-      <!-- API: leagues -->
+      <!-- API: leagueList -->
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/leagues</h2>
+              <h2>api.poe-stats.com/leagueList</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides a list of current active leagues. Will be sorted so that challenge league is first, followed by the hardcore version of the challenge league. SSF leagues are omitted. Updated dynamically and also every 30 minutes from the official API.</p>
+              <p class="card-text">Provides a list of current active leagues. Entries are sorted such that event leagues appear first, followed by the challenge leagues and then the permanent leagues. SSF entries are omitted. Updated every 30 minutes.</p>
               <!--/Description/-->
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagues">Leagues</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagueList">leagueList</a>
               <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
-      <!--/API: leagues/-->
-      <!-- API: league length -->
+      <!--/API: leagueList/-->
+      <!-- API: leagueData -->
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/length <span class='badge badge-light'>New</span></h2>
+              <h2>api.poe-stats.com/leagueData</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">Provides a list of current active leagues as well as their durations. Updated every 30 minutes from the official API. If the duration is impossible to calculate, -1 will be used as a replacement.</p>
+              <p class="card-text">Provides a list of current active leagues as well as their durations. Not sorted. Pretty much the same as the official API but not as slow.</p>
               <!--/Description/-->
               <hr>
               <!-- Response fields -->
               <h5 class="card-title">Response fields</h5>
-              <div class="card api-data-table px-2 pt-1 mb-2">
+              <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
                     <tr>
@@ -123,27 +150,12 @@
                       <td>Name of the league</td>
                     </tr>
                     <tr>
-                      <td>elapse</td>
-                      <td><span class='badge badge-success'>✓</span></td>
-                      <td>Days since the league began</td>
-                    </tr>
-                    <tr>
-                      <td>remain</td>
-                      <td><span class='badge badge-success'>✓</span></td>
-                      <td>Days until the end of the league</td>
-                    </tr>
-                    <tr>
-                      <td>total</td>
-                      <td><span class='badge badge-success'>✓</span></td>
-                      <td>Total length of league in days</td>
-                    </tr>
-                    <tr>
-                      <td>start</td>
+                      <td>startAt</td>
                       <td><span class='badge badge-danger'>✕</span></td>
                       <td>If present, indicates when the league started in ISO 8601 yyyy-MM-dd'T'HH:mm:ss'Z' standard</td>
                     </tr>
                     <tr>
-                      <td>end</td>
+                      <td>endAt</td>
                       <td><span class='badge badge-danger'>✕</span></td>
                       <td>If present, indicates when the league will end in ISO 8601 yyyy-MM-dd'T'HH:mm:ss'Z' standard</td>
                     </tr>
@@ -154,13 +166,13 @@
               <hr>
               <!-- Examples -->
               <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/length">Durations</a>
+              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagueData">leagueData</a>
               <!--/Examples/-->
             </div>
           </div>
         </div>
       </div>
-      <!--/API: league length/-->
+      <!--/API: leagueData/-->
       <!-- API: categories -->
       <div class="row mb-3">
         <div class="col-lg">
@@ -220,7 +232,7 @@
               <hr>
               <!-- Request fields -->
               <h5 class="card-title">Request fields</h5>
-              <div class="card api-data-table px-2 pt-1 mb-2">
+              <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
                     <tr>
@@ -247,7 +259,7 @@
               <hr>
               <!-- Response fields -->
               <h5 class="card-title">Response fields - generic</h5>
-              <div class="card api-data-table px-2 pt-1 mb-2">
+              <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
                     <tr>
@@ -351,7 +363,7 @@
                 </table>
               </div>
               <h5 class="card-title">Response fields - gems <span class="subtext-1">(Fields unique to gem entries)</span></h5>
-              <div class="card api-data-table px-2 pt-1 mb-2">
+              <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
                     <tr>
@@ -380,7 +392,7 @@
                 </table>
               </div>
               <h5 class="card-title">Response fields - enchantments <span class="subtext-1">(Fields unique to enchantment entries)</span></h5>
-              <div class="card api-data-table px-2 pt-1 mb-2">
+              <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
                     <tr>
@@ -407,7 +419,7 @@
               <hr>
               <!-- Error fields -->
               <h5 class="card-title">Response fields - errors <span class="subtext-1">(Responses upon entering invalid paramters)</span></h5>
-              <div class="card api-data-table px-2 pt-1 mb-2">
+              <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
                     <tr>

@@ -121,6 +121,10 @@ a:hover {text-decoration: none !important}
   color: #ddd;
 }
 
+.api-data-table table {
+  margin-bottom: 0;
+}
+
 .api-data-table .table td {
   border-top: 1px solid #383838;
 }
