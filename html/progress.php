@@ -51,18 +51,13 @@
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
+            <div class="card-header"></div>
             <div class="card-body">
               <p class="mb-0">A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end. All dates displayed are in your local timezone.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-body">
+              <hr>
               <div class="row" id="main"></div>
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>

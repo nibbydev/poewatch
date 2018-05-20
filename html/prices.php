@@ -231,15 +231,17 @@
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
+            <div class="card-header"></div>
             <div class="card-body">
-              <table class="table price-table table-striped table-hover" id="searchResults">
+              <table class="table price-table table-striped table-hover mb-0" id="searchResults">
                 <thead><tr></tr></thead>
                 <tbody></tbody>
               </table>
-              <div class="loadall">
+              <div class="loadall mt-2">
                 <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
               </div>
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>

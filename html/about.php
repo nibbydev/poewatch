@@ -48,21 +48,26 @@
     <!--/Menu/-->
     <!-- Main content -->
     <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
-      <div class="row">
+      <div class="row mb-3">
         <div class="col-lg">
-          <div class="alert custom-card" role="alert">
-            <h3 class="alert-heading text-center">Attention!</h3>
-            <hr>
-            <p>This site is still a work in progress. Since there have not been any official releases to date and the service is currently in its testing phase, prices may be inaccurate, data may be wiped regularly, API endpoints may change, layout will change.</p>
+          <div class="card custom-card">
+            <div class="card-header">
+              <h3 class="text-center">Attention!</h3>
+            </div>
+            <div class="card-body">
+              <p>This site is still a work in progress. Since there have not been any official releases to date and the service is currently in its testing phase, prices may be inaccurate, data may be wiped regularly, API endpoints may change, layout will change.</p>
+            </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div> 
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
+            <div class="card-header">
+              <h2 class="text-center">About</h2>
+            </div>
             <div class="card-body">
-              <h2 class="card-title text-center">About</h2>
-              <hr>
               <h5>Got a question/suggestion or notice something wrong with an item?</h5>
               <p>Drop me a message @ Siegrest#1851</p>
               <hr>
@@ -74,6 +79,7 @@
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
               <p>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</p>
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>

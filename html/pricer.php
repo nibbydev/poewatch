@@ -55,15 +55,14 @@
         </div>
         <div class="card-body">
           <img src="assets/img/pricer.gif" class="float-right ml-3 rounded img-fluid">
+          <h5>Where can I get one?</h5>
+          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/Pricer/releases" role="button">Over at GitHub</a>
           <h5>How does it work?</h5>
           <p>When the user right-clicks an item in a premium tab (or any tab), this handy program instantly outputs a buyout note containing the average price for that type of item.</p>
           <h5>Who is it for?</h5>
           <p>Players who are tired of induvidually pricing hundreds of items in their stash tabs. Be you a labrunner or an Uber Atziri farmer, who has dozens upon dozens of gems or maps that need prices or maybe just your average player who wants to actually enjoy the game instead of playing Shoppe Keep all day long. Well, then this program is perfect for you.</p>
           <h5>What can it price?</h5>
           <p>Armours, weapons, accessories, flasks, 6-links, 5-links, jewels, gems, divination cards, maps, currency, prophecies, essences, normal, magic and rare items. In short: if it's an item, this program can find a price for it.</p>
-          <h5>Where can I get one?</h5>
-          <p>Head on over to the GitHub page:</p>
-          <a class="btn btn-outline-dark" href="https://github.com/siegrest/Pricer/releases" role="button">Github</a>
         </div>
         <div class="card-footer"></div>
       </div>
