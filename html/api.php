@@ -87,12 +87,8 @@
                 </table>
               </div>
               <!--/Response fields/-->
-              <hr>
-              <!-- Examples -->
-              <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/id">Id</a>
-              <!--/Examples/-->
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>
@@ -109,12 +105,8 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of current active leagues. Entries are sorted such that event leagues appear first, followed by the challenge leagues and then the permanent leagues. SSF entries are omitted. Updated every 30 minutes.</p>
               <!--/Description/-->
-              <hr>
-              <!-- Examples -->
-              <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagueList">leagueList</a>
-              <!--/Examples/-->
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>
@@ -163,12 +155,8 @@
                 </table>
               </div>
               <!--/Response fields/-->
-              <hr>
-              <!-- Examples -->
-              <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/leagueData">leagueData</a>
-              <!--/Examples/-->
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>
@@ -185,12 +173,8 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">Provides a list of catetgories currently in use. Updated dynamically.</p>
               <!--/Description/-->
-              <hr>
-              <!-- Examples -->
-              <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/categories">Categories</a>
-              <!--/Examples/-->
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>
@@ -207,12 +191,8 @@
               <h5 class="card-title">Description</h5>
               <p class="card-text">For all your poe-stats-index-to-item-data-mappings needs. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
               <!--/Description/-->
-              <hr>
-              <!-- Examples -->
-              <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/itemdata">Item data</a>
-              <!--/Examples/-->
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>
@@ -362,7 +342,7 @@
                   </tbody>
                 </table>
               </div>
-              <h5 class="card-title">Response fields - gems <span class="subtext-1">(Fields unique to gem entries)</span></h5>
+              <h5 class="card-title mt-3">Response fields - gems <span class="subtext-1">(Fields unique to gem entries)</span></h5>
               <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
@@ -391,7 +371,7 @@
                   </tbody>
                 </table>
               </div>
-              <h5 class="card-title">Response fields - enchantments <span class="subtext-1">(Fields unique to enchantment entries)</span></h5>
+              <h5 class="card-title mt-3">Response fields - enchantments <span class="subtext-1">(Fields unique to enchantment entries)</span></h5>
               <div class="card api-data-table px-2 pt-1 pb-1">
                 <table class="table table-sm">
                   <thead>
@@ -443,12 +423,8 @@
                 </table>
               </div>
               <!--/Error fields/-->
-              <hr>
-              <!-- Examples -->
-              <h5 class="card-title">Examples</h5>
-              <a class="btn btn-outline-dark mt-1" href="http://api.poe-stats.com/get?league=standard&category=armour">Armour</a>
-              <!--/Examples/-->
             </div>
+            <div class="card-footer"></div>
           </div>
         </div>
       </div>

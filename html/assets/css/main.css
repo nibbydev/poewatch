@@ -21,6 +21,10 @@ hr {
   border-color: #282828;
 }
 
+.card-header, .card-footer {
+  background-color: rgba(0,0,0,.2);
+}
+
 /*------------------------------------------------------------------------------------------------------------
 // Form elements
 //----------------------------------------------------------------------------------------------------------*/
@@ -37,12 +41,13 @@ option {
 
 .btn-outline-dark {
   color: #ddd;
-  border-color: #555;
+  border-color: rgba(255,255,255,.2);
+  background-color: rgba(0,0,0,.1);
 }
 
 .btn-outline-dark:hover {
-  background-color: #333;
-  border-color: #555;
+  background-color: rgba(0,0,0,.2);
+  border-color: rgba(255,255,255,.3);
 }
 
 /* Disable focus borders */ 
@@ -117,8 +122,13 @@ a:hover {text-decoration: none !important}
 //----------------------------------------------------------------------------------------------------------*/
 
 .api-data-table {
-  background-color: #444;
+  background-color: transparent;
   color: #ddd;
+}
+
+.api-data-table.card {
+  border: 1px solid rgba(255,255,255,.05);
+  background-color: rgba(0,0,0,.1);
 }
 
 .api-data-table table {
@@ -126,11 +136,11 @@ a:hover {text-decoration: none !important}
 }
 
 .api-data-table .table td {
-  border-top: 1px solid #383838;
+  border-top: 1px solid rgba(255,255,255,.05);
 }
 
 .api-data-table .table thead th {
-  border-bottom: 1px solid #383838;
+  border-bottom: 1px solid rgba(255,255,255,.05);
   border-top: transparent;
 }
 
@@ -154,24 +164,8 @@ a:hover {text-decoration: none !important}
 // Misc
 //----------------------------------------------------------------------------------------------------------*/
 
-/* On small screens, set height to 'auto' for sidenav and grid */
-@media screen and (max-width: 992px) {
-  .sidenav {
-    height: auto;
-    padding: 15px;
-  }
-
-  .sidebar-left {
-    max-width: unset;
-  }
-}
-
 /* Styling for item types */
 .subtext-1{color: #888}
-
-.main-img-1 {
-  float: right;
-}
 
 /*------------------------------------------------------------------------------------------------------------
 // Colors
