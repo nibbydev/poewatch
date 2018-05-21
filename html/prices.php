@@ -81,7 +81,7 @@
     <!-- Main content -->
     <div class="col-xl-9 col-lg mt-4"> 
       <!-- Title row -->
-      <div class="row d-none d-xl-block">
+      <div class="row d-none d-xl-block mb-3">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>

@@ -94,7 +94,7 @@ var TEMPLATE_expandedRow = `
 </td></tr>`;
 
 var TEMPLATE_name = `
-<td class="wide-table-col">
+<td>
   <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
   <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
 </td>`;
@@ -301,7 +301,7 @@ function fillSelectors(category) {
   $("#search-sub").append(tmp_selString);
 
   // Add price table headers
-  let tmp_thString = TEMPLATE_th.trim().replace("{{name}}", "Item");
+  let tmp_thString = "<th class='w-100' scope='col'>Item</th>";
 
   if (category === "gems") {
     tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Lvl");
