@@ -83,12 +83,16 @@
       <!-- Title row -->
       <div class="row d-none d-xl-block">
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
-          <div class="alert custom-card" role="alert">
-            <?php if ($category === "enchantments"): ?>
-            <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
-            <?php else: ?>
-            <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
-            <?php endif; ?>
+          <div class="card custom-card">
+            <div class="card-header slim-card-edge"></div>
+            <div class="card-body">
+              <?php if ($category === "enchantments"): ?>
+              <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
+              <?php else: ?>
+              <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
+              <?php endif; ?>
+            </div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
@@ -231,7 +235,7 @@
       <div class="row mb-3">
         <div class="col-lg">
           <div class="card custom-card">
-            <div class="card-header"></div>
+            <div class="card-header slim-card-edge"></div>
             <div class="card-body">
               <table class="table price-table table-striped table-hover mb-0" id="searchResults">
                 <thead><tr></tr></thead>
@@ -241,7 +245,7 @@
                 <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
               </div>
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>

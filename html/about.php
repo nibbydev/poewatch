@@ -57,7 +57,7 @@
             <div class="card-body">
               <p>This site is still a work in progress. Since there have not been any official releases to date and the service is currently in its testing phase, prices may be inaccurate, data may be wiped regularly, API endpoints may change, layout will change.</p>
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div> 
@@ -79,7 +79,7 @@
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
               <p>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</p>
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>

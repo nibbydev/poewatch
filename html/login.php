@@ -44,28 +44,33 @@
     <div class="col-10 offset-1 mt-4">
       <div class="row">
         <div class="col-lg">
-          <div class="alert custom-card" role="alert">
-            <h3 class="alert-heading">Attention!</h3>
-            <hr>
-            <div class="row">
-              <div class="col-sm">
-                <p>The requested resource was not found or is not yet ready for public access.</p>
-              </div>
-              <div class="col-sm">
-                <p>Please enter your credentials to proceed</p>
-                <!-- Nosey little fucker, aren't you? -->
-                <form method="POST"> 
-                  <div class="form-group">
-                    <input type="email" class="form-control" name="email" placeholder="Email">
-                  </div>
-                  <div class="form-group">
-                    <input type="current-password" class="form-control" name="password" placeholder="Password">
-                  </div>
-                  <?php if (isset($_POST["email"])) echo "<span class=\"badge custom-text-red\">Invalid login.</span>"; ?>
-                  <button type="submit" class="btn btn-outline-dark float-right">Submit</button>
-                </form>
+          <div class="card custom-card">
+            <div class="card-header">
+              <h3>Attention!</h3>
+            </div>
+
+            <div class="card-body">
+              <div class="row">
+                <div class="col-sm">
+                  <p>The requested resource was not found or is not yet ready for public access.</p>
+                </div>
+                <div class="col-sm">
+                  <p>Please enter your credentials to proceed</p>
+                  <!-- Nosey little fucker, aren't you? -->
+                  <form method="POST"> 
+                    <div class="form-group">
+                      <input type="email" class="form-control" name="email" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                      <input type="current-password" class="form-control" name="password" placeholder="Password">
+                    </div>
+                    <?php if (isset($_POST["email"])) echo "<span class=\"badge custom-text-red\">Invalid login.</span>"; ?>
+                    <button type="submit" class="btn btn-outline-dark float-right">Submit</button>
+                  </form>
+                </div>
               </div>
             </div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div> 

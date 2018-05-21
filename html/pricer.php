@@ -64,7 +64,7 @@
           <h5>What can it price?</h5>
           <p>Armours, weapons, accessories, flasks, 6-links, 5-links, jewels, gems, divination cards, maps, currency, prophecies, essences, normal, magic and rare items. In short: if it's an item, this program can find a price for it.</p>
         </div>
-        <div class="card-footer"></div>
+        <div class="card-footer slim-card-edge"></div>
       </div>
     </div>
     <!--/Main content/-->

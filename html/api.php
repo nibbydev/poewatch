@@ -49,7 +49,7 @@
     <!-- Main content -->
     <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
       <!-- API: id -->
-      <div class="row mb-3">
+      <div class="row mb-4">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
@@ -69,7 +69,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Persistent</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -88,13 +88,13 @@
               </div>
               <!--/Response fields/-->
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
       <!--/API: id/-->
       <!-- API: leagueList -->
-      <div class="row mb-3">
+      <div class="row mb-4">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
@@ -106,13 +106,13 @@
               <p class="card-text">Provides a list of current active leagues. Entries are sorted such that event leagues appear first, followed by the challenge leagues and then the permanent leagues. SSF entries are omitted. Updated every 30 minutes.</p>
               <!--/Description/-->
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
       <!--/API: leagueList/-->
       <!-- API: leagueData -->
-      <div class="row mb-3">
+      <div class="row mb-4">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
@@ -132,7 +132,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Persistent</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -156,13 +156,13 @@
               </div>
               <!--/Response fields/-->
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
       <!--/API: leagueData/-->
       <!-- API: categories -->
-      <div class="row mb-3">
+      <div class="row mb-4">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
@@ -174,13 +174,13 @@
               <p class="card-text">Provides a list of catetgories currently in use. Updated dynamically.</p>
               <!--/Description/-->
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
       <!--/API: categories/-->
       <!-- API: itemdata -->
-      <div class="row mb-3">
+      <div class="row mb-4">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
@@ -192,13 +192,13 @@
               <p class="card-text">For all your poe-stats-index-to-item-data-mappings needs. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
               <!--/Description/-->
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
       <!--/API: itemdata/-->
       <!-- API: get -->
-      <div class="row mb-3">
+      <div class="row mb-4">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
@@ -218,7 +218,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Required</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -245,7 +245,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Persistent</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -349,7 +349,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Persistent</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -378,7 +378,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Persistent</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -405,7 +405,7 @@
                     <tr>
                       <th>Param</th>
                       <th>Persistent</th>
-                      <th>Description</th>
+                      <th class="w-100">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -424,7 +424,7 @@
               </div>
               <!--/Error fields/-->
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>

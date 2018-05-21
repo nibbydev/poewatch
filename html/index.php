@@ -63,7 +63,7 @@
               <h5>The API</h5>
               <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
             </div>
-            <div class="card-footer"></div>
+            <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
