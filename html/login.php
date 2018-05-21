@@ -38,7 +38,7 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Page body -->
-<div class="container-fluid mv-xl">    
+<div class="container-fluid mv-xl pb-4">    
   <div class="row">
     <!-- Main content -->
     <div class="col-10 offset-1 mt-4">

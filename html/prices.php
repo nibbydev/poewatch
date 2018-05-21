@@ -67,7 +67,7 @@
   </div>
 </div>
 <!-- Page body -->
-<div class="container-fluid">    
+<div class="container-fluid pb-4">    
   <div class="row">
     <!-- Menu -->
     <div class="col-xl-3 custom-sidebar-column"> 
@@ -232,7 +232,7 @@
 
       <?php endif; ?>
       <!-- Main table -->
-      <div class="row mb-3">
+      <div class="row">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>

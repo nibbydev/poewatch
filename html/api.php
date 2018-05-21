@@ -35,7 +35,7 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Page body -->
-<div class="container-fluid">    
+<div class="container-fluid pb-4">    
   <div class="row">
     <!-- Menu -->
     <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
@@ -198,7 +198,7 @@
       </div>
       <!--/API: itemdata/-->
       <!-- API: get -->
-      <div class="row mb-4">
+      <div class="row">
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
