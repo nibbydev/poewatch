@@ -55,7 +55,7 @@
               <h2 class="text-center">Poe-Stats</h2>
             </div>
             <div class="card-body">
-              <img src="assets/img/img1.png" class="float-right ml-3">
+              <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">
               <h5>Overview</h5>
               <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
               <h5>The general idea</h5>

@@ -414,7 +414,7 @@ function onRowClick(event) {
   // Create event listener for league selector
   $("#history-league-radio", ROW_expanded).change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
-
+  
     if (HISTORY_LEAGUE in HISTORY_DATA[item["index"]]) {
       HISTORY_CHART.data.labels = HISTORY_DATA[item["index"]][HISTORY_LEAGUE];
       HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[item["index"]][HISTORY_LEAGUE];
@@ -601,6 +601,17 @@ function displayHistory(index, expandedRow) {
   let tmp_leagueBtnString = "";
 
   $.each(leagues, function(index, league) {
+    if (!~LEAGUES.indexOf(league)) return;
+
+    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
+      .replace("{{active}}", (selectedLeague === league ? "active" : ""))
+      .replace("{{value}}", league)
+      .replace("{{name}}", formatLeague(league));
+  });
+
+  $.each(leagues, function(index, league) {
+    if (~LEAGUES.indexOf(league)) return;
+
     tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
       .replace("{{active}}", (selectedLeague === league ? "active" : ""))
       .replace("{{value}}", league)

@@ -45,6 +45,32 @@ function getNewHistory($PARAM_category, $PARAM_index) {
   return $payload;
 }
 
+function getPriceData($PARAM_category, $PARAM_index) {
+  $payload = array();
+
+  $baseDir = dirname( getcwd(), 2) . "/data/output/*";
+  $leagueDirs = glob($baseDir, GLOB_ONLYDIR);
+
+  foreach ( $leagueDirs as $leagueDir ) {
+    $categoryFile = $leagueDir . "/$PARAM_category.json";
+
+    if ( !file_exists($categoryFile) ) continue;
+
+    $json = json_decode( file_get_contents( $categoryFile ) , true );
+
+    foreach($json as $item) {
+      if ( $item["index"] === $PARAM_index ) {
+        $splitDir = explode("/", $leagueDir);
+        $league = end( $splitDir );
+        $payload[$league] = $item;
+        break;
+      }
+    }
+  }
+
+  return $payload;
+}
+
 // Set header to json
 header("Content-Type: application/json");
 
@@ -68,7 +94,11 @@ if (sizeof($splitIndex) !== 2 || strlen($splitIndex[0]) !== 4 || strlen($splitIn
   die("{\"error\": \"Invalid params\", \"field\": \"index\"}");
 }
 
-$payload = getOldHistory($PARAM_category, $PARAM_index);
+$payload = array();
+
+$payload["new"] = getNewHistory($PARAM_category, $PARAM_index);
+$payload["old"] = getOldHistory($PARAM_category, $PARAM_index);
+$payload["data"] = getPriceData($PARAM_category, $PARAM_index);
 
 if ( empty($payload) ) {
   die("{\"error\": \"No results\"}");

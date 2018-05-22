@@ -50,19 +50,19 @@
     <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
       <div class="card custom-card">
         <div class="card-header">
-          <h2>Hey, you!</h3>
+          <h2 class="text-white">Hey, you!</h3>
           <div>Ever felt a need for a tool for quickly adding buyout notes to masses of items based on their average prices? Well, look no further!</div>
         </div>
         <div class="card-body">
           <img src="assets/img/pricer.gif" class="float-right ml-3 rounded img-fluid">
-          <h5>Where can I get one?</h5>
-          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/Pricer/releases" role="button">Over at GitHub</a>
-          <h5>How does it work?</h5>
-          <p>When the user right-clicks an item in a premium tab (or any tab), this handy program instantly outputs a buyout note containing the average price for that type of item.</p>
-          <h5>Who is it for?</h5>
-          <p>Players who are tired of induvidually pricing hundreds of items in their stash tabs. Be you a labrunner or an Uber Atziri farmer, who has dozens upon dozens of gems or maps that need prices or maybe just your average player who wants to actually enjoy the game instead of playing Shoppe Keep all day long. Well, then this program is perfect for you.</p>
-          <h5>What can it price?</h5>
-          <p>Armours, weapons, accessories, flasks, 6-links, 5-links, jewels, gems, divination cards, maps, currency, prophecies, essences, normal, magic and rare items. In short: if it's an item, this program can find a price for it.</p>
+          <h5 class="text-white">Where can I get one?</h5>
+          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/Pricer/releases/latest" role="button">Over at GitHub</a>
+          <h5 class="text-white">How does it work?</h5>
+          <p class="paragraph-text">When you right-click an item in a premium tab (or any tab), this handy program copies the item data, matches it against its database and instantly pastes a buyout note containing the average price.</p>
+          <h5 class="text-white">Who is it for?</h5>
+          <p class="paragraph-text">Players who are tired of induvidually pricing hundreds of items in their stash tabs. Be you a labrunner or an Uber Atziri farmer who has dozens upon dozens of gems or maps that need prices or maybe just your average player who wants to actually enjoy the game instead of playing Shoppe Keep all day long. Well, in that case this program is perfect for you.</p>
+          <h5 class="text-white">What can it price?</h5>
+          <p class="paragraph-text">Armours, weapons, accessories, flasks, 6-links, 5-links, jewels, gems, divination cards, maps, currency, prophecies, essences, normal, magic and rare items. In short: if it's an item, this program can find a price for it.</p>
         </div>
         <div class="card-footer slim-card-edge"></div>
       </div>

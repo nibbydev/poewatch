@@ -87,8 +87,7 @@
   border: 0;
   vertical-align: middle;
   padding: 2px 2px 2px 4px;
-  background-color: #282828;
-
+  background-color: transparent !important;
 }
 
 .price-table hr {
