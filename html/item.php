@@ -65,8 +65,8 @@
   </div>
 
 
-  <div class="d-flex flex-wrap mr-3">
-    <div class="d-flex mr-3">
+  <div class="d-flex flex-column mr-3">
+    <div class="d-flex mr-3 mb-auto">
       <div class="rounded mr-3 p-2 d-flex align-items-center">
         <img src="http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
       </div>
@@ -84,11 +84,11 @@
     </div>
   </div>
 
-  <div class="d-flex flex-wrap">
-    <div class="mt-2">
+  <div class="d-flex flex-column">
+    <div class="mt-3">
       <h4 id="item-name">?</h4>
     </div>
-    <div class="d-flex align-items-center mt-auto mb-2">
+    <div class="d-flex align-items-center mt-auto mb-3">
       <svg class="mega-sparkline mr-2"></svg>
       <span class="d-flex mr-2"><h4 id="item-change">?</h4></span>
     </div>
@@ -152,8 +152,15 @@
               <hr>
               <div class="row m-1 mb-3">
                 <div class="col-sm">
-                  <h4>Past leagues</h4>
-                  <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+                  <h4>League charts</h4>
+                  <div class="mb-1">
+                    <label class="m-0 mr-2" for="history-league-radio-new">Current leagues:</label>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="history-league-radio-new"></div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="m-0 mr-2" for="history-league-radio-old">Past leagues: </label>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="history-league-radio-old"></div>
+                  </div>
                   <div class="chart-large"><canvas id="chart-past"></canvas></div>
                 </div>
               </div>
