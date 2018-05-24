@@ -32,10 +32,9 @@ public class Database {
             connection.setAutoCommit(false);
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Failed to connect to database", 5);
+            System.exit(0);
         }
-
-        disconnect();
-        System.exit(1);
     }
 
     public void disconnect() {
