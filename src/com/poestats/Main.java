@@ -2,6 +2,7 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.poestats.admin.AdminSuite;
 import com.poestats.history.HistoryManager;
 import com.poestats.league.LeagueManager;
 import com.poestats.pricer.EntryManager;

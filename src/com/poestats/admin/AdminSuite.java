@@ -1,4 +1,4 @@
-package com.poestats;
+package com.poestats.admin;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,36 +10,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.google.gson.Gson;
+import com.poestats.Config;
+import com.poestats.Main;
+import com.poestats.Misc;
 
 import java.io.*;
 
 public class AdminSuite {
-    //------------------------------------------------------------------------------------------------------------
-    // Inner classes
-    //------------------------------------------------------------------------------------------------------------
-
-    private static class LogMessage {
-        String timeStamp = Misc.timeStamp();
-        String dateStamp = Misc.dateStamp();
-        String msg;
-        int flair;
-
-        LogMessage (String msg, int flair) {
-            this.msg = msg;
-            this.flair = flair;
-        }
-
-        @Override
-        public String toString() {
-            return dateStamp + timeStamp + getFlair(flair) + " " + msg;
-        }
-    }
-
-    public static class ChangeIDElement {
-        public String changeId;
-        public long lastUpdate;
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -82,10 +59,10 @@ public class AdminSuite {
      * @param changeID The latest ChangeID string
      */
     public void setChangeID(String changeID) {
-        changeIDElement.lastUpdate = System.currentTimeMillis();
+        String oldChangeID = changeIDElement.getChangeId();
+        changeIDElement.update(changeID);
 
-        if (changeIDElement.changeId == null || !changeIDElement.changeId.equals(changeID)) {
-            changeIDElement.changeId = changeID;
+        if (!changeIDElement.getChangeId().equals(oldChangeID)) {
             saveChangeID();
         }
     }
@@ -181,24 +158,5 @@ public class AdminSuite {
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
 
-    public static String getFlair(int flair) {
-        switch (flair) {
-            case -1:
-                return "[STATUS]";
-            case 0:
-                return "[DEBUG]";
-            case 1:
-                return "[INFO]";
-            case 2:
-                return "[WARN]";
-            case 3:
-                return "[ERROR]";
-            case 4:
-                return "[CRITICAL]";
-            case 5:
-                return "[FATAL]";
-            default:
-                return "";
-        }
-    }
+
 }
