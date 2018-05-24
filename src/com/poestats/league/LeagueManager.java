@@ -28,33 +28,44 @@ public class LeagueManager {
     /**
      * Prepares league data lists on program start.
      *
-     * @return False on failure.
+     * @return False on failure
      */
     public boolean loadLeaguesOnStartup() {
-        if (stringLeagues != null) return false;
+        List<LeagueEntry> tmpLeagueList = downloadLeagueList();
 
-        download();
+        // Download failed. Load leagues from database
+        if (tmpLeagueList == null) {
+            tmpLeagueList = Main.DATABASE.getLeagues();
 
-        if (stringLeagues == null) {
-            readFromFile();
+            // Download failed AND database doesn't have league data. Shut down the program.
+            if (tmpLeagueList == null) return false;
         }
 
-        return stringLeagues != null;
+        leagues = sortLeagues(tmpLeagueList);
+        fillStringLeagues(leagues);
+
+        // Update database leagues
+        Main.DATABASE.updateLeagues(leagues);
+
+        return true;
     }
 
-    public void download() {
-        List<LeagueEntry> rawLeagueList = downloadLeagueList();
-        if (rawLeagueList == null) return;
+    /**
+     * Downloads leagues, updates database and local arrays
+     *
+     * @return False of failure
+     */
+    public boolean download() {
+        List<LeagueEntry> tmpLeagueList = downloadLeagueList();
+        if (tmpLeagueList == null) return false;
 
-        leagues = sortLeagues(rawLeagueList);
+        leagues = sortLeagues(tmpLeagueList);
+        fillStringLeagues(leagues);
 
-        // Fill stringLeague list
-        stringLeagues = new String[leagues.size()];
-        for (int i = 0; i < leagues.size(); i++) {
-            stringLeagues[i] = leagues.get(i).getId();
-        }
+        // Update database leagues if there have been any changes
+        Main.DATABASE.updateLeagues(leagues);
 
-        saveDataToFiles();
+        return true;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -120,6 +131,13 @@ public class LeagueManager {
         }
 
         return tmpLeagueList;
+    }
+
+    private void fillStringLeagues(List<LeagueEntry> leagueList) {
+        stringLeagues = new String[leagueList.size()];
+        for (int i = 0; i < leagueList.size(); i++) {
+            stringLeagues[i] = leagueList.get(i).getId();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
