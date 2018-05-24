@@ -26,6 +26,7 @@ public class Main {
     public static AdminSuite ADMIN;
     public static HistoryManager HISTORY_MANAGER;
     public static LeagueManager LEAGUE_MANAGER;
+    public static Database DATABASE;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -39,6 +40,9 @@ public class Main {
     public static void main(String[] args) {
         gsonBuilder = new GsonBuilder();
         gsonBuilder.disableHtmlEscaping();
+
+        DATABASE = new Database();
+        DATABASE.connect();
 
         // Init admin suite
         ADMIN = new AdminSuite();

@@ -80,10 +80,34 @@ public class LeagueEntry {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
+    // Getters
     //------------------------------------------------------------------------------------------------------------
 
     public String getId() {
         return id;
+    }
+
+    public String getEndAt() {
+        return endAt;
+    }
+
+    public String getStartAt() {
+        return startAt;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setEndAt(String endAt) {
+        this.endAt = endAt;
+    }
+
+    public void setStartAt(String startAt) {
+        this.startAt = startAt;
     }
 }
