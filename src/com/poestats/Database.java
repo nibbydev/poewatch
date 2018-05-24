@@ -50,8 +50,7 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private ArrayList<String> listAllTables() throws SQLException {
-        String query = "SHOW tables";
-        PreparedStatement statement = connection.prepareStatement(query);
+        PreparedStatement statement = connection.prepareStatement("SHOW tables");
         ResultSet result = statement.executeQuery();
 
         ArrayList<String> tables = new ArrayList<>();
@@ -70,8 +69,7 @@ public class Database {
 
     public List<LeagueEntry> getLeagues() {
         try {
-            String query = "SELECT * FROM `leagues`";
-            PreparedStatement statement = connection.prepareStatement(query);
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM `leagues`");
             ResultSet result = statement.executeQuery();
 
             List<LeagueEntry> leagueEntries = new ArrayList<>();
@@ -90,6 +88,7 @@ public class Database {
             return leagueEntries;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not query database league list", 3);
             return null;
         }
     }
@@ -100,6 +99,11 @@ public class Database {
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
     public void updateLeagues(List<LeagueEntry> leagueEntries) {
+        if (leagueEntries == null) {
+            Main.ADMIN.log_("Could not update database league list (null passed)", 3);
+            return;
+        }
+
         try {
             String query1 = "SELECT * FROM `leagues`";
             String query2 = "UPDATE TABLE `leagues` SET (`start`, `end`) VALUES (?, ?) WHERE `id`=?";
@@ -117,10 +121,29 @@ public class Database {
                 for (int i = 0; i < leagueEntries.size(); i++) {
                     // If there's a match and the info has changed, update the database entry
                     if (result.getString("id").equals(leagueEntries.get(i).getId())) {
-                        if (!result.getString("start").equals(leagueEntries.get(i).getStartAt()) ||
-                                !result.getString("end").equals(leagueEntries.get(i).getEndAt())) {
-                            statement2.setString(1, leagueEntries.get(i).getStartAt());
-                            statement2.setString(2, leagueEntries.get(i).getEndAt());
+                        String start = result.getString("start");
+                        String end = result.getString("end");
+
+                        String startNew = leagueEntries.get(i).getStartAt();
+                        String endNew = leagueEntries.get(i).getEndAt();
+
+                        boolean update = false;
+
+                        if (start == null) {
+                            if (startNew != null) update = true;
+                        } else if (!start.equals(startNew)) update = true;
+
+                        if (end == null) {
+                            if (endNew != null) update = true;
+                        } else if (!end.equals(endNew)) update = true;
+
+                        if (update) {
+                            if (startNew == null) statement2.setNull(1, 0);
+                            else statement2.setString(1, startNew);
+
+                            if (endNew == null) statement2.setNull(2, 0);
+                            else statement2.setString(2, endNew);
+
                             statement2.setString(3, leagueEntries.get(i).getId());
                             statement2.addBatch();
                         }
@@ -134,8 +157,13 @@ public class Database {
             // Loop though entries that were not present in the database
             for (LeagueEntry leagueEntry : leagueEntries) {
                 statement3.setString(1, leagueEntry.getId());
-                statement3.setString(2, leagueEntry.getStartAt());
-                statement3.setString(3, leagueEntry.getEndAt());
+
+                if (leagueEntry.getStartAt() == null) statement2.setNull(1, 0);
+                else statement2.setString(2, leagueEntry.getStartAt());
+
+                if (leagueEntry.getEndAt() == null) statement2.setNull(2, 0);
+                else statement2.setString(3, leagueEntry.getEndAt());
+
                 statement3.addBatch();
             }
 
@@ -147,6 +175,7 @@ public class Database {
             connection.commit();
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not update database league list", 3);
         }
     }
 
