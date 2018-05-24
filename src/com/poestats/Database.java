@@ -140,8 +140,8 @@ public class Database {
             }
 
             // Execute the batches
-            statement2.execute();
-            statement3.execute();
+            statement2.executeBatch();
+            statement3.executeBatch();
 
             // Commit changes
             connection.commit();
