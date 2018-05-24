@@ -153,7 +153,7 @@ CREATE TABLE `league__entry` (
 
 CREATE TABLE `leagues` (
     `id`        varchar(64)     PRIMARY KEY,
-    `display`   varchar(64)     NOT NULL,
+    `display`   varchar(64)     DEFAULT NULL,
     `start`     varchar(32)     DEFAULT NULL,
     `end`       varchar(32)     DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
