@@ -179,6 +179,31 @@ public class Database {
         }
     }
 
+    /**
+     * Removes any previous and updates the changeID record in table `changeid`
+     *
+     * @param changeID New changeID string to store
+     */
+    public void updateChangeID(String changeID) {
+        try {
+            String query1 = "DELETE FROM `changeid`";
+            String query2 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
+
+            PreparedStatement statement1 = connection.prepareStatement(query1);
+            PreparedStatement statement2 = connection.prepareStatement(query2);
+
+            statement2.setString(1, changeID);
+
+            statement1.execute();
+            statement2.execute();
+
+            connection.commit();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not update database change id", 3);
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Utility methods
     //------------------------------------------------------------------------------------------------------------

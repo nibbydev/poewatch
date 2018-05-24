@@ -63,7 +63,7 @@ public class AdminSuite {
         changeIDElement.update(changeID);
 
         if (!changeIDElement.getChangeId().equals(oldChangeID)) {
-            saveChangeID();
+            Main.DATABASE.updateChangeID(changeID);
         }
     }
 
