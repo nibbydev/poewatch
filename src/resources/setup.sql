@@ -16,7 +16,8 @@ USE `ps_test_database`;
 --
 
 CREATE TABLE `category_parent` (
-    `parent`    varchar(32)     PRIMARY KEY
+    `parent`    varchar(32)     PRIMARY KEY,
+    `display`   varchar(32)     DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
