@@ -49,7 +49,8 @@ public class Main {
         ADMIN = new AdminSuite();
 
         // Make sure basic folder structure exists
-        buildFolderFileStructure();
+        boolean createdFiles = buildFolderFileStructure();
+        if (createdFiles) System.exit(0);
 
         CONFIG = new Config();
         RELATIONS = new RelationManager();
@@ -59,7 +60,7 @@ public class Main {
         boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
         if (!leagueLoadResult) {
             Main.ADMIN.log_("Failed to obtain leagues from API and database. Shutting down...", 5);
-            System.exit(0);
+            System.exit(-1);
         }
 
         WORKER_MANAGER = new WorkerManager();
@@ -159,7 +160,6 @@ public class Main {
                         break;
                     case "exit":
                         System.out.println("[INFO] Shutting down..");
-                        ADMIN.saveChangeID();
                         return;
                     case "id":
                         commandIdAdd(userInput);
@@ -193,8 +193,10 @@ public class Main {
     /**
      * Creates basic file structure on program launch
      */
-    private static void buildFolderFileStructure() {
-        boolean createdFile = notifyMkDir(Config.folder_data);
+    private static boolean buildFolderFileStructure() {
+        boolean createdFile = false;
+
+        createdFile = notifyMkDir(Config.folder_data)       || createdFile;
         createdFile = notifyMkDir(Config.folder_database)   || createdFile;
         createdFile = notifyMkDir(Config.folder_output)     || createdFile;
         createdFile = notifyMkDir(Config.folder_history)    || createdFile;
@@ -203,13 +205,7 @@ public class Main {
         createdFile = saveResource(Config.resource_config, Config.file_config)          || createdFile;
         createdFile = saveResource(Config.resource_relations, Config.file_relations)    || createdFile;
 
-        if (createdFile) {
-            Main.ADMIN.log_("Created new file(s)/folder(s)!", 0);
-            Main.ADMIN.log_("Configure these and restart the program", 0);
-            Main.ADMIN.log_("Press enter to continue...", 0);
-            try { System.in.read(); } catch (IOException ex) {}
-            System.exit(0);
-        }
+        return createdFile;
     }
 
     /**
@@ -220,10 +216,7 @@ public class Main {
      */
     private static boolean notifyMkDir(File file) {
         if (file.mkdir()) {
-            try {
-                Main.ADMIN.log_("Created: " + file.getCanonicalPath(), 1);
-            } catch (IOException ex) { }
-
+            Main.ADMIN.log_("Created: " + file.getPath(), 1);
             return true;
         } else {
             return false;
