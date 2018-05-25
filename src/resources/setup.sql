@@ -49,7 +49,7 @@ CREATE TABLE `item_data_sup` (
         REFERENCES `category_child` (`parent`,`child`)
         ON DELETE CASCADE,
 
-    `sup`       varchar(4)      PRIMARY KEY,
+    `sup`       varchar(5)      PRIMARY KEY,
     `parent`    varchar(32)     NOT NULL,
     `child`     varchar(32)     DEFAULT NULL,
 
@@ -70,7 +70,7 @@ CREATE TABLE `item_data_sub` (
         REFERENCES `item_data_sup` (`sup`)
         ON DELETE CASCADE,
     
-    `sup`       varchar(4)      NOT NULL,
+    `sup`       varchar(5)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
 
     `tier`      tinyint(1)      DEFAULT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE `league__item` (
         REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
 
-    `sup`       varchar(4)      NOT NULL,
+    `sup`       varchar(5)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -119,7 +119,7 @@ CREATE TABLE `league__history` (
         REFERENCES `league__item` (`sup`,`sub`)
         ON DELETE CASCADE,
 
-    `sup`       varchar(4)      NOT NULL,
+    `sup`       varchar(5)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -141,7 +141,7 @@ CREATE TABLE `league__entry` (
         REFERENCES `league__item` (`sup`,`sub`)
         ON DELETE CASCADE,
 
-    `sup`       varchar(4)      NOT NULL,
+    `sup`       varchar(5)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
