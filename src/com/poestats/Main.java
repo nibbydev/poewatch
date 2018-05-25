@@ -39,48 +39,52 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        gsonBuilder = new GsonBuilder();
-        gsonBuilder.disableHtmlEscaping();
+        try {
+            gsonBuilder = new GsonBuilder();
+            gsonBuilder.disableHtmlEscaping();
 
-        DATABASE = new Database();
-        DATABASE.connect();
+            DATABASE = new Database();
+            DATABASE.connect();
 
-        // Init admin suite
-        ADMIN = new AdminSuite();
+            // Init admin suite
+            ADMIN = new AdminSuite();
 
-        // Make sure basic folder structure exists
-        boolean createdFiles = buildFolderFileStructure();
-        if (createdFiles) System.exit(0);
+            // Make sure basic folder structure exists
+            boolean createdFiles = buildFolderFileStructure();
+            if (createdFiles) return;
 
-        CONFIG = new Config();
-        RELATIONS = new RelationManager();
+            CONFIG = new Config();
+            RELATIONS = new RelationManager();
 
-        // Init league manager
-        LEAGUE_MANAGER = new LeagueManager();
-        boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
-        if (!leagueLoadResult) {
-            Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
-            System.exit(-1);
+            // Init league manager
+            LEAGUE_MANAGER = new LeagueManager();
+            boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
+            if (!leagueLoadResult) {
+                Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
+                return;
+            }
+
+            WORKER_MANAGER = new WorkerManager();
+            ENTRY_MANAGER = new EntryManager();
+            HISTORY_MANAGER = new HistoryManager();
+
+            // Parse CLI parameters
+            parseCommandParameters(args);
+
+            // Start controller
+            WORKER_MANAGER.start();
+
+            // Initiate main command loop, allowing user some control over the program
+            commandLoop();
+
+            // Stop workers on exit
+            WORKER_MANAGER.stopController();
+
+            // Save generated item data
+            RELATIONS.saveData();
+        } finally {
+            if (DATABASE != null) DATABASE.disconnect();
         }
-
-        WORKER_MANAGER = new WorkerManager();
-        ENTRY_MANAGER = new EntryManager();
-        HISTORY_MANAGER = new HistoryManager();
-
-        // Parse CLI parameters
-        parseCommandParameters(args);
-
-        // Start controller
-        WORKER_MANAGER.start();
-
-        // Initiate main command loop, allowing user some control over the program
-        commandLoop();
-
-        // Stop workers on exit
-        WORKER_MANAGER.stopController();
-
-        // Save generated item data
-        RELATIONS.saveData();
     }
 
     /**
