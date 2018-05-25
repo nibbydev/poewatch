@@ -79,10 +79,8 @@ public class Main {
 
             // Stop workers on exit
             WORKER_MANAGER.stopController();
-
-            // Save generated item data
-            RELATIONS.saveData();
         } finally {
+            if (RELATIONS != null) RELATIONS.saveData();
             if (DATABASE != null) DATABASE.disconnect();
         }
     }

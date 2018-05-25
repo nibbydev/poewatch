@@ -347,9 +347,11 @@ public class Database {
     /**
      * Compares provided item data to database entries and adds what's missing
      *
-     * @param relations Item data map
+     * @param newSup Map of super index to IndexedItem
+     * @param newSub Map of index to SubIndexedItem
+     * @return True on success
      */
-    public void updateItemData(Map<String, IndexedItem> newSup, Map<String, SubIndexedItem> newSub) {
+    public boolean updateItemData(Map<String, IndexedItem> newSup, Map<String, SubIndexedItem> newSub) {
         try {
             String querySup =   "INSERT INTO " +
                                     "`item_data_sup` " +
@@ -438,12 +440,13 @@ public class Database {
 
             // Commit changes
             connection.commit();
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database league list", 3);
+            return false;
         }
     }
-
 
     //------------------------------------------------------------------------------------------------------------
     // Utility methods

@@ -121,9 +121,12 @@ public class RelationManager {
      * Saves data to file on program exit
      */
     public void saveData() {
-        // item data and categories
+        boolean updateSuccessful = Main.DATABASE.updateItemData(newSup, newSub);
 
-        Main.DATABASE.updateItemData(newSup, newSub);
+        if (updateSuccessful) {
+            newSup.clear();
+            newSub.clear();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
