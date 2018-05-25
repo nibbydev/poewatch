@@ -74,7 +74,17 @@ public class RelationManager {
             }
         }
 
-        readCurrencyRelationsFromFile();
+        List<CurrencyRelation> currencyRelations = readCurrencyRelationsFromFile();
+        if (currencyRelations == null) {
+            Main.ADMIN.log_("Failed load currency relations. Shutting down...", 5);
+            System.exit(-1);
+        } else {
+            for (CurrencyRelation relation : currencyRelations) {
+                for (String alias : relation.getAliases()) {
+                    currencyAliasToName.put(alias, relation.getName());
+                }
+            }
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -83,26 +93,26 @@ public class RelationManager {
 
     /**
      * Reads currency relation data from file
+     *
+     * @return List of CurrencyRelation objects or null on error
      */
-    private void readCurrencyRelationsFromFile() {
+    private List<CurrencyRelation> readCurrencyRelationsFromFile() {
+        List<CurrencyRelation> currencyRelations;
+
         // Open up the reader
         try (Reader reader = Misc.defineReader(Config.file_relations)) {
             if (reader == null) {
                 Main.ADMIN.log_("File not found: '" + Config.file_relations.getPath() + "'", 4);
-                return;
+                return null;
             }
 
             Type listType = new TypeToken<ArrayList<CurrencyRelation>>(){}.getType();
-            List<CurrencyRelation> relations = gson.fromJson(reader, listType);
+            currencyRelations = gson.fromJson(reader, listType);
 
-            for (CurrencyRelation relation : relations) {
-                for (String alias : relation.getAliases()) {
-                    currencyAliasToName.put(alias, relation.getName());
-                }
-            }
-
+            return currencyRelations;
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
+            return null;
         }
     }
 
