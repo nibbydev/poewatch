@@ -19,7 +19,6 @@ public class LeagueManager {
 
     private Gson gson = Main.getGson();
     private List<LeagueEntry> leagues;
-    private String[] stringLeagues;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -42,7 +41,6 @@ public class LeagueManager {
         }
 
         leagues = sortLeagues(tmpLeagueList);
-        fillStringLeagues(leagues);
 
         // Update database leagues
         Main.DATABASE.updateLeagues(leagues);
@@ -60,7 +58,6 @@ public class LeagueManager {
         if (tmpLeagueList == null) return false;
 
         leagues = sortLeagues(tmpLeagueList);
-        fillStringLeagues(leagues);
 
         // Update database leagues if there have been any changes
         Main.DATABASE.updateLeagues(leagues);
@@ -133,13 +130,6 @@ public class LeagueManager {
         return tmpLeagueList;
     }
 
-    private void fillStringLeagues(List<LeagueEntry> leagueList) {
-        stringLeagues = new String[leagueList.size()];
-        for (int i = 0; i < leagueList.size(); i++) {
-            stringLeagues[i] = leagueList.get(i).getId();
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // I/O
     //------------------------------------------------------------------------------------------------------------
@@ -198,58 +188,11 @@ public class LeagueManager {
         }
     }
 
-    /**
-     * Saves league-related data to files
-     */
-    public void saveDataToFiles() {
-        try (Writer writer = Misc.defineWriter(Config.file_leagueData)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(leagues, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+Config.file_leagueData.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
-        }
-
-        try (Writer writer = Misc.defineWriter(Config.file_leagueList)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(stringLeagues, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+Config.file_leagueList.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
-        }
-    }
-
-    /**
-     * Reads league-related data from files
-     */
-    public void readFromFile() {
-        try (Reader reader = Misc.defineReader(Config.file_leagueData)) {
-            if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_leagueData.getCanonicalPath() + "'", 4);
-                return;
-            }
-
-            Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
-            leagues = gson.fromJson(reader, listType);
-
-            // Fill stringLeagues
-            for (int i = 0; i < leagues.size(); i++) {
-                stringLeagues[i] = leagues.get(i).getId();
-            }
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
     public List<LeagueEntry> getLeagues() {
         return leagues;
-    }
-
-    public String[] getStringLeagues() {
-        return stringLeagues;
     }
 }

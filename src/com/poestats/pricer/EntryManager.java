@@ -2,6 +2,7 @@ package com.poestats.pricer;
 
 import com.google.gson.Gson;
 import com.poestats.*;
+import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.maps.*;
 import com.poestats.parcel.*;
 import com.poestats.parcel.ParcelMaps.*;
@@ -98,7 +99,9 @@ public class EntryManager {
      * Load in currency data on app start and fill leagueMap with leagues
      */
     private void loadDatabases() {
-        for (String league : Main.LEAGUE_MANAGER.getStringLeagues()) {
+        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+            String league = leagueEntry.getId();
+
             File currencyFile = new File(Config.folder_database, league + "/currency.csv");
 
             if (!currencyFile.exists()) {
@@ -135,7 +138,9 @@ public class EntryManager {
      * Writes all collected data to file
      */
     private void cycle() {
-        for (String league : Main.LEAGUE_MANAGER.getStringLeagues()) {
+        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+            String league = leagueEntry.getId();
+
             CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
             File leagueFolder = new File(Config.folder_database, league);
 
