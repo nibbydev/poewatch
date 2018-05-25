@@ -148,7 +148,7 @@ public class Entry {
             if (!raw.getPriceType().equals("Chaos Orb")) {
                 if (currencyMap == null) continue;
 
-                String fullIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault(raw.getPriceType(), null);
+                String fullIndex = Main.RELATIONS.getCurrencyNameToIndex().getOrDefault(raw.getPriceType(), null);
                 if (fullIndex == null) continue;
 
                 Entry currencyEntry = currencyMap.getOrDefault(fullIndex, null);
@@ -247,7 +247,8 @@ public class Entry {
                         return tmpPercent < 140;
                     case "currency":
                         if (tmpPastMedian > 300) {
-                            return tmpPercent > 80 && tmpPercent < 140;
+                            //return tmpPercent > 80 && tmpPercent < 140;
+                            return tmpPercent < 140;
                         } else {
                             //return tmpPercent > 90 && tmpPercent < 110;
                             return tmpPercent < 200;

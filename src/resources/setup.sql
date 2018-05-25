@@ -52,7 +52,8 @@ CREATE TABLE `item_data_sup` (
 
     `name`      varchar(128)    NOT NULL,
     `type`      varchar(64)     DEFAULT NULL,
-    `frame`     tinyint(1)      NOT NULL
+    `frame`     tinyint(1)      NOT NULL,
+    `key`       varchar(128)    NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

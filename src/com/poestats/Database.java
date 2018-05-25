@@ -265,6 +265,7 @@ public class Database {
                                 "`item_data_sup`.`name`, " +
                                 "`item_data_sup`.`type`, " +
                                 "`item_data_sup`.`frame`, " +
+                                "`item_data_sup`.`key`, " +
 
                                 "`item_data_sub`.`sub`, " +
                                 "`item_data_sub`.`tier`, " +
@@ -284,7 +285,10 @@ public class Database {
             // Get parent categories
             while (result.next()) {
                 String sup = result.getString(1);
-                String sub = result.getString(7);
+                String sub = result.getString(8);
+
+                String supKey = result.getString(7);
+                String subKey = result.getString(15);
 
                 String parent = result.getString(2);
                 String child = result.getString(3);
@@ -293,15 +297,13 @@ public class Database {
                 String type = result.getString(5);
                 int frame = result.getInt(6);
 
-                String tier = result.getString(8);
-                String lvl = result.getString(9);
-                String quality = result.getString(10);
-                String corrupted = result.getString(11);
-                String links = result.getString(12);
-                String var = result.getString(13);
-
-                String key = result.getString(14);
-                String icon = result.getString(15);
+                String tier = result.getString(9);
+                String lvl = result.getString(10);
+                String quality = result.getString(11);
+                String corrupted = result.getString(12);
+                String links = result.getString(13);
+                String var = result.getString(14);
+                String icon = result.getString(16);
 
                 IndexedItem indexedItem = relations.getOrDefault(sup, new IndexedItem());
 
@@ -312,6 +314,7 @@ public class Database {
                     indexedItem.setParent(parent);
                     indexedItem.setName(name);
                     indexedItem.setFrame(frame);
+                    indexedItem.setKey(supKey);
                 }
 
                 SubIndexedItem subIndexedItem = new SubIndexedItem();
@@ -321,8 +324,9 @@ public class Database {
                 if (corrupted != null)  subIndexedItem.setCorrupted(corrupted);
                 if (links != null)      subIndexedItem.setLinks(links);
                 if (var != null)        subIndexedItem.setVar(var);
-                subIndexedItem.setKey(key);
+                subIndexedItem.setKey(subKey);
                 subIndexedItem.setIcon(icon);
+                subIndexedItem.setParentItem(indexedItem);
 
                 indexedItem.getSubIndexes().put(sub, subIndexedItem);
                 relations.putIfAbsent(sup, indexedItem);

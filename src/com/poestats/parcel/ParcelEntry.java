@@ -38,7 +38,7 @@ public class ParcelEntry {
         // Find the item's price in exalted
         IndexMap tmp_currencyMap = Main.ENTRY_MANAGER.getCurrencyMap(entry.getLeague());
         if (tmp_currencyMap != null) {
-            String exaltedIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault("Exalted Orb", null);
+            String exaltedIndex = Main.RELATIONS.getCurrencyNameToIndex().getOrDefault("Exalted Orb", null);
             Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(exaltedIndex, null);
 
             if (tmp_exaltedEntry != null) {
@@ -126,8 +126,8 @@ public class ParcelEntry {
 
         // Check if there's a match for the specific index
         String superIndex = index.substring(0, index.indexOf("-"));
-        if (Main.RELATIONS.getItemSubIndexToData().containsKey(superIndex)) {
-            IndexedItem indexedItem = Main.RELATIONS.getItemSubIndexToData().get(superIndex);
+        if (Main.RELATIONS.getSupIndexToData().containsKey(superIndex)) {
+            IndexedItem indexedItem = Main.RELATIONS.getSupIndexToData().get(superIndex);
             frame = indexedItem.getFrame();
             parent = indexedItem.getParent();
             child = indexedItem.getChild();

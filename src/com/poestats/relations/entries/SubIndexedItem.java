@@ -11,6 +11,7 @@ public class SubIndexedItem {
 
     private String var, key, lvl, quality, links, corrupted, name;
     private String icon, tier;
+    private IndexedItem parentItem;
 
     //------------------------------------------------------------------------------------------------------------
     // Constructors
@@ -93,6 +94,10 @@ public class SubIndexedItem {
         return tier;
     }
 
+    public IndexedItem getParentItem() {
+        return parentItem;
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Setters
     //------------------------------------------------------------------------------------------------------------
@@ -131,5 +136,9 @@ public class SubIndexedItem {
 
     public void setTier(String tier) {
         this.tier = tier;
+    }
+
+    public void setParentItem(IndexedItem parentItem) {
+        this.parentItem = parentItem;
     }
 }

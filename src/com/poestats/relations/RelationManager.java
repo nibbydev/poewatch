@@ -25,11 +25,13 @@ public class RelationManager {
     private Gson gson = Main.getGson();
 
     private Map<String, String> currencyAliasToName = new HashMap<>();
-    private Map<String, String> currencyNameToFullIndex = new HashMap<>();
+    private Map<String, String> currencyNameToIndex = new HashMap<>();
 
-    private Map<String, String> itemSpecificKeyToFullIndex = new HashMap<>();
-    private Map<String, String> itemGenericKeyToSuperIndex = new HashMap<>();
-    private Map<String, IndexedItem> itemSubIndexToData;
+    private Map<String, String> supKeyToSup = new HashMap<>();
+    private Map<String, String> subKeyToSub = new HashMap<>();
+
+
+    private Map<String, IndexedItem> supIndexToData;
 
     private Map<String, List<String>> categories;
 
@@ -49,12 +51,27 @@ public class RelationManager {
             Main.ADMIN.log_("Database did not contain any category information", 2);
         }
 
-        itemSubIndexToData = Main.DATABASE.getItemData();
-        if (itemSubIndexToData == null) {
+        supIndexToData = Main.DATABASE.getItemData();
+        if (supIndexToData == null) {
             Main.ADMIN.log_("Failed to query item data from database. Shutting down...", 5);
             System.exit(-1);
-        } else if (itemSubIndexToData.isEmpty()) {
+        } else if (supIndexToData.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any item data information", 2);
+        } else {
+            for (String sup : supIndexToData.keySet()) {
+                IndexedItem indexedItem = supIndexToData.get(sup);
+
+                supKeyToSup.putIfAbsent(indexedItem.getKey(), sup);
+
+                if (indexedItem.getFrame() == 5) {
+                    currencyNameToIndex.put(indexedItem.getName(), sup + Config.index_subBase);
+                }
+
+                for (String sub : indexedItem.getSubIndexes().keySet()) {
+                    SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().get(sub);
+                    subKeyToSub.put(subIndexedItem.getKey(), sub);
+                }
+            }
         }
 
         readCurrencyRelationsFromFile();
@@ -90,63 +107,13 @@ public class RelationManager {
     }
 
     /**
-     * Reads item relation data from file
-     */
-    private void readItemDataFromFile() {
-        try (Reader reader = Misc.defineReader(Config.file_itemData)) {
-            if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_itemData.getPath() + "'", 2);
-                return;
-            }
-
-            Type listType = new TypeToken<Map<String, IndexedItem>>(){}.getType();
-            Map<String, IndexedItem> relations = gson.fromJson(reader, listType);
-
-            // Lambda loop
-            relations.forEach((superIndex, superItem) -> {
-                superItem.getSubIndexes().forEach((subIndex, subItem) -> {
-                    String index = superIndex + "-" + subIndex;
-                    itemSpecificKeyToFullIndex.put(subItem.getKey(), index);
-
-                    // Add currency indexes to a special map
-                    if (superItem.getFrame() == 5) {
-                        currencyNameToFullIndex.put(superItem.getName(), index);
-                    }
-                });
-
-                //itemGenericKeyToSuperIndex.put(superItem.getGenericKey(), superIndex);
-                itemSubIndexToData.put(superIndex, superItem);
-            });
-
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
-    }
-
-    /**
-     * Reads item categories from file
-     */
-    private void readCategoriesFromFile() {
-        try (Reader reader = Misc.defineReader(Config.file_categories)) {
-            if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_categories.getPath() + "'", 4);
-                return;
-            }
-            Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();
-            categories = gson.fromJson(reader, listType);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
-    }
-
-    /**
      * Saves data to file on program exit
      */
     public void saveData() {
         // Save item data to file
         try (Writer writer = Misc.defineWriter(Config.file_itemData)) {
             if (writer == null) throw new IOException();
-            gson.toJson(itemSubIndexToData, writer);
+            gson.toJson(supIndexToData, writer);
         } catch (IOException ex) {
             Main.ADMIN._log(ex, 4);
         }
@@ -178,31 +145,33 @@ public class RelationManager {
 
         String index;
         String genericKey = resolveSpecificKey(item.getKey());
-        if (itemSpecificKeyToFullIndex.containsKey(item.getKey())) {
-            // Return index if item is already indexed
-            return itemSpecificKeyToFullIndex.get(item.getKey());
+
+        String sup = supKeyToSup.get(genericKey);
+        String sub = subKeyToSub.get(item.getKey());
+
+        if (sup != null && sub != null)  {
+            return sup + sub;
         } else if (item.isDoNotIndex()) {
             // If there wasn't an already existing index, return null without indexing
             return null;
-        } else if (itemGenericKeyToSuperIndex.containsKey(genericKey)) {
-            String superIndex = itemGenericKeyToSuperIndex.get(genericKey);
-            IndexedItem indexedGenericItem = itemSubIndexToData.get(superIndex);
+        } else if (sup != null) {
+            IndexedItem indexedGenericItem = supIndexToData.get(sup);
 
-            String subIndex = indexedGenericItem.subIndex(item);
-            index = itemGenericKeyToSuperIndex.get(genericKey) + Config.index_separator + subIndex;
+            sub = indexedGenericItem.subIndex(item);
+            index = sup + sub;
 
-            itemSpecificKeyToFullIndex.put(item.getKey(), index);
+            subKeyToSub.put(item.getKey(), sub);
         } else {
-            String superIndex = Integer.toHexString(itemGenericKeyToSuperIndex.size());
-            superIndex = (Config.index_superBase + superIndex).substring(superIndex.length());
+            sup = Integer.toHexString(supKeyToSup.size());
+            sup = (Config.index_superBase + sup).substring(sup.length());
 
             IndexedItem indexedItem = new IndexedItem(item);
-            String subIndex = indexedItem.subIndex(item);
-            index = superIndex + Config.index_separator + subIndex;
+            sub = indexedItem.subIndex(item);
+            index = sup + sub;
 
-            itemGenericKeyToSuperIndex.put(genericKey, superIndex);
-            itemSubIndexToData.put(superIndex, indexedItem);
-            itemSpecificKeyToFullIndex.put(item.getKey(), index);
+            supKeyToSup.put(genericKey, sup);
+            supIndexToData.put(sup, indexedItem);
+            subKeyToSub.put(item.getKey(), sub);
         }
 
         return index;
@@ -254,7 +223,7 @@ public class RelationManager {
 
         String primaryIndex = index.substring(0, Config.index_superSize);
 
-        return itemSubIndexToData.getOrDefault(primaryIndex, null);
+        return supIndexToData.getOrDefault(primaryIndex, null);
     }
 
     /**
@@ -269,7 +238,7 @@ public class RelationManager {
         String primaryIndex = index.substring(0, Config.index_superSize);
         String secondaryIndex = index.substring(Config.index_superSize + 1);
 
-        IndexedItem indexedItem = itemSubIndexToData.getOrDefault(primaryIndex, null);
+        IndexedItem indexedItem = supIndexToData.getOrDefault(primaryIndex, null);
         if (indexedItem == null) return null;
 
         SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().getOrDefault(secondaryIndex, null);
@@ -293,12 +262,12 @@ public class RelationManager {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public Map<String, String> getCurrencyNameToFullIndex() {
-        return currencyNameToFullIndex;
+    public Map<String, String> getCurrencyNameToIndex() {
+        return currencyNameToIndex;
     }
 
-    public Map<String, IndexedItem> getItemSubIndexToData() {
-        return itemSubIndexToData;
+    public Map<String, IndexedItem> getSupIndexToData() {
+        return supIndexToData;
     }
 
     public Map<String, List<String>> getCategories() {

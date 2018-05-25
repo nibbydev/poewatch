@@ -15,7 +15,7 @@ public class IndexedItem {
     //------------------------------------------------------------------------------------------------------------
 
     private Map<String, SubIndexedItem> subIndexes = new HashMap<>();
-    private String name, type, parent, child;
+    private String name, type, parent, child, key;
     private int frame;
 
     //------------------------------------------------------------------------------------------------------------
@@ -77,6 +77,10 @@ public class IndexedItem {
         return type;
     }
 
+    public String getKey() {
+        return key;
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Setters
     //------------------------------------------------------------------------------------------------------------
@@ -97,11 +101,11 @@ public class IndexedItem {
         this.parent = parent;
     }
 
-    public void setSubIndexes(Map<String, SubIndexedItem> subIndexes) {
-        this.subIndexes = subIndexes;
-    }
-
     public void setType(String type) {
         this.type = type;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 }
