@@ -292,7 +292,7 @@ public class Entry {
             SubIndexedItem indexedItem = Main.RELATIONS.indexToSpecificData(index);
 
             for (ItemEntry item : tmpList) {
-                System.out.println("("+league+") '"+indexedItem.getSpecificKey()+"' '"+item.getPrice()+"' > '"+ tmpPastMedian +"'");
+                System.out.println("("+league+") '"+indexedItem.getKey()+"' '"+item.getPrice()+"' > '"+ tmpPastMedian +"'");
                 db_items.remove(item);
                 dec++;
             }

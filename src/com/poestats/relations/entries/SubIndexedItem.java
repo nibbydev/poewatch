@@ -1,6 +1,7 @@
 package com.poestats.relations.entries;
 
 import com.poestats.Item;
+import com.poestats.Misc;
 import com.poestats.relations.RelationManager;
 
 public class SubIndexedItem {
@@ -8,14 +9,22 @@ public class SubIndexedItem {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String var, specificKey, lvl, quality, links, corrupted, name;
+    private String var, key, lvl, quality, links, corrupted, name;
+    private String icon, tier;
 
     //------------------------------------------------------------------------------------------------------------
     // Constructors
     //------------------------------------------------------------------------------------------------------------
 
+    public SubIndexedItem () {
+
+    }
+
     public SubIndexedItem (Item item) {
-        specificKey = item.getKey();
+        key = item.getKey();
+
+        if (item.icon != null) icon = Misc.formatIconURL(item.icon);
+        if (item.getTier() != null) tier = item.getTier();
 
         if (item.getVariation() != null) {
             var = item.getVariation();
@@ -68,12 +77,20 @@ public class SubIndexedItem {
         return quality;
     }
 
-    public String getSpecificKey() {
-        return specificKey;
+    public String getKey() {
+        return key;
     }
 
     public String getVar() {
         return var;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getTier() {
+        return tier;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -100,11 +117,19 @@ public class SubIndexedItem {
         this.quality = quality;
     }
 
-    public void setSpecificKey(String specificKey) {
-        this.specificKey = specificKey;
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public void setVar(String var) {
         this.var = var;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public void setTier(String tier) {
+        this.tier = tier;
     }
 }

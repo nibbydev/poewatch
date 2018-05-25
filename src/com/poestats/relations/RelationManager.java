@@ -29,7 +29,7 @@ public class RelationManager {
 
     private Map<String, String> itemSpecificKeyToFullIndex = new HashMap<>();
     private Map<String, String> itemGenericKeyToSuperIndex = new HashMap<>();
-    private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
+    private Map<String, IndexedItem> itemSubIndexToData;
 
     private Map<String, List<String>> categories;
 
@@ -41,14 +41,23 @@ public class RelationManager {
      * Reads currency and item data from file on object init
      */
     public RelationManager() {
-        readItemDataFromFile();
-        readCurrencyRelationsFromFile();
-
         categories = Main.DATABASE.getCategories();
         if (categories == null) {
             Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);
             System.exit(-1);
+        } else if (categories.isEmpty()) {
+            Main.ADMIN.log_("Database did not contain any category information", 2);
         }
+
+        itemSubIndexToData = Main.DATABASE.getItemData();
+        if (itemSubIndexToData == null) {
+            Main.ADMIN.log_("Failed to query item data from database. Shutting down...", 5);
+            System.exit(-1);
+        } else if (itemSubIndexToData.isEmpty()) {
+            Main.ADMIN.log_("Database did not contain any item data information", 2);
+        }
+
+        readCurrencyRelationsFromFile();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -62,7 +71,7 @@ public class RelationManager {
         // Open up the reader
         try (Reader reader = Misc.defineReader(Config.file_relations)) {
             if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_relations.getCanonicalPath() + "'", 4);
+                Main.ADMIN.log_("File not found: '" + Config.file_relations.getPath() + "'", 4);
                 return;
             }
 
@@ -86,7 +95,7 @@ public class RelationManager {
     private void readItemDataFromFile() {
         try (Reader reader = Misc.defineReader(Config.file_itemData)) {
             if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_itemData.getCanonicalPath() + "'", 4);
+                Main.ADMIN.log_("File not found: '" + Config.file_itemData.getPath() + "'", 2);
                 return;
             }
 
@@ -97,7 +106,7 @@ public class RelationManager {
             relations.forEach((superIndex, superItem) -> {
                 superItem.getSubIndexes().forEach((subIndex, subItem) -> {
                     String index = superIndex + "-" + subIndex;
-                    itemSpecificKeyToFullIndex.put(subItem.getSpecificKey(), index);
+                    itemSpecificKeyToFullIndex.put(subItem.getKey(), index);
 
                     // Add currency indexes to a special map
                     if (superItem.getFrame() == 5) {
@@ -105,7 +114,7 @@ public class RelationManager {
                     }
                 });
 
-                itemGenericKeyToSuperIndex.put(superItem.getGenericKey(), superIndex);
+                //itemGenericKeyToSuperIndex.put(superItem.getGenericKey(), superIndex);
                 itemSubIndexToData.put(superIndex, superItem);
             });
 
@@ -120,7 +129,7 @@ public class RelationManager {
     private void readCategoriesFromFile() {
         try (Reader reader = Misc.defineReader(Config.file_categories)) {
             if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_categories.getCanonicalPath() + "'", 4);
+                Main.ADMIN.log_("File not found: '" + Config.file_categories.getPath() + "'", 4);
                 return;
             }
             Type listType = new TypeToken<Map<String, List<String>>>(){}.getType();

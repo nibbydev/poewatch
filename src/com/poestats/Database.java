@@ -2,6 +2,7 @@ package com.poestats;
 
 import com.poestats.league.LeagueEntry;
 import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SubIndexedItem;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -207,7 +208,11 @@ public class Database {
         }
     }
 
-    // Read in categories
+    /**
+     * Gets a list of parent and child categories and their display names from the database
+     *
+     * @return Map of categories or null on error
+     */
     public Map<String, List<String>> getCategories() {
         Map<String, List<String>> categories = new HashMap<>();
 
@@ -244,9 +249,91 @@ public class Database {
         return categories;
     }
 
-    // Read in itemData
-    public void getItemData() {
+    /**
+     * Get item data relations from database
+     *
+     * @return Map of indexed items or null on error
+     */
+    public Map<String, IndexedItem> getItemData() {
+        Map<String, IndexedItem> relations = new HashMap<>();
 
+        try {
+            String query =  "SELECT " +
+                                "`item_data_sup`.`sup`, " +
+                                "`item_data_sup`.`parent`, " +
+                                "`item_data_sup`.`child`, " +
+                                "`item_data_sup`.`name`, " +
+                                "`item_data_sup`.`type`, " +
+                                "`item_data_sup`.`frame`, " +
+
+                                "`item_data_sub`.`sub`, " +
+                                "`item_data_sub`.`tier`, " +
+                                "`item_data_sub`.`lvl`, " +
+                                "`item_data_sub`.`quality`, " +
+                                "`item_data_sub`.`corrupted`, " +
+                                "`item_data_sub`.`links`, " +
+                                "`item_data_sub`.`var`, " +
+                                "`item_data_sub`.`key`, " +
+                                "`item_data_sub`.`icon` " +
+                            "FROM `item_data_sub`" +
+                                "JOIN `item_data_sup`" +
+                                    "ON `item_data_sub`.`sup` = `item_data_sup`.`sup`";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet result = statement.executeQuery();
+
+            // Get parent categories
+            while (result.next()) {
+                String sup = result.getString(1);
+                String sub = result.getString(7);
+
+                String parent = result.getString(2);
+                String child = result.getString(3);
+
+                String name = result.getString(4);
+                String type = result.getString(5);
+                int frame = result.getInt(6);
+
+                String tier = result.getString(8);
+                String lvl = result.getString(9);
+                String quality = result.getString(10);
+                String corrupted = result.getString(11);
+                String links = result.getString(12);
+                String var = result.getString(13);
+
+                String key = result.getString(14);
+                String icon = result.getString(15);
+
+                IndexedItem indexedItem = relations.getOrDefault(sup, new IndexedItem());
+
+                if (!relations.containsKey(sup)) {
+                    if (child != null)  indexedItem.setChild(child);
+                    if (type != null)   indexedItem.setType(type);
+
+                    indexedItem.setParent(parent);
+                    indexedItem.setName(name);
+                    indexedItem.setFrame(frame);
+                }
+
+                SubIndexedItem subIndexedItem = new SubIndexedItem();
+                if (tier != null)       subIndexedItem.setTier(tier);
+                if (lvl != null)        subIndexedItem.setLvl(lvl);
+                if (quality != null)    subIndexedItem.setQuality(quality);
+                if (corrupted != null)  subIndexedItem.setCorrupted(corrupted);
+                if (links != null)      subIndexedItem.setLinks(links);
+                if (var != null)        subIndexedItem.setVar(var);
+                subIndexedItem.setKey(key);
+                subIndexedItem.setIcon(icon);
+
+                indexedItem.getSubIndexes().put(sub, subIndexedItem);
+                relations.putIfAbsent(sup, indexedItem);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not query categories", 3);
+            return null;
+        }
+
+        return relations;
     }
 
     //------------------------------------------------------------------------------------------------------------

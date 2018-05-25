@@ -129,23 +129,23 @@ public class ParcelEntry {
         if (Main.RELATIONS.getItemSubIndexToData().containsKey(superIndex)) {
             IndexedItem indexedItem = Main.RELATIONS.getItemSubIndexToData().get(superIndex);
             frame = indexedItem.getFrame();
-            key = indexedItem.getGenericKey();
             parent = indexedItem.getParent();
             child = indexedItem.getChild();
-            icon = indexedItem.getIcon();
             name = indexedItem.getName();
             type = indexedItem.getType();
-            tier = indexedItem.getTier();
 
             String subIndex = index.substring(index.indexOf("-") + 1);
             SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().get(subIndex);
 
-            if (subIndexedItem.getCorrupted() != null) corrupted = subIndexedItem.getCorrupted().equals("true") ? "1" : "0";
+            icon = subIndexedItem.getIcon();
+            key = subIndexedItem.getKey();
+
+            if (subIndexedItem.getCorrupted() != null) corrupted = subIndexedItem.getCorrupted();
             if (subIndexedItem.getQuality() != null) quality = subIndexedItem.getQuality();
             if (subIndexedItem.getLinks() != null) links = subIndexedItem.getLinks();
             if (subIndexedItem.getLvl() != null) lvl = subIndexedItem.getLvl();
             if (subIndexedItem.getVar() != null) var = subIndexedItem.getVar();
-            if (subIndexedItem.getSpecificKey() != null) key = subIndexedItem.getSpecificKey();
+            if (subIndexedItem.getTier() != null) tier = subIndexedItem.getTier();
 
             // Enchantments override the id here
             if (subIndexedItem.getName() != null) name = subIndexedItem.getName();
