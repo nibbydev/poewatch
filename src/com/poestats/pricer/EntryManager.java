@@ -20,9 +20,8 @@ public class EntryManager {
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();
 
-    private long lastRunTime = System.currentTimeMillis();
-    private volatile boolean flagPause, tenBool, sixtyBool, twentyFourBool;
-    private long twentyFourCounter, sixtyCounter, tenCounter;
+    private volatile boolean flagPause;
+    private final StatusElement status = new StatusElement();
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -44,9 +43,9 @@ public class EntryManager {
             if (writer == null) return;
 
             String buffer = "writeTime: " + System.currentTimeMillis() + "\n";
-            buffer += "twentyFourCounter: " + twentyFourCounter + "\n";
-            buffer += "sixtyCounter: " + sixtyCounter + "\n";
-            buffer += "tenCounter: " + tenCounter + "\n";
+            buffer += "twentyFourCounter: " + status.twentyFourCounter + "\n";
+            buffer += "sixtyCounter: " + status.sixtyCounter + "\n";
+            buffer += "tenCounter: " + status.tenCounter + "\n";
 
             writer.write(buffer);
         } catch (IOException ex) {
@@ -67,13 +66,13 @@ public class EntryManager {
 
                 switch (splitLine[0]) {
                     case "twentyFourCounter":
-                        twentyFourCounter = Long.parseLong(splitLine[1]);
+                        status.twentyFourCounter = Long.parseLong(splitLine[1]);
                         break;
                     case "sixtyCounter":
-                        sixtyCounter = Long.parseLong(splitLine[1]);
+                        status.sixtyCounter = Long.parseLong(splitLine[1]);
                         break;
                     case "tenCounter":
-                        tenCounter = Long.parseLong(splitLine[1]);
+                        status.tenCounter = Long.parseLong(splitLine[1]);
                         break;
                 }
             }
@@ -83,9 +82,9 @@ public class EntryManager {
 
         fixCounters();
 
-        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
-        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
-        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
+        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
 
         saveStartParameters();
@@ -157,7 +156,7 @@ public class EntryManager {
                 File tmpLeagueFile = new File(Config.folder_database, league+"/"+category+".tmp");
 
                 // If it's time, prep history controller
-                if (twentyFourBool) {
+                if (status.isTwentyFourBool()) {
                     Main.HISTORY_MANAGER.configure(league, category);
                     Main.HISTORY_MANAGER.readFile();
                 }
@@ -244,14 +243,14 @@ public class EntryManager {
                 }
 
                 // If it's time, close history controller
-                if (twentyFourBool) {
+                if (status.isTwentyFourBool()) {
                     Main.HISTORY_MANAGER.writeFile();
                 }
             }
 
             // Commit a sin. This program is made for a box with 512-1024 MBs of memory. Java would run out of heap
             // space without a garbage collection suggestion. Also, it runs only every 24 hours.
-            if (twentyFourBool) System.gc();
+            if (status.isTwentyFourBool()) System.gc();
         }
     }
 
@@ -296,8 +295,8 @@ public class EntryManager {
         long current = System.currentTimeMillis();
 
         // Run every minute (-ish)
-        if (current - lastRunTime < Config.entryController_sleepMS) return;
-        lastRunTime = System.currentTimeMillis();
+        if (current - status.lastRunTime < Config.entryController_sleepMS) return;
+        status.lastRunTime = System.currentTimeMillis();
 
         // Don't run if there hasn't been a successful run in the past 30 seconds
         //if ((current - Main.ADMIN.changeIDElement.lastUpdate) / 1000 > 30) return;
@@ -306,16 +305,16 @@ public class EntryManager {
         flipPauseFlag();
 
         // Run once every 10min
-        if (current - tenCounter > Config.entryController_tenMS) {
-            tenCounter += (current - tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            tenBool = true;
+        if (current - status.tenCounter > Config.entryController_tenMS) {
+            status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
+            status.setTenBool(true);
             Main.ADMIN.log_("10 activated", 0);
         }
 
         // Run once every 60min
-        if (current - sixtyCounter > Config.entryController_sixtyMS) {
-            sixtyCounter += (current - sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            sixtyBool = true;
+        if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
+            status.sixtyCounter += (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
+            status.setSixtyBool(true);
             Main.ADMIN.log_("60 activated", 0);
 
             // Get a list of active leagues from pathofexile.com's api
@@ -323,10 +322,10 @@ public class EntryManager {
         }
 
         // Run once every 24h
-        if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
-            twentyFourCounter += (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
-            twentyFourBool = true;
+        if (current - status.twentyFourCounter > Config.entryController_twentyFourMS) {
+            if (status.twentyFourCounter == 0) status.twentyFourCounter -= Config.entryController_counterOffset;
+            status.twentyFourCounter += (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
+            status.setTwentyFourBool(true);
             Main.ADMIN.log_("24 activated", 0);
 
             // Make a backup before 24h mark passes
@@ -354,7 +353,7 @@ public class EntryManager {
         Main.RELATIONS.saveData();
 
         // Backup output folder
-        if (twentyFourBool) {
+        if (status.isTwentyFourBool()) {
             Main.ADMIN.log_("Starting backup (after)...", 0);
             long time_backup = System.currentTimeMillis();
             Main.ADMIN.backup(Config.folder_data, "daily_after");
@@ -362,10 +361,10 @@ public class EntryManager {
         }
 
         // Prepare message
-        String timeElapsedDisplay = "[Took:" + String.format("%5d", System.currentTimeMillis() - lastRunTime) + " ms]";
-        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - tenCounter) / 60000) + " min]";
-        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - sixtyCounter) / 60000) + " min]";
-        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - twentyFourCounter) / 60000) + " min]";
+        String timeElapsedDisplay = "[Took:" + String.format("%5d", System.currentTimeMillis() - status.lastRunTime) + " ms]";
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
+        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) +
                 " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
@@ -374,7 +373,9 @@ public class EntryManager {
         Parcel.clear();
 
         // Switch off flags
-        tenBool = sixtyBool = twentyFourBool = false;
+        status.setTwentyFourBool(false);
+        status.setSixtyBool(false);
+        status.setTenBool(false);
         flipPauseFlag();
 
         saveStartParameters();
@@ -436,20 +437,20 @@ public class EntryManager {
     private void fixCounters() {
         long current = System.currentTimeMillis();
 
-        if (current - tenCounter > Config.entryController_tenMS) {
-            long gap = (current - tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            tenCounter += gap;
+        if (current - status.tenCounter > Config.entryController_tenMS) {
+            long gap = (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
+            status.tenCounter += gap;
         }
 
-        if (current - sixtyCounter > Config.entryController_sixtyMS) {
-            long gap = (current - sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            sixtyCounter += gap;
+        if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
+            long gap = (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
+            status.sixtyCounter += gap;
         }
 
-        if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
-            long gap = (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
-            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
-            twentyFourCounter += gap;
+        if (current - status.twentyFourCounter > Config.entryController_twentyFourMS) {
+            long gap = (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
+            if (status.twentyFourCounter == 0) status.twentyFourCounter -= Config.entryController_counterOffset;
+            status.twentyFourCounter += gap;
         }
     }
 
@@ -467,43 +468,11 @@ public class EntryManager {
         return indexMap;
     }
 
-    public boolean isTenBool() {
-        return tenBool;
-    }
-
-    public boolean isSixtyBool() {
-        return sixtyBool;
-    }
-
-    public boolean isTwentyFourBool() {
-        return twentyFourBool;
-    }
-
     public boolean isFlagPause() {
         return flagPause;
     }
 
-    public long getTwentyFourCounter() {
-        return twentyFourCounter;
-    }
-
-    public void setTwentyFourCounter(long twentyFourCounter) {
-        this.twentyFourCounter = twentyFourCounter;
-    }
-
-    public long getTenCounter() {
-        return tenCounter;
-    }
-
-    public void setTenCounter(long tenCounter) {
-        this.tenCounter = tenCounter;
-    }
-
-    public long getSixtyCounter() {
-        return sixtyCounter;
-    }
-
-    public void setSixtyCounter(long sixtyCounter) {
-        this.sixtyCounter = sixtyCounter;
+    public StatusElement getStatus() {
+        return status;
     }
 }

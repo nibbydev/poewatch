@@ -415,7 +415,7 @@ public class Main {
 
         switch (userInput[1]) {
             case "24":
-                oldValue = ENTRY_MANAGER.getTwentyFourCounter();
+                oldValue = ENTRY_MANAGER.getStatus().twentyFourCounter;
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -426,10 +426,10 @@ public class Main {
                         return;
                 }
 
-                ENTRY_MANAGER.setTwentyFourCounter(newValue);
+                ENTRY_MANAGER.getStatus().twentyFourCounter = newValue;
                 break;
             case "60":
-                oldValue = ENTRY_MANAGER.getSixtyCounter();
+                oldValue = ENTRY_MANAGER.getStatus().sixtyCounter;
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -440,10 +440,10 @@ public class Main {
                         return;
                 }
 
-                ENTRY_MANAGER.setSixtyCounter(newValue);
+                ENTRY_MANAGER.getStatus().sixtyCounter = newValue;
                 break;
             case "10":
-                oldValue = ENTRY_MANAGER.getTenCounter();
+                oldValue = ENTRY_MANAGER.getStatus().tenCounter;
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -454,7 +454,7 @@ public class Main {
                         return;
                 }
 
-                ENTRY_MANAGER.setTenCounter(newValue);
+                ENTRY_MANAGER.getStatus().tenCounter = newValue;
                 break;
             default:
                 System.out.println("Unknown type");
