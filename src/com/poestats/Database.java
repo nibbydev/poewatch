@@ -1,10 +1,13 @@
 package com.poestats;
 
 import com.poestats.league.LeagueEntry;
+import com.poestats.relations.entries.IndexedItem;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Database {
     //------------------------------------------------------------------------------------------------------------
@@ -204,9 +207,64 @@ public class Database {
         }
     }
 
+    // Read in categories
+    public Map<String, List<String>> getCategories() {
+        Map<String, List<String>> categories = new HashMap<>();
+
+        try {
+            String query =  "SELECT " +
+                                "`category_parent`.`parent`, " +
+                                "`category_parent`.`display`, " +
+                                "`category_child`.`child`, " +
+                                "`category_child`.`display` " +
+                            "FROM `category_child`" +
+                                "JOIN `category_parent`" +
+                                    "ON `category_child`.`parent` = `category_parent`.`parent`";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet result = statement.executeQuery();
+
+            // Get parent categories
+            while (result.next()) {
+                String parent = result.getString(1);
+                String parentDisplay = result.getString(2);
+
+                String child = result.getString(3);
+                String childDisplay = result.getString(4);
+
+                List<String> childCategories = categories.getOrDefault(parent, new ArrayList<>());
+                childCategories.add(child);
+                categories.putIfAbsent(parent, childCategories);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not query categories", 3);
+            return null;
+        }
+
+        return categories;
+    }
+
+    // Read in itemData
+    public void getItemData() {
+
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
+
+    private static void debug(ResultSet rs) throws SQLException {
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columnsNumber = rsmd.getColumnCount();
+        while (rs.next()) {
+            for (int i = 1; i <= columnsNumber; i++) {
+                if (i > 1) System.out.print(",  ");
+                String columnValue = rs.getString(i);
+                System.out.print(columnValue + " (" + rsmd.getColumnName(i) + ")");
+            }
+            System.out.println();
+        }
+    }
 
     //------------------------------------------------------------------------------------------------------------
     // Getters

@@ -59,7 +59,7 @@ public class Main {
         LEAGUE_MANAGER = new LeagueManager();
         boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
         if (!leagueLoadResult) {
-            Main.ADMIN.log_("Failed to obtain leagues from API and database. Shutting down...", 5);
+            Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
             System.exit(-1);
         }
 

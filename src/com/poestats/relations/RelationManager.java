@@ -31,7 +31,7 @@ public class RelationManager {
     private Map<String, String> itemGenericKeyToSuperIndex = new HashMap<>();
     private Map<String, IndexedItem> itemSubIndexToData = new TreeMap<>();
 
-    private Map<String, List<String>> categories = new HashMap<>();
+    private Map<String, List<String>> categories;
 
     //------------------------------------------------------------------------------------------------------------
     // Constructors
@@ -43,7 +43,12 @@ public class RelationManager {
     public RelationManager() {
         readItemDataFromFile();
         readCurrencyRelationsFromFile();
-        readCategoriesFromFile();
+
+        categories = Main.DATABASE.getCategories();
+        if (categories == null) {
+            Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);
+            System.exit(-1);
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
