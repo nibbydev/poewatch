@@ -5,7 +5,7 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.pricer.entries.*;
 import com.poestats.pricer.maps.*;
-import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SupIndexedItem;
 import com.poestats.relations.RelationManager;
 import com.poestats.relations.entries.SubIndexedItem;
 
@@ -138,11 +138,11 @@ public class Entry {
      */
     private void parse() {
         IndexMap currencyMap = Main.ENTRY_MANAGER.getCurrencyMap(league);
-        IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
+        SupIndexedItem supIndexedItem = Main.RELATIONS.indexToGenericData(index);
 
         // Loop through entries
         for (RawEntry raw : db_raw) {
-            if (checkRaw(raw, indexedItem.getFrame())) continue;
+            if (checkRaw(raw, supIndexedItem.getFrame())) continue;
 
             // If the item was not listed for chaos orbs, then find the value in chaos
             if (!raw.getPriceType().equals("Chaos Orb")) {
@@ -228,8 +228,8 @@ public class Entry {
         // Very few items have been listed
         //if (total_counter < 15) return true;
 
-        IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(index);
-        if (indexedItem == null) {
+        SupIndexedItem supIndexedItem = Main.RELATIONS.indexToGenericData(index);
+        if (supIndexedItem == null) {
             System.out.println("null: "+index);
             return false;
         }
@@ -242,7 +242,7 @@ public class Entry {
             double tmpPercent = entry.getPrice() / tmpPastMedian * 100;
 
             if (db_daily.size() > 1) {
-                switch (indexedItem.getParent()) {
+                switch (supIndexedItem.getParent()) {
                     case "enchantments":
                         return tmpPercent < 140;
                     case "currency":

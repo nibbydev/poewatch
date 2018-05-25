@@ -7,7 +7,7 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.relations.entries.CurrencyRelation;
-import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SupIndexedItem;
 import com.poestats.relations.entries.SubIndexedItem;
 
 import java.io.*;
@@ -27,13 +27,13 @@ public class RelationManager {
     private Map<String, String> currencyAliasToName = new HashMap<>();
     private Map<String, String> currencyNameToIndex = new HashMap<>();
 
-    private Map<String, String> supKeyToSup = new HashMap<>();
-    private Map<String, String> subKeyToSub = new HashMap<>();
+    private Map<String, String> genKeyToSup = new HashMap<>();
+    private Map<String, String> speKeyToFull = new HashMap<>();
 
-    private Map<String, IndexedItem> newSup = new HashMap<>();
+    private Map<String, SupIndexedItem> newSup = new HashMap<>();
     private Map<String, SubIndexedItem> newSub = new HashMap<>();
 
-    private Map<String, IndexedItem> supIndexToData;
+    private Map<String, SupIndexedItem> supIndexToData;
     private Map<String, List<String>> categories;
 
     //------------------------------------------------------------------------------------------------------------
@@ -60,17 +60,17 @@ public class RelationManager {
             Main.ADMIN.log_("Database did not contain any item data information", 2);
         } else {
             for (String sup : supIndexToData.keySet()) {
-                IndexedItem indexedItem = supIndexToData.get(sup);
+                SupIndexedItem supIndexedItem = supIndexToData.get(sup);
 
-                supKeyToSup.putIfAbsent(indexedItem.getKey(), sup);
+                genKeyToSup.putIfAbsent(supIndexedItem.getKey(), sup);
 
-                if (indexedItem.getFrame() == 5) {
-                    currencyNameToIndex.put(indexedItem.getName(), sup + Config.index_subBase);
+                if (supIndexedItem.getFrame() == 5) {
+                    currencyNameToIndex.put(supIndexedItem.getName(), sup + Config.index_subBase);
                 }
 
-                for (String sub : indexedItem.getSubIndexes().keySet()) {
-                    SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().get(sub);
-                    subKeyToSub.put(subIndexedItem.getKey(), sub);
+                for (String sub : supIndexedItem.getSubIndexes().keySet()) {
+                    SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sub);
+                    speKeyToFull.put(subIndexedItem.getKey(), sub);
                 }
             }
         }
@@ -145,43 +145,43 @@ public class RelationManager {
         if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
         categories.putIfAbsent(item.getParentCategory(), childCategories);
 
-        String index;
+        String specificKey = item.getKey();
         String genericKey = resolveSpecificKey(item.getKey());
 
-        String sup = supKeyToSup.get(genericKey);
-        String sub = subKeyToSub.get(item.getKey());
+        String sup = genKeyToSup.get(genericKey);
+        String sub;
+        String full = speKeyToFull.get(specificKey);
 
-        if (sup != null && sub != null)  {
-            return sup + sub;
+        if (sup != null && full != null)  {
+            return full;
         } else if (item.isDoNotIndex()) {
             // If there wasn't an already existing index, return null without indexing
             return null;
         } else if (sup != null) {
-            IndexedItem indexedGenericItem = supIndexToData.get(sup);
+            SupIndexedItem indexedGenericItem = supIndexToData.get(sup);
 
             sub = indexedGenericItem.subIndex(item);
-            index = sup + sub;
+            full = sup + sub;
 
-            newSub.put(index, supIndexToData.get(sup).getSubIndexes().get(sub));
-
-            subKeyToSub.put(item.getKey(), sub);
+            newSub.put(full, supIndexToData.get(sup).getSubIndexes().get(full));
+            speKeyToFull.put(item.getKey(), full);
         } else {
-            sup = Integer.toHexString(supKeyToSup.size());
+            sup = Integer.toHexString(genKeyToSup.size());
             sup = (Config.index_superBase + sup).substring(sup.length());
 
-            IndexedItem indexedItem = new IndexedItem(item);
-            sub = indexedItem.subIndex(item);
-            index = sup + sub;
+            SupIndexedItem supIndexedItem = new SupIndexedItem(item);
+            sub = supIndexedItem.subIndex(item);
+            full = sup + sub;
 
-            newSup.put(sup, indexedItem);
-            newSub.put(index, supIndexToData.get(sup).getSubIndexes().get(sub));
+            newSup.put(sup, supIndexedItem);
+            newSub.put(full, supIndexToData.get(sup).getSubIndexes().get(full));
 
-            supKeyToSup.put(genericKey, sup);
-            supIndexToData.put(sup, indexedItem);
-            subKeyToSub.put(item.getKey(), sub);
+            genKeyToSup.put(genericKey, sup);
+            supIndexToData.put(sup, supIndexedItem);
+            speKeyToFull.put(item.getKey(), full);
         }
 
-        return index;
+        return full;
     }
 
     /**
@@ -220,12 +220,12 @@ public class RelationManager {
     }
 
     /**
-     * Allows returning the IndexedItem entries from a complete index
+     * Allows returning the SupIndexedItem entries from a complete index
      *
      * @param index Index of item
      * @return Requested indexed item entries or null on failure
      */
-    public IndexedItem indexToGenericData(String index) {
+    public SupIndexedItem indexToGenericData(String index) {
         if (isIndex(index)) return null;
 
         String primaryIndex = index.substring(0, Config.index_superSize);
@@ -242,13 +242,13 @@ public class RelationManager {
     public SubIndexedItem indexToSpecificData(String index) {
         if (isIndex(index)) return null;
 
-        String primaryIndex = index.substring(0, Config.index_superSize);
-        String secondaryIndex = index.substring(Config.index_superSize + 1);
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize + 1);
 
-        IndexedItem indexedItem = supIndexToData.getOrDefault(primaryIndex, null);
-        if (indexedItem == null) return null;
+        SupIndexedItem supIndexedItem = supIndexToData.getOrDefault(sup, null);
+        if (supIndexedItem == null) return null;
 
-        SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().getOrDefault(secondaryIndex, null);
+        SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().getOrDefault(sub, null);
         if (subIndexedItem == null) return null;
 
         return subIndexedItem;
@@ -261,8 +261,7 @@ public class RelationManager {
      * @return True if not an index
      */
     public static boolean isIndex(String index) {
-        String separator = index.substring(Config.index_superSize, Config.index_size - Config.index_subSize);
-        return index.length() != Config.index_size || !separator.equals(Config.index_separator);
+        return index.length() != Config.index_size;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -273,7 +272,7 @@ public class RelationManager {
         return currencyNameToIndex;
     }
 
-    public Map<String, IndexedItem> getSupIndexToData() {
+    public Map<String, SupIndexedItem> getSupIndexToData() {
         return supIndexToData;
     }
 

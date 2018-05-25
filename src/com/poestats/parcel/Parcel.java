@@ -3,7 +3,7 @@ package com.poestats.parcel;
 import com.poestats.Main;
 import com.poestats.pricer.Entry;
 import com.poestats.parcel.ParcelMaps.*;
-import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SupIndexedItem;
 
 public class Parcel {
     //------------------------------------------------------------------------------------------------------------
@@ -18,17 +18,17 @@ public class Parcel {
 
     public void add(Entry entry) {
         if (entry.getIndex() == null) return;
-        IndexedItem indexedItem = Main.RELATIONS.indexToGenericData(entry.getIndex());
-        if (indexedItem == null) return;
+        SupIndexedItem supIndexedItem = Main.RELATIONS.indexToGenericData(entry.getIndex());
+        if (supIndexedItem == null) return;
 
         ParcelCategoryMap parcelCategoryMap = parcelLeagueMap.getOrDefault(entry.getLeague(), new ParcelCategoryMap());
-        ParcelItemList parcelItemList = parcelCategoryMap.getOrDefault(indexedItem.getParent(), new ParcelItemList());
+        ParcelItemList parcelItemList = parcelCategoryMap.getOrDefault(supIndexedItem.getParent(), new ParcelItemList());
 
         ParcelEntry parcelEntry = new ParcelEntry();
         parcelEntry.copy(entry);
 
         parcelItemList.add(parcelEntry);
-        parcelCategoryMap.putIfAbsent(indexedItem.getParent(), parcelItemList);
+        parcelCategoryMap.putIfAbsent(supIndexedItem.getParent(), parcelItemList);
         parcelLeagueMap.putIfAbsent(entry.getLeague(), parcelCategoryMap);
     }
 

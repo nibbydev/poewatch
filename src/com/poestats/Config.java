@@ -32,12 +32,11 @@ public class Config {
     // Index definitions
     //------------------------------------------------------------------------------------------------------------
 
-    public static final String index_superBase = "0000";
+    public static final String index_superBase = "00000";
     public static final String index_subBase = "00";
-    public static final String index_separator = "-";
     public static final int index_superSize = index_superBase.length();
     public static final int index_subSize = index_subBase.length();
-    public static final int index_size = index_superSize + index_separator.length() + index_subSize;
+    public static final int index_size = index_superSize + index_subSize;
 
     //------------------------------------------------------------------------------------------------------------
     // Admin

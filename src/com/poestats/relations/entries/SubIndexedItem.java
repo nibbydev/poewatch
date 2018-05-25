@@ -9,40 +9,25 @@ public class SubIndexedItem {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String var, key, lvl, quality, links, corrupted, name;
+    private String var, key, lvl, quality, links, corrupted;
     private String icon, tier;
-    private IndexedItem parentItem;
+    private SupIndexedItem supIndexedItem;
 
     //------------------------------------------------------------------------------------------------------------
     // Constructors
     //------------------------------------------------------------------------------------------------------------
 
-    public SubIndexedItem () {
+    public SubIndexedItem() {
 
     }
 
-    public SubIndexedItem (Item item) {
+    public SubIndexedItem (Item item, SupIndexedItem supItem) {
         key = item.getKey();
+        supIndexedItem = supItem;
 
         if (item.icon != null) icon = Misc.formatIconURL(item.icon);
         if (item.getTier() != null) tier = item.getTier();
-
-        if (item.getVariation() != null) {
-            var = item.getVariation();
-
-            if (item.frameType == -1) {
-                name = RelationManager.resolveSpecificKey(item.getKey());
-
-                // Replace all instances of "#" with the associated value
-                for (String value : var.split("-")) {
-                    name = name.replaceFirst("#", value);
-                }
-            }
-        } else {
-            if (item.frameType == -1) {
-                name = RelationManager.resolveSpecificKey(item.getKey());
-            }
-        }
+        if (item.getVariation() != null) var = item.getVariation();
 
         if (item.getLinks() > 4) links = Integer.toString(item.getLinks());
 
@@ -57,10 +42,6 @@ public class SubIndexedItem {
     //------------------------------------------------------------------------------------------------------------
     // Getters
     //------------------------------------------------------------------------------------------------------------
-
-    public String getName() {
-        return name;
-    }
 
     public String getCorrupted() {
         return corrupted;
@@ -94,17 +75,13 @@ public class SubIndexedItem {
         return tier;
     }
 
-    public IndexedItem getParentItem() {
-        return parentItem;
+    public SupIndexedItem getSupIndexedItem() {
+        return supIndexedItem;
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Setters
     //------------------------------------------------------------------------------------------------------------
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public void setCorrupted(String corrupted) {
         this.corrupted = corrupted;
@@ -138,7 +115,7 @@ public class SubIndexedItem {
         this.tier = tier;
     }
 
-    public void setParentItem(IndexedItem parentItem) {
-        this.parentItem = parentItem;
+    public void setSupIndexedItem(SupIndexedItem supIndexedItem) {
+        this.supIndexedItem = supIndexedItem;
     }
 }

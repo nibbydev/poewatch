@@ -1,7 +1,7 @@
 package com.poestats;
 
 import com.poestats.league.LeagueEntry;
-import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SupIndexedItem;
 import com.poestats.relations.entries.SubIndexedItem;
 
 import java.sql.*;
@@ -258,8 +258,8 @@ public class Database {
      *
      * @return Map of indexed items or null on error
      */
-    public Map<String, IndexedItem> getItemData() {
-        Map<String, IndexedItem> relations = new HashMap<>();
+    public Map<String, SupIndexedItem> getItemData() {
+        Map<String, SupIndexedItem> relations = new HashMap<>();
 
         try {
             String query =  "SELECT " +
@@ -309,16 +309,16 @@ public class Database {
                 String var = result.getString(14);
                 String icon = result.getString(16);
 
-                IndexedItem indexedItem = relations.getOrDefault(sup, new IndexedItem());
+                SupIndexedItem supIndexedItem = relations.getOrDefault(sup, new SupIndexedItem());
 
                 if (!relations.containsKey(sup)) {
-                    if (child != null)  indexedItem.setChild(child);
-                    if (type != null)   indexedItem.setType(type);
+                    if (child != null)  supIndexedItem.setChild(child);
+                    if (type != null)   supIndexedItem.setType(type);
 
-                    indexedItem.setParent(parent);
-                    indexedItem.setName(name);
-                    indexedItem.setFrame(frame);
-                    indexedItem.setKey(supKey);
+                    supIndexedItem.setParent(parent);
+                    supIndexedItem.setName(name);
+                    supIndexedItem.setFrame(frame);
+                    supIndexedItem.setKey(supKey);
                 }
 
                 SubIndexedItem subIndexedItem = new SubIndexedItem();
@@ -330,10 +330,10 @@ public class Database {
                 if (var != null)        subIndexedItem.setVar(var);
                 subIndexedItem.setKey(subKey);
                 subIndexedItem.setIcon(icon);
-                subIndexedItem.setParentItem(indexedItem);
+                subIndexedItem.setSupIndexedItem(supIndexedItem);
 
-                indexedItem.getSubIndexes().put(sub, subIndexedItem);
-                relations.putIfAbsent(sup, indexedItem);
+                supIndexedItem.getSubIndexes().put(sub, subIndexedItem);
+                relations.putIfAbsent(sup, supIndexedItem);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -347,11 +347,11 @@ public class Database {
     /**
      * Compares provided item data to database entries and adds what's missing
      *
-     * @param newSup Map of super index to IndexedItem
+     * @param newSup Map of super index to SupIndexedItem
      * @param newSub Map of index to SubIndexedItem
      * @return True on success
      */
-    public boolean updateItemData(Map<String, IndexedItem> newSup, Map<String, SubIndexedItem> newSub) {
+    public boolean updateItemData(Map<String, SupIndexedItem> newSup, Map<String, SubIndexedItem> newSub) {
         try {
             String querySup =   "INSERT INTO " +
                                     "`item_data_sup` " +
@@ -367,21 +367,21 @@ public class Database {
             PreparedStatement statementSup = connection.prepareStatement(querySup);
 
             for (String sup : newSup.keySet()) {
-                IndexedItem indexedItem = newSup.get(sup);
+                SupIndexedItem supIndexedItem = newSup.get(sup);
 
                 statementSup.setString(1, sup);
-                statementSup.setString(2, indexedItem.getParent());
+                statementSup.setString(2, supIndexedItem.getParent());
 
-                if (indexedItem.getChild() == null) statementSup.setNull(3, 0);
-                else statementSup.setString(3, indexedItem.getChild());
+                if (supIndexedItem.getChild() == null) statementSup.setNull(3, 0);
+                else statementSup.setString(3, supIndexedItem.getChild());
 
-                statementSup.setString(4, indexedItem.getName());
+                statementSup.setString(4, supIndexedItem.getName());
 
-                if (indexedItem.getType() == null) statementSup.setNull(5, 0);
-                else statementSup.setString(5, indexedItem.getType());
+                if (supIndexedItem.getType() == null) statementSup.setNull(5, 0);
+                else statementSup.setString(5, supIndexedItem.getType());
 
-                statementSup.setInt(6, indexedItem.getFrame());
-                statementSup.setString(7, indexedItem.getKey());
+                statementSup.setInt(6, supIndexedItem.getFrame());
+                statementSup.setString(7, supIndexedItem.getKey());
 
                 statementSup.addBatch();
             }

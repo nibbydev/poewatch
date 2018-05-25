@@ -6,7 +6,7 @@ import com.poestats.Misc;
 import com.poestats.pricer.entries.DailyEntry;
 import com.poestats.pricer.Entry;
 import com.poestats.pricer.maps.*;
-import com.poestats.relations.entries.IndexedItem;
+import com.poestats.relations.entries.SupIndexedItem;
 import com.poestats.relations.entries.SubIndexedItem;
 
 import java.util.List;
@@ -127,15 +127,15 @@ public class ParcelEntry {
         // Check if there's a match for the specific index
         String superIndex = index.substring(0, index.indexOf("-"));
         if (Main.RELATIONS.getSupIndexToData().containsKey(superIndex)) {
-            IndexedItem indexedItem = Main.RELATIONS.getSupIndexToData().get(superIndex);
-            frame = indexedItem.getFrame();
-            parent = indexedItem.getParent();
-            child = indexedItem.getChild();
-            name = indexedItem.getName();
-            type = indexedItem.getType();
+            SupIndexedItem supIndexedItem = Main.RELATIONS.getSupIndexToData().get(superIndex);
+            frame = supIndexedItem.getFrame();
+            parent = supIndexedItem.getParent();
+            child = supIndexedItem.getChild();
+            name = supIndexedItem.getName();
+            type = supIndexedItem.getType();
 
             String subIndex = index.substring(index.indexOf("-") + 1);
-            SubIndexedItem subIndexedItem = indexedItem.getSubIndexes().get(subIndex);
+            SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(subIndex);
 
             icon = subIndexedItem.getIcon();
             key = subIndexedItem.getKey();
@@ -146,9 +146,6 @@ public class ParcelEntry {
             if (subIndexedItem.getLvl() != null) lvl = subIndexedItem.getLvl();
             if (subIndexedItem.getVar() != null) var = subIndexedItem.getVar();
             if (subIndexedItem.getTier() != null) tier = subIndexedItem.getTier();
-
-            // Enchantments override the id here
-            if (subIndexedItem.getName() != null) name = subIndexedItem.getName();
         }
     }
 

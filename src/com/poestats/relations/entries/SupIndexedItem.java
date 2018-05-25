@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class IndexedItem {
+public class SupIndexedItem {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -22,11 +22,11 @@ public class IndexedItem {
     // Constructors
     //------------------------------------------------------------------------------------------------------------
 
-    public IndexedItem() {
+    public SupIndexedItem() {
 
     }
 
-    public IndexedItem(Item item) {
+    public SupIndexedItem(Item item) {
         if (item.frameType != -1) name = item.name;
         parent = item.getParentCategory();
         frame = item.frameType;
@@ -43,7 +43,7 @@ public class IndexedItem {
         String subIndex = Integer.toHexString(subIndexes.size());
         subIndex = (Config.index_subBase + subIndex).substring(subIndex.length());
 
-        SubIndexedItem subIndexedItem = new SubIndexedItem(item);
+        SubIndexedItem subIndexedItem = new SubIndexedItem(item, this);
         subIndexes.put(subIndex, subIndexedItem);
 
         return subIndex;
