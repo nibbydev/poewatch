@@ -28,7 +28,7 @@ CREATE TABLE `category_child` (
     CONSTRAINT `parent-child`
         PRIMARY KEY (`parent`,`child`),
     FOREIGN KEY (`parent`)
-        REFERENCES category_parent(`parent`)
+        REFERENCES `category_parent` (`parent`)
         ON DELETE CASCADE,
 
     `parent`    varchar(32)     NOT NULL,
@@ -41,10 +41,13 @@ CREATE TABLE `category_child` (
 --
 
 CREATE TABLE `item_data_sup` (
+    FOREIGN KEY (`parent`)
+        REFERENCES `category_parent` (`parent`)
+        ON DELETE CASCADE,
     CONSTRAINT `parent-child`
         FOREIGN KEY (`parent`,`child`)
         REFERENCES `category_child` (`parent`,`child`)
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
 
     `sup`       varchar(4)      PRIMARY KEY,
     `parent`    varchar(32)     NOT NULL,
@@ -63,7 +66,7 @@ CREATE TABLE `item_data_sup` (
 CREATE TABLE `item_data_sub` (
     CONSTRAINT `sup-sub` 
         PRIMARY KEY (`sup`,`sub`),
-    FOREIGN KEY (`sup`) 
+    FOREIGN KEY (`sup`)
         REFERENCES `item_data_sup` (`sup`)
         ON DELETE CASCADE,
     
@@ -89,7 +92,7 @@ CREATE TABLE `league__item` (
     CONSTRAINT `__sup-sub`
         FOREIGN KEY (`sup`,`sub`) 
         REFERENCES `item_data_sub` (`sup`,`sub`)
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
 
     `sup`       varchar(4)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
@@ -114,7 +117,7 @@ CREATE TABLE `league__history` (
     CONSTRAINT `__history`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `league__item` (`sup`,`sub`)
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
 
     `sup`       varchar(4)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
@@ -136,7 +139,7 @@ CREATE TABLE `league__entry` (
     CONSTRAINT `__item_entry`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `league__item` (`sup`,`sub`)
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
 
     `sup`       varchar(4)      NOT NULL,
     `sub`       varchar(2)      NOT NULL,
