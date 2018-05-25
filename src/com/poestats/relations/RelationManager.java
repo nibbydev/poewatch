@@ -30,9 +30,10 @@ public class RelationManager {
     private Map<String, String> supKeyToSup = new HashMap<>();
     private Map<String, String> subKeyToSub = new HashMap<>();
 
+    private Map<String, IndexedItem> newSup = new HashMap<>();
+    private Map<String, SubIndexedItem> newSub = new HashMap<>();
 
     private Map<String, IndexedItem> supIndexToData;
-
     private Map<String, List<String>> categories;
 
     //------------------------------------------------------------------------------------------------------------
@@ -120,21 +121,9 @@ public class RelationManager {
      * Saves data to file on program exit
      */
     public void saveData() {
-        // Save item data to file
-        try (Writer writer = Misc.defineWriter(Config.file_itemData)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(supIndexToData, writer);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
+        // item data and categories
 
-        // Save item categories to file
-        try (Writer writer = Misc.defineWriter(Config.file_categories)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(categories, writer);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
+        Main.DATABASE.updateItemData(newSup, newSub);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -170,6 +159,8 @@ public class RelationManager {
             sub = indexedGenericItem.subIndex(item);
             index = sup + sub;
 
+            newSub.put(index, supIndexToData.get(sup).getSubIndexes().get(sub));
+
             subKeyToSub.put(item.getKey(), sub);
         } else {
             sup = Integer.toHexString(supKeyToSup.size());
@@ -178,6 +169,9 @@ public class RelationManager {
             IndexedItem indexedItem = new IndexedItem(item);
             sub = indexedItem.subIndex(item);
             index = sup + sub;
+
+            newSup.put(sup, indexedItem);
+            newSub.put(index, supIndexToData.get(sup).getSubIndexes().get(sub));
 
             supKeyToSup.put(genericKey, sup);
             supIndexToData.put(sup, indexedItem);

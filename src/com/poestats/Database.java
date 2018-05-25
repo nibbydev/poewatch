@@ -98,7 +98,7 @@ public class Database {
     }
 
     /**
-     * Compares provided league entires to ones present in database, updates any changes and adds missing leagues
+     * Compares provided league entries to ones present in database, updates any changes and adds missing leagues
      *
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
@@ -249,6 +249,10 @@ public class Database {
         return categories;
     }
 
+    //--------------------
+    // Item data
+    //--------------------
+
     /**
      * Get item data relations from database
      *
@@ -339,6 +343,107 @@ public class Database {
 
         return relations;
     }
+
+    /**
+     * Compares provided item data to database entries and adds what's missing
+     *
+     * @param relations Item data map
+     */
+    public void updateItemData(Map<String, IndexedItem> newSup, Map<String, SubIndexedItem> newSub) {
+        try {
+            String querySup =   "INSERT INTO " +
+                                    "`item_data_sup` " +
+                                        "(`sup`, " +
+                                        "`parent`, " +
+                                        "`child`, " +
+                                        "`name`, " +
+                                        "`type`, " +
+                                        "`frame`, " +
+                                        "`key`) " +
+                                    "VALUES " +
+                                        "(?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement statementSup = connection.prepareStatement(querySup);
+
+            for (String sup : newSup.keySet()) {
+                IndexedItem indexedItem = newSup.get(sup);
+
+                statementSup.setString(1, sup);
+                statementSup.setString(2, indexedItem.getParent());
+
+                if (indexedItem.getChild() == null) statementSup.setNull(3, 0);
+                else statementSup.setString(3, indexedItem.getChild());
+
+                statementSup.setString(4, indexedItem.getName());
+
+                if (indexedItem.getType() == null) statementSup.setNull(5, 0);
+                else statementSup.setString(5, indexedItem.getType());
+
+                statementSup.setInt(6, indexedItem.getFrame());
+                statementSup.setString(7, indexedItem.getKey());
+
+                statementSup.addBatch();
+            }
+
+            String querySub =   "INSERT INTO " +
+                                    "`item_data_sub` " +
+                                        "(`sup`, " +
+                                        "`sub`, " +
+                                        "`tier`, " +
+                                        "`lvl`, " +
+                                        "`quality`, " +
+                                        "`corrupted`, " +
+                                        "`links`, " +
+                                        "`var`, " +
+                                        "`key`, " +
+                                        "`icon`) " +
+                                    "VALUES " +
+                                        "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement statementSub = connection.prepareStatement(querySub);
+
+            for (String index : newSub.keySet()) {
+                String sup = index.substring(0, Config.index_superSize);
+                String sub = index.substring(Config.index_superSize, Config.index_subSize);
+
+                SubIndexedItem subIndexedItem = newSub.get(index);
+
+                statementSub.setString(1, sup);
+                statementSub.setString(2, sub);
+
+                if (subIndexedItem.getTier() == null) statementSub.setNull(3, 0);
+                else statementSub.setString(3, subIndexedItem.getTier());
+
+                if (subIndexedItem.getLvl() == null) statementSub.setNull(4, 0);
+                else statementSub.setString(4, subIndexedItem.getLvl());
+
+                if (subIndexedItem.getQuality() == null) statementSub.setNull(5, 0);
+                else statementSub.setString(5, subIndexedItem.getQuality());
+
+                if (subIndexedItem.getCorrupted() == null) statementSub.setNull(6, 0);
+                else statementSub.setString(6, subIndexedItem.getCorrupted());
+
+                if (subIndexedItem.getLinks() == null) statementSub.setNull(7, 0);
+                else statementSub.setString(7, subIndexedItem.getLinks());
+
+                if (subIndexedItem.getVar() == null) statementSub.setNull(8, 0);
+                else statementSub.setString(8, subIndexedItem.getVar());
+
+                statementSub.setString(9, subIndexedItem.getKey());
+                statementSub.setString(10, subIndexedItem.getIcon());
+
+                statementSub.addBatch();
+            }
+
+            statementSup.executeBatch();
+            statementSub.executeBatch();
+
+            // Commit changes
+            connection.commit();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not update database league list", 3);
+        }
+    }
+
 
     //------------------------------------------------------------------------------------------------------------
     // Utility methods
