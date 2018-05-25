@@ -6,6 +6,19 @@ import java.util.regex.Pattern;
 
 public class Config {
     //------------------------------------------------------------------------------------------------------------
+    // Database
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC";
+    public static final String db_username = "root";
+    private static final String db_password = "";
+    public static final String db_database = "ps_test_database";
+
+    public static String getDb_password() {
+        return db_password;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
 

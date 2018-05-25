@@ -15,10 +15,6 @@ public class Database {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private final String address = "jdbc:mysql://localhost:3306?serverTimezone=UTC";
-    private final String db_username = "root";
-    private final String db_password = "";
-    private final String database = "ps_test_database";
     private Connection connection;
 
     //------------------------------------------------------------------------------------------------------------
@@ -31,8 +27,8 @@ public class Database {
 
     public void connect() {
         try {
-            connection = DriverManager.getConnection(address, db_username, db_password);
-            connection.setCatalog(database);
+            connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
+            connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -60,8 +56,8 @@ public class Database {
         ArrayList<String> tables = new ArrayList<>();
 
         while (result.next()) {
-            tables.add(result.getString("Tables_in_" + database));
-            System.out.println(result.getString("Tables_in_" + database));
+            tables.add(result.getString("Tables_in_" + Config.db_database));
+            System.out.println(result.getString("Tables_in_" + Config.db_database));
         }
 
         return tables;
