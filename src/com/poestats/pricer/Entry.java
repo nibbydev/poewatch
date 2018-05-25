@@ -148,7 +148,7 @@ public class Entry {
             if (!raw.getPriceType().equals("Chaos Orb")) {
                 if (currencyMap == null) continue;
 
-                String fullIndex = Main.RELATIONS.getCurrencyNameToIndex().getOrDefault(raw.getPriceType(), null);
+                String fullIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault(raw.getPriceType(), null);
                 if (fullIndex == null) continue;
 
                 Entry currencyEntry = currencyMap.getOrDefault(fullIndex, null);

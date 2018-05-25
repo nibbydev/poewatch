@@ -25,10 +25,10 @@ public class RelationManager {
     private Gson gson = Main.getGson();
 
     private Map<String, String> currencyAliasToName = new HashMap<>();
-    private Map<String, String> currencyNameToIndex = new HashMap<>();
+    private Map<String, String> currencyNameToFullIndex = new HashMap<>();
 
-    private Map<String, String> genKeyToSup = new HashMap<>();
-    private Map<String, String> speKeyToFull = new HashMap<>();
+    private Map<String, String> genericKeyToSuperIndex = new HashMap<>();
+    private Map<String, String> specificKeyToFullIndex = new HashMap<>();
 
     private Map<String, SupIndexedItem> newSup = new HashMap<>();
     private Map<String, SubIndexedItem> newSub = new HashMap<>();
@@ -62,15 +62,15 @@ public class RelationManager {
             for (String sup : supIndexToData.keySet()) {
                 SupIndexedItem supIndexedItem = supIndexToData.get(sup);
 
-                genKeyToSup.putIfAbsent(supIndexedItem.getKey(), sup);
+                genericKeyToSuperIndex.putIfAbsent(supIndexedItem.getKey(), sup);
 
                 if (supIndexedItem.getFrame() == 5) {
-                    currencyNameToIndex.put(supIndexedItem.getName(), sup + Config.index_subBase);
+                    currencyNameToFullIndex.put(supIndexedItem.getName(), sup + Config.index_subBase);
                 }
 
                 for (String sub : supIndexedItem.getSubIndexes().keySet()) {
                     SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sub);
-                    speKeyToFull.put(subIndexedItem.getKey(), sub);
+                    specificKeyToFullIndex.put(subIndexedItem.getKey(), sub);
                 }
             }
         }
@@ -148,9 +148,9 @@ public class RelationManager {
         String specificKey = item.getKey();
         String genericKey = resolveSpecificKey(item.getKey());
 
-        String sup = genKeyToSup.get(genericKey);
+        String sup = genericKeyToSuperIndex.get(genericKey);
         String sub;
-        String full = speKeyToFull.get(specificKey);
+        String full = specificKeyToFullIndex.get(specificKey);
 
         if (sup != null && full != null)  {
             return full;
@@ -164,9 +164,9 @@ public class RelationManager {
             full = sup + sub;
 
             newSub.put(full, supIndexToData.get(sup).getSubIndexes().get(full));
-            speKeyToFull.put(item.getKey(), full);
+            specificKeyToFullIndex.put(item.getKey(), full);
         } else {
-            sup = Integer.toHexString(genKeyToSup.size());
+            sup = Integer.toHexString(genericKeyToSuperIndex.size());
             sup = (Config.index_superBase + sup).substring(sup.length());
 
             SupIndexedItem supIndexedItem = new SupIndexedItem(item);
@@ -176,9 +176,9 @@ public class RelationManager {
             newSup.put(sup, supIndexedItem);
             newSub.put(full, supIndexToData.get(sup).getSubIndexes().get(full));
 
-            genKeyToSup.put(genericKey, sup);
+            genericKeyToSuperIndex.put(genericKey, sup);
             supIndexToData.put(sup, supIndexedItem);
-            speKeyToFull.put(item.getKey(), full);
+            specificKeyToFullIndex.put(item.getKey(), full);
         }
 
         return full;
@@ -268,8 +268,8 @@ public class RelationManager {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public Map<String, String> getCurrencyNameToIndex() {
-        return currencyNameToIndex;
+    public Map<String, String> getCurrencyNameToFullIndex() {
+        return currencyNameToFullIndex;
     }
 
     public Map<String, SupIndexedItem> getSupIndexToData() {

@@ -38,7 +38,7 @@ public class ParcelEntry {
         // Find the item's price in exalted
         IndexMap tmp_currencyMap = Main.ENTRY_MANAGER.getCurrencyMap(entry.getLeague());
         if (tmp_currencyMap != null) {
-            String exaltedIndex = Main.RELATIONS.getCurrencyNameToIndex().getOrDefault("Exalted Orb", null);
+            String exaltedIndex = Main.RELATIONS.getCurrencyNameToFullIndex().getOrDefault("Exalted Orb", null);
             Entry tmp_exaltedEntry = tmp_currencyMap.getOrDefault(exaltedIndex, null);
 
             if (tmp_exaltedEntry != null) {
