@@ -161,11 +161,11 @@ public class Database {
             for (LeagueEntry leagueEntry : leagueEntries) {
                 statement3.setString(1, leagueEntry.getId());
 
-                if (leagueEntry.getStartAt() == null) statement2.setNull(1, 0);
-                else statement2.setString(2, leagueEntry.getStartAt());
+                if (leagueEntry.getStartAt() == null) statement3.setNull(2, 0);
+                else statement3.setString(2, leagueEntry.getStartAt());
 
-                if (leagueEntry.getEndAt() == null) statement2.setNull(2, 0);
-                else statement2.setString(3, leagueEntry.getEndAt());
+                if (leagueEntry.getEndAt() == null) statement3.setNull(3, 0);
+                else statement3.setString(3, leagueEntry.getEndAt());
 
                 statement3.addBatch();
             }
