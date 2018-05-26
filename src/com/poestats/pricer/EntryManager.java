@@ -32,52 +32,17 @@ public class EntryManager {
      */
     public EntryManager() {
         loadStartParameters();
-        loadDatabases();
-    }
-
-    /**
-     * Saves current status data in text file
-     */
-    private void saveStartParameters() {
-        try (BufferedWriter writer = Misc.defineWriter(Config.file_status)) {
-            if (writer == null) return;
-
-            String buffer = "writeTime: " + System.currentTimeMillis() + "\n";
-            buffer += "twentyFourCounter: " + status.twentyFourCounter + "\n";
-            buffer += "sixtyCounter: " + status.sixtyCounter + "\n";
-            buffer += "tenCounter: " + status.tenCounter + "\n";
-
-            writer.write(buffer);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
+        loadCurrency();
     }
 
     /**
      * Loads status data from file on program start
      */
     private void loadStartParameters() {
-        try (BufferedReader reader = Misc.defineReader(Config.file_status)) {
-            if (reader == null) return;
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] splitLine = line.split(": ");
-
-                switch (splitLine[0]) {
-                    case "twentyFourCounter":
-                        status.twentyFourCounter = Long.parseLong(splitLine[1]);
-                        break;
-                    case "sixtyCounter":
-                        status.sixtyCounter = Long.parseLong(splitLine[1]);
-                        break;
-                    case "tenCounter":
-                        status.tenCounter = Long.parseLong(splitLine[1]);
-                        break;
-                }
-            }
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
+        boolean querySuccessful = Main.DATABASE.getStatus(status);
+        if (!querySuccessful) {
+            Main.ADMIN.log_("Could not query status from database", 5);
+            System.exit(-1);
         }
 
         fixCounters();
@@ -87,7 +52,7 @@ public class EntryManager {
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
 
-        saveStartParameters();
+        Main.DATABASE.updateStatus(status);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -97,41 +62,19 @@ public class EntryManager {
     /**
      * Load in currency data on app start and fill leagueMap with leagues
      */
-    private void loadDatabases() {
+    private void loadCurrency() {
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = leagueEntry.getId();
 
-            File currencyFile = new File(Config.folder_database, league + "/currency.csv");
+            CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
+            IndexMap indexMap = categoryMap.getOrDefault("currency", new IndexMap());
 
-            if (!currencyFile.exists()) {
-                Main.ADMIN.log_("Missing currency file for league: "+league, 2);
-                continue;
-            }
+            Main.DATABASE.getCurrency(league, indexMap);
 
-            try (BufferedReader reader = Misc.defineReader(currencyFile)) {
-                if (reader == null) {
-                    Main.ADMIN.log_("Could not create currency reader for: "+league, 2);
-                    continue;
-                }
-
-                CategoryMap categoryMap = leagueMap.getOrDefault(league, new CategoryMap());
-                IndexMap indexMap = categoryMap.getOrDefault("currency", new IndexMap());
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String index = line.substring(0, line.indexOf("::"));
-                    Entry entry = new Entry(line, league);
-                    indexMap.put(index, entry);
-                }
-
-                categoryMap.putIfAbsent("currency", indexMap);
-                leagueMap.putIfAbsent(league, categoryMap);
-            } catch (IOException ex) {
-                Main.ADMIN._log(ex, 4);
-            }
+            categoryMap.putIfAbsent("currency", indexMap);
+            leagueMap.putIfAbsent(league, categoryMap);
         }
     }
-
 
     /**
      * Writes all collected data to file
@@ -378,7 +321,7 @@ public class EntryManager {
         status.setTenBool(false);
         flipPauseFlag();
 
-        saveStartParameters();
+        Main.DATABASE.updateStatus(status);
     }
 
     /**

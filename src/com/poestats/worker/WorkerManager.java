@@ -210,7 +210,7 @@ public class WorkerManager extends Thread {
      * @return ChangeID as string
      */
     public String getLocalChangeID() {
-        return downloadChangeID("http://api.poe-stats.com/ChangeID");
+        return downloadChangeID("http://api.poe-stats.com/id");
     }
 
     //------------------------------------------------------------------------------------------------------------

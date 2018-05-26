@@ -1,6 +1,9 @@
 package com.poestats;
 
 import com.poestats.league.LeagueEntry;
+import com.poestats.pricer.Entry;
+import com.poestats.pricer.StatusElement;
+import com.poestats.pricer.maps.IndexMap;
 import com.poestats.relations.entries.SupIndexedItem;
 import com.poestats.relations.entries.SubIndexedItem;
 
@@ -440,6 +443,119 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database league list", 3);
+            return false;
+        }
+    }
+
+    //--------------------
+    // Status
+    //--------------------
+
+    /**
+     * Queries status timers from the database
+     *
+     * @param statusElement StatusElement to fill out
+     * @return True if successful
+     */
+    public boolean getStatus(StatusElement statusElement) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM `status`");
+            ResultSet result = statement.executeQuery();
+
+            while (result.next()) {
+                switch (result.getString("name")) {
+                    case "twentyFourCounter":
+                        statusElement.twentyFourCounter = result.getLong("val");
+                        break;
+                    case "sixtyCounter":
+                        statusElement.sixtyCounter = result.getLong("val");
+                        break;
+                    case "tenCounter":
+                        statusElement.tenCounter = result.getLong("val");
+                        break;
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Removes any previous and updates the status records in table `status`
+     *
+     * @param statusElement StatusElement to copy
+     * @return True on success
+     */
+    public boolean updateStatus(StatusElement statusElement) {
+        try {
+            String query1 = "DELETE FROM `status`";
+            String query2 = "INSERT INTO `status` (`val`, `name`) VALUES (?, ?)";
+
+            PreparedStatement statement1 = connection.prepareStatement(query1);
+            PreparedStatement statement2 = connection.prepareStatement(query2);
+
+            statement2.setLong(1, statusElement.twentyFourCounter);
+            statement2.setString(2, "twentyFourCounter");
+            statement2.addBatch();
+
+            statement2.setLong(1, statusElement.sixtyCounter);
+            statement2.setString(2, "sixtyCounter");
+            statement2.addBatch();
+
+            statement2.setLong(1, statusElement.tenCounter);
+            statement2.setString(2, "tenCounter");
+            statement2.addBatch();
+
+            statement2.setLong(1, statusElement.lastRunTime);
+            statement2.setString(2, "lastRunTime");
+            statement2.addBatch();
+
+            statement1.execute();
+            statement2.executeBatch();
+            connection.commit();
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    //--------------------
+    // Entry management
+    //--------------------
+
+    public boolean getCurrency(String league, IndexMap indexMap) {
+        String table = "league_" + league.toLowerCase() + "_item";
+
+        try {
+            String query =  "SELECT " +
+                            "    (`sup`,`sub`,`mean`,`median`,`mode`,`exalted`," +
+                            "    `count`,`quantity`,`inc`,`dec`)" +
+                            "FROM `"+ table +"` AS i" +
+                            "WHERE EXISTS (" +
+                            "    SELECT * FROM `item_data_sup` AS a " +
+                            "    WHERE a.sup = i.sup " +
+                            "    AND a.parent = 'currency')";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet result = statement.executeQuery();
+
+            while (result.next()) {
+                String sup = result.getString("sup");
+                String sub = result.getString("sub");
+
+                Entry entry = new Entry();
+                entry.load(result, league);
+
+                indexMap.put(sup+sub, entry);
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
             return false;
         }
     }

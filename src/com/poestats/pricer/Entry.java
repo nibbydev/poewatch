@@ -9,6 +9,8 @@ import com.poestats.relations.entries.SupIndexedItem;
 import com.poestats.relations.RelationManager;
 import com.poestats.relations.entries.SubIndexedItem;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -19,9 +21,9 @@ public class Entry {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String league, index;
-    private int total_counter, inc, dec, quantity;
-    private double mean, median, mode;
+    private String league, index, sup, sub;
+    private int total_counter, inc, dec, quantity, count;
+    private double mean, median, mode, exalted;
 
     private List<RawEntry> db_raw = new ArrayList<>();
     private List<RawEntry> db_temp = new ArrayList<>(Config.entry_tempSize);
@@ -39,7 +41,7 @@ public class Entry {
      *
      * @param line Database entries from the CSV-format file
      */
-    Entry (String line, String league) {
+    public Entry (String line, String league) {
         if (this.league == null) this.league = league;
         parseLine(line);
     }
@@ -47,7 +49,7 @@ public class Entry {
     /**
      * Needed to create an instance without initial parameters
      */
-    Entry() {
+    public Entry() {
     }
 
     /**
@@ -682,6 +684,22 @@ public class Entry {
             median = findMedianHourly();
             mode = findModeHourly();
         }
+    }
+
+    public void load(ResultSet result, String league) throws SQLException {
+        sup = result.getString("sup");
+        sub = result.getString("sub");
+
+        index = sub + sub;
+
+        mean = result.getDouble("mean");
+        median = result.getDouble("median");
+        mode = result.getDouble("mode");
+        exalted = result.getDouble("exalted");
+        count = result.getInt("count");
+        quantity = result.getInt("quantity");
+        inc = result.getInt("inc");
+        dec = result.getInt("dec");
     }
 
     //------------------------------------------------------------------------------------------------------------
