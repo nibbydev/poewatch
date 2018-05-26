@@ -205,7 +205,7 @@ public class Item extends Mappers.BaseItem {
         if (typeLine.equals("Chaos Orb")) {
             typeLine = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
             priceType = "Chaos Orb";
-            this.price = 1 / (Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision);
+            this.price = (Math.round((1 / price) * Config.item_pricePrecision) / Config.item_pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
@@ -535,7 +535,7 @@ public class Item extends Mappers.BaseItem {
      */
     private void checkEnchant() {
         parentCategory = "enchantments";
-        icon = null;
+        icon = Config.enchantment_icon;
         //childCategory = null;
         typeLine = null;
 

@@ -25,17 +25,16 @@ public class SubIndexedItem {
         key = item.getKey();
         supIndexedItem = supItem;
 
-        if (item.icon != null) icon = Misc.formatIconURL(item.icon);
+        icon = Misc.formatIconURL(item.icon);
         if (item.getTier() != null) tier = item.getTier();
         if (item.getVariation() != null) var = item.getVariation();
 
         if (item.getLinks() > 4) links = Integer.toString(item.getLinks());
 
         if (item.frameType == 4) {
-            // Gson wants to serialize uninitialized integers and booleans
             quality = Integer.toString(item.getQuality());
             lvl = Integer.toString(item.getLevel());
-            corrupted = Boolean.toString(item.corrupted);
+            corrupted = item.corrupted ? "1" : "0";
         }
     }
 

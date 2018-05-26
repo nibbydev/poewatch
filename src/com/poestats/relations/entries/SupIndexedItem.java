@@ -2,12 +2,10 @@ package com.poestats.relations.entries;
 
 import com.poestats.Config;
 import com.poestats.Item;
-import com.poestats.Misc;
 import com.poestats.relations.RelationManager;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class SupIndexedItem {
     //------------------------------------------------------------------------------------------------------------
@@ -27,9 +25,10 @@ public class SupIndexedItem {
     }
 
     public SupIndexedItem(Item item) {
-        if (item.frameType != -1) name = item.name;
+        name = item.name;
         parent = item.getParentCategory();
         frame = item.frameType;
+        key = RelationManager.resolveSpecificKey(item.getKey());
 
         if (item.typeLine != null) type = item.typeLine;
         if (item.getChildCategory() != null) child = item.getChildCategory();
@@ -39,14 +38,14 @@ public class SupIndexedItem {
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
-    public String subIndex(Item item) {
-        String subIndex = Integer.toHexString(subIndexes.size());
-        subIndex = (Config.index_subBase + subIndex).substring(subIndex.length());
+    public String subIndex(Item item, String sup) {
+        String sub = Integer.toHexString(subIndexes.size());
+        sub = (Config.index_subBase + sub).substring(sub.length());
 
         SubIndexedItem subIndexedItem = new SubIndexedItem(item, this);
-        subIndexes.put(subIndex, subIndexedItem);
+        subIndexes.put(sup + sub, subIndexedItem);
 
-        return subIndex;
+        return sub;
     }
 
     //------------------------------------------------------------------------------------------------------------

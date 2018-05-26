@@ -3,7 +3,7 @@ package com.poestats;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.poestats.admin.AdminSuite;
-import com.poestats.history.HistoryManager;
+import com.poestats.database.Database;
 import com.poestats.league.LeagueManager;
 import com.poestats.pricer.EntryManager;
 import com.poestats.relations.RelationManager;
@@ -25,7 +25,6 @@ public class Main {
     public static EntryManager ENTRY_MANAGER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
-    public static HistoryManager HISTORY_MANAGER;
     public static LeagueManager LEAGUE_MANAGER;
     public static Database DATABASE;
 
@@ -66,7 +65,6 @@ public class Main {
 
             WORKER_MANAGER = new WorkerManager();
             ENTRY_MANAGER = new EntryManager();
-            HISTORY_MANAGER = new HistoryManager();
 
             // Parse CLI parameters
             parseCommandParameters(args);
@@ -80,7 +78,6 @@ public class Main {
             // Stop workers on exit
             WORKER_MANAGER.stopController();
         } finally {
-            if (RELATIONS != null) RELATIONS.saveData();
             if (DATABASE != null) DATABASE.disconnect();
         }
     }

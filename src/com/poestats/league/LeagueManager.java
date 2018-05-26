@@ -45,6 +45,10 @@ public class LeagueManager {
         // Update database leagues
         Main.DATABASE.updateLeagues(leagues);
 
+        for (LeagueEntry leagueEntry : leagues) {
+            Main.DATABASE.createLeagueTables(leagueEntry.getId());
+        }
+
         return true;
     }
 

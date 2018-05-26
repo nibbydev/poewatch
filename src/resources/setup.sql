@@ -98,10 +98,10 @@ CREATE TABLE `league__item` (
     `sub`       varchar(2)      NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `mean`      decimal(9,3)    unsigned NOT NULL DEFAULT 0.0,
-    `median`    decimal(9,3)    unsigned NOT NULL DEFAULT 0.0,
-    `mode`      decimal(9,3)    unsigned NOT NULL DEFAULT 0.0,
-    `exalted`   decimal(9,3)    unsigned NOT NULL DEFAULT 0.0,
+    `mean`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
+    `median`    decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
+    `mode`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
+    `exalted`   decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
     `count`     int(16)         unsigned NOT NULL DEFAULT 0,
     `quantity`  int(8)          unsigned NOT NULL DEFAULT 0,
     `inc`       int(8)          unsigned NOT NULL DEFAULT 0,
@@ -123,9 +123,9 @@ CREATE TABLE `league__history` (
     `sub`       varchar(2)      NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `mean`      decimal(9,3)    unsigned DEFAULT NULL,
-    `median`    decimal(9,3)    unsigned DEFAULT NULL,
-    `mode`      decimal(9,3)    unsigned DEFAULT NULL,
+    `mean`      decimal(10,4)   unsigned DEFAULT NULL,
+    `median`    decimal(10,4)   unsigned DEFAULT NULL,
+    `mode`      decimal(10,4)   unsigned DEFAULT NULL,
     `count`     int(16)         unsigned DEFAULT NULL,
     `quantity`  int(8)          unsigned DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -145,7 +145,7 @@ CREATE TABLE `league__entry` (
     `sub`       varchar(2)      NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `price`     decimal(9,3)    NOT NULL,
+    `price`     decimal(10,4)   NOT NULL,
     `account`   varchar(32)     NOT NULL,
     `id`        varchar(32)     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -177,9 +177,9 @@ CREATE TABLE `league__history_entry` (
     `type`      varchar(32)     NOT NULL,
 
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `mean`      decimal(9,3)    unsigned DEFAULT NULL,
-    `median`    decimal(9,3)    unsigned DEFAULT NULL,
-    `mode`      decimal(9,3)    unsigned DEFAULT NULL,
+    `mean`      decimal(10,4)   unsigned DEFAULT NULL,
+    `median`    decimal(10,4)   unsigned DEFAULT NULL,
+    `mode`      decimal(10,4)   unsigned DEFAULT NULL,
     `count`     int(16)         unsigned DEFAULT NULL,
     `quantity`  int(8)          unsigned DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

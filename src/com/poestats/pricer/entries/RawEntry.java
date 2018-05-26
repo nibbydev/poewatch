@@ -1,24 +1,52 @@
 package com.poestats.pricer.entries;
 
+import com.poestats.Config;
 import com.poestats.Item;
+import com.poestats.database.DatabaseItem;
+import com.poestats.pricer.maps.CurrencyMap;
 
 public class RawEntry {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String accountName, priceType, id;
+    private String account, priceType, id;
     private double price;
+    private boolean discard;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
     public void add (Item item, String accountName) {
-        this.price = item.getPrice();
-        this.id = item.id;
-        this.accountName = accountName;
-        this.priceType = item.getPriceType();
+        account = accountName;
+        priceType = item.getPriceType();
+        price = item.getPrice();
+        id = item.id;
+    }
+
+    public void convertPrice(CurrencyMap currencyMap) {
+        if (priceType.equals("Chaos Orb")) return;
+
+        if (currencyMap == null) {
+            discard = true;
+            return;
+        }
+
+        DatabaseItem databaseItem = currencyMap.get(priceType);
+
+        if (databaseItem == null) {
+            discard = true;
+            return;
+        } else if (databaseItem.getCount() < 20) {
+            discard = true;
+            return;
+        }
+
+        price = Math.round(price * databaseItem.getMean() * Config.item_pricePrecision) / Config.item_pricePrecision;
+        priceType = "Chaos Orb";
+
+        if (price < 0.0001) discard = true;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -33,31 +61,15 @@ public class RawEntry {
         return price;
     }
 
-    public String getAccountName() {
-        return accountName;
+    public String getAccount() {
+        return account;
     }
 
     public String getPriceType() {
         return priceType;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Setters
-    //------------------------------------------------------------------------------------------------------------
-
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public void setPriceType(String priceType) {
-        this.priceType = priceType;
+    public boolean isDiscard() {
+        return discard;
     }
 }

@@ -109,8 +109,10 @@ public class Config {
     // Other?
     //------------------------------------------------------------------------------------------------------------
 
-    public static final double item_pricePrecision = 1000.0;
+    public static final double item_pricePrecision = 10000.0;
+    public static final int item_pricePrecision2 = 4;
     public static final int misc_defaultLeagueLength = 90;
     public static final int monitorTimeoutMS = 500;
     public static final long startTime = System.currentTimeMillis();
+    public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 }

@@ -6,6 +6,7 @@
 /converter-out/
 /data/
 config.cfg
+/unused/
 
 # Log file
 *.log

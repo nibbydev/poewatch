@@ -30,9 +30,6 @@ public class RelationManager {
     private Map<String, String> genericKeyToSuperIndex = new HashMap<>();
     private Map<String, String> specificKeyToFullIndex = new HashMap<>();
 
-    private Map<String, SupIndexedItem> newSup = new HashMap<>();
-    private Map<String, SubIndexedItem> newSub = new HashMap<>();
-
     private Map<String, SupIndexedItem> supIndexToData;
     private Map<String, List<String>> categories;
 
@@ -70,14 +67,14 @@ public class RelationManager {
 
                 for (String sub : supIndexedItem.getSubIndexes().keySet()) {
                     SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sub);
-                    specificKeyToFullIndex.put(subIndexedItem.getKey(), sub);
+                    specificKeyToFullIndex.put(subIndexedItem.getKey(), sup + sub);
                 }
             }
         }
 
         List<CurrencyRelation> currencyRelations = readCurrencyRelationsFromFile();
         if (currencyRelations == null) {
-            Main.ADMIN.log_("Failed load currency relations. Shutting down...", 5);
+            Main.ADMIN.log_("Failed loadItem currency relations. Shutting down...", 5);
             System.exit(-1);
         } else {
             for (CurrencyRelation relation : currencyRelations) {
@@ -117,18 +114,6 @@ public class RelationManager {
         }
     }
 
-    /**
-     * Saves data to file on program exit
-     */
-    public void saveData() {
-        boolean updateSuccessful = Main.DATABASE.updateItemData(newSup, newSub);
-
-        if (updateSuccessful) {
-            newSup.clear();
-            newSub.clear();
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Indexing interface
     //------------------------------------------------------------------------------------------------------------
@@ -158,27 +143,27 @@ public class RelationManager {
             // If there wasn't an already existing index, return null without indexing
             return null;
         } else if (sup != null) {
-            SupIndexedItem indexedGenericItem = supIndexToData.get(sup);
+            SupIndexedItem supIndexedItem = supIndexToData.get(sup);
 
-            sub = indexedGenericItem.subIndex(item);
+            sub = supIndexedItem.subIndex(item, sup);
             full = sup + sub;
 
-            newSub.put(full, supIndexToData.get(sup).getSubIndexes().get(full));
             specificKeyToFullIndex.put(item.getKey(), full);
+
+            Main.DATABASE.addSubItemData(supIndexedItem, sup, sub);
         } else {
             sup = Integer.toHexString(genericKeyToSuperIndex.size());
             sup = (Config.index_superBase + sup).substring(sup.length());
 
             SupIndexedItem supIndexedItem = new SupIndexedItem(item);
-            sub = supIndexedItem.subIndex(item);
+            sub = supIndexedItem.subIndex(item, sup);
             full = sup + sub;
 
-            newSup.put(sup, supIndexedItem);
-            newSub.put(full, supIndexToData.get(sup).getSubIndexes().get(full));
-
             genericKeyToSuperIndex.put(genericKey, sup);
-            supIndexToData.put(sup, supIndexedItem);
             specificKeyToFullIndex.put(item.getKey(), full);
+            supIndexToData.put(sup, supIndexedItem);
+
+            Main.DATABASE.addFullItemData(supIndexedItem, sup, sub);
         }
 
         return full;

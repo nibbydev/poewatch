@@ -86,7 +86,7 @@ public class Mappers {
         public List<String> enchantMods;
 
         public void fix() {
-            id = id.substring(0, 16);
+            id = id.substring(0, 32);
             name = name.substring(name.lastIndexOf(">") + 1);
             enchanted = (enchantMods != null);
         }
