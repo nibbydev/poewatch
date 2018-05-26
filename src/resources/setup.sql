@@ -150,6 +150,40 @@ CREATE TABLE `league__entry` (
     `id`        varchar(32)     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure `history_entry_category`
+--
+
+CREATE TABLE `history_entry_category` (
+    `type`      varchar(32)     PRIMARY KEY
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `league__history_entry`
+-- (to be created dynamically with league names)
+--
+
+CREATE TABLE `league__history_entry` (
+    CONSTRAINT `__history_entry`
+        FOREIGN KEY (`sup`,`sub`)
+        REFERENCES `league__item` (`sup`,`sub`)
+        ON DELETE CASCADE,
+    FOREIGN KEY (`type`)
+        REFERENCES `history_entry_category` (`type`)
+        ON DELETE CASCADE,
+
+    `sup`       varchar(5)      NOT NULL,
+    `sub`       varchar(2)      NOT NULL,
+    `type`      varchar(32)     NOT NULL,
+
+    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `mean`      decimal(9,3)    unsigned DEFAULT NULL,
+    `median`    decimal(9,3)    unsigned DEFAULT NULL,
+    `mode`      decimal(9,3)    unsigned DEFAULT NULL,
+    `count`     int(16)         unsigned DEFAULT NULL,
+    `quantity`  int(8)          unsigned DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------
 
 --
