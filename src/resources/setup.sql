@@ -215,3 +215,78 @@ CREATE TABLE `changeid` (
     `changeid`  varchar(128)    PRIMARY KEY,
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+-- --------------------------------------------------------
+
+--
+-- Base values for `history_entry_category`
+--
+
+INSERT INTO `history_entry_category`
+    (`type`)
+VALUES
+    ('minutely'),
+    ('hourly'),
+    ('daily'),
+    ('weekly');
+
+--
+-- Base values for `category_parent`
+--
+
+INSERT INTO `category_parent`
+    (`parent`, `display`)
+VALUES
+    ('accessories',   'Accessories'),
+    ('armour',        'Armour'),
+    ('cards',         'Divination cards'),
+    ('currency',      'Currency'),
+    ('enchantments',  'Enchants'),
+    ('essence',       'Essences'),
+    ('flasks',        'Flasks'),
+    ('gems',          'Gems'),
+    ('jewels',        'Jewels'),
+    ('maps',          'Maps'),
+    ('prophecy',      'Prophecy'),
+    ('weapons',       'Weapons');
+
+--
+-- Base values for `category_child`
+--
+
+INSERT INTO `category_child`
+    (`parent`, `child`, `display`)
+VALUES
+    ('accessories',   'amulet',     'Amulets'),
+    ('accessories',   'belt',       'Belts'),
+    ('accessories',   'ring',       'Rings'),
+    ('armour',        'boots',      'Boots'),
+    ('armour',        'chest',      'Body Armour'),
+    ('armour',        'gloves',     'Gloves'),
+    ('armour',        'helmet',     'Helmets'),
+    ('armour',        'quiver',     'Quivers'),
+    ('armour',        'shield',     'Shields'),
+    ('currency',      'piece',      'Pieces'),
+    ('enchantments',  'boots',      'Boots'),
+    ('enchantments',  'gloves',     'Gloves'),
+    ('enchantments',  'helmet',     'Helmets'),
+    ('gems',          'activegem',  'Skill Gems'),
+    ('gems',          'supportgem', 'Support Gems'),
+    ('gems',          'vaalgem',    'Vaal Gems'),
+    ('maps',          'fragment',   'Fragments'),
+    ('maps',          'map',        'Maps'),
+    ('maps',          'unique',     'Unique Maps'),
+    ('weapons',       'bow',        'Bows'),
+    ('weapons',       'claw',       'Claws'),
+    ('weapons',       'dagger',     'Daggers'),
+    ('weapons',       'oneaxe',     '1H Axes'),
+    ('weapons',       'onemace',    '1H Maces'),
+    ('weapons',       'onesword',   '1H Swords'),
+    ('weapons',       'rod',        'Rods'),
+    ('weapons',       'sceptre',    'Sceptres'),
+    ('weapons',       'staff',      'Staves'),
+    ('weapons',       'twoaxe',     '2H Axes'),
+    ('weapons',       'twomace',    '2H Maces'),
+    ('weapons',       'twosword',   '2H Swords'),
+    ('weapons',       'wand',       'Wands');
