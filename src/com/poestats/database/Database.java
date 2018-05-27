@@ -115,79 +115,26 @@ public class Database {
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
     public void updateLeagues(List<LeagueEntry> leagueEntries) {
-        PreparedStatement statement1 = null;
-        PreparedStatement statement2 = null;
-        PreparedStatement statement3 = null;
-        ResultSet result = null;
-
-        List<LeagueEntry> tmpLeagueEntries = new ArrayList<>(leagueEntries);
+        PreparedStatement statement = null;
 
         try {
-            String query1 = "SELECT * FROM `leagues`";
-            String query2 = "UPDATE `leagues` SET `start`=?, `end`=? WHERE `id`=?";
-            String query3 = "INSERT INTO `leagues` (`id`, `start`, `end`) VALUES (?, ?, ?)";
+            String query =  "INSERT INTO `leagues`" +
+                            "    (`id`, `start`, `end`)" +
+                            "VALUES" +
+                            "    (?, ?, ?)" +
+                            "ON DUPLICATE KEY UPDATE" +
+                            "    `start`     = VALUES(`start`)," +
+                            "    `end`       = VALUES(`end`)";
+            statement = connection.prepareStatement(query);
 
-            statement1 = connection.prepareStatement(query1);
-            statement2 = connection.prepareStatement(query2);
-            statement3 = connection.prepareStatement(query3);
-
-            result = statement1.executeQuery();
-
-            // Loop though database's league entries
-            while (result.next()) {
-                // Loop though provided league entries
-                for (int i = 0; i < tmpLeagueEntries.size(); i++) {
-                    // If there's a match and the info has changed, update the database entry
-                    if (result.getString("id").equals(tmpLeagueEntries.get(i).getId())) {
-                        String start = result.getString("start");
-                        String end = result.getString("end");
-
-                        String startNew = tmpLeagueEntries.get(i).getStartAt();
-                        String endNew = tmpLeagueEntries.get(i).getEndAt();
-
-                        boolean update = false;
-
-                        if (start == null) {
-                            if (startNew != null) update = true;
-                        } else if (!start.equals(startNew)) update = true;
-
-                        if (end == null) {
-                            if (endNew != null) update = true;
-                        } else if (!end.equals(endNew)) update = true;
-
-                        if (update) {
-                            if (startNew == null) statement2.setNull(1, 0);
-                            else statement2.setString(1, startNew);
-
-                            if (endNew == null) statement2.setNull(2, 0);
-                            else statement2.setString(2, endNew);
-
-                            statement2.setString(3, tmpLeagueEntries.get(i).getId());
-                            statement2.addBatch();
-                        }
-
-                        tmpLeagueEntries.remove(i);
-                        break;
-                    }
-                }
+            for (LeagueEntry leagueEntry : leagueEntries) {
+                statement.setString(1, leagueEntry.getId());
+                statement.setString(2, leagueEntry.getStartAt());
+                statement.setString(3, leagueEntry.getEndAt());
+                statement.addBatch();
             }
 
-            // Loop though entries that were not present in the database
-            for (LeagueEntry leagueEntry : tmpLeagueEntries) {
-                statement3.setString(1, leagueEntry.getId());
-
-                if (leagueEntry.getStartAt() == null) statement3.setNull(2, 0);
-                else statement3.setString(2, leagueEntry.getStartAt());
-
-                if (leagueEntry.getEndAt() == null) statement3.setNull(3, 0);
-                else statement3.setString(3, leagueEntry.getEndAt());
-
-                statement3.addBatch();
-            }
-
-            // Execute the batches
-            statement2.executeBatch();
-            statement3.executeBatch();
+            statement.executeBatch();
 
             // Commit changes
             connection.commit();
@@ -195,10 +142,7 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database league list", 3);
         } finally {
-            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement3 != null) statement3.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
