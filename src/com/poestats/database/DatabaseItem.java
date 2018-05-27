@@ -18,7 +18,7 @@ public class DatabaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     private SupIndexedItem supIndexedItem;
-    private String index, sup, sub, time;
+    private String index, sup, sub;
     private int count, quantity, inc, dec;
     private double mean, median, mode, exalted;
 
@@ -37,7 +37,6 @@ public class DatabaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     public void loadItem(ResultSet result) throws SQLException {
-        time = result.getString("time");
         mean = result.getDouble("mean");
         median = result.getDouble("median");
         mode = result.getDouble("mode");
@@ -67,7 +66,6 @@ public class DatabaseItem {
             return;
         }
 
-
         for (RawEntry rawEntry : rawList) {
             if ( discardDuplicate(rawEntry) ) continue;
 
@@ -91,13 +89,9 @@ public class DatabaseItem {
         for (DatabaseEntry databaseEntry : databaseEntryList) {
             double percent = databaseEntry.getPrice() / mean * 100;
 
-            if (databaseEntry.getPrice() <= 0) {
-                databaseEntryListToRemove.add(databaseEntry);
-            } else if (mean < 2) {
-                if (percent > Config.entry_pluckPercentLT2) databaseEntryListToRemove.add(databaseEntry);
-            } else {
-                if (percent > Config.entry_pluckPercentGT2) databaseEntryListToRemove.add(databaseEntry);
-            }
+            if (databaseEntry.getPrice() <= 0) databaseEntryListToRemove.add(databaseEntry);
+            else if (percent > 300) databaseEntryListToRemove.add(databaseEntry);
+            else if (percent < 5) databaseEntryListToRemove.add(databaseEntry);
         }
 
         for (DatabaseEntry databaseEntry : databaseEntryListToRemove) {
@@ -152,9 +146,9 @@ public class DatabaseItem {
         List<Double> tempList = new ArrayList<>();
         for (DatabaseEntry entry : databaseEntryList) tempList.add(entry.getPrice());
         Collections.sort(tempList);
-        return tempList;
 
-        /*if (databaseEntryList.size() > Config.entry_itemsSize * 3 / 4) {
+
+        if (databaseEntryList.size() > Config.entry_itemsSize * 3 / 4) {
             if (count < 20) {
                 int startIndex = databaseEntryList.size() * Config.entry_shiftPercent / 100;
                 return tempList.subList(0, startIndex);
@@ -165,7 +159,7 @@ public class DatabaseItem {
             }
         } else {
             return tempList;
-        }*/
+        }
     }
 
     private double findMean(List<Double> sortedItemPrices) {

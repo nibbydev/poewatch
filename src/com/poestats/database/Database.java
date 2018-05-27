@@ -629,7 +629,7 @@ public class Database {
 
             statement2 = connection.prepareStatement(query3);
             for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToRemove()) {
-                System.out.printf("%s-%s: %10s (%s)\n", databaseItem.getSup(), databaseItem.getSub(), databaseEntry.getPriceAsRoundedString(), databaseEntry.getId());
+                //System.out.printf("%s-%s: %10s (%s)\n", databaseItem.getSup(), databaseItem.getSub(), databaseEntry.getPriceAsRoundedString(), databaseEntry.getId());
                 statement2.setString(1, databaseItem.getSup());
                 statement2.setString(2, databaseItem.getSub());
                 statement2.setString(3, databaseEntry.getId());
@@ -746,7 +746,7 @@ public class Database {
                             "        ORDER BY `time` DESC" +
                             "        LIMIT "+ Config.entry_itemsSize +
                             "    ) foo" +
-                            ");";
+                            ")";
             statement = connection.prepareStatement(query);
             statement.execute();
 
@@ -756,6 +756,48 @@ public class Database {
             return false;
         } finally {
             try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean removeItemOutliers(String league, String index){
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        league = formatLeague(league);
+
+        try {
+            String sup = index.substring(0, Config.index_superSize);
+            String sub = index.substring(Config.index_superSize);
+
+            String query1 = "DELETE FROM `!_"+ league +"_item_entry` " +
+                            "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' " +
+                            "AND `price` > (" +
+                            "    SELECT * FROM (" +
+                            "        SELECT AVG(`price`) + "+ Config.db_outlierMulti +"*STDDEV(`price`) " +
+                            "        FROM `!_"+ league +"_item_entry`  " +
+                            "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
+                            "    ) foo )";
+
+            String query2 = "DELETE FROM `!_"+ league +"_item_entry` " +
+                            "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' " +
+                            "AND `price` < (" +
+                            "    SELECT * FROM (" +
+                            "        SELECT AVG(`price`) - "+ Config.db_outlierMulti +"*STDDEV(`price`) " +
+                            "        FROM `!_"+ league +"_item_entry`  " +
+                            "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
+                            "    ) foo )";
+
+            statement1 = connection.prepareStatement(query1);
+            statement1.execute();
+            statement2 = connection.prepareStatement(query2);
+            statement2.execute();
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 

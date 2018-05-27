@@ -52,6 +52,10 @@ public class RawEntry {
         return price;
     }
 
+    public String getPriceAsRoundedString() {
+        return String.format("%."+ Config.item_pricePrecision2 +"f", price);
+    }
+
     public String getAccount() {
         return account;
     }
