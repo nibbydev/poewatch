@@ -629,6 +629,7 @@ public class Database {
 
             statement2 = connection.prepareStatement(query3);
             for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToRemove()) {
+                System.out.printf("%s-%s: %10s (%s)\n", databaseItem.getSup(), databaseItem.getSub(), databaseEntry.getPriceAsRoundedString(), databaseEntry.getId());
                 statement2.setString(1, databaseItem.getSup());
                 statement2.setString(2, databaseItem.getSub());
                 statement2.setString(3, databaseEntry.getId());
@@ -715,6 +716,37 @@ public class Database {
             String query =  "DELETE FROM `!_"+ league +"_history_entry` " +
                             "WHERE `type` = 'minutely' " +
                             "AND `time` < ADDDATE(NOW(), INTERVAL -1 HOUR)";
+            statement = connection.prepareStatement(query);
+            statement.execute();
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean removeOldItemEntries(String league, String index) {
+        PreparedStatement statement = null;
+        league = formatLeague(league);
+
+        try {
+            String sup = index.substring(0, Config.index_superSize);
+            String sub = index.substring(Config.index_superSize);
+
+            String query =  "DELETE FROM `!_"+ league +"_item_entry`" +
+                            "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' AND `id` NOT IN (" +
+                            "    SELECT `id`" +
+                            "    FROM (" +
+                            "        SELECT `id`, `time`" +
+                            "        FROM `!_"+ league +"_item_entry`" +
+                            "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
+                            "        ORDER BY `time` DESC" +
+                            "        LIMIT "+ Config.entry_itemsSize +
+                            "    ) foo" +
+                            ");";
             statement = connection.prepareStatement(query);
             statement.execute();
 

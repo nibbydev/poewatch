@@ -88,6 +88,7 @@ public class EntryManager {
                 databaseItem.removeOutliers();
                 databaseItem.calculate();
                 Main.DATABASE.updateFullItem(league, databaseItem);
+                Main.DATABASE.removeOldItemEntries(league, index);
             }
 
             time1 = System.currentTimeMillis() - time1;

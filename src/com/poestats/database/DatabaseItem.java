@@ -88,20 +88,19 @@ public class DatabaseItem {
         if (databaseEntryList.isEmpty()) return;
         if (mean == 0) return;
 
-        List<DatabaseEntry> tmpRemoveList = new ArrayList<>();
-
         for (DatabaseEntry databaseEntry : databaseEntryList) {
             double percent = databaseEntry.getPrice() / mean * 100;
 
-            if (mean < 2) {
-                if (percent > Config.entry_pluckPercentLT2) tmpRemoveList.add(databaseEntry);
+            if (databaseEntry.getPrice() <= 0) {
+                databaseEntryListToRemove.add(databaseEntry);
+            } else if (mean < 2) {
+                if (percent > Config.entry_pluckPercentLT2) databaseEntryListToRemove.add(databaseEntry);
             } else {
-                if (percent > Config.entry_pluckPercentGT2) tmpRemoveList.add(databaseEntry);
+                if (percent > Config.entry_pluckPercentGT2) databaseEntryListToRemove.add(databaseEntry);
             }
         }
 
-        for (DatabaseEntry databaseEntry : tmpRemoveList) {
-            databaseEntryListToRemove.add(databaseEntry);
+        for (DatabaseEntry databaseEntry : databaseEntryListToRemove) {
             databaseEntryList.remove(databaseEntry);
             dec++;
         }
@@ -140,6 +139,8 @@ public class DatabaseItem {
     private boolean discardDuplicate(RawEntry rawEntry) {
         for (DatabaseEntry databaseEntry : databaseEntryList) {
             if (databaseEntry.getId().equals(rawEntry.getId())) {
+                return true;
+            } else if (databaseEntry.getAccount().equals(rawEntry.getAccount())) {
                 return true;
             }
         }
