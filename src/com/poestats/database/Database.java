@@ -57,16 +57,24 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private ArrayList<String> listAllTables() throws SQLException {
-        PreparedStatement statement = connection.prepareStatement("SHOW tables");
-        ResultSet result = statement.executeQuery();
+        PreparedStatement statement = null;
+        ResultSet result = null;
 
-        ArrayList<String> tables = new ArrayList<>();
+        try {
+            statement = connection.prepareStatement("SHOW tables");
+            result = statement.executeQuery();
 
-        while (result.next()) {
-            tables.add(result.getString("Tables_in_" + Config.db_database));
+            ArrayList<String> tables = new ArrayList<>();
+
+            while (result.next()) {
+                tables.add(result.getString("Tables_in_" + Config.db_database));
+            }
+
+            return tables;
+        } finally {
+            if (statement != null) statement.close();
+            if (result != null) result.close();
         }
-
-        return tables;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -74,9 +82,12 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     public List<LeagueEntry> getLeagues() {
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM `leagues`");
-            ResultSet result = statement.executeQuery();
+            statement = connection.prepareStatement("SELECT * FROM `leagues`");
+            result = statement.executeQuery();
 
             List<LeagueEntry> leagueEntries = new ArrayList<>();
 
@@ -96,6 +107,9 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query database league list", 3);
             return null;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -110,6 +124,11 @@ public class Database {
             return;
         }
 
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        PreparedStatement statement3 = null;
+        ResultSet result = null;
+
         List<LeagueEntry> tmpLeagueEntries = new ArrayList<>(leagueEntries);
 
         try {
@@ -117,11 +136,11 @@ public class Database {
             String query2 = "UPDATE `leagues` SET `start`=?, `end`=? WHERE `id`=?";
             String query3 = "INSERT INTO `leagues` (`id`, `start`, `end`) VALUES (?, ?, ?)";
 
-            PreparedStatement statement1 = connection.prepareStatement(query1);
-            PreparedStatement statement2 = connection.prepareStatement(query2);
-            PreparedStatement statement3 = connection.prepareStatement(query3);
+            statement1 = connection.prepareStatement(query1);
+            statement2 = connection.prepareStatement(query2);
+            statement3 = connection.prepareStatement(query3);
 
-            ResultSet result = statement1.executeQuery();
+            result = statement1.executeQuery();
 
             // Loop though database's league entries
             while (result.next()) {
@@ -184,6 +203,11 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database league list", 3);
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement3 != null) statement3.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -193,12 +217,15 @@ public class Database {
      * @param changeID New changeID string to store
      */
     public void updateChangeID(String changeID) {
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+
         try {
             String query1 = "DELETE FROM `changeid`";
             String query2 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
 
-            PreparedStatement statement1 = connection.prepareStatement(query1);
-            PreparedStatement statement2 = connection.prepareStatement(query2);
+            statement1 = connection.prepareStatement(query1);
+            statement2 = connection.prepareStatement(query2);
 
             statement2.setString(1, changeID);
 
@@ -209,6 +236,9 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database change id", 3);
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -218,6 +248,9 @@ public class Database {
      * @return Map of categories or null on error
      */
     public Map<String, List<String>> getCategories() {
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
         Map<String, List<String>> categories = new HashMap<>();
 
         try {
@@ -229,8 +262,8 @@ public class Database {
                             "FROM `category_child`" +
                                 "JOIN `category_parent`" +
                                     "ON `category_child`.`parent` = `category_parent`.`parent`";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet result = statement.executeQuery();
+            statement = connection.prepareStatement(query);
+            result = statement.executeQuery();
 
             // Get parent categories
             while (result.next()) {
@@ -248,6 +281,9 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query categories", 3);
             return null;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
 
         return categories;
@@ -263,6 +299,9 @@ public class Database {
      * @return Map of indexed items or null on error
      */
     public Map<String, SupIndexedItem> getItemData() {
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
         Map<String, SupIndexedItem> relations = new HashMap<>();
 
         try {
@@ -287,8 +326,8 @@ public class Database {
                             "FROM `item_data_sub`" +
                                 "JOIN `item_data_sup`" +
                                     "ON `item_data_sub`.`sup` = `item_data_sup`.`sup`";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet result = statement.executeQuery();
+            statement = connection.prepareStatement(query);
+            result = statement.executeQuery();
 
             // Get parent categories
             while (result.next()) {
@@ -343,27 +382,32 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query item data", 3);
             return null;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
 
         return relations;
     }
 
     public boolean addFullItemData(SupIndexedItem supIndexedItem, String sup, String sub) {
+        PreparedStatement statement = null;
+
         try {
-            String querySup =   "INSERT INTO " +
+            String query =   "INSERT INTO " +
                                     "`item_data_sup` (`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement statementSup = connection.prepareStatement(querySup);
+            statement = connection.prepareStatement(query);
 
-            statementSup.setString(1, sup);
-            statementSup.setString(2, supIndexedItem.getParent());
-            statementSup.setString(3, supIndexedItem.getChild());
-            statementSup.setString(4, supIndexedItem.getName());
-            statementSup.setString(5, supIndexedItem.getType());
-            statementSup.setInt(6, supIndexedItem.getFrame());
-            statementSup.setString(7, supIndexedItem.getKey());
+            statement.setString(1, sup);
+            statement.setString(2, supIndexedItem.getParent());
+            statement.setString(3, supIndexedItem.getChild());
+            statement.setString(4, supIndexedItem.getName());
+            statement.setString(5, supIndexedItem.getType());
+            statement.setInt(6, supIndexedItem.getFrame());
+            statement.setString(7, supIndexedItem.getKey());
 
-            statementSup.execute();
+            statement.execute();
 
             addSubItemData(supIndexedItem, sup, sub);
 
@@ -374,17 +418,20 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update item data in database", 3);
             return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean addSubItemData(SupIndexedItem supIndexedItem, String sup, String sub) {
+        PreparedStatement statement = null;
         SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sup + sub);
 
         try {
             String query =  "INSERT INTO `item_data_sub` " +
                                 "(`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
 
             statement.setString(1, sup);
             statement.setString(2, sub);
@@ -408,6 +455,8 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update item data in database", 3);
             return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -422,9 +471,12 @@ public class Database {
      * @return True if successful
      */
     public boolean getStatus(StatusElement statusElement) {
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM `status`");
-            ResultSet result = statement.executeQuery();
+            statement = connection.prepareStatement("SELECT * FROM `status`");
+            result = statement.executeQuery();
 
             while (result.next()) {
                 switch (result.getString("name")) {
@@ -444,6 +496,9 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -454,12 +509,15 @@ public class Database {
      * @return True on success
      */
     public boolean updateStatus(StatusElement statusElement) {
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+
         try {
             String query1 = "DELETE FROM `status`";
             String query2 = "INSERT INTO `status` (`val`, `name`) VALUES (?, ?)";
 
-            PreparedStatement statement1 = connection.prepareStatement(query1);
-            PreparedStatement statement2 = connection.prepareStatement(query2);
+            statement1 = connection.prepareStatement(query1);
+            statement2 = connection.prepareStatement(query2);
 
             statement2.setLong(1, statusElement.twentyFourCounter);
             statement2.setString(2, "twentyFourCounter");
@@ -485,6 +543,9 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -494,6 +555,9 @@ public class Database {
 
     public boolean getCurrency(String league, CurrencyMap currencyMap) {
         if (!tables.contains(league)) return false;
+
+        PreparedStatement statement = null;
+        ResultSet result = null;
 
         String table = "league_" + league.toLowerCase() + "_item";
 
@@ -518,8 +582,8 @@ public class Database {
                             "    WHERE a.`sup` = i.`sup` " +
                             "    AND a.`parent` = 'currency'" +
                             "    AND a.`frame` = 5)";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet result = statement.executeQuery();
+            statement = connection.prepareStatement(query);
+            result = statement.executeQuery();
 
             while (result.next()) {
                 String name = result.getString("name");
@@ -536,10 +600,18 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public DatabaseItem getFullItem(String index, String league) {
+        PreparedStatement statementItem = null;
+        PreparedStatement statementEntry = null;
+        ResultSet resultItem = null;
+        ResultSet resultEntry = null;
+
         try {
             String sup = index.substring(0, Config.index_superSize);
             String sub = index.substring(Config.index_superSize);
@@ -550,16 +622,16 @@ public class Database {
             String queryItem = "SELECT * FROM `"+ tableItem +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
             String queryEntry = "SELECT * FROM `"+ tableEntry +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
 
-            PreparedStatement statementItem = connection.prepareStatement(queryItem);
-            ResultSet resultItem = statementItem.executeQuery();
+            statementItem = connection.prepareStatement(queryItem);
+            resultItem = statementItem.executeQuery();
 
             DatabaseItem databaseItem = new DatabaseItem(sup, sub);
 
             if (resultItem.next()) {
                 databaseItem.loadItem(resultItem);
 
-                PreparedStatement statementEntry = connection.prepareStatement(queryEntry);
-                ResultSet resultEntry = statementEntry.executeQuery();
+                statementEntry = connection.prepareStatement(queryEntry);
+                resultEntry = statementEntry.executeQuery();
 
                 databaseItem.loadEntries(resultEntry);
             }
@@ -568,10 +640,20 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             return null;
+        } finally {
+            try { if (statementItem != null) statementItem.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statementEntry != null) statementEntry.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (resultItem != null) resultItem.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (resultEntry != null) resultEntry.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean updateFullItem(String league, DatabaseItem databaseItem) {
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        PreparedStatement statement3 = null;
+        PreparedStatement statement4 = null;
+
         String table1 = "league_" + league.toLowerCase() + "_item";
         String table2 = "league_" + league.toLowerCase() + "_entry";
 
@@ -592,7 +674,7 @@ public class Database {
 
         try {
             if (databaseItem.isInDatabase()) {
-                PreparedStatement statement1 = connection.prepareStatement(query1);
+                statement1 = connection.prepareStatement(query1);
                 statement1.setDouble(1, databaseItem.getMean());
                 statement1.setDouble(2, databaseItem.getMedian());
                 statement1.setDouble(3, databaseItem.getMode());
@@ -606,7 +688,7 @@ public class Database {
                 statement1.setString(10, databaseItem.getSub());
                 statement1.execute();
             } else {
-                PreparedStatement statement2 = connection.prepareStatement(query2);
+                statement2 = connection.prepareStatement(query2);
                 statement2.setString(1, databaseItem.getSup());
                 statement2.setString(2, databaseItem.getSub());
                 statement2.setDouble(3, databaseItem.getMean());
@@ -621,7 +703,7 @@ public class Database {
                 statement2.execute();
             }
 
-            PreparedStatement statement3 = connection.prepareStatement(query3);
+            statement3 = connection.prepareStatement(query3);
             for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToRemove()) {
                 statement3.setString(1, databaseItem.getSup());
                 statement3.setString(2, databaseItem.getSub());
@@ -630,7 +712,7 @@ public class Database {
             }
             statement3.executeBatch();
 
-            PreparedStatement statement4 = connection.prepareStatement(query4);
+            statement4 = connection.prepareStatement(query4);
             for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToAdd()) {
                 statement4.setString(1, databaseItem.getSup());
                 statement4.setString(2, databaseItem.getSub());
@@ -646,6 +728,11 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement3 != null) statement3.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement4 != null) statement4.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -654,6 +741,7 @@ public class Database {
     //--------------------------
 
     public boolean addMinutely(String league) {
+        PreparedStatement statement = null;
         league = league.toLowerCase();
 
         try {
@@ -662,31 +750,41 @@ public class Database {
                             "SELECT " +
                             "    `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`count`,`quantity`" +
                             "FROM `league_"+ league +"_item`";
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.execute();
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean removeOldHistoryEntries(String league) {
+        PreparedStatement statement = null;
+
         try {
             String query =  "DELETE FROM `league_"+ league.toLowerCase() +"_history_entry` " +
                             "WHERE `time` < ADDDATE(NOW(), INTERVAL -1 HOUR)";
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.execute();
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean createLeagueTables(String league) {
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        PreparedStatement statement3 = null;
+        PreparedStatement statement4 = null;
         league = league.toLowerCase();
 
         try {
@@ -771,23 +869,23 @@ public class Database {
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
             if (!tables.contains(table1)) {
-                PreparedStatement preparedStatement1 = connection.prepareStatement(query1);
-                preparedStatement1.execute();
+                statement1 = connection.prepareStatement(query1);
+                statement1.execute();
             }
 
             if (!tables.contains(table2)) {
-                PreparedStatement preparedStatement2 = connection.prepareStatement(query2);
-                preparedStatement2.execute();
+                statement2 = connection.prepareStatement(query2);
+                statement2.execute();
             }
 
             if (!tables.contains(table3)) {
-                PreparedStatement preparedStatement3 = connection.prepareStatement(query3);
-                preparedStatement3.execute();
+                statement3 = connection.prepareStatement(query3);
+                statement3.execute();
             }
 
             if (!tables.contains(table4)) {
-                PreparedStatement preparedStatement4 = connection.prepareStatement(query4);
-                preparedStatement4.execute();
+                statement4 = connection.prepareStatement(query4);
+                statement4.execute();
             }
 
             connection.commit();
@@ -795,6 +893,11 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement3 != null) statement3.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement4 != null) statement4.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 

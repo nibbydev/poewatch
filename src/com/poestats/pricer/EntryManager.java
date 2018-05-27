@@ -92,7 +92,7 @@ public class EntryManager {
             }
 
             time1 = System.currentTimeMillis() - time1;
-            System.out.println("    "+ league +": "+ time1 +" ("+ indexMap.size() +" items)");
+            System.out.println("    "+ league +" ("+ time1 +" ms)("+ indexMap.size() +" items)");
 
             Main.DATABASE.addMinutely(league);
             Main.DATABASE.removeOldHistoryEntries(league);
