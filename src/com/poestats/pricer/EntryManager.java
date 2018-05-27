@@ -148,16 +148,15 @@ public class EntryManager {
             Main.ADMIN.log_("Backup (before) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
         }
 
-        // Get latest currency data
-        long time_load_currency = System.currentTimeMillis();
-        loadCurrency();
-        time_load_currency = System.currentTimeMillis() - time_load_currency;
-
         // Sort JSON
         long time_cycle = System.currentTimeMillis();
         cycle();
         time_cycle = System.currentTimeMillis() - time_cycle;
 
+        // Get latest currency data
+        long time_load_currency = System.currentTimeMillis();
+        loadCurrency();
+        time_load_currency = System.currentTimeMillis() - time_load_currency;
 
         // Build JSON
         long time_json = System.currentTimeMillis();

@@ -329,9 +329,12 @@ public class Database {
         PreparedStatement statement = null;
 
         try {
-            String query =   "INSERT INTO " +
-                                    "`item_data_sup` (`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String query =  "INSERT INTO `item_data_sup` " +
+                                "(`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
+                            "VALUES " +
+                                "(?, ?, ?, ?, ?, ?, ?) " +
+                            "ON DUPLICATE KEY UPDATE" +
+                                "`sup`=`sup`";
             statement = connection.prepareStatement(query);
 
             statement.setString(1, sup);
@@ -363,9 +366,12 @@ public class Database {
         SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sup + sub);
 
         try {
-            String query =  "INSERT INTO `item_data_sub` " +
-                                "(`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String query =  "INSERT INTO `item_data_sub`" +
+                                "(`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`)" +
+                            "VALUES" +
+                                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                            "ON DUPLICATE KEY UPDATE" +
+                                "`sup`=`sup`";
             statement = connection.prepareStatement(query);
 
             statement.setString(1, sup);

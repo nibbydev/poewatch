@@ -185,21 +185,9 @@ public class RelationManager {
         // Add item id
         genericKey.append(splitKey[0]);
 
-        // If it's an enchant, don't add frametype nor var info
-        if (splitKey[1].equals("-1")) return genericKey.toString();
-
         // Add item frameType
         genericKey.append("|");
         genericKey.append(splitKey[1]);
-
-        // Add var info, if present (eg Impresence has different icons based on variation)
-        for (int i = 2; i < splitKey.length; i++) {
-            if (splitKey[i].contains("var:")) {
-                genericKey.append("|");
-                genericKey.append(splitKey[i]);
-                break;
-            }
-        }
 
         return genericKey.toString();
     }
