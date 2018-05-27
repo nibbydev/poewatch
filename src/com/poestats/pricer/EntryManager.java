@@ -222,8 +222,8 @@ public class EntryManager {
                 RawEntry rawEntry = new RawEntry();
                 rawEntry.add(item, stash.accountName);
 
-                rawEntry.convertPrice(currencyLeagueMap.get(item.league));
-                if (rawEntry.isDiscard()) continue; // Couldn't convert the listed currency to chaos
+                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(item.league));
+                if (discard) continue; // Couldn't convert the listed currency to chaos
 
                 rawList.add(rawEntry);
 

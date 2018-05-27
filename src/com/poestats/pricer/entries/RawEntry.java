@@ -25,28 +25,19 @@ public class RawEntry {
         id = item.id;
     }
 
-    public void convertPrice(CurrencyMap currencyMap) {
-        if (priceType.equals("Chaos Orb")) return;
+    public boolean convertPrice(CurrencyMap currencyMap) {
+        if (!priceType.equals("Chaos Orb")) {
+            if (currencyMap == null) return true;
+            DatabaseItem databaseItem = currencyMap.get(priceType);
 
-        if (currencyMap == null) {
-            discard = true;
-            return;
+            if (databaseItem == null) return true;
+            else if (databaseItem.getCount() < 20) return true;
+
+            price = Math.round(price * databaseItem.getMean() * Config.item_pricePrecision) / Config.item_pricePrecision;
+            priceType = "Chaos Orb";
         }
 
-        DatabaseItem databaseItem = currencyMap.get(priceType);
-
-        if (databaseItem == null) {
-            discard = true;
-            return;
-        } else if (databaseItem.getCount() < 20) {
-            discard = true;
-            return;
-        }
-
-        price = Math.round(price * databaseItem.getMean() * Config.item_pricePrecision) / Config.item_pricePrecision;
-        priceType = "Chaos Orb";
-
-        if (price < 0.0001) discard = true;
+        return price < 0.0001 || price > 120000;
     }
 
     //------------------------------------------------------------------------------------------------------------
