@@ -1,6 +1,5 @@
 package com.poestats.pricer;
 
-import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.database.DatabaseItem;
 import com.poestats.league.LeagueEntry;
@@ -92,7 +91,7 @@ public class EntryManager {
             }
 
             time1 = System.currentTimeMillis() - time1;
-            System.out.println("    "+ league +" ("+ time1 +" ms)("+ indexMap.size() +" items)");
+            System.out.println(String.format("    %-30s (%4d ms)(%4d items)", league, time1, indexMap.size()));
 
             Main.DATABASE.addMinutely(league);
             Main.DATABASE.removeOldHistoryEntries(league);
@@ -149,9 +148,10 @@ public class EntryManager {
             Main.ADMIN.log_("Backup (before) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
         }
 
-        // Save item data
-        long time_sort = System.currentTimeMillis();
-        time_sort = System.currentTimeMillis() - time_sort;
+        // Get latest currency data
+        long time_load_currency = System.currentTimeMillis();
+        loadCurrency();
+        time_load_currency = System.currentTimeMillis() - time_load_currency;
 
         // Sort JSON
         long time_cycle = System.currentTimeMillis();
@@ -177,7 +177,7 @@ public class EntryManager {
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) +
-                " ms)(sort:" + String.format("%5d", time_sort) + " ms)";
+                " ms)(currency:" + String.format("%5d", time_load_currency) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Switch off flags
@@ -187,6 +187,7 @@ public class EntryManager {
         flipPauseFlag();
 
         Main.DATABASE.updateStatus(status);
+        //System.gc();
     }
 
     /**

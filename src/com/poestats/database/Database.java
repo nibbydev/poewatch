@@ -23,10 +23,6 @@ public class Database {
     private ArrayList<String> tables;
 
     //------------------------------------------------------------------------------------------------------------
-    // Constructors
-    //------------------------------------------------------------------------------------------------------------
-
-    //------------------------------------------------------------------------------------------------------------
     // DB controllers
     //------------------------------------------------------------------------------------------------------------
 
@@ -119,11 +115,6 @@ public class Database {
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
     public void updateLeagues(List<LeagueEntry> leagueEntries) {
-        if (leagueEntries == null) {
-            Main.ADMIN.log_("Could not update database league list (null passed)", 3);
-            return;
-        }
-
         PreparedStatement statement1 = null;
         PreparedStatement statement2 = null;
         PreparedStatement statement3 = null;
@@ -558,8 +549,9 @@ public class Database {
 
         PreparedStatement statement = null;
         ResultSet result = null;
+        league = formatLeague(league);
 
-        String table = "league_" + league.toLowerCase() + "_item";
+        String table = "league_"+ league +"_item";
 
         try {
             String query =  "SELECT " +
@@ -611,13 +603,14 @@ public class Database {
         PreparedStatement statementEntry = null;
         ResultSet resultItem = null;
         ResultSet resultEntry = null;
+        league = formatLeague(league);
 
         try {
             String sup = index.substring(0, Config.index_superSize);
             String sub = index.substring(Config.index_superSize);
 
-            String tableItem = "league_" + league.toLowerCase() + "_item";
-            String tableEntry = "league_" + league.toLowerCase() + "_entry";
+            String tableItem = "league_" + league + "_item";
+            String tableEntry = "league_" + league + "_entry";
 
             String queryItem = "SELECT * FROM `"+ tableItem +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
             String queryEntry = "SELECT * FROM `"+ tableEntry +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
@@ -653,9 +646,10 @@ public class Database {
         PreparedStatement statement2 = null;
         PreparedStatement statement3 = null;
         PreparedStatement statement4 = null;
+        league = formatLeague(league);
 
-        String table1 = "league_" + league.toLowerCase() + "_item";
-        String table2 = "league_" + league.toLowerCase() + "_entry";
+        String table1 = "league_" + league + "_item";
+        String table2 = "league_" + league + "_entry";
 
         String query1 = "UPDATE `"+ table1 +"` " +
                             "SET `mean`=?,`median`=?,`mode`=?,`exalted`=?,`count`=?,`quantity`=?,`inc`=?,`dec`=? " +
@@ -742,7 +736,7 @@ public class Database {
 
     public boolean addMinutely(String league) {
         PreparedStatement statement = null;
-        league = league.toLowerCase();
+        league = formatLeague(league);
 
         try {
             String query =  "INSERT INTO `league_"+ league +"_history_entry` " +
@@ -764,9 +758,10 @@ public class Database {
 
     public boolean removeOldHistoryEntries(String league) {
         PreparedStatement statement = null;
+        league = formatLeague(league);
 
         try {
-            String query =  "DELETE FROM `league_"+ league.toLowerCase() +"_history_entry` " +
+            String query =  "DELETE FROM `league_"+ league +"_history_entry` " +
                             "WHERE `time` < ADDDATE(NOW(), INTERVAL -1 HOUR)";
             statement = connection.prepareStatement(query);
             statement.execute();
@@ -785,7 +780,7 @@ public class Database {
         PreparedStatement statement2 = null;
         PreparedStatement statement3 = null;
         PreparedStatement statement4 = null;
-        league = league.toLowerCase();
+        league = formatLeague(league);
 
         try {
             tables = listAllTables();
@@ -918,11 +913,7 @@ public class Database {
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Getters
-    //------------------------------------------------------------------------------------------------------------
-
-    //------------------------------------------------------------------------------------------------------------
-    // Setters
-    //------------------------------------------------------------------------------------------------------------
+    public static String formatLeague(String league) {
+        return league.replace(" ", "-").replace("(", "").replace(")", "").toLowerCase();
+    }
 }
