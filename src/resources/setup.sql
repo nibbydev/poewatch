@@ -84,12 +84,12 @@ CREATE TABLE `item_data_sub` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `league__item`
+-- Table structure for table `!__item`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `league__item` (
-    CONSTRAINT `__sup-sub`
+CREATE TABLE `!__item` (
+    CONSTRAINT `_sup-sub`
         FOREIGN KEY (`sup`,`sub`) 
         REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
@@ -109,14 +109,14 @@ CREATE TABLE `league__item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `league__item_history`
+-- Table structure `!__item_history`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `league__history` (
-    CONSTRAINT `__history`
+CREATE TABLE `!__history` (
+    CONSTRAINT `_history`
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `league__item` (`sup`,`sub`)
+        REFERENCES `!__item` (`sup`,`sub`)
         ON DELETE CASCADE,
 
     `sup`       varchar(5)      NOT NULL,
@@ -131,14 +131,14 @@ CREATE TABLE `league__history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `league__entry`
+-- Table structure `!__entry`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `league__entry` (
-    CONSTRAINT `__item_entry`
+CREATE TABLE `!__entry` (
+    CONSTRAINT `_item_entry`
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `league__item` (`sup`,`sub`)
+        REFERENCES `!__item` (`sup`,`sub`)
         ON DELETE CASCADE,
 
     `sup`       varchar(5)      NOT NULL,
@@ -159,14 +159,14 @@ CREATE TABLE `history_entry_category` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `league__history_entry`
+-- Table structure `!__history_entry`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `league__history_entry` (
-    CONSTRAINT `__history_entry`
+CREATE TABLE `!__history_entry` (
+    CONSTRAINT `_history_entry`
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `league__item` (`sup`,`sub`)
+        REFERENCES `!__item` (`sup`,`sub`)
         ON DELETE CASCADE,
     FOREIGN KEY (`type`)
         REFERENCES `history_entry_category` (`type`)

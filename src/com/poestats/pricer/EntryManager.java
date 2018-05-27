@@ -94,7 +94,7 @@ public class EntryManager {
             System.out.println(String.format("    %-30s (%4d ms)(%4d items)", league, time1, indexMap.size()));
 
             Main.DATABASE.addMinutely(league);
-            Main.DATABASE.removeOldHistoryEntries(league);
+            Main.DATABASE.removeOldMinutelyEntries(league);
 
             indexMap.clear();
         }

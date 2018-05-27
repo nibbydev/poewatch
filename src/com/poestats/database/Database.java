@@ -495,8 +495,6 @@ public class Database {
         ResultSet result = null;
         league = formatLeague(league);
 
-        String table = "league_"+ league +"_item";
-
         try {
             String query =  "SELECT " +
                             "    i.`sub`," +
@@ -510,7 +508,7 @@ public class Database {
                             "    i.`quantity`," +
                             "    i.`inc`," +
                             "    i.`dec`" +
-                            "FROM `"+ table +"` AS i" +
+                            "FROM `!_"+ league +"_item` AS i" +
                             "    INNER JOIN `item_data_sup` AS d" +
                             "        ON i.`sup` = d.`sup`" +
                             "WHERE EXISTS (" +
@@ -553,11 +551,8 @@ public class Database {
             String sup = index.substring(0, Config.index_superSize);
             String sub = index.substring(Config.index_superSize);
 
-            String tableItem = "league_" + league + "_item";
-            String tableEntry = "league_" + league + "_entry";
-
-            String queryItem = "SELECT * FROM `"+ tableItem +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
-            String queryEntry = "SELECT * FROM `"+ tableEntry +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+            String queryItem = "SELECT * FROM `!_"+ league +"_item` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+            String queryEntry = "SELECT * FROM `!_"+ league +"_entry` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
 
             statementItem = connection.prepareStatement(queryItem);
             resultItem = statementItem.executeQuery();
@@ -592,21 +587,18 @@ public class Database {
         PreparedStatement statement4 = null;
         league = formatLeague(league);
 
-        String table1 = "league_" + league + "_item";
-        String table2 = "league_" + league + "_entry";
-
-        String query1 = "UPDATE `"+ table1 +"` " +
+        String query1 = "UPDATE `!_"+ league +"_item` " +
                             "SET `mean`=?,`median`=?,`mode`=?,`exalted`=?,`count`=?,`quantity`=?,`inc`=?,`dec`=? " +
                         "WHERE `sup`=? AND `sub`=?";
 
-        String query2 = "INSERT INTO `"+ table1 +"` " +
+        String query2 = "INSERT INTO `!_"+ league +"_item` " +
                             "(`sup`,`sub`,`mean`,`median`,`mode`,`exalted`,`count`,`quantity`,`inc`,`dec`)" +
                             "VALUES (?,?,?,?,?,?,?,?,?,?)";
 
-        String query3 = "DELETE FROM `"+ table2 +"` " +
+        String query3 = "DELETE FROM `!_"+ league +"_entry` " +
                         "WHERE `sup`=? AND `sub`=? AND `id`=?";
 
-        String query4 = "INSERT INTO `"+ table2 +"` " +
+        String query4 = "INSERT INTO `!_"+ league +"_entry` " +
                             "(`sup`,`sub`,`price`,`account`,`id`)" +
                             "VALUES (?,?,?,?,?)";
 
@@ -683,11 +675,11 @@ public class Database {
         league = formatLeague(league);
 
         try {
-            String query =  "INSERT INTO `league_"+ league +"_history_entry` " +
+            String query =  "INSERT INTO `!_"+ league +"_history_entry` " +
                             "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`count`,`quantity`)" +
                             "SELECT " +
                             "    `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`count`,`quantity`" +
-                            "FROM `league_"+ league +"_item`";
+                            "FROM `!_"+ league +"_item`";
             statement = connection.prepareStatement(query);
             statement.execute();
 
@@ -700,13 +692,14 @@ public class Database {
         }
     }
 
-    public boolean removeOldHistoryEntries(String league) {
+    public boolean removeOldMinutelyEntries(String league) {
         PreparedStatement statement = null;
         league = formatLeague(league);
 
         try {
-            String query =  "DELETE FROM `league_"+ league +"_history_entry` " +
-                            "WHERE `time` < ADDDATE(NOW(), INTERVAL -1 HOUR)";
+            String query =  "DELETE FROM `!_"+ league +"_history_entry` " +
+                            "WHERE `type` = 'minutely' " +
+                            "AND `time` < ADDDATE(NOW(), INTERVAL -1 HOUR)";
             statement = connection.prepareStatement(query);
             statement.execute();
 
@@ -727,14 +720,7 @@ public class Database {
         league = formatLeague(league);
 
         try {
-            tables = listAllTables();
-
-            String table1 = "league_"+ league +"_item";
-            String table2 = "league_"+ league +"_history";
-            String table3 = "league_"+ league +"_entry";
-            String table4 = "league_"+ league +"_history_entry";
-
-            String query1 = "CREATE TABLE `"+ table1 +"` (" +
+            String query1 = "CREATE TABLE `!_"+ league +"_item` (" +
                             "    CONSTRAINT `"+ league +"_sup-sub`" +
                             "        FOREIGN KEY (`sup`,`sub`) " +
                             "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
@@ -754,10 +740,10 @@ public class Database {
                             "    `dec`       int(8)          unsigned NOT NULL DEFAULT 0" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-            String query2 = "CREATE TABLE `"+ table2 +"` (" +
+            String query2 = "CREATE TABLE `!_"+ league +"_history` (" +
                             "    CONSTRAINT `"+ league +"_history`" +
                             "        FOREIGN KEY (`sup`,`sub`)" +
-                            "        REFERENCES `"+ table1 +"` (`sup`,`sub`)" +
+                            "        REFERENCES `!_"+ league +"_item` (`sup`,`sub`)" +
                             "        ON DELETE CASCADE," +
 
                             "    `sup`       varchar(5)      NOT NULL," +
@@ -771,10 +757,10 @@ public class Database {
                             "    `quantity`  int(8)          unsigned DEFAULT NULL" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-            String query3 = "CREATE TABLE `"+ table3 +"` (" +
+            String query3 = "CREATE TABLE `!_"+ league +"_item_entry` (" +
                             "    CONSTRAINT `"+ league +"_item_entry`" +
                             "        FOREIGN KEY (`sup`,`sub`)" +
-                            "        REFERENCES `"+ table1 +"` (`sup`,`sub`)" +
+                            "        REFERENCES `!_"+ league +"_item` (`sup`,`sub`)" +
                             "        ON DELETE CASCADE," +
 
                             "    `sup`       varchar(5)      NOT NULL," +
@@ -786,10 +772,10 @@ public class Database {
                             "    `id`        varchar(32)     NOT NULL" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-            String query4 = "CREATE TABLE `"+ table4 +"` (" +
+            String query4 = "CREATE TABLE `!_"+ league +"_history_entry` (" +
                             "    CONSTRAINT `"+ league +"_history_entry`" +
                             "        FOREIGN KEY (`sup`,`sub`)" +
-                            "        REFERENCES `"+ table1 +"` (`sup`,`sub`)" +
+                            "        REFERENCES `!_"+ league +"_item` (`sup`,`sub`)" +
                             "        ON DELETE CASCADE," +
                             "    FOREIGN KEY (`type`)" +
                             "        REFERENCES `history_entry_category` (`type`)" +
@@ -807,22 +793,24 @@ public class Database {
                             "    `quantity`  int(8)          unsigned DEFAULT NULL" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-            if (!tables.contains(table1)) {
+            tables = listAllTables();
+
+            if (!tables.contains("!_"+ league +"_item")) {
                 statement1 = connection.prepareStatement(query1);
                 statement1.execute();
             }
 
-            if (!tables.contains(table2)) {
+            if (!tables.contains("!_"+ league +"_history")) {
                 statement2 = connection.prepareStatement(query2);
                 statement2.execute();
             }
 
-            if (!tables.contains(table3)) {
+            if (!tables.contains("!_"+ league +"_entry")) {
                 statement3 = connection.prepareStatement(query3);
                 statement3.execute();
             }
 
-            if (!tables.contains(table4)) {
+            if (!tables.contains("!_"+ league +"_history_entry")) {
                 statement4 = connection.prepareStatement(query4);
                 statement4.execute();
             }
