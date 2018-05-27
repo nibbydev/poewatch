@@ -583,16 +583,21 @@ public class Database {
         PreparedStatement statement1 = null;
         PreparedStatement statement2 = null;
         PreparedStatement statement3 = null;
-        PreparedStatement statement4 = null;
         league = formatLeague(league);
 
-        String query1 = "UPDATE `!_"+ league +"_item` " +
-                            "SET `mean`=?,`median`=?,`mode`=?,`exalted`=?,`count`=?,`quantity`=?,`inc`=?,`dec`=? " +
-                        "WHERE `sup`=? AND `sub`=?";
-
-        String query2 = "INSERT INTO `!_"+ league +"_item` " +
-                            "(`sup`,`sub`,`mean`,`median`,`mode`,`exalted`,`count`,`quantity`,`inc`,`dec`)" +
-                            "VALUES (?,?,?,?,?,?,?,?,?,?)";
+        String query1 = "INSERT INTO `!_"+ league +"_item`" +
+                        "    (`sup`, `sub`, `mean`, `median`, `mode`, `exalted`, `count`, `quantity`, `inc`, `dec`)" +
+                        "VALUES" +
+                        "    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                        "ON DUPLICATE KEY UPDATE" +
+                        "    `mean`      = VALUES(`mean`)," +
+                        "    `median`    = VALUES(`median`)," +
+                        "    `mode`      = VALUES(`mode`)" +
+                        "    `exalted`   = VALUES(`exalted`)" +
+                        "    `count`     = VALUES(`count`)" +
+                        "    `quantity`  = VALUES(`quantity`)" +
+                        "    `inc`       = VALUES(`inc`)" +
+                        "    `dec`       = VALUES(`dec`)";
 
         String query3 = "DELETE FROM `!_"+ league +"_item_entry` " +
                         "WHERE `sup`=? AND `sub`=? AND `id`=?";
@@ -602,55 +607,39 @@ public class Database {
                             "VALUES (?,?,?,?,?)";
 
         try {
-            if (databaseItem.isInDatabase()) {
-                statement1 = connection.prepareStatement(query1);
-                statement1.setDouble(1, databaseItem.getMean());
-                statement1.setDouble(2, databaseItem.getMedian());
-                statement1.setDouble(3, databaseItem.getMode());
-                statement1.setDouble(4, databaseItem.getExalted());
-                statement1.setInt(5, databaseItem.getCount());
-                statement1.setInt(6, databaseItem.getQuantity());
-                statement1.setInt(7, databaseItem.getInc());
-                statement1.setInt(8, databaseItem.getDec());
+            statement1 = connection.prepareStatement(query1);
+            statement1.setString(1, databaseItem.getSup());
+            statement1.setString(2, databaseItem.getSub());
+            statement1.setDouble(3, databaseItem.getMean());
+            statement1.setDouble(4, databaseItem.getMedian());
+            statement1.setDouble(5, databaseItem.getMode());
+            statement1.setDouble(6, databaseItem.getExalted());
 
-                statement1.setString(9, databaseItem.getSup());
-                statement1.setString(10, databaseItem.getSub());
-                statement1.execute();
-            } else {
-                statement2 = connection.prepareStatement(query2);
+            statement1.setInt(7, databaseItem.getCount());
+            statement1.setInt(8, databaseItem.getQuantity());
+            statement1.setInt(9, databaseItem.getInc());
+            statement1.setInt(10, databaseItem.getDec());
+            statement1.execute();
+
+            statement2 = connection.prepareStatement(query3);
+            for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToRemove()) {
                 statement2.setString(1, databaseItem.getSup());
                 statement2.setString(2, databaseItem.getSub());
-                statement2.setDouble(3, databaseItem.getMean());
-                statement2.setDouble(4, databaseItem.getMedian());
-                statement2.setDouble(5, databaseItem.getMode());
-                statement2.setDouble(6, databaseItem.getExalted());
-
-                statement2.setInt(7, databaseItem.getCount());
-                statement2.setInt(8, databaseItem.getQuantity());
-                statement2.setInt(9, databaseItem.getInc());
-                statement2.setInt(10, databaseItem.getDec());
-                statement2.execute();
+                statement2.setString(3, databaseEntry.getId());
+                statement2.addBatch();
             }
+            statement2.executeBatch();
 
-            statement3 = connection.prepareStatement(query3);
-            for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToRemove()) {
+            statement3 = connection.prepareStatement(query4);
+            for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToAdd()) {
                 statement3.setString(1, databaseItem.getSup());
                 statement3.setString(2, databaseItem.getSub());
-                statement3.setString(3, databaseEntry.getId());
+                statement3.setString(3, databaseEntry.getPriceAsRoundedString());
+                statement3.setString(4, databaseEntry.getAccount());
+                statement3.setString(5, databaseEntry.getId());
                 statement3.addBatch();
             }
             statement3.executeBatch();
-
-            statement4 = connection.prepareStatement(query4);
-            for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToAdd()) {
-                statement4.setString(1, databaseItem.getSup());
-                statement4.setString(2, databaseItem.getSub());
-                statement4.setString(3, databaseEntry.getPriceAsRoundedString());
-                statement4.setString(4, databaseEntry.getAccount());
-                statement4.setString(5, databaseEntry.getId());
-                statement4.addBatch();
-            }
-            statement4.executeBatch();
 
             connection.commit();
             return true;
@@ -661,7 +650,6 @@ public class Database {
             try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
             try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
             try { if (statement3 != null) statement3.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement4 != null) statement4.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 

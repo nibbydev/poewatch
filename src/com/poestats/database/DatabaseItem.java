@@ -22,8 +22,6 @@ public class DatabaseItem {
     private int count, quantity, inc, dec;
     private double mean, median, mode, exalted;
 
-    private boolean isInDatabase;
-
     private List<DatabaseEntry> databaseEntryList = new ArrayList<>();
     private List<DatabaseEntry> databaseEntryListToRemove = new ArrayList<>();
     private List<DatabaseEntry> databaseEntryListToAdd = new ArrayList<>();
@@ -39,8 +37,6 @@ public class DatabaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     public void loadItem(ResultSet result) throws SQLException {
-        isInDatabase = true;
-
         time = result.getString("time");
         mean = result.getDouble("mean");
         median = result.getDouble("median");
@@ -258,9 +254,5 @@ public class DatabaseItem {
 
     public List<DatabaseEntry> getDatabaseEntryListToAdd() {
         return databaseEntryListToAdd;
-    }
-
-    public boolean isInDatabase() {
-        return isInDatabase;
     }
 }
