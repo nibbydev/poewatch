@@ -126,6 +126,9 @@ CREATE TABLE `!__history` (
     `mean`      decimal(10,4)   unsigned DEFAULT NULL,
     `median`    decimal(10,4)   unsigned DEFAULT NULL,
     `mode`      decimal(10,4)   unsigned DEFAULT NULL,
+    `exalted`   decimal(10,4)   unsigned DEFAULT NULL,
+    `inc`       int(8)          unsigned DEFAULT NULL,
+    `dec`       int(8)          unsigned DEFAULT NULL,
     `count`     int(16)         unsigned DEFAULT NULL,
     `quantity`  int(8)          unsigned DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -180,6 +183,9 @@ CREATE TABLE `!__history_entry` (
     `mean`      decimal(10,4)   unsigned DEFAULT NULL,
     `median`    decimal(10,4)   unsigned DEFAULT NULL,
     `mode`      decimal(10,4)   unsigned DEFAULT NULL,
+    `exalted`   decimal(10,4)   unsigned DEFAULT NULL,
+    `inc`       int(8)          unsigned DEFAULT NULL,
+    `dec`       int(8)          unsigned DEFAULT NULL,
     `count`     int(16)         unsigned DEFAULT NULL,
     `quantity`  int(8)          unsigned DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

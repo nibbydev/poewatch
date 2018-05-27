@@ -586,18 +586,18 @@ public class Database {
         league = formatLeague(league);
 
         String query1 = "INSERT INTO `!_"+ league +"_item`" +
-                        "    (`sup`, `sub`, `mean`, `median`, `mode`, `exalted`, `count`, `quantity`, `inc`, `dec`)" +
+                        "    (`sup`, `sub`, `mean`, `median`, `mode`, `exalted`, `inc`, `dec`, `count`, `quantity`)" +
                         "VALUES" +
                         "    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
                         "ON DUPLICATE KEY UPDATE" +
                         "    `mean`      = VALUES(`mean`)," +
                         "    `median`    = VALUES(`median`)," +
-                        "    `mode`      = VALUES(`mode`)" +
-                        "    `exalted`   = VALUES(`exalted`)" +
-                        "    `count`     = VALUES(`count`)" +
-                        "    `quantity`  = VALUES(`quantity`)" +
-                        "    `inc`       = VALUES(`inc`)" +
-                        "    `dec`       = VALUES(`dec`)";
+                        "    `mode`      = VALUES(`mode`)," +
+                        "    `exalted`   = VALUES(`exalted`)," +
+                        "    `inc`       = VALUES(`inc`)," +
+                        "    `dec`       = VALUES(`dec`)," +
+                        "    `count`     = VALUES(`count`)," +
+                        "    `quantity`  = VALUES(`quantity`)";
 
         String query3 = "DELETE FROM `!_"+ league +"_item_entry` " +
                         "WHERE `sup`=? AND `sub`=? AND `id`=?";
@@ -663,9 +663,9 @@ public class Database {
 
         try {
             String query =  "INSERT INTO `!_"+ league +"_history_entry` " +
-                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`count`,`quantity`)" +
+                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`)" +
                             "SELECT " +
-                            "    `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`count`,`quantity`" +
+                            "    `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`" +
                             "FROM `!_"+ league +"_item`";
             statement = connection.prepareStatement(query);
             statement.execute();
@@ -685,9 +685,9 @@ public class Database {
 
         try {
             String query =  "INSERT INTO `!_"+ league +"_history_entry` " +
-                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`count`,`quantity`)" +
+                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`)" +
                             "SELECT " +
-                            "    `sup`,`sub`,'hourly',`mean`,`median`,`mode`,`count`,`quantity`" +
+                            "    `sup`,`sub`,'hourly',`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`" +
                             "FROM `!_"+ league +"_item`";
             statement = connection.prepareStatement(query);
             statement.execute();
@@ -743,10 +743,10 @@ public class Database {
                             "    `median`    decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                             "    `mode`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                             "    `exalted`   decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                            "    `count`     int(16)         unsigned NOT NULL DEFAULT 0," +
-                            "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0," +
                             "    `inc`       int(8)          unsigned NOT NULL DEFAULT 0," +
-                            "    `dec`       int(8)          unsigned NOT NULL DEFAULT 0" +
+                            "    `dec`       int(8)          unsigned NOT NULL DEFAULT 0," +
+                            "    `count`     int(16)         unsigned NOT NULL DEFAULT 0," +
+                            "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
             String query2 = "CREATE TABLE `!_"+ league +"_history` (" +
@@ -762,6 +762,9 @@ public class Database {
                             "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
                             "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
                             "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
+                            "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
+                            "    `inc`       int(8)          unsigned DEFAULT NULL," +
+                            "    `dec`       int(8)          unsigned DEFAULT NULL," +
                             "    `count`     int(16)         unsigned DEFAULT NULL," +
                             "    `quantity`  int(8)          unsigned DEFAULT NULL" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -798,6 +801,9 @@ public class Database {
                             "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
                             "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
                             "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
+                            "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
+                            "    `inc`       int(8)          unsigned DEFAULT NULL," +
+                            "    `dec`       int(8)          unsigned DEFAULT NULL," +
                             "    `count`     int(16)         unsigned DEFAULT NULL," +
                             "    `quantity`  int(8)          unsigned DEFAULT NULL" +
                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
