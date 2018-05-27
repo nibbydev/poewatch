@@ -737,6 +737,7 @@ public class Database {
         try {
             String query1 = "CREATE TABLE `!_"+ league +"_item` (" +
                             "    CONSTRAINT `"+ league +"_sup-sub`" +
+                            "        PRIMARY KEY (`sup`,`sub`), " +
                             "        FOREIGN KEY (`sup`,`sub`) " +
                             "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
                             "        ON DELETE CASCADE," +
@@ -757,6 +758,7 @@ public class Database {
 
             String query2 = "CREATE TABLE `!_"+ league +"_history` (" +
                             "    CONSTRAINT `"+ league +"_history`" +
+                            "        PRIMARY KEY (`sup`,`sub`)," +
                             "        FOREIGN KEY (`sup`,`sub`)" +
                             "        REFERENCES `!_"+ league +"_item` (`sup`,`sub`)" +
                             "        ON DELETE CASCADE," +

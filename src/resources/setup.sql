@@ -90,7 +90,8 @@ CREATE TABLE `item_data_sub` (
 
 CREATE TABLE `!__item` (
     CONSTRAINT `_sup-sub`
-        FOREIGN KEY (`sup`,`sub`) 
+        PRIMARY KEY (`sup`,`sub`),
+        FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
 
@@ -115,6 +116,7 @@ CREATE TABLE `!__item` (
 
 CREATE TABLE `!__history` (
     CONSTRAINT `_history`
+        PRIMARY KEY (`sup`,`sub`),
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `!__item` (`sup`,`sub`)
         ON DELETE CASCADE,
