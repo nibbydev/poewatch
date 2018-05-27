@@ -135,7 +135,7 @@ CREATE TABLE `!__history` (
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `!__entry` (
+CREATE TABLE `!__item_entry` (
     CONSTRAINT `_item_entry`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `!__item` (`sup`,`sub`)

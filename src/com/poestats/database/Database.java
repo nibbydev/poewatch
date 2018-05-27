@@ -489,17 +489,16 @@ public class Database {
     //--------------------
 
     public boolean getCurrency(String league, CurrencyMap currencyMap) {
-        if (!tables.contains(league)) return false;
-
         PreparedStatement statement = null;
         ResultSet result = null;
         league = formatLeague(league);
 
         try {
             String query =  "SELECT " +
-                            "    i.`sub`," +
+                            "    i.`sup`," +
                             "    i.`sub`," +
                             "    d.`name`," +
+                            "    i.`time`," +
                             "    i.`mean`," +
                             "    i.`median`," +
                             "    i.`mode`," +
@@ -552,7 +551,7 @@ public class Database {
             String sub = index.substring(Config.index_superSize);
 
             String queryItem = "SELECT * FROM `!_"+ league +"_item` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
-            String queryEntry = "SELECT * FROM `!_"+ league +"_entry` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+            String queryEntry = "SELECT * FROM `!_"+ league +"_item_entry` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
 
             statementItem = connection.prepareStatement(queryItem);
             resultItem = statementItem.executeQuery();
@@ -595,10 +594,10 @@ public class Database {
                             "(`sup`,`sub`,`mean`,`median`,`mode`,`exalted`,`count`,`quantity`,`inc`,`dec`)" +
                             "VALUES (?,?,?,?,?,?,?,?,?,?)";
 
-        String query3 = "DELETE FROM `!_"+ league +"_entry` " +
+        String query3 = "DELETE FROM `!_"+ league +"_item_entry` " +
                         "WHERE `sup`=? AND `sub`=? AND `id`=?";
 
-        String query4 = "INSERT INTO `!_"+ league +"_entry` " +
+        String query4 = "INSERT INTO `!_"+ league +"_item_entry` " +
                             "(`sup`,`sub`,`price`,`account`,`id`)" +
                             "VALUES (?,?,?,?,?)";
 
@@ -679,6 +678,28 @@ public class Database {
                             "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`count`,`quantity`)" +
                             "SELECT " +
                             "    `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`count`,`quantity`" +
+                            "FROM `!_"+ league +"_item`";
+            statement = connection.prepareStatement(query);
+            statement.execute();
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean addHourly(String league) {
+        PreparedStatement statement = null;
+        league = formatLeague(league);
+
+        try {
+            String query =  "INSERT INTO `!_"+ league +"_history_entry` " +
+                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`count`,`quantity`)" +
+                            "SELECT " +
+                            "    `sup`,`sub`,'hourly',`mean`,`median`,`mode`,`count`,`quantity`" +
                             "FROM `!_"+ league +"_item`";
             statement = connection.prepareStatement(query);
             statement.execute();
@@ -805,7 +826,7 @@ public class Database {
                 statement2.execute();
             }
 
-            if (!tables.contains("!_"+ league +"_entry")) {
+            if (!tables.contains("!_"+ league +"_item_entry")) {
                 statement3 = connection.prepareStatement(query3);
                 statement3.execute();
             }
