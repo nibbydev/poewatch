@@ -80,6 +80,7 @@ public class EntryManager {
             IndexMap indexMap = leagueMap.get(league);
             if (indexMap == null) continue;
 
+            long time1 = System.currentTimeMillis();
             for (String index : indexMap.keySet()) {
                 DatabaseItem databaseItem = Main.DATABASE.getFullItem(index, league);
                 if (databaseItem == null) continue;
@@ -90,8 +91,13 @@ public class EntryManager {
                 Main.DATABASE.updateFullItem(league, databaseItem);
             }
 
+            time1 = System.currentTimeMillis() - time1;
+            System.out.println("    "+ league +": "+ time1 +" ("+ indexMap.size() +" items)");
+
             Main.DATABASE.addMinutely(league);
             Main.DATABASE.removeOldHistoryEntries(league);
+
+            indexMap.clear();
         }
     }
 
