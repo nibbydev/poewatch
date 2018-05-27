@@ -22,6 +22,8 @@ public class DatabaseItem {
     private int count, quantity, inc, dec;
     private double mean, median, mode, exalted;
 
+    private boolean isInDatabase;
+
     private List<DatabaseEntry> databaseEntryList = new ArrayList<>();
     private List<DatabaseEntry> databaseEntryListToRemove = new ArrayList<>();
     private List<DatabaseEntry> databaseEntryListToAdd = new ArrayList<>();
@@ -37,8 +39,9 @@ public class DatabaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     public void loadItem(ResultSet result) throws SQLException {
-        time = result.getString("time");
+        isInDatabase = true;
 
+        time = result.getString("time");
         mean = result.getDouble("mean");
         median = result.getDouble("median");
         mode = result.getDouble("mode");
@@ -52,8 +55,8 @@ public class DatabaseItem {
     public void loadEntries(ResultSet result) throws SQLException {
         while (result.next()) {
             DatabaseEntry databaseEntry = new DatabaseEntry();
-            databaseEntryList.add(databaseEntry);
             databaseEntry.loadFromDatabase(result);
+            databaseEntryList.add(databaseEntry);
         }
     }
 
@@ -86,6 +89,9 @@ public class DatabaseItem {
     }
 
     public void removeOutliers() {
+        if (databaseEntryList.isEmpty()) return;
+        if (mean == 0) return;
+
         List<DatabaseEntry> tmpRemoveList = new ArrayList<>();
 
         for (DatabaseEntry databaseEntry : databaseEntryList) {
@@ -112,8 +118,6 @@ public class DatabaseItem {
         median = findMedian(entryPrices);
         mode = findMode(entryPrices);
     }
-
-
 
     //------------------------------------------------------------------------------------------------------------
     // Internal workings
@@ -254,5 +258,9 @@ public class DatabaseItem {
 
     public List<DatabaseEntry> getDatabaseEntryListToAdd() {
         return databaseEntryListToAdd;
+    }
+
+    public boolean isInDatabase() {
+        return isInDatabase;
     }
 }

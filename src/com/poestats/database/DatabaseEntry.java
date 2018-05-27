@@ -19,10 +19,10 @@ public class DatabaseEntry {
     //------------------------------------------------------------------------------------------------------------
 
     public void loadFromDatabase(ResultSet result) throws SQLException {
-        time = result.getString("time");
         account = result.getString("account");
-        id = result.getString("id");
         price = result.getDouble("price");
+        time = result.getString("time");
+        id = result.getString("id");
     }
 
     public void loadFromRaw(RawEntry rawEntry) {

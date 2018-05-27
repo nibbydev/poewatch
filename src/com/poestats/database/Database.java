@@ -1,7 +1,6 @@
 package com.poestats.database;
 
 import com.poestats.Config;
-import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.StatusElement;
@@ -545,21 +544,25 @@ public class Database {
             String sup = index.substring(0, Config.index_superSize);
             String sub = index.substring(Config.index_superSize);
 
-            String table1 = "league_" + league.toLowerCase() + "_item";
-            String table2 = "league_" + league.toLowerCase() + "_entry";
+            String tableItem = "league_" + league.toLowerCase() + "_item";
+            String tableEntry = "league_" + league.toLowerCase() + "_entry";
 
-            String query1 = "SELECT * FROM `"+ table1 +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
-            PreparedStatement statement1 = connection.prepareStatement(query1);
-            ResultSet result1 = statement1.executeQuery();
+            String queryItem = "SELECT * FROM `"+ tableItem +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+            String queryEntry = "SELECT * FROM `"+ tableEntry +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+
+            PreparedStatement statementItem = connection.prepareStatement(queryItem);
+            ResultSet resultItem = statementItem.executeQuery();
 
             DatabaseItem databaseItem = new DatabaseItem(sup, sub);
-            if (result1.next()) databaseItem.loadItem(result1);
 
-            String query2 = "SELECT * FROM `"+ table2 +"` WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
-            PreparedStatement statement2 = connection.prepareStatement(query2);
-            ResultSet result2 = statement2.executeQuery();
+            if (resultItem.next()) {
+                databaseItem.loadItem(resultItem);
 
-            databaseItem.loadEntries(result2);
+                PreparedStatement statementEntry = connection.prepareStatement(queryEntry);
+                ResultSet resultEntry = statementEntry.executeQuery();
+
+                databaseItem.loadEntries(resultEntry);
+            }
 
             return databaseItem;
         } catch (SQLException ex) {
@@ -571,8 +574,6 @@ public class Database {
     public boolean updateFullItem(String league, DatabaseItem databaseItem) {
         String table1 = "league_" + league.toLowerCase() + "_item";
         String table2 = "league_" + league.toLowerCase() + "_entry";
-
-        String query0 = "SELECT * FROM `"+ table1 +"` WHERE `sup`=? AND `sub`=?";
 
         String query1 = "UPDATE `"+ table1 +"` " +
                             "SET `mean`=?,`median`=?,`mode`=?,`exalted`=?,`count`=?,`quantity`=?,`inc`=?,`dec`=? " +
@@ -590,12 +591,7 @@ public class Database {
                             "VALUES (?,?,?,?,?)";
 
         try {
-            PreparedStatement statement0 = connection.prepareStatement(query0);
-            statement0.setString(1, databaseItem.getSup());
-            statement0.setString(2, databaseItem.getSub());
-            ResultSet result = statement0.executeQuery();
-
-            if (result.next()) {
+            if (databaseItem.isInDatabase()) {
                 PreparedStatement statement1 = connection.prepareStatement(query1);
                 statement1.setDouble(1, databaseItem.getMean());
                 statement1.setDouble(2, databaseItem.getMedian());
@@ -636,7 +632,6 @@ public class Database {
 
             PreparedStatement statement4 = connection.prepareStatement(query4);
             for (DatabaseEntry databaseEntry : databaseItem.getDatabaseEntryListToAdd()) {
-                System.out.println(databaseEntry.getPriceAsRoundedString());
                 statement4.setString(1, databaseItem.getSup());
                 statement4.setString(2, databaseItem.getSub());
                 statement4.setString(3, databaseEntry.getPriceAsRoundedString());
