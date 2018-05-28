@@ -16,6 +16,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    private final Map<String, List<String>> hourlyIndexes = new HashMap<>();
     private final Map<String, List<String>> leagueIndexes = new HashMap<>();
 
     private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
@@ -80,20 +81,15 @@ public class EntryManager {
      */
     private void cycle() {
         for (String league : leagueIndexes.keySet()) {
+            List<String> hourlyList = hourlyIndexes.getOrDefault(league, new ArrayList<>());
+
             long time1 = System.currentTimeMillis();
 
             List<String> tmpList = new ArrayList<>(leagueIndexes.get(league));
             leagueIndexes.get(league).clear();
 
             for (String index : tmpList) {
-                //DatabaseEntryHolder entryHolder = new DatabaseEntryHolder();
-                //Main.DATABASE.getItem(league, index, entryHolder);
-                //Main.DATABASE.getEntries(league, index, entryHolder);
-
-                //entryHolder.calculate();
-
-                //Main.DATABASE.updateFullItem(league, index, entryHolder);
-
+                if (!hourlyList.contains(index)) hourlyList.add(index);
 
                 Main.DATABASE.calculateMean(league, index);
                 Main.DATABASE.calculateMedian(league, index);
@@ -105,7 +101,25 @@ public class EntryManager {
             System.out.println(String.format("    %-30s (%4d ms)(%4d dif items)", league, time1,  tmpList.size()));
 
             Main.DATABASE.addMinutely(league);
-            Main.DATABASE.removeOldMinutelyEntries(league);
+            Main.DATABASE.removeOldHistoryEntries(league, "minutely", "1 HOUR");
+
+            hourlyIndexes.putIfAbsent(league, hourlyList);
+        }
+
+        if (status.isSixtyBool()) {
+            for (String league : hourlyIndexes.keySet()) {
+                // 1. remove all old hourlyEntries
+                Main.DATABASE.removeOldHistoryEntries(league, "hourly", "1 DAY");
+
+                for (String index : hourlyIndexes.get(league)) {
+                    // 2. sum up minutely values and create hourlyEntry
+                    Main.DATABASE.addHourly(league, index);
+                    // 3. sum up hourlyEntry's incs and update item's quantity (also zero inc and dec)
+                    Main.DATABASE.calcQuantity(league, index);
+                }
+            }
+
+            hourlyIndexes.clear();
         }
     }
 
@@ -162,7 +176,7 @@ public class EntryManager {
         cycle();
         time_cycle = System.currentTimeMillis() - time_cycle;
 
-        // Get latest currency data
+        // Get latest currency rates
         long time_load_currency = System.currentTimeMillis();
         loadCurrency();
         time_load_currency = System.currentTimeMillis() - time_load_currency;
@@ -256,12 +270,16 @@ public class EntryManager {
             Main.DATABASE.uploadRaw(league, indexMap);
             time2 = System.currentTimeMillis() - time2;
 
+            long time4 = System.currentTimeMillis();
+            Main.DATABASE.updateCounters(league, indexMap);
+            time4 = System.currentTimeMillis() - time4;
+
             long time3 = System.currentTimeMillis();
             Main.DATABASE.removeItemOutliers(league, indexMap);
             time3 = System.currentTimeMillis() - time3;
 
-            System.out.println(String.format("    %-30s (%4d ms)(%4d dif items) - (raw: %4d ms)(out: %4d ms)",
-                    league, System.currentTimeMillis() - time1,  indexMap.size(), time2, time3));
+            System.out.println(String.format("    %-30s (%4d ms)(%4d dif items) - (raw: %4d ms)(out: %4d ms)(cnt: %4d ms)",
+                    league, System.currentTimeMillis() - time1,  indexMap.size(), time2, time3, time4));
         }
 
     }

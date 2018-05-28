@@ -669,6 +669,41 @@ public class Database {
         }
     }
 
+    public boolean updateCounters(String league, IndexMap indexMap) {
+        PreparedStatement statement = null;
+        league = formatLeague(league);
+
+        String query =  "UPDATE `!_"+ league +"_item` " +
+                        "SET `count`=`count` + ?, `inc`=`inc` + ? " +
+                        "WHERE `sup`=? AND `sub`=?";
+
+        try {
+            statement = connection.prepareStatement(query);
+
+            for (String index : indexMap.keySet()) {
+                RawList rawList = indexMap.get(index);
+
+                String sup = index.substring(0, Config.index_superSize);
+                String sub = index.substring(Config.index_superSize);
+
+                statement.setInt(1, rawList.size());
+                statement.setInt(2, rawList.size());
+                statement.setString(3, sup);
+                statement.setString(4, sub);
+                statement.addBatch();
+            }
+
+            statement.executeBatch();
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
     /*
     public boolean calculatePrices(String league, String index, RawList rawList) {
         PreparedStatement statementX = null;
@@ -914,6 +949,58 @@ public class Database {
         }
     }
 
+    public boolean addHourly(String league, String index) {
+        PreparedStatement statement = null;
+
+        league = formatLeague(league);
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
+
+        try {
+            String query =  "INSERT INTO `!_"+ league +"_history_entry`" +
+                            "    (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+                            "     `exalted`, `count`, `quantity`, `inc`, `dec`)" +
+                            "SELECT" +
+                            "    '"+ sup +"', '"+ sub +"', 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
+                            "    AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
+                            "FROM `!_"+ league +"_history_entry`" +
+                            "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' AND `type`='minutely'";
+            statement = connection.prepareStatement(query);
+            statement.execute();
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean calcQuantity(String league, String index) {
+        PreparedStatement statement = null;
+
+        league = formatLeague(league);
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
+
+        try {
+            String query =  "UPDATE `!_"+ league +"_item` " +
+                            "SET `inc`=0, `dec`=0, `quantity` = (" +
+                            "    SELECT SUM(`inc`) FROM `!_"+ league +"_history_entry` " +
+                            "    WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' AND `type`='hourly'" +
+                            ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+            statement = connection.prepareStatement(query);
+            statement.execute();
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
     /*
     public boolean addHourly(String league) {
         PreparedStatement statement = null;
@@ -938,14 +1025,14 @@ public class Database {
     }
     */
 
-    public boolean removeOldMinutelyEntries(String league) {
+    public boolean removeOldHistoryEntries(String league, String type, String interval) {
         PreparedStatement statement = null;
         league = formatLeague(league);
 
         try {
             String query =  "DELETE FROM `!_"+ league +"_history_entry` " +
-                            "WHERE `type` = 'minutely' " +
-                            "AND `time` < ADDDATE(NOW(), INTERVAL -1 HOUR)";
+                            "WHERE `type` = '"+ type+ "' " +
+                            "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
             statement = connection.prepareStatement(query);
             statement.execute();
 
