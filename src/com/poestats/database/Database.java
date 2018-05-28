@@ -827,6 +827,67 @@ public class Database {
         }
     }
 
+    public boolean calculateMean(String league, String index) {
+        PreparedStatement statement = null;
+
+        league = formatLeague(league);
+
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
+
+        String query =  "UPDATE `!_"+ league +"_item` " +
+                        "SET `mean` = (" +
+                        "    SELECT AVG(`price`) FROM `!_"+ league +"_item_entry` " +
+                        "    WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
+                        ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+
+        try {
+            statement = connection.prepareStatement(query);
+            statement.execute();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean calculateMedian(String league, String index) {
+        PreparedStatement statement = null;
+
+        league = formatLeague(league);
+
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
+
+        String query =  "UPDATE `!_"+ league +"_item` " +
+                        "SET `median` = (" +
+                        "    SELECT AVG(t1.`price`) as median_val FROM (" +
+                        "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
+                        "        FROM `!_"+ league +"_item_entry` d,  (SELECT @rownum:=0) r" +
+                        "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
+                        "        ORDER BY d.`price`" +
+                        "    ) as t1, (" +
+                        "        SELECT count(*) as total_rows" +
+                        "        FROM `!_"+ league +"_item_entry` d" +
+                        "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
+                        "    ) as t2 WHERE 1" +
+                        "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
+                        ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+
+        try {
+            statement = connection.prepareStatement(query);
+            statement.execute();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
     //--------------------------
     // History entry management
     //--------------------------

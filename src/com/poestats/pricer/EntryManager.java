@@ -6,6 +6,7 @@ import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private final Map<String, Map<String, Integer>> leagueIndexes = new HashMap<>();
+    private final Map<String, List<String>> leagueIndexes = new HashMap<>();
 
     private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
     private final Object monitor = new Object();
@@ -78,28 +79,30 @@ public class EntryManager {
      * Writes all collected data to file
      */
     private void cycle() {
-        Map<String, Map<String, Integer>> leagueIndexes = new HashMap<>(this.leagueIndexes);
-        this.leagueIndexes.clear();
-
         for (String league : leagueIndexes.keySet()) {
             long time1 = System.currentTimeMillis();
 
-            for (String index : leagueIndexes.get(league).keySet()) {
-                int count = leagueIndexes.get(league).get(index);
+            List<String> tmpList = new ArrayList<>(leagueIndexes.get(league));
+            leagueIndexes.get(league).clear();
 
-                DatabaseEntryHolder entryHolder = new DatabaseEntryHolder();
-                Main.DATABASE.getItem(league, index, entryHolder);
-                Main.DATABASE.getEntries(league, index, entryHolder);
+            for (String index : tmpList) {
+                //DatabaseEntryHolder entryHolder = new DatabaseEntryHolder();
+                //Main.DATABASE.getItem(league, index, entryHolder);
+                //Main.DATABASE.getEntries(league, index, entryHolder);
 
-                entryHolder.calculate();
-                entryHolder.incCounters(count);
+                //entryHolder.calculate();
 
-                Main.DATABASE.updateFullItem(league, index, entryHolder);
+                //Main.DATABASE.updateFullItem(league, index, entryHolder);
+
+
+                Main.DATABASE.calculateMean(league, index);
+                Main.DATABASE.calculateMedian(league, index);
                 Main.DATABASE.removeOldItemEntries(league, index);
             }
 
+
             time1 = System.currentTimeMillis() - time1;
-            System.out.println(String.format("    %-30s (%4d ms)(%4d items)", league, time1,  leagueIndexes.get(league).size()));
+            System.out.println(String.format("    %-30s (%4d ms)(%4d dif items)", league, time1,  tmpList.size()));
 
             Main.DATABASE.addMinutely(league);
             Main.DATABASE.removeOldMinutelyEntries(league);
@@ -234,9 +237,8 @@ public class EntryManager {
 
                 rawList.add(rawEntry);
 
-                Map<String, Integer> leagueIndexes = this.leagueIndexes.getOrDefault(item.league, new HashMap<>());
-                int count = leagueIndexes.getOrDefault(index, 0);
-                leagueIndexes.put(index, ++count);
+                List<String> leagueIndexes = this.leagueIndexes.getOrDefault(item.league, new ArrayList<>());
+                if (!leagueIndexes.contains(index)) leagueIndexes.add(index);
                 this.leagueIndexes.putIfAbsent(item.league, leagueIndexes);
 
                 indexMap.putIfAbsent(index, rawList);
@@ -244,10 +246,24 @@ public class EntryManager {
             }
         }
 
+
         for (String league : leagueMap.keySet()) {
-            Main.DATABASE.uploadRaw(league, leagueMap.get(league));
-            Main.DATABASE.removeItemOutliers(league, leagueMap.get(league));
+            long time1 = System.currentTimeMillis();
+
+            IndexMap indexMap = leagueMap.get(league);
+
+            long time2 = System.currentTimeMillis();
+            Main.DATABASE.uploadRaw(league, indexMap);
+            time2 = System.currentTimeMillis() - time2;
+
+            long time3 = System.currentTimeMillis();
+            Main.DATABASE.removeItemOutliers(league, indexMap);
+            time3 = System.currentTimeMillis() - time3;
+
+            System.out.println(String.format("    %-30s (%4d ms)(%4d dif items) - (raw: %4d ms)(out: %4d ms)",
+                    league, System.currentTimeMillis() - time1,  indexMap.size(), time2, time3));
         }
+
     }
 
     /**
