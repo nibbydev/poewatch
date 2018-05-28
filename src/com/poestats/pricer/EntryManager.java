@@ -1,7 +1,6 @@
 package com.poestats.pricer;
 
 import com.poestats.*;
-import com.poestats.database.DatabaseEntryHolder;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;

@@ -583,7 +583,7 @@ public class Database {
         }
     }
 */
-
+/*
     public boolean updateFullItem(String league, String index, DatabaseEntryHolder entryHolder) {
         PreparedStatement statement = null;
         league = formatLeague(league);
@@ -630,7 +630,7 @@ public class Database {
             try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
-
+*/
     public boolean uploadRaw(String league, IndexMap indexMap) {
         PreparedStatement statement = null;
         league = formatLeague(league);
@@ -806,7 +806,7 @@ public class Database {
         }
     }
     */
-
+/*
     public boolean getItem(String league, String index, DatabaseEntryHolder entryHolder) {
         PreparedStatement statement = null;
         ResultSet result = null;
@@ -833,7 +833,8 @@ public class Database {
             try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
-
+    */
+/*
     public boolean getEntries(String league, String index, DatabaseEntryHolder entryHolder) {
         PreparedStatement statement = null;
         ResultSet result = null;
@@ -861,7 +862,7 @@ public class Database {
             try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
-
+*/
     public boolean calculateMean(String league, String index) {
         PreparedStatement statement = null;
 
@@ -1001,29 +1002,6 @@ public class Database {
             try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
-    /*
-    public boolean addHourly(String league) {
-        PreparedStatement statement = null;
-        league = formatLeague(league);
-
-        try {
-            String query =  "INSERT INTO `!_"+ league +"_history_entry` " +
-                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`)" +
-                            "SELECT " +
-                            "    `sup`,`sub`,'hourly',`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`" +
-                            "FROM `!_"+ league +"_item`";
-            statement = connection.prepareStatement(query);
-            statement.execute();
-
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-        }
-    }
-    */
 
     public boolean removeOldHistoryEntries(String league, String type, String interval) {
         PreparedStatement statement = null;
@@ -1265,6 +1243,10 @@ public class Database {
     }
 
     public static String formatLeague(String league) {
-        return league.replace(" ", "-").replace("(", "").replace(")", "").toLowerCase();
+        return league
+                .replace(" ", "-")
+                .replace("(", "")
+                .replace(")", "")
+                .toLowerCase();
     }
 }
