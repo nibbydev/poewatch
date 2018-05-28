@@ -924,6 +924,42 @@ public class Database {
         }
     }
 
+    public boolean calculateExalted(String league) {
+        Statement statement1 = null;
+        Statement statement2 = null;
+
+        league = formatLeague(league);
+
+        String query1 = "SET @exVal = (" +
+                        "    SELECT  `mean`" +
+                        "    FROM (SELECT `sup`, `mean` FROM `!_"+ league +"_item`) AS i" +
+                        "        INNER JOIN `item_data_sup` AS d" +
+                        "            ON i.`sup` = d.`sup`" +
+                        "    WHERE EXISTS (" +
+                        "        SELECT * FROM `item_data_sup` AS a " +
+                        "        WHERE a.`sup` = i.`sup` " +
+                        "        AND a.`parent` = 'currency'" +
+                        "        AND a.`name` = 'Exalted Orb'))";
+
+        String query2 = "UPDATE `!_"+ league +"_item` " +
+                        "SET `exalted` = `mean` / @exVal";
+
+        try {
+            statement1 = connection.createStatement();
+            statement1.execute(query1);
+
+            statement2 = connection.createStatement();
+            statement2.execute(query2);
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
     //--------------------------
     // History entry management
     //--------------------------
@@ -933,11 +969,11 @@ public class Database {
         league = formatLeague(league);
 
         try {
-            String query =  "INSERT INTO `!_"+ league +"_history_entry` " +
-                            "    (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`)" +
-                            "SELECT " +
-                            "    `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`" +
-                            "FROM `!_"+ league +"_item`";
+            String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
+                            "                                            `exalted`,`inc`,`dec`,`count`,`quantity`)" +
+                            "   SELECT `sup`,`sub`,'minutely',`mean`,`median`,`mode`," +
+                            "           `exalted`,`inc`,`dec`,`count`,`quantity`" +
+                            "   FROM `!_"+ league +"_item`";
             statement = connection.prepareStatement(query);
             statement.execute();
 
@@ -950,22 +986,18 @@ public class Database {
         }
     }
 
-    public boolean addHourly(String league, String index) {
+    public boolean addHourly(String league) {
         PreparedStatement statement = null;
-
         league = formatLeague(league);
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
 
         try {
-            String query =  "INSERT INTO `!_"+ league +"_history_entry`" +
-                            "    (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
-                            "     `exalted`, `count`, `quantity`, `inc`, `dec`)" +
-                            "SELECT" +
-                            "    '"+ sup +"', '"+ sub +"', 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
-                            "    AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                            "FROM `!_"+ league +"_history_entry`" +
-                            "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' AND `type`='minutely'";
+            String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+                            "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
+                            "    SELECT `sup`, `sub`, 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
+                            "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
+                            "    FROM `!_"+ league +"_history_entry`" +
+                            "    WHERE `type`='minutely'" +
+                            "    GROUP BY `sup`, `sub`";
             statement = connection.prepareStatement(query);
             statement.execute();
 
@@ -978,19 +1010,16 @@ public class Database {
         }
     }
 
-    public boolean calcQuantity(String league, String index) {
+    public boolean calcQuantity(String league) {
         PreparedStatement statement = null;
 
         league = formatLeague(league);
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
-
         try {
-            String query =  "UPDATE `!_"+ league +"_item` " +
-                            "SET `inc`=0, `dec`=0, `quantity` = (" +
+            String query =  "UPDATE `!_"+ league +"_item` as i " +
+                            "SET `quantity` = (" +
                             "    SELECT SUM(`inc`) FROM `!_"+ league +"_history_entry` " +
-                            "    WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' AND `type`='hourly'" +
-                            ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+                            "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
+                            "), `inc`=0, `dec`=0";
             statement = connection.prepareStatement(query);
             statement.execute();
 
@@ -1040,8 +1069,7 @@ public class Database {
                             "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
                             "        ORDER BY `time` DESC" +
                             "        LIMIT "+ Config.entry_itemsSize +
-                            "    ) foo" +
-                            ")";
+                            "    ) foo )";
             statement = connection.prepareStatement(query);
             statement.execute();
 
