@@ -745,7 +745,7 @@ public class Database {
             try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
-    
+
     public boolean calculateExalted(String league) {
         Statement statement1 = null;
         Statement statement2 = null;
@@ -787,18 +787,18 @@ public class Database {
     //--------------------------
 
     public boolean addMinutely(String league) {
-        PreparedStatement statement = null;
+        Statement statement = null;
         league = formatLeague(league);
 
-        try {
-            String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
-                            "                                            `exalted`,`inc`,`dec`,`count`,`quantity`)" +
-                            "   SELECT `sup`,`sub`,'minutely',`mean`,`median`,`mode`," +
-                            "           `exalted`,`inc`,`dec`,`count`,`quantity`" +
-                            "   FROM `!_"+ league +"_item`";
-            statement = connection.prepareStatement(query);
-            statement.execute();
+        String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
+                        "                                            `exalted`,`inc`,`dec`,`count`,`quantity`)" +
+                        "   SELECT `sup`,`sub`,'minutely',`mean`,`median`,`mode`," +
+                        "           `exalted`,`inc`,`dec`,`count`,`quantity`" +
+                        "   FROM `!_"+ league +"_item`";
 
+        try {
+            statement = connection.createStatement();
+            statement.execute(query);
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -809,20 +809,44 @@ public class Database {
     }
 
     public boolean addHourly(String league) {
-        PreparedStatement statement = null;
+        Statement statement = null;
         league = formatLeague(league);
 
-        try {
-            String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
-                            "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
-                            "    SELECT `sup`, `sub`, 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
-                            "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                            "    FROM `!_"+ league +"_history_entry`" +
-                            "    WHERE `type`='minutely'" +
-                            "    GROUP BY `sup`, `sub`";
-            statement = connection.prepareStatement(query);
-            statement.execute();
+        String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+                        "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
+                        "    SELECT `sup`, `sub`, 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
+                        "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
+                        "    FROM `!_"+ league +"_history_entry`" +
+                        "    WHERE `type`='minutely'" +
+                        "    GROUP BY `sup`, `sub`";
 
+        try {
+            statement = connection.createStatement();
+            statement.execute(query);
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean addDaily(String league) {
+        Statement statement = null;
+        league = formatLeague(league);
+
+        String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+                        "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
+                        "    SELECT `sup`, `sub`, 'daily', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
+                        "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
+                        "    FROM `!_"+ league +"_history_entry`" +
+                        "    WHERE `type`='hourly'" +
+                        "    GROUP BY `sup`, `sub`";
+
+        try {
+            statement = connection.createStatement();
+            statement.execute(query);
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();

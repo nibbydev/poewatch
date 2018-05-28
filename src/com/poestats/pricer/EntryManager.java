@@ -79,65 +79,36 @@ public class EntryManager {
      */
     private void cycle() {
         for (String league : leagueIndexes.keySet()) {
-            long time0 = System.currentTimeMillis();
-            long time1;
-            long time2;
-            long time3;
-            long time4;
-            long tmp;
-
             List<String> tmpList = new ArrayList<>(leagueIndexes.get(league));
             leagueIndexes.get(league).clear();
 
-            tmp = System.currentTimeMillis();
             for (String index : tmpList) {
                 Main.DATABASE.calculateMean(league, index);
                 Main.DATABASE.calculateMedian(league, index);
                 Main.DATABASE.calculateMode(league, index);
                 Main.DATABASE.removeOldItemEntries(league, index);
             }
-            time1 = System.currentTimeMillis() - tmp;
 
-            tmp = System.currentTimeMillis();
             Main.DATABASE.calculateExalted(league);
-            time2 = System.currentTimeMillis() - tmp;
-
-            tmp = System.currentTimeMillis();
             Main.DATABASE.addMinutely(league);
-            time3 = System.currentTimeMillis() - tmp;
-
-            tmp = System.currentTimeMillis();
             Main.DATABASE.removeOldHistoryEntries(league, "minutely", "1 HOUR");
-            time4 = System.currentTimeMillis() - tmp;
-
-            System.out.println(String.format("[cycle] %-30s (total:%4d)(items:%4d) - (pri:%4d)(exa:%4d)(minu:%4d)(old:%4d)",
-                    league, System.currentTimeMillis() - time0, tmpList.size(),
-                    time1, time2, time3, time4));
         }
 
         if (status.isSixtyBool()) {
             for (String league : leagueIndexes.keySet()) {
-                long time1 = 0;
-                long time2 = 0;
-                long time3 = 0;
-                long tmp;
-
-                // 1. remove all old hourlyEntries
-                tmp = System.currentTimeMillis();
                 Main.DATABASE.removeOldHistoryEntries(league, "hourly", "1 DAY");
-                time1 += System.currentTimeMillis() - tmp;
-
-                // 2. sum up minutely values and create hourlyEntry
-                tmp = System.currentTimeMillis();
                 Main.DATABASE.addHourly(league);
-                time2 += System.currentTimeMillis() - tmp;
-
-                // 3. sum up hourlyEntry's incs and update item's quantity (also zero inc and dec)
-                tmp = System.currentTimeMillis();
                 Main.DATABASE.calcQuantity(league);
-                time3 += System.currentTimeMillis() - tmp;
+            }
 
-                System.out.println(String.format("[HOURLY] %-30s (%4d ms)(add: %4d ms)(quant: %4d)", league, time1, time2, time3));
+            // TODO: remove after development
+            System.gc();
+        }
+
+        if (status.isTwentyFourBool()) {
+            for (String league : leagueIndexes.keySet()) {
+                Main.DATABASE.addDaily(league);
+                Main.DATABASE.removeOldHistoryEntries(league, "daily", "7 DAYS");
             }
         }
     }
@@ -163,7 +134,6 @@ public class EntryManager {
         if (current - status.tenCounter > Config.entryController_tenMS) {
             status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
             status.setTenBool(true);
-            Main.ADMIN.log_("10 activated", 0);
         }
 
         // Run once every 60min
@@ -182,12 +152,6 @@ public class EntryManager {
             status.twentyFourCounter += (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
             status.setTwentyFourBool(true);
             Main.ADMIN.log_("24 activated", 0);
-
-            // Make a backup before 24h mark passes
-            Main.ADMIN.log_("Starting backup (before)...", 0);
-            long time_backup = System.currentTimeMillis();
-            Main.ADMIN.backup(Config.folder_data, "daily_before");
-            Main.ADMIN.log_("Backup (before) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
         }
 
         // Sort JSON
@@ -203,14 +167,6 @@ public class EntryManager {
         // Build JSON
         long time_json = System.currentTimeMillis();
         time_json = System.currentTimeMillis() - time_json;
-
-        // Backup output folder
-        if (status.isTwentyFourBool()) {
-            Main.ADMIN.log_("Starting backup (after)...", 0);
-            long time_backup = System.currentTimeMillis();
-            Main.ADMIN.backup(Config.folder_data, "daily_after");
-            Main.ADMIN.log_("Backup (after) finished: " + (System.currentTimeMillis() - time_backup) + " ms", 0);
-        }
 
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%5d", System.currentTimeMillis() - status.lastRunTime) + " ms]";
@@ -228,7 +184,6 @@ public class EntryManager {
         flipPauseFlag();
 
         Main.DATABASE.updateStatus(status);
-        //System.gc();
     }
 
     /**
