@@ -1,18 +1,23 @@
 package com.poestats.pricer;
 
 import com.poestats.*;
-import com.poestats.database.DatabaseItem;
+import com.poestats.database.DatabaseEntryHolder;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    private final Map<String, Map<String, Integer>> leagueIndexes = new HashMap<>();
+
     private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
-    private final LeagueMap leagueMap = new LeagueMap();
     private final Object monitor = new Object();
 
     private volatile boolean flagPause;
@@ -73,32 +78,31 @@ public class EntryManager {
      * Writes all collected data to file
      */
     private void cycle() {
-        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getId();
+        Map<String, Map<String, Integer>> leagueIndexes = new HashMap<>(this.leagueIndexes);
+        this.leagueIndexes.clear();
 
-            IndexMap indexMap = leagueMap.get(league);
-            if (indexMap == null) continue;
-
+        for (String league : leagueIndexes.keySet()) {
             long time1 = System.currentTimeMillis();
-            for (String index : indexMap.keySet()) {
-                DatabaseItem databaseItem = Main.DATABASE.getFullItem(index, league);
-                if (databaseItem == null) continue;
 
-                databaseItem.processRaw(indexMap.get(index));
-                databaseItem.removeOutliers();
-                databaseItem.calculate();
-                Main.DATABASE.updateFullItem(league, databaseItem);
+            for (String index : leagueIndexes.get(league).keySet()) {
+                int count = leagueIndexes.get(league).get(index);
+
+                DatabaseEntryHolder entryHolder = new DatabaseEntryHolder();
+                Main.DATABASE.getItem(league, index, entryHolder);
+                Main.DATABASE.getEntries(league, index, entryHolder);
+
+                entryHolder.calculate();
+                entryHolder.incCounters(count);
+
+                Main.DATABASE.updateFullItem(league, index, entryHolder);
                 Main.DATABASE.removeOldItemEntries(league, index);
-                Main.DATABASE.removeItemOutliers(league, index);
             }
 
             time1 = System.currentTimeMillis() - time1;
-            System.out.println(String.format("    %-30s (%4d ms)(%4d items)", league, time1, indexMap.size()));
+            System.out.println(String.format("    %-30s (%4d ms)(%4d items)", league, time1,  leagueIndexes.get(league).size()));
 
             Main.DATABASE.addMinutely(league);
             Main.DATABASE.removeOldMinutelyEntries(league);
-
-            indexMap.clear();
         }
     }
 
@@ -197,6 +201,8 @@ public class EntryManager {
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
+        LeagueMap leagueMap = new LeagueMap();
+
         for (Mappers.Stash stash : reply.stashes) {
             stash.fix();
             for (Item item : stash.items) {
@@ -214,11 +220,10 @@ public class EntryManager {
                 item.parseItem();
                 if (item.isDiscard()) continue;
 
-                IndexMap indexMap = leagueMap.getOrDefault(item.league, new IndexMap());
-
                 String index = Main.RELATIONS.indexItem(item);
                 if (index == null) continue; // Some currency items have invalid icons
 
+                IndexMap indexMap = leagueMap.getOrDefault(item.league, new IndexMap());
                 RawList rawList = indexMap.getOrDefault(index, new RawList());
 
                 RawEntry rawEntry = new RawEntry();
@@ -229,9 +234,19 @@ public class EntryManager {
 
                 rawList.add(rawEntry);
 
+                Map<String, Integer> leagueIndexes = this.leagueIndexes.getOrDefault(item.league, new HashMap<>());
+                int count = leagueIndexes.getOrDefault(index, 0);
+                leagueIndexes.put(index, ++count);
+                this.leagueIndexes.putIfAbsent(item.league, leagueIndexes);
+
                 indexMap.putIfAbsent(index, rawList);
                 leagueMap.putIfAbsent(item.league, indexMap);
             }
+        }
+
+        for (String league : leagueMap.keySet()) {
+            Main.DATABASE.uploadRaw(league, leagueMap.get(league));
+            Main.DATABASE.removeItemOutliers(league, leagueMap.get(league));
         }
     }
 

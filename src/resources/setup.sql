@@ -118,7 +118,7 @@ CREATE TABLE `!__history` (
     CONSTRAINT `_history`
         PRIMARY KEY (`sup`,`sub`),
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `!__item` (`sup`,`sub`)
+        REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
 
     `sup`       varchar(5)      NOT NULL,
@@ -142,8 +142,9 @@ CREATE TABLE `!__history` (
 
 CREATE TABLE `!__item_entry` (
     CONSTRAINT `_item_entry`
+        PRIMARY KEY (`sup`,`sub`,`account`),
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `!__item` (`sup`,`sub`)
+        REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
 
     `sup`       varchar(5)      NOT NULL,
@@ -171,7 +172,7 @@ CREATE TABLE `history_entry_category` (
 CREATE TABLE `!__history_entry` (
     CONSTRAINT `_history_entry`
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `!__item` (`sup`,`sub`)
+        REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
     FOREIGN KEY (`type`)
         REFERENCES `history_entry_category` (`type`)

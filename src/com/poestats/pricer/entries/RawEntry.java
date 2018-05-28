@@ -2,7 +2,7 @@ package com.poestats.pricer.entries;
 
 import com.poestats.Config;
 import com.poestats.Item;
-import com.poestats.database.DatabaseItem;
+import com.poestats.database.CurrencyItem;
 import com.poestats.pricer.maps.CurrencyMap;
 
 public class RawEntry {
@@ -12,7 +12,6 @@ public class RawEntry {
 
     private String account, priceType, id;
     private double price;
-    private boolean discard;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -28,12 +27,12 @@ public class RawEntry {
     public boolean convertPrice(CurrencyMap currencyMap) {
         if (!priceType.equals("Chaos Orb")) {
             if (currencyMap == null) return true;
-            DatabaseItem databaseItem = currencyMap.get(priceType);
+            CurrencyItem currencyItem = currencyMap.get(priceType);
 
-            if (databaseItem == null) return true;
-            else if (databaseItem.getCount() < 20) return true;
+            if (currencyItem == null) return true;
+            else if (currencyItem.getCount() < 20) return true;
 
-            price = Math.round(price * databaseItem.getMean() * Config.item_pricePrecision) / Config.item_pricePrecision;
+            price = Math.round(price * currencyItem.getMean() * Config.item_pricePrecision) / Config.item_pricePrecision;
             priceType = "Chaos Orb";
         }
 
@@ -58,13 +57,5 @@ public class RawEntry {
 
     public String getAccount() {
         return account;
-    }
-
-    public String getPriceType() {
-        return priceType;
-    }
-
-    public boolean isDiscard() {
-        return discard;
     }
 }
