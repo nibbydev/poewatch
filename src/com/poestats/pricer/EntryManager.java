@@ -93,6 +93,7 @@ public class EntryManager {
             for (String index : tmpList) {
                 Main.DATABASE.calculateMean(league, index);
                 Main.DATABASE.calculateMedian(league, index);
+                Main.DATABASE.calculateMode(league, index);
                 Main.DATABASE.removeOldItemEntries(league, index);
             }
             time1 = System.currentTimeMillis() - tmp;

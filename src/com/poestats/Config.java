@@ -15,6 +15,7 @@ public class Config {
     public static final String db_database = "ps_test_database";
 
     public static final double db_outlierMulti = 2.0;
+    public static final double db_outlierMulti2 = 1.2;
 
     public static String getDb_password() {
         return db_password;
