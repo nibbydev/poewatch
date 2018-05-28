@@ -1,6 +1,7 @@
 package com.poestats.database;
 
 import com.poestats.Config;
+import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.StatusElement;
@@ -669,6 +670,30 @@ public class Database {
         }
     }
 
+    public boolean createItem(String league, String index) {
+        Statement statement = null;
+        league = formatLeague(league);
+
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
+
+        String query =  "INSERT INTO `!_"+ league +"_item` (`sup`, `sub`) " +
+                        "VALUES ('"+ sup +"', '"+ sub +"') " +
+                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
+
+        try {
+            statement = connection.createStatement();
+            statement.execute(query);
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
     public boolean updateCounters(String league, IndexMap indexMap) {
         PreparedStatement statement = null;
         league = formatLeague(league);
@@ -942,7 +967,7 @@ public class Database {
                         "        AND a.`name` = 'Exalted Orb'))";
 
         String query2 = "UPDATE `!_"+ league +"_item` " +
-                        "SET `exalted` = `mean` / @exVal";
+                        "SET `exalted` = IFNULL(`mean` / @exVal, 0.0)";
 
         try {
             statement1 = connection.createStatement();

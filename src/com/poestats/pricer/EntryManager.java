@@ -268,6 +268,7 @@ public class EntryManager {
                 if (discard) continue; // Couldn't convert the listed currency to chaos
 
                 rawList.add(rawEntry);
+                Main.DATABASE.createItem(item.league, index);
 
                 List<String> leagueIndexes = this.leagueIndexes.getOrDefault(item.league, new ArrayList<>());
                 if (!leagueIndexes.contains(index)) leagueIndexes.add(index);
