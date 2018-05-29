@@ -18,7 +18,7 @@ public class LeagueManager {
     //------------------------------------------------------------------------------------------------------------
 
     private Gson gson = Main.getGson();
-    private List<LeagueEntry> leagues;
+    private List<LeagueEntry> leagues = new ArrayList<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -30,20 +30,19 @@ public class LeagueManager {
      * @return False on failure
      */
     public boolean loadLeaguesOnStartup() {
-        List<LeagueEntry> tmpLeagueList = new ArrayList<>();
         boolean success;
 
-        success = downloadLeagueList(tmpLeagueList);
+        success = downloadLeagueList(leagues);
 
         // Download failed. Load leagues from database
         if (!success) {
-            success = Main.DATABASE.getLeagues(tmpLeagueList);
+            success = Main.DATABASE.getLeagues(leagues);
 
             // Download failed AND database doesn't have league data. Shut down the program.
             if (!success) return false;
         }
 
-        leagues = sortLeagues(tmpLeagueList);
+        sortLeagues(leagues);
 
         // Update database leagues
         Main.DATABASE.updateLeagues(leagues);
@@ -62,14 +61,27 @@ public class LeagueManager {
      */
     public boolean download() {
         List<LeagueEntry> tmpLeagueList = new ArrayList<>();
+        boolean success;
 
-        boolean success = downloadLeagueList(tmpLeagueList);
-        if (!success) return false;
+        success = downloadLeagueList(tmpLeagueList);
 
-        leagues = sortLeagues(tmpLeagueList);
+        // Download failed. Load leagues from database
+        if (!success) {
+            success = Main.DATABASE.getLeagues(leagues);
+
+            // Download failed AND database doesn't have league data. Shut down the program.
+            if (!success) return false;
+        }
+
+        sortLeagues(tmpLeagueList);
+        leagues = tmpLeagueList;
 
         // Update database leagues if there have been any changes
         Main.DATABASE.updateLeagues(leagues);
+
+        for (LeagueEntry leagueEntry : leagues) {
+            Main.DATABASE.createLeagueTables(leagueEntry.getId());
+        }
 
         return true;
     }
@@ -78,65 +90,70 @@ public class LeagueManager {
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
 
-    private List<LeagueEntry> sortLeagues(List<LeagueEntry> leagueList) {
+    private void sortLeagues(List<LeagueEntry> leagueList) {
+        List<LeagueEntry> sortedLeagueList = new ArrayList<>();
+
         // Get rid of SSF
-        List<LeagueEntry> leagueListNoSSF = new ArrayList<>();
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().contains("SSF")) continue;
-            leagueListNoSSF.add(leagueEntry);
+        for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
+            if (leagueEntry.getId().contains("SSF")) {
+                leagueList.remove(leagueEntry);
+            }
         }
 
-        List<LeagueEntry> tmpLeagueList = new ArrayList<>(leagueListNoSSF.size());
-
         // Add softcore events
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
                 if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
-                    tmpLeagueList.add(leagueEntry);
+                    sortedLeagueList.add(leagueEntry);
                 }
             }
         }
 
         // Add hardcore events
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
                 if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
-                    tmpLeagueList.add(leagueEntry);
+                    sortedLeagueList.add(leagueEntry);
                 }
             }
         }
 
         // Add main softcore league
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
             if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
 
             if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
-                tmpLeagueList.add(leagueEntry);
+                sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add main hardcore league
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
             if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
 
             if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
-                tmpLeagueList.add(leagueEntry);
+                sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add Standard
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
-            if (leagueEntry.getId().equals("Standard")) tmpLeagueList.add(leagueEntry);
+        for (LeagueEntry leagueEntry : leagueList) {
+            if (leagueEntry.getId().equals("Standard")) {
+                sortedLeagueList.add(leagueEntry);
+            }
         }
 
         // Add Hardcore
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
-            if (leagueEntry.getId().equals("Hardcore")) tmpLeagueList.add(leagueEntry);
+        for (LeagueEntry leagueEntry : leagueList) {
+            if (leagueEntry.getId().equals("Hardcore")) {
+                sortedLeagueList.add(leagueEntry);
+            }
         }
 
-        return tmpLeagueList;
+        leagueList.clear();
+        leagueList.addAll(sortedLeagueList);
     }
 
     //------------------------------------------------------------------------------------------------------------

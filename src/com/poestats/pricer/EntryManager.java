@@ -5,11 +5,6 @@ import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
@@ -77,22 +72,25 @@ public class EntryManager {
      * Writes all collected data to file
      */
     private void cycle() {
-        for (String league : leagueMap.keySet()) {
+        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+            String league = leagueEntry.getId();
             IndexMap indexMap = leagueMap.get(league);
 
-            for (String index : indexMap.keySet()) {
-                Main.DATABASE.createItem(league, index);
-            }
+            if (indexMap != null) {
+                for (String index : indexMap.keySet()) {
+                    Main.DATABASE.createItem(league, index);
+                }
 
-            Main.DATABASE.uploadRaw(league, indexMap);
-            Main.DATABASE.updateCounters(league, indexMap);
-            Main.DATABASE.removeItemOutliers(league, indexMap);
+                Main.DATABASE.uploadRaw(league, indexMap);
+                Main.DATABASE.updateCounters(league, indexMap);
+                Main.DATABASE.removeItemOutliers(league, indexMap);
 
-            for (String index : indexMap.keySet()) {
-                Main.DATABASE.calculateMean(league, index);
-                Main.DATABASE.calculateMedian(league, index);
-                Main.DATABASE.calculateMode(league, index);
-                Main.DATABASE.removeOldItemEntries(league, index);
+                for (String index : indexMap.keySet()) {
+                    Main.DATABASE.calculateMean(league, index);
+                    Main.DATABASE.calculateMedian(league, index);
+                    Main.DATABASE.calculateMode(league, index);
+                    Main.DATABASE.removeOldItemEntries(league, index);
+                }
             }
 
             Main.DATABASE.calculateExalted(league);
@@ -101,26 +99,25 @@ public class EntryManager {
         }
 
         if (status.isSixtyBool()) {
-            for (String league : leagueMap.keySet()) {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                String league = leagueEntry.getId();
+
                 Main.DATABASE.removeOldHistoryEntries(league, "hourly", "1 DAY");
                 Main.DATABASE.addHourly(league);
                 Main.DATABASE.calcQuantity(league);
             }
-
-            // TODO: remove after development
-            System.gc();
         }
 
         if (status.isTwentyFourBool()) {
-            for (String league : leagueMap.keySet()) {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                String league = leagueEntry.getId();
+
                 Main.DATABASE.addDaily(league);
                 Main.DATABASE.removeOldHistoryEntries(league, "daily", "7 DAYS");
             }
         }
 
-        for (IndexMap indexMap : leagueMap.values()) {
-            indexMap.clear();
-        }
+        leagueMap.clear();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -139,6 +136,12 @@ public class EntryManager {
 
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
+
+        try {
+            Thread.sleep(50);
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
 
         // Run once every 10min
         if (current - status.tenCounter > Config.entryController_tenMS) {

@@ -116,14 +116,15 @@ public class Database {
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "INSERT INTO `leagues` (`id`, `start`, `end`) " +
-                        "VALUES (?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE" +
-                        "    `start`    = VALUES(`start`)," +
-                        "    `end`      = VALUES(`end`)";
+        String query1 = "DELETE FROM `leagues`";
+        String query2 = "INSERT INTO `leagues` (`id`, `start`, `end`) VALUES (?, ?, ?)";
 
         try {
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query1);
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getId());
                     statement.setString(2, leagueEntry.getStartAt());
