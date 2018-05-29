@@ -30,8 +30,8 @@ public class RelationManager {
     private Map<String, String> genericKeyToSuperIndex = new HashMap<>();
     private Map<String, String> specificKeyToFullIndex = new HashMap<>();
 
-    private Map<String, SupIndexedItem> supIndexToData;
-    private Map<String, List<String>> categories;
+    private Map<String, SupIndexedItem> supIndexToData = new HashMap<>();
+    private Map<String, List<String>> categories = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -41,16 +41,18 @@ public class RelationManager {
      * Reads currency and item data from file on object init
      */
     public void init() {
-        categories = Main.DATABASE.getCategories();
-        if (categories == null) {
+        boolean success;
+
+        success = Main.DATABASE.getCategories(categories);
+        if (!success) {
             Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);
             System.exit(-1);
         } else if (categories.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any category information", 2);
         }
 
-        supIndexToData = Main.DATABASE.getItemData();
-        if (supIndexToData == null) {
+        success = Main.DATABASE.getItemData(supIndexToData);
+        if (!success) {
             Main.ADMIN.log_("Failed to query item data from database. Shutting down...", 5);
             System.exit(-1);
         } else if (supIndexToData.isEmpty()) {

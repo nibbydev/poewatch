@@ -13,7 +13,6 @@ import com.poestats.relations.entries.SubIndexedItem;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,16 +57,16 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private boolean getTables(ArrayList<String> tables) {
-        Statement statement = null;
-        ResultSet result = null;
+        String query = "SHOW tables";
 
         try {
-            statement = connection.createStatement();
-            result = statement.executeQuery("SHOW tables");
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-            tables.clear();
-            while (result.next()) {
-                tables.add(result.getString(1));
+                tables.clear();
+                while (resultSet.next()) {
+                    tables.add(resultSet.getString(1));
+                }
             }
 
             return true;
@@ -75,9 +74,6 @@ public class Database {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query table info", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -120,8 +116,8 @@ public class Database {
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "INSERT INTO `leagues` (`id`, `start`, `end`)" +
-                        "VALUES (?, ?, ?)" +
+        String query =  "INSERT INTO `leagues` (`id`, `start`, `end`) " +
+                        "VALUES (?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE" +
                         "    `start`    = VALUES(`start`)," +
                         "    `end`      = VALUES(`end`)";
@@ -152,77 +148,65 @@ public class Database {
      *
      * @param changeID New changeID string to store
      */
-    public void updateChangeID(String changeID) {
-        PreparedStatement statement1 = null;
-        PreparedStatement statement2 = null;
+    public boolean updateChangeID(String changeID) {
+        String query1 = "DELETE FROM `changeid`";
+        String query2 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
 
         try {
-            String query1 = "DELETE FROM `changeid`";
-            String query2 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query1);
+            }
 
-            statement1 = connection.prepareStatement(query1);
-            statement2 = connection.prepareStatement(query2);
-
-            statement2.setString(1, changeID);
-
-            statement1.execute();
-            statement2.execute();
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setString(1, changeID);
+                statement.execute();
+            }
 
             connection.commit();
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database change id", 3);
-        } finally {
-            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
         }
     }
 
     /**
      * Gets a list of parent and child categories and their display names from the database
-     *
-     * @return Map of categories or null on error
      */
-    public Map<String, List<String>> getCategories() {
-        PreparedStatement statement = null;
-        ResultSet result = null;
-
-        Map<String, List<String>> categories = new HashMap<>();
+    public boolean getCategories(Map<String, List<String>> tmpCategories) {
+        String query =  "SELECT " +
+                        "    `category_parent`.`parent`, " +
+                        "    `category_parent`.`display`, " +
+                        "    `category_child`.`child`, " +
+                        "    `category_child`.`display` " +
+                        "FROM `category_child`" +
+                        "    JOIN `category_parent`" +
+                        "        ON `category_child`.`parent` = `category_parent`.`parent`";
 
         try {
-            String query =  "SELECT " +
-                                "`category_parent`.`parent`, " +
-                                "`category_parent`.`display`, " +
-                                "`category_child`.`child`, " +
-                                "`category_child`.`display` " +
-                            "FROM `category_child`" +
-                                "JOIN `category_parent`" +
-                                    "ON `category_child`.`parent` = `category_parent`.`parent`";
-            statement = connection.prepareStatement(query);
-            result = statement.executeQuery();
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-            // Get parent categories
-            while (result.next()) {
-                String parent = result.getString(1);
-                String parentDisplay = result.getString(2);
+                while (resultSet.next()) {
+                    String parent = resultSet.getString(1);
+                    String parentDisplay = resultSet.getString(2);
 
-                String child = result.getString(3);
-                String childDisplay = result.getString(4);
+                    String child = resultSet.getString(3);
+                    String childDisplay = resultSet.getString(4);
 
-                List<String> childCategories = categories.getOrDefault(parent, new ArrayList<>());
-                childCategories.add(child);
-                categories.putIfAbsent(parent, childCategories);
+                    List<String> childCategories = tmpCategories.getOrDefault(parent, new ArrayList<>());
+                    childCategories.add(child);
+                    tmpCategories.putIfAbsent(parent, childCategories);
+                }
             }
+
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query categories", 3);
-            return null;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
         }
-
-        return categories;
     }
 
     //--------------------
@@ -231,122 +215,110 @@ public class Database {
 
     /**
      * Get item data relations from database
-     *
-     * @return Map of indexed items or null on error
+     * TODO: simplify resultSet operation
      */
-    public Map<String, SupIndexedItem> getItemData() {
-        PreparedStatement statement = null;
-        ResultSet result = null;
+    public boolean getItemData(Map<String, SupIndexedItem> relations) {
+        String query =  "SELECT " +
+                        "    `item_data_sup`.`sup`, " +
+                        "    `item_data_sup`.`parent`, " +
+                        "    `item_data_sup`.`child`, " +
+                        "    `item_data_sup`.`name`, " +
+                        "    `item_data_sup`.`type`, " +
+                        "    `item_data_sup`.`frame`, " +
+                        "    `item_data_sup`.`key`, " +
 
-        Map<String, SupIndexedItem> relations = new HashMap<>();
+                        "    `item_data_sub`.`sub`, " +
+                        "    `item_data_sub`.`tier`, " +
+                        "    `item_data_sub`.`lvl`, " +
+                        "    `item_data_sub`.`quality`, " +
+                        "    `item_data_sub`.`corrupted`, " +
+                        "    `item_data_sub`.`links`, " +
+                        "    `item_data_sub`.`var`, " +
+                        "    `item_data_sub`.`key`, " +
+                        "    `item_data_sub`.`icon` " +
+                        "FROM `item_data_sub`" +
+                        "    JOIN `item_data_sup`" +
+                        "        ON `item_data_sub`.`sup` = `item_data_sup`.`sup`";
 
         try {
-            String query =  "SELECT " +
-                                "`item_data_sup`.`sup`, " +
-                                "`item_data_sup`.`parent`, " +
-                                "`item_data_sup`.`child`, " +
-                                "`item_data_sup`.`name`, " +
-                                "`item_data_sup`.`type`, " +
-                                "`item_data_sup`.`frame`, " +
-                                "`item_data_sup`.`key`, " +
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                ResultSet resultSet = statement.executeQuery();
 
-                                "`item_data_sub`.`sub`, " +
-                                "`item_data_sub`.`tier`, " +
-                                "`item_data_sub`.`lvl`, " +
-                                "`item_data_sub`.`quality`, " +
-                                "`item_data_sub`.`corrupted`, " +
-                                "`item_data_sub`.`links`, " +
-                                "`item_data_sub`.`var`, " +
-                                "`item_data_sub`.`key`, " +
-                                "`item_data_sub`.`icon` " +
-                            "FROM `item_data_sub`" +
-                                "JOIN `item_data_sup`" +
-                                    "ON `item_data_sub`.`sup` = `item_data_sup`.`sup`";
-            statement = connection.prepareStatement(query);
-            result = statement.executeQuery();
+                while (resultSet.next()) {
+                    String sup = resultSet.getString(1);
+                    String sub = resultSet.getString(8);
 
-            // Get parent categories
-            while (result.next()) {
-                String sup = result.getString(1);
-                String sub = result.getString(8);
+                    String supKey = resultSet.getString(7);
+                    String subKey = resultSet.getString(15);
 
-                String supKey = result.getString(7);
-                String subKey = result.getString(15);
+                    String parent = resultSet.getString(2);
+                    String child = resultSet.getString(3);
 
-                String parent = result.getString(2);
-                String child = result.getString(3);
+                    String name = resultSet.getString(4);
+                    String type = resultSet.getString(5);
+                    int frame = resultSet.getInt(6);
 
-                String name = result.getString(4);
-                String type = result.getString(5);
-                int frame = result.getInt(6);
+                    String tier = resultSet.getString(9);
+                    String lvl = resultSet.getString(10);
+                    String quality = resultSet.getString(11);
+                    String corrupted = resultSet.getString(12);
+                    String links = resultSet.getString(13);
+                    String var = resultSet.getString(14);
+                    String icon = resultSet.getString(16);
 
-                String tier = result.getString(9);
-                String lvl = result.getString(10);
-                String quality = result.getString(11);
-                String corrupted = result.getString(12);
-                String links = result.getString(13);
-                String var = result.getString(14);
-                String icon = result.getString(16);
+                    SupIndexedItem supIndexedItem = relations.getOrDefault(sup, new SupIndexedItem());
 
-                SupIndexedItem supIndexedItem = relations.getOrDefault(sup, new SupIndexedItem());
+                    if (!relations.containsKey(sup)) {
+                        if (child != null)  supIndexedItem.setChild(child);
+                        if (type != null)   supIndexedItem.setType(type);
 
-                if (!relations.containsKey(sup)) {
-                    if (child != null)  supIndexedItem.setChild(child);
-                    if (type != null)   supIndexedItem.setType(type);
+                        supIndexedItem.setParent(parent);
+                        supIndexedItem.setName(name);
+                        supIndexedItem.setFrame(frame);
+                        supIndexedItem.setKey(supKey);
+                    }
 
-                    supIndexedItem.setParent(parent);
-                    supIndexedItem.setName(name);
-                    supIndexedItem.setFrame(frame);
-                    supIndexedItem.setKey(supKey);
+                    SubIndexedItem subIndexedItem = new SubIndexedItem();
+                    if (tier != null)       subIndexedItem.setTier(tier);
+                    if (lvl != null)        subIndexedItem.setLvl(lvl);
+                    if (quality != null)    subIndexedItem.setQuality(quality);
+                    if (corrupted != null)  subIndexedItem.setCorrupted(corrupted);
+                    if (links != null)      subIndexedItem.setLinks(links);
+                    if (var != null)        subIndexedItem.setVar(var);
+                    subIndexedItem.setKey(subKey);
+                    subIndexedItem.setIcon(icon);
+                    subIndexedItem.setSupIndexedItem(supIndexedItem);
+
+                    supIndexedItem.getSubIndexes().put(sub, subIndexedItem);
+                    relations.putIfAbsent(sup, supIndexedItem);
                 }
-
-                SubIndexedItem subIndexedItem = new SubIndexedItem();
-                if (tier != null)       subIndexedItem.setTier(tier);
-                if (lvl != null)        subIndexedItem.setLvl(lvl);
-                if (quality != null)    subIndexedItem.setQuality(quality);
-                if (corrupted != null)  subIndexedItem.setCorrupted(corrupted);
-                if (links != null)      subIndexedItem.setLinks(links);
-                if (var != null)        subIndexedItem.setVar(var);
-                subIndexedItem.setKey(subKey);
-                subIndexedItem.setIcon(icon);
-                subIndexedItem.setSupIndexedItem(supIndexedItem);
-
-                supIndexedItem.getSubIndexes().put(sub, subIndexedItem);
-                relations.putIfAbsent(sup, supIndexedItem);
             }
+
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query item data", 3);
-            return null;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
         }
-
-        return relations;
     }
 
     public boolean addFullItemData(SupIndexedItem supIndexedItem, String sup, String sub) {
-        PreparedStatement statement = null;
+        String query =  "INSERT INTO `item_data_sup` (`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
         try {
-            String query =  "INSERT INTO `item_data_sup` " +
-                                "(`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
-                            "VALUES " +
-                                "(?, ?, ?, ?, ?, ?, ?) " +
-                            "ON DUPLICATE KEY UPDATE" +
-                                "`sup`=`sup`";
-            statement = connection.prepareStatement(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, supIndexedItem.getParent());
+                statement.setString(3, supIndexedItem.getChild());
+                statement.setString(4, supIndexedItem.getName());
+                statement.setString(5, supIndexedItem.getType());
+                statement.setInt(6, supIndexedItem.getFrame());
+                statement.setString(7, supIndexedItem.getKey());
 
-            statement.setString(1, sup);
-            statement.setString(2, supIndexedItem.getParent());
-            statement.setString(3, supIndexedItem.getChild());
-            statement.setString(4, supIndexedItem.getName());
-            statement.setString(5, supIndexedItem.getType());
-            statement.setInt(6, supIndexedItem.getFrame());
-            statement.setString(7, supIndexedItem.getKey());
-
-            statement.execute();
+                statement.execute();
+            }
 
             addSubItemData(supIndexedItem, sup, sub);
 
@@ -355,48 +327,42 @@ public class Database {
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not update item data in database", 3);
+            Main.ADMIN.log_("Could not update full item data in database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean addSubItemData(SupIndexedItem supIndexedItem, String sup, String sub) {
-        PreparedStatement statement = null;
         SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sup + sub);
 
+        String query =  "INSERT INTO `item_data_sub`" +
+                        "   (`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
+
         try {
-            String query =  "INSERT INTO `item_data_sub`" +
-                                "(`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                            "ON DUPLICATE KEY UPDATE `sup`=`sup`";
-            statement = connection.prepareStatement(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, sub);
+                statement.setString(3, subIndexedItem.getTier());
+                statement.setString(4, subIndexedItem.getLvl());
+                statement.setString(5, subIndexedItem.getQuality());
+                statement.setString(6, subIndexedItem.getCorrupted());
+                statement.setString(7, subIndexedItem.getLinks());
+                statement.setString(8, subIndexedItem.getVar());
+                statement.setString(9, subIndexedItem.getKey());
+                statement.setString(10, subIndexedItem.getIcon());
 
-            statement.setString(1, sup);
-            statement.setString(2, sub);
-
-            statement.setString(3, subIndexedItem.getTier());
-            statement.setString(4, subIndexedItem.getLvl());
-            statement.setString(5, subIndexedItem.getQuality());
-            statement.setString(6, subIndexedItem.getCorrupted());
-            statement.setString(7, subIndexedItem.getLinks());
-            statement.setString(8, subIndexedItem.getVar());
-
-            statement.setString(9, subIndexedItem.getKey());
-            statement.setString(10, subIndexedItem.getIcon());
-
-            statement.execute();
+                statement.execute();
+            }
 
             // Commit changes
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not update item data in database", 3);
+            Main.ADMIN.log_("Could not update sub item data in database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -411,34 +377,32 @@ public class Database {
      * @return True if successful
      */
     public boolean getStatus(StatusElement statusElement) {
-        PreparedStatement statement = null;
-        ResultSet result = null;
+        String query = "SELECT * FROM `status`";
 
         try {
-            statement = connection.prepareStatement("SELECT * FROM `status`");
-            result = statement.executeQuery();
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-            while (result.next()) {
-                switch (result.getString("name")) {
-                    case "twentyFourCounter":
-                        statusElement.twentyFourCounter = result.getLong("val");
-                        break;
-                    case "sixtyCounter":
-                        statusElement.sixtyCounter = result.getLong("val");
-                        break;
-                    case "tenCounter":
-                        statusElement.tenCounter = result.getLong("val");
-                        break;
+                while (resultSet.next()) {
+                    switch (resultSet.getString("name")) {
+                        case "twentyFourCounter":
+                            statusElement.twentyFourCounter = resultSet.getLong("val");
+                            break;
+                        case "sixtyCounter":
+                            statusElement.sixtyCounter = resultSet.getLong("val");
+                            break;
+                        case "tenCounter":
+                            statusElement.tenCounter = resultSet.getLong("val");
+                            break;
+                    }
                 }
             }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not query status data from database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -449,43 +413,40 @@ public class Database {
      * @return True on success
      */
     public boolean updateStatus(StatusElement statusElement) {
-        PreparedStatement statement1 = null;
-        PreparedStatement statement2 = null;
+        String query1 = "DELETE FROM `status`";
+        String query2 = "INSERT INTO `status` (`val`, `name`) VALUES (?, ?)";
 
         try {
-            String query1 = "DELETE FROM `status`";
-            String query2 = "INSERT INTO `status` (`val`, `name`) VALUES (?, ?)";
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query1);
+            }
 
-            statement1 = connection.prepareStatement(query1);
-            statement2 = connection.prepareStatement(query2);
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setLong(1, statusElement.twentyFourCounter);
+                statement.setString(2, "twentyFourCounter");
+                statement.addBatch();
 
-            statement2.setLong(1, statusElement.twentyFourCounter);
-            statement2.setString(2, "twentyFourCounter");
-            statement2.addBatch();
+                statement.setLong(1, statusElement.sixtyCounter);
+                statement.setString(2, "sixtyCounter");
+                statement.addBatch();
 
-            statement2.setLong(1, statusElement.sixtyCounter);
-            statement2.setString(2, "sixtyCounter");
-            statement2.addBatch();
+                statement.setLong(1, statusElement.tenCounter);
+                statement.setString(2, "tenCounter");
+                statement.addBatch();
 
-            statement2.setLong(1, statusElement.tenCounter);
-            statement2.setString(2, "tenCounter");
-            statement2.addBatch();
+                statement.setLong(1, statusElement.lastRunTime);
+                statement.setString(2, "lastRunTime");
+                statement.addBatch();
 
-            statement2.setLong(1, statusElement.lastRunTime);
-            statement2.setString(2, "lastRunTime");
-            statement2.addBatch();
+                statement.executeBatch();
+            }
 
-            statement1.execute();
-            statement2.executeBatch();
             connection.commit();
-
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not update status data", 3);
             return false;
-        } finally {
-            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -494,55 +455,52 @@ public class Database {
     //--------------------
 
     public boolean getCurrency(String league, CurrencyMap currencyMap) {
-        PreparedStatement statement = null;
-        ResultSet result = null;
         league = formatLeague(league);
 
+        String query =  "SELECT " +
+                        "    i.`sup`," +
+                        "    i.`sub`," +
+                        "    d.`name`," +
+                        "    i.`time`," +
+                        "    i.`mean`," +
+                        "    i.`median`," +
+                        "    i.`mode`," +
+                        "    i.`exalted`," +
+                        "    i.`count`," +
+                        "    i.`quantity`," +
+                        "    i.`inc`," +
+                        "    i.`dec` " +
+                        "FROM `!_"+ league +"_item` AS i" +
+                        "    INNER JOIN `item_data_sup` AS d" +
+                        "        ON i.`sup` = d.`sup` " +
+                        "WHERE EXISTS (" +
+                        "    SELECT * FROM `item_data_sup` AS a " +
+                        "    WHERE a.`sup` = i.`sup` " +
+                        "    AND a.`parent` = 'currency'" +
+                        "    AND a.`frame` = 5)";
+
         try {
-            String query =  "SELECT " +
-                            "    i.`sup`," +
-                            "    i.`sub`," +
-                            "    d.`name`," +
-                            "    i.`time`," +
-                            "    i.`mean`," +
-                            "    i.`median`," +
-                            "    i.`mode`," +
-                            "    i.`exalted`," +
-                            "    i.`count`," +
-                            "    i.`quantity`," +
-                            "    i.`inc`," +
-                            "    i.`dec`" +
-                            "FROM `!_"+ league +"_item` AS i" +
-                            "    INNER JOIN `item_data_sup` AS d" +
-                            "        ON i.`sup` = d.`sup`" +
-                            "WHERE EXISTS (" +
-                            "    SELECT * FROM `item_data_sup` AS a " +
-                            "    WHERE a.`sup` = i.`sup` " +
-                            "    AND a.`parent` = 'currency'" +
-                            "    AND a.`frame` = 5)";
-            statement = connection.prepareStatement(query);
-            result = statement.executeQuery();
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                ResultSet resultSet = statement.executeQuery();
 
-            while (result.next()) {
-                String name = result.getString("name");
+                while (resultSet.next()) {
+                    String name = resultSet.getString("name");
 
-                CurrencyItem currencyItem = new CurrencyItem();
-                currencyItem.loadItem(result);
-                currencyMap.put(name, currencyItem);
+                    CurrencyItem currencyItem = new CurrencyItem();
+                    currencyItem.loadItem(resultSet);
+                    currencyMap.put(name, currencyItem);
+                }
             }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not query currency rates from database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean uploadRaw(String league, IndexMap indexMap) {
-        PreparedStatement statement = null;
         league = formatLeague(league);
 
         String query =  "INSERT INTO `!_"+ league +"_item_entry` (`sup`, `sub`, `price`, `account`, `id`) " +
@@ -550,203 +508,193 @@ public class Database {
                         "ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
         try {
-            statement = connection.prepareStatement(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (String index : indexMap.keySet()) {
+                    RawList rawList = indexMap.get(index);
 
-            for (String index : indexMap.keySet()) {
-                RawList rawList = indexMap.get(index);
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
 
-                String sup = index.substring(0, Config.index_superSize);
-                String sub = index.substring(Config.index_superSize);
-
-                for (RawEntry rawEntry : rawList) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setString(3, rawEntry.getPriceAsRoundedString());
-                    statement.setString(4, rawEntry.getAccount());
-                    statement.setString(5, rawEntry.getId());
-                    statement.addBatch();
+                    for (RawEntry rawEntry : rawList) {
+                        statement.setString(1, sup);
+                        statement.setString(2, sub);
+                        statement.setString(3, rawEntry.getPriceAsRoundedString());
+                        statement.setString(4, rawEntry.getAccount());
+                        statement.setString(5, rawEntry.getId());
+                        statement.addBatch();
+                    }
                 }
+
+                statement.executeBatch();
             }
 
-            statement.executeBatch();
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not add raw values to database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean createItem(String league, String index) {
-        Statement statement = null;
-        league = formatLeague(league);
-
         String sup = index.substring(0, Config.index_superSize);
         String sub = index.substring(Config.index_superSize);
+        league = formatLeague(league);
 
         String query =  "INSERT INTO `!_"+ league +"_item` (`sup`, `sub`) " +
-                        "VALUES ('"+ sup +"', '"+ sub +"') " +
+                        "VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
         try {
-            statement = connection.createStatement();
-            statement.execute(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, sub);
+                statement.execute();
+            }
+
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not create item in database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean updateCounters(String league, IndexMap indexMap) {
-        PreparedStatement statement = null;
         league = formatLeague(league);
 
         String query =  "UPDATE `!_"+ league +"_item` " +
                         "SET `count`=`count` + ?, `inc`=`inc` + ? " +
-                        "WHERE `sup`=? AND `sub`=?";
+                        "WHERE `sup`= ? AND `sub`= ?";
 
         try {
-            statement = connection.prepareStatement(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (String index : indexMap.keySet()) {
+                    RawList rawList = indexMap.get(index);
 
-            for (String index : indexMap.keySet()) {
-                RawList rawList = indexMap.get(index);
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
 
-                String sup = index.substring(0, Config.index_superSize);
-                String sub = index.substring(Config.index_superSize);
+                    statement.setInt(1, rawList.size());
+                    statement.setInt(2, rawList.size());
+                    statement.setString(3, sup);
+                    statement.setString(4, sub);
+                    statement.addBatch();
+                }
 
-                statement.setInt(1, rawList.size());
-                statement.setInt(2, rawList.size());
-                statement.setString(3, sup);
-                statement.setString(4, sub);
-                statement.addBatch();
+                statement.executeBatch();
             }
 
-            statement.executeBatch();
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not update counters in database", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean calculateMean(String league, String index) {
-        PreparedStatement statement = null;
-
-        league = formatLeague(league);
-
         String sup = index.substring(0, Config.index_superSize);
         String sub = index.substring(Config.index_superSize);
+        league = formatLeague(league);
 
         String query =  "UPDATE `!_"+ league +"_item` " +
                         "SET `mean` = (" +
                         "    SELECT AVG(`price`) FROM `!_"+ league +"_item_entry` " +
-                        "    WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                        ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
-
-        /*String query =  "UPDATE `!_"+ league +"_item` " +
-                        "SET `mean` = (" +
-                        "    SELECT AVG(`price`) FROM (" +
-                        "        SELECT * FROM `!_"+ league +"_item_entry` AS t" +
-                        "            CROSS JOIN (" +
-                        "                SELECT AVG(`price`) avgr, STD(`price`) stdr" +
-                        "                FROM `!_"+ league +"_item_entry`" +
-                        "                WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' " +
-                        "            ) AS stats" +
-                        "        WHERE " +
-                        "            t.`sup`='"+ sup +"' AND t.`sub`='"+ sub +"' " +
-                        "            AND t.`price` " +
-                        "                BETWEEN (stats.avgr -2 * stats.stdr) " +
-                        "                AND (stats.avgr +2 * stats.stdr)" +
-                        "    ) foo" +
-                        ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";*/
+                        "    WHERE `sup`= ? AND `sub`= ?" +
+                        ") WHERE `sup`= ? AND `sub`= ?";
 
         try {
-            statement = connection.prepareStatement(query);
-            statement.execute();
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, sub);
+                statement.setString(3, sup);
+                statement.setString(4, sub);
+                statement.execute();
+            }
+
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate mean", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-        }
-    }
-
-    public boolean calculateMode(String league, String index) {
-        Statement statement = null;
-        league = formatLeague(league);
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
-
-        String query =  "UPDATE `!_"+ league +"_item`  " +
-                        "SET `mode` = ( " +
-                        "   SELECT `price` FROM `!_"+ league +"_item_entry` " +
-                        "   WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                        "   GROUP BY `price` " +
-                        "   ORDER BY COUNT(*) DESC " +
-                        "   LIMIT 1" +
-                        ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
-
-        try {
-            statement = connection.createStatement();
-            statement.execute(query);
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean calculateMedian(String league, String index) {
-        PreparedStatement statement = null;
-
-        league = formatLeague(league);
-
         String sup = index.substring(0, Config.index_superSize);
         String sub = index.substring(Config.index_superSize);
+        league = formatLeague(league);
 
         String query =  "UPDATE `!_"+ league +"_item` " +
-                "SET `median` = (" +
-                "    SELECT AVG(t1.`price`) as median_val FROM (" +
-                "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
-                "        FROM `!_"+ league +"_item_entry` d,  (SELECT @rownum:=0) r" +
-                "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                "        ORDER BY d.`price`" +
-                "    ) as t1, (" +
-                "        SELECT count(*) as total_rows" +
-                "        FROM `!_"+ league +"_item_entry` d" +
-                "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                "    ) as t2 WHERE 1" +
-                "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                ") WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'";
+                        "SET `median` = (" +
+                        "    SELECT AVG(t1.`price`) as median_val FROM (" +
+                        "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
+                        "        FROM `!_"+ league +"_item_entry` d,  (SELECT @rownum:=0) r" +
+                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "        ORDER BY d.`price`" +
+                        "    ) as t1, (" +
+                        "        SELECT count(*) as total_rows" +
+                        "        FROM `!_"+ league +"_item_entry` d" +
+                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "    ) as t2 WHERE 1" +
+                        "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
+                        ") WHERE `sup`= ? AND `sub`= ?";
 
         try {
-            statement = connection.prepareStatement(query);
-            statement.execute();
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, sub);
+                statement.setString(3, sup);
+                statement.setString(4, sub);
+                statement.setString(5, sup);
+                statement.setString(6, sub);
+                statement.execute();
+            }
+
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate median", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
+
+    public boolean calculateMode(String league, String index) {
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
+        league = formatLeague(league);
+
+        String query =  "UPDATE `!_"+ league +"_item`  " +
+                "SET `mode` = ( " +
+                "   SELECT `price` FROM `!_"+ league +"_item_entry` " +
+                "   WHERE `sup`= ? AND `sub`= ?" +
+                "   GROUP BY `price` " +
+                "   ORDER BY COUNT(*) DESC " +
+                "   LIMIT 1" +
+                ") WHERE `sup`= ? AND `sub`= ?";
+
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, sub);
+                statement.setString(3, sup);
+                statement.setString(4, sub);
+                statement.execute();
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate mode", 3);
+            return false;
         }
     }
 
     public boolean calculateExalted(String league) {
-        Statement statement1 = null;
-        Statement statement2 = null;
-
         league = formatLeague(league);
 
         String query1 = "SET @exVal = (" +
@@ -764,18 +712,16 @@ public class Database {
                         "SET `exalted` = IFNULL(`mean` / @exVal, 0.0)";
 
         try {
-            statement1 = connection.createStatement();
-            statement1.execute(query1);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query1);
+                statement.execute(query2);
+            }
 
-            statement2 = connection.createStatement();
-            statement2.execute(query2);
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate exalted", 3);
             return false;
-        } finally {
-            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -784,7 +730,6 @@ public class Database {
     //--------------------------
 
     public boolean addMinutely(String league) {
-        Statement statement = null;
         league = formatLeague(league);
 
         String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
@@ -794,19 +739,19 @@ public class Database {
                         "   FROM `!_"+ league +"_item`";
 
         try {
-            statement = connection.createStatement();
-            statement.execute(query);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
+
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not add minutely", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean addHourly(String league) {
-        Statement statement = null;
         league = formatLeague(league);
 
         String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
@@ -818,19 +763,19 @@ public class Database {
                         "    GROUP BY `sup`, `sub`";
 
         try {
-            statement = connection.createStatement();
-            statement.execute(query);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
+
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not add hourly", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean addDaily(String league) {
-        Statement statement = null;
         league = formatLeague(league);
 
         String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
@@ -842,166 +787,170 @@ public class Database {
                         "    GROUP BY `sup`, `sub`";
 
         try {
-            statement = connection.createStatement();
-            statement.execute(query);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
+
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not add daily", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean calcQuantity(String league) {
-        PreparedStatement statement = null;
-
         league = formatLeague(league);
+
+        String query =  "UPDATE `!_"+ league +"_item` as i " +
+                        "SET `quantity` = (" +
+                        "    SELECT SUM(`inc`) FROM `!_"+ league +"_history_entry` " +
+                        "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
+                        "), `inc`=0, `dec`=0";
+
         try {
-            String query =  "UPDATE `!_"+ league +"_item` as i " +
-                            "SET `quantity` = (" +
-                            "    SELECT SUM(`inc`) FROM `!_"+ league +"_history_entry` " +
-                            "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
-                            "), `inc`=0, `dec`=0";
-            statement = connection.prepareStatement(query);
-            statement.execute();
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate quantity", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean removeOldHistoryEntries(String league, String type, String interval) {
-        PreparedStatement statement = null;
         league = formatLeague(league);
 
+        String query =  "DELETE FROM `!_"+ league +"_history_entry` " +
+                        "WHERE `type` = '"+ type+ "' " +
+                        "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
+
         try {
-            String query =  "DELETE FROM `!_"+ league +"_history_entry` " +
-                            "WHERE `type` = '"+ type+ "' " +
-                            "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
-            statement = connection.prepareStatement(query);
-            statement.execute();
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not remove old history entries", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean removeOldItemEntries(String league, String index) {
-        PreparedStatement statement = null;
+        String sup = index.substring(0, Config.index_superSize);
+        String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        try {
-            String sup = index.substring(0, Config.index_superSize);
-            String sub = index.substring(Config.index_superSize);
+        String query =  "DELETE FROM `!_"+ league +"_item_entry`" +
+                        "WHERE `sup`= ? AND `sub`= ? AND `id` NOT IN (" +
+                        "    SELECT `id`" +
+                        "    FROM (" +
+                        "        SELECT `id`, `time`" +
+                        "        FROM `!_"+ league +"_item_entry`" +
+                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "        ORDER BY `time` DESC" +
+                        "        LIMIT ?" +
+                        "    ) foo )";
 
-            String query =  "DELETE FROM `!_"+ league +"_item_entry`" +
-                            "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' AND `id` NOT IN (" +
-                            "    SELECT `id`" +
-                            "    FROM (" +
-                            "        SELECT `id`, `time`" +
-                            "        FROM `!_"+ league +"_item_entry`" +
-                            "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                            "        ORDER BY `time` DESC" +
-                            "        LIMIT "+ Config.entry_itemsSize +
-                            "    ) foo )";
-            statement = connection.prepareStatement(query);
-            statement.execute();
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, sup);
+                statement.setString(2, sub);
+                statement.setString(3, sup);
+                statement.setString(4, sub);
+                statement.setInt(5, Config.entry_itemsSize);
+                statement.execute();
+            }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not remove old item entries", 3);
             return false;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean removeItemOutliers(String league, IndexMap indexMap){
-        PreparedStatement statement1 = null;
-        PreparedStatement statement2 = null;
         league = formatLeague(league);
 
         String query1 = "DELETE FROM `!_"+ league +"_item_entry` " +
-                        "WHERE `sup`=? AND `sub`=? " +
+                        "WHERE `sup`= ? AND `sub`= ? " +
                         "AND `price` > (" +
                         "    SELECT * FROM (" +
                         "        SELECT AVG(`price`) + ? * STDDEV(`price`) " +
                         "        FROM `!_"+ league +"_item_entry`  " +
-                        "        WHERE `sup`=? AND `sub`=?" +
+                        "        WHERE `sup`= ? AND `sub`= ?" +
                         "    ) foo )" +
                         "AND `price` / ? > (" +
                         "    SELECT `median` FROM `!_"+ league +"_item` " +
-                        "    WHERE `sup`=? AND `sub`=?)";
+                        "    WHERE `sup`= ? AND `sub`= ?)";
 
         String query2 = "DELETE FROM `!_"+ league +"_item_entry` " +
-                        "WHERE `sup`=? AND `sub`=? " +
+                        "WHERE `sup`= ? AND `sub`= ? " +
                         "AND `price` < (" +
                         "    SELECT * FROM (" +
                         "        SELECT AVG(`price`) - ? * STDDEV(`price`) " +
                         "        FROM `!_"+ league +"_item_entry`  " +
-                        "        WHERE `sup`=? AND `sub`=? " +
+                        "        WHERE `sup`= ? AND `sub`= ? " +
                         "    ) foo )" +
                         "AND `price` * ? < (" +
                         "    SELECT `median` FROM `!_"+ league +"_item` " +
-                        "    WHERE `sup`=? AND `sub`=?)";
+                        "    WHERE `sup`= ? AND `sub`= ?)";
 
         try {
-            statement1 = connection.prepareStatement(query1);
-            statement2 = connection.prepareStatement(query2);
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                for (String index : indexMap.keySet()) {
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
 
-            for (String index : indexMap.keySet()) {
-                String sup = index.substring(0, Config.index_superSize);
-                String sub = index.substring(Config.index_superSize);
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setDouble(3, Config.db_outlierMulti);
+                    statement.setString(4, sup);
+                    statement.setString(5, sub);
+                    statement.setDouble(6, Config.db_outlierMulti2);
+                    statement.setString(7, sup);
+                    statement.setString(8, sub);
+                    statement.addBatch();
+                }
 
-                statement1.setString(1, sup);
-                statement1.setString(2, sub);
-                statement1.setDouble(3, Config.db_outlierMulti);
-                statement1.setString(4, sup);
-                statement1.setString(5, sub);
-                statement1.setDouble(6, Config.db_outlierMulti2);
-                statement1.setString(7, sup);
-                statement1.setString(8, sub);
-                statement1.addBatch();
-
-                statement2.setString(1, sup);
-                statement2.setString(2, sub);
-                statement2.setDouble(3, Config.db_outlierMulti);
-                statement2.setString(4, sup);
-                statement2.setString(5, sub);
-                statement2.setDouble(6, Config.db_outlierMulti2);
-                statement2.setString(7, sup);
-                statement2.setString(8, sub);
-                statement2.addBatch();
+                statement.executeBatch();
             }
 
-            statement1.executeBatch();
-            statement2.executeBatch();
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                for (String index : indexMap.keySet()) {
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
+
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setDouble(3, Config.db_outlierMulti);
+                    statement.setString(4, sup);
+                    statement.setString(5, sub);
+                    statement.setDouble(6, Config.db_outlierMulti2);
+                    statement.setString(7, sup);
+                    statement.setString(8, sub);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
 
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not remove outliers", 3);
             return false;
-        } finally {
-            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
     public boolean createLeagueTables(String league) {
-        Statement statement1 = null;
-        Statement statement2 = null;
-        Statement statement3 = null;
-        Statement statement4 = null;
         league = formatLeague(league);
 
         String query1 = "CREATE TABLE `!_"+ league +"_item` (" +
@@ -1090,35 +1039,35 @@ public class Database {
             getTables(tables);
 
             if (!tables.contains("!_"+ league +"_item")) {
-                statement1 = connection.createStatement();
-                statement1.execute(query1);
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute(query1);
+                }
             }
 
             if (!tables.contains("!_"+ league +"_history")) {
-                statement2 = connection.createStatement();
-                statement2.execute(query2);
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute(query2);
+                }
             }
 
             if (!tables.contains("!_"+ league +"_item_entry")) {
-                statement3 = connection.createStatement();
-                statement3.execute(query3);
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute(query3);
+                }
             }
 
             if (!tables.contains("!_"+ league +"_history_entry")) {
-                statement4 = connection.createStatement();
-                statement4.execute(query4);
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute(query4);
+                }
             }
 
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            Main.ADMIN.log_("Could not create league tables", 3);
             return false;
-        } finally {
-            try { if (statement1 != null) statement1.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement2 != null) statement2.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement3 != null) statement3.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (statement4 != null) statement4.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
