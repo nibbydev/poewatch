@@ -113,7 +113,7 @@ public class EntryManager {
                 String league = leagueEntry.getId();
 
                 Main.DATABASE.addDaily(league);
-                Main.DATABASE.removeOldHistoryEntries(league, "daily", "7 DAYS");
+                Main.DATABASE.removeOldHistoryEntries(league, "daily", "7 DAY");
             }
         }
 
