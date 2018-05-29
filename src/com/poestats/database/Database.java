@@ -1,7 +1,6 @@
 package com.poestats.database;
 
 import com.poestats.Config;
-import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.StatusElement;
@@ -31,12 +30,14 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     public void connect() {
+        tables = new ArrayList<>();
+
         try {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
 
-            tables = listAllTables();
+            getTables(tables);
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Failed to connect to database", 5);
@@ -56,24 +57,27 @@ public class Database {
     // Initial DB setup
     //------------------------------------------------------------------------------------------------------------
 
-    private ArrayList<String> listAllTables() throws SQLException {
-        PreparedStatement statement = null;
+    private boolean getTables(ArrayList<String> tables) {
+        Statement statement = null;
         ResultSet result = null;
 
         try {
-            statement = connection.prepareStatement("SHOW tables");
-            result = statement.executeQuery();
+            statement = connection.createStatement();
+            result = statement.executeQuery("SHOW tables");
 
-            ArrayList<String> tables = new ArrayList<>();
-
+            tables.clear();
             while (result.next()) {
-                tables.add(result.getString("Tables_in_" + Config.db_database));
+                tables.add(result.getString(1));
             }
 
-            return tables;
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not query table info", 3);
+            return false;
         } finally {
-            if (statement != null) statement.close();
-            if (result != null) result.close();
+            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
@@ -960,7 +964,7 @@ public class Database {
         try {
             statement1 = connection.prepareStatement(query1);
             statement2 = connection.prepareStatement(query2);
-            
+
             for (String index : indexMap.keySet()) {
                 String sup = index.substring(0, Config.index_superSize);
                 String sub = index.substring(Config.index_superSize);
