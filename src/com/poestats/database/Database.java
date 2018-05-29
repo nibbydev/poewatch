@@ -805,7 +805,7 @@ public class Database {
 
         String query =  "UPDATE `!_"+ league +"_item` as i " +
                         "SET `quantity` = (" +
-                        "    SELECT SUM(`inc`) FROM `!_"+ league +"_history_entry` " +
+                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `!_"+ league +"_history_entry` " +
                         "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
                         "), `inc`=0, `dec`=0";
 
