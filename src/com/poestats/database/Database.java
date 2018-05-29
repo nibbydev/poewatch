@@ -1001,115 +1001,115 @@ public class Database {
     }
 
     public boolean createLeagueTables(String league) {
-        PreparedStatement statement1 = null;
-        PreparedStatement statement2 = null;
-        PreparedStatement statement3 = null;
-        PreparedStatement statement4 = null;
+        Statement statement1 = null;
+        Statement statement2 = null;
+        Statement statement3 = null;
+        Statement statement4 = null;
         league = formatLeague(league);
 
+        String query1 = "CREATE TABLE `!_"+ league +"_item` (" +
+                        "    CONSTRAINT `"+ league +"_sup-sub`" +
+                        "        PRIMARY KEY (`sup`,`sub`), " +
+                        "        FOREIGN KEY (`sup`,`sub`) " +
+                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "        ON DELETE CASCADE," +
+
+                        "    `sup`       varchar(5)      NOT NULL," +
+                        "    `sub`       varchar(2)      NOT NULL," +
+
+                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `mean`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `median`    decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `mode`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `exalted`   decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `inc`       int(8)          unsigned NOT NULL DEFAULT 0," +
+                        "    `dec`       int(8)          unsigned NOT NULL DEFAULT 0," +
+                        "    `count`     int(16)         unsigned NOT NULL DEFAULT 0," +
+                        "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+        String query2 = "CREATE TABLE `!_"+ league +"_history` (" +
+                        "    CONSTRAINT `"+ league +"_history`" +
+                        "        PRIMARY KEY (`sup`,`sub`)," +
+                        "        FOREIGN KEY (`sup`,`sub`)" +
+                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "        ON DELETE CASCADE," +
+
+                        "    `sup`       varchar(5)      NOT NULL," +
+                        "    `sub`       varchar(2)      NOT NULL," +
+
+                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `inc`       int(8)          unsigned DEFAULT NULL," +
+                        "    `dec`       int(8)          unsigned DEFAULT NULL," +
+                        "    `count`     int(16)         unsigned DEFAULT NULL," +
+                        "    `quantity`  int(8)          unsigned DEFAULT NULL" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+        String query3 = "CREATE TABLE `!_"+ league +"_item_entry` (" +
+                        "    CONSTRAINT `"+ league +"_item_entry`" +
+                        "        PRIMARY KEY (`sup`,`sub`,`account`)," +
+                        "        FOREIGN KEY (`sup`,`sub`)" +
+                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "        ON DELETE CASCADE," +
+
+                        "    `sup`       varchar(5)      NOT NULL," +
+                        "    `sub`       varchar(2)      NOT NULL," +
+
+                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `price`     decimal(10,4)   NOT NULL," +
+                        "    `account`   varchar(32)     NOT NULL," +
+                        "    `id`        varchar(32)     NOT NULL" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+        String query4 = "CREATE TABLE `!_"+ league +"_history_entry` (" +
+                        "    CONSTRAINT `"+ league +"_history_entry`" +
+                        "        FOREIGN KEY (`sup`,`sub`)" +
+                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "        ON DELETE CASCADE," +
+                        "    FOREIGN KEY (`type`)" +
+                        "        REFERENCES `history_entry_category` (`type`)" +
+                        "        ON DELETE CASCADE," +
+
+                        "    `sup`       varchar(5)      NOT NULL," +
+                        "    `sub`       varchar(2)      NOT NULL," +
+                        "    `type`      varchar(32)     NOT NULL," +
+
+                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `inc`       int(8)          unsigned DEFAULT NULL," +
+                        "    `dec`       int(8)          unsigned DEFAULT NULL," +
+                        "    `count`     int(16)         unsigned DEFAULT NULL," +
+                        "    `quantity`  int(8)          unsigned DEFAULT NULL" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
         try {
-            String query1 = "CREATE TABLE `!_"+ league +"_item` (" +
-                            "    CONSTRAINT `"+ league +"_sup-sub`" +
-                            "        PRIMARY KEY (`sup`,`sub`), " +
-                            "        FOREIGN KEY (`sup`,`sub`) " +
-                            "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
-                            "        ON DELETE CASCADE," +
-
-                            "    `sup`       varchar(5)      NOT NULL," +
-                            "    `sub`       varchar(2)      NOT NULL," +
-
-                            "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                            "    `mean`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                            "    `median`    decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                            "    `mode`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                            "    `exalted`   decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                            "    `inc`       int(8)          unsigned NOT NULL DEFAULT 0," +
-                            "    `dec`       int(8)          unsigned NOT NULL DEFAULT 0," +
-                            "    `count`     int(16)         unsigned NOT NULL DEFAULT 0," +
-                            "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0" +
-                            ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
-            String query2 = "CREATE TABLE `!_"+ league +"_history` (" +
-                            "    CONSTRAINT `"+ league +"_history`" +
-                            "        PRIMARY KEY (`sup`,`sub`)," +
-                            "        FOREIGN KEY (`sup`,`sub`)" +
-                            "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
-                            "        ON DELETE CASCADE," +
-
-                            "    `sup`       varchar(5)      NOT NULL," +
-                            "    `sub`       varchar(2)      NOT NULL," +
-
-                            "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                            "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `inc`       int(8)          unsigned DEFAULT NULL," +
-                            "    `dec`       int(8)          unsigned DEFAULT NULL," +
-                            "    `count`     int(16)         unsigned DEFAULT NULL," +
-                            "    `quantity`  int(8)          unsigned DEFAULT NULL" +
-                            ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
-            String query3 = "CREATE TABLE `!_"+ league +"_item_entry` (" +
-                            "    CONSTRAINT `"+ league +"_item_entry`" +
-                            "        PRIMARY KEY (`sup`,`sub`,`account`)," +
-                            "        FOREIGN KEY (`sup`,`sub`)" +
-                            "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
-                            "        ON DELETE CASCADE," +
-
-                            "    `sup`       varchar(5)      NOT NULL," +
-                            "    `sub`       varchar(2)      NOT NULL," +
-
-                            "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                            "    `price`     decimal(10,4)   NOT NULL," +
-                            "    `account`   varchar(32)     NOT NULL," +
-                            "    `id`        varchar(32)     NOT NULL" +
-                            ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
-            String query4 = "CREATE TABLE `!_"+ league +"_history_entry` (" +
-                            "    CONSTRAINT `"+ league +"_history_entry`" +
-                            "        FOREIGN KEY (`sup`,`sub`)" +
-                            "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
-                            "        ON DELETE CASCADE," +
-                            "    FOREIGN KEY (`type`)" +
-                            "        REFERENCES `history_entry_category` (`type`)" +
-                            "        ON DELETE CASCADE," +
-
-                            "    `sup`       varchar(5)      NOT NULL," +
-                            "    `sub`       varchar(2)      NOT NULL," +
-                            "    `type`      varchar(32)     NOT NULL," +
-
-                            "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                            "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
-                            "    `inc`       int(8)          unsigned DEFAULT NULL," +
-                            "    `dec`       int(8)          unsigned DEFAULT NULL," +
-                            "    `count`     int(16)         unsigned DEFAULT NULL," +
-                            "    `quantity`  int(8)          unsigned DEFAULT NULL" +
-                            ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
-            tables = listAllTables();
+            getTables(tables);
 
             if (!tables.contains("!_"+ league +"_item")) {
-                statement1 = connection.prepareStatement(query1);
-                statement1.execute();
+                statement1 = connection.createStatement();
+                statement1.execute(query1);
             }
 
             if (!tables.contains("!_"+ league +"_history")) {
-                statement2 = connection.prepareStatement(query2);
-                statement2.execute();
+                statement2 = connection.createStatement();
+                statement2.execute(query2);
             }
 
             if (!tables.contains("!_"+ league +"_item_entry")) {
-                statement3 = connection.prepareStatement(query3);
-                statement3.execute();
+                statement3 = connection.createStatement();
+                statement3.execute(query3);
             }
 
             if (!tables.contains("!_"+ league +"_history_entry")) {
-                statement4 = connection.prepareStatement(query4);
-                statement4.execute();
+                statement4 = connection.createStatement();
+                statement4.execute(query4);
             }
 
             connection.commit();
