@@ -85,35 +85,32 @@ public class Database {
     // Access methods
     //------------------------------------------------------------------------------------------------------------
 
-    public List<LeagueEntry> getLeagues() {
-        PreparedStatement statement = null;
-        ResultSet result = null;
+    public boolean getLeagues(List<LeagueEntry> leagueEntries) {
+        String query = "SELECT * FROM `leagues`";
 
         try {
-            statement = connection.prepareStatement("SELECT * FROM `leagues`");
-            result = statement.executeQuery();
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-            List<LeagueEntry> leagueEntries = new ArrayList<>();
+                leagueEntries.clear();
 
-            while (result.next()) {
-                LeagueEntry leagueEntry = new LeagueEntry();
+                while (resultSet.next()) {
+                    LeagueEntry leagueEntry = new LeagueEntry();
 
-                // TODO: SQL database has additional field display
-                leagueEntry.setId(result.getString("id"));
-                leagueEntry.setEndAt(result.getString("start"));
-                leagueEntry.setStartAt(result.getString("end"));
+                    // TODO: SQL database has additional field display
+                    leagueEntry.setId(resultSet.getString("id"));
+                    leagueEntry.setEndAt(resultSet.getString("start"));
+                    leagueEntry.setStartAt(resultSet.getString("end"));
 
-                leagueEntries.add(leagueEntry);
+                    leagueEntries.add(leagueEntry);
+                }
             }
 
-            return leagueEntries;
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query database league list", 3);
-            return null;
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
-            try { if (result != null) result.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
         }
     }
 
@@ -122,35 +119,31 @@ public class Database {
      *
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
-    public void updateLeagues(List<LeagueEntry> leagueEntries) {
-        PreparedStatement statement = null;
+    public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
+        String query =  "INSERT INTO `leagues` (`id`, `start`, `end`)" +
+                        "VALUES (?, ?, ?)" +
+                        "ON DUPLICATE KEY UPDATE" +
+                        "    `start`    = VALUES(`start`)," +
+                        "    `end`      = VALUES(`end`)";
 
         try {
-            String query =  "INSERT INTO `leagues`" +
-                            "    (`id`, `start`, `end`)" +
-                            "VALUES" +
-                            "    (?, ?, ?)" +
-                            "ON DUPLICATE KEY UPDATE" +
-                            "    `start`     = VALUES(`start`)," +
-                            "    `end`       = VALUES(`end`)";
-            statement = connection.prepareStatement(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (LeagueEntry leagueEntry : leagueEntries) {
+                    statement.setString(1, leagueEntry.getId());
+                    statement.setString(2, leagueEntry.getStartAt());
+                    statement.setString(3, leagueEntry.getEndAt());
+                    statement.addBatch();
+                }
 
-            for (LeagueEntry leagueEntry : leagueEntries) {
-                statement.setString(1, leagueEntry.getId());
-                statement.setString(2, leagueEntry.getStartAt());
-                statement.setString(3, leagueEntry.getEndAt());
-                statement.addBatch();
+                statement.executeBatch();
             }
 
-            statement.executeBatch();
-
-            // Commit changes
             connection.commit();
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update database league list", 3);
-        } finally {
-            try { if (statement != null) statement.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
         }
     }
 
