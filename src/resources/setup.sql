@@ -110,33 +110,7 @@ CREATE TABLE `!__item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `!__item_history`
--- (to be created dynamically with league names)
---
-
-CREATE TABLE `!__history` (
-    CONSTRAINT `_history`
-        PRIMARY KEY (`sup`,`sub`),
-        FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `item_data_sub` (`sup`,`sub`)
-        ON DELETE CASCADE,
-
-    `sup`       varchar(5)      NOT NULL,
-    `sub`       varchar(2)      NOT NULL,
-
-    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `mean`      decimal(10,4)   unsigned DEFAULT NULL,
-    `median`    decimal(10,4)   unsigned DEFAULT NULL,
-    `mode`      decimal(10,4)   unsigned DEFAULT NULL,
-    `exalted`   decimal(10,4)   unsigned DEFAULT NULL,
-    `inc`       int(8)          unsigned DEFAULT NULL,
-    `dec`       int(8)          unsigned DEFAULT NULL,
-    `count`     int(16)         unsigned DEFAULT NULL,
-    `quantity`  int(8)          unsigned DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure `!__entry`
+-- Table structure `!__item_entry`
 -- (to be created dynamically with league names)
 --
 
@@ -157,25 +131,25 @@ CREATE TABLE `!__item_entry` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `history_entry_category`
+-- Table structure `history_category`
 --
 
-CREATE TABLE `history_entry_category` (
+CREATE TABLE `history_category` (
     `type`      varchar(32)     PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `!__history_entry`
+-- Table structure `!__history_`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `!__history_entry` (
-    CONSTRAINT `_history_entry`
+CREATE TABLE `!__history` (
+    CONSTRAINT `_history`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
     FOREIGN KEY (`type`)
-        REFERENCES `history_entry_category` (`type`)
+        REFERENCES `history_category` (`type`)
         ON DELETE CASCADE,
 
     `sup`       varchar(5)      NOT NULL,
@@ -229,10 +203,10 @@ CREATE TABLE `changeid` (
 -- --------------------------------------------------------
 
 --
--- Base values for `history_entry_category`
+-- Base values for `history_category`
 --
 
-INSERT INTO `history_entry_category`
+INSERT INTO `history_category`
     (`type`)
 VALUES
     ('minutely'),

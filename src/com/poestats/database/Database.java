@@ -733,7 +733,7 @@ public class Database {
     public boolean addMinutely(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
+        String query =  "INSERT INTO `!_"+ league +"_history` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
                         "                                            `exalted`,`inc`,`dec`,`count`,`quantity`)" +
                         "   SELECT `sup`,`sub`,'minutely',`mean`,`median`,`mode`," +
                         "           `exalted`,`inc`,`dec`,`count`,`quantity`" +
@@ -755,11 +755,11 @@ public class Database {
     public boolean addHourly(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+        String query =  "INSERT INTO `!_"+ league +"_history` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
                         "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
                         "    SELECT `sup`, `sub`, 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
                         "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "    FROM `!_"+ league +"_history_entry`" +
+                        "    FROM `!_"+ league +"_history`" +
                         "    WHERE `type`='minutely'" +
                         "    GROUP BY `sup`, `sub`";
 
@@ -779,11 +779,11 @@ public class Database {
     public boolean addDaily(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_history_entry` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+        String query =  "INSERT INTO `!_"+ league +"_history` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
                         "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
                         "    SELECT `sup`, `sub`, 'daily', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
                         "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "    FROM `!_"+ league +"_history_entry`" +
+                        "    FROM `!_"+ league +"_history`" +
                         "    WHERE `type`='hourly'" +
                         "    GROUP BY `sup`, `sub`";
 
@@ -805,7 +805,7 @@ public class Database {
 
         String query =  "UPDATE `!_"+ league +"_item` as i " +
                         "SET `quantity` = (" +
-                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `!_"+ league +"_history_entry` " +
+                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `!_"+ league +"_history` " +
                         "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
                         "), `inc`=0, `dec`=0";
 
@@ -825,7 +825,7 @@ public class Database {
     public boolean removeOldHistoryEntries(String league, String type, String interval) {
         league = formatLeague(league);
 
-        String query =  "DELETE FROM `!_"+ league +"_history_entry` " +
+        String query =  "DELETE FROM `!_"+ league +"_history` " +
                         "WHERE `type` = '"+ type+ "' " +
                         "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
 
@@ -975,27 +975,6 @@ public class Database {
                         "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-        String query2 = "CREATE TABLE `!_"+ league +"_history` (" +
-                        "    CONSTRAINT `"+ league +"_history`" +
-                        "        PRIMARY KEY (`sup`,`sub`)," +
-                        "        FOREIGN KEY (`sup`,`sub`)" +
-                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
-                        "        ON DELETE CASCADE," +
-
-                        "    `sup`       varchar(5)      NOT NULL," +
-                        "    `sub`       varchar(2)      NOT NULL," +
-
-                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `inc`       int(8)          unsigned DEFAULT NULL," +
-                        "    `dec`       int(8)          unsigned DEFAULT NULL," +
-                        "    `count`     int(16)         unsigned DEFAULT NULL," +
-                        "    `quantity`  int(8)          unsigned DEFAULT NULL" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
         String query3 = "CREATE TABLE `!_"+ league +"_item_entry` (" +
                         "    CONSTRAINT `"+ league +"_item_entry`" +
                         "        PRIMARY KEY (`sup`,`sub`,`account`)," +
@@ -1012,13 +991,13 @@ public class Database {
                         "    `id`        varchar(32)     NOT NULL" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-        String query4 = "CREATE TABLE `!_"+ league +"_history_entry` (" +
-                        "    CONSTRAINT `"+ league +"_history_entry`" +
+        String query4 = "CREATE TABLE `!_"+ league +"_history` (" +
+                        "    CONSTRAINT `"+ league +"_history`" +
                         "        FOREIGN KEY (`sup`,`sub`)" +
                         "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
                         "        ON DELETE CASCADE," +
                         "    FOREIGN KEY (`type`)" +
-                        "        REFERENCES `history_entry_category` (`type`)" +
+                        "        REFERENCES `history_category` (`type`)" +
                         "        ON DELETE CASCADE," +
 
                         "    `sup`       varchar(5)      NOT NULL," +
@@ -1045,19 +1024,13 @@ public class Database {
                 }
             }
 
-            if (!tables.contains("!_"+ league +"_history")) {
-                try (Statement statement = connection.createStatement()) {
-                    statement.execute(query2);
-                }
-            }
-
             if (!tables.contains("!_"+ league +"_item_entry")) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query3);
                 }
             }
 
-            if (!tables.contains("!_"+ league +"_history_entry")) {
+            if (!tables.contains("!_"+ league +"_history")) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query4);
                 }
