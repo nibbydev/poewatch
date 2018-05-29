@@ -933,41 +933,61 @@ public class Database {
         PreparedStatement statement2 = null;
         league = formatLeague(league);
 
+        String query1 = "DELETE FROM `!_"+ league +"_item_entry` " +
+                        "WHERE `sup`=? AND `sub`=? " +
+                        "AND `price` > (" +
+                        "    SELECT * FROM (" +
+                        "        SELECT AVG(`price`) + ?*STDDEV(`price`) " +
+                        "        FROM `!_"+ league +"_item_entry`  " +
+                        "        WHERE `sup`=? AND `sub`=?" +
+                        "    ) foo )" +
+                        "AND `price` / ? > (" +
+                        "    SELECT `median` FROM `!_"+ league +"_item` " +
+                        "    WHERE `sup`=? AND `sub`=?)";
+
+        String query2 = "DELETE FROM `!_"+ league +"_item_entry` " +
+                        "WHERE `sup`=? AND `sub`=? " +
+                        "AND `price` < (" +
+                        "    SELECT * FROM (" +
+                        "        SELECT AVG(`price`) - ?*STDDEV(`price`) " +
+                        "        FROM `!_"+ league +"_item_entry`  " +
+                        "        WHERE `sup`=? AND `sub`=? " +
+                        "    ) foo )" +
+                        "AND `price` * ? < (" +
+                        "    SELECT `median` FROM `!_"+ league +"_item` " +
+                        "    WHERE `sup`=? AND `sub`=?)";
+
         try {
+            statement1 = connection.prepareStatement(query1);
+            statement2 = connection.prepareStatement(query2);
+            
             for (String index : indexMap.keySet()) {
                 String sup = index.substring(0, Config.index_superSize);
                 String sub = index.substring(Config.index_superSize);
 
-                String query1 = "DELETE FROM `!_"+ league +"_item_entry` " +
-                                "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' " +
-                                "AND `price` > (" +
-                                "    SELECT * FROM (" +
-                                "        SELECT AVG(`price`) + "+ Config.db_outlierMulti +"*STDDEV(`price`) " +
-                                "        FROM `!_"+ league +"_item_entry`  " +
-                                "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                                "    ) foo )" +
-                                "AND `price` / "+ Config.db_outlierMulti2 +" > (" +
-                                "    SELECT `median` FROM `!_"+ league +"_item` " +
-                                "    WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"')";
+                statement1.setString(1, sup);
+                statement1.setString(2, sub);
+                statement1.setDouble(3, Config.db_outlierMulti);
+                statement1.setString(4, sup);
+                statement1.setString(5, sub);
+                statement1.setDouble(6, Config.db_outlierMulti2);
+                statement1.setString(7, sup);
+                statement1.setString(8, sub);
+                statement1.addBatch();
 
-                String query2 = "DELETE FROM `!_"+ league +"_item_entry` " +
-                                "WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"' " +
-                                "AND `price` < (" +
-                                "    SELECT * FROM (" +
-                                "        SELECT AVG(`price`) - "+ Config.db_outlierMulti +"*STDDEV(`price`) " +
-                                "        FROM `!_"+ league +"_item_entry`  " +
-                                "        WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"'" +
-                                "    ) foo )" +
-                                "AND `price` * "+ Config.db_outlierMulti2 +" < (" +
-                                "    SELECT `median` FROM `!_"+ league +"_item` " +
-                                "    WHERE `sup`='"+ sup +"' AND `sub`='"+ sub +"')";
-
-                statement1 = connection.prepareStatement(query1);
-                statement2 = connection.prepareStatement(query2);
-
-                statement1.execute();
-                statement2.execute();
+                statement2.setString(1, sup);
+                statement2.setString(2, sub);
+                statement1.setDouble(3, Config.db_outlierMulti);
+                statement2.setString(4, sup);
+                statement2.setString(5, sub);
+                statement1.setDouble(6, Config.db_outlierMulti2);
+                statement2.setString(7, sup);
+                statement2.setString(8, sub);
+                statement2.addBatch();
             }
+
+            statement1.executeBatch();
+            statement2.executeBatch();
 
             connection.commit();
             return true;
