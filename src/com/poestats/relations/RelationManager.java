@@ -34,13 +34,13 @@ public class RelationManager {
     private Map<String, List<String>> categories;
 
     //------------------------------------------------------------------------------------------------------------
-    // Constructors
+    // Initialization
     //------------------------------------------------------------------------------------------------------------
 
     /**
      * Reads currency and item data from file on object init
      */
-    public RelationManager() {
+    public void init() {
         categories = Main.DATABASE.getCategories();
         if (categories == null) {
             Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);

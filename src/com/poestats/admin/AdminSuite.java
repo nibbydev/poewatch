@@ -67,18 +67,6 @@ public class AdminSuite {
         }
     }
 
-    /**
-     * Saves data to file on program exit
-     */
-    public void saveChangeID() {
-        try (Writer writer = Misc.defineWriter(Config.file_changeID)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(changeIDElement, writer);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Backups
     //------------------------------------------------------------------------------------------------------------

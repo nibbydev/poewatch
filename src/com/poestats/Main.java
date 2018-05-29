@@ -20,7 +20,6 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
 
     private static GsonBuilder gsonBuilder;
-    public static Config CONFIG;
     public static WorkerManager WORKER_MANAGER;
     public static EntryManager ENTRY_MANAGER;
     public static RelationManager RELATIONS;
@@ -42,18 +41,18 @@ public class Main {
             gsonBuilder = new GsonBuilder();
             gsonBuilder.disableHtmlEscaping();
 
-            DATABASE = new Database();
-            DATABASE.connect();
-
             // Init admin suite
             ADMIN = new AdminSuite();
+
+            DATABASE = new Database();
+            DATABASE.connect();
 
             // Make sure basic folder structure exists
             boolean createdFiles = buildFolderFileStructure();
             if (createdFiles) return;
 
-            CONFIG = new Config();
             RELATIONS = new RelationManager();
+            RELATIONS.init();
 
             // Init league manager
             LEAGUE_MANAGER = new LeagueManager();
@@ -65,6 +64,7 @@ public class Main {
 
             WORKER_MANAGER = new WorkerManager();
             ENTRY_MANAGER = new EntryManager();
+            ENTRY_MANAGER.init();
 
             // Parse CLI parameters
             parseCommandParameters(args);
@@ -74,11 +74,9 @@ public class Main {
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
-
-            // Stop workers on exit
-            WORKER_MANAGER.stopController();
         } finally {
             if (DATABASE != null) DATABASE.disconnect();
+            if (WORKER_MANAGER != null) WORKER_MANAGER.stopController();
         }
     }
 

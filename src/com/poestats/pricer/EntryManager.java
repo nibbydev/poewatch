@@ -29,7 +29,7 @@ public class EntryManager {
     /**
      * Loads data in from file on object initialization
      */
-    public EntryManager() {
+    public void init() {
         loadStartParameters();
         loadCurrency();
     }
