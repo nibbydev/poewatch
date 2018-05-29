@@ -941,7 +941,7 @@ public class Database {
                         "WHERE `sup`=? AND `sub`=? " +
                         "AND `price` > (" +
                         "    SELECT * FROM (" +
-                        "        SELECT AVG(`price`) + ?*STDDEV(`price`) " +
+                        "        SELECT AVG(`price`) + ? * STDDEV(`price`) " +
                         "        FROM `!_"+ league +"_item_entry`  " +
                         "        WHERE `sup`=? AND `sub`=?" +
                         "    ) foo )" +
@@ -953,7 +953,7 @@ public class Database {
                         "WHERE `sup`=? AND `sub`=? " +
                         "AND `price` < (" +
                         "    SELECT * FROM (" +
-                        "        SELECT AVG(`price`) - ?*STDDEV(`price`) " +
+                        "        SELECT AVG(`price`) - ? * STDDEV(`price`) " +
                         "        FROM `!_"+ league +"_item_entry`  " +
                         "        WHERE `sup`=? AND `sub`=? " +
                         "    ) foo )" +
@@ -981,10 +981,10 @@ public class Database {
 
                 statement2.setString(1, sup);
                 statement2.setString(2, sub);
-                statement1.setDouble(3, Config.db_outlierMulti);
+                statement2.setDouble(3, Config.db_outlierMulti);
                 statement2.setString(4, sup);
                 statement2.setString(5, sub);
-                statement1.setDouble(6, Config.db_outlierMulti2);
+                statement2.setDouble(6, Config.db_outlierMulti2);
                 statement2.setString(7, sup);
                 statement2.setString(8, sub);
                 statement2.addBatch();
