@@ -206,7 +206,8 @@ public class EntryManager {
      */
     public void parseItems(Mappers.APIReply reply) {
         for (Mappers.Stash stash : reply.stashes) {
-            stash.fix();
+            //stash.fix();
+
             for (Item item : stash.items) {
                 // Snooze. The lock will be lifted in about 0.1 seconds. This loop is NOT time-sensitive
                 while (flagPause) {
