@@ -471,7 +471,7 @@ public class Database {
                         "    i.`quantity`," +
                         "    i.`inc`," +
                         "    i.`dec` " +
-                        "FROM `!_"+ league +"_item` AS i" +
+                        "FROM `$_"+ league +"_item` AS i" +
                         "    INNER JOIN `item_data_sup` AS d" +
                         "        ON i.`sup` = d.`sup` " +
                         "WHERE EXISTS (" +
@@ -504,7 +504,7 @@ public class Database {
     public boolean uploadRaw(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_item_entry` (`sup`, `sub`, `price`, `account`, `id`) " +
+        String query =  "INSERT INTO `$_"+ league +"_entry` (`sup`, `sub`, `price`, `account`, `id`) " +
                         "VALUES (?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
@@ -543,7 +543,7 @@ public class Database {
         String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_item` (`sup`, `sub`) " +
+        String query =  "INSERT INTO `$_"+ league +"_item` (`sup`, `sub`) " +
                         "VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
@@ -566,7 +566,7 @@ public class Database {
     public boolean updateCounters(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `!_"+ league +"_item` " +
+        String query =  "UPDATE `$_"+ league +"_item` " +
                         "SET `count`=`count` + ?, `inc`=`inc` + ? " +
                         "WHERE `sup`= ? AND `sub`= ?";
 
@@ -602,9 +602,9 @@ public class Database {
         String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        String query =  "UPDATE `!_"+ league +"_item` " +
+        String query =  "UPDATE `$_"+ league +"_item` " +
                         "SET `mean` = (" +
-                        "    SELECT AVG(`price`) FROM `!_"+ league +"_item_entry` " +
+                        "    SELECT AVG(`price`) FROM `$_"+ league +"_entry`" +
                         "    WHERE `sup`= ? AND `sub`= ?" +
                         ") WHERE `sup`= ? AND `sub`= ?";
 
@@ -630,16 +630,16 @@ public class Database {
         String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        String query =  "UPDATE `!_"+ league +"_item` " +
+        String query =  "UPDATE `$_"+ league +"_item` " +
                         "SET `median` = (" +
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
-                        "        FROM `!_"+ league +"_item_entry` d,  (SELECT @rownum:=0) r" +
+                        "        FROM `$_"+ league +"_entry` d,  (SELECT @rownum:=0) r" +
                         "        WHERE `sup`= ? AND `sub`= ?" +
                         "        ORDER BY d.`price`" +
                         "    ) as t1, (" +
                         "        SELECT count(*) as total_rows" +
-                        "        FROM `!_"+ league +"_item_entry` d" +
+                        "        FROM `$_"+ league +"_entry` d" +
                         "        WHERE `sup`= ? AND `sub`= ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
@@ -669,14 +669,14 @@ public class Database {
         String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        String query =  "UPDATE `!_"+ league +"_item`  " +
-                "SET `mode` = ( " +
-                "   SELECT `price` FROM `!_"+ league +"_item_entry` " +
-                "   WHERE `sup`= ? AND `sub`= ?" +
-                "   GROUP BY `price` " +
-                "   ORDER BY COUNT(*) DESC " +
-                "   LIMIT 1" +
-                ") WHERE `sup`= ? AND `sub`= ?";
+        String query =  "UPDATE `$_"+ league +"_item`  " +
+                        "SET `mode` = ( " +
+                        "    SELECT `price` FROM `$_"+ league +"_entry` " +
+                        "    WHERE `sup`= ? AND `sub`= ?" +
+                        "    GROUP BY `price` " +
+                        "    ORDER BY COUNT(*) DESC " +
+                        "    LIMIT 1" +
+                        ") WHERE `sup`= ? AND `sub`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -700,7 +700,7 @@ public class Database {
 
         String query1 = "SET @exVal = (" +
                         "    SELECT  `mean`" +
-                        "    FROM (SELECT `sup`, `mean` FROM `!_"+ league +"_item`) AS i" +
+                        "    FROM (SELECT `sup`, `mean` FROM `$_"+ league +"_item`) AS i" +
                         "        INNER JOIN `item_data_sup` AS d" +
                         "            ON i.`sup` = d.`sup`" +
                         "    WHERE EXISTS (" +
@@ -709,7 +709,7 @@ public class Database {
                         "        AND a.`parent` = 'currency'" +
                         "        AND a.`name` = 'Exalted Orb'))";
 
-        String query2 = "UPDATE `!_"+ league +"_item` " +
+        String query2 = "UPDATE `$_"+ league +"_item` " +
                         "SET `exalted` = IFNULL(`mean` / @exVal, 0.0)";
 
         try {
@@ -733,11 +733,11 @@ public class Database {
     public boolean addMinutely(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_history` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
+        String query =  "INSERT INTO `$_"+ league +"_history` (`sup`,`sub`,`type`,`mean`,`median`,`mode`," +
                         "                                            `exalted`,`inc`,`dec`,`count`,`quantity`)" +
                         "   SELECT `sup`,`sub`,'minutely',`mean`,`median`,`mode`," +
                         "           `exalted`,`inc`,`dec`,`count`,`quantity`" +
-                        "   FROM `!_"+ league +"_item`";
+                        "   FROM `$_"+ league +"_item`";
 
         try {
             try (Statement statement = connection.createStatement()) {
@@ -755,11 +755,11 @@ public class Database {
     public boolean addHourly(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_history` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+        String query =  "INSERT INTO `$_"+ league +"_history` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
                         "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
                         "    SELECT `sup`, `sub`, 'hourly', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
                         "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "    FROM `!_"+ league +"_history`" +
+                        "    FROM `$_"+ league +"_history`" +
                         "    WHERE `type`='minutely'" +
                         "    GROUP BY `sup`, `sub`";
 
@@ -779,11 +779,11 @@ public class Database {
     public boolean addDaily(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `!_"+ league +"_history` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
+        String query =  "INSERT INTO `$_"+ league +"_history` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
                         "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
                         "    SELECT `sup`, `sub`, 'daily', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
                         "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "    FROM `!_"+ league +"_history`" +
+                        "    FROM `$_"+ league +"_history`" +
                         "    WHERE `type`='hourly'" +
                         "    GROUP BY `sup`, `sub`";
 
@@ -803,9 +803,9 @@ public class Database {
     public boolean calcQuantity(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `!_"+ league +"_item` as i " +
+        String query =  "UPDATE `$_"+ league +"_item` as i " +
                         "SET `quantity` = (" +
-                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `!_"+ league +"_history` " +
+                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `$_"+ league +"_history` " +
                         "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
                         "), `inc`=0, `dec`=0";
 
@@ -825,7 +825,7 @@ public class Database {
     public boolean removeOldHistoryEntries(String league, String type, String interval) {
         league = formatLeague(league);
 
-        String query =  "DELETE FROM `!_"+ league +"_history` " +
+        String query =  "DELETE FROM `$_"+ league +"_history` " +
                         "WHERE `type` = '"+ type+ "' " +
                         "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
 
@@ -847,12 +847,12 @@ public class Database {
         String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        String query =  "DELETE FROM `!_"+ league +"_item_entry`" +
+        String query =  "DELETE FROM `$_"+ league +"_entry`" +
                         "WHERE `sup`= ? AND `sub`= ? AND `id` NOT IN (" +
                         "    SELECT `id`" +
                         "    FROM (" +
                         "        SELECT `id`, `time`" +
-                        "        FROM `!_"+ league +"_item_entry`" +
+                        "        FROM `$_"+ league +"_entry`" +
                         "        WHERE `sup`= ? AND `sub`= ?" +
                         "        ORDER BY `time` DESC" +
                         "        LIMIT ?" +
@@ -879,29 +879,26 @@ public class Database {
     public boolean removeItemOutliers(String league, IndexMap indexMap){
         league = formatLeague(league);
 
-        String query1 = "DELETE FROM `!_"+ league +"_item_entry` " +
+        String query1 = "DELETE FROM `$_"+ league +"_entry` " +
                         "WHERE `sup`= ? AND `sub`= ? " +
                         "AND `price` > (" +
                         "    SELECT * FROM (" +
                         "        SELECT AVG(`price`) + ? * STDDEV(`price`) " +
-                        "        FROM `!_"+ league +"_item_entry`  " +
+                        "        FROM `$_"+ league +"_entry`  " +
                         "        WHERE `sup`= ? AND `sub`= ?" +
-                        "    ) foo )" +
-                        "AND `price` / ? > (" +
-                        "    SELECT `median` FROM `!_"+ league +"_item` " +
-                        "    WHERE `sup`= ? AND `sub`= ?)";
+                        "    ) foo )";
 
-        String query2 = "DELETE FROM `!_"+ league +"_item_entry` " +
+        String query2 = "DELETE FROM `$_"+ league +"_entry` " +
                         "WHERE `sup`= ? AND `sub`= ? " +
                         "AND `price` < (" +
                         "    SELECT * FROM (" +
                         "        SELECT AVG(`price`) - ? * STDDEV(`price`) " +
-                        "        FROM `!_"+ league +"_item_entry`  " +
+                        "        FROM `$_"+ league +"_entry`  " +
                         "        WHERE `sup`= ? AND `sub`= ? " +
                         "    ) foo )" +
-                        "AND `price` * ? < (" +
-                        "    SELECT `median` FROM `!_"+ league +"_item` " +
-                        "    WHERE `sup`= ? AND `sub`= ?)";
+                        "AND `price` < (" +
+                        "    SELECT `median` FROM `$_"+ league +"_item` " +
+                        "    WHERE `sup`= ? AND `sub`= ?) / ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
@@ -914,9 +911,6 @@ public class Database {
                     statement.setDouble(3, Config.db_outlierMulti);
                     statement.setString(4, sup);
                     statement.setString(5, sub);
-                    statement.setDouble(6, Config.db_outlierMulti2);
-                    statement.setString(7, sup);
-                    statement.setString(8, sub);
                     statement.addBatch();
                 }
 
@@ -933,9 +927,10 @@ public class Database {
                     statement.setDouble(3, Config.db_outlierMulti);
                     statement.setString(4, sup);
                     statement.setString(5, sub);
-                    statement.setDouble(6, Config.db_outlierMulti2);
-                    statement.setString(7, sup);
-                    statement.setString(8, sub);
+                    statement.setString(6, sup);
+                    statement.setString(7, sub);
+                    statement.setDouble(8, Config.db_outlierMulti2);
+
                     statement.addBatch();
                 }
 
@@ -954,7 +949,7 @@ public class Database {
     public boolean createLeagueTables(String league) {
         league = formatLeague(league);
 
-        String query1 = "CREATE TABLE `!_"+ league +"_item` (" +
+        String query1 = "CREATE TABLE `$_"+ league +"_item` (" +
                         "    CONSTRAINT `"+ league +"_sup-sub`" +
                         "        PRIMARY KEY (`sup`,`sub`), " +
                         "        FOREIGN KEY (`sup`,`sub`) " +
@@ -975,9 +970,9 @@ public class Database {
                         "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-        String query3 = "CREATE TABLE `!_"+ league +"_item_entry` (" +
-                        "    CONSTRAINT `"+ league +"_item_entry`" +
-                        "        PRIMARY KEY (`sup`,`sub`,`account`)," +
+        String query3 = "CREATE TABLE `$_"+ league +"_entry` (" +
+                        "    CONSTRAINT `"+ league +"_entry`" +
+                        "        PRIMARY KEY (`sup`,`sub`,`id`)," +
                         "        FOREIGN KEY (`sup`,`sub`)" +
                         "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
                         "        ON DELETE CASCADE," +
@@ -991,7 +986,7 @@ public class Database {
                         "    `id`        varchar(32)     NOT NULL" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-        String query4 = "CREATE TABLE `!_"+ league +"_history` (" +
+        String query4 = "CREATE TABLE `$_"+ league +"_history` (" +
                         "    CONSTRAINT `"+ league +"_history`" +
                         "        FOREIGN KEY (`sup`,`sub`)" +
                         "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
@@ -1018,19 +1013,19 @@ public class Database {
         try {
             getTables(tables);
 
-            if (!tables.contains("!_"+ league +"_item")) {
+            if (!tables.contains("$_"+ league +"_item")) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query1);
                 }
             }
 
-            if (!tables.contains("!_"+ league +"_item_entry")) {
+            if (!tables.contains("$_"+ league +"_entry")) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query3);
                 }
             }
 
-            if (!tables.contains("!_"+ league +"_history")) {
+            if (!tables.contains("$_"+ league +"_history")) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query4);
                 }

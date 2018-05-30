@@ -84,11 +84,11 @@ CREATE TABLE `item_data_sub` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `!__item`
+-- Table structure for table `$__item`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `!__item` (
+CREATE TABLE `$__item` (
     CONSTRAINT `_sup-sub`
         PRIMARY KEY (`sup`,`sub`),
         FOREIGN KEY (`sup`,`sub`)
@@ -110,12 +110,12 @@ CREATE TABLE `!__item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `!__item_entry`
+-- Table structure `$__entry`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `!__item_entry` (
-    CONSTRAINT `_item_entry`
+CREATE TABLE `$__entry` (
+    CONSTRAINT `_entry`
         PRIMARY KEY (`sup`,`sub`,`account`),
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
@@ -139,11 +139,11 @@ CREATE TABLE `history_category` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `!__history_`
+-- Table structure `$__history_`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `!__history` (
+CREATE TABLE `$__history` (
     CONSTRAINT `_history`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
