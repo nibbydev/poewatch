@@ -882,16 +882,20 @@ public class Database {
         String query1 = "DELETE FROM `$_"+ league +"_entry` " +
                         "WHERE `sup`= ? AND `sub`= ? " +
                         "AND `price` > (" +
-                        "    SELECT AVG(`price`) + ? * STDDEV(`price`) " +
-                        "    FROM `$_"+ league +"_entry`  " +
-                        "    WHERE `sup`= ? AND `sub`= ?)";
+                        "    SELECT * FROM (" +
+                        "        SELECT AVG(`price`) + ? * STDDEV(`price`) " +
+                        "        FROM `$_"+ league +"_entry`  " +
+                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "    ) foo )";
 
         String query2 = "DELETE FROM `$_"+ league +"_entry` " +
                         "WHERE `sup`= ? AND `sub`= ? " +
                         "AND `price` < (" +
-                        "    SELECT AVG(`price`) - ? * STDDEV(`price`) " +
-                        "    FROM `$_"+ league +"_entry`  " +
-                        "    WHERE `sup`= ? AND `sub`= ?) " +
+                        "    SELECT * FROM (" +
+                        "        SELECT AVG(`price`) - ? * STDDEV(`price`) " +
+                        "        FROM `$_"+ league +"_entry`  " +
+                        "        WHERE `sup`= ? AND `sub`= ? " +
+                        "    ) foo )" +
                         "AND `price` < (" +
                         "    SELECT `median` FROM `$_"+ league +"_item` " +
                         "    WHERE `sup`= ? AND `sub`= ?) / ?";
