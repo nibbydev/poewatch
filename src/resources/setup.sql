@@ -84,12 +84,12 @@ CREATE TABLE `item_data_sub` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `$__item`
+-- Table structure for table `#_item_`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `$__item` (
-    CONSTRAINT `_sup-sub`
+CREATE TABLE `#_item_` (
+    CONSTRAINT `sup-sub_`
         PRIMARY KEY (`sup`,`sub`),
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
@@ -110,12 +110,12 @@ CREATE TABLE `$__item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `$__entry`
+-- Table structure `#_entry_`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `$__entry` (
-    CONSTRAINT `_entry`
+CREATE TABLE `#_entry_` (
+    CONSTRAINT `entry_`
         PRIMARY KEY (`sup`,`sub`,`account`),
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
@@ -139,12 +139,12 @@ CREATE TABLE `history_category` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `$__history_`
+-- Table structure `#_history_`
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `$__history` (
-    CONSTRAINT `_history`
+CREATE TABLE `#_history` (
+    CONSTRAINT `history_`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `item_data_sub` (`sup`,`sub`)
         ON DELETE CASCADE,
