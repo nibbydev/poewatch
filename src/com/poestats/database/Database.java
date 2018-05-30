@@ -957,6 +957,11 @@ public class Database {
     public boolean removeItemOutliers(String league, IndexMap indexMap){
         league = formatLeague(league);
 
+        String query0 = "SET @entryCount = (" +
+                        "    SELECT COUNT(`id`)" +
+                        "    FROM `#_entry_"+ league +"`" +
+                        "    WHERE `sup`=? AND `sub`=?);";
+
         String query1 = "SET @stddevPrice = (" +
                         "    SELECT STDDEV(`price`) * 2.0" +
                         "    FROM `#_entry_"+ league +"`" +
@@ -972,7 +977,8 @@ public class Database {
                         "    FROM `#_entry_"+ league +"`" +
                         "    WHERE `sup`=? AND `sub`=?" +
                         "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * 1.2 || " +
-                        "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2));";
+                        "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2) && " +
+                        "        @entryCount > 5);";
 
         String query4 = "UPDATE `#_item_"+ league +"` " +
                         "SET `dec` = `dec` + @numberOfElementsToRemove " +
@@ -981,12 +987,19 @@ public class Database {
         String query5 = "DELETE FROM `#_entry_"+ league +"` " +
                         "WHERE `sup`=? AND `sub`=? " +
                         "AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * 1.2 || " +
-                        "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2);";
+                        "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2) && " +
+                        "    @entryCount > 5;";
 
         try {
             for (String index : indexMap.keySet()) {
                 String sup = index.substring(0, Config.index_superSize);
                 String sub = index.substring(Config.index_superSize);
+
+                try (PreparedStatement statement = connection.prepareStatement(query0)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.execute();
+                }
 
                 try (PreparedStatement statement = connection.prepareStatement(query1)) {
                     statement.setString(1, sup);
