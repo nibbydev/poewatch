@@ -506,7 +506,7 @@ public class Database {
 
         String query =  "INSERT INTO `$_"+ league +"_entry` (`sup`, `sub`, `price`, `account`, `id`) " +
                         "VALUES (?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
+                        "ON DUPLICATE KEY UPDATE `price`=`price`";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -603,10 +603,11 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "UPDATE `$_"+ league +"_item` " +
-                        "SET `mean` = (" +
+                        "SET `mean` = IFNULL((" +
                         "    SELECT AVG(`price`) FROM `$_"+ league +"_entry`" +
                         "    WHERE `sup`= ? AND `sub`= ?" +
-                        ") WHERE `sup`= ? AND `sub`= ?";
+                        "), 0.0) " +
+                        "WHERE `sup`= ? AND `sub`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -631,7 +632,7 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "UPDATE `$_"+ league +"_item` " +
-                        "SET `median` = (" +
+                        "SET `median` = IFNULL((" +
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
                         "        FROM `$_"+ league +"_entry` d,  (SELECT @rownum:=0) r" +
@@ -643,7 +644,7 @@ public class Database {
                         "        WHERE `sup`= ? AND `sub`= ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        ") WHERE `sup`= ? AND `sub`= ?";
+                        "), 0.0) WHERE `sup`= ? AND `sub`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -670,13 +671,14 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "UPDATE `$_"+ league +"_item`  " +
-                        "SET `mode` = ( " +
+                        "SET `mode` = IFNULL(( " +
                         "    SELECT `price` FROM `$_"+ league +"_entry` " +
                         "    WHERE `sup`= ? AND `sub`= ?" +
                         "    GROUP BY `price` " +
                         "    ORDER BY COUNT(*) DESC " +
                         "    LIMIT 1" +
-                        ") WHERE `sup`= ? AND `sub`= ?";
+                        "), 0.0) " +
+                        "WHERE `sup`= ? AND `sub`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -876,7 +878,7 @@ public class Database {
         }
     }
 
-    public boolean removeItemOutliers(String league, IndexMap indexMap){
+    public boolean removeItemOutliers0(String league, IndexMap indexMap){
         league = formatLeague(league);
 
         String query1 = "DELETE FROM `$_"+ league +"_entry` " +
@@ -886,7 +888,10 @@ public class Database {
                         "        SELECT AVG(`price`) + ? * STDDEV(`price`) " +
                         "        FROM `$_"+ league +"_entry`  " +
                         "        WHERE `sup`= ? AND `sub`= ?" +
-                        "    ) foo )";
+                        "    ) foo ) " +
+                        "AND `price` > (" +
+                        "    SELECT `median` FROM `$_"+ league +"_item` " +
+                        "    WHERE `sup`= ? AND `sub`= ?) * ?";
 
         String query2 = "DELETE FROM `$_"+ league +"_entry` " +
                         "WHERE `sup`= ? AND `sub`= ? " +
@@ -911,6 +916,10 @@ public class Database {
                     statement.setDouble(3, Config.db_outlierMulti);
                     statement.setString(4, sup);
                     statement.setString(5, sub);
+                    statement.setString(6, sup);
+                    statement.setString(7, sub);
+                    statement.setDouble(8, Config.db_outlierMulti2);
+
                     statement.addBatch();
                 }
 
@@ -935,6 +944,80 @@ public class Database {
                 }
 
                 statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not remove outliers", 3);
+            return false;
+        }
+    }
+
+    public boolean removeItemOutliers(String league, IndexMap indexMap){
+        league = formatLeague(league);
+
+        String query1 = "SET @stddevPrice = (" +
+                        "    SELECT STDDEV(`price`) * 2.0" +
+                        "    FROM `$_"+ league +"_entry`" +
+                        "    WHERE `sup`=? AND `sub`=?);";
+
+        String query2 = "SET @medianPrice = (" +
+                        "    SELECT `median`" +
+                        "    FROM `$_"+ league +"_item`" +
+                        "    WHERE `sup`=? AND `sub`=?);";
+
+        String query3 = "SET @numberOfElementsToRemove = (" +
+                        "    SELECT COUNT(`price`)" +
+                        "    FROM `$_"+ league +"_entry`" +
+                        "    WHERE `sup`=? AND `sub`=?" +
+                        "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * 1.2 || " +
+                        "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2));";
+
+        String query4 = "UPDATE `$_"+ league +"_item` " +
+                        "SET `dec` = `dec` + @numberOfElementsToRemove " +
+                        "WHERE `sup`=? AND `sub`=?;";
+
+        String query5 = "DELETE FROM `$_"+ league +"_entry` " +
+                        "WHERE `sup`=? AND `sub`=? " +
+                        "AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * 1.2 || " +
+                        "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2);";
+
+        try {
+            for (String index : indexMap.keySet()) {
+                String sup = index.substring(0, Config.index_superSize);
+                String sub = index.substring(Config.index_superSize);
+
+                try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.execute();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.execute();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(query3)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.execute();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(query4)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.execute();
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(query5)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.execute();
+                }
             }
 
             connection.commit();

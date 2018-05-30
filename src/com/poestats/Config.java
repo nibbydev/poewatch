@@ -78,7 +78,7 @@ public class Config {
     // Entry
     //------------------------------------------------------------------------------------------------------------
 
-    public static final int entry_itemsSize = 64;
+    public static final int entry_itemsSize = 128;
     public static final int entry_tempSize = 16;
     public static final int entry_minutelySize = 6;
     public static final int entry_hourlySize = 24;
