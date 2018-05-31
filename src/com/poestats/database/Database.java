@@ -453,22 +453,20 @@ public class Database {
     // Entry management
     //--------------------
 
+    /**
+     * Queries database and fills out provided CurrencyMap with CurrencyItems
+     *
+     * @param league League where to get currency
+     * @param currencyMap CurrencyMap to fill out
+     * @return True on success
+     */
     public boolean getCurrency(String league, CurrencyMap currencyMap) {
         league = formatLeague(league);
 
         String query =  "SELECT " +
-                        "    i.`sup`," +
-                        "    i.`sub`," +
-                        "    d.`name`," +
-                        "    i.`time`," +
-                        "    i.`mean`," +
-                        "    i.`median`," +
-                        "    i.`mode`," +
-                        "    i.`exalted`," +
-                        "    i.`count`," +
-                        "    i.`quantity`," +
-                        "    i.`inc`," +
-                        "    i.`dec` " +
+                        "    i.`sup`, i.`sub`, d.`name`," +
+                        "    i.`mean`, i.`median`, i.`mode`, i.`exalted`," +
+                        "    i.`count`, i.`quantity`, i.`inc`, i.`dec` " +
                         "FROM `#_item_"+ league +"` AS i" +
                         "    INNER JOIN `item_data_sup` AS d" +
                         "        ON i.`sup` = d.`sup` " +

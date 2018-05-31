@@ -8,8 +8,8 @@ public class CurrencyItem {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private int count, quantity, inc, dec;
     private double mean, median, mode, exalted;
+    private int count, quantity, inc, dec;
 
     //------------------------------------------------------------------------------------------------------------
     // I/O
@@ -68,9 +68,5 @@ public class CurrencyItem {
 
     public void setMedian(double median) {
         this.median = median;
-    }
-
-    public void addCount(int val) {
-        count += val;
     }
 }
