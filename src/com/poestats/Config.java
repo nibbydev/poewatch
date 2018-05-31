@@ -78,7 +78,7 @@ public class Config {
     public static final double outlier_devMulti = 2.0;
     public static final double outlier_minPrice = 0.0;
     public static final double outlier_priceMulti = 1.2;
-    public static final int outlier_minCount = 10;
+    public static final int outlier_minCount = 4;
 
     public static final int entry_maxCount = 96;
 

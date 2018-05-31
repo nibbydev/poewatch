@@ -1075,7 +1075,7 @@ public class Database {
                         "    CONSTRAINT `entry_"+ league +"`" +
                         "        PRIMARY KEY (`sup`,`sub`,`account`)," +
                         "        FOREIGN KEY (`sup`,`sub`)" +
-                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "        REFERENCES `#_item_"+ league +"` (`sup`,`sub`)" +
                         "        ON DELETE CASCADE," +
 
                         "    `sup`       varchar(5)      NOT NULL," +
@@ -1090,7 +1090,7 @@ public class Database {
         String query4 = "CREATE TABLE `#_history_"+ league +"` (" +
                         "    CONSTRAINT `history_"+ league +"`" +
                         "        FOREIGN KEY (`sup`,`sub`)" +
-                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "        REFERENCES `#_item_"+ league +"` (`sup`,`sub`)" +
                         "        ON DELETE CASCADE," +
                         "    FOREIGN KEY (`type`)" +
                         "        REFERENCES `history_category` (`type`)" +

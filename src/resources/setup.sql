@@ -118,7 +118,7 @@ CREATE TABLE `#_entry_` (
     CONSTRAINT `entry_`
         PRIMARY KEY (`sup`,`sub`,`account`),
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `item_data_sub` (`sup`,`sub`)
+        REFERENCES `#_item_` (`sup`,`sub`)
         ON DELETE CASCADE,
 
     `sup`       varchar(5)      NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE `history_category` (
 CREATE TABLE `#_history` (
     CONSTRAINT `history_`
         FOREIGN KEY (`sup`,`sub`)
-        REFERENCES `item_data_sub` (`sup`,`sub`)
+        REFERENCES `#_item_` (`sup`,`sub`)
         ON DELETE CASCADE,
     FOREIGN KEY (`type`)
         REFERENCES `history_category` (`type`)
