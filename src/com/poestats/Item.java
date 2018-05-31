@@ -285,22 +285,19 @@ public class Item extends Mappers.BaseItem {
 
         // Begin the long block that filters out gems based on a number of properties
         if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
-            if (qual < 6) qual = 0;
-            else if (qual < 16) qual = 10;
+            if (qual < 10) qual = 0;
             else qual = 20;
 
             // Quality doesn't matter for lvl 3 and 4
             if (lvl > 2) qual = 0;
         } else {
-            if (lvl < 7) lvl = 1;           // 1  = 1,2,3,4,5,6
-            else if (lvl < 19) lvl = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17,18
-            else if (lvl < 21) lvl = 20;    // 20 = 19,20
+            if (lvl < 15) lvl = 1;          // 1  = 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+            else if (lvl < 21) lvl = 20;    // 20 = 15,16,17,18,19,20
             // 21 = 21
 
-            if (qual < 7) qual = 0;           // 0  = 0,1,2,3,4,5,6
-            else if (qual < 18) qual = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17
-            else if (qual < 23) qual = 20;    // 20 = 18,19,20,21,22
-            // 23 = 23
+            if (qual < 17) qual = 0;          // 0  = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+            else if (qual < 22) qual = 20;    // 20 = 17,18,19,20,21
+            // 22,23 = 23
 
             // Gets rid of specific gems
             if (lvl < 20 && qual > 20) qual = 20;         // |4| 1|23|1 and |4|10|23|1
