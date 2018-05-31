@@ -14,9 +14,6 @@ public class Config {
     private static final String db_password = "";
     public static final String db_database = "ps_test_database";
 
-    public static final double db_outlierMulti = 2.0;
-    public static final double db_outlierMulti2 = 1.2;
-
     public static String getDb_password() {
         return db_password;
     }
@@ -78,17 +75,12 @@ public class Config {
     // Entry
     //------------------------------------------------------------------------------------------------------------
 
-    public static final int entry_itemsSize = 96;
-    public static final int entry_tempSize = 16;
-    public static final int entry_minutelySize = 6;
-    public static final int entry_hourlySize = 24;
-    public static final int entry_dailySize = 7;
+    public static final double outlier_devMulti = 2.0;
+    public static final double outlier_minPrice = 0.0;
+    public static final double outlier_priceMulti = 1.2;
+    public static final int outlier_minCount = 10;
 
-    public static final int entry_pluckPercentLT2 = 10000;
-    public static final int entry_pluckPercentGT2 = 500;
-
-    public static final int entry_shiftPercent = 80;
-    public static final int entry_shiftPercentNew = 60;
+    public static final int entry_maxCount = 96;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;
@@ -114,7 +106,6 @@ public class Config {
 
     public static final double item_pricePrecision = 10000.0;
     public static final int item_pricePrecision2 = 4;
-    public static final int misc_defaultLeagueLength = 90;
     public static final int monitorTimeoutMS = 500;
     public static final long startTime = System.currentTimeMillis();
     public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";

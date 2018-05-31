@@ -865,7 +865,7 @@ public class Database {
                 statement.setString(2, sub);
                 statement.setString(3, sup);
                 statement.setString(4, sub);
-                statement.setInt(5, Config.entry_itemsSize);
+                statement.setInt(5, Config.entry_maxCount);
                 statement.execute();
             }
 
@@ -912,12 +912,12 @@ public class Database {
 
                     statement.setString(1, sup);
                     statement.setString(2, sub);
-                    statement.setDouble(3, Config.db_outlierMulti);
+                    statement.setDouble(3, 2.0);
                     statement.setString(4, sup);
                     statement.setString(5, sub);
                     statement.setString(6, sup);
                     statement.setString(7, sub);
-                    statement.setDouble(8, Config.db_outlierMulti2);
+                    statement.setDouble(8,1.2);
 
                     statement.addBatch();
                 }
@@ -932,12 +932,12 @@ public class Database {
 
                     statement.setString(1, sup);
                     statement.setString(2, sub);
-                    statement.setDouble(3, Config.db_outlierMulti);
+                    statement.setDouble(3, 2.0);
                     statement.setString(4, sup);
                     statement.setString(5, sub);
                     statement.setString(6, sup);
                     statement.setString(7, sub);
-                    statement.setDouble(8, Config.db_outlierMulti2);
+                    statement.setDouble(8, 1.2);
 
                     statement.addBatch();
                 }
@@ -963,9 +963,10 @@ public class Database {
                         "    WHERE `sup`=? AND `sub`=?);";
 
         String query1 = "SET @stddevPrice = (" +
-                        "    SELECT STDDEV(`price`) * 2.0" +
+                        "    SELECT STDDEV(`price`)" +
                         "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `sup`=? AND `sub`=?);";
+                        "    WHERE `sup`=? AND `sub`=?" +
+                        ") * ?;";
 
         String query2 = "SET @medianPrice = (" +
                         "    SELECT `median`" +
@@ -976,9 +977,9 @@ public class Database {
                         "    SELECT COUNT(`price`)" +
                         "    FROM `#_entry_"+ league +"`" +
                         "    WHERE `sup`=? AND `sub`=?" +
-                        "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * 1.2 || " +
-                        "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2) && " +
-                        "        @entryCount > 5);";
+                        "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
+                        "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) &&" +
+                        "        @entryCount > ? && @medianPrice > ?);";
 
         String query4 = "UPDATE `#_item_"+ league +"` " +
                         "SET `dec` = `dec` + @numberOfElementsToRemove " +
@@ -986,9 +987,9 @@ public class Database {
 
         String query5 = "DELETE FROM `#_entry_"+ league +"` " +
                         "WHERE `sup`=? AND `sub`=? " +
-                        "AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * 1.2 || " +
-                        "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / 1.2) && " +
-                        "    @entryCount > 5;";
+                        "AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
+                        "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) && " +
+                        "    @entryCount > ? && @medianPrice > ?;";
 
         try {
             for (String index : indexMap.keySet()) {
@@ -1004,6 +1005,7 @@ public class Database {
                 try (PreparedStatement statement = connection.prepareStatement(query1)) {
                     statement.setString(1, sup);
                     statement.setString(2, sub);
+                    statement.setDouble(3, Config.outlier_devMulti);
                     statement.execute();
                 }
 
@@ -1016,6 +1018,10 @@ public class Database {
                 try (PreparedStatement statement = connection.prepareStatement(query3)) {
                     statement.setString(1, sup);
                     statement.setString(2, sub);
+                    statement.setDouble(3, Config.outlier_priceMulti);
+                    statement.setDouble(4, Config.outlier_priceMulti);
+                    statement.setInt(5, Config.outlier_minCount);
+                    statement.setDouble(6, Config.outlier_minPrice);
                     statement.execute();
                 }
 
@@ -1028,6 +1034,10 @@ public class Database {
                 try (PreparedStatement statement = connection.prepareStatement(query5)) {
                     statement.setString(1, sup);
                     statement.setString(2, sub);
+                    statement.setDouble(3, Config.outlier_priceMulti);
+                    statement.setDouble(4, Config.outlier_priceMulti);
+                    statement.setInt(5, Config.outlier_minCount);
+                    statement.setDouble(6, Config.outlier_minPrice);
                     statement.execute();
                 }
             }
@@ -1067,7 +1077,7 @@ public class Database {
 
         String query3 = "CREATE TABLE `#_entry_"+ league +"` (" +
                         "    CONSTRAINT `entry_"+ league +"`" +
-                        "        PRIMARY KEY (`sup`,`sub`,`id`)," +
+                        "        PRIMARY KEY (`sup`,`sub`,`account`)," +
                         "        FOREIGN KEY (`sup`,`sub`)" +
                         "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
                         "        ON DELETE CASCADE," +
