@@ -375,7 +375,7 @@ public class Database {
      * Queries status timers from the database
      *
      * @param statusElement StatusElement to fill out
-     * @return True if successful
+     * @return True on success
      */
     public boolean getStatus(StatusElement statusElement) {
         String query = "SELECT * FROM `status`";
@@ -408,21 +408,19 @@ public class Database {
     }
 
     /**
-     * Removes any previous and updates the status records in table `status`
+     * Adds or updates status records stored in the `status` table
      *
      * @param statusElement StatusElement to copy
      * @return True on success
      */
     public boolean updateStatus(StatusElement statusElement) {
-        String query1 = "DELETE FROM `status`";
-        String query2 = "INSERT INTO `status` (`val`, `name`) VALUES (?, ?)";
+        String query =  "INSERT INTO `status` (`val`, `name`)" +
+                        "  VALUES (?, ?) " +
+                        "ON DUPLICATE KEY UPDATE" +
+                        "  `val`= VALUES(`val`)";
 
         try {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(query1);
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setLong(1, statusElement.twentyFourCounter);
                 statement.setString(2, "twentyFourCounter");
                 statement.addBatch();
@@ -446,7 +444,7 @@ public class Database {
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not update status data", 3);
+            Main.ADMIN.log_("Could not update status", 3);
             return false;
         }
     }
