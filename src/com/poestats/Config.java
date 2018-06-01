@@ -29,6 +29,8 @@ public class Config {
     public static final File folder_history     = new File(folder_data.getPath(), "history");
     public static final File folder_backups     = new File(folder_root.getPath(), "backups");
 
+    public static final File folder_newOutput   = new File(folder_root.getPath(), "output");
+
     public static final File file_leagueData    = new File(folder_data.getPath(),"leagueData.json");
     public static final File file_leagueList    = new File(folder_data.getPath(),"leagueList.json");
     public static final File file_config        = new File(folder_root.getPath(),"config.cfg");

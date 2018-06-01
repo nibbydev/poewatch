@@ -64,6 +64,7 @@ public class Main {
 
             WORKER_MANAGER = new WorkerManager();
             ENTRY_MANAGER = new EntryManager();
+            ENTRY_MANAGER.setGson(gsonBuilder.create());
             ENTRY_MANAGER.init();
 
             // Parse CLI parameters

@@ -725,19 +725,44 @@ public class Database {
         }
     }
 
-    public boolean getOutputItems(String league, String category, List<ParcelEntry> parcel) {
+    //--------------------------
+    // Output data management
+    //--------------------------
+
+    public boolean getOutputItems(String league, String category, Map<String, ParcelEntry> parcel) {
         league = formatLeague(league);
 
-        String query = "";
+        String query =  "SELECT " +
+                        "  i.`sup`, i.`sub`, d.`child`, " +
+                        "  d.`name`, d.`type`, d.`frame`, d.`icon`, " +
+                        "  d.`var`, d.`tier`, d.`lvl`, d.`quality`, d.`corrupted`, d.`links`," +
+                        "  i.`mean`, i.`median`, i.`mode`, i.`exalted`, " +
+                        "  i.`count`, i.`quantity`, d.`supKey`, d.`subKey`" +
+                        "FROM `#_item_"+ league +"` AS i " +
+                        "JOIN (" +
+                        "  SELECT " +
+                        "      p.`sup`, b.`sub`," +
+                        "      p.`child`," +
+                        "      p.`name`, p.`type`," +
+                        "      p.`frame`, b.`icon`," +
+                        "      p.`key` AS 'supKey', b.`key` AS 'subKey'," +
+                        "      b.`var`, b.`tier`, b.`lvl`, b.`quality`, b.`corrupted`, b.`links` " +
+                        "  FROM `item_data_sub` AS b" +
+                        "  JOIN `item_data_sup` AS p" +
+                        "      ON b.`sup` = p.`sup`" +
+                        "  WHERE p.`parent` = ?" +
+                        ") AS d ON i.`sup` = d.`sup` AND i.`sub` = d.`sub`" +
+                        "ORDER BY i.`mean` DESC ";
 
         try {
-            try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, category);
+                ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
                     ParcelEntry parcelEntry = new ParcelEntry();
                     parcelEntry.loadItem(resultSet);
-                    parcel.add(parcelEntry);
+                    parcel.put(parcelEntry.getIndex(), parcelEntry);
                 }
             }
 
@@ -745,6 +770,79 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not get output items", 3);
+            return false;
+        }
+    }
+
+    public boolean getOutputHistory(String league, Map<String, ParcelEntry> parcel) {
+        league = formatLeague(league);
+
+        String query  = "SELECT * FROM `#_history_"+ league +"` " +
+                        "WHERE `type`='daily' " +
+                        "ORDER BY `time` DESC ";
+
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                ResultSet resultSet = statement.executeQuery();
+
+                while (resultSet.next()) {
+                    String index = resultSet.getString("sup") + resultSet.getString("sub");
+                    ParcelEntry parcelEntry = parcel.get(index);
+
+                    if (parcelEntry == null) continue;
+                    parcelEntry.loadHistory(resultSet);
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not get output items", 3);
+            return false;
+        }
+    }
+
+    public boolean addOutputFile(String league, String category, String path) {
+        league = formatLeague(league);
+
+        String query =  "INSERT INTO `output_files` (`league`, `category`, `path`) " +
+                        "VALUES (?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "   `path` = VALUES(`path`)";
+
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, league);
+                statement.setString(2, category);
+                statement.setString(3, path);
+                statement.execute();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not add output file to database", 3);
+            return false;
+        }
+    }
+
+    public boolean getOutputFiles(List<String> pathList) {
+        String query =  "SELECT * FROM `output_files`";
+
+        try {
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    pathList.add(resultSet.getString("path"));
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not add output file to database", 3);
             return false;
         }
     }
@@ -894,83 +992,6 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not remove old item entries", 3);
-            return false;
-        }
-    }
-
-    public boolean removeItemOutliers0(String league, IndexMap indexMap){
-        league = formatLeague(league);
-
-        String query1 = "DELETE FROM `#_entry_"+ league +"` " +
-                        "WHERE `sup`= ? AND `sub`= ? " +
-                        "AND `price` > (" +
-                        "    SELECT * FROM (" +
-                        "        SELECT AVG(`price`) + ? * STDDEV(`price`) " +
-                        "        FROM `#_entry_"+ league +"`  " +
-                        "        WHERE `sup`= ? AND `sub`= ?" +
-                        "    ) foo ) " +
-                        "AND `price` > (" +
-                        "    SELECT `median` FROM `#_item_"+ league +"` " +
-                        "    WHERE `sup`= ? AND `sub`= ?) * ?";
-
-        String query2 = "DELETE FROM `#_entry_"+ league +"` " +
-                        "WHERE `sup`= ? AND `sub`= ? " +
-                        "AND `price` < (" +
-                        "    SELECT * FROM (" +
-                        "        SELECT AVG(`price`) - ? * STDDEV(`price`) " +
-                        "        FROM `#_entry_"+ league +"`  " +
-                        "        WHERE `sup`= ? AND `sub`= ? " +
-                        "    ) foo )" +
-                        "AND `price` < (" +
-                        "    SELECT `median` FROM `#_item_"+ league +"` " +
-                        "    WHERE `sup`= ? AND `sub`= ?) / ?";
-
-        try {
-            try (PreparedStatement statement = connection.prepareStatement(query1)) {
-                for (String index : indexMap.keySet()) {
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setDouble(3, 2.0);
-                    statement.setString(4, sup);
-                    statement.setString(5, sub);
-                    statement.setString(6, sup);
-                    statement.setString(7, sub);
-                    statement.setDouble(8,1.2);
-
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                for (String index : indexMap.keySet()) {
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setDouble(3, 2.0);
-                    statement.setString(4, sup);
-                    statement.setString(5, sub);
-                    statement.setString(6, sup);
-                    statement.setString(7, sub);
-                    statement.setDouble(8, 1.2);
-
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove outliers", 3);
             return false;
         }
     }

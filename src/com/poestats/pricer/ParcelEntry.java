@@ -2,17 +2,17 @@ package com.poestats.pricer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 
 public class ParcelEntry {
-    private class HistoryData {
-        public double[] mean = new double[7];
-        public double[] median = new double[7];
-        public double[] mode = new double[7];
-        public double[] exalted = new double[7];
-        public int[] count = new int[7];
-        public int[] quantity = new int[7];
-        public double[] spark = new double[7];
+    public class HistoryData {
+        public Double[] mean = new Double[7];
+        public Double[] median = new Double[7];
+        public Double[] mode = new Double[7];
+        public Double[] exalted = new Double[7];
+        public Integer[] count = new Integer[7];
+        public Integer[] quantity = new Integer[7];
+        public Double[] spark = new Double[7];
+        public double change;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -25,14 +25,16 @@ public class ParcelEntry {
     private int count, quantity;
 
     // Sup
-    private String parent, child, name, type, supKey;
+    private String child, name, type, supKey;
     private int frame;
 
     // Sub
-    private String tier, lvl, quality, corrupted, links, var, subKey, icon;
+    private String tier, lvl, quality, corrupted;
+    private String links, var, subKey, icon;
 
-    // History
-    private HistoryData historyData = new HistoryData();
+
+    private HistoryData history = new HistoryData();
+    private transient int historyCounter = 7;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -49,7 +51,6 @@ public class ParcelEntry {
         count = result.getInt("count");
         quantity = result.getInt("quantity");
 
-        parent = result.getString("parent =");
         child = result.getString("child");
         name = result.getString("name");
         type = result.getString("type");
@@ -67,25 +68,68 @@ public class ParcelEntry {
     }
 
     public void loadHistory(ResultSet result) throws SQLException {
-        int count = 6;
-        while (result.next()) {
-            historyData.mean[count] = result.getDouble("mean");
-            historyData.median[count] = result.getDouble("median");
-            historyData.mode[count] = result.getDouble("mode");
-            historyData.exalted[count] = result.getDouble("exalted");
+        if (--historyCounter < 0) return;
 
-            historyData.count[count] = result.getInt("count");
-            historyData.quantity[count] = result.getInt("quantity");
-            count--;
-        }
+        history.mean[historyCounter] = result.getDouble("mean");
+        history.median[historyCounter] = result.getDouble("median");
+        history.mode[historyCounter] = result.getDouble("mode");
+        history.exalted[historyCounter] = result.getDouble("exalted");
+
+        history.count[historyCounter] = result.getInt("count");
+        history.quantity[historyCounter] = result.getInt("quantity");
     }
 
-    private void calcSpark() {
+    public void calcSpark() {
+        double lowestSpark = 0;
+        double highestSpark = 0;
+        double firstSpark = 0;
+        double lastSpark = 0;
 
+        for (Double mean : history.mean) {
+            if (mean != null) {
+                if (lowestSpark == 0) lowestSpark = mean;
+                else if (mean < lowestSpark) lowestSpark = mean;
+
+                if (mean > highestSpark) highestSpark = mean;
+            }
+        }
+
+        for (int i = 7; --i > 0;) {
+            Double newSpark = null;
+
+            if (history.mean[i] != null && lowestSpark > 0) {
+                newSpark = history.mean[i] / lowestSpark - 1;
+                newSpark = Math.round(newSpark * 10000.0) / 100.0;
+            }
+
+            history.spark[i] = newSpark;
+        }
+
+        for (int i = 7; --i > 0;) {
+            if (history.spark[i] != null) {
+                firstSpark = history.spark[i];
+            }
+        }
+
+        for (int i = 0; i < 7; i++) {
+            if (history.spark[i] != null) {
+                lastSpark = history.spark[i];
+            }
+        }
+
+        if (firstSpark == 0 || lastSpark == 0) {
+            history.change = 0;
+        } else {
+            history.change = (1 - firstSpark / lastSpark) * 100;
+            history.change = Math.round(history.change * 1000.0) / 1000.0;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Getters
     //------------------------------------------------------------------------------------------------------------
 
+    public String getIndex() {
+        return sup + sub;
+    }
 }

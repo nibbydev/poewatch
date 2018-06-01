@@ -1,12 +1,15 @@
 package com.poestats.pricer;
 
+import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
@@ -16,6 +19,7 @@ public class EntryManager {
     private final LeagueMap leagueMap = new LeagueMap();
     private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
     private final Object monitor = new Object();
+    private Gson gson;
 
     private volatile boolean flagPause;
     private final StatusElement status = new StatusElement();
@@ -124,13 +128,63 @@ public class EntryManager {
     }
 
     private void generateOutputFiles() {
+        List<String> oldOutputFiles = new ArrayList<>();
+        List<String> newOutputFiles = new ArrayList<>();
+
+        Main.DATABASE.getOutputFiles(oldOutputFiles);
+        Config.folder_newOutput.mkdirs();
+
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            List<ParcelEntry> parcel = new ArrayList<>();
             String league = leagueEntry.getId();
 
-            for (String parent : Main.RELATIONS.getCategories().keySet()) {
-                Main.DATABASE.getOutputItems(league, parent, parcel);
+            for (String category : Main.RELATIONS.getCategories().keySet()) {
+                Map<String, ParcelEntry> tmpParcel = new LinkedHashMap<>();
+
+                Main.DATABASE.getOutputItems(league, category, tmpParcel);
+                Main.DATABASE.getOutputHistory(league, tmpParcel);
+
+                List<ParcelEntry> parcel = new ArrayList<>();
+                for (ParcelEntry parcelEntry : tmpParcel.values()) {
+                    parcelEntry.calcSpark();
+                    parcel.add(parcelEntry);
+                }
+
+                String fileName = league + "_" + category + "_" + System.currentTimeMillis() + ".json";
+                File outputFile = new File(Config.folder_newOutput, fileName);
+
+                try (Writer writer = Misc.defineWriter(outputFile)) {
+                    if (writer == null) throw new IOException();
+                    gson.toJson(parcel, writer);
+                } catch (IOException ex) {
+                    Main.ADMIN._log(ex, 4);
+                    Main.ADMIN.log_("Couldn't write output JSON to file", 3);
+                }
+
+                try {
+                    String path = outputFile.getCanonicalPath();
+                    newOutputFiles.add(path);
+                    Main.DATABASE.addOutputFile(league, category, path);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    Main.ADMIN.log_("Couldn't get file's actual path", 3);
+                }
             }
+        }
+
+        File[] outputFiles = Config.folder_newOutput.listFiles();
+        if (outputFiles == null) return;
+
+        try {
+            for (File outputFile : outputFiles) {
+                if (oldOutputFiles.contains(outputFile.getCanonicalPath())) continue;
+                if (newOutputFiles.contains(outputFile.getCanonicalPath())) continue;
+
+                boolean success = outputFile.delete();
+                if (!success) Main.ADMIN.log_("Could not delete old output file", 3);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not delete old output files", 3);
         }
     }
 
@@ -193,6 +247,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
+        generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message
@@ -304,5 +359,9 @@ public class EntryManager {
 
     public StatusElement getStatus() {
         return status;
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
     }
 }

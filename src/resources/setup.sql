@@ -199,6 +199,19 @@ CREATE TABLE `changeid` (
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure `output_files`
+--
+
+CREATE TABLE `output_files` (
+    CONSTRAINT `output_constraint`
+        PRIMARY KEY (`league`,`category`),
+
+    `league`    varchar(64)     NOT NULL,
+    `category`  varchar(32)     NOT NULL,
+    `path`      text            NOT NULL,
+    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
