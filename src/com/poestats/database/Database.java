@@ -3,6 +3,7 @@ package com.poestats.database;
 import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.league.LeagueEntry;
+import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.CurrencyMap;
@@ -720,6 +721,30 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not calculate exalted", 3);
+            return false;
+        }
+    }
+
+    public boolean getOutputItems(String league, String category, List<ParcelEntry> parcel) {
+        league = formatLeague(league);
+
+        String query = "";
+
+        try {
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    ParcelEntry parcelEntry = new ParcelEntry();
+                    parcelEntry.loadItem(resultSet);
+                    parcel.add(parcelEntry);
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not get output items", 3);
             return false;
         }
     }

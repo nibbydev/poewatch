@@ -5,6 +5,9 @@ import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
@@ -118,6 +121,17 @@ public class EntryManager {
         }
 
         leagueMap.clear();
+    }
+
+    private void generateOutputFiles() {
+        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+            List<ParcelEntry> parcel = new ArrayList<>();
+            String league = leagueEntry.getId();
+
+            for (String parent : Main.RELATIONS.getCategories().keySet()) {
+                Main.DATABASE.getOutputItems(league, parent, parcel);
+            }
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
