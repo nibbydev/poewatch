@@ -40,6 +40,7 @@ public class Main {
         try {
             gsonBuilder = new GsonBuilder();
             gsonBuilder.disableHtmlEscaping();
+            gsonBuilder.serializeNulls();
 
             // Init admin suite
             ADMIN = new AdminSuite();

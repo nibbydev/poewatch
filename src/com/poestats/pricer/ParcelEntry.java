@@ -29,8 +29,8 @@ public class ParcelEntry {
     private int frame;
 
     // Sub
-    private String tier, lvl, quality, corrupted;
-    private String links, var, subKey, icon;
+    private Integer tier, lvl, quality, corrupted, links;
+    private String var, subKey, icon;
 
 
     private HistoryData history = new HistoryData();
@@ -57,14 +57,29 @@ public class ParcelEntry {
         supKey = result.getString("supKey");
         frame = result.getInt("frame");
 
-        tier = result.getString("tier");
-        lvl = result.getString("lvl");
-        quality = result.getString("quality");
-        corrupted = result.getString("corrupted");
-        links = result.getString("links");
         var = result.getString("var");
         subKey = result.getString("subKey");
         icon = result.getString("icon");
+
+        try {
+            tier = Integer.parseUnsignedInt(result.getString("tier"));
+        } catch (NumberFormatException ex) {}
+
+        try {
+            lvl = Integer.parseUnsignedInt(result.getString("lvl"));
+        } catch (NumberFormatException ex) {}
+
+        try {
+            quality = Integer.parseUnsignedInt(result.getString("quality"));
+        } catch (NumberFormatException ex) {}
+
+        try {
+            corrupted = Integer.parseUnsignedInt(result.getString("corrupted"));
+        } catch (NumberFormatException ex) {}
+
+        try {
+            links = Integer.parseUnsignedInt(result.getString("links"));
+        } catch (NumberFormatException ex) {}
     }
 
     public void loadHistory(ResultSet result) throws SQLException {
