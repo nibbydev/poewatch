@@ -143,7 +143,7 @@ CREATE TABLE `history_category` (
 -- (to be created dynamically with league names)
 --
 
-CREATE TABLE `#_history` (
+CREATE TABLE `#_history_` (
     CONSTRAINT `history_`
         FOREIGN KEY (`sup`,`sub`)
         REFERENCES `#_item_` (`sup`,`sub`)

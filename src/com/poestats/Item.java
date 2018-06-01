@@ -42,6 +42,11 @@ public class Item extends Mappers.BaseItem {
             case 0: // Normal
             case 1: // Magic
             case 2: // Rare
+                if (enchanted) {
+                    checkEnchant();
+                    break;
+                }
+
                 // If it's not a map, discard it
                 if (!parentCategory.equals("maps")) {
                     discard = true;
@@ -62,10 +67,6 @@ public class Item extends Mappers.BaseItem {
             case 5: // Filter out chaos orbs
                 // Discard specific currency items
                 checkCurrency();
-                break;
-
-            case -1:
-                checkEnchant();
                 break;
 
             default: // Everything else will pass through here
@@ -150,7 +151,7 @@ public class Item extends Mappers.BaseItem {
             discard = true;
         } else if (enchanted) {
             // For pricing items based on their enchants
-            frameType = -1;
+            frameType = 0;
         } else if (frameType == 1 || frameType == 2 || frameType == 7) {
             // Filter out unpriceable items
             discard = true;
