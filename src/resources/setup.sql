@@ -2,12 +2,12 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 --
--- Database: `ps_test_database`
+-- Database: `ps_database`
 --
-DROP DATABASE IF EXISTS `ps_test_database`;
-CREATE DATABASE IF NOT EXISTS `ps_test_database` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+DROP DATABASE IF EXISTS `ps_database`;
+CREATE DATABASE IF NOT EXISTS `ps_database` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE `ps_test_database`;
+USE `ps_database`;
 
 -- --------------------------------------------------------
 
