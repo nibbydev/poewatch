@@ -34,7 +34,7 @@ public class Config {
     public static final File file_leagueData    = new File(folder_data.getPath(),"leagueData.json");
     public static final File file_leagueList    = new File(folder_data.getPath(),"leagueList.json");
     public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
-    public static final File file_relations     = new File(folder_data.getPath(),"currencyRelations.json");
+    public static final File file_relations     = new File(folder_root.getPath(),"currencyRelations.json");
     public static final File file_itemData      = new File(folder_data.getPath(),"itemData.json");
     public static final File file_categories    = new File(folder_data.getPath(),"categories.json");
     public static final File file_changeID      = new File(folder_data.getPath(),"changeID.json");
@@ -79,7 +79,7 @@ public class Config {
 
     public static final double outlier_devMulti = 2.0;
     public static final double outlier_minPrice = 0.0;
-    public static final double outlier_priceMulti = 1.2;
+    public static final double outlier_priceMulti = 2.0;
     public static final int outlier_minCount = 4;
 
     public static final int entry_maxCount = 96;

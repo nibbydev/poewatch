@@ -140,7 +140,6 @@ public class Main {
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
-                + "    backup - backup commands\n"
                 + "    counter - counter commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
@@ -169,9 +168,6 @@ public class Main {
                     case "about":
                         commandAbout();
                         break;
-                    case "backup":
-                        commandBackup(userInput);
-                        break;
                     case "counter":
                         commandCounter(userInput);
                         break;
@@ -195,31 +191,10 @@ public class Main {
     private static boolean buildFolderFileStructure() {
         boolean createdFile = false;
 
-        createdFile = notifyMkDir(Config.folder_data)       || createdFile;
-        createdFile = notifyMkDir(Config.folder_database)   || createdFile;
-        createdFile = notifyMkDir(Config.folder_output)     || createdFile;
-        createdFile = notifyMkDir(Config.folder_history)    || createdFile;
-        createdFile = notifyMkDir(Config.folder_backups)    || createdFile;
-
         createdFile = saveResource(Config.resource_config, Config.file_config)          || createdFile;
         createdFile = saveResource(Config.resource_relations, Config.file_relations)    || createdFile;
 
         return createdFile;
-    }
-
-    /**
-     * Creates a folder and logs it
-     *
-     * @param file Folder to be created
-     * @return True if success
-     */
-    private static boolean notifyMkDir(File file) {
-        if (file.mkdir()) {
-            Main.ADMIN.log_("Created: " + file.getPath(), 1);
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -350,40 +325,6 @@ public class Main {
                 + "Made by: Siegrest\n"
                 + "Licenced under MIT licence, 2018\n";
         System.out.println(about);
-    }
-
-    /**
-     * Allows creating specific backups from the CLI
-     *
-     * @param userInput Input string
-     */
-    private static void commandBackup(String[] userInput) {
-        String helpString = "[INFO] Available backup commands:\n";
-        helpString += "    'backup 1' - Backup crucial files\n";
-        helpString += "    'backup 2' - Backup everything in output directory\n";
-        helpString += "    'backup 3' - Backup everything in data directory\n";
-
-        if (userInput.length < 2) {
-            System.out.println(helpString);
-            return;
-        }
-
-        switch (userInput[1]) {
-            case "1":
-                ADMIN.backup(new File("./data/database"), "cli_output");
-                ADMIN.backup(new File("./data/history"), "cli_history");
-                ADMIN.backup(new File("./data/itemData.json"), "cli_itemdata");
-                break;
-            case "2":
-                ADMIN.backup(new File("./data/output"), "cli_output");
-                break;
-            case "3":
-                ADMIN.backup(new File("./data/"), "cli_all");
-                break;
-            default:
-                System.out.println(helpString);
-                break;
-        }
     }
 
     /**
