@@ -1,23 +1,49 @@
 <?php
-// Set header to json
+function get_param_league() {
+  if ( !isset($_GET["league"]) ) {
+    die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
+  }
+
+  $league = strtolower(trim(preg_replace("/[^A-Za-z0-9-]/", "", $_GET["league"])));
+
+  if (!$league || strlen($league) <  3) {
+    die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
+  }
+
+  return $league;
+}
+
+function get_param_category() {
+  if ( !isset($_GET["category"]) ) {
+    die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+  }
+
+  $category = strtolower(trim(preg_replace("/[^A-Za-z]/", "", $_GET["category"])));
+
+  if (!$category || strlen($category) < 3) {
+    die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+  }
+
+  return $category;
+}
+
 header("Content-Type: application/json");
 
-if (array_key_exists("league", $_GET)) {
-  $PARAM_league = trim(preg_replace("/[^A-Za-z0-9( )]/", "", $_GET["league"]));
-  if (!$PARAM_league) die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
-} else die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
+$league = get_param_league();
+$category = get_param_category();
 
-if (array_key_exists("category", $_GET)) {
-  $PARAM_category = strtolower(trim(preg_replace("/[^A-Za-z ]/", "", $_GET["category"])));
-  if (!$PARAM_category) die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
-} else die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+include_once ( "details/pdo.php" );
 
-// Check if file exists
-$filePath = dirname(getcwd(), 2) . "/data/output/$PARAM_league/$PARAM_category.json";
-if ( !file_exists($filePath) ) die("{\"error\": \"Invalid params\"}");
+$stmt = $pdo->prepare("SELECT `path` FROM `output_files` WHERE `league`=? AND `category`=?");
+$stmt->execute([$league, $category]);
+$row = $stmt->fetch();
 
-$data = file_get_contents( $filePath );
-// If there was an error opening the file
-if ($data === false) die("{\"error\": \"An error occurred\"}");
+if ($row && file_exists($row["path"]) ) {
 
-echo $data;
+  $data = file_get_contents( $row["path"] );
+  if ($data === false) echo "{\"error\": \"An error occurred\"}";
+  else echo $data;
+
+} else {
+  echo "{\"error\": \"Invalid params\"}";
+}
