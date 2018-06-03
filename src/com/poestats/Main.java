@@ -77,8 +77,8 @@ public class Main {
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
-            if (DATABASE != null) DATABASE.disconnect();
             if (WORKER_MANAGER != null) WORKER_MANAGER.stopController();
+            if (DATABASE != null) DATABASE.disconnect();
         }
     }
 
