@@ -67,7 +67,7 @@ public class LeagueManager {
 
         // Download failed. Load leagues from database
         if (!success) {
-            success = Main.DATABASE.getLeagues(leagues);
+            success = Main.DATABASE.getLeagues(tmpLeagueList);
 
             // Download failed AND database doesn't have league data. Shut down the program.
             if (!success) return false;
