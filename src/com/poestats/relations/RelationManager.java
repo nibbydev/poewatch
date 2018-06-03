@@ -61,7 +61,7 @@ public class RelationManager {
             for (String sup : supIndexToData.keySet()) {
                 SupIndexedItem supIndexedItem = supIndexToData.get(sup);
 
-                genericKeyToSuperIndex.putIfAbsent(supIndexedItem.getKey(), sup);
+                genericKeyToSuperIndex.put(supIndexedItem.getKey(), sup);
 
                 if (supIndexedItem.getFrame() == 5) {
                     currencyNameToFullIndex.put(supIndexedItem.getName(), sup + Config.index_subBase);
@@ -154,7 +154,7 @@ public class RelationManager {
 
             Main.DATABASE.addSubItemData(supIndexedItem, sup, sub);
         } else {
-            sup = Integer.toHexString(genericKeyToSuperIndex.size());
+            sup = Integer.toHexString(supIndexToData.size());
             sup = (Config.index_superBase + sup).substring(sup.length());
 
             SupIndexedItem supIndexedItem = new SupIndexedItem(item);

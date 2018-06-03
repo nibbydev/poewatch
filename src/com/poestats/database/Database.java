@@ -117,15 +117,12 @@ public class Database {
      * @param leagueEntries List of the most recent LeagueEntry objects
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query1 = "DELETE FROM `leagues`";
-        String query2 = "INSERT INTO `leagues` (`id`, `start`, `end`) VALUES (?, ?, ?)";
+        String query =  "INSERT INTO `leagues` (`id`, `start`, `end`) " +
+                        "VALUES (?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE `start`=`start`, `end`=`end`";
 
         try {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(query1);
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getId());
                     statement.setString(2, leagueEntry.getStartAt());
@@ -148,20 +145,28 @@ public class Database {
     /**
      * Removes any previous and updates the changeID record in table `changeid`
      *
-     * @param changeID New changeID string to store
+     * @param id New changeID string to store
      */
-    public boolean updateChangeID(String changeID) {
-        String query1 = "DELETE FROM `changeid`";
-        String query2 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
+    public boolean updateChangeID(String id) {
+        String query1 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
+
+        String query2 = "DELETE FROM `changeid` " +
+                        "WHERE `time` NOT IN ( " +
+                        "    SELECT `time` FROM ( " +
+                        "        SELECT `time` " +
+                        "        FROM `changeid` " +
+                        "        ORDER BY `time` DESC " +
+                        "        LIMIT 1 " +
+                        "    ) foo ); ";
 
         try {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(query1);
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                statement.setString(1, id);
+                statement.execute();
             }
 
-            try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                statement.setString(1, changeID);
-                statement.execute();
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query2);
             }
 
             connection.commit();
@@ -292,7 +297,7 @@ public class Database {
                     subIndexedItem.setSupIndexedItem(supIndexedItem);
 
                     supIndexedItem.getSubIndexes().put(sub, subIndexedItem);
-                    relations.putIfAbsent(sup, supIndexedItem);
+                    relations.put(sup, supIndexedItem);
                 }
             }
 
@@ -416,9 +421,9 @@ public class Database {
      */
     public boolean updateStatus(StatusElement statusElement) {
         String query =  "INSERT INTO `status` (`val`, `name`)" +
-                        "  VALUES (?, ?) " +
+                        "    VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE" +
-                        "  `val`= VALUES(`val`)";
+                        "    `val`= VALUES(`val`)";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {

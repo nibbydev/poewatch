@@ -16,7 +16,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private final LeagueMap leagueMap = new LeagueMap();
+    private LeagueMap leagueMap = new LeagueMap();
     private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
     private final Object monitor = new Object();
     private Gson gson;
@@ -124,7 +124,7 @@ public class EntryManager {
             }
         }
 
-        leagueMap.clear();
+        leagueMap = new LeagueMap();
     }
 
     private void generateOutputFiles() {
@@ -205,16 +205,16 @@ public class EntryManager {
         // Raise static flag that suspends other threads while the databases are being worked on
         flipPauseFlag();
 
-        try {
-            Thread.sleep(50);
-        } catch(InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
+        // Allow workers to pause
+        try { Thread.sleep(50); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
         // Run once every 10min
         if (current - status.tenCounter > Config.entryController_tenMS) {
             status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
             status.setTenBool(true);
+            Main.ADMIN.log_("10 activated", 0);
+            // Get a list of active leagues from pathofexile.com's api
+            Main.LEAGUE_MANAGER.download();
         }
 
         // Run once every 60min
@@ -222,9 +222,6 @@ public class EntryManager {
             status.sixtyCounter += (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
             status.setSixtyBool(true);
             Main.ADMIN.log_("60 activated", 0);
-
-            // Get a list of active leagues from pathofexile.com's api
-            Main.LEAGUE_MANAGER.download();
         }
 
         // Run once every 24h
@@ -348,14 +345,6 @@ public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
-
-    public CurrencyMap getCurrencyMap (String league) {
-        return currencyLeagueMap.getOrDefault(league, null);
-    }
-
-    public boolean isFlagPause() {
-        return flagPause;
-    }
 
     public StatusElement getStatus() {
         return status;
