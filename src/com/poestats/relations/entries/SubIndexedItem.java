@@ -11,7 +11,6 @@ public class SubIndexedItem {
 
     private String var, key, lvl, quality, links, corrupted;
     private String icon, tier;
-    private SupIndexedItem supIndexedItem;
 
     //------------------------------------------------------------------------------------------------------------
     // Constructors
@@ -21,10 +20,7 @@ public class SubIndexedItem {
 
     }
 
-    public SubIndexedItem (Item item, SupIndexedItem supItem) {
-        key = item.getKey();
-        supIndexedItem = supItem;
-
+    public SubIndexedItem (Item item) {
         icon = Misc.formatIconURL(item.icon);
         if (item.getTier() != null) tier = item.getTier();
         if (item.getVariation() != null) var = item.getVariation();
@@ -74,10 +70,6 @@ public class SubIndexedItem {
         return tier;
     }
 
-    public SupIndexedItem getSupIndexedItem() {
-        return supIndexedItem;
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Setters
     //------------------------------------------------------------------------------------------------------------
@@ -112,9 +104,5 @@ public class SubIndexedItem {
 
     public void setTier(String tier) {
         this.tier = tier;
-    }
-
-    public void setSupIndexedItem(SupIndexedItem supIndexedItem) {
-        this.supIndexedItem = supIndexedItem;
     }
 }

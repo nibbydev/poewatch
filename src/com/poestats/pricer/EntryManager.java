@@ -84,7 +84,7 @@ public class EntryManager {
             IndexMap indexMap = leagueMap.get(league);
 
             if (indexMap != null) {
-                for (String index : indexMap.keySet()) {
+                for (String index : indexMap.keySet()) { // TODO: filter out already indexed items based on local list
                     Main.DATABASE.createItem(league, index);
                 }
 

@@ -289,7 +289,6 @@ public class Database {
                     if (var != null)        subIndexedItem.setVar(var);
                     subIndexedItem.setKey(subKey);
                     subIndexedItem.setIcon(icon);
-                    subIndexedItem.setSupIndexedItem(supIndexedItem);
 
                     supIndexedItem.getSubIndexes().put(sub, subIndexedItem);
                     relations.put(sup, supIndexedItem);

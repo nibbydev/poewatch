@@ -28,7 +28,7 @@ public class SupIndexedItem {
         name = item.name;
         parent = item.getParentCategory();
         frame = item.frameType;
-        key = RelationManager.resolveSpecificKey(item.getKey());
+        key = item.getSupKey();
 
         if (item.typeLine != null) type = item.typeLine;
         if (item.getChildCategory() != null) child = item.getChildCategory();
@@ -42,7 +42,7 @@ public class SupIndexedItem {
         String sub = Integer.toHexString(subIndexes.size());
         sub = (Config.index_subBase + sub).substring(sub.length());
 
-        SubIndexedItem subIndexedItem = new SubIndexedItem(item, this);
+        SubIndexedItem subIndexedItem = new SubIndexedItem(item);
         subIndexes.put(sup + sub, subIndexedItem);
 
         return sub;

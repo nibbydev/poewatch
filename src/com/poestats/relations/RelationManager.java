@@ -25,7 +25,6 @@ public class RelationManager {
     private Gson gson = Main.getGson();
 
     private Map<String, String> currencyAliasToName = new HashMap<>();
-    private Map<String, String> currencyNameToFullIndex = new HashMap<>();
 
     private Map<String, String> genericKeyToSuperIndex = new HashMap<>();
     private Map<String, String> specificKeyToFullIndex = new HashMap<>();
@@ -62,10 +61,6 @@ public class RelationManager {
                 SupIndexedItem supIndexedItem = supIndexToData.get(sup);
 
                 genericKeyToSuperIndex.put(supIndexedItem.getKey(), sup);
-
-                if (supIndexedItem.getFrame() == 5) {
-                    currencyNameToFullIndex.put(supIndexedItem.getName(), sup + Config.index_subBase);
-                }
 
                 for (String sub : supIndexedItem.getSubIndexes().keySet()) {
                     SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sub);
@@ -132,12 +127,12 @@ public class RelationManager {
         if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
         categories.putIfAbsent(item.getParentCategory(), childCategories);
 
-        String specificKey = item.getKey();
-        String genericKey = resolveSpecificKey(item.getKey());
+        String subKey = item.getSubKey();
+        String supKey = item.getSupKey();
 
-        String sup = genericKeyToSuperIndex.get(genericKey);
+        String sup = genericKeyToSuperIndex.get(supKey);
         String sub;
-        String full = specificKeyToFullIndex.get(specificKey);
+        String full = specificKeyToFullIndex.get(subKey);
 
         if (sup != null && full != null)  {
             return full;
@@ -150,7 +145,7 @@ public class RelationManager {
             sub = supIndexedItem.subIndex(item, sup);
             full = sup + sub;
 
-            specificKeyToFullIndex.put(item.getKey(), full);
+            specificKeyToFullIndex.put(subKey, full);
 
             Main.DATABASE.addSubItemData(supIndexedItem, sup, sub);
         } else {
@@ -161,8 +156,8 @@ public class RelationManager {
             sub = supIndexedItem.subIndex(item, sup);
             full = sup + sub;
 
-            genericKeyToSuperIndex.put(genericKey, sup);
-            specificKeyToFullIndex.put(item.getKey(), full);
+            genericKeyToSuperIndex.put(supKey, sup);
+            specificKeyToFullIndex.put(subKey, full);
             supIndexToData.put(sup, supIndexedItem);
 
             Main.DATABASE.addFullItemData(supIndexedItem, sup, sub);
@@ -171,85 +166,9 @@ public class RelationManager {
         return full;
     }
 
-    /**
-     * Generalizes a specific key. E.g: "Flame Dash|4|l:10|q:20|c:0"
-     * is turned into: "Flame Dash|4"
-     *
-     * @param key Specific item key with league and category and additional info
-     * @return Generalized item key
-     */
-    public static String resolveSpecificKey(String key) {
-        // "Shroud of the Lightless:Carnal Armour|3|var:1 socket"
-
-        StringBuilder genericKey = new StringBuilder();
-        String[] splitKey = key.split("\\|");
-
-        // Add item id
-        genericKey.append(splitKey[0]);
-
-        // Add item frameType
-        genericKey.append("|");
-        genericKey.append(splitKey[1]);
-
-        return genericKey.toString();
-    }
-
-    /**
-     * Allows returning the SupIndexedItem entries from a complete index
-     *
-     * @param index Index of item
-     * @return Requested indexed item entries or null on failure
-     */
-    public SupIndexedItem indexToGenericData(String index) {
-        if (isIndex(index)) return null;
-
-        String primaryIndex = index.substring(0, Config.index_superSize);
-
-        return supIndexToData.getOrDefault(primaryIndex, null);
-    }
-
-    /**
-     * Allows returning the SubIndexedItem entries from a complete index
-     *
-     * @param index Index of item
-     * @return Requested indexed item entries or null on failure
-     */
-    public SubIndexedItem indexToSpecificData(String index) {
-        if (isIndex(index)) return null;
-
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize + 1);
-
-        SupIndexedItem supIndexedItem = supIndexToData.getOrDefault(sup, null);
-        if (supIndexedItem == null) return null;
-
-        SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().getOrDefault(sub, null);
-        if (subIndexedItem == null) return null;
-
-        return subIndexedItem;
-    }
-
-    /**
-     * Very primitive method to check if provided string is an index.
-     *
-     * @param index String to check
-     * @return True if not an index
-     */
-    public static boolean isIndex(String index) {
-        return index.length() != Config.index_size;
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
-
-    public Map<String, String> getCurrencyNameToFullIndex() {
-        return currencyNameToFullIndex;
-    }
-
-    public Map<String, SupIndexedItem> getSupIndexToData() {
-        return supIndexToData;
-    }
 
     public Map<String, List<String>> getCategories() {
         return categories;

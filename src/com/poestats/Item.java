@@ -9,7 +9,8 @@ public class Item extends Mappers.BaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     private volatile boolean discard = false;
-    private String priceType, parentCategory, childCategory, key, variation, tier;
+    private String priceType, parentCategory, childCategory, variation, tier;
+    private String supKey, subKey;
     private double price;
     private int links, level, quality;
     private boolean doNotIndex;
@@ -117,6 +118,9 @@ public class Item extends Mappers.BaseItem {
         key.append('|');
         key.append(frameType);
 
+        // Save the super key
+        supKey = key.toString();
+
         // If the item has a 5- or 6-link
         if (links > 4) {
             if (links == 5) key.append("|links:5");
@@ -139,8 +143,8 @@ public class Item extends Mappers.BaseItem {
             key.append(corrupted ? 1 : 0);
         }
 
-        // Convert to string
-        this.key = key.toString();
+        // Save the sub-key
+        subKey = key.toString();
     }
 
     /**
@@ -654,10 +658,6 @@ public class Item extends Mappers.BaseItem {
         return childCategory;
     }
 
-    public String getKey() {
-        return key;
-    }
-
     public String getParentCategory() {
         return parentCategory;
     }
@@ -676,5 +676,13 @@ public class Item extends Mappers.BaseItem {
 
     public boolean isDiscard() {
         return discard;
+    }
+
+    public String getSubKey() {
+        return subKey;
+    }
+
+    public String getSupKey() {
+        return supKey;
     }
 }
