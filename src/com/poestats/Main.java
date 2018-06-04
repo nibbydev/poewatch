@@ -37,6 +37,8 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
+        boolean success;
+
         try {
             gsonBuilder = new GsonBuilder();
             gsonBuilder.disableHtmlEscaping();
@@ -49,19 +51,22 @@ public class Main {
             DATABASE.connect();
 
             // Make sure basic folder structure exists
-            boolean createdFiles = buildFolderFileStructure();
-            if (createdFiles) return;
+            saveResource(Config.resource_config, Config.file_config);
+            saveResource(Config.resource_relations, Config.file_relations);
 
             RELATIONS = new RelationManager();
-            RELATIONS.init();
+            RELATIONS.setGson(gsonBuilder.create());
+
+            // Get category, item and currency data
+            success = RELATIONS.init();
+            if (!success) return;
 
             // Init league manager
             LEAGUE_MANAGER = new LeagueManager();
-            boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
-            if (!leagueLoadResult) {
-                Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
-                return;
-            }
+
+            // Load list of active leagues on startup
+            success = LEAGUE_MANAGER.loadLeaguesOnStartup();
+            if (!success) return;
 
             WORKER_MANAGER = new WorkerManager();
             ENTRY_MANAGER = new EntryManager();
@@ -184,18 +189,6 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
     // File structure setup
     //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Creates basic file structure on program launch
-     */
-    private static boolean buildFolderFileStructure() {
-        boolean createdFile = false;
-
-        createdFile = saveResource(Config.resource_config, Config.file_config)          || createdFile;
-        createdFile = saveResource(Config.resource_relations, Config.file_relations)    || createdFile;
-
-        return createdFile;
-    }
 
     /**
      * Reads files from the .jar and writes them to filepath

@@ -22,15 +22,13 @@ public class RelationManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private Gson gson = Main.getGson();
-
     private Map<String, String> currencyAliasToName = new HashMap<>();
-
     private Map<String, String> genericKeyToSuperIndex = new HashMap<>();
     private Map<String, String> specificKeyToFullIndex = new HashMap<>();
-
     private Map<String, SupIndexedItem> supIndexToData = new HashMap<>();
     private Map<String, List<String>> categories = new HashMap<>();
+
+    private Gson gson;
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -39,13 +37,13 @@ public class RelationManager {
     /**
      * Reads currency and item data from file on object init
      */
-    public void init() {
+    public boolean init() {
         boolean success;
 
         success = Main.DATABASE.getCategories(categories);
         if (!success) {
             Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);
-            System.exit(-1);
+            return false;
         } else if (categories.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any category information", 2);
         }
@@ -53,7 +51,7 @@ public class RelationManager {
         success = Main.DATABASE.getItemData(supIndexToData);
         if (!success) {
             Main.ADMIN.log_("Failed to query item data from database. Shutting down...", 5);
-            System.exit(-1);
+            return false;
         } else if (supIndexToData.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any item data information", 2);
         } else {
@@ -72,7 +70,7 @@ public class RelationManager {
         List<CurrencyRelation> currencyRelations = readCurrencyRelationsFromFile();
         if (currencyRelations == null) {
             Main.ADMIN.log_("Failed loadItem currency relations. Shutting down...", 5);
-            System.exit(-1);
+            return false;
         } else {
             for (CurrencyRelation relation : currencyRelations) {
                 for (String alias : relation.getAliases()) {
@@ -80,6 +78,8 @@ public class RelationManager {
                 }
             }
         }
+
+        return true;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -176,5 +176,9 @@ public class RelationManager {
 
     public Map<String, String> getCurrencyAliasToName() {
         return currencyAliasToName;
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
     }
 }

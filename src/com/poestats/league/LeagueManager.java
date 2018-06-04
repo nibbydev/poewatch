@@ -39,7 +39,10 @@ public class LeagueManager {
             success = Main.DATABASE.getLeagues(leagues);
 
             // Download failed AND database doesn't have league data. Shut down the program.
-            if (!success) return false;
+            if (!success) {
+                Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
+                return false;
+            }
         }
 
         sortLeagues(leagues);
