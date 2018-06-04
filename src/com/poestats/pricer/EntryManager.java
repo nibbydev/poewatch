@@ -2,6 +2,7 @@ package com.poestats.pricer;
 
 import com.google.gson.Gson;
 import com.poestats.*;
+import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.*;
@@ -130,7 +131,7 @@ public class EntryManager {
         Config.folder_newOutput.mkdirs();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getId();
+            String league = Database.formatLeague(leagueEntry.getId());
 
             for (String category : Main.RELATIONS.getCategories().keySet()) {
                 Map<String, ParcelEntry> tmpParcel = new LinkedHashMap<>();
