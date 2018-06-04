@@ -111,16 +111,6 @@ public class RelationManager {
         }
     }
 
-    /**
-     * Checks if the specified index exists in the maps (and by extension in the database)
-     *
-     * @param index Index to check
-     * @return True if exists
-     */
-    public boolean isIndexed(String index) {
-        return specificKeyToFullIndex.values().contains(index);
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Indexing interface
     //------------------------------------------------------------------------------------------------------------

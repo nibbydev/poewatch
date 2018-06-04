@@ -544,19 +544,17 @@ public class Database {
     public boolean createNewItems(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_item_"+ league +"` (`sup`, `sub`) VALUES (?, ?)";
+        String query =  "INSERT INTO `#_item_"+ league +"` (`sup`, `sub`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (String index : indexMap.keySet()) {
-                    if (!Main.RELATIONS.isIndexed(index)) {
-                        String sup = index.substring(0, Config.index_superSize);
-                        String sub = index.substring(Config.index_superSize);
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
 
-                        statement.setString(1, sup);
-                        statement.setString(2, sub);
-                        statement.addBatch();
-                    }
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.addBatch();
                 }
 
                 statement.executeBatch();
