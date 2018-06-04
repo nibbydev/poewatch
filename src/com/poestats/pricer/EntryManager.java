@@ -213,7 +213,7 @@ public class EntryManager {
             status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
             status.setTenBool(true);
             Main.ADMIN.log_("10 activated", 0);
-            // Get a list of active leagues from pathofexile.com's api
+
             Main.LEAGUE_MANAGER.download();
         }
 

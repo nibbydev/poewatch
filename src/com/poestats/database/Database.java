@@ -83,7 +83,7 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     public boolean getLeagues(List<LeagueEntry> leagueEntries) {
-        String query = "SELECT * FROM `leagues`";
+        String query = "SELECT `id`, `start`, `end` FROM `leagues`";
 
         try {
             try (Statement statement = connection.createStatement()) {
@@ -93,12 +93,7 @@ public class Database {
 
                 while (resultSet.next()) {
                     LeagueEntry leagueEntry = new LeagueEntry();
-
-                    // TODO: SQL database has additional field display
-                    leagueEntry.setId(resultSet.getString("id"));
-                    leagueEntry.setEndAt(resultSet.getString("start"));
-                    leagueEntry.setStartAt(resultSet.getString("end"));
-
+                    leagueEntry.load(resultSet);
                     leagueEntries.add(leagueEntry);
                 }
             }
@@ -1165,19 +1160,19 @@ public class Database {
         try {
             getTables(tables);
 
-            if (!tables.contains("#_item_"+ league)) {
+            if (!tables.contains("#_item_" + league)) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query1);
                 }
             }
 
-            if (!tables.contains("#_entry_"+ league)) {
+            if (!tables.contains("#_entry_" + league)) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query3);
                 }
             }
 
-            if (!tables.contains("#_history_"+ league)) {
+            if (!tables.contains("#_history_" + league)) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query4);
                 }

@@ -206,7 +206,6 @@ public class LeagueManager {
             return true;
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
-            Main.ADMIN._log(ex, 3);
             return false;
         } finally {
             try {
