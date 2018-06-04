@@ -117,7 +117,7 @@ public class RelationManager {
      * @param index Index to check
      * @return True if exists
      */
-    public boolean checkIfIndexed(String index) {
+    public boolean isIndexed(String index) {
         return specificKeyToFullIndex.values().contains(index);
     }
 

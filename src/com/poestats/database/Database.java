@@ -534,18 +534,32 @@ public class Database {
         }
     }
 
-    public boolean createItem(String league, String index) {
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
+    /**
+     * Creates a new item entry in the league-specific item table if the item has not previously been indexed
+     *
+     * @param league League table to pick
+     * @param indexMap IndexMap of indexes to check
+     * @return True on success
+     */
+    public boolean createNewItems(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_item_"+ league +"` (`sup`, `sub`) VALUES (?, ?)";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, sub);
-                statement.execute();
+                for (String index : indexMap.keySet()) {
+                    if (!Main.RELATIONS.isIndexed(index)) {
+                        String sup = index.substring(0, Config.index_superSize);
+                        String sub = index.substring(Config.index_superSize);
+
+                        statement.setString(1, sup);
+                        statement.setString(2, sub);
+                        statement.addBatch();
+                    }
+                }
+
+                statement.executeBatch();
             }
 
             connection.commit();
@@ -556,6 +570,7 @@ public class Database {
             return false;
         }
     }
+
 
     public boolean updateCounters(String league, IndexMap indexMap) {
         league = formatLeague(league);

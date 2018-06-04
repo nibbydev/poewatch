@@ -84,13 +84,7 @@ public class EntryManager {
             IndexMap indexMap = leagueMap.get(league);
 
             if (indexMap != null) {
-                // Adds items to database if they have not been indexed
-                for (String index : indexMap.keySet()) {
-                    if (!Main.RELATIONS.checkIfIndexed(index)) {
-                        Main.DATABASE.createItem(league, index);
-                    }
-                }
-
+                Main.DATABASE.createNewItems(league, indexMap);
                 Main.DATABASE.uploadRaw(league, indexMap);
                 Main.DATABASE.updateCounters(league, indexMap);
                 Main.DATABASE.removeItemOutliers(league, indexMap);
