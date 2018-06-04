@@ -22,6 +22,7 @@ public class SubIndexedItem {
 
     public SubIndexedItem (Item item) {
         icon = Misc.formatIconURL(item.icon);
+        key = item.getSubKey();
         if (item.getTier() != null) tier = item.getTier();
         if (item.getVariation() != null) var = item.getVariation();
 

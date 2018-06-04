@@ -337,7 +337,7 @@ public class Database {
         SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sup + sub);
 
         String query =  "INSERT INTO `item_data_sub`" +
-                        "   (`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
+                        "    (`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE `sup`=`sup`";
 
