@@ -539,9 +539,7 @@ public class Database {
         String sub = index.substring(Config.index_superSize);
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_item_"+ league +"` (`sup`, `sub`) " +
-                        "VALUES (?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
+        String query =  "INSERT INTO `#_item_"+ league +"` (`sup`, `sub`) VALUES (?, ?)";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {

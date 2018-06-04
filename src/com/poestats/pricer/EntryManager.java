@@ -76,7 +76,7 @@ public class EntryManager {
     }
 
     /**
-     * Writes all collected data to file
+     * Writes all collected data to database
      */
     private void cycle() {
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
@@ -84,8 +84,11 @@ public class EntryManager {
             IndexMap indexMap = leagueMap.get(league);
 
             if (indexMap != null) {
-                for (String index : indexMap.keySet()) { // TODO: filter out already indexed items based on local list
-                    Main.DATABASE.createItem(league, index);
+                // Adds items to database if they have not been indexed
+                for (String index : indexMap.keySet()) {
+                    if (!Main.RELATIONS.checkIfIndexed(index)) {
+                        Main.DATABASE.createItem(league, index);
+                    }
                 }
 
                 Main.DATABASE.uploadRaw(league, indexMap);
