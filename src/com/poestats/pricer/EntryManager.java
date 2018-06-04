@@ -93,8 +93,9 @@ public class EntryManager {
                     Main.DATABASE.calculateMean(league, index);
                     Main.DATABASE.calculateMedian(league, index);
                     Main.DATABASE.calculateMode(league, index);
-                    Main.DATABASE.removeOldItemEntries(league, index);
                 }
+
+                Main.DATABASE.removeOldItemEntries(league, indexMap);
             }
 
             Main.DATABASE.calculateExalted(league);

@@ -974,9 +974,7 @@ public class Database {
         }
     }
 
-    public boolean removeOldItemEntries(String league, String index) {
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
+    public boolean removeOldItemEntries(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
         String query =  "DELETE FROM `#_entry_"+ league +"`" +
@@ -992,12 +990,19 @@ public class Database {
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, sub);
-                statement.setString(3, sup);
-                statement.setString(4, sub);
-                statement.setInt(5, Config.entry_maxCount);
-                statement.execute();
+                for (String index : indexMap.keySet()) {
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
+
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setString(3, sup);
+                    statement.setString(4, sub);
+                    statement.setInt(5, Config.entry_maxCount);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
             }
 
             return true;
