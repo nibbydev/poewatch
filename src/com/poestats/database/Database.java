@@ -571,7 +571,6 @@ public class Database {
         }
     }
 
-
     public boolean updateCounters(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
@@ -606,27 +605,33 @@ public class Database {
         }
     }
 
-    public boolean calculateMean(String league, String index) {
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
+    public boolean calculateMean(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
-                        "SET `mean` = IFNULL((" +
-                        "    SELECT AVG(`price`) FROM `#_entry_"+ league +"`" +
+                        "SET `mean` = (" +
+                        "    SELECT IFNULL(AVG(`price`), 0.0) " +
+                        "    FROM `#_entry_"+ league +"`" +
                         "    WHERE `sup`= ? AND `sub`= ?" +
-                        "), 0.0) " +
-                        "WHERE `sup`= ? AND `sub`= ?";
+                        ") WHERE `sup`= ? AND `sub`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, sub);
-                statement.setString(3, sup);
-                statement.setString(4, sub);
-                statement.execute();
+                for (String index : indexMap.keySet()) {
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
+
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setString(3, sup);
+                    statement.setString(4, sub);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -635,9 +640,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMedian(String league, String index) {
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
+    public boolean calculateMedian(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
@@ -657,15 +660,23 @@ public class Database {
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, sub);
-                statement.setString(3, sup);
-                statement.setString(4, sub);
-                statement.setString(5, sup);
-                statement.setString(6, sub);
-                statement.execute();
+                for (String index : indexMap.keySet()) {
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
+
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setString(3, sup);
+                    statement.setString(4, sub);
+                    statement.setString(5, sup);
+                    statement.setString(6, sub);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -674,9 +685,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMode(String league, String index) {
-        String sup = index.substring(0, Config.index_superSize);
-        String sub = index.substring(Config.index_superSize);
+    public boolean calculateMode(String league, IndexMap indexMap) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
@@ -691,13 +700,21 @@ public class Database {
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, sub);
-                statement.setString(3, sup);
-                statement.setString(4, sub);
-                statement.execute();
+                for (String index : indexMap.keySet()) {
+                    String sup = index.substring(0, Config.index_superSize);
+                    String sub = index.substring(Config.index_superSize);
+
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setString(3, sup);
+                    statement.setString(4, sub);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();

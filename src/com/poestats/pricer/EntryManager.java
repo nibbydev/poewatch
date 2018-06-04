@@ -89,12 +89,9 @@ public class EntryManager {
                 Main.DATABASE.updateCounters(league, indexMap);
                 Main.DATABASE.removeItemOutliers(league, indexMap);
 
-                for (String index : indexMap.keySet()) {
-                    Main.DATABASE.calculateMean(league, index);
-                    Main.DATABASE.calculateMedian(league, index);
-                    Main.DATABASE.calculateMode(league, index);
-                }
-
+                Main.DATABASE.calculateMean(league, indexMap);
+                Main.DATABASE.calculateMedian(league, indexMap);
+                Main.DATABASE.calculateMode(league, indexMap);
                 Main.DATABASE.removeOldItemEntries(league, indexMap);
             }
 
