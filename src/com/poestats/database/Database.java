@@ -746,6 +746,7 @@ public class Database {
                 statement.execute(query2);
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -893,6 +894,7 @@ public class Database {
                 statement.execute(query);
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -917,6 +919,7 @@ public class Database {
                 statement.execute(query);
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -941,6 +944,7 @@ public class Database {
                 statement.execute(query);
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -963,6 +967,7 @@ public class Database {
                 statement.execute(query);
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -983,6 +988,7 @@ public class Database {
                 statement.execute(query);
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -1022,6 +1028,7 @@ public class Database {
                 statement.executeBatch();
             }
 
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
