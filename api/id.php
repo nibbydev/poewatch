@@ -1,8 +1,9 @@
 <?php
 header("Content-Type: application/json");
-include_once ( "details/db_connect.php" );
+include_once ( "details/pdo.php" );
 
 $query = "SELECT `changeid` as `id`, `time` FROM `changeid`";
-$result = mysqli_query($conn, $query);
+$stmt = $pdo->query($query);
+$row = $stmt->fetch();
 
-echo json_encode(mysqli_fetch_assoc($result));
+echo json_encode($row);

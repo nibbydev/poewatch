@@ -27,23 +27,26 @@ function get_param_category() {
   return $category;
 }
 
+function get_file_path($pdo, $league, $category) {
+  $query = "SELECT `path` FROM `output_files` WHERE `league` = ? AND `category` = ?";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$league, $category]);
+
+  return $stmt->fetch();
+}
+
 header("Content-Type: application/json");
+
+include_once ( "details/pdo.php" );
 
 $league = get_param_league();
 $category = get_param_category();
 
-include_once ( "details/pdo.php" );
+$payload = get_file_path($pdo, $league, $category);
 
-$stmt = $pdo->prepare("SELECT `path` FROM `output_files` WHERE `league`=? AND `category`=?");
-$stmt->execute([$league, $category]);
-$row = $stmt->fetch();
-
-if ($row && file_exists($row["path"]) ) {
-
-  $data = file_get_contents( $row["path"] );
-  if ($data === false) echo "{\"error\": \"An error occurred\"}";
-  else echo $data;
-
-} else {
-  echo "{\"error\": \"Invalid params\"}";
+if (!$payload || !file_exists($payload["path"])) {
+  die ("{\"error\": \"Invalid params\", \"field\": \"category\"}");
 }
+
+print file_get_contents($payload["path"]);

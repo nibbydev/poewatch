@@ -1,13 +1,13 @@
 <?php
 header("Content-Type: application/json");
-include_once ( "details/db_connect.php" );
+include_once ( "details/pdo.php" );
 
 $query = "SELECT * FROM `leagues`";
-$result = mysqli_query($conn, $query);
+$stmt = $pdo->query($query);
 
 $rows = array();
 
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = $stmt->fetch()) {
   $rows[] = $row;
 }
 

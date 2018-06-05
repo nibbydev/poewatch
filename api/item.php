@@ -29,7 +29,10 @@ function get_item($pdo, $league, $sup, $sub) {
 }
 
 function get_history($pdo, $league, $sup, $sub) {
-  $query = "SELECT * FROM `#_history_$league` WHERE `sup` = ? AND `sub` = ? AND `type`='hourly'";
+  $query = "SELECT * FROM `#_history_$league` 
+    WHERE `sup` = ? AND `sub` = ? AND `type`='daily' 
+    ORDER BY `time` DESC
+    LIMIT 7";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$sup, $sub]);
@@ -38,12 +41,12 @@ function get_history($pdo, $league, $sup, $sub) {
 
 function prep_item($item) {
   $item["history"] = array(
-    "mean" => array(),
-    "median" => array(),
-    "mode" => array(),
-    "exalted" => array(),
-    "count" => array(),
-    "quantity" => array()
+    "mean" => array(null, null, null, null, null, null, null),
+    "median" => array(null, null, null, null, null, null, null),
+    "mode" => array(null, null, null, null, null, null, null),
+    "exalted" => array(null, null, null, null, null, null, null),
+    "count" => array(null, null, null, null, null, null, null),
+    "quantity" => array(null, null, null, null, null, null, null)
   );
 
   $item["mean"] = floatval($item["mean"]);
@@ -70,19 +73,22 @@ include_once ( "details/pdo.php" );
 $sup = substr($index, 0, 5);
 $sub = substr($index, 5);
 
-$item = get_item($pdo, $league, $sup, $sub);
-$item = prep_item($item);
+$payload = get_item($pdo, $league, $sup, $sub);
+$payload = prep_item($payload);
 
 $history = get_history($pdo, $league, $sup, $sub);
 
+$counter = 6;
 while ($row = $history->fetch()) {
-  $item["history"]["mean"][] = floatval($row["mean"]);
-  $item["history"]["median"][] = floatval($row["median"]);
-  $item["history"]["mode"][] = floatval($row["mode"]);
-  $item["history"]["exalted"][] = floatval($row["exalted"]);
-  $item["history"]["count"][] = $row["count"];
-  $item["history"]["quantity"][] = $row["quantity"];
+  $payload["history"]["mean"][$counter] = floatval($row["mean"]);
+  $payload["history"]["median"][$counter] = floatval($row["median"]);
+  $payload["history"]["mode"][$counter] = floatval($row["mode"]);
+  $payload["history"]["exalted"][$counter] = floatval($row["exalted"]);
+  $payload["history"]["count"][$counter] = $row["count"];
+  $payload["history"]["quantity"][$counter] = $row["quantity"];
+
+  $counter--;
 }
 
-echo json_encode($item) . "\n\n";
+echo json_encode($payload) . "\n\n";
 
