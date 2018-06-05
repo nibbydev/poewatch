@@ -74,6 +74,11 @@ $sup = substr($index, 0, 5);
 $sub = substr($index, 5);
 
 $payload = get_item($pdo, $league, $sup, $sub);
+
+if (!$payload) {
+  die("{\"error\": \"Invalid params\", \"field\": \"index\"}" );
+}
+
 $payload = prep_item($payload);
 
 $history = get_history($pdo, $league, $sup, $sub);
