@@ -135,7 +135,7 @@ public class RelationManager {
             index = sup + sub;
 
             indexRelations.getCompleteIndexList().add(index);
-            indexRelations.getSupIndexToSubs().get(sup).add(sub);
+            indexRelations.getSupIndexToSubs().put(sup, new ArrayList<>() {{add(sub);}});
             indexRelations.getUniqueKeyToFullIndex().put(item.getUniqueKey(), index);
             indexRelations.getGenericKeyToSupIndex().put(item.getGenericKey(), sup);
 
