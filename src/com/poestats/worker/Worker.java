@@ -23,6 +23,7 @@ public class Worker extends Thread {
     private final Object monitor = new Object();
     private final Gson gson = Main.getGson();
     private volatile boolean flagLocalRun = true;
+    private volatile boolean readyToExit = false;
     private String job;
     private int index;
     private static long lastPullTime;
@@ -44,8 +45,7 @@ public class Worker extends Thread {
             waitOnMonitor();
 
             // Check if worker should close after being woken from sleep
-            if(!flagLocalRun)
-                break;
+            if(!flagLocalRun) break;
 
             // In case the notify came from some other source or there was a timeout, make sure the worker doesn't
             // continue with an empty job
@@ -67,14 +67,20 @@ public class Worker extends Thread {
             // Clear the job
             job = null;
         }
+
+        readyToExit = true;
     }
 
     /**
      * Stops current worker's process
      */
     public void stopWorker() {
-        this.flagLocalRun = false;
+        flagLocalRun = false;
         wakeLocalMonitor();
+
+        while (readyToExit) try {
+            Thread.sleep(50);
+        } catch (InterruptedException ex) { }
     }
 
     //------------------------------------------------------------------------------------------------------------
