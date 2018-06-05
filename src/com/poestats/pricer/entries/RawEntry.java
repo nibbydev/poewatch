@@ -21,7 +21,7 @@ public class RawEntry {
         account = accountName;
         priceType = item.getPriceType();
         price = item.getPrice();
-        id = item.id;
+        id = item.getId();
     }
 
     public boolean convertPrice(CurrencyMap currencyMap) {

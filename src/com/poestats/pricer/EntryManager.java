@@ -288,19 +288,19 @@ public class EntryManager {
                 String index = Main.RELATIONS.indexItem(item);
                 if (index == null) continue; // Some currency items have invalid icons
 
-                IndexMap indexMap = leagueMap.getOrDefault(item.league, new IndexMap());
+                IndexMap indexMap = leagueMap.getOrDefault(item.getLeague(), new IndexMap());
                 RawList rawList = indexMap.getOrDefault(index, new RawList());
 
                 RawEntry rawEntry = new RawEntry();
                 rawEntry.add(item, stash.accountName);
 
-                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(item.league));
+                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(item.getLeague()));
                 if (discard) continue; // Couldn't convert the listed currency to chaos
 
                 rawList.add(rawEntry);
 
                 indexMap.putIfAbsent(index, rawList);
-                leagueMap.putIfAbsent(item.league, indexMap);
+                leagueMap.putIfAbsent(item.getLeague(), indexMap);
             }
         }
     }

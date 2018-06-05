@@ -9,10 +9,10 @@ public class Item extends Mappers.BaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     private volatile boolean discard = false;
-    private String priceType, parentCategory, childCategory, variation, tier;
-    private String supKey, subKey;
+    private String priceType, parentCategory, childCategory, variation;
+    private String genericKey, uniqueKey;
     private double price;
-    private int links, level, quality;
+    private String links, level, quality, tier;
     private boolean doNotIndex;
 
     //------------------------------------------------------------------------------------------------------------
@@ -119,12 +119,12 @@ public class Item extends Mappers.BaseItem {
         key.append(frameType);
 
         // Save the super key
-        supKey = key.toString();
+        genericKey = key.toString();
 
         // If the item has a 5- or 6-link
-        if (links > 4) {
-            if (links == 5) key.append("|links:5");
-            else if (links == 6) key.append("|links:6");
+        if (links != null) {
+            key.append("|links:");
+            key.append(links);
         }
 
         // If the item has a variation
@@ -144,7 +144,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // Save the sub-key
-        subKey = key.toString();
+        uniqueKey = key.toString();
     }
 
     /**
@@ -272,6 +272,7 @@ public class Item extends Mappers.BaseItem {
     private void checkGemInfo() {
         int lvl = -1;
         int qual = 0;
+        boolean corrupted = false;
 
         // Attempt to extract lvl and quality from item info
         for (Mappers.Property prop : properties) {
@@ -312,8 +313,9 @@ public class Item extends Mappers.BaseItem {
             if (name.contains("Vaal")) corrupted = true;
         }
 
-        this.level = lvl;
-        this.quality = qual;
+        this.level = Integer.toString(lvl);
+        this.quality = Integer.toString(qual);
+        this.corrupted = corrupted;
     }
 
     /**
@@ -336,23 +338,23 @@ public class Item extends Mappers.BaseItem {
         }
 
         // This was an error somehow, somewhere
-        if (sockets == null) {
-            links = 0;
-            return;
-        }
+        if (sockets == null) return;
 
         // Group links together
-        Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};
+        Integer[] linkArray = new Integer[]{0, 0, 0, 0, 0, 0};
         for (Mappers.Socket socket : sockets) {
-            links[socket.group]++;
+            linkArray[socket.group]++;
         }
 
         // Find largest single link
-        for (Integer link : links) {
-            if (link > this.links) {
-                this.links = link;
+        int largestLink = 0;
+        for (Integer link : linkArray) {
+            if (link > largestLink) {
+                largestLink = link;
             }
         }
+
+        if (largestLink > 4) links = Integer.toString(largestLink);
     }
 
     /**
@@ -536,15 +538,14 @@ public class Item extends Mappers.BaseItem {
      * Parses item as an enchant
      */
     private void checkEnchant() {
-        parentCategory = "enchantments";
-        icon = Config.enchantment_icon;
-        //childCategory = null;
-        typeLine = null;
-
         if (enchantMods.size() < 1) {
             discard = true;
             return;
         }
+
+        parentCategory = "enchantments";
+        icon = Config.enchantment_icon;
+        typeLine = null;
 
         // Match any negative or positive integer or double
         name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
@@ -601,32 +602,6 @@ public class Item extends Mappers.BaseItem {
             case "Transmutation Shard":
                 discard = true;
                 break;
-            /*case "Portal Scroll":
-            case "Scroll of Wisdom":
-                if (price > 0.1) discard = true;
-                break;
-            case "Chromatic Orb":
-            case "Cartographer's Chisel":
-            case "Armourer's Scrap":
-            case "Jeweller's Orb":
-            case "Orb of Alteration":
-            case "Orb of Augmentation":
-            case "Blacksmith's Whetstone":
-                if (price > 1) discard = true;
-                break;
-            case "Mirror of Kalandra":
-                if (price < 500) discard = true;
-                break;
-            case "Orb of Regret":
-            case "Vaal Orb":
-            case "Regal Orb":
-                if (price < 0.2) discard = true;
-                break;
-            case "Divine Orb":
-            case "Ancient Orb":
-            case "Exalted Orb":
-                if (price < 2) discard = true;
-                break;*/
         }
     }
 
@@ -642,15 +617,15 @@ public class Item extends Mappers.BaseItem {
         return price;
     }
 
-    public int getLevel() {
+    public String getLevel() {
         return level;
     }
 
-    public int getLinks() {
+    public String getLinks() {
         return links;
     }
 
-    public int getQuality() {
+    public String getQuality() {
         return quality;
     }
 
@@ -678,11 +653,39 @@ public class Item extends Mappers.BaseItem {
         return discard;
     }
 
-    public String getSubKey() {
-        return subKey;
+    public String getUniqueKey() {
+        return uniqueKey;
     }
 
-    public String getSupKey() {
-        return supKey;
+    public String getGenericKey() {
+        return genericKey;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return typeLine;
+    }
+
+    public String isCorrupted() {
+        return corrupted == null ? null : (corrupted ? "1" : "0");
+    }
+
+    public int getFrame() {
+        return frameType;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getLeague() {
+        return league;
     }
 }

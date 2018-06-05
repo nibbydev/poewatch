@@ -6,9 +6,6 @@ import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
-import com.poestats.relations.entries.CurrencyRelation;
-import com.poestats.relations.entries.SupIndexedItem;
-import com.poestats.relations.entries.SubIndexedItem;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -22,11 +19,9 @@ public class RelationManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private Map<String, String> currencyAliasToName = new HashMap<>();
-    private Map<String, String> genericKeyToSuperIndex = new HashMap<>();
-    private Map<String, String> specificKeyToFullIndex = new HashMap<>();
-    private Map<String, SupIndexedItem> supIndexToData = new HashMap<>();
-    private Map<String, List<String>> categories = new HashMap<>();
+    private final Map<String, String> currencyAliasToName = new HashMap<>();
+    private final Map<String, List<String>> categories = new HashMap<>();
+    private final IndexRelations indexRelations = new IndexRelations();
 
     private Gson gson;
 
@@ -48,23 +43,12 @@ public class RelationManager {
             Main.ADMIN.log_("Database did not contain any category information", 2);
         }
 
-        success = Main.DATABASE.getItemData(supIndexToData);
+        success = Main.DATABASE.getItemData(indexRelations);
         if (!success) {
-            Main.ADMIN.log_("Failed to query item data from database. Shutting down...", 5);
+            Main.ADMIN.log_("Failed to query item indexes from database. Shutting down...", 5);
             return false;
-        } else if (supIndexToData.isEmpty()) {
+        } else if (indexRelations.getCompleteIndexList().isEmpty()) {
             Main.ADMIN.log_("Database did not contain any item data information", 2);
-        } else {
-            for (String sup : supIndexToData.keySet()) {
-                SupIndexedItem supIndexedItem = supIndexToData.get(sup);
-
-                genericKeyToSuperIndex.put(supIndexedItem.getKey(), sup);
-
-                for (String sub : supIndexedItem.getSubIndexes().keySet()) {
-                    SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sub);
-                    specificKeyToFullIndex.put(subIndexedItem.getKey(), sup + sub);
-                }
-            }
         }
 
         List<CurrencyRelation> currencyRelations = readCurrencyRelationsFromFile();
@@ -112,7 +96,7 @@ public class RelationManager {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Indexing interface
+    // Indexing methods
     //------------------------------------------------------------------------------------------------------------
 
     /**
@@ -127,43 +111,49 @@ public class RelationManager {
         if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
         categories.putIfAbsent(item.getParentCategory(), childCategories);
 
-        String subKey = item.getSubKey();
-        String supKey = item.getSupKey();
-
-        String sup = genericKeyToSuperIndex.get(supKey);
+        String sup = indexRelations.getGenericKeyToSupIndex().get(item.getGenericKey());
+        String index = indexRelations.getUniqueKeyToFullIndex().get(item.getUniqueKey());
         String sub;
-        String full = specificKeyToFullIndex.get(subKey);
 
-        if (sup != null && full != null)  {
-            return full;
+        if (index != null)  {
+            return index;
         } else if (item.isDoNotIndex()) {
             // If there wasn't an already existing index, return null without indexing
             return null;
         } else if (sup != null) {
-            SupIndexedItem supIndexedItem = supIndexToData.get(sup);
+            sub = findNextSubIndex(sup);
+            index = sup + sub;
 
-            sub = supIndexedItem.subIndex(item, sup);
-            full = sup + sub;
+            indexRelations.getCompleteIndexList().add(index);
+            indexRelations.getSupIndexToSubs().get(sup).add(sub);
+            indexRelations.getUniqueKeyToFullIndex().put(item.getUniqueKey(), index);
 
-            specificKeyToFullIndex.put(subKey, full);
-
-            Main.DATABASE.addSubItemData(supIndexedItem, sup, sub);
+            Main.DATABASE.addSubItemData(sup, sub, item);
         } else {
-            sup = Integer.toHexString(supIndexToData.size());
-            sup = (Config.index_superBase + sup).substring(sup.length());
+            sup = findNextSupIndex();
+            sub = Config.index_subBase;
+            index = sup + sub;
 
-            SupIndexedItem supIndexedItem = new SupIndexedItem(item);
-            sub = supIndexedItem.subIndex(item, sup);
-            full = sup + sub;
+            indexRelations.getCompleteIndexList().add(index);
+            indexRelations.getSupIndexToSubs().get(sup).add(sub);
+            indexRelations.getUniqueKeyToFullIndex().put(item.getUniqueKey(), index);
+            indexRelations.getGenericKeyToSupIndex().put(item.getGenericKey(), sup);
 
-            genericKeyToSuperIndex.put(supKey, sup);
-            specificKeyToFullIndex.put(subKey, full);
-            supIndexToData.put(sup, supIndexedItem);
-
-            Main.DATABASE.addFullItemData(supIndexedItem, sup, sub);
+            Main.DATABASE.addSupItemData(sup, item);
+            Main.DATABASE.addSubItemData(sup, sub, item);
         }
 
-        return full;
+        return index;
+    }
+
+    private String findNextSupIndex() {
+        String sup = Integer.toHexString(indexRelations.getSupIndexToSubs().size());
+        return (Config.index_superBase + sup).substring(sup.length());
+    }
+
+    private String findNextSubIndex(String sup) {
+        String sub = Integer.toHexString(indexRelations.getSupIndexToSubs().get(sup).size());
+        return (Config.index_subBase + sub).substring(sub.length());
     }
 
     //------------------------------------------------------------------------------------------------------------

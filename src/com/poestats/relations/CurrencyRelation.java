@@ -1,4 +1,4 @@
-package com.poestats.relations.entries;
+package com.poestats.relations;
 
 public class CurrencyRelation {
     //------------------------------------------------------------------------------------------------------------

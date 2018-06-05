@@ -1,6 +1,7 @@
 package com.poestats.database;
 
 import com.poestats.Config;
+import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.ParcelEntry;
@@ -9,11 +10,11 @@ import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.CurrencyMap;
 import com.poestats.pricer.maps.IndexMap;
 import com.poestats.pricer.maps.RawList;
-import com.poestats.relations.entries.SupIndexedItem;
-import com.poestats.relations.entries.SubIndexedItem;
+import com.poestats.relations.IndexRelations;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -219,25 +220,12 @@ public class Database {
      * Get item data relations from database
      * TODO: simplify resultSet operation
      */
-    public boolean getItemData(Map<String, SupIndexedItem> relations) {
+    public boolean getItemData(IndexRelations indexRelations) {
         String query =  "SELECT " +
                         "    `item_data_sup`.`sup`, " +
-                        "    `item_data_sup`.`parent`, " +
-                        "    `item_data_sup`.`child`, " +
-                        "    `item_data_sup`.`name`, " +
-                        "    `item_data_sup`.`type`, " +
-                        "    `item_data_sup`.`frame`, " +
-                        "    `item_data_sup`.`key`, " +
-
                         "    `item_data_sub`.`sub`, " +
-                        "    `item_data_sub`.`tier`, " +
-                        "    `item_data_sub`.`lvl`, " +
-                        "    `item_data_sub`.`quality`, " +
-                        "    `item_data_sub`.`corrupted`, " +
-                        "    `item_data_sub`.`links`, " +
-                        "    `item_data_sub`.`var`, " +
-                        "    `item_data_sub`.`key`, " +
-                        "    `item_data_sub`.`icon` " +
+                        "    `item_data_sup`.`key` AS 'genericKey', " +
+                        "    `item_data_sub`.`key` AS 'uniqueKey' " +
                         "FROM `item_data_sub`" +
                         "    JOIN `item_data_sup`" +
                         "        ON `item_data_sub`.`sup` = `item_data_sup`.`sup`";
@@ -246,84 +234,53 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 ResultSet resultSet = statement.executeQuery();
 
+                List<String> completeIndexList = indexRelations.getCompleteIndexList();
+                Map<String, List<String>> supIndexToSubs = indexRelations.getSupIndexToSubs();
+                Map<String, String> uniqueKeyToFullIndex = indexRelations.getUniqueKeyToFullIndex();
+                Map<String, String> genericKeyToSupIndex = indexRelations.getGenericKeyToSupIndex();
+
                 while (resultSet.next()) {
-                    String sup = resultSet.getString(1);
-                    String sub = resultSet.getString(8);
+                    String sup = resultSet.getString("sup");
+                    String sub = resultSet.getString("sub");
+                    String uniqueKey = resultSet.getString("uniqueKey");
+                    String genericKey = resultSet.getString("genericKey");
+                    String index = sup + sub;
 
-                    String supKey = resultSet.getString(7);
-                    String subKey = resultSet.getString(15);
+                    completeIndexList.add(index);
+                    uniqueKeyToFullIndex.put(uniqueKey, index);
+                    genericKeyToSupIndex.putIfAbsent(genericKey, sup);
 
-                    String parent = resultSet.getString(2);
-                    String child = resultSet.getString(3);
-
-                    String name = resultSet.getString(4);
-                    String type = resultSet.getString(5);
-                    int frame = resultSet.getInt(6);
-
-                    String tier = resultSet.getString(9);
-                    String lvl = resultSet.getString(10);
-                    String quality = resultSet.getString(11);
-                    String corrupted = resultSet.getString(12);
-                    String links = resultSet.getString(13);
-                    String var = resultSet.getString(14);
-                    String icon = resultSet.getString(16);
-
-                    SupIndexedItem supIndexedItem = relations.getOrDefault(sup, new SupIndexedItem());
-
-                    if (!relations.containsKey(sup)) {
-                        if (child != null)  supIndexedItem.setChild(child);
-                        if (type != null)   supIndexedItem.setType(type);
-
-                        supIndexedItem.setParent(parent);
-                        supIndexedItem.setName(name);
-                        supIndexedItem.setFrame(frame);
-                        supIndexedItem.setKey(supKey);
-                    }
-
-                    SubIndexedItem subIndexedItem = new SubIndexedItem();
-                    if (tier != null)       subIndexedItem.setTier(tier);
-                    if (lvl != null)        subIndexedItem.setLvl(lvl);
-                    if (quality != null)    subIndexedItem.setQuality(quality);
-                    if (corrupted != null)  subIndexedItem.setCorrupted(corrupted);
-                    if (links != null)      subIndexedItem.setLinks(links);
-                    if (var != null)        subIndexedItem.setVar(var);
-                    subIndexedItem.setKey(subKey);
-                    subIndexedItem.setIcon(icon);
-
-                    supIndexedItem.getSubIndexes().put(sub, subIndexedItem);
-                    relations.put(sup, supIndexedItem);
+                    List<String> subIndexes = supIndexToSubs.getOrDefault(sup, new ArrayList<>());
+                    subIndexes.add(sub);
+                    supIndexToSubs.putIfAbsent(sup, subIndexes);
                 }
             }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not query item data", 3);
+            Main.ADMIN.log_("Could not query item indexes", 3);
             return false;
         }
     }
 
-    public boolean addFullItemData(SupIndexedItem supIndexedItem, String sup, String sub) {
+    public boolean addSupItemData(String sup, Item item) {
         String query =  "INSERT INTO `item_data_sup` (`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, sup);
-                statement.setString(2, supIndexedItem.getParent());
-                statement.setString(3, supIndexedItem.getChild());
-                statement.setString(4, supIndexedItem.getName());
-                statement.setString(5, supIndexedItem.getType());
-                statement.setInt(6, supIndexedItem.getFrame());
-                statement.setString(7, supIndexedItem.getKey());
+                statement.setString(2, item.getParentCategory());
+                statement.setString(3, item.getChildCategory());
+                statement.setString(4, item.getName());
+                statement.setString(5, item.getType());
+                statement.setInt(6, item.getFrame());
+                statement.setString(7, item.getGenericKey());
 
                 statement.execute();
             }
 
-            addSubItemData(supIndexedItem, sup, sub);
-
-            // Commit changes
             connection.commit();
             return true;
         } catch (SQLException ex) {
@@ -333,26 +290,23 @@ public class Database {
         }
     }
 
-    public boolean addSubItemData(SupIndexedItem supIndexedItem, String sup, String sub) {
-        SubIndexedItem subIndexedItem = supIndexedItem.getSubIndexes().get(sup + sub);
-
+    public boolean addSubItemData(String sup, String sub, Item item) {
         String query =  "INSERT INTO `item_data_sub`" +
                         "    (`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `sup`=`sup`";
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, sup);
                 statement.setString(2, sub);
-                statement.setString(3, subIndexedItem.getTier());
-                statement.setString(4, subIndexedItem.getLvl());
-                statement.setString(5, subIndexedItem.getQuality());
-                statement.setString(6, subIndexedItem.getCorrupted());
-                statement.setString(7, subIndexedItem.getLinks());
-                statement.setString(8, subIndexedItem.getVar());
-                statement.setString(9, subIndexedItem.getKey());
-                statement.setString(10, subIndexedItem.getIcon());
+                statement.setString(3, item.getTier());
+                statement.setString(4, item.getLevel());
+                statement.setString(5, item.getQuality());
+                statement.setString(6, item.isCorrupted());
+                statement.setString(7, item.getLinks());
+                statement.setString(8, item.getVariation());
+                statement.setString(9, item.getUniqueKey());
+                statement.setString(10, item.getIcon());
 
                 statement.execute();
             }
@@ -366,6 +320,7 @@ public class Database {
             return false;
         }
     }
+
 
     //--------------------
     // Status
