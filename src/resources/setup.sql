@@ -212,6 +212,16 @@ CREATE TABLE `output_files` (
     `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+--
+-- Table structure `currency_alias`
+--
+
+CREATE TABLE `currency_alias` (
+    `alias`     varchar(32)     PRIMARY KEY,
+    `name`      varchar(64)     NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------
 
 --
@@ -285,3 +295,83 @@ VALUES
     ('weapons',       'twomace',    '2H Maces'),
     ('weapons',       'twosword',   '2H Swords'),
     ('weapons',       'wand',       'Wands');
+
+--
+-- Base values for `currency_aliases`
+--
+
+INSERT INTO `currency_aliases`
+    (`name`, `alias`)
+VALUES
+    ('Chaos Orb',                           'chaos'),
+    ('Chaos Orb',                           'choas'),
+    ('Chaos Orb',                           'c'),
+    ('Exalted Orb',                         'exalted'),
+    ('Exalted Orb',                         'exalt'),
+    ('Exalted Orb',                         'exa'),
+    ('Exalted Orb',                         'ex'),
+    ('Divine Orb',                          'divine'),
+    ('Divine Orb',                          'div'),
+    ('Orb of Alchemy',                      'alchemy'),
+    ('Orb of Alchemy',                      'alch'),
+    ('Orb of Alchemy',                      'alc'),
+    ('Orb of Fusing',                       'fusings'),
+    ('Orb of Fusing',                       'fusing'),
+    ('Orb of Fusing',                       'fuse'),
+    ('Orb of Fusing',                       'fus'),
+    ('Orb of Alteration',                   'alts'),
+    ('Orb of Alteration',                   'alteration'),
+    ('Orb of Alteration',                   'alt'),
+    ('Regal Orb',                           'regal'),
+    ('Regal Orb',                           'rega'),
+    ('Vaal Orb',                            'vaal'),
+    ('Orb of Regret',                       'regret'),
+    ('Orb of Regret',                       'regrets'),
+    ('Orb of Regret',                       'regr'),
+    ('Cartographer''s Chisel',              'chisel'),
+    ('Cartographer''s Chisel',              'chis'),
+    ('Cartographer''s Chisel',              'cart'),
+    ('Jeweller''s Orb',                     'jewellers'),
+    ('Jeweller''s Orb',                     'jeweller'),
+    ('Jeweller''s Orb',                     'jew'),
+    ('Silver Coin',                         'silver'),
+    ('Perandus Coin',                       'coin'),
+    ('Perandus Coin',                       'coins'),
+    ('Perandus Coin',                       'perandus'),
+    ('Orb of Scouring',                     'scouring'),
+    ('Orb of Scouring',                     'scour'),
+    ('Gemcutter''s Prism',                  'gcp'),
+    ('Gemcutter''s Prism',                  'gemc'),
+    ('Orb of Chance',                       'chance'),
+    ('Orb of Chance',                       'chanc'),
+    ('Chromatic Orb',                       'chrome'),
+    ('Chromatic Orb',                       'chrom'),
+    ('Blessed Orb',                         'blessed'),
+    ('Blessed Orb',                         'bless'),
+    ('Blessed Orb',                         'bles'),
+    ('Glassblower''s Bauble',               'glass'),
+    ('Glassblower''s Bauble',               'bauble'),
+    ('Orb of Augmentation',                 'aug'),
+    ('Orb of Transmutation',                'tra'),
+    ('Orb of Transmutation',                'trans'),
+    ('Mirror of Kalandra',                  'mirror'),
+    ('Mirror of Kalandra',                  'mir'),
+    ('Mirror of Kalandra',                  'kal'),
+    ('Scroll of Wisdom',                    'wis'),
+    ('Scroll of Wisdom',                    'wisdom'),
+    ('Portal Scroll',                       'port'),
+    ('Portal Scroll',                       'portal'),
+    ('Blacksmith''s Whetstone',             'whetstone'),
+    ('Blacksmith''s Whetstone',             'blacksmith'),
+    ('Blacksmith''s Whetstone',             'whet'),
+    ('Armourer''s Scrap',                   'armour'),
+    ('Armourer''s Scrap',                   'scrap'),
+    ('Apprentice Cartographer''s Sextant',  'apprentice-sextant'),
+    ('Apprentice Cartographer''s Sextant',  'apprentice'),
+    ('Journeyman Cartographer''s Sextant',  'journeyman-sextant'),
+    ('Journeyman Cartographer''s Sextant',  'journeyman'),
+    ('Master Cartographer''s Sextant',      'master-sextant'),
+    ('Master Cartographer''s Sextant',      'master');
+
+
+

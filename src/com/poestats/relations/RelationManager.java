@@ -1,14 +1,9 @@
 package com.poestats.relations;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
-import com.poestats.Misc;
 
-import java.io.*;
-import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -19,11 +14,9 @@ public class RelationManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private final Map<String, String> currencyAliasToName = new HashMap<>();
+    private final Map<String, String> currencyAliases = new HashMap<>();
     private final Map<String, List<String>> categories = new HashMap<>();
     private final IndexRelations indexRelations = new IndexRelations();
-
-    private Gson gson;
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -34,6 +27,15 @@ public class RelationManager {
      */
     public boolean init() {
         boolean success;
+
+        success = Main.DATABASE.getCurrencyAliases(currencyAliases);
+        if (!success) {
+            Main.ADMIN.log_("Failed to query currency aliases from database. Shutting down...", 5);
+            return false;
+        } else if (currencyAliases.isEmpty()) {
+            Main.ADMIN.log_("Database did not contain any currency aliases. Shutting down...", 5);
+            return false;
+        }
 
         success = Main.DATABASE.getCategories(categories);
         if (!success) {
@@ -51,48 +53,7 @@ public class RelationManager {
             Main.ADMIN.log_("Database did not contain any item data information", 2);
         }
 
-        List<CurrencyRelation> currencyRelations = readCurrencyRelationsFromFile();
-        if (currencyRelations == null) {
-            Main.ADMIN.log_("Failed loadItem currency relations. Shutting down...", 5);
-            return false;
-        } else {
-            for (CurrencyRelation relation : currencyRelations) {
-                for (String alias : relation.getAliases()) {
-                    currencyAliasToName.put(alias, relation.getName());
-                }
-            }
-        }
-
         return true;
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Common I/O
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Reads currency relation data from file
-     *
-     * @return List of CurrencyRelation objects or null on error
-     */
-    private List<CurrencyRelation> readCurrencyRelationsFromFile() {
-        List<CurrencyRelation> currencyRelations;
-
-        // Open up the reader
-        try (Reader reader = Misc.defineReader(Config.file_relations)) {
-            if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_relations.getPath() + "'", 4);
-                return null;
-            }
-
-            Type listType = new TypeToken<ArrayList<CurrencyRelation>>(){}.getType();
-            currencyRelations = gson.fromJson(reader, listType);
-
-            return currencyRelations;
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-            return null;
-        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -164,11 +125,7 @@ public class RelationManager {
         return categories;
     }
 
-    public Map<String, String> getCurrencyAliasToName() {
-        return currencyAliasToName;
-    }
-
-    public void setGson(Gson gson) {
-        this.gson = gson;
+    public Map<String, String> getCurrencyAliases() {
+        return currencyAliases;
     }
 }

@@ -23,25 +23,10 @@ public class Config {
     //------------------------------------------------------------------------------------------------------------
 
     public static final File folder_root        = new File(".");
-    public static final File folder_data        = new File(folder_root.getPath(), "data");
-    public static final File folder_database    = new File(folder_data.getPath(), "database");
-    public static final File folder_output      = new File(folder_data.getPath(), "output");
-    public static final File folder_history     = new File(folder_data.getPath(), "history");
-    public static final File folder_backups     = new File(folder_root.getPath(), "backups");
-
     public static final File folder_newOutput   = new File(folder_root.getPath(), "output");
-
-    public static final File file_leagueData    = new File(folder_data.getPath(),"leagueData.json");
-    public static final File file_leagueList    = new File(folder_data.getPath(),"leagueList.json");
     public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
-    public static final File file_relations     = new File(folder_root.getPath(),"currencyRelations.json");
-    public static final File file_itemData      = new File(folder_data.getPath(),"itemData.json");
-    public static final File file_categories    = new File(folder_data.getPath(),"categories.json");
-    public static final File file_changeID      = new File(folder_data.getPath(),"changeID.json");
-    public static final File file_status        = new File(folder_data.getPath(),"status.csv");
 
     public static final URL  resource_config     = Main.class.getResource("/resources/" + file_config.getName());
-    public static final URL  resource_relations  = Main.class.getResource("/resources/" + file_relations.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Index definitions
@@ -58,7 +43,6 @@ public class Config {
     //------------------------------------------------------------------------------------------------------------
 
     public static final int admin_logSize = 2048;
-    public static final int admin_zipBufferSize = 1024;
 
     //------------------------------------------------------------------------------------------------------------
     // Workers

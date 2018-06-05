@@ -47,17 +47,14 @@ public class Main {
             // Init admin suite
             ADMIN = new AdminSuite();
 
+            // Make sure basic folder structure exists
+            saveResource(Config.resource_config, Config.file_config);
+
             DATABASE = new Database();
             DATABASE.connect();
 
-            // Make sure basic folder structure exists
-            saveResource(Config.resource_config, Config.file_config);
-            saveResource(Config.resource_relations, Config.file_relations);
-
-            RELATIONS = new RelationManager();
-            RELATIONS.setGson(gsonBuilder.create());
-
             // Get category, item and currency data
+            RELATIONS = new RelationManager();
             success = RELATIONS.init();
             if (!success) return;
 

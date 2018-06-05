@@ -14,7 +14,6 @@ import com.poestats.relations.IndexRelations;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -451,6 +450,30 @@ public class Database {
             return false;
         }
     }
+
+    public boolean getCurrencyAliases(Map<String, String> currencyAliases) {
+        String query =  "SELECT * FROM `currency_aliases`";
+
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                ResultSet resultSet = statement.executeQuery();
+
+                while (resultSet.next()) {
+                    String alias = resultSet.getString("alias");
+                    String name = resultSet.getString("name");
+
+                    currencyAliases.put(alias, name);
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not query currency aliases from database", 3);
+            return false;
+        }
+    }
+
 
     public boolean uploadRaw(String league, IndexMap indexMap) {
         league = formatLeague(league);
