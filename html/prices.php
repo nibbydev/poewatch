@@ -167,10 +167,10 @@
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
             <label class="btn btn-outline-dark active">
-              <input type="radio" name="confidence" value="1" checked><a>Hide</a>
+              <input type="radio" name="confidence" value="0" checked><a>Hide</a>
             </label>
             <label class="btn btn-outline-dark">
-              <input type="radio" name="confidence" value=""><a>Show</a>
+              <input type="radio" name="confidence" value="1"><a>Show</a>
             </label>
           </div>
         </div>
@@ -178,7 +178,7 @@
           <h4>Links</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
             <label class="btn btn-outline-dark active">
-              <input type="radio" name="links" value="" checked>None
+              <input type="radio" name="links" value="none" checked>None
             </label>
             <label class="btn btn-outline-dark">
               <input type="radio" name="links" value="5">5L

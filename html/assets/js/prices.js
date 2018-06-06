@@ -77,7 +77,6 @@ $(document).ready(function() {
   $(loadall, "button").on("click", function(){
     console.log("Button press: loadall");
     loadall.hide();
-
     FILTER.parseAmount = 0;
     sortResults();
   });
@@ -93,7 +92,6 @@ $(document).ready(function() {
   $("#radio-confidence").on("change", function(){
     let option = $("input:checked", this).val() === "1";
     console.log("Show low count: " + option);
-    
     FILTER.showLowConfidence = option;
     sortResults();
   });
