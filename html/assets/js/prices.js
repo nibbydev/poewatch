@@ -45,98 +45,6 @@ const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyA
 const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "http://poe-stats.com/assets/img/missing.png";
 
-var TEMPLATE_expandedRow = `
-<tr class='selected-row'><td colspan='100'>
-  <div class='row m-1'>
-    <div class='col-md'>
-      <h4>Chaos value</h4>
-      <div class='chart-small'><canvas id="chart-price"></canvas></div>
-    </div>
-    <div class='col-md'>
-      <h4>Listed per 24h</h4>
-      <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
-    </div>
-  </div>
-  <hr>
-  <div class='row m-1 mt-2'>
-    <div class='col-md'>
-      <table class="table table-sm details-table">
-        <tbody>
-          <tr>
-            <td>Current mean</td>
-            <td>{{mean}}</td>
-          </tr>
-          <tr>
-            <td>Current median</td>
-            <td>{{median}}</td>
-          </tr>
-          <tr>
-            <td>Current mode</td>
-            <td>{{mode}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class='col-md'>
-      <table class="table table-sm details-table">
-        <tbody>
-          <tr>
-            <td>Total amount listed</td>
-            <td>{{count}}</td>
-          </tr>
-          <tr>
-            <td>Price since yesterday</td>
-            <td>{{1d}}</td>
-          </tr>
-          <tr>
-            <td>Price since 1 week</td>
-            <td>{{1w}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <hr>
-  <div class='row m-1 mb-3'>
-    <div class='col-sm'>
-      <h4>Past leagues</h4>
-      <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
-      <div class='chart-large'><canvas id="chart-past"></canvas></div>
-    </div>
-  </div>
-</td></tr>`;
-
-var TEMPLATE_prices = `
-<td>
-  <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
-</td>
-<td>
-  <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
-</td>`;
-
-var TEMPLATE_gemFields = `
-<td>{{lvl}}</td>
-<td>{{quality}}</td>
-<td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>`;
-  
-var TEMPLATE_changeField = `
-<td><span class='badge custom-badge-block custom-badge-{{color}}'>{{percent}}%</span></td>`;
-
-var TEMPLATE_quantField = `
-<td><span class='badge custom-badge-block custom-badge-{{color}}'>{{quant}}</span></td>`;
-
-var TEMPLATE_row = `
-<tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>`;
-
-var TEMPLATE_th = `<th scope='col'>{{name}}</th>`;
-
-var TEMPLATE_option = `<option value="{{value}}">{{name}}</option>`;
-
-var TEMPLATE_leagueBtn = `
-<label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
-  <input type="radio" name="league" value="{{value}}">{{name}}
-</label>`;
-
 var TEMPLATE_imgContainer = `
 <span class='table-img-container text-center mr-1'><img src={{img}}></span>`;
 
@@ -299,7 +207,69 @@ function onRowClick(event) {
   let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
   let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
 
-  let template = TEMPLATE_expandedRow.trim()
+  let template = `
+  <tr class='selected-row'><td colspan='100'>
+    <div class='row m-1'>
+      <div class='col-md'>
+        <h4>Chaos value</h4>
+        <div class='chart-small'><canvas id="chart-price"></canvas></div>
+      </div>
+      <div class='col-md'>
+        <h4>Listed per 24h</h4>
+        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1 mt-2'>
+      <div class='col-md'>
+        <table class="table table-sm details-table">
+          <tbody>
+            <tr>
+              <td>Current mean</td>
+              <td>{{mean}}</td>
+            </tr>
+            <tr>
+              <td>Current median</td>
+              <td>{{median}}</td>
+            </tr>
+            <tr>
+              <td>Current mode</td>
+              <td>{{mode}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class='col-md'>
+        <table class="table table-sm details-table">
+          <tbody>
+            <tr>
+              <td>Total amount listed</td>
+              <td>{{count}}</td>
+            </tr>
+            <tr>
+              <td>Price since yesterday</td>
+              <td>{{1d}}</td>
+            </tr>
+            <tr>
+              <td>Price since 1 week</td>
+              <td>{{1w}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1 mb-3'>
+      <div class='col-sm'>
+        <h4>Past leagues</h4>
+        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <div class='chart-large'><canvas id="chart-past"></canvas></div>
+      </div>
+    </div>
+  </td></tr>
+  `.trim();
+
+  template = template
     .replace("{{mean}}",    chaosContainer + roundPrice(item["mean"]))
     .replace("{{median}}",  chaosContainer + roundPrice(item["median"]))
     .replace("{{mode}}",    chaosContainer + roundPrice(item["mode"]))
@@ -511,12 +481,18 @@ function displayHistory(index, expandedRow) {
   HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague];
   HISTORY_CHART.update();
 
+  let template = `
+  <label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
+    <input type="radio" name="league" value="{{value}}">{{name}}
+  </label>
+  `.trim();
+
   let tmp_leagueBtnString = "";
 
   $.each(leagues, function(index, league) {
     if (!~LEAGUES.indexOf(league)) return;
 
-    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
+    tmp_leagueBtnString += template
       .replace("{{active}}", (selectedLeague === league ? "active" : ""))
       .replace("{{value}}", league)
       .replace("{{name}}", formatLeague(league));
@@ -525,7 +501,7 @@ function displayHistory(index, expandedRow) {
   $.each(leagues, function(index, league) {
     if (~LEAGUES.indexOf(league)) return;
 
-    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
+    tmp_leagueBtnString += template
       .replace("{{active}}", (selectedLeague === league ? "active" : ""))
       .replace("{{value}}", league)
       .replace("{{name}}", formatLeague(league));
@@ -633,7 +609,12 @@ function parseItem(item, index) {
   // Format count badge
   var quantField = buildQuantField(item);
 
-  return TEMPLATE_row.trim().replace("{{id}}", index)
+  let template = `
+    <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>
+  `.trim();
+
+  return template
+    .replace("{{id}}",      index)
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
     .replace("{{price}}",   priceFields)
@@ -698,7 +679,11 @@ function buildNameField(item) {
 function buildGemFields(item) {
   if (item["frame"] !== 4) return "";
 
-  template = TEMPLATE_gemFields.trim();
+  template = `
+  <td>{{lvl}}</td>
+  <td>{{quality}}</td>
+  <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
+  `.trim();
 
   template = template.replace("{{lvl}}",      item["lvl"]);
   template = template.replace("{{quality}}",  item["quality"]);
@@ -730,7 +715,15 @@ function buildSparkLine(item) {
 }
 
 function buildPriceFields(item) {
-  var template = TEMPLATE_prices.trim();
+  var template = `
+  <td>
+    <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
+  </td>
+  <td>
+    <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
+  </td>
+  `.trim();
+
   var chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
   var exContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
 
@@ -751,7 +744,13 @@ function buildPriceFields(item) {
 }
 
 function buildChangeField(item) {
-  let template = TEMPLATE_changeField.trim();
+  let template = `
+  <td>
+    <span class='badge custom-badge-block custom-badge-{{color}}'>
+      {{percent}}%
+    </span>
+  </td>
+  `.trim();
 
   if (item["history"]["change"] > MAJOR_CHANGE) {
     template = template.replace("{{color}}", "green");
@@ -771,7 +770,13 @@ function buildChangeField(item) {
 }
 
 function buildQuantField(item) {
-  let template = TEMPLATE_quantField.trim();
+  let template = `
+  <td>
+    <span class='badge custom-badge-block custom-badge-{{color}}'>
+      {{quant}}
+    </span>
+  </td>
+  `.trim();
 
   if (item["frame"] === -1) {
     if (item["quantity"] >= ENCH_QUANT_HIGH) {
