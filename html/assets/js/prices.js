@@ -13,7 +13,8 @@ var FILTER = {
   search: null,
   gemLvl: null,
   gemQuality: null,
-  gemCorrupted: null
+  gemCorrupted: null,
+  parseAmount: 100
 };
 
 var ITEMS = [];
@@ -25,11 +26,6 @@ var HISTORY_LEAGUE;
 var INTERVAL;
 
 var ROW_parent, ROW_expanded;
-var PARSE_AMOUNT = 100;
-var COUNTER = {
-  lowCount: 0,
-  categories: {}
-};
 
 const PRICE_PERCISION = 100;
 const ENCH_QUANT_HIGH = 10;
@@ -64,9 +60,8 @@ $(document).ready(function() {
   // Define league event listener
   $("#search-league").on("change", function(){
     FILTER.league = $("input[name=league]:checked", this).val();
-    console.log(FILTER.league);
+    console.log("Selected league: " + FILTER.league);
     document.cookie = "league="+FILTER.league;
-    ITEMS = [];
     makeRequest();
   });
 
@@ -83,14 +78,14 @@ $(document).ready(function() {
     console.log("Button press: loadall");
     loadall.hide();
 
-    PARSE_AMOUNT = -1;
+    FILTER.parseAmount = 0;
     sortResults();
   });
 
   // Define searchbar event listener
   $("#search-searchbar").on("input", function(){
     FILTER.search = $(this).val().toLowerCase().trim();
-    console.log("search: '" + FILTER.search + "'");
+    console.log("Search: " + FILTER.search);
     sortResults();
   });
 
@@ -513,6 +508,8 @@ function displayHistory(index, expandedRow) {
 //------------------------------------------------------------------------------------------------------------
 
 function makeRequest() {
+  ITEMS = [];
+
   var data = {
     league: FILTER.league, 
     category: FILTER.category
@@ -534,9 +531,9 @@ function makeRequest() {
     sortResults(json);
     
     // Enable "show more" button
-    if (json.length > PARSE_AMOUNT) {
+    if (json.length > FILTER.parseAmount) {
       var loadAllDiv = $(".loadall");
-      $("button", loadAllDiv).text("Load more (" + (json.length - PARSE_AMOUNT) + ")");
+      $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
       loadAllDiv.show();
     }
   });
@@ -943,7 +940,7 @@ function sortResults() {
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
 
-    if (parsed_count > PARSE_AMOUNT) break;
+    if (FILTER.parseAmount && parsed_count > FILTER.parseAmount) break;
     if ( checkHideItem(item) ) continue;
 
     // If item has not been parsed, parse it 
