@@ -49,4 +49,4 @@ if (!$payload || !file_exists($payload["path"])) {
   die ("{\"error\": \"Invalid params\", \"field\": \"category\"}");
 }
 
-print file_get_contents($payload["path"]);
+echo file_get_contents($payload["path"]);

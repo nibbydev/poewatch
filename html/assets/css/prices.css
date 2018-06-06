@@ -4,13 +4,13 @@
 
 .table-img-container {
   display: inline-block;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
 }
 
 .table-img-container img {
-  max-height: 30px;
-  max-width: 30px;
+  max-height: 35px;
+  max-width: 35px;
   vertical-align: middle;
 }
 

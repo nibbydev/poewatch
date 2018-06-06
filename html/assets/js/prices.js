@@ -106,12 +106,6 @@ var TEMPLATE_expandedRow = `
   </div>
 </td></tr>`;
 
-var TEMPLATE_name = `
-<td>
-  <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
-  <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
-</td>`;
-
 var TEMPLATE_prices = `
 <td>
   <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
@@ -650,12 +644,15 @@ function parseItem(item, index) {
 }
 
 function buildNameField(item) {
-  let template = TEMPLATE_name.trim();
+  let template = `
+  <td>
+    <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
+    <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+  </td>
+  `.trim();
 
   if ( item["icon"] ) {
     template = template.replace("{{icon}}", item["icon"]);
-  } else if ( item["frame"] === -1 ) {
-    template = template.replace("{{icon}}", ICON_ENCHANTMENT);
   } else {
     template = template.replace("{{icon}}", ICON_MISSING);
   }
@@ -668,17 +665,17 @@ function buildNameField(item) {
 
   template = template.replace("{{name}}", item["name"]);
 
-  if ("type" in item) {
+  if (item["type"]) {
     let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
     template = template.replace("{{type}}", tmp);
   } else {
     template = template.replace("{{type}}", "");
   }
 
-  if ("var" in item && item["frame"] !== -1) {
+  if (item["var"] && item["frame"] !== -1) {
     let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
-  } else if ("tier" in item) {
+  } else if (item["tier"]) {
     let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else {

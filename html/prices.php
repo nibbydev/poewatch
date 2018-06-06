@@ -1,11 +1,4 @@
-<?php
-  if ( isset($_GET["category"]) ) {
-    $category = $_GET["category"];
-  } else {
-    header('location:/prices?category=currency');
-    die();
-  }
-?>
+<?php include_once( "assets/php/functions_prices.php" ); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,15 +14,6 @@
   <link rel="stylesheet" href="assets/css/prices.css">
 </head>
 <body>
-<!-- Service script -->
-<script>
- <?php include_once( "assets/php/getLeagues.php" ); ?>
- <?php include_once( "assets/php/getCategories.php" ); ?>
-  var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
-  var SERVICE_categories = <?php echo json_encode($SERVICE_categories); ?>;
-  var SERVICE_category = <?php echo isset($_GET["category"]) ? "\"" . $_GET["category"] . "\"" : "null" ?>;
-</script>
-<!--/Service script/-->
 <!-- Primary navbar -->
 <nav class="navbar navbar-expand-md navbar-dark">
   <div class="container-fluid">
@@ -57,19 +41,7 @@
   <div class="form-group search-league m-0 ml-3">
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league">
 
-<?php // Add league radio buttons to second navbar
-  foreach ($SERVICE_leagues as $league) {
-    $outString = "
-    <label class='btn btn-sm btn-outline-dark p-0 px-1 {{active}}'>
-      <input type='radio' name='league' value='$league'>$league
-    </label>";
-
-    echo $outString.trim();
-  }
-
-  unset($league);
-  unset($outString);
-?>
+      <?php AddLeagueRadios($SERVICE_leagues); ?>
     
     </div>
   </div>
@@ -111,18 +83,16 @@
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
             <div class="card-body">
-              <?php if ($category === "enchantments"): ?>
-              <p class="mb-0 text-center subtext-1">[ Enchantment prices <i>might</i> be inaccurate at this point in time ]</p>
-              <?php else: ?>
-              <p class="mb-0 text-center subtext-1">[ allan please add advertisement ]</p>
-              <?php endif; ?>
+
+              <?php AddMotdMessage($SERVICE_category); ?>
+
             </div>
             <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
       </div>
       <!--/Title row/-->
-      <?php if ($category === "gems"): ?>
+      <?php if ($SERVICE_category === "gems"): ?>
       
       <!-- Gem field row -->
       <div class="row mb-3 gem-fields">
@@ -189,7 +159,7 @@
       </div>
       <!--/Gem field row/-->
 
-      <?php elseif ($category === "armour" || $category === "weapons"): ?>
+      <?php elseif ($SERVICE_category === "armour" || $SERVICE_category === "weapons"): ?>
 
       <!-- Link + generic field row -->
       <div class="row mb-3">
@@ -220,7 +190,11 @@
         </div>
         <div class="col-6 col-md-3 mb-2">
           <h4>Sub-category</h4>
-          <select class="form-control custom-select" id="search-sub"></select>
+          <select class="form-control custom-select" id="search-sub">
+
+            <?php AddSubCategorySelectors($SERVICE_categories); ?>
+
+          </select>
         </div>
         <div class="col-6 col-md-3 mb-2">
           <h4>Search</h4>
@@ -248,26 +222,7 @@
           <h4>Sub-category</h4>
           <select class="form-control custom-select" id="search-sub">
           
-<?php // Add category-sppecific selector fields to sub-category selector
-  if ( !isset($_GET["category"]) ) return;
-
-  foreach ($SERVICE_categories as $categoryElement) {
-    if ( $categoryElement["name"] !== $_GET["category"] ) continue;
-
-    echo "<option value='all'>All</option>";
-
-    foreach ($categoryElement["members"] as $member) {
-      $outString = "
-      <option value='{$member["name"]}'>{$member["display"]}</option>";
-  
-      echo $outString.trim();
-    }
-  }
-
-  unset($categoryElement);
-  unset($outString);
-  unset($member);
-?>
+            <?php AddSubCategorySelectors($SERVICE_categories); ?>
           
           </select>
         </div>
@@ -279,6 +234,7 @@
       <!--/Generic field row/-->
 
       <?php endif; ?>
+
       <!-- Main table -->
       <div class="row">
         <div class="col-lg">
@@ -289,22 +245,7 @@
                 <thead>
                   <tr>
                 
-<?php // Add table headers based on category
-echo "<th class='w-100' scope='col'>Item</th>";
-
-if ( isset($_GET["category"]) ) {
-  if ( $_GET["category"] === "gems" ) {
-    echo "<th scope='col'>Lvl</th>";
-    echo "<th scope='col'>Qual</th>";
-    echo "<th scope='col'>Corr</th>";
-  }
-}
-
-echo "<th scope='col'>Chaos</th>";
-echo "<th scope='col'>Exalted</th>";
-echo "<th scope='col'>Change</th>";
-echo "<th scope='col'>Count</th>";
-?>
+                    <?php AddTableHeaders($SERVICE_category); ?>
                 
                   </tr>
                 </thead>
@@ -329,6 +270,13 @@ echo "<th scope='col'>Count</th>";
   <p>Poe-Stats © 2018</p>
 </footer>
 <!--/Footer/-->
+<!-- Service script -->
+<script>
+  var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
+  var SERVICE_categories = <?php echo json_encode($SERVICE_categories); ?>;
+  var SERVICE_category = <?php echo "\"" . $SERVICE_category . "\"" ?>;
+</script>
+<!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/prices.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
