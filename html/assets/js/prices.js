@@ -8,7 +8,7 @@ var FILTER = {
   league: null,
   category: null,
   sub: "all",
-  hideLowConfidence: true,
+  showLowConfidence: false,
   links: null,
   search: null,
   gemLvl: null,
@@ -59,7 +59,7 @@ $(document).ready(function() {
   FILTER.category = SERVICE_category;
 
   readLeagueFromCookies(FILTER);
-  makeRequest(FILTER, ITEMS, PARSE_AMOUNT); 
+  makeRequest(); 
 
   // Define league event listener
   $("#search-league").on("change", function(){
@@ -99,10 +99,8 @@ $(document).ready(function() {
     let option = $("input:checked", this).val() === "1";
     console.log("Show low count: " + option);
     
-    if (FILTER.hideLowConfidence != option) {
-      FILTER.hideLowConfidence = option;
-      sortResults();
-    }
+    FILTER.showLowConfidence = option;
+    sortResults();
   });
 
   // Define link radio button event listener
@@ -960,7 +958,7 @@ function sortResults() {
 
 function checkHideItem(item) {
   // Hide low confidence items
-  if (FILTER.hideLowConfidence) {
+  if (!FILTER.showLowConfidence) {
     if (item["quantity"] < QUANT_MED) return true;
   }
 
