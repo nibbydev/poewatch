@@ -1,4 +1,4 @@
-var LEAGUE = "Bestiary";
+var LEAGUE = "Incursion";
 var itemData = null;
 var HISTORY_CHART = null;
 
@@ -8,14 +8,12 @@ var TEMPLATE_leagueBtn = `
 </label>`;
 
 $(document).ready(function() {
-  if (!category || !index) return;
-  makeRequest(category, index);
+  if (index) makeRequest(index);
 });
 
 
-function makeRequest(category, index) {
+function makeRequest(index) {
   var data = {
-    category: category,
     index: index
   };
 

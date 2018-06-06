@@ -183,8 +183,7 @@
 <!--/Footer/-->
 <!-- Service script -->
 <script>
-  var category = <?php echo isset($_GET["category"]) ? "\"" . $_GET["category"] . "\"" : "null" ?>;
-  var index =    <?php echo isset($_GET["index"])    ? "\"" . $_GET["index"]    . "\"" : "null" ?>;
+  var index = <?php echo isset($_GET["index"])    ? "\"" . $_GET["index"]    . "\"" : "null" ?>;
 </script>
 <!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>

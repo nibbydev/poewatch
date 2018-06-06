@@ -3,10 +3,22 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
-var FILTER;
+// Default item search filter options
+var FILTER = {
+  league: null,
+  category: null,
+  sub: "all",
+  hideLowConfidence: true,
+  links: null,
+  search: null,
+  gemLvl: null,
+  gemQuality: null,
+  gemCorrupted: null
+};
+
 var ITEMS = [];
-var LEAGUES = [];
-var CATEGORIES = {};
+var LEAGUES;
+var CATEGORIES;
 var HISTORY_DATA = {};
 var HISTORY_CHART;
 var HISTORY_LEAGUE;
@@ -27,6 +39,7 @@ const QUANT_MED = 3;
 const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
+// Re-used icon urls
 const ICON_ENCHANTMENT = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1";
 const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
@@ -134,26 +147,17 @@ var TEMPLATE_imgContainer = `
 <span class='table-img-container text-center mr-1'><img src={{img}}></span>`;
 
 $(document).ready(function() {
-  var category = getUrlParameter("category");
-  if (!category) return;
+  if (!SERVICE_category) return;
 
-  readServiceContainers();
+  LEAGUES = SERVICE_leagues;
+  CATEGORIES = SERVICE_categories;
 
-  FILTER = {
-    league: LEAGUES[0],
-    category: category,
-    sub: "all",
-    hideLowConfidence: true,
-    links: "",
-    search: "",
-    gemLvl: "",
-    gemQuality: "",
-    gemCorrupted: ""
-  };
+  //FILTER.league = LEAGUES[0];
+  FILTER.league = "Incursion";
+  FILTER.category = SERVICE_category;
 
-  fillSelectors(category);
-  readCookies();
-  makeRequest();
+  readLeagueFromCookies(FILTER);
+  makeRequest(FILTER, ITEMS, PARSE_AMOUNT); 
 
   // Define league event listener
   $("#search-league").on("change", function(){
@@ -167,14 +171,14 @@ $(document).ready(function() {
   // Define subcategory event listener
   $("#search-sub").change(function(){
     FILTER.sub = $(this).find(":selected").val();
-    console.log("sub-category: '" + FILTER.sub + "'");
+    console.log("Selected sub-category: " + FILTER.sub);
     sortResults();
   });
 
   // Define load all button listener
   var loadall = $(".loadall");
   $(loadall, "button").on("click", function(){
-    console.log("loadall");
+    console.log("Button press: loadall");
     loadall.hide();
 
     PARSE_AMOUNT = -1;
@@ -190,28 +194,19 @@ $(document).ready(function() {
 
   // Define low confidence radio button event listener
   $("#radio-confidence").on("change", function(){
-    let newValue = $("input:checked", this).val();
-    console.log(newValue);
+    let option = $("input:checked", this).val() === "1";
+    console.log("Show low count: " + option);
     
-    if (newValue != FILTER.hideLowConfidence) {
-      FILTER.hideLowConfidence = !FILTER.hideLowConfidence;
+    if (FILTER.hideLowConfidence != option) {
+      FILTER.hideLowConfidence = option;
       sortResults();
     }
-
-    /*var tempLabel = $("label", this);
-    if ( $("input", tempLabel[0]).is(":checked") ) {
-      $("span", tempLabel[0]).text("Hide");
-      $("span", tempLabel[1]).text("Show" + " (" + COUNTER.lowCount + ")");
-    } else {
-      $("span", tempLabel[0]).text("Hide" + " (" + COUNTER.lowCount + ")");
-      $("span", tempLabel[1]).text("Show");
-    }*/
   });
 
   // Define link radio button event listener
   $("#radio-links").on("change", function(){
     FILTER.links = $("input[name=links]:checked", this).val();
-    console.log(FILTER.links);
+    console.log("Link filter: " + FILTER.links);
     sortResults();
   });
 
@@ -258,93 +253,17 @@ $(document).ready(function() {
 // Data prep
 //------------------------------------------------------------------------------------------------------------
 
-function readServiceContainers() {
-  $(".service-container").each(function() {
-    var container = $(this);
-    var id = container.attr("id");
-    var payload = container.data("payload");
-    payload = payload.replace(/'/g, '"');
+function readLeagueFromCookies(FILTER) {
+  let league = getCookie("league");
 
-    switch (id) {
-      case "service-leagues":
-        LEAGUES = JSON.parse(payload);
-        break;
-      case "service-categories":
-        CATEGORIES = JSON.parse(payload);
-        break;
-    }
-  });
-}
-
-function fillSelectors(category) {
-  let tmp_leagueBtnString = "";
-
-  $.each(LEAGUES, function(index, league) {
-    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
-      .replace("{{active}}", "")
-      .replace("{{value}}", league)
-      .replace("{{name}}", formatLeague(league));
-  });
-
-  $("#search-league").append(tmp_leagueBtnString);
-
-  let tmp_selString = TEMPLATE_option.trim()
-    .replace("{{value}}", "all")
-    .replace("{{name}}", "All");
-
-  $.each(CATEGORIES[category], function(index, child) {   
-    tmp_selString += TEMPLATE_option.trim()
-      .replace("{{value}}", child)
-      .replace("{{name}}", formatCategory(child));
-  });
-
-  $("#search-sub").append(tmp_selString);
-
-  // Add price table headers
-  let tmp_thString = "<th class='w-100' scope='col'>Item</th>";
-
-  if (category === "gems") {
-    tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Lvl");
-    tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Qual");
-    tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Corr");
-  }
-
-  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Chaos")
-  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Exalted")
-  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Change")
-  tmp_thString += TEMPLATE_th.trim().replace("{{name}}", "Count")
-
-  $("#searchResults > thead > tr").append(tmp_thString);
-}
-
-function readCookies() {
-  var live = getCookie("live")
-  if (live) {
-    console.log("Got live flag from cookie: " + live);
-
-    if (live == "true") {
-      INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
-      $("#progressbar-live").css("animation-name", "progressbar-live");
-    }
-
-    $("#live-updates input").filter(function() { 
-      return ($(this).val() === live);
-    }).prop("active", true).trigger("click");
-  }
-
-  var league = getCookie("league");
-  if (!league) {
-    $("#search-league input").filter(function() { 
-      return ($(this).val() === FILTER.league);
-    }).prop("active", true).trigger("click");
-  } else {
+  if (league) {
     console.log("Got league from cookie: " + league);
     FILTER.league = league;
-    
-    $("#search-league input").filter(function() { 
-      return ($(this).val() === league);
-    }).prop("active", true).trigger("click");
   }
+
+  $("#search-league input").filter(function() { 
+    return ($(this).val() === FILTER.league);
+  }).prop("active", true).trigger("click");
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -632,7 +551,7 @@ function makeRequest() {
   };
 
   var request = $.ajax({
-    url: "http://api.poe-stats.com/get",
+    url: "http://159.69.15.81/api/get.php",
     data: data,
     type: "GET",
     async: true,
@@ -640,15 +559,16 @@ function makeRequest() {
   });
 
   request.done(function(json) {
-    ITEMS = json;
-    sortResults();
+    console.log("got " + json.length + " items");
 
-    console.log("got " + ITEMS.length + " items");
+    ITEMS = json;
+
+    sortResults(json);
     
     // Enable "show more" button
-    if (ITEMS.length > PARSE_AMOUNT) {
+    if (json.length > PARSE_AMOUNT) {
       var loadAllDiv = $(".loadall");
-      $("button", loadAllDiv).text("Load more (" + (ITEMS.length - PARSE_AMOUNT) + ")");
+      $("button", loadAllDiv).text("Load more (" + (json.length - PARSE_AMOUNT) + ")");
       loadAllDiv.show();
     }
   });
@@ -704,152 +624,7 @@ function timedRequestCallback() {
 //------------------------------------------------------------------------------------------------------------
 
 function parseItem(item, index) {
-  function buildNameField(item) {
-    let template = TEMPLATE_name.trim();
-  
-    if ( item["icon"] ) {
-      template = template.replace("{{icon}}", item["icon"]);
-    } else if ( item["frame"] === -1 ) {
-      template = template.replace("{{icon}}", ICON_ENCHANTMENT);
-    } else {
-      template = template.replace("{{icon}}", ICON_MISSING);
-    }
-  
-    if (item["frame"] === 9) {
-      template = template.replace("{{foil}}", "class='item-foil'");
-    } else {
-      template = template.replace("{{foil}}", "");
-    }
-  
-    template = template.replace("{{name}}", item["name"]);
-  
-    if ("type" in item) {
-      let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
-      template = template.replace("{{type}}", tmp);
-    } else {
-      template = template.replace("{{type}}", "");
-    }
-  
-    if ("var" in item && item["frame"] !== -1) {
-      let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
-      template = template.replace("{{var_or_tier}}", tmp);
-    } else if ("tier" in item) {
-      let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-      template = template.replace("{{var_or_tier}}", tmp);
-    } else {
-      template = template.replace("{{var_or_tier}}", "");
-    }
-  
-    if (item["history"]["mean"].length < 7) {
-      let tmp = "<span class='badge badge-light'>New</span>";
-      template = template.replace("{{new}}", tmp);
-    } else {
-      template = template.replace("{{new}}", "");
-    }
-    
-    return template;
-  }
-  
-  function buildGemFields(item) {
-    if (item["frame"] !== 4) return "";
-  
-    template = TEMPLATE_gemFields.trim();
-  
-    template = template.replace("{{lvl}}",      item["lvl"]);
-    template = template.replace("{{quality}}",  item["quality"]);
-    
-    if (item["corrupted"] === "1") {
-      template = template.replace("{{color}}",  "red");
-      template = template.replace("{{corr}}",   "✓");
-    } else {
-      template = template.replace("{{color}}",  "green");
-      template = template.replace("{{corr}}",   "✕");
-    }
-  
-    return template;
-  }
-  
-  function buildSparkLine(item) {
-    var svgColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
-    
-    let svg = document.createElement("svg");
-    
-    svg.setAttribute("class", "sparkline " + svgColorClass);
-    svg.setAttribute("width", 60);
-    svg.setAttribute("height", 25);
-    svg.setAttribute("stroke-width", 3);
-  
-    sparkline.sparkline(svg, item["history"]["spark"]);
-  
-    return svg.outerHTML;
-  }
-  
-  function buildPriceFields(item) {
-    var template = TEMPLATE_prices.trim();
-    var chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-    var exContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
-  
-    let sparkLine = buildSparkLine( item );
-    template = template.replace("{{sparkline}}", sparkLine);
-    template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
-    template = template.replace("{{chaos_icon}}", chaosContainer);
-  
-    if ("exalted" in item && item["exalted"] >= 1) {
-      template = template.replace("{{ex_icon}}", exContainer);
-      template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
-    } else {
-      template = template.replace("{{ex_icon}}", "");
-      template = template.replace("{{ex_price}}", "");
-    }
-    
-    return template;
-  }
-  
-  function buildChangeField(item) {
-    let template = TEMPLATE_changeField.trim();
-  
-    if (item["history"]["change"] > MAJOR_CHANGE) {
-      template = template.replace("{{color}}", "green");
-    } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
-      template = template.replace("{{color}}", "orange");
-    } else if (item["history"]["change"] > MINOR_CHANGE) {
-      template = template.replace("{{color}}", "green-lo");
-    } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
-      template = template.replace("{{color}}", "orange-lo");
-    } else {
-      template = template.replace("{{color}}", "gray");
-    }
-  
-    template = template.replace("{{percent}}", Math.round(item["history"]["change"]));
-  
-    return template;
-  }
-  
-  function buildQuantField(item) {
-    let template = TEMPLATE_quantField.trim();
 
-    if (item["frame"] === -1) {
-      if (item["quantity"] >= ENCH_QUANT_HIGH) {
-        template = template.replace("{{color}}", "gray");
-      } else if (item["quantity"] >= ENCH_QUANT_MED) {
-        template = template.replace("{{color}}", "orange");
-      } else {
-        template = template.replace("{{color}}", "red");
-      }
-    } else {
-      if (item["quantity"] >= QUANT_HIGH) {
-        template = template.replace("{{color}}", "gray");
-      } else if (item["quantity"] >= QUANT_MED) {
-        template = template.replace("{{color}}", "orange");
-      } else {
-        template = template.replace("{{color}}", "red");
-      }
-    }
-  
-    template = template.replace("{{quant}}", item["quantity"]);
-  
-    return template;
-  }
 
   // Format name and variant/links badge
   var nameField = buildNameField(item);
@@ -874,24 +649,156 @@ function parseItem(item, index) {
     .replace("{{quant}}",   quantField);
 }
 
+function buildNameField(item) {
+  let template = TEMPLATE_name.trim();
+
+  if ( item["icon"] ) {
+    template = template.replace("{{icon}}", item["icon"]);
+  } else if ( item["frame"] === -1 ) {
+    template = template.replace("{{icon}}", ICON_ENCHANTMENT);
+  } else {
+    template = template.replace("{{icon}}", ICON_MISSING);
+  }
+
+  if (item["frame"] === 9) {
+    template = template.replace("{{foil}}", "class='item-foil'");
+  } else {
+    template = template.replace("{{foil}}", "");
+  }
+
+  template = template.replace("{{name}}", item["name"]);
+
+  if ("type" in item) {
+    let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
+    template = template.replace("{{type}}", tmp);
+  } else {
+    template = template.replace("{{type}}", "");
+  }
+
+  if ("var" in item && item["frame"] !== -1) {
+    let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+    template = template.replace("{{var_or_tier}}", tmp);
+  } else if ("tier" in item) {
+    let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+    template = template.replace("{{var_or_tier}}", tmp);
+  } else {
+    template = template.replace("{{var_or_tier}}", "");
+  }
+
+  if (item["history"]["mean"].length < 7) {
+    let tmp = "<span class='badge badge-light'>New</span>";
+    template = template.replace("{{new}}", tmp);
+  } else {
+    template = template.replace("{{new}}", "");
+  }
+  
+  return template;
+}
+
+function buildGemFields(item) {
+  if (item["frame"] !== 4) return "";
+
+  template = TEMPLATE_gemFields.trim();
+
+  template = template.replace("{{lvl}}",      item["lvl"]);
+  template = template.replace("{{quality}}",  item["quality"]);
+  
+  if (item["corrupted"] === "1") {
+    template = template.replace("{{color}}",  "red");
+    template = template.replace("{{corr}}",   "✓");
+  } else {
+    template = template.replace("{{color}}",  "green");
+    template = template.replace("{{corr}}",   "✕");
+  }
+
+  return template;
+}
+
+function buildSparkLine(item) {
+  var svgColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
+  
+  let svg = document.createElement("svg");
+  
+  svg.setAttribute("class", "sparkline " + svgColorClass);
+  svg.setAttribute("width", 60);
+  svg.setAttribute("height", 25);
+  svg.setAttribute("stroke-width", 3);
+
+  sparkline.sparkline(svg, item["history"]["spark"]);
+
+  return svg.outerHTML;
+}
+
+function buildPriceFields(item) {
+  var template = TEMPLATE_prices.trim();
+  var chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+  var exContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
+
+  let sparkLine = buildSparkLine( item );
+  template = template.replace("{{sparkline}}", sparkLine);
+  template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
+  template = template.replace("{{chaos_icon}}", chaosContainer);
+
+  if ("exalted" in item && item["exalted"] >= 1) {
+    template = template.replace("{{ex_icon}}", exContainer);
+    template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
+  } else {
+    template = template.replace("{{ex_icon}}", "");
+    template = template.replace("{{ex_price}}", "");
+  }
+  
+  return template;
+}
+
+function buildChangeField(item) {
+  let template = TEMPLATE_changeField.trim();
+
+  if (item["history"]["change"] > MAJOR_CHANGE) {
+    template = template.replace("{{color}}", "green");
+  } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
+    template = template.replace("{{color}}", "orange");
+  } else if (item["history"]["change"] > MINOR_CHANGE) {
+    template = template.replace("{{color}}", "green-lo");
+  } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
+    template = template.replace("{{color}}", "orange-lo");
+  } else {
+    template = template.replace("{{color}}", "gray");
+  }
+
+  template = template.replace("{{percent}}", Math.round(item["history"]["change"]));
+
+  return template;
+}
+
+function buildQuantField(item) {
+  let template = TEMPLATE_quantField.trim();
+
+  if (item["frame"] === -1) {
+    if (item["quantity"] >= ENCH_QUANT_HIGH) {
+      template = template.replace("{{color}}", "gray");
+    } else if (item["quantity"] >= ENCH_QUANT_MED) {
+      template = template.replace("{{color}}", "orange");
+    } else {
+      template = template.replace("{{color}}", "red");
+    }
+  } else {
+    if (item["quantity"] >= QUANT_HIGH) {
+      template = template.replace("{{color}}", "gray");
+    } else if (item["quantity"] >= QUANT_MED) {
+      template = template.replace("{{color}}", "orange");
+    } else {
+      template = template.replace("{{color}}", "red");
+    }
+  }
+
+  template = template.replace("{{quant}}", item["quantity"]);
+
+  return template;
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
-
-function getUrlParameter(sParam) {
-  var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-    sURLVariables = sPageURL.split('&'),
-    sParameterName,
-    i;
-
-  for (i = 0; i < sURLVariables.length; i++) {
-    sParameterName = sURLVariables[i].split('=');
-
-    if (sParameterName[0] === sParam) {
-      return sParameterName[1] === undefined ? true : sParameterName[1].trim().toLowerCase();
-    }
-  }
-}
 
 function roundPrice(price) {
   const numberWithCommas = (x) => {
@@ -1033,13 +940,11 @@ function sortResults() {
   for (let index = 0; index < ITEMS.length; index++) {
     const item = ITEMS[index];
 
-    if (PARSE_AMOUNT > 0 && parsed_count > PARSE_AMOUNT) break;
-
-    // Check if item should be displayed in the search
+    if (parsed_count > PARSE_AMOUNT) break;
     if ( checkHideItem(item) ) continue;
 
     // If item has not been parsed, parse it 
-    if (!("tableData" in item)) item["tableData"] = parseItem(item, index);
+    if ( !("tableData" in item) ) item["tableData"] = parseItem(item, index);
 
     tableDataBuffer += item["tableData"];
     parsed_count++;
@@ -1058,10 +963,7 @@ function checkHideItem(item) {
   if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) return true;
 
   // Hide items with different links
-  if (FILTER.links) {
-    if (!("links" in item)) return true;
-    else if (item["links"] !== FILTER.links) return true;
-  } else if ("links" in item) return true;
+  if (FILTER.links && item["links"] !== FILTER.links) return true;
 
   // Sort gems, I guess
   if (item["frame"] === 4) {
@@ -1096,32 +998,4 @@ function checkHideItem(item) {
     var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
     if (!nameBool && !typeBool) return true;
   }
-}
-
-//------------------------------------------------------------------------------------------------------------
-// Other
-//------------------------------------------------------------------------------------------------------------
-
-function countItems() {
-  for (let i = 0; i < ITEMS.length; i++) {
-    const item = ITEMS[i];
-
-    if ("child" in item) {
-      if (item["child"] in COUNTER.categories) {
-        COUNTER.categories[item["child"]]++;
-      } else {
-        COUNTER.categories[item["child"]] = 1;
-      }
-    }
-    
-    if (item["quantity"] < QUANT_MED) COUNTER.lowCount++;
-  }
-
-  COUNTER.categories["all"] = ITEMS.length;
-
-  // Update item counter under confidence toggle radio
-  var test = $("#radio-confidence label");
-  $("span", test[1]).text("Show" + " (" + COUNTER.lowCount + ")");
-
-  console.log(COUNTER);
 }

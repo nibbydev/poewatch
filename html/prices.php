@@ -21,6 +21,15 @@
   <link rel="stylesheet" href="assets/css/prices.css">
 </head>
 <body>
+<!-- Service script -->
+<script>
+ <?php include_once( "assets/php/getLeagues.php" ); ?>
+ <?php include_once( "assets/php/getCategories.php" ); ?>
+  var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
+  var SERVICE_categories = <?php echo json_encode($SERVICE_categories); ?>;
+  var SERVICE_category = <?php echo isset($_GET["category"]) ? "\"" . $_GET["category"] . "\"" : "null" ?>;
+</script>
+<!--/Service script/-->
 <!-- Primary navbar -->
 <nav class="navbar navbar-expand-md navbar-dark">
   <div class="container-fluid">
@@ -46,7 +55,23 @@
 <!-- Secondary navbar -->
 <div class="container-fluid second-navbar m-0 py-1 pr-3">
   <div class="form-group search-league m-0 ml-3">
-    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league"></div>
+    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league">
+
+<?php // Add league radio buttons to second navbar
+  foreach ($SERVICE_leagues as $league) {
+    $outString = "
+    <label class='btn btn-sm btn-outline-dark p-0 px-1 {{active}}'>
+      <input type='radio' name='league' value='$league'>$league
+    </label>";
+
+    echo $outString.trim();
+  }
+
+  unset($league);
+  unset($outString);
+?>
+    
+    </div>
   </div>
   <div class="form-group live-updates m-0">
     <label for="live-updates" class="m-0">Live updates</label>
@@ -212,16 +237,39 @@
           <h4>Low count</h4>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
             <label class="btn btn-outline-dark active">
-              <input type="radio" name="confidence" value="1" checked><a>Hide</a>
+              <input type="radio" name="confidence" value="0" checked><a>Hide</a>
             </label>
             <label class="btn btn-outline-dark">
-              <input type="radio" name="confidence" value=""><a>Show</a>
+              <input type="radio" name="confidence" value="1"><a>Show</a>
             </label>
           </div>
         </div>
         <div class="col-6 col-md-3 mb-2 offset-md-3">
           <h4>Sub-category</h4>
-          <select class="form-control custom-select" id="search-sub"></select>
+          <select class="form-control custom-select" id="search-sub">
+          
+<?php // Add category-sppecific selector fields to sub-category selector
+  if ( !isset($_GET["category"]) ) return;
+
+  foreach ($SERVICE_categories as $categoryElement) {
+    if ( $categoryElement["name"] !== $_GET["category"] ) continue;
+
+    echo "<option value='all'>All</option>";
+
+    foreach ($categoryElement["members"] as $member) {
+      $outString = "
+      <option value='{$member["name"]}'>{$member["display"]}</option>";
+  
+      echo $outString.trim();
+    }
+  }
+
+  unset($categoryElement);
+  unset($outString);
+  unset($member);
+?>
+          
+          </select>
         </div>
         <div class="col-6 col-md-3 mb-2 offset-md-0 offset-6">
           <h4>Search</h4>
@@ -238,7 +286,28 @@
             <div class="card-header slim-card-edge"></div>
             <div class="card-body">
               <table class="table price-table table-striped table-hover mb-0" id="searchResults">
-                <thead><tr></tr></thead>
+                <thead>
+                  <tr>
+                
+<?php // Add table headers based on category
+echo "<th class='w-100' scope='col'>Item</th>";
+
+if ( isset($_GET["category"]) ) {
+  if ( $_GET["category"] === "gems" ) {
+    echo "<th scope='col'>Lvl</th>";
+    echo "<th scope='col'>Qual</th>";
+    echo "<th scope='col'>Corr</th>";
+  }
+}
+
+echo "<th scope='col'>Chaos</th>";
+echo "<th scope='col'>Exalted</th>";
+echo "<th scope='col'>Change</th>";
+echo "<th scope='col'>Count</th>";
+?>
+                
+                  </tr>
+                </thead>
                 <tbody></tbody>
               </table>
               <div class="loadall mt-2">
@@ -260,10 +329,6 @@
   <p>Poe-Stats © 2018</p>
 </footer>
 <!--/Footer/-->
-<!-- Service containers -->
-<div class="service-container" id="service-leagues" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagueList.json" ) ); ?>"></div>
-<div class="service-container" id="service-categories" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/categories.json" ) ); ?>"></div>
-<!--/Service containers/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/prices.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
