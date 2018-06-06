@@ -618,8 +618,6 @@ function timedRequestCallback() {
 //------------------------------------------------------------------------------------------------------------
 
 function parseItem(item, index) {
-
-
   // Format name and variant/links badge
   var nameField = buildNameField(item);
 
@@ -663,7 +661,12 @@ function buildNameField(item) {
     template = template.replace("{{foil}}", "");
   }
 
-  template = template.replace("{{name}}", item["name"]);
+  if (FILTER.category === "enchantments") {
+    template = template.replace("{{name}}", item["name"].replace("#", item["var"]));
+    item["var"] = null;
+  } else {
+    template = template.replace("{{name}}", item["name"]);
+  }
 
   if (item["type"]) {
     let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
@@ -672,7 +675,7 @@ function buildNameField(item) {
     template = template.replace("{{type}}", "");
   }
 
-  if (item["var"] && item["frame"] !== -1) {
+  if (item["var"]) {
     let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else if (item["tier"]) {
