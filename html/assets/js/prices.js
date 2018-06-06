@@ -100,6 +100,7 @@ $(document).ready(function() {
   $("#radio-links").on("change", function(){
     FILTER.links = $("input[name=links]:checked", this).val();
     console.log("Link filter: " + FILTER.links);
+    if (FILTER.links === "none") FILTER.links = null;
     sortResults();
   });
 
@@ -961,7 +962,7 @@ function checkHideItem(item) {
   if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) return true;
 
   // Hide items with different links
-  if (FILTER.links && item["links"] !== FILTER.links) return true;
+  if (item["links"] != FILTER.links) return true;
 
   // Sort gems, I guess
   if (item["frame"] === 4) {
