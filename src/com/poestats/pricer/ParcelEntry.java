@@ -96,8 +96,8 @@ public class ParcelEntry {
     public void calcSpark() {
         double lowestSpark = 0;
         double highestSpark = 0;
-        double firstSpark = 0;
-        double lastSpark = 0;
+        double firstMean = 0;
+        double lastMean = 0;
 
         for (Double mean : history.mean) {
             if (mean != null) {
@@ -120,23 +120,19 @@ public class ParcelEntry {
         }
 
         for (int i = 7; --i > 0;) {
-            if (history.spark[i] != null) {
-                firstSpark = history.spark[i];
+            if (history.mean[i] != null) {
+                firstMean = history.mean[i];
             }
         }
 
         for (int i = 0; i < 7; i++) {
-            if (history.spark[i] != null) {
-                lastSpark = history.spark[i];
+            if (history.mean[i] != null) {
+                lastMean = history.mean[i];
             }
         }
 
-        if (firstSpark == 0 || lastSpark == 0) {
-            history.change = 0;
-        } else {
-            history.change = (1 - firstSpark / lastSpark) * 100;
-            history.change = Math.round(history.change * 1000.0) / 1000.0;
-        }
+        history.change = (1 - firstMean / lastMean) * 100;
+        history.change = Math.round(history.change * 1000.0) / 1000.0;
     }
 
     //------------------------------------------------------------------------------------------------------------
