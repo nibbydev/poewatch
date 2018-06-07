@@ -5,12 +5,12 @@ import java.sql.SQLException;
 
 public class ParcelEntry {
     public class HistoryData {
-        public Double[] mean = new Double[7];
-        public Double[] median = new Double[7];
+        public transient Double[] mean = new Double[7];
+        /*public Double[] median = new Double[7];
         public Double[] mode = new Double[7];
         public Double[] exalted = new Double[7];
         public Integer[] count = new Integer[7];
-        public Integer[] quantity = new Integer[7];
+        public Integer[] quantity = new Integer[7];*/
         public Double[] spark = new Double[7];
         public double change;
     }
@@ -31,7 +31,6 @@ public class ParcelEntry {
     // Sub
     private Integer tier, lvl, quality, corrupted, links;
     private String var, subKey, icon;
-
 
     private HistoryData history = new HistoryData();
     private transient int historyCounter = 7;
@@ -86,12 +85,12 @@ public class ParcelEntry {
         if (--historyCounter < 0) return;
 
         history.mean[historyCounter] = result.getDouble("mean");
-        history.median[historyCounter] = result.getDouble("median");
+        /*history.median[historyCounter] = result.getDouble("median");
         history.mode[historyCounter] = result.getDouble("mode");
         history.exalted[historyCounter] = result.getDouble("exalted");
 
         history.count[historyCounter] = result.getInt("count");
-        history.quantity[historyCounter] = result.getInt("quantity");
+        history.quantity[historyCounter] = result.getInt("quantity");*/
     }
 
     public void calcSpark() {
