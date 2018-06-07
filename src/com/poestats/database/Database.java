@@ -3,6 +3,7 @@ package com.poestats.database;
 import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
+import com.poestats.Misc;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
@@ -305,7 +306,7 @@ public class Database {
                 statement.setString(7, item.getLinks());
                 statement.setString(8, item.getVariation());
                 statement.setString(9, item.getUniqueKey());
-                statement.setString(10, item.getIcon());
+                statement.setString(10, Misc.formatIconURL(item.getIcon()));
 
                 statement.execute();
             }
@@ -783,7 +784,7 @@ public class Database {
     public boolean getOutputHistory(String league, Map<String, ParcelEntry> parcel) {
         league = formatLeague(league);
 
-        String query  = "SELECT * FROM `#_history_"+ league +"` " +
+        String query  = "SELECT `sup`, `sub`, `mean` FROM `#_history_"+ league +"` " +
                         "WHERE `type`='daily' " +
                         "ORDER BY `time` DESC ";
 
