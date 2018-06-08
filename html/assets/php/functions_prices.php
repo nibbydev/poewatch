@@ -1,15 +1,11 @@
 <?php
-if ( !isset($_GET["category"]) ) {
-  header('location:/prices?category=currency');
-  die();
+// Checks whether a category param was passed on to the request
+function CheckAndGetCategoryParam() {
+  if ( !isset($_GET["category"]) ) {
+    header('location:/prices?category=currency');
+    die();
+  } else return $_GET["category"];
 }
-
-include_once ( "details/pdo.php" );
-
-// Define variables that will have their values set
-$SERVICE_leagues = null;
-$SERVICE_categories = null;
-$SERVICE_category = $_GET["category"];
 
 // Get list of categories from DB
 function GetCategories($pdo) {
@@ -19,10 +15,10 @@ function GetCategories($pdo) {
   $stmtParent = $pdo->query($queryParent);
   $stmtChild = $pdo->query($queryChild);
 
-  $SERVICE_categories = array();
+  $rows = array();
 
   while ($row = $stmtParent->fetch()) {
-    $SERVICE_categories[] = array(
+    $rows[] = array(
       "name" => $row["parent"],
       "display" => $row["display"],
       "members" => array()
@@ -30,9 +26,9 @@ function GetCategories($pdo) {
   }
 
   while ($row = $stmtChild->fetch()) {
-    for ($i=0; $i < count($SERVICE_categories); $i++) { 
-      if ($SERVICE_categories[$i]["name"] === $row["parent"]) {
-        $SERVICE_categories[$i]["members"][] = array(
+    for ($i=0; $i < count($rows); $i++) { 
+      if ($rows[$i]["name"] === $row["parent"]) {
+        $rows[$i]["members"][] = array(
           "name" => $row["child"],
           "display" => $row["display"]
         );
@@ -42,25 +38,22 @@ function GetCategories($pdo) {
     }
   }
 
-  return $SERVICE_categories;
+  return $rows;
 }
 
 // Get list of leagues from DB
-function GetLeagues($pdo) {
+function GetLeagues($pdo, $short) {
   $query = "SELECT * FROM `leagues`";
   $stmt = $pdo->query($query);
   
-  $SERVICE_leagues = array();
+  $rows = array();
   
   while ($row = $stmt->fetch()) {
-    $SERVICE_leagues[] = $row["id"];
+    if ($short) $rows[] = $row["id"];
+    else $rows[] = $row;
   }
-  
-  unset($query);
-  unset($stmt);
-  unset($row);
 
-  return $SERVICE_leagues;
+  return $rows;
 }
 
 // Add category-specific selector fields to sub-category selector
@@ -123,7 +116,3 @@ function AddMotdMessage($category) {
 
   echo "</p>";
 }
-
-$SERVICE_categories = GetCategories($pdo);
-$SERVICE_leagues = GetLeagues($pdo);
-

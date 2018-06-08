@@ -1,4 +1,11 @@
-<?php include_once( "assets/php/functions_prices.php" ); ?>
+<?php 
+  include_once ( "assets/php/details/pdo.php" );
+  include_once ( "assets/php/functions_prices.php" ); 
+
+  $SERVICE_category = CheckAndGetCategoryParam();
+  $SERVICE_categories = GetCategories($pdo);
+  $SERVICE_leagues = GetLeagues($pdo, true);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
