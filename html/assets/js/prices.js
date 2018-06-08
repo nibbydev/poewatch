@@ -107,17 +107,23 @@ $(document).ready(function() {
   // Define gem selector and radio event listeners
   $("#select-level").on("change", function(){
     FILTER.gemLvl = $(":selected", this).val();
-    console.log(FILTER.gemLvl);
+    console.log("Gem lvl filter: " + FILTER.gemLvl);
+    if (FILTER.gemLvl === "none") FILTER.gemLvl = null;
+    else FILTER.gemLvl = parseInt(FILTER.gemLvl);
     sortResults();
   });
   $("#select-quality").on("change", function(){
     FILTER.gemQuality = $(":selected", this).val();
-    console.log(FILTER.gemQuality);
+    console.log("Gem quality filter: " + FILTER.gemQuality);
+    if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
+    else FILTER.gemQuality = parseInt(FILTER.gemQuality);
     sortResults();
   });
   $("#radio-corrupted").on("change", function(){
     FILTER.gemCorrupted = $(":checked", this).val();
-    console.log(FILTER.gemCorrupted);
+    console.log("Gem corruption filter: " + FILTER.gemCorrupted);
+    if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
+    else FILTER.gemCorrupted = parseInt(FILTER.gemCorrupted);
     sortResults();
   });
 
@@ -682,7 +688,7 @@ function buildGemFields(item) {
   template = template.replace("{{lvl}}",      item["lvl"]);
   template = template.replace("{{quality}}",  item["quality"]);
   
-  if (item["corrupted"] === "1") {
+  if (item["corrupted"] === 1) {
     template = template.replace("{{color}}",  "red");
     template = template.replace("{{corr}}",   "✓");
   } else {
@@ -746,6 +752,8 @@ function buildChangeField(item) {
   </td>
   `.trim();
 
+  let change = item["history"]["change"] > 999 ? "> +999" : (item["history"]["change"] < -999 ? "< -999" : Math.round(item["history"]["change"]));
+
   if (item["history"]["change"] > MAJOR_CHANGE) {
     template = template.replace("{{color}}", "green");
   } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
@@ -758,9 +766,7 @@ function buildChangeField(item) {
     template = template.replace("{{color}}", "gray");
   }
 
-  template = template.replace("{{percent}}", Math.round(item["history"]["change"]));
-
-  return template;
+  return template.replace("{{percent}}", change);
 }
 
 function buildQuantField(item) {
@@ -966,30 +972,16 @@ function checkHideItem(item) {
 
   // Sort gems, I guess
   if (item["frame"] === 4) {
-    if (FILTER.gemLvl !== "") {
-      if (item["lvl"] != FILTER.gemLvl) return true;
-    }
-    if (FILTER.gemQuality !== "") {
-      if (FILTER.gemQuality) {
-        if (!("quality" in item)) return true;
-        if (item["quality"] != FILTER.gemQuality) return true;
-      } else {
-        if ("quality" in item && item["quality"] > 0) return true;
-      }
-    }
-    // Sort based on corruption selector
-    if (FILTER.gemCorrupted === "1" && item["corrupted"] !== "1") return true;
-    else if (FILTER.gemCorrupted === "0" && item["corrupted"] !== "0") return true;
-  
+    if (FILTER.gemLvl && item["lvl"] != FILTER.gemLvl) return true;
+    if (FILTER.gemQuality && item["quality"] != FILTER.gemQuality) return true;
+    if (FILTER.gemCorrupted && item["corrupted"] !== FILTER.gemCorrupted) return true;
+
   } else if (FILTER.category === "currency") {
     if (item["frame"] === 3 && FILTER.sub === "all") {
       // Hide harbinger pieces under category 'all'
       return true;
     }
-  } else if (item["frame"] === -1) {
-    // Let enchants have a bit different quantity
-    if (item["quantity"] < ENCH_QUANT_MED) return true;
-  }
+  } else if (FILTER.category === "enchantments" && item["quantity"] < ENCH_QUANT_MED) return true;
 
   // String search
   if (FILTER.search) {
