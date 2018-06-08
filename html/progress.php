@@ -1,3 +1,9 @@
+<?php 
+  include_once ( "assets/php/details/pdo.php" );
+  include_once ( "assets/php/functions_prices.php" ); 
+
+  $SERVICE_leagues = GetLeagues($pdo, false);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -71,9 +77,11 @@
   <p>Poe-Stats © 2018</p>
 </footer>
 <!--/Footer/-->
-<!-- Service containers -->
-<div id="service-data" data-payload="<?php echo str_replace('"', "'", file_get_contents( dirname( getcwd(), 2) . "/data/leagueData.json" ) ); ?>"></div>
-<!--/Service containers/-->
+<!-- Service script -->
+<script>
+  var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
+</script>
+<!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/progress.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
