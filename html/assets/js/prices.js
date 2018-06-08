@@ -30,8 +30,8 @@ var ROW_parent, ROW_expanded;
 const PRICE_PERCISION = 100;
 const ENCH_QUANT_HIGH = 10;
 const ENCH_QUANT_MED = 5;
-const QUANT_HIGH = 7;
-const QUANT_MED = 3;
+const QUANT_HIGH = 10;
+const QUANT_MED = 5;
 const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
@@ -660,7 +660,7 @@ function buildNameField(item) {
     template = template.replace("{{var_or_tier}}", "");
   }
 
-  if (item["history"]["mean"].length < 7) {
+  if (item["history"]["spark"].length < 7) {
     let tmp = "<span class='badge badge-light'>New</span>";
     template = template.replace("{{new}}", tmp);
   } else {
@@ -726,7 +726,7 @@ function buildPriceFields(item) {
   template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
   template = template.replace("{{chaos_icon}}", chaosContainer);
 
-  if ("exalted" in item && item["exalted"] >= 1) {
+  if (item["exalted"] >= 1) {
     template = template.replace("{{ex_icon}}", exContainer);
     template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
   } else {
@@ -993,8 +993,8 @@ function checkHideItem(item) {
 
   // String search
   if (FILTER.search) {
-    var nameBool = ("name" in item && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
-    var typeBool = ("type" in item && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
+    var nameBool = (item["name"] && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
+    var typeBool = (item["type"] && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
     if (!nameBool && !typeBool) return true;
   }
 }
