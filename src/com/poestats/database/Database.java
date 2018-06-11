@@ -15,6 +15,7 @@ import com.poestats.relations.IndexRelations;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -582,7 +583,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMean(String league, IndexMap indexMap) {
+    public boolean calculateMean(String league, IndexMap indexMap, List<String> ignoreList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
@@ -595,6 +596,8 @@ public class Database {
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (String index : indexMap.keySet()) {
+                    if (ignoreList.contains(index)) continue;
+
                     String sup = index.substring(0, Config.index_superSize);
                     String sub = index.substring(Config.index_superSize);
 
@@ -617,7 +620,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMedian(String league, IndexMap indexMap) {
+    public boolean calculateMedian(String league, IndexMap indexMap, List<String> ignoreList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
@@ -638,6 +641,8 @@ public class Database {
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (String index : indexMap.keySet()) {
+                    if (ignoreList.contains(index)) continue;
+
                     String sup = index.substring(0, Config.index_superSize);
                     String sub = index.substring(Config.index_superSize);
 
@@ -662,7 +667,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMode(String league, IndexMap indexMap) {
+    public boolean calculateMode(String league, IndexMap indexMap, List<String> ignoreList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
@@ -678,6 +683,8 @@ public class Database {
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (String index : indexMap.keySet()) {
+                    if (ignoreList.contains(index)) continue;
+
                     String sup = index.substring(0, Config.index_superSize);
                     String sub = index.substring(Config.index_superSize);
 
@@ -1014,8 +1021,14 @@ public class Database {
         }
     }
 
-    public boolean removeItemOutliers(String league, IndexMap indexMap){
+    public boolean removeItemOutliers(String league, IndexMap indexMap, List<String> ignoreList){
         league = formatLeague(league);
+
+        String queryX = "SELECT SUM(`dec`) / SUM(`inc`) AS 'discardRatio' " +
+                        "FROM `#_history_"+ league +"` " +
+                        "WHERE `sup`=? AND `sub`=? AND `type`='hourly' " +
+                        "ORDER BY `time` DESC " +
+                        "LIMIT ?";
 
         String query0 = "SET @entryCount = (" +
                         "    SELECT COUNT(`id`)" +
@@ -1055,6 +1068,24 @@ public class Database {
             for (String index : indexMap.keySet()) {
                 String sup = index.substring(0, Config.index_superSize);
                 String sub = index.substring(Config.index_superSize);
+
+                try (PreparedStatement statement = connection.prepareStatement(queryX)) {
+                    statement.setString(1, sup);
+                    statement.setString(2, sub);
+                    statement.setInt(3, Config.outlier_hoursCalculated);
+
+                    ResultSet resultSet = statement.executeQuery();
+
+                    if (resultSet.next()) {
+                        double discardRatio = resultSet.getDouble("discardRatio");
+
+                        if (discardRatio > Config.outlier_discardRatio) {
+                            System.out.printf("Bad ratio (%f) for %s %s\n", discardRatio, sup, sub);
+                            ignoreList.add(index);
+                            continue;
+                        }
+                    }
+                }
 
                 try (PreparedStatement statement = connection.prepareStatement(query0)) {
                     statement.setString(1, sup);

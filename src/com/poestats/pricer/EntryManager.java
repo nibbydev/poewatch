@@ -83,29 +83,30 @@ public class EntryManager {
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = leagueEntry.getId();
             IndexMap indexMap = leagueMap.get(league);
+            List<String> ignoreList = new ArrayList<>();
 
             if (indexMap != null) {
                 Main.DATABASE.createNewItems(league, indexMap);
                 Main.DATABASE.uploadRaw(league, indexMap);
                 Main.DATABASE.updateCounters(league, indexMap);
-                Main.DATABASE.removeItemOutliers(league, indexMap);
+                Main.DATABASE.removeItemOutliers(league, indexMap, ignoreList);
 
-                Main.DATABASE.calculateMean(league, indexMap);
-                Main.DATABASE.calculateMedian(league, indexMap);
-                Main.DATABASE.calculateMode(league, indexMap);
+                Main.DATABASE.calculateMean(league, indexMap, ignoreList);
+                Main.DATABASE.calculateMedian(league, indexMap, ignoreList);
+                Main.DATABASE.calculateMode(league, indexMap, ignoreList);
                 Main.DATABASE.removeOldItemEntries(league, indexMap);
             }
 
             Main.DATABASE.calculateExalted(league);
             Main.DATABASE.addMinutely(league);
-            Main.DATABASE.removeOldHistoryEntries(league, "minutely", "1 HOUR");
+            Main.DATABASE.removeOldHistoryEntries(league, "minutely", Config.sql_interval_1h);
         }
 
         if (status.isSixtyBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
                 String league = leagueEntry.getId();
 
-                Main.DATABASE.removeOldHistoryEntries(league, "hourly", "1 DAY");
+                Main.DATABASE.removeOldHistoryEntries(league, "hourly", Config.sql_interval_1d);
                 Main.DATABASE.addHourly(league);
                 Main.DATABASE.calcQuantity(league);
             }
@@ -116,7 +117,7 @@ public class EntryManager {
                 String league = leagueEntry.getId();
 
                 Main.DATABASE.addDaily(league);
-                Main.DATABASE.removeOldHistoryEntries(league, "daily", "7 DAY");
+                Main.DATABASE.removeOldHistoryEntries(league, "daily", Config.sql_interval_7d);
             }
         }
 

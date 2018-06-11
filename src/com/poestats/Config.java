@@ -18,6 +18,10 @@ public class Config {
         return db_password;
     }
 
+    public static final String sql_interval_1h = "1 HOUR";
+    public static final String sql_interval_1d = "1 DAY";
+    public static final String sql_interval_7d = "7 DAY";
+
     //------------------------------------------------------------------------------------------------------------
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
@@ -25,8 +29,7 @@ public class Config {
     public static final File folder_root        = new File(".");
     public static final File folder_newOutput   = new File(folder_root.getPath(), "output");
     public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
-
-    public static final URL  resource_config     = Main.class.getResource("/resources/" + file_config.getName());
+    public static final URL  resource_config    = Main.class.getResource("/resources/" + file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Index definitions
@@ -61,6 +64,8 @@ public class Config {
     // Entry
     //------------------------------------------------------------------------------------------------------------
 
+    public static final int outlier_hoursCalculated = 1;
+    public static final double outlier_discardRatio = 0.7;
     public static final double outlier_devMulti = 2.0;
     public static final double outlier_minPrice = 0.0;
     public static final double outlier_priceMulti = 2.0;
