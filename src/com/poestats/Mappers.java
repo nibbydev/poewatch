@@ -71,22 +71,22 @@ public class Mappers {
      * Item object
      */
     public static class BaseItem {
-        public int w, h, x, y, ilvl, frameType;
-        public boolean identified, corrupted, enchanted;
-        public String icon, league, id, name, typeLine;
-        public String note;
-        public List<Property> properties;
-        public List<Socket> sockets;
-        public List<String> explicitMods;
+        int w, h, x, y, ilvl, frameType;
+        Boolean identified, corrupted, enchanted;
+        String icon, league, id, name, typeLine;
+        String note;
+        List<Property> properties;
+        List<Socket> sockets;
+        List<String> explicitMods;
 
         // This field varies in the API and cannot be assigned a specific type. A few examples can be seen below:
         // "category": {"jewels": []}
         // "category": {"armour": ["gloves"]}
-        public Object category;
-        public List<String> enchantMods;
+        Object category;
+        List<String> enchantMods;
 
         public void fix() {
-            id = id.substring(0, 16);
+            id = id.substring(0, 32);
             name = name.substring(name.lastIndexOf(">") + 1);
             enchanted = (enchantMods != null);
         }

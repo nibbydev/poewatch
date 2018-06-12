@@ -2,7 +2,8 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.poestats.history.HistoryManager;
+import com.poestats.admin.AdminSuite;
+import com.poestats.database.Database;
 import com.poestats.league.LeagueManager;
 import com.poestats.pricer.EntryManager;
 import com.poestats.relations.RelationManager;
@@ -19,13 +20,12 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
 
     private static GsonBuilder gsonBuilder;
-    public static Config CONFIG;
     public static WorkerManager WORKER_MANAGER;
     public static EntryManager ENTRY_MANAGER;
     public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
-    public static HistoryManager HISTORY_MANAGER;
     public static LeagueManager LEAGUE_MANAGER;
+    public static Database DATABASE;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -37,44 +37,51 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        gsonBuilder = new GsonBuilder();
-        gsonBuilder.disableHtmlEscaping();
+        boolean success;
 
-        // Init admin suite
-        ADMIN = new AdminSuite();
+        try {
+            gsonBuilder = new GsonBuilder();
+            gsonBuilder.disableHtmlEscaping();
+            gsonBuilder.serializeNulls();
 
-        // Make sure basic folder structure exists
-        buildFolderFileStructure();
+            // Init admin suite
+            ADMIN = new AdminSuite();
 
-        CONFIG = new Config();
-        RELATIONS = new RelationManager();
+            // Make sure basic folder structure exists
+            saveResource(Config.resource_config, Config.file_config);
 
-        // Init league manager
-        LEAGUE_MANAGER = new LeagueManager();
-        boolean leagueLoadResult = LEAGUE_MANAGER.loadLeaguesOnStartup();
-        if (!leagueLoadResult) {
-            Main.ADMIN.log_("Unable to get league list", 5);
-            System.exit(0);
+            DATABASE = new Database();
+            DATABASE.connect();
+
+            // Get category, item and currency data
+            RELATIONS = new RelationManager();
+            success = RELATIONS.init();
+            if (!success) return;
+
+            // Init league manager
+            LEAGUE_MANAGER = new LeagueManager();
+
+            // Load list of active leagues on startup
+            success = LEAGUE_MANAGER.loadLeaguesOnStartup();
+            if (!success) return;
+
+            WORKER_MANAGER = new WorkerManager();
+            ENTRY_MANAGER = new EntryManager();
+            ENTRY_MANAGER.setGson(gsonBuilder.create());
+            ENTRY_MANAGER.init();
+
+            // Parse CLI parameters
+            parseCommandParameters(args);
+
+            // Start controller
+            WORKER_MANAGER.start();
+
+            // Initiate main command loop, allowing user some control over the program
+            commandLoop();
+        } finally {
+            if (WORKER_MANAGER != null) WORKER_MANAGER.stopController();
+            if (DATABASE != null) DATABASE.disconnect();
         }
-
-        WORKER_MANAGER = new WorkerManager();
-        ENTRY_MANAGER = new EntryManager();
-        HISTORY_MANAGER = new HistoryManager();
-
-        // Parse CLI parameters
-        parseCommandParameters(args);
-
-        // Start controller
-        WORKER_MANAGER.start();
-
-        // Initiate main command loop, allowing user some control over the program
-        commandLoop();
-
-        // Stop workers on exit
-        WORKER_MANAGER.stopController();
-
-        // Save generated item data
-        RELATIONS.saveData();
     }
 
     /**
@@ -135,7 +142,6 @@ public class Main {
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
-                + "    backup - backup commands\n"
                 + "    counter - counter commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
@@ -154,7 +160,6 @@ public class Main {
                         break;
                     case "exit":
                         System.out.println("[INFO] Shutting down..");
-                        ADMIN.saveChangeID();
                         return;
                     case "id":
                         commandIdAdd(userInput);
@@ -164,9 +169,6 @@ public class Main {
                         break;
                     case "about":
                         commandAbout();
-                        break;
-                    case "backup":
-                        commandBackup(userInput);
                         break;
                     case "counter":
                         commandCounter(userInput);
@@ -184,46 +186,6 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
     // File structure setup
     //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Creates basic file structure on program launch
-     */
-    private static void buildFolderFileStructure() {
-        boolean createdFile = notifyMkDir(Config.folder_data);
-        createdFile = notifyMkDir(Config.folder_database)   || createdFile;
-        createdFile = notifyMkDir(Config.folder_output)     || createdFile;
-        createdFile = notifyMkDir(Config.folder_history)    || createdFile;
-        createdFile = notifyMkDir(Config.folder_backups)    || createdFile;
-
-        createdFile = saveResource(Config.resource_config, Config.file_config)          || createdFile;
-        createdFile = saveResource(Config.resource_relations, Config.file_relations)    || createdFile;
-
-        if (createdFile) {
-            Main.ADMIN.log_("Created new file(s)/folder(s)!", 0);
-            Main.ADMIN.log_("Configure these and restart the program", 0);
-            Main.ADMIN.log_("Press enter to continue...", 0);
-            try { System.in.read(); } catch (IOException ex) {}
-            System.exit(0);
-        }
-    }
-
-    /**
-     * Creates a folder and logs it
-     *
-     * @param file Folder to be created
-     * @return True if success
-     */
-    private static boolean notifyMkDir(File file) {
-        if (file.mkdir()) {
-            try {
-                Main.ADMIN.log_("Created: " + file.getCanonicalPath(), 1);
-            } catch (IOException ex) { }
-
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     /**
      * Reads files from the .jar and writes them to filepath
@@ -356,40 +318,6 @@ public class Main {
     }
 
     /**
-     * Allows creating specific backups from the CLI
-     *
-     * @param userInput Input string
-     */
-    private static void commandBackup(String[] userInput) {
-        String helpString = "[INFO] Available backup commands:\n";
-        helpString += "    'backup 1' - Backup crucial files\n";
-        helpString += "    'backup 2' - Backup everything in output directory\n";
-        helpString += "    'backup 3' - Backup everything in data directory\n";
-
-        if (userInput.length < 2) {
-            System.out.println(helpString);
-            return;
-        }
-
-        switch (userInput[1]) {
-            case "1":
-                ADMIN.backup(new File("./data/database"), "cli_output");
-                ADMIN.backup(new File("./data/history"), "cli_history");
-                ADMIN.backup(new File("./data/itemData.json"), "cli_itemdata");
-                break;
-            case "2":
-                ADMIN.backup(new File("./data/output"), "cli_output");
-                break;
-            case "3":
-                ADMIN.backup(new File("./data/"), "cli_all");
-                break;
-            default:
-                System.out.println(helpString);
-                break;
-        }
-    }
-
-    /**
      * Holds commands that control time counters
      *
      * @param userInput Input string
@@ -415,7 +343,7 @@ public class Main {
 
         switch (userInput[1]) {
             case "24":
-                oldValue = ENTRY_MANAGER.getTwentyFourCounter();
+                oldValue = ENTRY_MANAGER.getStatus().twentyFourCounter;
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -426,10 +354,10 @@ public class Main {
                         return;
                 }
 
-                ENTRY_MANAGER.setTwentyFourCounter(newValue);
+                ENTRY_MANAGER.getStatus().twentyFourCounter = newValue;
                 break;
             case "60":
-                oldValue = ENTRY_MANAGER.getSixtyCounter();
+                oldValue = ENTRY_MANAGER.getStatus().sixtyCounter;
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -440,10 +368,10 @@ public class Main {
                         return;
                 }
 
-                ENTRY_MANAGER.setSixtyCounter(newValue);
+                ENTRY_MANAGER.getStatus().sixtyCounter = newValue;
                 break;
             case "10":
-                oldValue = ENTRY_MANAGER.getTenCounter();
+                oldValue = ENTRY_MANAGER.getStatus().tenCounter;
 
                 switch (userInput[2]) {
                     case "+": newValue = oldValue + value; break;
@@ -454,7 +382,7 @@ public class Main {
                         return;
                 }
 
-                ENTRY_MANAGER.setTenCounter(newValue);
+                ENTRY_MANAGER.getStatus().tenCounter = newValue;
                 break;
             default:
                 System.out.println("Unknown type");

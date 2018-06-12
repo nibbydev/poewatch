@@ -1,34 +1,43 @@
-package com.poestats.relations.entries;
+package com.poestats.pricer;
 
-public class CurrencyRelation {
+public class StatusElement {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String name;
-    private String[] aliases;
+    public long lastRunTime = System.currentTimeMillis();
+    public long twentyFourCounter, sixtyCounter, tenCounter;
+    private volatile boolean tenBool, sixtyBool, twentyFourBool;
 
     //------------------------------------------------------------------------------------------------------------
     // Getters
     //------------------------------------------------------------------------------------------------------------
 
-    public String getName() {
-        return name;
+    public boolean isTwentyFourBool() {
+        return twentyFourBool;
     }
 
-    public String[] getAliases() {
-        return aliases;
+    public boolean isSixtyBool() {
+        return sixtyBool;
+    }
+
+    public boolean isTenBool() {
+        return tenBool;
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Setters
     //------------------------------------------------------------------------------------------------------------
 
-    public void setAliases(String[] aliases) {
-        this.aliases = aliases;
+    public void setTwentyFourBool(boolean twentyFourBool) {
+        this.twentyFourBool = twentyFourBool;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSixtyBool(boolean sixtyBool) {
+        this.sixtyBool = sixtyBool;
+    }
+
+    public void setTenBool(boolean tenBool) {
+        this.tenBool = tenBool;
     }
 }

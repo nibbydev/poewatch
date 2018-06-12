@@ -165,6 +165,8 @@ public class WorkerManager extends Thread {
         int sizeTwo = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1, idTwo.length()));
         int sizeThree = Integer.parseInt(idThree.substring(idThree.lastIndexOf('-') + 1, idThree.length()));
 
+        if (sizeOne > 0) return idOne;
+
         // Compare cluster indexes and return latest
         if (sizeOne < sizeTwo) {
             if (sizeThree < sizeTwo) return idTwo;
@@ -210,7 +212,7 @@ public class WorkerManager extends Thread {
      * @return ChangeID as string
      */
     public String getLocalChangeID() {
-        return downloadChangeID("http://api.poe-stats.com/ChangeID");
+        return downloadChangeID("http://api.poe-stats.com/id");
     }
 
     //------------------------------------------------------------------------------------------------------------

@@ -4,6 +4,8 @@ package com.poestats.league;
 import com.poestats.Config;
 import com.poestats.Main;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,11 +17,18 @@ public class LeagueEntry {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    // TODO: SQL database has additional field display
     private String id, startAt, endAt;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
+
+    public void load(ResultSet resultSet) throws SQLException {
+        id = resultSet.getString("id");
+        startAt = resultSet.getString("start");
+        endAt = resultSet.getString("end");
+    }
 
     /**
      * Finds number of days league has been active for
@@ -80,10 +89,34 @@ public class LeagueEntry {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
+    // Getters
     //------------------------------------------------------------------------------------------------------------
 
     public String getId() {
         return id;
+    }
+
+    public String getEndAt() {
+        return endAt;
+    }
+
+    public String getStartAt() {
+        return startAt;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setEndAt(String endAt) {
+        this.endAt = endAt;
+    }
+
+    public void setStartAt(String startAt) {
+        this.startAt = startAt;
     }
 }

@@ -4,6 +4,9 @@
 /out/
 /src/META-INF/MANIFEST.MF
 /converter-out/
+/data/
+config.cfg
+/output/
 
 # Log file
 *.log

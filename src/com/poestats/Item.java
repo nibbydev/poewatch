@@ -9,9 +9,10 @@ public class Item extends Mappers.BaseItem {
     //------------------------------------------------------------------------------------------------------------
 
     private volatile boolean discard = false;
-    private String priceType, parentCategory, childCategory, key, variation, tier;
+    private String priceType, parentCategory, childCategory, variation;
+    private String genericKey, uniqueKey;
     private double price;
-    private int links, level, quality;
+    private String links, level, quality, tier;
     private boolean doNotIndex;
 
     //------------------------------------------------------------------------------------------------------------
@@ -42,6 +43,11 @@ public class Item extends Mappers.BaseItem {
             case 0: // Normal
             case 1: // Magic
             case 2: // Rare
+                if (enchanted) {
+                    checkEnchant();
+                    break;
+                }
+
                 // If it's not a map, discard it
                 if (!parentCategory.equals("maps")) {
                     discard = true;
@@ -62,10 +68,6 @@ public class Item extends Mappers.BaseItem {
             case 5: // Filter out chaos orbs
                 // Discard specific currency items
                 checkCurrency();
-                break;
-
-            case -1:
-                checkEnchant();
                 break;
 
             default: // Everything else will pass through here
@@ -116,10 +118,13 @@ public class Item extends Mappers.BaseItem {
         key.append('|');
         key.append(frameType);
 
+        // Save the super key
+        genericKey = key.toString();
+
         // If the item has a 5- or 6-link
-        if (links > 4) {
-            if (links == 5) key.append("|links:5");
-            else if (links == 6) key.append("|links:6");
+        if (links != null) {
+            key.append("|links:");
+            key.append(links);
         }
 
         // If the item has a variation
@@ -138,8 +143,8 @@ public class Item extends Mappers.BaseItem {
             key.append(corrupted ? 1 : 0);
         }
 
-        // Convert to string
-        this.key = key.toString();
+        // Save the sub-key
+        uniqueKey = key.toString();
     }
 
     /**
@@ -150,7 +155,7 @@ public class Item extends Mappers.BaseItem {
             discard = true;
         } else if (enchanted) {
             // For pricing items based on their enchants
-            frameType = -1;
+            frameType = 0;
         } else if (frameType == 1 || frameType == 2 || frameType == 7) {
             // Filter out unpriceable items
             discard = true;
@@ -194,7 +199,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!Main.RELATIONS.getCurrencyAliasToName().containsKey(noteList[2])) {
+        if (!Main.RELATIONS.getCurrencyAliases().containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -203,14 +208,14 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
-            typeLine = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
+            typeLine = Main.RELATIONS.getCurrencyAliases().get(noteList[2]);
             priceType = "Chaos Orb";
-            this.price = 1 / (Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision);
+            this.price = (Math.round((1 / price) * Config.item_pricePrecision) / Config.item_pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
             this.price = Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision;
-            priceType = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
+            priceType = Main.RELATIONS.getCurrencyAliases().get(noteList[2]);
         }
     }
 
@@ -267,6 +272,7 @@ public class Item extends Mappers.BaseItem {
     private void checkGemInfo() {
         int lvl = -1;
         int qual = 0;
+        boolean corrupted = false;
 
         // Attempt to extract lvl and quality from item info
         for (Mappers.Property prop : properties) {
@@ -285,22 +291,19 @@ public class Item extends Mappers.BaseItem {
 
         // Begin the long block that filters out gems based on a number of properties
         if (name.equals("Empower Support") || name.equals("Enlighten Support") || name.equals("Enhance Support")) {
-            if (qual < 6) qual = 0;
-            else if (qual < 16) qual = 10;
+            if (qual < 10) qual = 0;
             else qual = 20;
 
             // Quality doesn't matter for lvl 3 and 4
             if (lvl > 2) qual = 0;
         } else {
-            if (lvl < 7) lvl = 1;           // 1  = 1,2,3,4,5,6
-            else if (lvl < 19) lvl = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17,18
-            else if (lvl < 21) lvl = 20;    // 20 = 19,20
+            if (lvl < 15) lvl = 1;          // 1  = 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+            else if (lvl < 21) lvl = 20;    // 20 = 15,16,17,18,19,20
             // 21 = 21
 
-            if (qual < 7) qual = 0;           // 0  = 0,1,2,3,4,5,6
-            else if (qual < 18) qual = 10;    // 10 = 7,8,9,10,11,12,13,14,15,16,17
-            else if (qual < 23) qual = 20;    // 20 = 18,19,20,21,22
-            // 23 = 23
+            if (qual < 17) qual = 0;          // 0  = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+            else if (qual < 22) qual = 20;    // 20 = 17,18,19,20,21
+            // 22,23 = 23
 
             // Gets rid of specific gems
             if (lvl < 20 && qual > 20) qual = 20;         // |4| 1|23|1 and |4|10|23|1
@@ -310,8 +313,9 @@ public class Item extends Mappers.BaseItem {
             if (name.contains("Vaal")) corrupted = true;
         }
 
-        this.level = lvl;
-        this.quality = qual;
+        this.level = Integer.toString(lvl);
+        this.quality = Integer.toString(qual);
+        this.corrupted = corrupted;
     }
 
     /**
@@ -334,23 +338,23 @@ public class Item extends Mappers.BaseItem {
         }
 
         // This was an error somehow, somewhere
-        if (sockets == null) {
-            links = 0;
-            return;
-        }
+        if (sockets == null) return;
 
         // Group links together
-        Integer[] links = new Integer[]{0, 0, 0, 0, 0, 0};
+        Integer[] linkArray = new Integer[]{0, 0, 0, 0, 0, 0};
         for (Mappers.Socket socket : sockets) {
-            links[socket.group]++;
+            linkArray[socket.group]++;
         }
 
         // Find largest single link
-        for (Integer link : links) {
-            if (link > this.links) {
-                this.links = link;
+        int largestLink = 0;
+        for (Integer link : linkArray) {
+            if (link > largestLink) {
+                largestLink = link;
             }
         }
+
+        if (largestLink > 4) links = Integer.toString(largestLink);
     }
 
     /**
@@ -511,6 +515,22 @@ public class Item extends Mappers.BaseItem {
                     }
                 }
                 break;
+
+            case "Combat Focus":
+                // Attempt to match preset mod with item mod
+                for (String explicitMod : explicitMods) {
+                    if (explicitMod.contains("Lightning")) {
+                        variation = "lightning";
+                        break;
+                    } else if (explicitMod.contains("Fire")) {
+                        variation = "fire";
+                        break;
+                    } else if (explicitMod.contains("Cold")) {
+                        variation = "cold";
+                        break;
+                    }
+                }
+                break;
         }
     }
 
@@ -518,15 +538,14 @@ public class Item extends Mappers.BaseItem {
      * Parses item as an enchant
      */
     private void checkEnchant() {
-        parentCategory = "enchantments";
-        icon = null;
-        //childCategory = null;
-        typeLine = null;
-
         if (enchantMods.size() < 1) {
             discard = true;
             return;
         }
+
+        parentCategory = "enchantments";
+        icon = Config.enchantment_icon;
+        typeLine = null;
 
         // Match any negative or positive integer or double
         name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
@@ -583,32 +602,6 @@ public class Item extends Mappers.BaseItem {
             case "Transmutation Shard":
                 discard = true;
                 break;
-            /*case "Portal Scroll":
-            case "Scroll of Wisdom":
-                if (price > 0.1) discard = true;
-                break;
-            case "Chromatic Orb":
-            case "Cartographer's Chisel":
-            case "Armourer's Scrap":
-            case "Jeweller's Orb":
-            case "Orb of Alteration":
-            case "Orb of Augmentation":
-            case "Blacksmith's Whetstone":
-                if (price > 1) discard = true;
-                break;
-            case "Mirror of Kalandra":
-                if (price < 500) discard = true;
-                break;
-            case "Orb of Regret":
-            case "Vaal Orb":
-            case "Regal Orb":
-                if (price < 0.2) discard = true;
-                break;
-            case "Divine Orb":
-            case "Ancient Orb":
-            case "Exalted Orb":
-                if (price < 2) discard = true;
-                break;*/
         }
     }
 
@@ -624,24 +617,20 @@ public class Item extends Mappers.BaseItem {
         return price;
     }
 
-    public int getLevel() {
+    public String getLevel() {
         return level;
     }
 
-    public int getLinks() {
+    public String getLinks() {
         return links;
     }
 
-    public int getQuality() {
+    public String getQuality() {
         return quality;
     }
 
     public String getChildCategory() {
         return childCategory;
-    }
-
-    public String getKey() {
-        return key;
     }
 
     public String getParentCategory() {
@@ -662,5 +651,41 @@ public class Item extends Mappers.BaseItem {
 
     public boolean isDiscard() {
         return discard;
+    }
+
+    public String getUniqueKey() {
+        return uniqueKey;
+    }
+
+    public String getGenericKey() {
+        return genericKey;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return typeLine;
+    }
+
+    public String isCorrupted() {
+        return corrupted == null ? null : (corrupted ? "1" : "0");
+    }
+
+    public int getFrame() {
+        return frameType;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getLeague() {
+        return league;
     }
 }

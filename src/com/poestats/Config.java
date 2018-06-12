@@ -6,45 +6,46 @@ import java.util.regex.Pattern;
 
 public class Config {
     //------------------------------------------------------------------------------------------------------------
+    // Database
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC";
+    public static final String db_username = "root";
+    private static final String db_password = "";
+    public static final String db_database = "ps_test_database";
+
+    public static String getDb_password() {
+        return db_password;
+    }
+
+    public static final String sql_interval_1h = "1 HOUR";
+    public static final String sql_interval_1d = "1 DAY";
+    public static final String sql_interval_7d = "7 DAY";
+
+    //------------------------------------------------------------------------------------------------------------
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
 
     public static final File folder_root        = new File(".");
-    public static final File folder_data        = new File(folder_root.getPath(), "data");
-    public static final File folder_database    = new File(folder_data.getPath(), "database");
-    public static final File folder_output      = new File(folder_data.getPath(), "output");
-    public static final File folder_history     = new File(folder_data.getPath(), "history");
-    public static final File folder_backups     = new File(folder_root.getPath(), "backups");
-
-    public static final File file_leagueData    = new File(folder_data.getPath(),"leagueData.json");
-    public static final File file_leagueList    = new File(folder_data.getPath(),"leagueList.json");
+    public static final File folder_newOutput   = new File(folder_root.getPath(), "output");
     public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
-    public static final File file_relations     = new File(folder_data.getPath(),"currencyRelations.json");
-    public static final File file_itemData      = new File(folder_data.getPath(),"itemData.json");
-    public static final File file_categories    = new File(folder_data.getPath(),"categories.json");
-    public static final File file_changeID      = new File(folder_data.getPath(),"changeID.json");
-    public static final File file_status        = new File(folder_data.getPath(),"status.csv");
-
-    public static final URL  resource_config     = Main.class.getResource("/resources/" + file_config.getName());
-    public static final URL  resource_relations  = Main.class.getResource("/resources/" + file_relations.getName());
+    public static final URL  resource_config    = Main.class.getResource("/resources/" + file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Index definitions
     //------------------------------------------------------------------------------------------------------------
 
-    public static final String index_superBase = "0000";
+    public static final String index_superBase = "00000";
     public static final String index_subBase = "00";
-    public static final String index_separator = "-";
     public static final int index_superSize = index_superBase.length();
     public static final int index_subSize = index_subBase.length();
-    public static final int index_size = index_superSize + index_separator.length() + index_subSize;
+    public static final int index_size = index_superSize + index_subSize;
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
     //------------------------------------------------------------------------------------------------------------
 
     public static final int admin_logSize = 2048;
-    public static final int admin_zipBufferSize = 1024;
 
     //------------------------------------------------------------------------------------------------------------
     // Workers
@@ -63,17 +64,14 @@ public class Config {
     // Entry
     //------------------------------------------------------------------------------------------------------------
 
-    public static final int entry_itemsSize = 64;
-    public static final int entry_tempSize = 16;
-    public static final int entry_minutelySize = 6;
-    public static final int entry_hourlySize = 24;
-    public static final int entry_dailySize = 7;
+    public static final int outlier_hoursCalculated = 1;
+    public static final double outlier_discardRatio = 0.7;
+    public static final double outlier_devMulti = 2.0;
+    public static final double outlier_minPrice = 0.0;
+    public static final double outlier_priceMulti = 2.0;
+    public static final int outlier_minCount = 4;
 
-    public static final int entry_pluckPercentLT2 = 10000;
-    public static final int entry_pluckPercentGT2 = 500;
-
-    public static final int entry_shiftPercent = 80;
-    public static final int entry_shiftPercentNew = 60;
+    public static final int entry_maxCount = 96;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;
@@ -97,8 +95,9 @@ public class Config {
     // Other?
     //------------------------------------------------------------------------------------------------------------
 
-    public static final double item_pricePrecision = 1000.0;
-    public static final int misc_defaultLeagueLength = 90;
+    public static final double item_pricePrecision = 10000.0;
+    public static final int item_pricePrecision2 = 4;
     public static final int monitorTimeoutMS = 500;
     public static final long startTime = System.currentTimeMillis();
+    public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 }

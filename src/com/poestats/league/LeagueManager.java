@@ -18,8 +18,7 @@ public class LeagueManager {
     //------------------------------------------------------------------------------------------------------------
 
     private Gson gson = Main.getGson();
-    private List<LeagueEntry> leagues;
-    private String[] stringLeagues;
+    private List<LeagueEntry> leagues = new ArrayList<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -28,98 +27,136 @@ public class LeagueManager {
     /**
      * Prepares league data lists on program start.
      *
-     * @return False on failure.
+     * @return False on failure
      */
     public boolean loadLeaguesOnStartup() {
-        if (stringLeagues != null) return false;
+        boolean success;
 
-        download();
+        success = downloadLeagueList(leagues);
 
-        if (stringLeagues == null) {
-            readFromFile();
+        // Download failed. Load leagues from database
+        if (!success) {
+            success = Main.DATABASE.getLeagues(leagues);
+
+            // Download failed AND database doesn't have league data. Shut down the program.
+            if (!success) {
+                Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
+                return false;
+            }
         }
 
-        return stringLeagues != null;
+        sortLeagues(leagues);
+
+        // Update database leagues
+        Main.DATABASE.updateLeagues(leagues);
+
+        for (LeagueEntry leagueEntry : leagues) {
+            Main.DATABASE.createLeagueTables(leagueEntry.getId());
+        }
+
+        return true;
     }
 
-    public void download() {
-        List<LeagueEntry> rawLeagueList = downloadLeagueList();
-        if (rawLeagueList == null) return;
+    /**
+     * Downloads leagues, updates database and local arrays
+     *
+     * @return False of failure
+     */
+    public boolean download() {
+        List<LeagueEntry> tmpLeagueList = new ArrayList<>();
+        boolean success;
 
-        leagues = sortLeagues(rawLeagueList);
+        success = downloadLeagueList(tmpLeagueList);
 
-        // Fill stringLeague list
-        stringLeagues = new String[leagues.size()];
-        for (int i = 0; i < leagues.size(); i++) {
-            stringLeagues[i] = leagues.get(i).getId();
+        // Download failed. Load leagues from database
+        if (!success) {
+            success = Main.DATABASE.getLeagues(tmpLeagueList);
+
+            // Download failed AND database doesn't have league data. Shut down the program.
+            if (!success) return false;
         }
 
-        saveDataToFiles();
+        sortLeagues(tmpLeagueList);
+        leagues = tmpLeagueList;
+
+        // Update database leagues if there have been any changes
+        Main.DATABASE.updateLeagues(leagues);
+
+        for (LeagueEntry leagueEntry : leagues) {
+            Main.DATABASE.createLeagueTables(leagueEntry.getId());
+        }
+
+        return true;
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
 
-    private List<LeagueEntry> sortLeagues(List<LeagueEntry> leagueList) {
+    private void sortLeagues(List<LeagueEntry> leagueList) {
+        List<LeagueEntry> sortedLeagueList = new ArrayList<>();
+
         // Get rid of SSF
-        List<LeagueEntry> leagueListNoSSF = new ArrayList<>();
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().contains("SSF")) continue;
-            leagueListNoSSF.add(leagueEntry);
+        for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
+            if (leagueEntry.getId().contains("SSF")) {
+                leagueList.remove(leagueEntry);
+            }
         }
 
-        List<LeagueEntry> tmpLeagueList = new ArrayList<>(leagueListNoSSF.size());
-
         // Add softcore events
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
                 if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
-                    tmpLeagueList.add(leagueEntry);
+                    sortedLeagueList.add(leagueEntry);
                 }
             }
         }
 
         // Add hardcore events
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
                 if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
-                    tmpLeagueList.add(leagueEntry);
+                    sortedLeagueList.add(leagueEntry);
                 }
             }
         }
 
         // Add main softcore league
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
             if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
 
             if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
-                tmpLeagueList.add(leagueEntry);
+                sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add main hardcore league
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
+        for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
             if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
 
             if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
-                tmpLeagueList.add(leagueEntry);
+                sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add Standard
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
-            if (leagueEntry.getId().equals("Standard")) tmpLeagueList.add(leagueEntry);
+        for (LeagueEntry leagueEntry : leagueList) {
+            if (leagueEntry.getId().equals("Standard")) {
+                sortedLeagueList.add(leagueEntry);
+            }
         }
 
         // Add Hardcore
-        for (LeagueEntry leagueEntry : leagueListNoSSF) {
-            if (leagueEntry.getId().equals("Hardcore")) tmpLeagueList.add(leagueEntry);
+        for (LeagueEntry leagueEntry : leagueList) {
+            if (leagueEntry.getId().equals("Hardcore")) {
+                sortedLeagueList.add(leagueEntry);
+            }
         }
 
-        return tmpLeagueList;
+        leagueList.clear();
+        leagueList.addAll(sortedLeagueList);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -131,8 +168,9 @@ public class LeagueManager {
      *
      * @return List of valid LeagueEntry'ies or null on exception
      */
-    private List<LeagueEntry> downloadLeagueList() {
+    private boolean downloadLeagueList(List<LeagueEntry> leagueEntryList) {
         InputStream stream = null;
+        leagueEntryList.clear();
 
         try {
             // Define the request
@@ -166,11 +204,12 @@ public class LeagueManager {
 
             // Attempt to parse league list
             Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
-            return gson.fromJson(stringBuilderBuffer.toString(), listType);
+            leagueEntryList.addAll(gson.fromJson(stringBuilderBuffer.toString(), listType));
+
+            return true;
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
-            Main.ADMIN._log(ex, 3);
-            return null;
+            return false;
         } finally {
             try {
                 if (stream != null) stream.close();
@@ -180,58 +219,11 @@ public class LeagueManager {
         }
     }
 
-    /**
-     * Saves league-related data to files
-     */
-    public void saveDataToFiles() {
-        try (Writer writer = Misc.defineWriter(Config.file_leagueData)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(leagues, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+Config.file_leagueData.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
-        }
-
-        try (Writer writer = Misc.defineWriter(Config.file_leagueList)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(stringLeagues, writer);
-        } catch (IOException ex) {
-            Main.ADMIN.log_("Could not write to '"+Config.file_leagueList.getName()+"'", 3);
-            Main.ADMIN._log(ex, 3);
-        }
-    }
-
-    /**
-     * Reads league-related data from files
-     */
-    public void readFromFile() {
-        try (Reader reader = Misc.defineReader(Config.file_leagueData)) {
-            if (reader == null) {
-                Main.ADMIN.log_("File not found: '" + Config.file_leagueData.getCanonicalPath() + "'", 4);
-                return;
-            }
-
-            Type listType = new TypeToken<List<LeagueEntry>>(){}.getType();
-            leagues = gson.fromJson(reader, listType);
-
-            // Fill stringLeagues
-            for (int i = 0; i < leagues.size(); i++) {
-                stringLeagues[i] = leagues.get(i).getId();
-            }
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
     public List<LeagueEntry> getLeagues() {
         return leagues;
-    }
-
-    public String[] getStringLeagues() {
-        return stringLeagues;
     }
 }
