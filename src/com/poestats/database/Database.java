@@ -1053,11 +1053,11 @@ public class Database {
     public boolean calcQuantity(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_item_"+ league +"` as i " +
+        String query =  "UPDATE `#_item_"+ league +"` as `i` " +
                         "SET `quantity` = (" +
                         "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `#_history_"+ league +"` " +
-                        "    WHERE `sup`=i.`sup` AND `sub`=i.`sub` AND `type`='hourly'" +
-                        "), `inc`=0, `dec`=0";
+                        "    WHERE `id` = `i`.`id` AND `type`=2 " +
+                        "), `inc` = 0, `dec` = 0;";
 
         try {
             try (Statement statement = connection.createStatement()) {
