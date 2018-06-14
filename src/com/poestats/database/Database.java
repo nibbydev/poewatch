@@ -249,7 +249,7 @@ public class Database {
     }
 
     public Integer addChildCategory(int parentId, String childName) {
-        String query1 = "INSERT INTO `category_child` (`id_parent`, `name`,) VALUES (?, ?)";
+        String query1 = "INSERT INTO `category_child` (`id_parent`, `name`) VALUES (?, ?)";
 
         String query2 = "SELECT `id` FROM `category_child` WHERE `id_parent` = ? AND `name` = ?";
 
