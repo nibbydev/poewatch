@@ -155,4 +155,8 @@ public class RelationManager {
     public Map<String, String> getCurrencyAliasToName() {
         return currencyAliasToName;
     }
+
+    public Map<String, CategoryEntry> getCategoryRelations() {
+        return categoryRelations;
+    }
 }

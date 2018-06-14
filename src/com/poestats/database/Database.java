@@ -852,40 +852,33 @@ public class Database {
     // Output data management
     //--------------------------
 
-    public boolean getOutputItems(String league, String category, Map<String, ParcelEntry> parcel) {
+    public boolean getOutputItems(String league, int category, Map<Integer, ParcelEntry> parcel) {
         league = formatLeague(league);
 
         String query =  "SELECT " +
-                        "  i.`sup`, i.`sub`, d.`child`, " +
-                        "  d.`name`, d.`type`, d.`frame`, d.`icon`, " +
-                        "  d.`var`, d.`tier`, d.`lvl`, d.`quality`, d.`corrupted`, d.`links`," +
-                        "  i.`mean`, i.`median`, i.`mode`, i.`exalted`, " +
-                        "  i.`count`, i.`quantity`, d.`supKey`, d.`subKey`" +
-                        "FROM `#_item_"+ league +"` AS i " +
-                        "JOIN (" +
-                        "  SELECT " +
-                        "      p.`sup`, b.`sub`," +
-                        "      p.`child`," +
-                        "      p.`name`, p.`type`," +
-                        "      p.`frame`, b.`icon`," +
-                        "      p.`key` AS 'supKey', b.`key` AS 'subKey'," +
-                        "      b.`var`, b.`tier`, b.`lvl`, b.`quality`, b.`corrupted`, b.`links` " +
-                        "  FROM `item_data_sub` AS b" +
-                        "  JOIN `item_data_sup` AS p" +
-                        "      ON b.`sup` = p.`sup`" +
-                        "  WHERE p.`parent` = ?" +
-                        ") AS d ON i.`sup` = d.`sup` AND i.`sub` = d.`sub`" +
-                        "ORDER BY i.`mean` DESC ";
+                        "    `i`.`id` AS 'id_item', " +
+                        "    `i`.`mean`, `i`.`median`, `i`.`mode`, `i`.`exalted`, " +
+                        "    `i`.`count`, `i`.`quantity`, `i`.`inc`, `i`.`dec`, " +
+                        "    `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'key_parent', " +
+                        "    `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, " +
+                        "    `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'key_child', `idc`.`icon`, " +
+                        "    `cc`.`name` AS 'category_child' " +
+                        "FROM `#_item_"+ league +"` AS `i` " +
+                        "JOIN `item_data_child` AS `idc` ON `i`.`id_data_child` = `idc`.`id` " +
+                        "JOIN `item_data_parent` AS `idp` ON `i`.`id_data_parent` = `idp`.`id` " +
+                        "JOIN `category_child` AS `cc` ON `idp`.`id_category_child` = `cc`.`id` " +
+                        "WHERE `idp`.`id_category_parent` = ? " +
+                        "ORDER BY `i`.`mean` DESC;";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, category);
+                statement.setInt(1, category);
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
                     ParcelEntry parcelEntry = new ParcelEntry();
                     parcelEntry.loadItem(resultSet);
-                    parcel.put(parcelEntry.getIndex(), parcelEntry);
+                    parcel.put(parcelEntry.getId(), parcelEntry);
                 }
             }
 
@@ -897,11 +890,11 @@ public class Database {
         }
     }
 
-    public boolean getOutputHistory(String league, Map<String, ParcelEntry> parcel) {
+    public boolean getOutputHistory(String league, Map<Integer, ParcelEntry> parcel) {
         league = formatLeague(league);
 
-        String query  = "SELECT `sup`, `sub`, `mean` FROM `#_history_"+ league +"` " +
-                        "WHERE `type`='daily' " +
+        String query  = "SELECT `id`, `mean` FROM `#_history_"+ league +"` " +
+                        "WHERE `id_type` = 2 " +
                         "ORDER BY `time` DESC ";
 
         try {
@@ -909,8 +902,8 @@ public class Database {
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
-                    String index = resultSet.getString("sup") + resultSet.getString("sub");
-                    ParcelEntry parcelEntry = parcel.get(index);
+                    Integer id = resultSet.getInt("id");
+                    ParcelEntry parcelEntry = parcel.get(id);
 
                     if (parcelEntry == null) continue;
                     parcelEntry.loadHistory(resultSet);
@@ -1008,7 +1001,7 @@ public class Database {
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
                         "FROM `#_history_"+ league +"` " +
-                        "WHERE `type` = 1 " +
+                        "WHERE `id_type` = 1 " +
                         "GROUP BY `id`";
 
         try {
@@ -1037,7 +1030,7 @@ public class Database {
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
                         "FROM `#_history_"+ league +"` " +
-                        "WHERE `type` = 2 " +
+                        "WHERE `id_type` = 2 " +
                         "GROUP BY `id`";
 
         try {
@@ -1060,7 +1053,7 @@ public class Database {
         String query =  "UPDATE `#_item_"+ league +"` as `i` " +
                         "SET `quantity` = (" +
                         "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `#_history_"+ league +"` " +
-                        "    WHERE `id` = `i`.`id` AND `type`=2 " +
+                        "    WHERE `id` = `i`.`id` AND `id_type` = 2 " +
                         "), `inc` = 0, `dec` = 0;";
 
         try {

@@ -20,17 +20,17 @@ public class ParcelEntry {
     //------------------------------------------------------------------------------------------------------------
 
     // Item
-    private String sup, sub;
+    private int id;
     private double mean, median, mode, exalted;
     private int count, quantity;
 
     // Sup
-    private String child, name, type, supKey;
+    private String child, name, type, parentKey;
     private int frame;
 
     // Sub
     private Integer tier, lvl, quality, corrupted, links;
-    private String var, subKey, icon;
+    private String var, childKey, icon;
 
     private HistoryData history = new HistoryData();
     private transient int historyCounter = 7;
@@ -40,8 +40,7 @@ public class ParcelEntry {
     //------------------------------------------------------------------------------------------------------------
 
     public void loadItem(ResultSet result) throws SQLException {
-        sup = result.getString("sup");
-        sub = result.getString("sub");
+        id = result.getInt("id_item");
 
         mean = result.getDouble("mean");
         median = result.getDouble("median");
@@ -50,14 +49,14 @@ public class ParcelEntry {
         count = result.getInt("count");
         quantity = result.getInt("quantity");
 
-        child = result.getString("child");
+        child = result.getString("category_child");
         name = result.getString("name");
         type = result.getString("type");
-        supKey = result.getString("supKey");
+        parentKey = result.getString("key_parent");
         frame = result.getInt("frame");
 
         var = result.getString("var");
-        subKey = result.getString("subKey");
+        childKey = result.getString("key_child");
         icon = result.getString("icon");
 
         try {
@@ -139,7 +138,8 @@ public class ParcelEntry {
     // Getters
     //------------------------------------------------------------------------------------------------------------
 
-    public String getIndex() {
-        return sup + sub;
+
+    public int getId() {
+        return id;
     }
 }

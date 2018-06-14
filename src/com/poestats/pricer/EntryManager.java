@@ -7,6 +7,7 @@ import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.CurrencyMaps.*;
 import com.poestats.pricer.maps.RawMaps.*;
+import com.poestats.relations.CategoryEntry;
 
 import java.io.File;
 import java.io.IOException;
@@ -126,7 +127,7 @@ public class EntryManager {
         }
     }
 
-    /*private void generateOutputFiles() {
+    private void generateOutputFiles() {
         List<String> oldOutputFiles = new ArrayList<>();
         List<String> newOutputFiles = new ArrayList<>();
 
@@ -136,10 +137,10 @@ public class EntryManager {
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = Database.formatLeague(leagueEntry.getName());
 
-            for (String category : Main.RELATIONS.getCategories().keySet()) {
-                Map<String, ParcelEntry> tmpParcel = new LinkedHashMap<>();
+            for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
+                Map<Integer, ParcelEntry> tmpParcel = new LinkedHashMap<>();
 
-                Main.DATABASE.getOutputItems(league, category, tmpParcel);
+                Main.DATABASE.getOutputItems(league, category.getValue().getId(), tmpParcel);
                 Main.DATABASE.getOutputHistory(league, tmpParcel);
 
                 List<ParcelEntry> parcel = new ArrayList<>();
@@ -148,7 +149,7 @@ public class EntryManager {
                     parcel.add(parcelEntry);
                 }
 
-                String fileName = league + "_" + category + "_" + System.currentTimeMillis() + ".json";
+                String fileName = league + "_" + category.getKey() + "_" + System.currentTimeMillis() + ".json";
                 File outputFile = new File(Config.folder_newOutput, fileName);
 
                 try (Writer writer = Misc.defineWriter(outputFile)) {
@@ -162,7 +163,7 @@ public class EntryManager {
                 try {
                     String path = outputFile.getCanonicalPath();
                     newOutputFiles.add(path);
-                    Main.DATABASE.addOutputFile(league, category, path);
+                    Main.DATABASE.addOutputFile(league, category.getKey(), path);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     Main.ADMIN.log_("Couldn't get file's actual path", 3);
@@ -185,7 +186,7 @@ public class EntryManager {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not delete old output files", 3);
         }
-    }*/
+    }
 
     //------------------------------------------------------------------------------------------------------------
     // Often called controller methods
@@ -243,7 +244,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        /*generateOutputFiles();*/
+        generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message
