@@ -1028,13 +1028,17 @@ public class Database {
     public boolean addDaily(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_history_"+ league +"` (`sup`, `sub`, `type`, `mean`, `median`, `mode`, " +
-                        "                                        `exalted`, `count`, `quantity`, `inc`, `dec`)" +
-                        "    SELECT `sup`, `sub`, 'daily', AVG(`mean`), AVG(`median`), AVG(`mode`), " +
-                        "           AVG(`exalted`), MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "    FROM `#_history_"+ league +"`" +
-                        "    WHERE `type`='hourly'" +
-                        "    GROUP BY `sup`, `sub`";
+        String query =  "INSERT INTO `#_history_"+ league +"` (" +
+                        "   `id`, `id_type`, " +
+                        "   `mean`, `median`, `mode`, `exalted`, " +
+                        "   `count`, `quantity`, `inc`, `dec`)" +
+                        "SELECT " +
+                        "   `id`, 3, " +
+                        "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
+                        "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
+                        "FROM `#_history_"+ league +"` " +
+                        "WHERE `type` = 2 " +
+                        "GROUP BY `id`";
 
         try {
             try (Statement statement = connection.createStatement()) {
