@@ -831,7 +831,7 @@ public class Database {
                         "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb');";
 
         String query2 = "UPDATE `#_item_"+ league +"` " +
-                        "SET `exalted` = IFNULL(`mean` / @exVal, 0.0)";
+                        "SET `exalted` = IF (`mean` = 0.0, 0.0, IF (@exVal = 0.0, 0.0, IFNULL(`mean` / @exVal, 0.0)))";
 
         try {
             try (Statement statement = connection.createStatement()) {
@@ -1135,7 +1135,7 @@ public class Database {
                         "ORDER BY `time` DESC " +
                         "LIMIT ?";
 
-        String query0 = "SET @entryCount = (" +
+        String query0 = "SELECT @entryCount := (" +
                         "    SELECT COUNT(*)" +
                         "    FROM `#_entry_"+ league +"`" +
                         "    WHERE `id_item` = ?);";
@@ -1171,6 +1171,14 @@ public class Database {
 
         try {
             for (Integer id : idList) {
+                int entryCount = 0;
+
+                try (PreparedStatement statement = connection.prepareStatement(query0)) {
+                    statement.setInt(1, id);
+                    ResultSet resultSet = statement.executeQuery();
+                    if (resultSet.next()) entryCount = resultSet.getInt(1);
+                }
+
                 try (PreparedStatement statement = connection.prepareStatement(queryX)) {
                     statement.setInt(1, id);
                     statement.setInt(2, Config.sql_id_category_history_hourly);
@@ -1181,17 +1189,12 @@ public class Database {
                     if (resultSet.next()) {
                         double discardRatio = resultSet.getDouble("discardRatio");
 
-                        if (discardRatio > Config.outlier_discardRatio) {
+                        if (discardRatio > Config.outlier_discardRatio && entryCount > 10) {
                             System.out.printf("Bad ratio (%f) for %s %d\n", discardRatio, league, id);
                             ignoreList.add(id);
                             continue;
                         }
                     }
-                }
-
-                try (PreparedStatement statement = connection.prepareStatement(query0)) {
-                    statement.setInt(1, id);
-                    statement.execute();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query1)) {
