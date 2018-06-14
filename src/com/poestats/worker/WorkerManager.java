@@ -93,9 +93,9 @@ public class WorkerManager extends Thread {
      * Prints out all active workers and their active jobs
      */
     public void printAllWorkers() {
-        // Loop though every worker and print out its job
-        for (Worker workerObject : workerList)
+        for (Worker workerObject : workerList) {
             Main.ADMIN.log_("    " + workerObject.getIndex() + ": " + workerObject.getJob(), 1);
+        }
     }
 
     /**

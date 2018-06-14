@@ -1,6 +1,5 @@
 package com.poestats.relations;
 
-import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
 
@@ -14,9 +13,9 @@ public class RelationManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private final Map<String, String> currencyAliases = new HashMap<>();
-    private final Map<String, List<String>> categories = new HashMap<>();
+    private final Map<String, String> currencyAliasToName = new HashMap<>();
     private final IndexRelations indexRelations = new IndexRelations();
+    private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -28,29 +27,45 @@ public class RelationManager {
     public boolean init() {
         boolean success;
 
-        success = Main.DATABASE.getCurrencyAliases(currencyAliases);
+        success = Main.DATABASE.getCurrencyAliases(currencyAliasToName);
         if (!success) {
             Main.ADMIN.log_("Failed to query currency aliases from database. Shutting down...", 5);
             return false;
-        } else if (currencyAliases.isEmpty()) {
+        } else if (currencyAliasToName.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any currency aliases. Shutting down...", 5);
             return false;
         }
 
-        success = Main.DATABASE.getCategories(categories);
+        success = Main.DATABASE.getCategories(categoryRelations);
         if (!success) {
             Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);
             return false;
-        } else if (categories.isEmpty()) {
+        } else if (categoryRelations.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any category information", 2);
         }
 
-        success = Main.DATABASE.getItemData(indexRelations);
+        success = Main.DATABASE.getItemIds(indexRelations, Main.LEAGUE_MANAGER.getLeagues());
         if (!success) {
-            Main.ADMIN.log_("Failed to query item indexes from database. Shutting down...", 5);
+            Main.ADMIN.log_("Failed to query item ids from database. Shutting down...", 5);
             return false;
-        } else if (indexRelations.getCompleteIndexList().isEmpty()) {
-            Main.ADMIN.log_("Database did not contain any item data information", 2);
+        } else if (indexRelations.isEmpty_leagueToKeyToId()) {
+            Main.ADMIN.log_("Database did not contain any item id information", 2);
+        }
+
+        success = Main.DATABASE.getItemDataParentIds(indexRelations);
+        if (!success) {
+            Main.ADMIN.log_("Failed to query parent item ids from database. Shutting down...", 5);
+            return false;
+        } else if (indexRelations.isEmpty_parentKeyToParentId()) {
+            Main.ADMIN.log_("Database did not contain any parent item id information", 2);
+        }
+
+        success = Main.DATABASE.getItemDataChildIds(indexRelations);
+        if (!success) {
+            Main.ADMIN.log_("Failed to query child item ids from database. Shutting down...", 5);
+            return false;
+        } else if (indexRelations.isEmpty_childKeyToChildId()) {
+            Main.ADMIN.log_("Database did not contain any child item id information", 2);
         }
 
         return true;
@@ -64,68 +79,80 @@ public class RelationManager {
      * Provides an interface for saving and retrieving item data (data, leagues, categories) and indexes
      *
      * @param item Item object to index
-     * @return Generated index of added url
+     * @param league
+     * @return
      */
-    public String indexItem(Item item) {
-        // Manage item category list
-        List<String> childCategories = categories.getOrDefault(item.getParentCategory(), new ArrayList<>());
-        if (item.getChildCategory() != null && !childCategories.contains(item.getChildCategory())) childCategories.add(item.getChildCategory());
-        categories.putIfAbsent(item.getParentCategory(), childCategories);
+    public Integer indexItem(Item item, String league) {
+        indexCategory(item);
 
-        String sup = indexRelations.getGenericKeyToSupIndex().get(item.getGenericKey());
-        String index = indexRelations.getUniqueKeyToFullIndex().get(item.getUniqueKey());
-        String sub;
+        String uniqueKey = item.getUniqueKey();
+        String genericKey = item.getGenericKey();
 
-        if (index != null)  {
-            return index;
-        } else if (item.isDoNotIndex()) {
-            // If there wasn't an already existing index, return null without indexing
-            return null;
-        } else if (sup != null) {
-            sub = findNextSubIndex(sup);
-            index = sup + sub;
+        Integer id = indexRelations.getItemId(league, uniqueKey);
 
-            indexRelations.getCompleteIndexList().add(index);
-            indexRelations.getSupIndexToSubs().get(sup).add(sub);
-            indexRelations.getUniqueKeyToFullIndex().put(item.getUniqueKey(), index);
+        if (id != null) return id;
+        // If there wasn't an already existing parentChildId, return null without indexing
+        if (item.isDoNotIndex()) return null;
 
-            Main.DATABASE.addSubItemData(sup, sub, item);
-        } else {
-            sup = findNextSupIndex();
-            sub = Config.index_subBase;
-            index = sup + sub;
+        Integer parentItemDataId = indexRelations.getParentItemDataId(genericKey);
+        if (parentItemDataId == null) {
+            CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
 
-            indexRelations.getCompleteIndexList().add(index);
-            indexRelations.getSupIndexToSubs().put(sup, new ArrayList<>() {{add(sub);}});
-            indexRelations.getUniqueKeyToFullIndex().put(item.getUniqueKey(), index);
-            indexRelations.getGenericKeyToSupIndex().put(item.getGenericKey(), sup);
+            Integer parentCategoryId = categoryEntry.getId();
+            Integer childCategoryId = categoryEntry.getChildCategoryId(item.getChildCategory());
 
-            Main.DATABASE.addSupItemData(sup, item);
-            Main.DATABASE.addSubItemData(sup, sub, item);
+            parentItemDataId = Main.DATABASE.indexParentItemData(item, parentCategoryId, childCategoryId);
+            indexRelations.addParentKeyToParentItemDataId(genericKey, parentItemDataId);
         }
 
-        return index;
+        Integer childItemDataId = indexRelations.getChildItemDataId(uniqueKey);
+        if (childItemDataId == null) {
+            childItemDataId = Main.DATABASE.indexChildItemData(item, parentItemDataId);
+            indexRelations.addChildKeyToChildItemDataId(uniqueKey, childItemDataId);
+        }
+
+        // Now that we have the item data's ids, we can index the item itself
+        id = Main.DATABASE.indexItem(league, parentItemDataId, childItemDataId);
+
+        indexRelations.addLeagueToKeyToId(league, uniqueKey, id);
+        indexRelations.addLeagueToIds(league, id);
+
+        return id;
     }
 
-    private String findNextSupIndex() {
-        String sup = Integer.toHexString(indexRelations.getSupIndexToSubs().size());
-        return (Config.index_superBase + sup).substring(sup.length());
-    }
+    /**
+     * Manage item category list
+     *
+     * @param item
+     */
+    private void indexCategory(Item item) {
+        CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
 
-    private String findNextSubIndex(String sup) {
-        String sub = Integer.toHexString(indexRelations.getSupIndexToSubs().get(sup).size());
-        return (Config.index_subBase + sub).substring(sub.length());
+        if (categoryEntry == null) {
+            Integer parentId = Main.DATABASE.addParentCategory(item.getParentCategory());
+            if (parentId == null) return;
+
+            categoryEntry = new CategoryEntry();
+            categoryEntry.setId(parentId);
+
+            categoryRelations.put(item.getParentCategory(), categoryEntry);
+        }
+
+        if (item.getChildCategory() != null && !categoryEntry.hasChild(item.getChildCategory())) {
+            int parentId = categoryRelations.get(item.getParentCategory()).getId();
+
+            Integer childId = Main.DATABASE.addChildCategory(parentId, item.getChildCategory());
+            if (childId == null) return;
+
+            categoryEntry.addChild(item.getChildCategory(), childId);
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public Map<String, List<String>> getCategories() {
-        return categories;
-    }
-
-    public Map<String, String> getCurrencyAliases() {
-        return currencyAliases;
+    public Map<String, String> getCurrencyAliasToName() {
+        return currencyAliasToName;
     }
 }

@@ -9,10 +9,10 @@ public class Config {
     // Database
     //------------------------------------------------------------------------------------------------------------
 
-    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC";
+    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false";
     public static final String db_username = "root";
     private static final String db_password = "";
-    public static final String db_database = "ps_test_database";
+    public static final String db_database = "ps_database";
 
     public static String getDb_password() {
         return db_password;
@@ -21,6 +21,8 @@ public class Config {
     public static final String sql_interval_1h = "1 HOUR";
     public static final String sql_interval_1d = "1 DAY";
     public static final String sql_interval_7d = "7 DAY";
+
+    public static final int sql_id_category_history_hourly = 2;
 
     //------------------------------------------------------------------------------------------------------------
     // File and folder locations
@@ -35,6 +37,8 @@ public class Config {
     // Index definitions
     //------------------------------------------------------------------------------------------------------------
 
+    public static final String index_separator = ".";
+    public static final String index_separator_regex = "\\.";
     public static final String index_superBase = "00000";
     public static final String index_subBase = "00";
     public static final int index_superSize = index_superBase.length();

@@ -1,5 +1,8 @@
 package com.poestats.pricer;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 public class StatusElement {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
@@ -8,6 +11,26 @@ public class StatusElement {
     public long lastRunTime = System.currentTimeMillis();
     public long twentyFourCounter, sixtyCounter, tenCounter;
     private volatile boolean tenBool, sixtyBool, twentyFourBool;
+
+    //------------------------------------------------------------------------------------------------------------
+    // Methods
+    //------------------------------------------------------------------------------------------------------------
+
+    public void load(ResultSet resultSet) throws SQLException {
+        while (resultSet.next()) {
+            switch (resultSet.getString("id")) {
+                case "twentyFourCounter":
+                    twentyFourCounter = resultSet.getLong("value");
+                    break;
+                case "sixtyCounter":
+                    sixtyCounter = resultSet.getLong("value");
+                    break;
+                case "tenCounter":
+                    tenCounter = resultSet.getLong("value");
+                    break;
+            }
+        }
+    }
 
     //------------------------------------------------------------------------------------------------------------
     // Getters

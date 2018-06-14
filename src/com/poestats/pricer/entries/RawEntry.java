@@ -3,22 +3,21 @@ package com.poestats.pricer.entries;
 import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.database.CurrencyItem;
-import com.poestats.pricer.maps.CurrencyMap;
+import com.poestats.pricer.maps.CurrencyMaps.*;
 
 public class RawEntry {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String account, priceType, id;
+    private String priceType, id;
     private double price;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
-    public void add (Item item, String accountName) {
-        account = accountName;
+    public void load(Item item) {
         priceType = item.getPriceType();
         price = item.getPrice();
         id = item.getId();
@@ -43,15 +42,11 @@ public class RawEntry {
     // Getters
     //------------------------------------------------------------------------------------------------------------
 
-    public String getId() {
+    public String getItemId() {
         return id;
     }
 
     public String getPriceAsRoundedString() {
         return String.format("%."+ Config.item_pricePrecision2 +"f", price);
-    }
-
-    public String getAccount() {
-        return account;
     }
 }

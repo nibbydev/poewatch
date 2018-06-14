@@ -8,14 +8,14 @@ import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
 import com.poestats.pricer.entries.RawEntry;
-import com.poestats.pricer.maps.CurrencyMap;
-import com.poestats.pricer.maps.IndexMap;
-import com.poestats.pricer.maps.RawList;
 import com.poestats.relations.IndexRelations;
+import com.poestats.pricer.maps.CurrencyMaps.*;
+import com.poestats.pricer.maps.RawMaps.*;
+import com.poestats.relations.CategoryEntry;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,8 +84,14 @@ public class Database {
     // Access methods
     //------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Fills provided List with LeagueEntry objects created from data from database
+     *
+     * @param leagueEntries
+     * @return True on success
+     */
     public boolean getLeagues(List<LeagueEntry> leagueEntries) {
-        String query = "SELECT `id`, `start`, `end` FROM `leagues`";
+        String query = "SELECT * FROM `leagues`";
 
         try {
             try (Statement statement = connection.createStatement()) {
@@ -112,18 +118,23 @@ public class Database {
      * Compares provided league entries to ones present in database, updates any changes and adds missing leagues
      *
      * @param leagueEntries List of the most recent LeagueEntry objects
+     * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "INSERT INTO `leagues` (`id`, `start`, `end`) " +
-                        "VALUES (?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `start`=`start`, `end`=`end`";
+        String query =  "INSERT INTO `leagues` (`name`, `display`, `start`, `end`) " +
+                        "   VALUES (?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "   `start` = VALUES(`start`), " +
+                        "   `end` = VALUES(`end`), " +
+                        "   `display` = VALUES(`display`)";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
-                    statement.setString(1, leagueEntry.getId());
-                    statement.setString(2, leagueEntry.getStartAt());
-                    statement.setString(3, leagueEntry.getEndAt());
+                    statement.setString(1, leagueEntry.getName());
+                    statement.setString(2, leagueEntry.getDisplay());
+                    statement.setString(3, leagueEntry.getStartAt());
+                    statement.setString(4, leagueEntry.getEndAt());
                     statement.addBatch();
                 }
 
@@ -140,30 +151,18 @@ public class Database {
     }
 
     /**
-     * Removes any previous and updates the changeID record in table `changeid`
+     * Removes any previous and updates the changeID record in table `change_id`
      *
      * @param id New changeID string to store
+     * @return True on success
      */
     public boolean updateChangeID(String id) {
-        String query1 = "INSERT INTO `changeid` (`changeid`) VALUES (?)";
-
-        String query2 = "DELETE FROM `changeid` " +
-                        "WHERE `time` NOT IN ( " +
-                        "    SELECT `time` FROM ( " +
-                        "        SELECT `time` " +
-                        "        FROM `changeid` " +
-                        "        ORDER BY `time` DESC " +
-                        "        LIMIT 1 " +
-                        "    ) foo ); ";
+        String query =  "UPDATE `change_id` SET `id` = ?";
 
         try {
-            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, id);
                 statement.execute();
-            }
-
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(query2);
             }
 
             connection.commit();
@@ -177,33 +176,42 @@ public class Database {
 
     /**
      * Gets a list of parent and child categories and their display names from the database
+     *
+     * @param categoryRelations
+     * @return Id of category or null on failure
      */
-    public boolean getCategories(Map<String, List<String>> tmpCategories) {
+    public boolean getCategories(Map<String, CategoryEntry> categoryRelations) {
+        Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
+
         String query =  "SELECT " +
-                        "    `category_parent`.`parent`, " +
-                        "    `category_parent`.`display`, " +
-                        "    `category_child`.`child`, " +
-                        "    `category_child`.`display` " +
-                        "FROM `category_child`" +
-                        "    JOIN `category_parent`" +
-                        "        ON `category_child`.`parent` = `category_parent`.`parent`";
+                        "    `cp`.`name` AS 'name_parent', " +
+                        "    `cc`.`name` AS 'name_child', " +
+                        "    `cp`.`id` AS 'id_parent', " +
+                        "    `cc`.`id` AS 'id_child' " +
+                        "FROM `category_parent` AS `cp` " +
+                        "    LEFT JOIN `category_child` AS `cc` " +
+                        "        ON `cp`.`id` = `cc`.`id_parent`";
 
         try {
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    String parent = resultSet.getString(1);
-                    String parentDisplay = resultSet.getString(2);
+                    String name_parent = resultSet.getString("name_parent");
+                    String name_child = resultSet.getString("name_child");
 
-                    String child = resultSet.getString(3);
-                    String childDisplay = resultSet.getString(4);
+                    Integer id_parent = resultSet.getInt("id_parent");
+                    Integer id_child = resultSet.getInt("id_child");
 
-                    List<String> childCategories = tmpCategories.getOrDefault(parent, new ArrayList<>());
-                    childCategories.add(child);
-                    tmpCategories.putIfAbsent(parent, childCategories);
+                    CategoryEntry categoryEntry = tmpCategoryRelations.getOrDefault(name_parent, new CategoryEntry());
+                    categoryEntry.setId(id_parent);
+                    if (name_child != null) categoryEntry.addChild(name_child, id_child);
+                    tmpCategoryRelations.putIfAbsent(name_parent, categoryEntry);
                 }
             }
+
+            categoryRelations.clear();
+            categoryRelations.putAll(tmpCategoryRelations);
 
             return true;
         } catch (SQLException ex) {
@@ -213,119 +221,290 @@ public class Database {
         }
     }
 
-    //--------------------
-    // Item data
-    //--------------------
+    public Integer addParentCategory(String parentName) {
+        String query1 = "INSERT INTO `category_parent` (`name`) VALUES (?)";
 
-    /**
-     * Get item data relations from database
-     * TODO: simplify resultSet operation
-     */
-    public boolean getItemData(IndexRelations indexRelations) {
-        String query =  "SELECT " +
-                        "    `item_data_sup`.`sup`, " +
-                        "    `item_data_sub`.`sub`, " +
-                        "    `item_data_sup`.`key` AS 'genericKey', " +
-                        "    `item_data_sub`.`key` AS 'uniqueKey' " +
-                        "FROM `item_data_sub`" +
-                        "    JOIN `item_data_sup`" +
-                        "        ON `item_data_sub`.`sup` = `item_data_sup`.`sup`";
+        String query2 = "SELECT `id` FROM `category_parent` WHERE `name` = ?";
 
         try {
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                statement.setString(1, parentName);
+                statement.execute();
+            }
+
+            connection.commit();
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setString(1, parentName);
+
                 ResultSet resultSet = statement.executeQuery();
+                return resultSet.next() ? resultSet.getInt("id") : null;
+            }
 
-                List<String> completeIndexList = indexRelations.getCompleteIndexList();
-                Map<String, List<String>> supIndexToSubs = indexRelations.getSupIndexToSubs();
-                Map<String, String> uniqueKeyToFullIndex = indexRelations.getUniqueKeyToFullIndex();
-                Map<String, String> genericKeyToSupIndex = indexRelations.getGenericKeyToSupIndex();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not add parent category to database", 3);
+            return null;
+        }
+    }
 
-                while (resultSet.next()) {
-                    String sup = resultSet.getString("sup");
-                    String sub = resultSet.getString("sub");
-                    String uniqueKey = resultSet.getString("uniqueKey");
-                    String genericKey = resultSet.getString("genericKey");
-                    String index = sup + sub;
+    public Integer addChildCategory(int parentId, String childName) {
+        String query1 = "INSERT INTO `category_child` (`id_parent`, `name`,) VALUES (?, ?)";
 
-                    completeIndexList.add(index);
-                    uniqueKeyToFullIndex.put(uniqueKey, index);
-                    genericKeyToSupIndex.putIfAbsent(genericKey, sup);
+        String query2 = "SELECT `id` FROM `category_child` WHERE `id_parent` = ? AND `name` = ?";
 
-                    List<String> subIndexes = supIndexToSubs.getOrDefault(sup, new ArrayList<>());
-                    subIndexes.add(sub);
-                    supIndexToSubs.putIfAbsent(sup, subIndexes);
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                statement.setInt(1, parentId);
+                statement.setString(2, childName);
+                statement.execute();
+            }
+
+            connection.commit();
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setInt(1, parentId);
+                statement.setString(2, childName);
+
+                ResultSet resultSet = statement.executeQuery();
+                return resultSet.next() ? resultSet.getInt("id") : null;
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not add child category to database", 3);
+            return null;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Get item IDs
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Gets all item keys and IDs from every league item table
+     *
+     * @param indexRelations
+     * @param leagueEntries
+     * @return True on success
+     */
+    public boolean getItemIds(IndexRelations indexRelations, List<LeagueEntry> leagueEntries) {
+        try {
+            for (LeagueEntry leagueEntry : leagueEntries) {
+                String league = leagueEntry.getName();
+                String queryLeague = formatLeague(leagueEntry.getName());
+
+                String query =  "SELECT " +
+                                "    `i`.`id`, `idc`.`key` " +
+                                "FROM `#_item_"+ queryLeague +"` AS `i` " +
+                                "JOIN `item_data_child` AS `idc` " +
+                                "    ON `i`.`id_data_child` = `idc`.`id`";
+
+                try (Statement statement = connection.createStatement()) {
+                    ResultSet resultSet = statement.executeQuery(query);
+                    indexRelations.loadItemIds(resultSet, league);
                 }
             }
 
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not query item indexes", 3);
+            Main.ADMIN.log_("Could not query item ids", 3);
             return false;
         }
     }
 
-    public boolean addSupItemData(String sup, Item item) {
-        String query =  "INSERT INTO `item_data_sup` (`sup`,`parent`,`child`,`name`,`type`,`frame`,`key`) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    /**
+     * Gets all item keys and IDs from the parent item data table
+     *
+     * @param indexRelations
+     * @return True on success
+     */
+    public boolean getItemDataParentIds(IndexRelations indexRelations) {
+        String query =  "SELECT `key`, `id` FROM `item_data_parent`";
 
         try {
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, item.getParentCategory());
-                statement.setString(3, item.getChildCategory());
-                statement.setString(4, item.getName());
-                statement.setString(5, item.getType());
-                statement.setInt(6, item.getFrame());
-                statement.setString(7, item.getGenericKey());
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+                indexRelations.loadItemDataParentIds(resultSet);
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not query parent item data ids", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Gets all item keys and IDs from the parent item data table
+     *
+     * @param indexRelations
+     * @return True on success loadItemDataChildIds
+     */
+    public boolean getItemDataChildIds(IndexRelations indexRelations) {
+        String query =  "SELECT `key`, `id` FROM `item_data_child`";
+
+        try {
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+                indexRelations.loadItemDataChildIds(resultSet);
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not query child item data ids", 3);
+            return false;
+        }
+    }
+
+
+    //------------------------------------------------------------------------------------------------------------
+    // Indexing
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Creates a new item entry in the league-specific item table if the item has not previously been indexed
+     *
+     * @param league
+     * @param parentId
+     * @param childId
+     * @return Id of created item entry or null on failure
+     */
+    public Integer indexItem(String league, int parentId, int childId) {
+        league = formatLeague(league);
+
+        String query1 = "INSERT INTO `#_item_"+ league +"` (`id_data_parent`, `id_data_child`) VALUES (?, ?)";
+
+        String query2 = "SELECT `id` FROM `#_item_"+ league +"` WHERE `id_data_parent` = ? AND `id_data_child` = ?";
+
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                statement.setInt(1, parentId);
+                statement.setInt(2, childId);
 
                 statement.execute();
             }
 
             connection.commit();
-            return true;
-        } catch (SQLException ex) {
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setInt(1, parentId);
+                statement.setInt(2, childId);
+
+                ResultSet resultSet = statement.executeQuery();
+                return resultSet.next() ? resultSet.getInt("id") : null;
+            }
+
+        } catch (Exception ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not update full item data in database", 3);
-            return false;
+            Main.ADMIN.log_("Could not create item in database", 3);
+            return null;
         }
     }
 
-    public boolean addSubItemData(String sup, String sub, Item item) {
-        String query =  "INSERT INTO `item_data_sub`" +
-                        "    (`sup`,`sub`,`tier`,`lvl`,`quality`,`corrupted`,`links`,`var`,`key`,`icon`) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    /**
+     * Saves generic item data to database
+     *
+     * @param item
+     * @return Id of created entry or null on failure
+     */
+    public Integer indexParentItemData(Item item, int parentCategoryId, Integer childCategoryId) {
+        String query1 = "INSERT INTO `item_data_parent` (" +
+                        "   `id_category_parent`, `id_category_child`, " +
+                        "   `name`, `type`, `frame`, `key`) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)";
+
+        String query2 = "SELECT `id` FROM `item_data_parent` WHERE `key` = ?";
 
         try {
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, sup);
-                statement.setString(2, sub);
-                statement.setString(3, item.getTier());
-                statement.setString(4, item.getLevel());
-                statement.setString(5, item.getQuality());
-                statement.setString(6, item.isCorrupted());
-                statement.setString(7, item.getLinks());
-                statement.setString(8, item.getVariation());
-                statement.setString(9, item.getUniqueKey());
-                statement.setString(10, Misc.formatIconURL(item.getIcon()));
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                statement.setInt(1, parentCategoryId);
+
+                if (childCategoryId == null) statement.setNull(2, 0);
+                else statement.setInt(2, childCategoryId);
+
+                statement.setString(3, item.getName());
+                statement.setString(4, item.getType());
+                statement.setInt(5, item.getFrame());
+                statement.setString(6, item.getGenericKey());
 
                 statement.execute();
             }
 
-            // Commit changes
             connection.commit();
-            return true;
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setString(1, item.getGenericKey());
+                ResultSet resultSet = statement.executeQuery();
+
+                if (resultSet.next()) return resultSet.getInt("id");
+                else return null;
+            }
+
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not update sub item data in database", 3);
-            return false;
+            Main.ADMIN.log_("Could not index parent item in database", 3);
+            return null;
         }
     }
 
+    /**
+     * Saves specific item data to database
+     *
+     * @param item
+     * @param parentId
+     * @return Id of created entry or null on failure
+     */
+    public Integer indexChildItemData(Item item, int parentId) {
+        String query1 = "INSERT INTO `item_data_child` (" +
+                        "   `id_parent`, `tier`, `lvl`, `quality`, " +
+                        "   `corrupted`, `links`, `var`, `key`, `icon`) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    //--------------------
+        String query2 = "SELECT `id` FROM `item_data_child` " +
+                        "WHERE `id_parent` = ? AND `key` = ? " +
+                        "LIMIT 1";
+
+        try {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                statement.setInt(1, parentId);
+
+                statement.setString(2, item.getTier());
+                statement.setString(3, item.getLevel());
+                statement.setString(4, item.getQuality());
+                statement.setString(5, item.isCorrupted());
+                statement.setString(6, item.getLinks());
+                statement.setString(7, item.getVariation());
+                statement.setString(8, item.getUniqueKey());
+                statement.setString(9, Misc.formatIconURL(item.getIcon()));
+
+                statement.execute();
+            }
+
+            connection.commit();
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setInt(1, parentId);
+                statement.setString(2, item.getUniqueKey());
+
+                ResultSet resultSet = statement.executeQuery();
+
+                return resultSet.next() ? resultSet.getInt("id") : null;
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not index child item in database", 3);
+            return null;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
     // Status
-    //--------------------
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Queries status timers from the database
@@ -339,20 +518,7 @@ public class Database {
         try {
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    switch (resultSet.getString("name")) {
-                        case "twentyFourCounter":
-                            statusElement.twentyFourCounter = resultSet.getLong("val");
-                            break;
-                        case "sixtyCounter":
-                            statusElement.sixtyCounter = resultSet.getLong("val");
-                            break;
-                        case "tenCounter":
-                            statusElement.tenCounter = resultSet.getLong("val");
-                            break;
-                    }
-                }
+                statusElement.load(resultSet);
             }
 
             return true;
@@ -370,13 +536,14 @@ public class Database {
      * @return True on success
      */
     public boolean updateStatus(StatusElement statusElement) {
-        String query =  "INSERT INTO `status` (`val`, `name`)" +
-                        "    VALUES (?, ?) " +
-                        "ON DUPLICATE KEY UPDATE" +
-                        "    `val`= VALUES(`val`)";
+        String query =  "UPDATE `status` SET `value` = ? WHERE `id` = ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setLong(1, statusElement.lastRunTime);
+                statement.setString(2, "lastRunTime");
+                statement.addBatch();
+
                 statement.setLong(1, statusElement.twentyFourCounter);
                 statement.setString(2, "twentyFourCounter");
                 statement.addBatch();
@@ -387,10 +554,6 @@ public class Database {
 
                 statement.setLong(1, statusElement.tenCounter);
                 statement.setString(2, "tenCounter");
-                statement.addBatch();
-
-                statement.setLong(1, statusElement.lastRunTime);
-                statement.setString(2, "lastRunTime");
                 statement.addBatch();
 
                 statement.executeBatch();
@@ -405,9 +568,9 @@ public class Database {
         }
     }
 
-    //--------------------
+    //------------------------------------------------------------------------------------------------------------
     // Entry management
-    //--------------------
+    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Queries database and fills out provided CurrencyMap with CurrencyItems
@@ -420,21 +583,17 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "SELECT " +
-                        "    i.`sup`, i.`sub`, d.`name`," +
-                        "    i.`mean`, i.`median`, i.`mode`, i.`exalted`," +
-                        "    i.`count`, i.`quantity`, i.`inc`, i.`dec` " +
-                        "FROM `#_item_"+ league +"` AS i" +
-                        "    INNER JOIN `item_data_sup` AS d" +
-                        "        ON i.`sup` = d.`sup` " +
-                        "WHERE EXISTS (" +
-                        "    SELECT * FROM `item_data_sup` AS a " +
-                        "    WHERE a.`sup` = i.`sup` " +
-                        "    AND a.`parent` = 'currency'" +
-                        "    AND a.`frame` = 5)";
+                        "   `idp`.`name`, `i`.`id_data_parent`, `i`.`id_data_child`, " +
+                        "   `i`.`mean`, `i`.`median`, `i`.`mode`, `i`.`exalted`, " +
+                        "   `i`.`count`, `i`.`quantity`, `i`.`inc`, `i`.`dec` " +
+                        "FROM `#_item_"+ league +"` AS `i` " +
+                        "    INNER JOIN `item_data_parent` AS `idp` " +
+                        "        ON `i`.`id_data_parent` = `idp`.`id` " +
+                        "WHERE `idp`.`id_category_parent` = 4 AND `idp`.`frame` = 5";
 
         try {
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                ResultSet resultSet = statement.executeQuery();
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
                     String name = resultSet.getString("name");
@@ -453,18 +612,30 @@ public class Database {
         }
     }
 
-    public boolean getCurrencyAliases(Map<String, String> currencyAliases) {
-        String query =  "SELECT * FROM `currency_aliases`";
+    /**
+     * Fills provided Map with currency alias data from database
+     *
+     * @param currencyAliasToName
+     * @return True on success
+     */
+    public boolean getCurrencyAliases(Map<String, String> currencyAliasToName) {
+        String query =  "SELECT " +
+                        "    `ci`.`id` AS 'id_item', " +
+                        "    `ca`.`id` AS 'id_alias', " +
+                        "    `ci`.`name` AS 'name_item', " +
+                        "    `ca`.`name` AS 'name_alias' " +
+                        "FROM `currency_item` AS `ci` " +
+                        "    JOIN `currency_alias` AS `ca` " +
+                        "        ON `ci`.`id` = `ca`.`id_parent`";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
-                    String alias = resultSet.getString("alias");
-                    String name = resultSet.getString("name");
-
-                    currencyAliases.put(alias, name);
+                    String name_item = resultSet.getString("name_item");
+                    String name_alias = resultSet.getString("name_alias");
+                    currencyAliasToName.put(name_alias, name_item);
                 }
             }
 
@@ -477,27 +648,25 @@ public class Database {
     }
 
 
-    public boolean uploadRaw(String league, IndexMap indexMap) {
+    public boolean uploadRaw(String league, IndexMap idToAccountToRawEntry) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_entry_"+ league +"` (`sup`, `sub`, `price`, `account`, `id`) " +
-                        "VALUES (?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `price`=`price`";
+        String query =  "INSERT INTO `#_entry_"+ league +"` (`id_item`, `price`, `account`, `item_id`) " +
+                        "VALUES (?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE `price` = `price`";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    RawList rawList = indexMap.get(index);
+                for (Integer id : idToAccountToRawEntry.keySet()) {
+                    AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
 
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
+                    for (String account : accountToRawEntry.keySet()) {
+                        RawEntry rawEntry = accountToRawEntry.get(account);
 
-                    for (RawEntry rawEntry : rawList) {
-                        statement.setString(1, sup);
-                        statement.setString(2, sub);
-                        statement.setString(3, rawEntry.getPriceAsRoundedString());
-                        statement.setString(4, rawEntry.getAccount());
-                        statement.setString(5, rawEntry.getId());
+                        statement.setInt(1, id);
+                        statement.setString(2, rawEntry.getPriceAsRoundedString());
+                        statement.setString(3, account);
+                        statement.setString(4, rawEntry.getItemId());
                         statement.addBatch();
                     }
                 }
@@ -514,60 +683,22 @@ public class Database {
         }
     }
 
-    /**
-     * Creates a new item entry in the league-specific item table if the item has not previously been indexed
-     *
-     * @param league League table to pick
-     * @param indexMap IndexMap of indexes to check
-     * @return True on success
-     */
-    public boolean createNewItems(String league, IndexMap indexMap) {
-        league = formatLeague(league);
-
-        String query =  "INSERT INTO `#_item_"+ league +"` (`sup`, `sub`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `sup`=`sup`";
-
-        try {
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not create item in database", 3);
-            return false;
-        }
-    }
-
-    public boolean updateCounters(String league, IndexMap indexMap) {
+    public boolean updateCounters(String league, IndexMap idToAccountToRawEntry) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
-                        "SET `count`=`count` + ?, `inc`=`inc` + ? " +
-                        "WHERE `sup`= ? AND `sub`= ?";
+                        "SET `count` = `count` + ?, `inc` = `inc` + ? " +
+                        "WHERE `id`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    RawList rawList = indexMap.get(index);
+                for (Integer id : idToAccountToRawEntry.keySet()) {
+                    AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
 
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
+                    statement.setInt(1, accountToRawEntry.size());
+                    statement.setInt(2, accountToRawEntry.size());
+                    statement.setInt(3, id);
 
-                    statement.setInt(1, rawList.size());
-                    statement.setInt(2, rawList.size());
-                    statement.setString(3, sup);
-                    statement.setString(4, sub);
                     statement.addBatch();
                 }
 
@@ -583,28 +714,23 @@ public class Database {
         }
     }
 
-    public boolean calculateMean(String league, IndexMap indexMap, List<String> ignoreList) {
+    public boolean calculateMean(String league, List<Integer> idList, List<Integer> ignoreList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
                         "SET `mean` = (" +
                         "    SELECT IFNULL(AVG(`price`), 0.0) " +
                         "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `sup`= ? AND `sub`= ?" +
-                        ") WHERE `sup`= ? AND `sub`= ?";
+                        "    WHERE `id_item`= ?" +
+                        ") WHERE `id`= ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    if (ignoreList.contains(index)) continue;
+                for (Integer id : idList) {
+                    if (ignoreList.contains(id)) continue;
 
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setString(3, sup);
-                    statement.setString(4, sub);
+                    statement.setInt(1, id);
+                    statement.setInt(2, id);
                     statement.addBatch();
                 }
 
@@ -620,7 +746,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMedian(String league, IndexMap indexMap, List<String> ignoreList) {
+    public boolean calculateMedian(String league, List<Integer> idList, List<Integer> ignoreList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
@@ -628,30 +754,24 @@ public class Database {
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
                         "        FROM `#_entry_"+ league +"` d,  (SELECT @rownum:=0) r" +
-                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "        WHERE `id_item` = ?" +
                         "        ORDER BY d.`price`" +
                         "    ) as t1, (" +
                         "        SELECT count(*) as total_rows" +
                         "        FROM `#_entry_"+ league +"` d" +
-                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "        WHERE `id_item` = ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) WHERE `sup`= ? AND `sub`= ?";
+                        "), 0.0) WHERE `id` = ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    if (ignoreList.contains(index)) continue;
+                for (Integer id : idList) {
+                    if (ignoreList.contains(id)) continue;
 
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setString(3, sup);
-                    statement.setString(4, sub);
-                    statement.setString(5, sup);
-                    statement.setString(6, sub);
+                    statement.setInt(1, id);
+                    statement.setInt(2, id);
+                    statement.setInt(3, id);
                     statement.addBatch();
                 }
 
@@ -667,31 +787,26 @@ public class Database {
         }
     }
 
-    public boolean calculateMode(String league, IndexMap indexMap, List<String> ignoreList) {
+    public boolean calculateMode(String league, List<Integer> idList, List<Integer> ignoreList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_item_"+ league +"` " +
                         "SET `mode` = IFNULL(( " +
                         "    SELECT `price` FROM `#_entry_"+ league +"`" +
-                        "    WHERE `sup`= ? AND `sub`= ?" +
+                        "    WHERE `id_item` = ?" +
                         "    GROUP BY `price` " +
                         "    ORDER BY COUNT(*) DESC " +
                         "    LIMIT 1" +
                         "), 0.0) " +
-                        "WHERE `sup`= ? AND `sub`= ?";
+                        "WHERE `id` = ?";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    if (ignoreList.contains(index)) continue;
+                for (Integer id : idList) {
+                    if (ignoreList.contains(id)) continue;
 
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setString(3, sup);
-                    statement.setString(4, sub);
+                    statement.setInt(1, id);
+                    statement.setInt(2, id);
                     statement.addBatch();
                 }
 
@@ -711,15 +826,9 @@ public class Database {
         league = formatLeague(league);
 
         String query1 = "SET @exVal = (" +
-                        "    SELECT  `mean`" +
-                        "    FROM (SELECT `sup`, `mean` FROM `#_item_"+ league +"`) AS i" +
-                        "        INNER JOIN `item_data_sup` AS d" +
-                        "            ON i.`sup` = d.`sup`" +
-                        "    WHERE EXISTS (" +
-                        "        SELECT * FROM `item_data_sup` AS a " +
-                        "        WHERE a.`sup` = i.`sup` " +
-                        "        AND a.`parent` = 'currency'" +
-                        "        AND a.`name` = 'Exalted Orb'))";
+                        "    SELECT `i`.`mean` FROM `#_item_"+ league +"` AS `i` " +
+                        "    JOIN `item_data_parent` AS `idp` ON `i`.`id_data_parent` = `idp`.`id` " +
+                        "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb');";
 
         String query2 = "UPDATE `#_item_"+ league +"` " +
                         "SET `exalted` = IFNULL(`mean` / @exVal, 0.0)";
@@ -869,8 +978,8 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_history_"+ league +"` " +
-                        "   (`sup`,`sub`,`type`,`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity`) " +
-                        "SELECT `sup`,`sub`,'minutely',`mean`,`median`,`mode`,`exalted`,`inc`,`dec`,`count`,`quantity` " +
+                        "   (`id`, `id_type`, `mean`, `median`, `mode`, `exalted`, `inc`, `dec`, `count`, `quantity`) " +
+                        "SELECT `id`, 1, `mean`, `median`, `mode`, `exalted`, `inc`, `dec`, `count`, `quantity` " +
                         "FROM `#_item_"+ league +"`";
 
         try {
@@ -960,11 +1069,11 @@ public class Database {
         }
     }
 
-    public boolean removeOldHistoryEntries(String league, String type, String interval) {
+    public boolean removeOldHistoryEntries(String league, int type, String interval) {
         league = formatLeague(league);
 
         String query =  "DELETE FROM `#_history_"+ league +"` " +
-                        "WHERE `type` = '"+ type+ "' " +
+                        "WHERE `id_type` = "+ type+ " " +
                         "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
 
         try {
@@ -981,31 +1090,26 @@ public class Database {
         }
     }
 
-    public boolean removeOldItemEntries(String league, IndexMap indexMap) {
+    public boolean removeOldItemEntries(String league, List<Integer> idList) {
         league = formatLeague(league);
 
         String query =  "DELETE FROM `#_entry_"+ league +"`" +
-                        "WHERE `sup`= ? AND `sub`= ? AND `id` NOT IN (" +
-                        "    SELECT `id`" +
+                        "WHERE `id_item` = ? AND `account` NOT IN (" +
+                        "    SELECT `account`" +
                         "    FROM (" +
-                        "        SELECT `id`, `time`" +
+                        "        SELECT `account`, `time` " +
                         "        FROM `#_entry_"+ league +"`" +
-                        "        WHERE `sup`= ? AND `sub`= ?" +
+                        "        WHERE `id_item` = ? " +
                         "        ORDER BY `time` DESC" +
                         "        LIMIT ?" +
                         "    ) foo )";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (String index : indexMap.keySet()) {
-                    String sup = index.substring(0, Config.index_superSize);
-                    String sub = index.substring(Config.index_superSize);
-
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setString(3, sup);
-                    statement.setString(4, sub);
-                    statement.setInt(5, Config.entry_maxCount);
+                for (Integer id : idList) {
+                    statement.setInt(1, id);
+                    statement.setInt(2, id);
+                    statement.setInt(3, Config.entry_maxCount);
                     statement.addBatch();
                 }
 
@@ -1021,57 +1125,54 @@ public class Database {
         }
     }
 
-    public boolean removeItemOutliers(String league, IndexMap indexMap, List<String> ignoreList){
+    public boolean removeItemOutliers(String league, List<Integer> idList, List<Integer> ignoreList){
         league = formatLeague(league);
 
         String queryX = "SELECT SUM(`dec`) / SUM(`inc`) AS 'discardRatio' " +
                         "FROM `#_history_"+ league +"` " +
-                        "WHERE `sup`=? AND `sub`=? AND `type`='hourly' " +
+                        "WHERE `id` = ? AND `id_type` = ? " +
                         "ORDER BY `time` DESC " +
                         "LIMIT ?";
 
         String query0 = "SET @entryCount = (" +
-                        "    SELECT COUNT(`id`)" +
+                        "    SELECT COUNT(*)" +
                         "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `sup`=? AND `sub`=?);";
+                        "    WHERE `id_item` = ?);";
 
         String query1 = "SET @stddevPrice = (" +
                         "    SELECT STDDEV(`price`)" +
                         "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `sup`=? AND `sub`=?" +
+                        "    WHERE `id_item` = ?" +
                         ") * ?;";
 
         String query2 = "SET @medianPrice = (" +
                         "    SELECT `median`" +
                         "    FROM `#_item_"+ league +"`" +
-                        "    WHERE `sup`=? AND `sub`=?);";
+                        "    WHERE `id` = ?);";
 
         String query3 = "SET @numberOfElementsToRemove = (" +
                         "    SELECT COUNT(`price`)" +
                         "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `sup`=? AND `sub`=?" +
+                        "    WHERE `id_item` = ? " +
                         "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
                         "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) &&" +
                         "        @entryCount > ? && @medianPrice > ?);";
 
         String query4 = "UPDATE `#_item_"+ league +"` " +
                         "SET `dec` = `dec` + @numberOfElementsToRemove " +
-                        "WHERE `sup`=? AND `sub`=?;";
+                        "WHERE `id` = ?;";
 
         String query5 = "DELETE FROM `#_entry_"+ league +"` " +
-                        "WHERE `sup`=? AND `sub`=? " +
+                        "WHERE `id_item` = ? " +
                         "AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
                         "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) && " +
                         "    @entryCount > ? && @medianPrice > ?;";
 
         try {
-            for (String index : indexMap.keySet()) {
-                String sup = index.substring(0, Config.index_superSize);
-                String sub = index.substring(Config.index_superSize);
-
+            for (Integer id : idList) {
                 try (PreparedStatement statement = connection.prepareStatement(queryX)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
+                    statement.setInt(1, id);
+                    statement.setInt(2, Config.sql_id_category_history_hourly);
                     statement.setInt(3, Config.outlier_hoursCalculated);
 
                     ResultSet resultSet = statement.executeQuery();
@@ -1080,55 +1181,49 @@ public class Database {
                         double discardRatio = resultSet.getDouble("discardRatio");
 
                         if (discardRatio > Config.outlier_discardRatio) {
-                            System.out.printf("Bad ratio (%f) for %s %s\n", discardRatio, sup, sub);
-                            ignoreList.add(index);
+                            System.out.printf("Bad ratio (%f) for %s %d\n", discardRatio, league, id);
+                            ignoreList.add(id);
                             continue;
                         }
                     }
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query0)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
+                    statement.setInt(1, id);
                     statement.execute();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query1)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
-                    statement.setDouble(3, Config.outlier_devMulti);
+                    statement.setInt(1, id);
+                    statement.setDouble(2, Config.outlier_devMulti);
                     statement.execute();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
+                    statement.setInt(1, id);
                     statement.execute();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query3)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
+                    statement.setInt(1, id);
+                    statement.setDouble(2, Config.outlier_priceMulti);
                     statement.setDouble(3, Config.outlier_priceMulti);
-                    statement.setDouble(4, Config.outlier_priceMulti);
-                    statement.setInt(5, Config.outlier_minCount);
-                    statement.setDouble(6, Config.outlier_minPrice);
+                    statement.setInt(4, Config.outlier_minCount);
+                    statement.setDouble(5, Config.outlier_minPrice);
                     statement.execute();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query4)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
+                    statement.setInt(1, id);
                     statement.execute();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(query5)) {
-                    statement.setString(1, sup);
-                    statement.setString(2, sub);
+                    statement.setInt(1, id);
+                    statement.setDouble(2, Config.outlier_priceMulti);
                     statement.setDouble(3, Config.outlier_priceMulti);
-                    statement.setDouble(4, Config.outlier_priceMulti);
-                    statement.setInt(5, Config.outlier_minCount);
-                    statement.setDouble(6, Config.outlier_minPrice);
+                    statement.setInt(4, Config.outlier_minCount);
+                    statement.setDouble(5, Config.outlier_minPrice);
                     statement.execute();
                 }
             }
@@ -1146,64 +1241,55 @@ public class Database {
         league = formatLeague(league);
 
         String query1 = "CREATE TABLE `#_item_"+ league +"` (" +
-                        "    CONSTRAINT `sup-sub_"+ league +"`" +
-                        "        PRIMARY KEY (`sup`,`sub`), " +
-                        "        FOREIGN KEY (`sup`,`sub`) " +
-                        "        REFERENCES `item_data_sub` (`sup`,`sub`)" +
+                        "    FOREIGN KEY (`id_data_child`)" +
+                        "        REFERENCES `item_data_child` (`id`)" +
                         "        ON DELETE CASCADE," +
-
-                        "    `sup`       varchar(5)      NOT NULL," +
-                        "    `sub`       varchar(2)      NOT NULL," +
-
-                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "    `mean`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                        "    `median`    decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                        "    `mode`      decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                        "    `exalted`   decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
-                        "    `inc`       int(8)          unsigned NOT NULL DEFAULT 0," +
-                        "    `dec`       int(8)          unsigned NOT NULL DEFAULT 0," +
-                        "    `count`     int(16)         unsigned NOT NULL DEFAULT 0," +
-                        "    `quantity`  int(8)          unsigned NOT NULL DEFAULT 0" +
+                        "    FOREIGN KEY (`id_data_parent`)" +
+                        "        REFERENCES `item_data_parent` (`id`)" +
+                        "        ON DELETE CASCADE," +
+                        "    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT," +
+                        "    `id_data_parent`      int             unsigned NOT NULL," +
+                        "    `id_data_child`       int             unsigned NOT NULL," +
+                        "    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `exalted`             decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
+                        "    `count`               int(16)         unsigned NOT NULL DEFAULT 0," +
+                        "    `quantity`            int(8)          unsigned NOT NULL DEFAULT 0," +
+                        "    `inc`                 int(8)          unsigned NOT NULL DEFAULT 0," +
+                        "    `dec`                 int(8)          unsigned NOT NULL DEFAULT 0" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         String query3 = "CREATE TABLE `#_entry_"+ league +"` (" +
-                        "    CONSTRAINT `entry_"+ league +"`" +
-                        "        PRIMARY KEY (`sup`,`sub`,`account`)," +
-                        "        FOREIGN KEY (`sup`,`sub`)" +
-                        "        REFERENCES `#_item_"+ league +"` (`sup`,`sub`)" +
+                        "    FOREIGN KEY (`id_item`)" +
+                        "        REFERENCES `#_item_"+ league +"` (`id`)" +
                         "        ON DELETE CASCADE," +
-
-                        "    `sup`       varchar(5)      NOT NULL," +
-                        "    `sub`       varchar(2)      NOT NULL," +
-
-                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "    `price`     decimal(10,4)   NOT NULL," +
-                        "    `account`   varchar(32)     NOT NULL," +
-                        "    `id`        varchar(32)     NOT NULL" +
+                        "    `id_item`             int             unsigned NOT NULL," +
+                        "    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `price`               decimal(10,4)   unsigned NOT NULL," +
+                        "    `account`             varchar(32)     NOT NULL UNIQUE," +
+                        "    `item_id`             varchar(32)     NOT NULL" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         String query4 = "CREATE TABLE `#_history_"+ league +"` (" +
-                        "    CONSTRAINT `history_"+ league +"`" +
-                        "        FOREIGN KEY (`sup`,`sub`)" +
-                        "        REFERENCES `#_item_"+ league +"` (`sup`,`sub`)" +
+                        "    FOREIGN KEY (`id`)" +
+                        "        REFERENCES `#_item_"+ league +"` (`id`)" +
                         "        ON DELETE CASCADE," +
-                        "    FOREIGN KEY (`type`)" +
-                        "        REFERENCES `history_category` (`type`)" +
-                        "        ON DELETE CASCADE," +
-
-                        "    `sup`       varchar(5)      NOT NULL," +
-                        "    `sub`       varchar(2)      NOT NULL," +
-                        "    `type`      varchar(32)     NOT NULL," +
-
-                        "    `time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "    `mean`      decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `median`    decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `mode`      decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `exalted`   decimal(10,4)   unsigned DEFAULT NULL," +
-                        "    `inc`       int(8)          unsigned DEFAULT NULL," +
-                        "    `dec`       int(8)          unsigned DEFAULT NULL," +
-                        "    `count`     int(16)         unsigned DEFAULT NULL," +
-                        "    `quantity`  int(8)          unsigned DEFAULT NULL" +
+                        "    FOREIGN KEY (`id_type`)" +
+                        "        REFERENCES `category_history` (`id`)" +
+                        "        ON DELETE RESTRICT," +
+                        "    `id`                  int             unsigned NOT NULL," +
+                        "    `id_type`             int             unsigned NOT NULL," +
+                        "    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `mean`                decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `median`              decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `mode`                decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `exalted`             decimal(10,4)   unsigned DEFAULT NULL," +
+                        "    `inc`                 int(8)          unsigned DEFAULT NULL," +
+                        "    `dec`                 int(8)          unsigned DEFAULT NULL," +
+                        "    `count`               int(16)         unsigned DEFAULT NULL," +
+                        "    `quantity`            int(8)          unsigned DEFAULT NULL" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         try {

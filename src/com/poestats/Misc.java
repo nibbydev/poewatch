@@ -53,7 +53,7 @@ public class Misc {
      * @return Formatted icon URL
      */
     public static String formatIconURL(String icon) {
-        String[] splitURL = icon.split("\\?");
+        String[] splitURL = icon.split("\\?", 1);
         String fullIcon = splitURL[0];
 
         if (splitURL.length > 1) {

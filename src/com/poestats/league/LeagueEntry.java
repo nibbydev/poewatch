@@ -18,14 +18,17 @@ public class LeagueEntry {
     //------------------------------------------------------------------------------------------------------------
 
     // TODO: SQL database has additional field display
-    private String id, startAt, endAt;
+    private String id, display, startAt, endAt;
+    private int dbId;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
     public void load(ResultSet resultSet) throws SQLException {
-        id = resultSet.getString("id");
+        dbId = resultSet.getInt("id");
+        id = resultSet.getString("name");
+        display = resultSet.getString("display");
         startAt = resultSet.getString("start");
         endAt = resultSet.getString("end");
     }
@@ -92,7 +95,7 @@ public class LeagueEntry {
     // Getters
     //------------------------------------------------------------------------------------------------------------
 
-    public String getId() {
+    public String getName() {
         return id;
     }
 
@@ -104,19 +107,7 @@ public class LeagueEntry {
         return startAt;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Setters
-    //------------------------------------------------------------------------------------------------------------
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setEndAt(String endAt) {
-        this.endAt = endAt;
-    }
-
-    public void setStartAt(String startAt) {
-        this.startAt = startAt;
+    public String getDisplay() {
+        return display;
     }
 }

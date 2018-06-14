@@ -5,7 +5,8 @@ import com.poestats.*;
 import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.entries.RawEntry;
-import com.poestats.pricer.maps.*;
+import com.poestats.pricer.maps.CurrencyMaps.*;
+import com.poestats.pricer.maps.RawMaps.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,12 +18,14 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private LeagueMap leagueMap = new LeagueMap();
-    private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
-    private final Object monitor = new Object();
+    private Map<String, List<Integer>> leagueToIds = new HashMap<>();
+
+    private CurrencyLeagueMap currencyLeagueMap;
+
+    //private final Object monitor = new Object();
     private Gson gson;
 
-    private volatile boolean flagPause;
+    // private volatile boolean flagPause;
     private final StatusElement status = new StatusElement();
 
     //------------------------------------------------------------------------------------------------------------
@@ -65,10 +68,10 @@ public class EntryManager {
      * Loads in currency rates on program start
      */
     private void loadCurrency() {
-        currencyLeagueMap.clear();
+        currencyLeagueMap = new CurrencyLeagueMap();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getId();
+            String league = leagueEntry.getName();
 
             CurrencyMap currencyMap = currencyLeagueMap.getOrDefault(league, new CurrencyMap());
             Main.DATABASE.getCurrency(league, currencyMap);
@@ -80,33 +83,34 @@ public class EntryManager {
      * Writes all collected data to database
      */
     private void cycle() {
+        Map<String, List<Integer>> leagueToIds = this.leagueToIds;
+        this.leagueToIds = new HashMap<>();
+
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getId();
-            IndexMap indexMap = leagueMap.get(league);
-            List<String> ignoreList = new ArrayList<>();
+            String league = leagueEntry.getName();
 
-            if (indexMap != null) {
-                Main.DATABASE.createNewItems(league, indexMap);
-                Main.DATABASE.uploadRaw(league, indexMap);
-                Main.DATABASE.updateCounters(league, indexMap);
-                Main.DATABASE.removeItemOutliers(league, indexMap, ignoreList);
+            List<Integer> idList = leagueToIds.get(league);
+            List<Integer> ignoreList = new ArrayList<>();
 
-                Main.DATABASE.calculateMean(league, indexMap, ignoreList);
-                Main.DATABASE.calculateMedian(league, indexMap, ignoreList);
-                Main.DATABASE.calculateMode(league, indexMap, ignoreList);
-                Main.DATABASE.removeOldItemEntries(league, indexMap);
+            if (idList != null) {
+                Main.DATABASE.removeItemOutliers(league, idList, ignoreList);
+
+                Main.DATABASE.calculateMean(league, idList, ignoreList);
+                Main.DATABASE.calculateMedian(league, idList, ignoreList);
+                Main.DATABASE.calculateMode(league, idList, ignoreList);
+                Main.DATABASE.removeOldItemEntries(league, idList);
             }
 
             Main.DATABASE.calculateExalted(league);
             Main.DATABASE.addMinutely(league);
-            Main.DATABASE.removeOldHistoryEntries(league, "minutely", Config.sql_interval_1h);
+            Main.DATABASE.removeOldHistoryEntries(league, 1, Config.sql_interval_1h);
         }
 
         if (status.isSixtyBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getId();
+                String league = leagueEntry.getName();
 
-                Main.DATABASE.removeOldHistoryEntries(league, "hourly", Config.sql_interval_1d);
+                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 Main.DATABASE.addHourly(league);
                 Main.DATABASE.calcQuantity(league);
             }
@@ -114,17 +118,15 @@ public class EntryManager {
 
         if (status.isTwentyFourBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getId();
+                String league = leagueEntry.getName();
 
                 Main.DATABASE.addDaily(league);
-                Main.DATABASE.removeOldHistoryEntries(league, "daily", Config.sql_interval_7d);
+                Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_7d);
             }
         }
-
-        leagueMap = new LeagueMap();
     }
 
-    private void generateOutputFiles() {
+    /*private void generateOutputFiles() {
         List<String> oldOutputFiles = new ArrayList<>();
         List<String> newOutputFiles = new ArrayList<>();
 
@@ -132,7 +134,7 @@ public class EntryManager {
         Config.folder_newOutput.mkdirs();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = Database.formatLeague(leagueEntry.getId());
+            String league = Database.formatLeague(leagueEntry.getName());
 
             for (String category : Main.RELATIONS.getCategories().keySet()) {
                 Map<String, ParcelEntry> tmpParcel = new LinkedHashMap<>();
@@ -183,7 +185,7 @@ public class EntryManager {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not delete old output files", 3);
         }
-    }
+    }*/
 
     //------------------------------------------------------------------------------------------------------------
     // Often called controller methods
@@ -200,7 +202,7 @@ public class EntryManager {
         status.lastRunTime = System.currentTimeMillis();
 
         // Raise static flag that suspends other threads while the databases are being worked on
-        flipPauseFlag();
+        // flipPauseFlag();
 
         // Allow workers to pause
         try { Thread.sleep(50); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
@@ -241,7 +243,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        generateOutputFiles();
+        /*generateOutputFiles();*/
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message
@@ -257,7 +259,7 @@ public class EntryManager {
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
-        flipPauseFlag();
+        // flipPauseFlag();
 
         Main.DATABASE.updateStatus(status);
     }
@@ -268,51 +270,47 @@ public class EntryManager {
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
+        RawEntryLeagueMap leagueToIdToAccountToRawEntry = new RawEntryLeagueMap();
+
         for (Mappers.Stash stash : reply.stashes) {
-            //stash.fix();
+            String league = null;
 
             for (Item item : stash.items) {
-                // Snooze. The lock will be lifted in about 0.1 seconds. This loop is NOT time-sensitive
-                while (flagPause) {
-                    synchronized (monitor) {
-                        try {
-                            monitor.wait(Config.monitorTimeoutMS);
-                        } catch (InterruptedException ex) {
-                        }
-                    }
-                }
+                if (league == null) league = item.getLeague();
 
                 item.fix();
                 item.parseItem();
                 if (item.isDiscard()) continue;
 
-                String index = Main.RELATIONS.indexItem(item);
-                if (index == null) continue; // Some currency items have invalid icons
-
-                IndexMap indexMap = leagueMap.getOrDefault(item.getLeague(), new IndexMap());
-                RawList rawList = indexMap.getOrDefault(index, new RawList());
+                Integer id = Main.RELATIONS.indexItem(item, league);
+                if (id == null) continue;
 
                 RawEntry rawEntry = new RawEntry();
-                rawEntry.add(item, stash.accountName);
+                rawEntry.load(item);
 
-                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(item.getLeague()));
+                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(league));
                 if (discard) continue; // Couldn't convert the listed currency to chaos
 
-                rawList.add(rawEntry);
+                IndexMap idToAccountToRawEntry = leagueToIdToAccountToRawEntry.getOrDefault(league, new IndexMap());
+                AccountMap accountToRawEntry = idToAccountToRawEntry.getOrDefault(id, new AccountMap());
 
-                indexMap.putIfAbsent(index, rawList);
-                leagueMap.putIfAbsent(item.getLeague(), indexMap);
+                accountToRawEntry.put(stash.accountName, rawEntry);
+
+                idToAccountToRawEntry.putIfAbsent(id, accountToRawEntry);
+                leagueToIdToAccountToRawEntry.putIfAbsent(league, idToAccountToRawEntry);
+
+                // Maintain a list of league-specific item IDs that have had entries added to them
+                List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
+                if (!idList.contains(id)) idList.add(id);
+                leagueToIds.putIfAbsent(league, idList);
             }
         }
-    }
 
-    /**
-     * Switches pause boolean from state to state and wakes monitor
-     */
-    private void flipPauseFlag() {
-        synchronized (monitor) {
-            flagPause = !flagPause;
-            monitor.notifyAll();
+        for (String league : leagueToIdToAccountToRawEntry.keySet()) {
+            IndexMap idToAccountToRawEntry = leagueToIdToAccountToRawEntry.get(league);
+
+            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry);
+            Main.DATABASE.updateCounters(league, idToAccountToRawEntry);
         }
     }
 
