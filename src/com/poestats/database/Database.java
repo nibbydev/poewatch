@@ -157,7 +157,7 @@ public class Database {
      * @return True on success
      */
     public boolean updateChangeID(String id) {
-        String query =  "UPDATE `change_id` SET `id` = ?";
+        String query =  "UPDATE `change_id` SET `id` = ?, `time` = CURRENT_TIMESTAMP";
 
         try {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
