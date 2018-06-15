@@ -8,6 +8,7 @@ import com.poestats.Main;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.*;
 
@@ -209,6 +210,9 @@ public class LeagueManager {
             leagueEntryList.addAll(gson.fromJson(stringBuilderBuffer.toString(), listType));
 
             return true;
+        } catch (SocketTimeoutException ex) {
+            Main.ADMIN.log_("Failed to download league list (timeout)", 3);
+            return false;
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
             ex.printStackTrace();
