@@ -13,9 +13,12 @@ public class RelationManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private final Map<String, String> currencyAliasToName = new HashMap<>();
-    private final IndexRelations indexRelations = new IndexRelations();
+    private Map<String, String> currencyAliasToName = new HashMap<>();
+    private IndexRelations indexRelations = new IndexRelations();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
+
+    private List<String> currentlyIndexingChildKeys = new ArrayList<>();
+    private final Object monitor = new Object();
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -72,6 +75,31 @@ public class RelationManager {
     }
 
     //------------------------------------------------------------------------------------------------------------
+    // Monitors
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Sleeps until monitor object is notified
+     */
+    private void waitOnMonitor() {
+        synchronized (monitor) {
+            try {
+                monitor.wait(10);
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+
+    /**
+     * Notifies local monitor
+     */
+    private void wakeLocalMonitor() {
+        synchronized (monitor) {
+            monitor.notify();
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
     // Indexing methods
     //------------------------------------------------------------------------------------------------------------
 
@@ -83,16 +111,24 @@ public class RelationManager {
      * @return
      */
     public Integer indexItem(Item item, String league) {
-        indexCategory(item);
-
         String uniqueKey = item.getUniqueKey();
         String genericKey = item.getGenericKey();
+
+        // If the current item is currently being processed/indexed by another worker thread, wait on the monitor until
+        // the other worker has obtained an id for the item and indexes it
+        while (currentlyIndexingChildKeys.contains(uniqueKey)) {
+            waitOnMonitor();
+        }
 
         Integer id = indexRelations.getItemId(league, uniqueKey);
 
         if (id != null) return id;
         // If there wasn't an already existing parentChildId, return null without indexing
         if (item.isDoNotIndex()) return null;
+
+        currentlyIndexingChildKeys.add(uniqueKey);
+
+        indexCategory(item);
 
         Integer parentItemDataId = indexRelations.getParentItemDataId(genericKey);
         if (parentItemDataId == null) {
@@ -116,6 +152,11 @@ public class RelationManager {
 
         indexRelations.addLeagueToKeyToId(league, uniqueKey, id);
         indexRelations.addLeagueToIds(league, id);
+
+        // Remove the unique key from the list and wake local monitor so that other worker threads could not access the
+        // newly generated index
+        currentlyIndexingChildKeys.remove(uniqueKey);
+        wakeLocalMonitor();
 
         return id;
     }
