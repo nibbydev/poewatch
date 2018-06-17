@@ -150,8 +150,10 @@ public class RelationManager {
         // Now that we have the item data's ids, we can index the item itself
         id = Main.DATABASE.indexItem(league, parentItemDataId, childItemDataId);
 
-        indexRelations.addLeagueToKeyToId(league, uniqueKey, id);
-        indexRelations.addLeagueToIds(league, id);
+        if (id != null) {
+            indexRelations.addLeagueToKeyToId(league, uniqueKey, id);
+            indexRelations.addLeagueToIds(league, id);
+        }
 
         // Remove the unique key from the list and wake local monitor so that other worker threads could not access the
         // newly generated index
