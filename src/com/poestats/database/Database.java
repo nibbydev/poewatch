@@ -63,6 +63,8 @@ public class Database {
         String query = "SHOW tables";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -94,6 +96,8 @@ public class Database {
         String query = "SELECT * FROM `leagues`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -129,6 +133,8 @@ public class Database {
                         "   `display` = VALUES(`display`)";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getName());
@@ -160,6 +166,8 @@ public class Database {
         String query =  "UPDATE `change_id` SET `id` = ?, `time` = CURRENT_TIMESTAMP";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, id);
                 statement.execute();
@@ -193,6 +201,8 @@ public class Database {
                         "        ON `cp`.`id` = `cc`.`id_parent`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -227,6 +237,8 @@ public class Database {
         String query2 = "SELECT `id` FROM `category_parent` WHERE `name` = ?";
 
         try {
+            if (connection.isClosed()) return null;
+
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setString(1, parentName);
                 statement.execute();
@@ -254,6 +266,8 @@ public class Database {
         String query2 = "SELECT `id` FROM `category_child` WHERE `id_parent` = ? AND `name` = ?";
 
         try {
+            if (connection.isClosed()) return null;
+
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setInt(1, parentId);
                 statement.setString(2, childName);
@@ -290,6 +304,8 @@ public class Database {
      */
     public boolean getItemIds(IndexRelations indexRelations, List<LeagueEntry> leagueEntries) {
         try {
+            if (connection.isClosed()) return false;
+
             for (LeagueEntry leagueEntry : leagueEntries) {
                 String league = leagueEntry.getName();
                 String queryLeague = formatLeague(leagueEntry.getName());
@@ -324,6 +340,8 @@ public class Database {
         String query =  "SELECT `key`, `id` FROM `item_data_parent`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
                 indexRelations.loadItemDataParentIds(resultSet);
@@ -347,6 +365,8 @@ public class Database {
         String query =  "SELECT `key`, `id` FROM `item_data_child`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
                 indexRelations.loadItemDataChildIds(resultSet);
@@ -381,6 +401,8 @@ public class Database {
         String query2 = "SELECT `id` FROM `#_item_"+ league +"` WHERE `id_data_parent` = ? AND `id_data_child` = ?";
 
         try {
+            if (connection.isClosed()) return null;
+
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setInt(1, parentId);
                 statement.setInt(2, childId);
@@ -420,6 +442,8 @@ public class Database {
         String query2 = "SELECT `id` FROM `item_data_parent` WHERE `key` = ?";
 
         try {
+            if (connection.isClosed()) return null;
+
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setInt(1, parentCategoryId);
 
@@ -469,6 +493,8 @@ public class Database {
                         "LIMIT 1";
 
         try {
+            if (connection.isClosed()) return null;
+
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setInt(1, parentId);
 
@@ -516,6 +542,8 @@ public class Database {
         String query = "SELECT * FROM `status`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
                 statusElement.load(resultSet);
@@ -539,6 +567,8 @@ public class Database {
         String query =  "UPDATE `status` SET `value` = ? WHERE `id` = ?";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setLong(1, statusElement.lastRunTime);
                 statement.setString(2, "lastRunTime");
@@ -592,6 +622,8 @@ public class Database {
                         "WHERE `idp`.`id_category_parent` = 4 AND `idp`.`frame` = 5";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -629,6 +661,8 @@ public class Database {
                         "        ON `ci`.`id` = `ca`.`id_parent`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 ResultSet resultSet = statement.executeQuery();
 
@@ -656,6 +690,8 @@ public class Database {
                         "ON DUPLICATE KEY UPDATE `price` = `price`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idToAccountToRawEntry.keySet()) {
                     AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
@@ -691,6 +727,8 @@ public class Database {
                         "WHERE `id`= ?";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idToAccountToRawEntry.keySet()) {
                     AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
@@ -725,6 +763,8 @@ public class Database {
                         ") WHERE `id`= ?";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
                     if (ignoreList.contains(id)) continue;
@@ -765,6 +805,8 @@ public class Database {
                         "), 0.0) WHERE `id` = ?";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
                     if (ignoreList.contains(id)) continue;
@@ -801,6 +843,8 @@ public class Database {
                         "WHERE `id` = ?";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
                     if (ignoreList.contains(id)) continue;
@@ -834,6 +878,8 @@ public class Database {
                         "SET `exalted` = IF (`mean` = 0.0, 0.0, IF (@exVal = 0.0, 0.0, IFNULL(`mean` / @exVal, 0.0)))";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 statement.execute(query1);
                 statement.execute(query2);
@@ -871,6 +917,8 @@ public class Database {
                         "ORDER BY `i`.`mean` DESC;";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, category);
                 ResultSet resultSet = statement.executeQuery();
@@ -898,6 +946,8 @@ public class Database {
                         "ORDER BY `time` DESC ";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 ResultSet resultSet = statement.executeQuery();
 
@@ -927,6 +977,8 @@ public class Database {
                         "   `path` = VALUES(`path`)";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, league);
                 statement.setString(2, category);
@@ -947,6 +999,8 @@ public class Database {
         String query =  "SELECT * FROM `output_files`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -976,6 +1030,8 @@ public class Database {
                         "FROM `#_item_"+ league +"`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 statement.execute(query);
             }
@@ -1005,6 +1061,8 @@ public class Database {
                         "GROUP BY `id`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 statement.execute(query);
             }
@@ -1034,6 +1092,8 @@ public class Database {
                         "GROUP BY `id`";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 statement.execute(query);
             }
@@ -1057,6 +1117,8 @@ public class Database {
                         "), `inc` = 0, `dec` = 0;";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 statement.execute(query);
             }
@@ -1078,6 +1140,8 @@ public class Database {
                         "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (Statement statement = connection.createStatement()) {
                 statement.execute(query);
             }
@@ -1106,6 +1170,8 @@ public class Database {
                         "    ) foo )";
 
         try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
                     statement.setInt(1, id);
@@ -1170,6 +1236,8 @@ public class Database {
                         "    @entryCount > ? && @medianPrice > ?;";
 
         try {
+            if (connection.isClosed()) return false;
+
             for (Integer id : idList) {
                 int entryCount = 0;
 
@@ -1297,6 +1365,8 @@ public class Database {
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         try {
+            if (connection.isClosed()) return false;
+
             getTables(tables);
 
             if (!tables.contains("#_item_" + league)) {
