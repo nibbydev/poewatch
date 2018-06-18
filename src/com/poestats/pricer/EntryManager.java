@@ -20,14 +20,9 @@ public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
 
     private Map<String, List<Integer>> leagueToIds = new HashMap<>();
-
     private CurrencyLeagueMap currencyLeagueMap;
-
-    //private final Object monitor = new Object();
+    private StatusElement status = new StatusElement();
     private Gson gson;
-
-    // private volatile boolean flagPause;
-    private final StatusElement status = new StatusElement();
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -87,6 +82,11 @@ public class EntryManager {
         Map<String, List<Integer>> leagueToIds = this.leagueToIds;
         this.leagueToIds = new HashMap<>();
 
+        // Allow workers to switch to new map
+        try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
+
+        long a, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
+
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = leagueEntry.getName();
 
@@ -94,17 +94,38 @@ public class EntryManager {
             List<Integer> ignoreList = new ArrayList<>();
 
             if (idList != null) {
+                a = System.currentTimeMillis();
                 Main.DATABASE.removeItemOutliers(league, idList, ignoreList);
+                a1 += System.currentTimeMillis() - a;
 
+                a = System.currentTimeMillis();
                 Main.DATABASE.calculateMean(league, idList, ignoreList);
+                a2 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.calculateMedian(league, idList, ignoreList);
+                a3 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.calculateMode(league, idList, ignoreList);
+                a4 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.removeOldItemEntries(league, idList);
+                a5 += System.currentTimeMillis() - a;
             }
 
+            a = System.currentTimeMillis();
             Main.DATABASE.calculateExalted(league);
+            a6 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
             Main.DATABASE.addMinutely(league);
+            a7 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
             Main.DATABASE.removeOldHistoryEntries(league, 1, Config.sql_interval_1h);
+            a8 += System.currentTimeMillis() - a;
         }
 
         if (status.isSixtyBool()) {
@@ -125,6 +146,8 @@ public class EntryManager {
                 Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_7d);
             }
         }
+
+        System.out.printf("a1(%4d) a2(%4d) a3(%4d) a4(%4d) a5(%4d) a6(%4d) a7(%4d) a8(%4d) \n", a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     private void generateOutputFiles() {
@@ -202,9 +225,6 @@ public class EntryManager {
         if (current - status.lastRunTime < Config.entryController_sleepMS) return;
         status.lastRunTime = System.currentTimeMillis();
 
-        // Raise static flag that suspends other threads while the databases are being worked on
-        // flipPauseFlag();
-
         // Allow workers to pause
         try { Thread.sleep(50); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
@@ -244,7 +264,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        generateOutputFiles();
+        //generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message
@@ -260,7 +280,6 @@ public class EntryManager {
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
-        // flipPauseFlag();
 
         Main.DATABASE.updateStatus(status);
     }

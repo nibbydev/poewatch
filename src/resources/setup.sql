@@ -152,7 +152,6 @@ CREATE TABLE `#_entry_` (
 
     `id_item`             int             unsigned NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     `price`               decimal(10,4)   unsigned NOT NULL,
     `account`             varchar(32)     NOT NULL UNIQUE,
     `item_id`             varchar(32)     NOT NULL
@@ -161,6 +160,7 @@ CREATE TABLE `#_entry_` (
 CREATE INDEX `index-e-id_i` ON `#_entry_` (`id_item`);
 CREATE INDEX `index-e-time` ON `#_entry_` (`time`);
 CREATE INDEX `index-e-account` ON `#_entry_` (`account`);
+CREATE INDEX `index-e-price` ON `#_entry_` (`price`);
 
 --
 -- Table structure `#_history_`

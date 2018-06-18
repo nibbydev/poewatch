@@ -1218,8 +1218,8 @@ public class Database {
                         "    WHERE `id` = ?);";
 
         String query3 = "SET @numberOfElementsToRemove = (" +
-                        "    SELECT COUNT(`price`)" +
-                        "    FROM `#_entry_"+ league +"`" +
+                        "    SELECT COUNT(*) " +
+                        "    FROM `#_entry_"+ league +"` " +
                         "    WHERE `id_item` = ? " +
                         "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
                         "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) &&" +
