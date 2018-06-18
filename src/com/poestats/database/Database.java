@@ -1331,7 +1331,11 @@ public class Database {
                         "    `quantity`            int(8)          unsigned NOT NULL DEFAULT 0," +
                         "    `inc`                 int(8)          unsigned NOT NULL DEFAULT 0," +
                         "    `dec`                 int(8)          unsigned NOT NULL DEFAULT 0" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8; " +
+                        "CREATE INDEX `index-i-id` ON `#_item_"+ league +"` (`id`); " +
+                        "CREATE INDEX `index-i-id_idp` ON `#_item_"+ league +"` (`id_data_parent`); " +
+                        "CREATE INDEX `index-i-id_idc` ON `#_item_"+ league +"` (`id_data_child`); " +
+                        "CREATE INDEX `index-i-mean` ON `#_item_"+ league +"` (`mean`); ";
 
         String query3 = "CREATE TABLE `#_entry_"+ league +"` (" +
                         "    FOREIGN KEY (`id_item`)" +
@@ -1342,7 +1346,10 @@ public class Database {
                         "    `price`               decimal(10,4)   unsigned NOT NULL," +
                         "    `account`             varchar(32)     NOT NULL UNIQUE," +
                         "    `item_id`             varchar(32)     NOT NULL" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8; " +
+                        "CREATE INDEX `index-e-id_i` ON `#_entry_"+ league +"` (`id_item`); " +
+                        "CREATE INDEX `index-e-time` ON `#_entry_"+ league +"` (`time`); " +
+                        "CREATE INDEX `index-e-account` ON `#_entry_"+ league +"` (`account`); ";
 
         String query4 = "CREATE TABLE `#_history_"+ league +"` (" +
                         "    FOREIGN KEY (`id`)" +
@@ -1362,7 +1369,10 @@ public class Database {
                         "    `dec`                 int(8)          unsigned DEFAULT NULL," +
                         "    `count`               int(16)         unsigned DEFAULT NULL," +
                         "    `quantity`            int(8)          unsigned DEFAULT NULL" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8; " +
+                        "CREATE INDEX `index-h-id` ON `#_history_"+ league +"` (`id`); " +
+                        "CREATE INDEX `index-h-id_t` ON `#_history_"+ league +"` (`id_type`); " +
+                        "CREATE INDEX `index-h-time` ON `#_history_"+ league +"` (`time`); ";
 
         try {
             if (connection.isClosed()) return false;

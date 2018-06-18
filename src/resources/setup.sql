@@ -20,6 +20,9 @@ CREATE TABLE `category_parent` (
     `display`             varchar(32)     DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE INDEX `index-cp-id` ON `category_parent` (`id`);
+CREATE INDEX `index-cp-name` ON `category_parent` (`name`);
+
 --
 -- Table structure `category_child`
 --
@@ -31,10 +34,13 @@ CREATE TABLE `category_child` (
 
     `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
     `id_parent`           int             unsigned NOT NULL,
-
     `name`                varchar(32)     NOT NULL,
     `display`             varchar(32)     DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-cc-id` ON `category_child` (`id`);
+CREATE INDEX `index-cc-id_p` ON `category_child` (`id_parent`);
+CREATE INDEX `index-cc-name` ON `category_child` (`name`);
 
 --
 -- Table structure `category_history`
@@ -44,6 +50,8 @@ CREATE TABLE `category_history` (
     `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
     `name`                varchar(32)     NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-ch-id` ON `category_history` (`id`);
 
 --
 -- Table structure `item_data_parent`
@@ -67,6 +75,12 @@ CREATE TABLE `item_data_parent` (
     `key`                 varchar(128)    NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE INDEX `index-idp-id` ON `item_data_parent` (`id`);
+CREATE INDEX `index-idp-id_cp` ON `item_data_parent` (`id_category_parent`);
+CREATE INDEX `index-idp-id_cc` ON `item_data_parent` (`id_category_child`);
+CREATE INDEX `index-idp-key` ON `item_data_parent` (`key`);
+CREATE INDEX `index-idp-frame` ON `item_data_parent` (`frame`);
+
 --
 -- Table structure `item_data_child`
 --
@@ -88,6 +102,10 @@ CREATE TABLE `item_data_child` (
     `key`                 varchar(128)    NOT NULL UNIQUE,
     `icon`                text            NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-idc-id` ON `item_data_child` (`id`);
+CREATE INDEX `index-idc-id_p` ON `item_data_child` (`id_parent`);
+CREATE INDEX `index-idc-key` ON `item_data_child` (`key`);
 
 --
 -- Table structure for table `#_item_`
@@ -117,6 +135,11 @@ CREATE TABLE `#_item_` (
     `dec`                 int(8)          unsigned NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE INDEX `index-i-id` ON `#_item_` (`id`);
+CREATE INDEX `index-i-id_idp` ON `#_item_` (`id_data_parent`);
+CREATE INDEX `index-i-id_idc` ON `#_item_` (`id_data_child`);
+CREATE INDEX `index-i-mean` ON `#_item_` (`mean`);
+
 --
 -- Table structure `#_entry_`
 -- (to be created dynamically with league names)
@@ -134,6 +157,10 @@ CREATE TABLE `#_entry_` (
     `account`             varchar(32)     NOT NULL UNIQUE,
     `item_id`             varchar(32)     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-e-id_i` ON `#_entry_` (`id_item`);
+CREATE INDEX `index-e-time` ON `#_entry_` (`time`);
+CREATE INDEX `index-e-account` ON `#_entry_` (`account`);
 
 --
 -- Table structure `#_history_`
@@ -162,6 +189,10 @@ CREATE TABLE `#_history_` (
     `quantity`            int(8)          unsigned DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE INDEX `index-h-id` ON `#_history_` (`id`);
+CREATE INDEX `index-h-id_t` ON `#_history_` (`id_type`);
+CREATE INDEX `index-h-time` ON `#_history_` (`time`);
+
 -- --------------------------------------------------------
 
 --
@@ -177,6 +208,9 @@ CREATE TABLE `leagues` (
     `end`                 varchar(32)     DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE INDEX `index-l-id` ON `leagues` (`id`);
+CREATE INDEX `index-l-name` ON `leagues` (`name`);
+
 --
 -- Table structure `status`
 --
@@ -186,6 +220,8 @@ CREATE TABLE `status` (
     `value`               bigint(19)      unsigned NOT NULL DEFAULT 0,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-s-id` ON `status` (`id`);
 
 --
 -- Table structure `change_id`
@@ -210,6 +246,9 @@ CREATE TABLE `output_files` (
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE INDEX `index-of-league` ON `output_files` (`league`);
+CREATE INDEX `index-of-category` ON `output_files` (`category`);
+
 --
 -- Table structure `currency_item`
 --
@@ -218,6 +257,8 @@ CREATE TABLE `currency_item` (
     `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
     `name`                varchar(64)     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-ci-id` ON `currency_item` (`id`);
 
 --
 -- Table structure `currency_alias`
@@ -233,6 +274,9 @@ CREATE TABLE `currency_alias` (
 
     `name`                  varchar(32)   NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE INDEX `index-ca-id` ON `currency_alias` (`id`);
+CREATE INDEX `index-ca-id_p` ON `currency_alias` (`id_parent`);
 
 -- --------------------------------------------------------
 
