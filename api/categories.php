@@ -2,32 +2,44 @@
 header("Content-Type: application/json");
 include_once ( "details/pdo.php" );
 
-$queryParent = "SELECT * FROM `category_parent`";
-$queryChild = "SELECT * FROM `category_child`";
+$query = "SELECT 
+  `cp`.`id` AS 'cp-id', `cp`.`name` AS 'cp-name', `cp`.`display` AS `cp-display`,
+  `cc`.`id` AS 'cc-id', `cc`.`name` AS 'cc-name', `cc`.`display` AS `cc-display`
+FROM `category-parent` AS `cp`
+LEFT JOIN `category-child` AS `cc`
+  ON `cp`.`id` = `cc`.`id-cp`
+ORDER BY `cp`.`id`, `cc`.`id` ASC";
 
-$stmtParent = $pdo->query($queryParent);
-$stmtChild = $pdo->query($queryChild);
-
+$stmt = $pdo->query($query);
 $payload = array();
 
-while ($row = $stmtParent->fetch()) {
-  $payload[] = array(
-    "name" => $row["parent"],
-    "display" => $row["display"],
-    "members" => array()
-  );
-}
+$tmp = null;
 
-while ($row = $stmtChild->fetch()) {
-  for ($i=0; $i < count($payload); $i++) { 
-    if ($payload[$i]["name"] === $row["parent"]) {
-      $payload[$i]["members"][] = array(
-        "name" => $row["child"],
-        "display" => $row["display"]
-      );
+while ($row = $stmt->fetch()) {
+  if ($tmp === null) {
+    $tmp = array(
+      "id" => $row["cp-id"],
+      "name" => $row["cp-name"],
+      "display" => $row["cp-display"],
+      "members" => array()
+    );
+  } else if ($tmp["name"] !== $row["cp-name"]) {
+    $payload[] = $tmp;
 
-      break;
-    }
+    $tmp = array(
+      "id" => $row["cp-id"],
+      "name" => $row["cp-name"],
+      "display" => $row["cp-display"],
+      "members" => array()
+    );
+  }
+
+  if ($row["cc-name"] !== null) {
+    $tmp["members"][] = array(
+      "id" => $row["cc-id"],
+      "name" => $row["cc-name"],
+      "display" => $row["cc-display"]
+    );
   }
 }
 
