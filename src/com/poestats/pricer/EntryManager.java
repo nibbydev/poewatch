@@ -91,23 +91,22 @@ public class EntryManager {
             String league = leagueEntry.getName();
 
             List<Integer> idList = leagueToIds.get(league);
-            List<Integer> ignoreList = new ArrayList<>();
 
             if (idList != null) {
                 a = System.currentTimeMillis();
-                Main.DATABASE.removeItemOutliers(league, idList, ignoreList);
+                Main.DATABASE.removeItemOutliers(league, idList);
                 a1 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.calculateMean(league, idList, ignoreList);
+                Main.DATABASE.calculateMean(league, idList);
                 a2 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.calculateMedian(league, idList, ignoreList);
+                Main.DATABASE.calculateMedian(league, idList);
                 a3 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.calculateMode(league, idList, ignoreList);
+                Main.DATABASE.calculateMode(league, idList);
                 a4 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();

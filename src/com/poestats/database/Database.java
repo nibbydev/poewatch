@@ -745,7 +745,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMean(String league, List<Integer> idList, List<Integer> ignoreList) {
+    public boolean calculateMean(String league, List<Integer> idList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` " +
@@ -760,8 +760,6 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
-                    if (ignoreList.contains(id)) continue;
-
                     statement.setInt(1, id);
                     statement.setInt(2, id);
                     statement.addBatch();
@@ -779,7 +777,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMedian(String league, List<Integer> idList, List<Integer> ignoreList) {
+    public boolean calculateMedian(String league, List<Integer> idList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` " +
@@ -802,8 +800,6 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
-                    if (ignoreList.contains(id)) continue;
-
                     statement.setInt(1, id);
                     statement.setInt(2, id);
                     statement.setInt(3, id);
@@ -822,7 +818,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMode(String league, List<Integer> idList, List<Integer> ignoreList) {
+    public boolean calculateMode(String league, List<Integer> idList) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` " +
@@ -840,8 +836,6 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
-                    if (ignoreList.contains(id)) continue;
-
                     statement.setInt(1, id);
                     statement.setInt(2, id);
                     statement.addBatch();
@@ -1191,7 +1185,7 @@ public class Database {
         }
     }
 
-    public boolean removeItemOutliers(String league, List<Integer> idList, List<Integer> ignoreList){
+    public boolean removeItemOutliers(String league, List<Integer> idList){
         league = formatLeague(league);
 
         String query1 = "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
@@ -1228,13 +1222,9 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query2)) {
                 for (int i = 0; i < idList.size(); i++) {
-                    if (results[i] > 0) {
-                        statement.setInt(1, results[i]);
-                        statement.setInt(2, idList.get(i));
-                        statement.addBatch();
-                    } else {
-                        //ignoreList.add(idList.get(i));
-                    }
+                    statement.setInt(1, results[i]);
+                    statement.setInt(2, idList.get(i));
+                    statement.addBatch();
                 }
 
                 statement.executeBatch();
