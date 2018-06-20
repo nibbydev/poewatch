@@ -1,30 +1,66 @@
 <?php
-function get_sup($pdo) {
-  $query = "SELECT
-    p.`sup`, b.`sub`,
-    p.`parent`, p.`child`,
-    p.`name`, p.`type`,
-    p.`frame`, b.`icon`,
-    p.`key` AS 'generic_key', b.`key` AS 'specific_key',
-    b.`var`, b.`tier`, b.`lvl`, b.`quality`, b.`corrupted`, b.`links` 
-  FROM `item_data_sub` AS b 
-  JOIN `item_data_sup` AS p 
-    ON b.`sup` = p.`sup`";
-
-  $stmt = $pdo->query($query);
-  return $stmt;
-}
-
 header("Content-Type: application/json");
 include_once ( "details/pdo.php" );
 
+$query = "SELECT
+  `idp`.`id` AS 'idp-id',
 
-$stmt = get_sup($pdo);
+  `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'parent-key', 
+
+  `idc`.`id` AS 'idc-id',
+
+  `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'child-key', `idc`.`icon`,
+
+  `idp`.`id-cp` AS 'cp-id', `idp`.`id-cc` AS 'cc-id'
+
+FROM `itemdata-parent` AS `idp`
+LEFT JOIN `itemdata-child` AS `idc` ON `idp`.`id` = `idc`.`id-idp`";
+
+$stmt = $pdo->query($query);
 
 $payload = array();
+$tmp = null;
 
 while ($row = $stmt->fetch()) {
-  $payload[] = $row;
+  if ($tmp === null) {
+    $tmp = array(
+      "id" => $row["idp-id"],
+      "name" => $row["name"],
+      "type" => $row["type"],
+      "frame" => $row["frame"],
+      "key" => $row["parent-key"],
+      "category-parent-id" => $row["cp-id"],
+      "category-child-id" => $row["cc-id"],
+      "members" => array()
+    );
+  } else if ($tmp["id"] !== $row["idp-id"]) {
+    $payload[] = $tmp;
+
+    $tmp = array(
+      "id" => $row["idp-id"],
+      "name" => $row["name"],
+      "type" => $row["type"],
+      "frame" => $row["frame"],
+      "key" => $row["parent-key"],
+      "category-parent-id" => $row["cp-id"],
+      "category-child-id" => $row["cc-id"],
+      "members" => array()
+    );
+  }
+
+  if ($row["idc-id"] !== null) {
+    $tmp["members"][] = array(
+      "id" => $row["idc-id"],
+      "tier" => $row["tier"],
+      "lvl" => $row["lvl"],
+      "quality" => $row["quality"],
+      "corrupted" => $row["corrupted"],
+      "links" => $row["links"],
+      "var" => $row["var"],
+      "key" => $row["child-key"],
+      "icon" => $row["icon"]
+    );
+  }
 }
 
 echo json_encode($payload);
