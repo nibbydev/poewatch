@@ -302,14 +302,14 @@ public class EntryManager {
                 item.parseItem();
                 if (item.isDiscard()) continue;
 
-                Integer id = Main.RELATIONS.indexItem(item, league);
-                if (id == null) continue;
-
                 RawEntry rawEntry = new RawEntry();
                 rawEntry.load(item);
 
                 boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(league));
                 if (discard) continue; // Couldn't convert the listed currency to chaos
+
+                Integer id = Main.RELATIONS.indexItem(item, league);
+                if (id == null) continue;
 
                 IndexMap idToAccountToRawEntry = leagueToIdToAccountToRawEntry.getOrDefault(league, new IndexMap());
                 AccountMap accountToRawEntry = idToAccountToRawEntry.getOrDefault(id, new AccountMap());

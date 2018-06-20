@@ -9,10 +9,10 @@ public class Config {
     // Database
     //------------------------------------------------------------------------------------------------------------
 
-    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false";
+    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true";
     public static final String db_username = "root";
     private static final String db_password = "";
-    public static final String db_database = "ps_database";
+    public static final String db_database = "ps2_database";
 
     public static String getDb_password() {
         return db_password;
@@ -71,9 +71,8 @@ public class Config {
     public static final int outlier_hoursCalculated = 1;
     public static final double outlier_discardRatio = 0.7;
     public static final double outlier_devMulti = 2.0;
-    public static final double outlier_minPrice = 0.0;
     public static final double outlier_priceMulti = 2.0;
-    public static final int outlier_minCount = 4;
+    public static final int outlier_minCount = 5;
 
     public static final int entry_maxCount = 96;
 

@@ -18,14 +18,14 @@ public class StatusElement {
 
     public void load(ResultSet resultSet) throws SQLException {
         while (resultSet.next()) {
-            switch (resultSet.getString("id")) {
-                case "twentyFourCounter":
+            switch (resultSet.getString("name")) {
+                case "24":
                     twentyFourCounter = resultSet.getLong("value");
                     break;
-                case "sixtyCounter":
+                case "60":
                     sixtyCounter = resultSet.getLong("value");
                     break;
-                case "tenCounter":
+                case "10":
                     tenCounter = resultSet.getLong("value");
                     break;
             }

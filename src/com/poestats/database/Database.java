@@ -93,7 +93,7 @@ public class Database {
      * @return True on success
      */
     public boolean getLeagues(List<LeagueEntry> leagueEntries) {
-        String query = "SELECT * FROM `leagues`";
+        String query = "SELECT * FROM `sys-leagues`";
 
         try {
             if (connection.isClosed()) return false;
@@ -125,7 +125,7 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "INSERT INTO `leagues` (`name`, `display`, `start`, `end`) " +
+        String query =  "INSERT INTO `sys-leagues` (`name`, `display`, `start`, `end`) " +
                         "   VALUES (?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "   `start` = VALUES(`start`), " +
@@ -163,7 +163,7 @@ public class Database {
      * @return True on success
      */
     public boolean updateChangeID(String id) {
-        String query =  "UPDATE `change_id` SET `id` = ?, `time` = CURRENT_TIMESTAMP";
+        String query =  "UPDATE `sys-change_id` SET `change_id` = ?, `time` = CURRENT_TIMESTAMP";
 
         try {
             if (connection.isClosed()) return false;
@@ -196,9 +196,9 @@ public class Database {
                         "    `cc`.`name` AS 'name_child', " +
                         "    `cp`.`id` AS 'id_parent', " +
                         "    `cc`.`id` AS 'id_child' " +
-                        "FROM `category_parent` AS `cp` " +
-                        "    LEFT JOIN `category_child` AS `cc` " +
-                        "        ON `cp`.`id` = `cc`.`id_parent`";
+                        "FROM `category-parent` AS `cp` " +
+                        "    LEFT JOIN `category-child` AS `cc` " +
+                        "        ON `cp`.`id` = `cc`.`id-cp`";
 
         try {
             if (connection.isClosed()) return false;
@@ -232,9 +232,9 @@ public class Database {
     }
 
     public Integer addParentCategory(String parentName) {
-        String query1 = "INSERT INTO `category_parent` (`name`) VALUES (?)";
+        String query1 = "INSERT INTO `category-parent` (`name`) VALUES (?)";
 
-        String query2 = "SELECT `id` FROM `category_parent` WHERE `name` = ?";
+        String query2 = "SELECT `id` FROM `category-parent` WHERE `name` = ?";
 
         try {
             if (connection.isClosed()) return null;
@@ -261,9 +261,9 @@ public class Database {
     }
 
     public Integer addChildCategory(int parentId, String childName) {
-        String query1 = "INSERT INTO `category_child` (`id_parent`, `name`) VALUES (?, ?)";
+        String query1 = "INSERT INTO `category-child` (`id-cp`, `name`) VALUES (?, ?)";
 
-        String query2 = "SELECT `id` FROM `category_child` WHERE `id_parent` = ? AND `name` = ?";
+        String query2 = "SELECT `id` FROM `category-child` WHERE `id-cp` = ? AND `name` = ?";
 
         try {
             if (connection.isClosed()) return null;
@@ -312,9 +312,9 @@ public class Database {
 
                 String query =  "SELECT " +
                                 "    `i`.`id`, `idc`.`key` " +
-                                "FROM `#_item_"+ queryLeague +"` AS `i` " +
-                                "JOIN `item_data_child` AS `idc` " +
-                                "    ON `i`.`id_data_child` = `idc`.`id`";
+                                "FROM `#_"+ queryLeague +"-items` AS `i` " +
+                                "JOIN `itemdata-child` AS `idc` " +
+                                "    ON `i`.`id-idc` = `idc`.`id`";
 
                 try (Statement statement = connection.createStatement()) {
                     ResultSet resultSet = statement.executeQuery(query);
@@ -337,7 +337,7 @@ public class Database {
      * @return True on success
      */
     public boolean getItemDataParentIds(IndexRelations indexRelations) {
-        String query =  "SELECT `key`, `id` FROM `item_data_parent`";
+        String query =  "SELECT `id`, `key` FROM `itemdata-parent`";
 
         try {
             if (connection.isClosed()) return false;
@@ -362,7 +362,7 @@ public class Database {
      * @return True on success loadItemDataChildIds
      */
     public boolean getItemDataChildIds(IndexRelations indexRelations) {
-        String query =  "SELECT `key`, `id` FROM `item_data_child`";
+        String query =  "SELECT `id`, `key` FROM `itemdata-child`";
 
         try {
             if (connection.isClosed()) return false;
@@ -380,7 +380,6 @@ public class Database {
         }
     }
 
-
     //------------------------------------------------------------------------------------------------------------
     // Indexing
     //------------------------------------------------------------------------------------------------------------
@@ -396,9 +395,9 @@ public class Database {
     public Integer indexItem(String league, int parentId, int childId) {
         league = formatLeague(league);
 
-        String query1 = "INSERT INTO `#_item_"+ league +"` (`id_data_parent`, `id_data_child`) VALUES (?, ?)";
+        String query1 = "INSERT INTO `#_"+ league +"-items` (`id-idp`, `id-idc`) VALUES (?, ?)";
 
-        String query2 = "SELECT `id` FROM `#_item_"+ league +"` WHERE `id_data_parent` = ? AND `id_data_child` = ?";
+        String query2 = "SELECT `id` FROM `#_"+ league +"-items` WHERE `id-idp` = ? AND `id-idc` = ?";
 
         try {
             if (connection.isClosed()) return null;
@@ -434,12 +433,10 @@ public class Database {
      * @return Id of created entry or null on failure
      */
     public Integer indexParentItemData(Item item, int parentCategoryId, Integer childCategoryId) {
-        String query1 = "INSERT INTO `item_data_parent` (" +
-                        "   `id_category_parent`, `id_category_child`, " +
-                        "   `name`, `type`, `frame`, `key`) " +
+        String query1 = "INSERT INTO `itemdata-parent` (`id-cp`, `id-cc`, `name`, `type`, `frame`, `key`) " +
                         "VALUES (?, ?, ?, ?, ?, ?)";
 
-        String query2 = "SELECT `id` FROM `item_data_parent` WHERE `key` = ?";
+        String query2 = "SELECT `id` FROM `itemdata-parent` WHERE `key` = ?";
 
         try {
             if (connection.isClosed()) return null;
@@ -483,14 +480,12 @@ public class Database {
      * @return Id of created entry or null on failure
      */
     public Integer indexChildItemData(Item item, int parentId) {
-        String query1 = "INSERT INTO `item_data_child` (" +
-                        "   `id_parent`, `tier`, `lvl`, `quality`, " +
+        String query1 = "INSERT INTO `itemdata-child` (" +
+                        "   `id-idp`, `tier`, `lvl`, `quality`, " +
                         "   `corrupted`, `links`, `var`, `key`, `icon`) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        String query2 = "SELECT `id` FROM `item_data_child` " +
-                        "WHERE `id_parent` = ? AND `key` = ? " +
-                        "LIMIT 1";
+        String query2 = "SELECT `id` FROM `itemdata-child` WHERE `key` = ?";
 
         try {
             if (connection.isClosed()) return null;
@@ -513,8 +508,7 @@ public class Database {
             connection.commit();
 
             try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                statement.setInt(1, parentId);
-                statement.setString(2, item.getUniqueKey());
+                statement.setString(1, item.getUniqueKey());
 
                 ResultSet resultSet = statement.executeQuery();
 
@@ -539,7 +533,7 @@ public class Database {
      * @return True on success
      */
     public boolean getStatus(StatusElement statusElement) {
-        String query = "SELECT * FROM `status`";
+        String query = "SELECT * FROM `sys-counters`";
 
         try {
             if (connection.isClosed()) return false;
@@ -552,7 +546,7 @@ public class Database {
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not query status data from database", 3);
+            Main.ADMIN.log_("Could not query counters from database", 3);
             return false;
         }
     }
@@ -564,7 +558,7 @@ public class Database {
      * @return True on success
      */
     public boolean updateStatus(StatusElement statusElement) {
-        String query =  "UPDATE `status` SET `value` = ? WHERE `id` = ?";
+        String query =  "UPDATE `sys-counters` SET `value` = ? WHERE `name` = ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -575,15 +569,15 @@ public class Database {
                 statement.addBatch();
 
                 statement.setLong(1, statusElement.twentyFourCounter);
-                statement.setString(2, "twentyFourCounter");
+                statement.setString(2, "24");
                 statement.addBatch();
 
                 statement.setLong(1, statusElement.sixtyCounter);
-                statement.setString(2, "sixtyCounter");
+                statement.setString(2, "60");
                 statement.addBatch();
 
                 statement.setLong(1, statusElement.tenCounter);
-                statement.setString(2, "tenCounter");
+                statement.setString(2, "10");
                 statement.addBatch();
 
                 statement.executeBatch();
@@ -613,13 +607,13 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "SELECT " +
-                        "   `idp`.`name`, `i`.`id_data_parent`, `i`.`id_data_child`, " +
+                        "   `idp`.`name`, `i`.`id-idp`, `i`.`id-idc`, " +
                         "   `i`.`mean`, `i`.`median`, `i`.`mode`, `i`.`exalted`, " +
                         "   `i`.`count`, `i`.`quantity`, `i`.`inc`, `i`.`dec` " +
-                        "FROM `#_item_"+ league +"` AS `i` " +
-                        "    INNER JOIN `item_data_parent` AS `idp` " +
-                        "        ON `i`.`id_data_parent` = `idp`.`id` " +
-                        "WHERE `idp`.`id_category_parent` = 4 AND `idp`.`frame` = 5";
+                        "FROM `#_"+ league +"-items` AS `i` " +
+                        "    INNER JOIN `itemdata-parent` AS `idp` " +
+                        "        ON `i`.`id-idp` = `idp`.`id` " +
+                        "WHERE `idp`.`id-cp` = 4 AND `idp`.`frame` = 5";
 
         try {
             if (connection.isClosed()) return false;
@@ -656,9 +650,9 @@ public class Database {
                         "    `ca`.`id` AS 'id_alias', " +
                         "    `ci`.`name` AS 'name_item', " +
                         "    `ca`.`name` AS 'name_alias' " +
-                        "FROM `currency_item` AS `ci` " +
-                        "    JOIN `currency_alias` AS `ca` " +
-                        "        ON `ci`.`id` = `ca`.`id_parent`";
+                        "FROM `sys-currency_items` AS `ci` " +
+                        "    JOIN `sys-currency_aliases` AS `ca` " +
+                        "        ON `ci`.`id` = `ca`.`id-ci`";
 
         try {
             if (connection.isClosed()) return false;
@@ -681,13 +675,12 @@ public class Database {
         }
     }
 
-
     public boolean uploadRaw(String league, IndexMap idToAccountToRawEntry) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_entry_"+ league +"` (`id_item`, `price`, `account`, `item_id`) " +
+        String query =  "INSERT INTO `#_"+ league +"-entries` (`id-i`, `price`, `account`, `itemid`) " +
                         "VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `price` = `price`";
+                        "ON DUPLICATE KEY UPDATE `price` = VALUES(`price`)";
 
         try {
             if (connection.isClosed()) return false;
@@ -722,9 +715,9 @@ public class Database {
     public boolean updateCounters(String league, IndexMap idToAccountToRawEntry) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_item_"+ league +"` " +
+        String query =  "UPDATE `#_"+ league +"-items` " +
                         "SET `count` = `count` + ?, `inc` = `inc` + ? " +
-                        "WHERE `id`= ?";
+                        "WHERE `id` = ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -755,12 +748,12 @@ public class Database {
     public boolean calculateMean(String league, List<Integer> idList, List<Integer> ignoreList) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_item_"+ league +"` " +
+        String query =  "UPDATE `#_"+ league +"-items` " +
                         "SET `mean` = (" +
                         "    SELECT IFNULL(AVG(`price`), 0.0) " +
-                        "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `id_item`= ?" +
-                        ") WHERE `id`= ?";
+                        "    FROM `#_"+ league +"-entries`" +
+                        "    WHERE `id-i` = ?" +
+                        ") WHERE `id` = ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -789,17 +782,17 @@ public class Database {
     public boolean calculateMedian(String league, List<Integer> idList, List<Integer> ignoreList) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_item_"+ league +"` " +
+        String query =  "UPDATE `#_"+ league +"-items` " +
                         "SET `median` = IFNULL((" +
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
-                        "        FROM `#_entry_"+ league +"` d,  (SELECT @rownum:=0) r" +
-                        "        WHERE `id_item` = ?" +
+                        "        FROM `#_"+ league +"-entries` d,  (SELECT @rownum:=0) r" +
+                        "        WHERE `id-i` = ?" +
                         "        ORDER BY d.`price`" +
                         "    ) as t1, (" +
                         "        SELECT count(*) as total_rows" +
-                        "        FROM `#_entry_"+ league +"` d" +
-                        "        WHERE `id_item` = ?" +
+                        "        FROM `#_"+ league +"-entries` d" +
+                        "        WHERE `id-i` = ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
                         "), 0.0) WHERE `id` = ?";
@@ -832,10 +825,10 @@ public class Database {
     public boolean calculateMode(String league, List<Integer> idList, List<Integer> ignoreList) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_item_"+ league +"` " +
+        String query =  "UPDATE `#_"+ league +"-items` " +
                         "SET `mode` = IFNULL(( " +
-                        "    SELECT `price` FROM `#_entry_"+ league +"`" +
-                        "    WHERE `id_item` = ?" +
+                        "    SELECT `price` FROM `#_"+ league +"-entries`" +
+                        "    WHERE `id-i` = ?" +
                         "    GROUP BY `price` " +
                         "    ORDER BY COUNT(*) DESC " +
                         "    LIMIT 1" +
@@ -870,11 +863,11 @@ public class Database {
         league = formatLeague(league);
 
         String query1 = "SET @exVal = (" +
-                        "    SELECT `i`.`mean` FROM `#_item_"+ league +"` AS `i` " +
-                        "    JOIN `item_data_parent` AS `idp` ON `i`.`id_data_parent` = `idp`.`id` " +
+                        "    SELECT `i`.`mean` FROM `#_"+ league +"-items` AS `i` " +
+                        "    JOIN `itemdata-parent` AS `idp` ON `i`.`id-idp` = `idp`.`id` " +
                         "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb');";
 
-        String query2 = "UPDATE `#_item_"+ league +"` " +
+        String query2 = "UPDATE `#_"+ league +"-items` " +
                         "SET `exalted` = IF (`mean` = 0.0, 0.0, IF (@exVal = 0.0, 0.0, IFNULL(`mean` / @exVal, 0.0)))";
 
         try {
@@ -908,12 +901,12 @@ public class Database {
                         "    `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'key_parent', " +
                         "    `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, " +
                         "    `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'key_child', `idc`.`icon`, " +
-                        "    `cc`.`name` AS 'category_child' " +
-                        "FROM `#_item_"+ league +"` AS `i` " +
-                        "JOIN `item_data_child` AS `idc` ON `i`.`id_data_child` = `idc`.`id` " +
-                        "JOIN `item_data_parent` AS `idp` ON `i`.`id_data_parent` = `idp`.`id` " +
-                        "JOIN `category_child` AS `cc` ON `idp`.`id_category_child` = `cc`.`id` " +
-                        "WHERE `idp`.`id_category_parent` = ? " +
+                        "    `cc`.`name` AS 'category-child' " +
+                        "FROM `#_"+ league +"-items` AS `i` " +
+                        "JOIN `itemdata-child` AS `idc` ON `i`.`id-idc` = `idc`.`id` " +
+                        "JOIN `itemdata-parent` AS `idp` ON `i`.`id-idp` = `idp`.`id` " +
+                        "JOIN `category-child` AS `cc` ON `idp`.`id-cc` = `cc`.`id` " +
+                        "WHERE `idp`.`id-cc` = ? " +
                         "ORDER BY `i`.`mean` DESC;";
 
         try {
@@ -941,8 +934,8 @@ public class Database {
     public boolean getOutputHistory(String league, Map<Integer, ParcelEntry> parcel) {
         league = formatLeague(league);
 
-        String query  = "SELECT `id`, `mean` FROM `#_history_"+ league +"` " +
-                        "WHERE `id_type` = 2 " +
+        String query  = "SELECT `id`, `mean` FROM `#_"+ league +"-history` " +
+                        "WHERE `id-ch` = 2 " +
                         "ORDER BY `time` DESC ";
 
         try {
@@ -971,7 +964,7 @@ public class Database {
     public boolean addOutputFile(String league, String category, String path) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `output_files` (`league`, `category`, `path`) " +
+        String query =  "INSERT INTO `sys-output_files` (`league`, `category`, `path`) " +
                         "VALUES (?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "   `path` = VALUES(`path`)";
@@ -996,7 +989,7 @@ public class Database {
     }
 
     public boolean getOutputFiles(List<String> pathList) {
-        String query =  "SELECT * FROM `output_files`";
+        String query =  "SELECT * FROM `sys-output_files`";
 
         try {
             if (connection.isClosed()) return false;
@@ -1024,10 +1017,15 @@ public class Database {
     public boolean addMinutely(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_history_"+ league +"` " +
-                        "   (`id`, `id_type`, `mean`, `median`, `mode`, `exalted`, `inc`, `dec`, `count`, `quantity`) " +
-                        "SELECT `id`, 1, `mean`, `median`, `mode`, `exalted`, `inc`, `dec`, `count`, `quantity` " +
-                        "FROM `#_item_"+ league +"`";
+        String query =  "INSERT INTO `#_"+ league +"-history` (" +
+                        "   `id-i`, `id-ch`, " +
+                        "   `mean`, `median`, `mode`, `exalted`, " +
+                        "   `count`, `quantity`, `inc`, `dec`)" +
+                        "SELECT " +
+                        "   `id`, 1, " +
+                        "   `mean`, `median`, `mode`, `exalted`, " +
+                        "   `inc`, `dec`, `count`, `quantity` " +
+                        "FROM `#_"+ league +"-items`";
 
         try {
             if (connection.isClosed()) return false;
@@ -1048,17 +1046,17 @@ public class Database {
     public boolean addHourly(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_history_"+ league +"` (" +
-                        "   `id`, `id_type`, " +
+        String query =  "INSERT INTO `#_"+ league +"-history` (" +
+                        "   `id-i`, `id-ch`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id`, 2, " +
+                        "   `id-i`, 2, " +
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "FROM `#_history_"+ league +"` " +
-                        "WHERE `id_type` = 1 " +
-                        "GROUP BY `id`";
+                        "FROM `#_"+ league +"-history` " +
+                        "WHERE `id-ch` = 1 " +
+                        "GROUP BY `id-i`";
 
         try {
             if (connection.isClosed()) return false;
@@ -1079,17 +1077,17 @@ public class Database {
     public boolean addDaily(String league) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_history_"+ league +"` (" +
-                        "   `id`, `id_type`, " +
+        String query =  "INSERT INTO `#_"+ league +"-history` (" +
+                        "   `id-i`, `id-ch`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id`, 3, " +
+                        "   `id-i`, 3, " +
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "FROM `#_history_"+ league +"` " +
-                        "WHERE `id_type` = 2 " +
-                        "GROUP BY `id`";
+                        "FROM `#_"+ league +"-history` " +
+                        "WHERE `id-ch` = 2 " +
+                        "GROUP BY `id-i`";
 
         try {
             if (connection.isClosed()) return false;
@@ -1110,10 +1108,10 @@ public class Database {
     public boolean calcQuantity(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_item_"+ league +"` as `i` " +
+        String query =  "UPDATE `#_"+ league +"-items` as `i` " +
                         "SET `quantity` = (" +
-                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `#_history_"+ league +"` " +
-                        "    WHERE `id` = `i`.`id` AND `id_type` = 2 " +
+                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `#_"+ league +"-history` " +
+                        "    WHERE `id-i` = `i`.`id` AND `id-ch` = 2 " +
                         "), `inc` = 0, `dec` = 0;";
 
         try {
@@ -1135,15 +1133,16 @@ public class Database {
     public boolean removeOldHistoryEntries(String league, int type, String interval) {
         league = formatLeague(league);
 
-        String query =  "DELETE FROM `#_history_"+ league +"` " +
-                        "WHERE `id_type` = "+ type+ " " +
+        String query =  "DELETE FROM `#_"+ league +"-history` " +
+                        "WHERE `id-ch` = ? " +
                         "AND `time` < ADDDATE(NOW(), INTERVAL -"+ interval +")";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, type);
+                statement.execute();
             }
 
             connection.commit();
@@ -1158,13 +1157,13 @@ public class Database {
     public boolean removeOldItemEntries(String league, List<Integer> idList) {
         league = formatLeague(league);
 
-        String query =  "DELETE FROM `#_entry_"+ league +"`" +
-                        "WHERE `id_item` = ? AND `account` NOT IN (" +
-                        "    SELECT `account`" +
+        String query =  "DELETE FROM `#_"+ league +"-entries`" +
+                        "WHERE `id-i` = ? AND `time` NOT IN (" +
+                        "    SELECT `time`" +
                         "    FROM (" +
-                        "        SELECT `account`, `time` " +
-                        "        FROM `#_entry_"+ league +"`" +
-                        "        WHERE `id_item` = ? " +
+                        "        SELECT `time` " +
+                        "        FROM `#_"+ league +"-entries`" +
+                        "        WHERE `id-i` = ? " +
                         "        ORDER BY `time` DESC" +
                         "        LIMIT ?" +
                         "    ) foo )";
@@ -1195,109 +1194,50 @@ public class Database {
     public boolean removeItemOutliers(String league, List<Integer> idList, List<Integer> ignoreList){
         league = formatLeague(league);
 
-        String queryX = "SELECT SUM(`dec`) / SUM(`inc`) AS 'discardRatio' " +
-                        "FROM `#_history_"+ league +"` " +
-                        "WHERE `id` = ? AND `id_type` = ? " +
-                        "ORDER BY `time` DESC " +
-                        "LIMIT ?";
+        String query1 = "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
+                        "SET @entryCount = (SELECT `count` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
 
-        String query0 = "SELECT @entryCount := (" +
-                        "    SELECT COUNT(*)" +
-                        "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `id_item` = ?);";
+                        "DELETE FROM `#_"+ league +"-entries` " +
+                        "WHERE `id-i` = ? AND @entryCount > ? && @medianPrice > 0 " +
+                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ?";
 
-        String query1 = "SET @stddevPrice = (" +
-                        "    SELECT STDDEV(`price`)" +
-                        "    FROM `#_entry_"+ league +"`" +
-                        "    WHERE `id_item` = ?" +
-                        ") * ?;";
-
-        String query2 = "SET @medianPrice = (" +
-                        "    SELECT `median`" +
-                        "    FROM `#_item_"+ league +"`" +
-                        "    WHERE `id` = ?);";
-
-        String query3 = "SET @numberOfElementsToRemove = (" +
-                        "    SELECT COUNT(*) " +
-                        "    FROM `#_entry_"+ league +"` " +
-                        "    WHERE `id_item` = ? " +
-                        "    AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
-                        "        `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) &&" +
-                        "        @entryCount > ? && @medianPrice > ?);";
-
-        String query4 = "UPDATE `#_item_"+ league +"` " +
-                        "SET `dec` = `dec` + @numberOfElementsToRemove " +
+        String query2 = "UPDATE `#_"+ league +"-items` " +
+                        "SET `dec` = `dec` + ? " +
                         "WHERE `id` = ?;";
 
-        String query5 = "DELETE FROM `#_entry_"+ league +"` " +
-                        "WHERE `id_item` = ? " +
-                        "AND (`price` > @medianPrice + @stddevPrice && `price` > @medianPrice * ? || " +
-                        "    `price` < @medianPrice - @stddevPrice && `price` < @medianPrice / ?) && " +
-                        "    @entryCount > ? && @medianPrice > ?;";
 
         try {
             if (connection.isClosed()) return false;
+            int[] results;
 
-            for (Integer id : idList) {
-                int entryCount = 0;
-
-                try (PreparedStatement statement = connection.prepareStatement(query0)) {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                for (Integer id : idList) {
                     statement.setInt(1, id);
-                    ResultSet resultSet = statement.executeQuery();
-                    if (resultSet.next()) entryCount = resultSet.getInt(1);
+                    statement.setInt(2, id);
+
+                    statement.setInt(3, id);
+                    statement.setInt(4, Config.outlier_minCount);
+                    statement.setDouble(5, Config.outlier_priceMulti);
+                    statement.setDouble(6, Config.outlier_priceMulti);
+
+                    statement.addBatch();
                 }
 
-                try (PreparedStatement statement = connection.prepareStatement(queryX)) {
-                    statement.setInt(1, id);
-                    statement.setInt(2, Config.sql_id_category_history_hourly);
-                    statement.setInt(3, Config.outlier_hoursCalculated);
+                results = statement.executeBatch();
+            }
 
-                    ResultSet resultSet = statement.executeQuery();
-
-                    if (resultSet.next()) {
-                        double discardRatio = resultSet.getDouble("discardRatio");
-
-                        if (discardRatio > Config.outlier_discardRatio && entryCount > 10) {
-                            System.out.printf("Bad ratio (%f) for %s %d\n", discardRatio, league, id);
-                            ignoreList.add(id);
-                            continue;
-                        }
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                for (int i = 0; i < idList.size(); i++) {
+                    if (results[i] > 0) {
+                        statement.setInt(1, results[i]);
+                        statement.setInt(2, idList.get(i));
+                        statement.addBatch();
+                    } else {
+                        //ignoreList.add(idList.get(i));
                     }
                 }
 
-                try (PreparedStatement statement = connection.prepareStatement(query1)) {
-                    statement.setInt(1, id);
-                    statement.setDouble(2, Config.outlier_devMulti);
-                    statement.execute();
-                }
-
-                try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                    statement.setInt(1, id);
-                    statement.execute();
-                }
-
-                try (PreparedStatement statement = connection.prepareStatement(query3)) {
-                    statement.setInt(1, id);
-                    statement.setDouble(2, Config.outlier_priceMulti);
-                    statement.setDouble(3, Config.outlier_priceMulti);
-                    statement.setInt(4, Config.outlier_minCount);
-                    statement.setDouble(5, Config.outlier_minPrice);
-                    statement.execute();
-                }
-
-                try (PreparedStatement statement = connection.prepareStatement(query4)) {
-                    statement.setInt(1, id);
-                    statement.execute();
-                }
-
-                try (PreparedStatement statement = connection.prepareStatement(query5)) {
-                    statement.setInt(1, id);
-                    statement.setDouble(2, Config.outlier_priceMulti);
-                    statement.setDouble(3, Config.outlier_priceMulti);
-                    statement.setInt(4, Config.outlier_minCount);
-                    statement.setDouble(5, Config.outlier_minPrice);
-                    statement.execute();
-                }
+                statement.executeBatch();
             }
 
             connection.commit();
@@ -1312,17 +1252,11 @@ public class Database {
     public boolean createLeagueTables(String league) {
         league = formatLeague(league);
 
-        String query1 = "CREATE TABLE `#_item_"+ league +"` (" +
-                        "    FOREIGN KEY (`id_data_child`)" +
-                        "        REFERENCES `item_data_child` (`id`)" +
-                        "        ON DELETE CASCADE," +
-                        "    FOREIGN KEY (`id_data_parent`)" +
-                        "        REFERENCES `item_data_parent` (`id`)" +
-                        "        ON DELETE CASCADE," +
+        String query1 = "CREATE TABLE `#_"+ league +"-items` (" +
                         "    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT," +
-                        "    `id_data_parent`      int             unsigned NOT NULL," +
-                        "    `id_data_child`       int             unsigned NOT NULL," +
-                        "    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `id-idp`              int             unsigned NOT NULL," +
+                        "    `id-idc`              int             unsigned NOT NULL," +
+                        "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                         "    `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                         "    `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                         "    `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
@@ -1330,37 +1264,37 @@ public class Database {
                         "    `count`               int(16)         unsigned NOT NULL DEFAULT 0," +
                         "    `quantity`            int(8)          unsigned NOT NULL DEFAULT 0," +
                         "    `inc`                 int(8)          unsigned NOT NULL DEFAULT 0," +
-                        "    `dec`                 int(8)          unsigned NOT NULL DEFAULT 0" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8; " +
-                        "CREATE INDEX `index-i-id` ON `#_item_"+ league +"` (`id`); " +
-                        "CREATE INDEX `index-i-id_idp` ON `#_item_"+ league +"` (`id_data_parent`); " +
-                        "CREATE INDEX `index-i-id_idc` ON `#_item_"+ league +"` (`id_data_child`); " +
-                        "CREATE INDEX `index-i-mean` ON `#_item_"+ league +"` (`mean`); ";
-
-        String query3 = "CREATE TABLE `#_entry_"+ league +"` (" +
-                        "    FOREIGN KEY (`id_item`)" +
-                        "        REFERENCES `#_item_"+ league +"` (`id`)" +
+                        "    `dec`                 int(8)          unsigned NOT NULL DEFAULT 0," +
+                        "    FOREIGN KEY (`id-idp`)" +
+                        "        REFERENCES `itemdata-parent` (`id`)" +
                         "        ON DELETE CASCADE," +
-                        "    `id_item`             int             unsigned NOT NULL," +
-                        "    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    FOREIGN KEY (`id-idc`)" +
+                        "        REFERENCES `itemdata-child` (`id`)" +
+                        "        ON DELETE CASCADE," +
+                        "    INDEX `ind-i-id`      (`id`)," +
+                        "    INDEX `ind-i-id-idp`  (`id-idp`)," +
+                        "    INDEX `ind-i-id-idc`  (`id-idc`)," +
+                        "    INDEX `ind-i-mean`    (`mean`)" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+        String query2 = "CREATE TABLE `#_"+ league +"-entries` (" +
+                        "    `id-i`                int             unsigned NOT NULL," +
+                        "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                         "    `price`               decimal(10,4)   unsigned NOT NULL," +
                         "    `account`             varchar(32)     NOT NULL UNIQUE," +
-                        "    `item_id`             varchar(32)     NOT NULL" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8; " +
-                        "CREATE INDEX `index-e-id_i` ON `#_entry_"+ league +"` (`id_item`); " +
-                        "CREATE INDEX `index-e-time` ON `#_entry_"+ league +"` (`time`); " +
-                        "CREATE INDEX `index-e-account` ON `#_entry_"+ league +"` (`account`); ";
-
-        String query4 = "CREATE TABLE `#_history_"+ league +"` (" +
-                        "    FOREIGN KEY (`id`)" +
-                        "        REFERENCES `#_item_"+ league +"` (`id`)" +
+                        "    `itemid`              varchar(32)     NOT NULL," +
+                        "    FOREIGN KEY (`id-i`)" +
+                        "        REFERENCES `#_"+ league +"-items` (`id`)" +
                         "        ON DELETE CASCADE," +
-                        "    FOREIGN KEY (`id_type`)" +
-                        "        REFERENCES `category_history` (`id`)" +
-                        "        ON DELETE RESTRICT," +
-                        "    `id`                  int             unsigned NOT NULL," +
-                        "    `id_type`             int             unsigned NOT NULL," +
-                        "    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    INDEX `ind-e-id-i`    (`id-i`)," +
+                        "    INDEX `ind-e-time`    (`time`)," +
+                        "    INDEX `ind-e-price`   (`price`)" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+        String query3 = "CREATE TABLE `#_"+ league +"-history` (" +
+                        "    `id-i`                int             unsigned NOT NULL," +
+                        "    `id-ch`               int             unsigned NOT NULL," +
+                        "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                         "    `mean`                decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `median`              decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `mode`                decimal(10,4)   unsigned DEFAULT NULL," +
@@ -1368,32 +1302,38 @@ public class Database {
                         "    `inc`                 int(8)          unsigned DEFAULT NULL," +
                         "    `dec`                 int(8)          unsigned DEFAULT NULL," +
                         "    `count`               int(16)         unsigned DEFAULT NULL," +
-                        "    `quantity`            int(8)          unsigned DEFAULT NULL" +
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8; " +
-                        "CREATE INDEX `index-h-id` ON `#_history_"+ league +"` (`id`); " +
-                        "CREATE INDEX `index-h-id_t` ON `#_history_"+ league +"` (`id_type`); " +
-                        "CREATE INDEX `index-h-time` ON `#_history_"+ league +"` (`time`); ";
+                        "    `quantity`            int(8)          unsigned DEFAULT NULL," +
+                        "    FOREIGN KEY (`id-i`)" +
+                        "        REFERENCES `#_"+ league +"-items` (`id`)" +
+                        "        ON DELETE CASCADE," +
+                        "    FOREIGN KEY (`id-ch`)" +
+                        "        REFERENCES `category-history` (`id`)" +
+                        "        ON DELETE RESTRICT," +
+                        "    INDEX `ind-h-id`      (`id-i`)," +
+                        "    INDEX `ind-h-id-ch`   (`id-ch`)," +
+                        "    INDEX `ind-h-time`    (`time`)" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         try {
             if (connection.isClosed()) return false;
 
             getTables(tables);
 
-            if (!tables.contains("#_item_" + league)) {
+            if (!tables.contains("#_" + league + "-items")) {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(query1);
                 }
             }
 
-            if (!tables.contains("#_entry_" + league)) {
+            if (!tables.contains("#_" + league + "-entries")) {
                 try (Statement statement = connection.createStatement()) {
-                    statement.execute(query3);
+                    statement.execute(query2);
                 }
             }
 
-            if (!tables.contains("#_history_" + league)) {
+            if (!tables.contains("#_" + league + "-history")) {
                 try (Statement statement = connection.createStatement()) {
-                    statement.execute(query4);
+                    statement.execute(query3);
                 }
             }
 
@@ -1425,7 +1365,7 @@ public class Database {
 
     public static String formatLeague(String league) {
         return league
-                .replace(" ", "-")
+                .replace(" ", "_")
                 .replace("(", "")
                 .replace(")", "")
                 .toLowerCase();
