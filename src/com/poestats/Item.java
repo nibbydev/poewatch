@@ -564,23 +564,10 @@ public class Item extends Mappers.BaseItem {
      * Gets text-value(s) from category object
      */
     private void parseCategory() {
-        // A rough outline of what it is meant to do:
-        // {"category": "jewels"}                  -> "jewels"                -> {"jewels"}             -> "jewels"
-        // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour:gloves"
-        // {"category": {"weapons": ["bow"]}}      -> "{weapons=[bow]}"       -> {"weapons", "bow"}     -> "weapons:bow"
+        parentCategory = category.keySet().toArray()[0].toString();
 
-        String asString = category.toString();
-
-        // "{armour=[gloves]}" -> "armour=[gloves]"
-        asString = asString.substring(1, asString.length() - 1);
-
-        // "armour=[gloves]" -> {"armour", "[gloves]"}
-        String[] splitString = asString.split("=");
-
-        parentCategory = splitString[0].toLowerCase();
-
-        if (!splitString[1].equals("[]")) {
-            childCategory =  splitString[1].substring(1, splitString[1].length() - 1).toLowerCase();
+        if (category.get(parentCategory).size() > 0) {
+            childCategory = category.get(parentCategory).get(0).toLowerCase();
         }
     }
 
