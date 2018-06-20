@@ -2,7 +2,7 @@
 header("Content-Type: application/json");
 include_once ( "details/pdo.php" );
 
-$query = "SELECT `changeid` as `id`, `time` FROM `changeid`";
+$query = "SELECT `change_id` as `id`, `time` FROM `sys-change_id`";
 $stmt = $pdo->query($query);
 $row = $stmt->fetch();
 
