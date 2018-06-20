@@ -5,49 +5,41 @@ function get_leagues($pdo) {
 
   $rows = array();
   while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-    $rows[] = $row[0];
+    $rows[] = str_replace(" ", "", strtolower($row[0]));
   }
 
   return $rows;
 }
 
-function get_item($pdo, $league, $sup, $sub) {
+function get_item($pdo, $league, $id) {
   $query = "SELECT 
-    i.`sup`, i.`sub`, d.`child`, 
-    d.`name`, d.`type`, d.`frame`, d.`icon`, 
-    d.`var`, d.`tier`, d.`lvl`, d.`quality`, d.`corrupted`, d.`links`,
-    i.`mean`, i.`median`, i.`mode`, i.`exalted`, 
-    i.`count`, i.`quantity`
-  FROM `#_item_$league` AS i
-  JOIN (
-    SELECT 
-        p.`sup`, b.`sub`,
-        p.`child`,
-        p.`name`, p.`type`,
-        p.`frame`, b.`icon`,
-        p.`key` AS 'generic_key', b.`key` AS 'specific_key',
-        b.`var`, b.`tier`, b.`lvl`, b.`quality`, b.`corrupted`, b.`links` 
-    FROM `item_data_sub` AS b
-    JOIN `item_data_sup` AS p
-        ON b.`sup` = p.`sup`
-    WHERE b.`sup` = ? AND b.`sub` = ?
-  ) AS d ON i.`sup` = d.`sup` AND i.`sub` = d.`sub`
-  ORDER BY i.`mean` DESC ";
+    `i`.`mean`, `i`.`median`, `i`.`mode`, `i`.`exalted`, 
+    `i`.`count`, `i`.`quantity`, `i`.`inc`, `i`.`dec`, 
+    `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'key_parent', 
+    `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, 
+    `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'key_child', `idc`.`icon`, 
+    `cc`.`name` AS 'category_child', `cp`.`name` AS 'category_parent'
+  FROM `#_$league-items` AS `i` 
+  JOIN `itemdata-child` AS `idc` ON `i`.`id-idc` = `idc`.`id` 
+  JOIN `itemdata-parent` AS `idp` ON `i`.`id-idp` = `idp`.`id` 
+  LEFT JOIN `category-parent` AS `cp` ON `idp`.`id-cp` = `cp`.`id` 
+  LEFT JOIN `category-child` AS `cc` ON `idp`.`id-cc` = `cc`.`id` 
+  WHERE `i`.`id` = ?";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$sup, $sub]);
+  $stmt->execute([$id]);
 
   return $stmt->fetch();
 }
 
-function get_history($pdo, $league, $sup, $sub) {
-  $query = "SELECT * FROM `#_history_$league` 
-    WHERE `sup` = ? AND `sub` = ? AND `type`='daily' 
+function get_history($pdo, $league, $id) {
+  $query = "SELECT * FROM `#_$league-history` 
+    WHERE `id-i` = ? AND `id-ch` = 3 
     ORDER BY `time` DESC
     LIMIT 7";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$sup, $sub]);
+  $stmt->execute([$id]);
   return $stmt;
 }
 
@@ -82,21 +74,11 @@ include_once ( "details/pdo.php" );
 $leagues = get_leagues($pdo);
 if (!in_array($league, $leagues)) die("{\"error\": \"Invalid params\"}" );
 
-
-
-
-
-
-
-$payload = get_item($pdo, $league, $sup, $sub);
-
-if (!$payload) {
-  die("{\"error\": \"Invalid params\", \"field\": \"index\"}" );
-}
-
+$payload = get_item($pdo, $league, $id);
+if (!$payload) die("{\"error\": \"Invalid params\"}" );
 $payload = prep_item($payload);
 
-$history = get_history($pdo, $league, $sup, $sub);
+$history = get_history($pdo, $league, $id);
 
 $counter = 6;
 while ($row = $history->fetch()) {
@@ -110,5 +92,4 @@ while ($row = $history->fetch()) {
   $counter--;
 }
 
-echo json_encode($payload) . "\n\n";
-
+echo json_encode($payload);
