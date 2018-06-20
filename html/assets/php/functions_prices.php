@@ -9,36 +9,57 @@ function CheckAndGetCategoryParam() {
 
 // Get list of categories from DB
 function GetCategories($pdo) {
-  $queryParent = "SELECT * FROM `category_parent`";
-  $queryChild = "SELECT * FROM `category_child`";
+  $query = "SELECT 
+    `cp`.`name` AS 'parent_name', `cc`.`name` AS 'child_name', 
+    `cp`.`display` AS 'parent_display', `cc`.`display` AS 'child_display' 
+    FROM `category_parent` AS `cp`
+    LEFT JOIN `category_child` AS `cc`
+    ON `cp`.`id` = `cc`.`id_parent`";
 
-  $stmtParent = $pdo->query($queryParent);
-  $stmtChild = $pdo->query($queryChild);
+  $stmt = $pdo->query($query);
 
-  $rows = array();
+  $payload = array();
 
-  while ($row = $stmtParent->fetch()) {
-    $rows[] = array(
-      "name" => $row["parent"],
-      "display" => $row["display"],
-      "members" => array()
-    );
-  }
+  $prevParent = null;
+  $parentArray = array();
 
-  while ($row = $stmtChild->fetch()) {
-    for ($i=0; $i < count($rows); $i++) { 
-      if ($rows[$i]["name"] === $row["parent"]) {
-        $rows[$i]["members"][] = array(
-          "name" => $row["child"],
-          "display" => $row["display"]
-        );
+  while ($row = $stmt->fetch()) {
+    if ($prevParent == null) {
+      $prevParent = $row["parent_name"];
 
-        break;
-      }
+      $prevParentArray = array(
+        "name" => $row["parent_name"],
+        "display" => $row["parent_display"],
+        "members" => array(
+          array(
+            "name" => $row["child_name"],
+            "display" => $row["child_display"]
+          )
+        )
+      );
+    } else if ($prevParent !== $row["parent_name"]) {
+      $prevParent = $row["parent_name"];
+      $payload[] = $prevParentArray;
+
+      $prevParentArray = array(
+        "name" => $row["parent_name"],
+        "display" => $row["parent_display"],
+        "members" => array(
+          array(
+            "name" => $row["child_name"],
+            "display" => $row["child_display"]
+          )
+        )
+      );
+    } else {
+      $parentArray["members"][] = array(
+        "name" => $row["child_name"],
+        "display" => $row["child_display"]
+      );
     }
   }
 
-  return $rows;
+  return $payload;
 }
 
 // Get list of leagues from DB
@@ -49,7 +70,7 @@ function GetLeagues($pdo, $short) {
   $rows = array();
   
   while ($row = $stmt->fetch()) {
-    if ($short) $rows[] = $row["id"];
+    if ($short) $rows[] = $row["name"];
     else $rows[] = $row;
   }
 

@@ -1,9 +1,14 @@
 <?php
 function get_leagues($pdo) {
-  $query = "SELECT `id` FROM `leagues`";
-
+  $query = "SELECT `name` FROM `sys-leagues`";
   $stmt = $pdo->query($query);
-  return $stmt->fetch_num();
+
+  $rows = array();
+  while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+    $rows[] = $row[0];
+  }
+
+  return $rows;
 }
 
 function get_item($pdo, $league, $sup, $sub) {
@@ -66,20 +71,17 @@ function prep_item($item) {
 
 header("Content-Type: application/json");
 
-if ( !isset($_GET["index"])  ) die("{\"error\": \"Invalid params\", \"field\": \"index\"}" );
-$index  = trim(preg_replace("/[^0-9]/",        "", strtolower($_GET["index" ])));
-if ( !$index  || strlen($index ) != 7 ) die("{\"error\": \"Invalid params\", \"field\": \"index\"}" );
+if (!isset($_GET["id"])) die("{\"error\": \"Invalid params\"}" );
+if (!isset($_GET["league"])) die("{\"error\": \"Invalid params\"}" );
+
+$id = $_GET["id"];
+$league = $_GET["league"];
 
 include_once ( "details/pdo.php" );
 
-$sup = substr($index, 0, 5);
-$sub = substr($index, 5);
-
 $leagues = get_leagues($pdo);
+if (!in_array($league, $leagues)) die("{\"error\": \"Invalid params\"}" );
 
-echo json_encode($leagues);
-
-die();
 
 
 
