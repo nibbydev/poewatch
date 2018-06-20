@@ -28,7 +28,7 @@ function get_param_category() {
 }
 
 function get_file_path($pdo, $league, $category) {
-  $query = "SELECT `path` FROM `output_files` WHERE `league` = ? AND `category` = ?";
+  $query = "SELECT `path` FROM `sys-output_files` WHERE `league` = ? AND `category` = ?";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$league, $category]);
