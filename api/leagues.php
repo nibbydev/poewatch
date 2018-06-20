@@ -2,7 +2,7 @@
 header("Content-Type: application/json");
 include_once ( "details/pdo.php" );
 
-$query = "SELECT * FROM `leagues`";
+$query = "SELECT * FROM `sys-leagues`";
 $stmt = $pdo->query($query);
 
 $rows = array();
