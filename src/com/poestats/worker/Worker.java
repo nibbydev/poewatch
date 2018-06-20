@@ -60,8 +60,10 @@ public class Worker extends Thread {
                 reply = gson.fromJson(replyJSONString, Mappers.APIReply.class);
 
                 // Parse the deserialized JSON if deserialization was successful
-                if (!reply.next_change_id.equals(""))
+                if (!reply.next_change_id.equals("")) {
                     Main.ENTRY_MANAGER.parseItems(reply);
+                }
+
             }
 
             // Clear the job

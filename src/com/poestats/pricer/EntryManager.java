@@ -146,7 +146,7 @@ public class EntryManager {
             }
         }
 
-        System.out.printf("a1(%4d) a2(%4d) a3(%4d) a4(%4d) a5(%4d) a6(%4d) a7(%4d) a8(%4d) \n", a1, a2, a3, a4, a5, a6, a7, a8);
+        //System.out.printf("a1(%4d) a2(%4d) a3(%4d) a4(%4d) a5(%4d) a6(%4d) a7(%4d) a8(%4d) \n", a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     private void generateOutputFiles() {
@@ -162,7 +162,9 @@ public class EntryManager {
             for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
                 Map<Integer, ParcelEntry> tmpParcel = new LinkedHashMap<>();
 
-                Main.DATABASE.getOutputItems(league, category.getValue().getId(), tmpParcel);
+                int categoryId = category.getValue().getId();
+
+                Main.DATABASE.getOutputItems(league, tmpParcel, categoryId);
                 Main.DATABASE.getOutputHistory(league, tmpParcel);
 
                 List<ParcelEntry> parcel = new ArrayList<>();
@@ -263,7 +265,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        //generateOutputFiles();
+        generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Prepare message

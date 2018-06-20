@@ -77,7 +77,9 @@ public class WorkerManager extends Thread {
 
         // Loop though every worker and call stop method
         for (Worker worker : workerList) {
+            Main.ADMIN.log_("Stopping worker (" + worker.getIndex() + ")", 1);
             worker.stopWorker();
+            Main.ADMIN.log_("Worker (" + worker.getIndex() + ") stopped", 1);
         }
 
         // Wake the monitor that's holding up the main loop, allowing safe exit

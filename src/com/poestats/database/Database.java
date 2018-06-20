@@ -885,7 +885,7 @@ public class Database {
     // Output data management
     //--------------------------
 
-    public boolean getOutputItems(String league, int category, Map<Integer, ParcelEntry> parcel) {
+    public boolean getOutputItems(String league, Map<Integer, ParcelEntry> parcel, int category) {
         league = formatLeague(league);
 
         String query =  "SELECT " +
@@ -895,12 +895,12 @@ public class Database {
                         "    `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'key_parent', " +
                         "    `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, " +
                         "    `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'key_child', `idc`.`icon`, " +
-                        "    `cc`.`name` AS 'category-child' " +
+                        "    `cc`.`name` AS 'category_child' " +
                         "FROM `#_"+ league +"-items` AS `i` " +
                         "JOIN `itemdata-child` AS `idc` ON `i`.`id-idc` = `idc`.`id` " +
                         "JOIN `itemdata-parent` AS `idp` ON `i`.`id-idp` = `idp`.`id` " +
-                        "JOIN `category-child` AS `cc` ON `idp`.`id-cc` = `cc`.`id` " +
-                        "WHERE `idp`.`id-cc` = ? " +
+                        "LEFT JOIN `category-child` AS `cc` ON `idp`.`id-cc` = `cc`.`id` " +
+                        "WHERE `idp`.`id-cp` = ? " +
                         "ORDER BY `i`.`mean` DESC;";
 
         try {
@@ -928,8 +928,8 @@ public class Database {
     public boolean getOutputHistory(String league, Map<Integer, ParcelEntry> parcel) {
         league = formatLeague(league);
 
-        String query  = "SELECT `id`, `mean` FROM `#_"+ league +"-history` " +
-                        "WHERE `id-ch` = 2 " +
+        String query  = "SELECT `id-i`, `mean` FROM `#_"+ league +"-history` " +
+                        "WHERE `id-ch` = 3 " +
                         "ORDER BY `time` DESC ";
 
         try {
