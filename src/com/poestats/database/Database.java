@@ -1236,22 +1236,18 @@ public class Database {
         league = formatLeague(league);
 
         String query1 = "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
-                        "SET @entryCount = (SELECT `count` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
+                        "SET @entryCount = (SELECT COUNT(*) FROM `#_"+ league +"-entries` WHERE `id-i` = ?); " +
                         "SET @stddevPrice = (SELECT STDDEV(`price`) * ? FROM `#_"+ league +"-entries` WHERE `id-i` = ?); " +
 
                         "DELETE FROM `#_"+ league +"-entries` " +
-                        "WHERE `id-i` = ? AND @entryCount > ? && @medianPrice > 0 " +
-                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ?" +
-                        "    AND `price` NOT BETWEEN @medianPrice - @stddevPrice AND @medianPrice + @stddevPrice";
+                        "WHERE `id-i` = ? AND @entryCount > ? AND @medianPrice > 0 " +
+                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ? " +
+                        "    AND `price` NOT BETWEEN @medianPrice - @stddevPrice AND @medianPrice + @stddevPrice; " +
 
-        String query2 = "UPDATE `#_"+ league +"-items` " +
-                        "SET `dec` = `dec` + ? " +
-                        "WHERE `id` = ?;";
-
+                        "UPDATE `#_"+ league +"-items` SET `dec` = `dec` + ROW_COUNT() WHERE `id` = ?;";
 
         try {
             if (connection.isClosed()) return false;
-            int[] results;
 
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (Integer id : idList) {
@@ -1264,17 +1260,8 @@ public class Database {
                     statement.setInt(6, Config.outlier_minCount);
                     statement.setDouble(7, Config.outlier_priceMulti);
                     statement.setDouble(8, Config.outlier_priceMulti);
+                    statement.setInt(9, id);
 
-                    statement.addBatch();
-                }
-
-                results = statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                for (int i = 0; i < idList.size(); i++) {
-                    statement.setInt(1, results[i]);
-                    statement.setInt(2, idList.get(i));
                     statement.addBatch();
                 }
 
