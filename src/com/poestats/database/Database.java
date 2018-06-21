@@ -892,6 +892,29 @@ public class Database {
         }
     }
 
+    public boolean updateVolatile(String league) {
+        league = formatLeague(league);
+
+        String query =  "UPDATE `#_"+ league +"-items` " +
+                        "SET `volatile` = IF(`dec` > 1 && `dec` / `inc` > ?, 1, 0);";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setDouble(1, Config.entry_volatileRatio);
+                statement.execute();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not update volatile status", 3);
+            return false;
+        }
+    }
+
     //--------------------------
     // Output data management
     //--------------------------
@@ -1069,13 +1092,9 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, " +
-                        "   `mean`, `median`, `mode`, `exalted`, " +
-                        "   `count`, `quantity`, `inc`, `dec`)" +
+                        "   `id-i`, `id-ch`, `mean`, `median`, `mode`, `exalted`)" +
                         "SELECT " +
-                        "   `id`, 1, " +
-                        "   `mean`, `median`, `mode`, `exalted`, " +
-                        "   `inc`, `dec`, `count`, `quantity` " +
+                        "   `id`, 1, `mean`, `median`, `mode`, `exalted`" +
                         "FROM `#_"+ league +"-items`";
 
         try {
@@ -1098,16 +1117,17 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, " +
+                        "   `id-i`, `id-ch`, `volatile`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id-i`, 2, " +
-                        "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
-                        "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "FROM `#_"+ league +"-history` " +
-                        "WHERE `id-ch` = 1 " +
-                        "GROUP BY `id-i`";
+                        "   `h`.`id-i`, 2, `i`.`volatile`, " +
+                        "   AVG(`h`.`mean`), AVG(`h`.`median`), AVG(`h`.`mode`), AVG(`h`.`exalted`), " +
+                        "   `i`.`count`, `i`.`quantity`, `i`.`inc`,  `i`.`dec` " +
+                        "FROM `#_"+ league +"-history` AS `h` " +
+                        "JOIN `#_"+ league +"-items` AS `i` ON `h`.`id-i` = `i`.`id` " +
+                        "WHERE `h`.`id-ch` = 1 " +
+                        "GROUP BY `h`.`id-i`";
 
         try {
             if (connection.isClosed()) return false;
@@ -1129,11 +1149,11 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, " +
+                        "   `id-i`, `id-ch`, `volatile`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id-i`, 3, " +
+                        "   `id-i`, 3, MAX(`volatile`), " +
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
                         "FROM `#_"+ league +"-history` " +
@@ -1245,16 +1265,18 @@ public class Database {
     public boolean removeItemOutliers(String league, List<Integer> idList){
         league = formatLeague(league);
 
-        String query1 = "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
-                        "SET @entryCount = (SELECT COUNT(*) FROM `#_"+ league +"-entries` WHERE `id-i` = ?); " +
-                        "SET @stddevPrice = (SELECT STDDEV(`price`) * ? FROM `#_"+ league +"-entries` WHERE `id-i` = ?); " +
+        String query1 = "SET @id = ?; " +
+                        "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = @id); " +
+                        "SET @volatileState = (SELECT `volatile` FROM `#_"+ league +"-items` WHERE `id` = @id); " +
+                        "SET @entryCount = (SELECT COUNT(*) FROM `#_"+ league +"-entries` WHERE `id-i` = @id); " +
+                        "SET @stddevPrice = (SELECT STDDEV(`price`) * ? FROM `#_"+ league +"-entries` WHERE `id-i` = @id); " +
 
                         "DELETE FROM `#_"+ league +"-entries` " +
-                        "WHERE `id-i` = ? AND @entryCount > ? AND @medianPrice > 0 " +
+                        "WHERE `id-i` = @id AND @volatileState = 0 AND @entryCount > ? AND @medianPrice > 0 " +
                         "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ? " +
                         "    AND `price` NOT BETWEEN @medianPrice - @stddevPrice AND @medianPrice + @stddevPrice; " +
 
-                        "UPDATE `#_"+ league +"-items` SET `dec` = `dec` + ROW_COUNT() WHERE `id` = ?;";
+                        "UPDATE `#_"+ league +"-items` SET `dec` = `dec` + ROW_COUNT() WHERE `id` = @id;";
 
         try {
             if (connection.isClosed()) return false;
@@ -1262,15 +1284,11 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (Integer id : idList) {
                     statement.setInt(1, id);
-                    statement.setInt(2, id);
-                    statement.setDouble(3, Config.outlier_devMulti);
-                    statement.setInt(4, id);
+                    statement.setDouble(2, Config.outlier_devMulti);
 
-                    statement.setInt(5, id);
-                    statement.setInt(6, Config.outlier_minCount);
-                    statement.setDouble(7, Config.outlier_priceMulti);
-                    statement.setDouble(8, Config.outlier_priceMulti);
-                    statement.setInt(9, id);
+                    statement.setInt(3, Config.outlier_minCount);
+                    statement.setDouble(4, Config.outlier_priceMulti);
+                    statement.setDouble(5, Config.outlier_priceMulti);
 
                     statement.addBatch();
                 }
@@ -1295,6 +1313,7 @@ public class Database {
                         "    `id-idp`              int             unsigned NOT NULL," +
                         "    `id-idc`              int             unsigned NOT NULL," +
                         "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `volatile`            tinyint(1)      unsigned NOT NULL DEFAULT 0," +
                         "    `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                         "    `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                         "    `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
@@ -1312,7 +1331,8 @@ public class Database {
                         "    INDEX `ind-i-id`      (`id`)," +
                         "    INDEX `ind-i-id-idp`  (`id-idp`)," +
                         "    INDEX `ind-i-id-idc`  (`id-idc`)," +
-                        "    INDEX `ind-i-mean`    (`mean`)" +
+                        "    INDEX `ind-i-mean`    (`mean`)," +
+                        "    INDEX `ind-i-volatile`(`volatile`)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         String query2 = "CREATE TABLE `#_"+ league +"-entries` (" +
@@ -1333,6 +1353,7 @@ public class Database {
                         "    `id-i`                int             unsigned NOT NULL," +
                         "    `id-ch`               int             unsigned NOT NULL," +
                         "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `volatile`            tinyint(1)      unsigned DEFAULT NULL," +
                         "    `mean`                decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `median`              decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `mode`                decimal(10,4)   unsigned DEFAULT NULL," +
@@ -1349,7 +1370,8 @@ public class Database {
                         "        ON DELETE RESTRICT," +
                         "    INDEX `ind-h-id`      (`id-i`)," +
                         "    INDEX `ind-h-id-ch`   (`id-ch`)," +
-                        "    INDEX `ind-h-time`    (`time`)" +
+                        "    INDEX `ind-h-time`    (`time`)," +
+                        "    INDEX `ind-h-volatile`(`volatile`)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         try {

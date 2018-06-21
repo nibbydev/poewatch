@@ -134,6 +134,7 @@ public class EntryManager {
 
                 Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 Main.DATABASE.addHourly(league);
+                Main.DATABASE.updateVolatile(league);
                 Main.DATABASE.calcQuantity(league);
             }
         }

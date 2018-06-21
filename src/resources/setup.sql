@@ -132,6 +132,7 @@ CREATE TABLE `#_LEAGUE-items` (
     `id-idc`              int             unsigned NOT NULL,
     `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    `volatile`            tinyint(1)      unsigned NOT NULL DEFAULT 0,
     `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
     `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
     `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
@@ -151,6 +152,7 @@ CREATE TABLE `#_LEAGUE-items` (
     INDEX `ind-i-id`      (`id`),
     INDEX `ind-i-id-idp`  (`id-idp`),
     INDEX `ind-i-id-idc`  (`id-idc`),
+    INDEX `ind-i-volatile`(`volatile`),
     INDEX `ind-i-mean`    (`mean`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -184,6 +186,7 @@ CREATE TABLE `#_LEAGUE-history` (
     `id-ch`               int             unsigned NOT NULL,
     `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    `volatile`            tinyint(1)      unsigned DEFAULT NULL,
     `mean`                decimal(10,4)   unsigned DEFAULT NULL,
     `median`              decimal(10,4)   unsigned DEFAULT NULL,
     `mode`                decimal(10,4)   unsigned DEFAULT NULL,
@@ -202,6 +205,7 @@ CREATE TABLE `#_LEAGUE-history` (
 
     INDEX `ind-h-id`      (`id-i`),
     INDEX `ind-h-id-ch`   (`id-ch`),
+    INDEX `ind-h-volatile`(`volatile`),
     INDEX `ind-h-time`    (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
