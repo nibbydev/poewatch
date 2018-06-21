@@ -15,10 +15,7 @@ import com.poestats.pricer.maps.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Database {
     //------------------------------------------------------------------------------------------------------------
@@ -676,12 +673,13 @@ public class Database {
         }
     }
 
-    public boolean uploadRaw(String league, IndexMap idToAccountToRawEntry) {
+    public boolean uploadRaw(String league, IndexMap idToAccountToRawEntry, Map<Integer, Integer> affectedCount) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_"+ league +"-entries` (`id-i`, `price`, `account`, `itemid`) " +
+        String query =  "INSERT INTO `#_"+ league +"-entries` (" +
+                        "   `id-i`, `price`, `account`, `itemid`) " +
                         "VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `price` = VALUES(`price`)";
+                        "ON DUPLICATE KEY UPDATE `id-i` = `id-i`";
 
         try {
             if (connection.isClosed()) return false;
@@ -701,7 +699,19 @@ public class Database {
                     }
                 }
 
-                statement.executeBatch();
+                int[] tmpResults = statement.executeBatch();
+
+                int tmpCounterI = 0;
+                for (Integer id : idToAccountToRawEntry.keySet()) {
+                    int tmpCounterJ = 0;
+
+                    for (int j = 0; j < idToAccountToRawEntry.get(id).size(); j++) {
+                        tmpCounterJ += tmpResults[tmpCounterI];
+                        tmpCounterI++;
+                    }
+
+                    affectedCount.put(id, tmpCounterJ);
+                }
             }
 
             connection.commit();
@@ -713,7 +723,7 @@ public class Database {
         }
     }
 
-    public boolean updateCounters(String league, IndexMap idToAccountToRawEntry) {
+    public boolean updateCounters(String league, Map<Integer, Integer> affectedCount) {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` " +
@@ -724,11 +734,11 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : idToAccountToRawEntry.keySet()) {
-                    AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
+                for (Integer id : affectedCount.keySet()) {
+                    int count = affectedCount.get(id);
 
-                    statement.setInt(1, accountToRawEntry.size());
-                    statement.setInt(2, accountToRawEntry.size());
+                    statement.setInt(1, count);
+                    statement.setInt(2, count);
                     statement.setInt(3, id);
 
                     statement.addBatch();

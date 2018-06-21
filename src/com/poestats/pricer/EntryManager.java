@@ -383,9 +383,10 @@ public class EntryManager {
 
         for (String league : leagueToIdToAccountToRawEntry.keySet()) {
             IndexMap idToAccountToRawEntry = leagueToIdToAccountToRawEntry.get(league);
+            Map<Integer, Integer> affectedCount = new HashMap<>();
 
-            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry);
-            Main.DATABASE.updateCounters(league, idToAccountToRawEntry);
+            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry, affectedCount);
+            Main.DATABASE.updateCounters(league, affectedCount);
         }
     }
 
