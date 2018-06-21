@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
+import com.poestats.pricer.Itemdata.ItemdataEntry;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.maps.CurrencyMaps.*;
 import com.poestats.pricer.maps.RawMaps.*;
@@ -154,7 +155,7 @@ public class EntryManager {
         List<String> newOutputFiles = new ArrayList<>();
 
         Main.DATABASE.getOutputFiles(oldOutputFiles);
-        Config.folder_newOutput.mkdirs();
+        Config.folder_output_get.mkdirs();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = Database.formatLeague(leagueEntry.getName());
@@ -174,7 +175,7 @@ public class EntryManager {
                 }
 
                 String fileName = league + "_" + category.getKey() + "_" + System.currentTimeMillis() + ".json";
-                File outputFile = new File(Config.folder_newOutput, fileName);
+                File outputFile = new File(Config.folder_output_get, fileName);
 
                 try (Writer writer = Misc.defineWriter(outputFile)) {
                     if (writer == null) throw new IOException();
@@ -195,7 +196,7 @@ public class EntryManager {
             }
         }
 
-        File[] outputFiles = Config.folder_newOutput.listFiles();
+        File[] outputFiles = Config.folder_output_get.listFiles();
         if (outputFiles == null) return;
 
         try {
@@ -209,6 +210,51 @@ public class EntryManager {
         } catch (IOException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not delete old output files", 3);
+        }
+    }
+
+    private void generateItemDataFile() {
+        List<String> oldItemdataFiles = new ArrayList<>();
+        Main.DATABASE.getOutputFiles(oldItemdataFiles);
+
+        Config.folder_output_itemdata.mkdirs();
+
+        List<ItemdataEntry> parcel = new ArrayList<>();
+        Main.DATABASE.getItemdata(parcel);
+
+        String fileName = "itemdata_" + System.currentTimeMillis() + ".json";
+        File itemdataFile = new File(Config.folder_output_itemdata, fileName);
+
+        try (Writer writer = Misc.defineWriter(itemdataFile)) {
+            if (writer == null) throw new IOException();
+            gson.toJson(parcel, writer);
+        } catch (IOException ex) {
+            Main.ADMIN._log(ex, 4);
+            Main.ADMIN.log_("Couldn't write itemdata to file", 3);
+        }
+
+        try {
+            String path = itemdataFile.getCanonicalPath();
+            Main.DATABASE.addOutputFile("itemdata", "itemdata", path);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Couldn't get file's actual path", 3);
+        }
+
+        File[] itemdataFiles = Config.folder_output_itemdata.listFiles();
+        if (itemdataFiles == null) return;
+
+        try {
+            for (File file : itemdataFiles) {
+                if (oldItemdataFiles.contains(file.getCanonicalPath())) continue;
+                else if (itemdataFile.getCanonicalPath().equals(file.getCanonicalPath())) continue;
+
+                boolean success = file.delete();
+                if (!success) Main.ADMIN.log_("Could not delete old itemdata file", 3);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not delete old itemdata files", 3);
         }
     }
 
@@ -267,6 +313,14 @@ public class EntryManager {
         long time_json = System.currentTimeMillis();
         generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
+
+        // Build itemdata
+        if (Main.RELATIONS.isNewIndexedItem()) {
+            long time_itemdata = System.currentTimeMillis();
+            generateItemDataFile();
+            time_itemdata = System.currentTimeMillis() - time_itemdata;
+            Main.ADMIN.log_(String.format("Itemdata rebuilt (%4d ms)", time_itemdata), 0);
+        }
 
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%5d", System.currentTimeMillis() - status.lastRunTime) + " ms]";

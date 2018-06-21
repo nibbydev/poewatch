@@ -28,10 +28,12 @@ public class Config {
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
 
-    public static final File folder_root        = new File(".");
-    public static final File folder_newOutput   = new File(folder_root.getPath(), "output");
-    public static final File file_config        = new File(folder_root.getPath(),"config.cfg");
-    public static final URL  resource_config    = Main.class.getResource("/resources/" + file_config.getName());
+    public static final File folder_root            = new File(".");
+    public static final File folder_output          = new File(folder_root.getPath(), "output");
+    public static final File folder_output_get      = new File(folder_output.getPath(), "get");
+    public static final File folder_output_itemdata = new File(folder_output.getPath(), "itemdata");
+    public static final File file_config            = new File(folder_root.getPath(),"config.cfg");
+    public static final URL  resource_config        = Main.class.getResource("/resources/" + file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Index definitions

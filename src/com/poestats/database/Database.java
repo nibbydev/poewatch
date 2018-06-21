@@ -5,6 +5,7 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.league.LeagueEntry;
+import com.poestats.pricer.Itemdata.ItemdataEntry;
 import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
 import com.poestats.pricer.entries.RawEntry;
@@ -884,6 +885,52 @@ public class Database {
     //--------------------------
     // Output data management
     //--------------------------
+
+    public boolean getItemdata(List<ItemdataEntry> parcel) {
+        String query =  "SELECT " +
+                        "  `idp`.`id` AS 'idp-id', " +
+                        "  `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'parent-key', " +
+                        "  `idc`.`id` AS 'idc-id', " +
+                        "  `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, " +
+                        "  `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'child-key', `idc`.`icon`, " +
+                        "  `cp`.`name` AS 'cp-name', `cc`.`name` AS 'cc-name' " +
+                        "FROM `itemdata-parent` AS `idp` " +
+                        "LEFT JOIN `itemdata-child` AS `idc` ON `idp`.`id` = `idc`.`id-idp` " +
+                        "LEFT JOIN `category-parent` AS `cp` ON `cp`.`id` = `idp`.`id-cp` " +
+                        "LEFT JOIN `category-child` AS `cc` ON `cc`.`id` = `idp`.`id-cc` ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                ItemdataEntry lastEntry = null;
+
+                while (resultSet.next()) {
+                    if (lastEntry == null) {
+                        lastEntry = new ItemdataEntry();
+                        lastEntry.load(resultSet);
+                    } else if (!lastEntry.getId().equals(resultSet.getString("idp-id"))) {
+                        parcel.add(lastEntry);
+
+                        lastEntry = new ItemdataEntry();
+                        lastEntry.load(resultSet);
+                    }
+
+                    if (resultSet.getString("idc-id") != null) {
+                        lastEntry.loadMember(resultSet);
+                    }
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not get itemdata", 3);
+            return false;
+        }
+    }
 
     public boolean getOutputItems(String league, Map<Integer, ParcelEntry> parcel, int category) {
         league = formatLeague(league);

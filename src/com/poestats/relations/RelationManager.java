@@ -16,8 +16,8 @@ public class RelationManager {
     private Map<String, String> currencyAliasToName = new HashMap<>();
     private IndexRelations indexRelations = new IndexRelations();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
-
     private List<String> currentlyIndexingChildKeys = new ArrayList<>();
+    private volatile boolean newIndexedItem = false;
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -98,6 +98,9 @@ public class RelationManager {
         if (currentlyIndexingChildKeys.contains(uniqueKey)) return null;
         else currentlyIndexingChildKeys.add(uniqueKey);
 
+        // Flip flag that indicates a new item was indexed and thus the itemdata files have to be regenerated
+        newIndexedItem = true;
+
         indexCategory(item);
 
         Integer parentItemDataId = indexRelations.getParentItemDataId(genericKey);
@@ -169,5 +172,12 @@ public class RelationManager {
 
     public Map<String, CategoryEntry> getCategoryRelations() {
         return categoryRelations;
+    }
+
+    public boolean isNewIndexedItem() {
+        if (newIndexedItem) {
+            newIndexedItem = false;
+            return true;
+        } else return false;
     }
 }
