@@ -769,7 +769,7 @@ public class Database {
                         "    SELECT IFNULL(AVG(`price`), 0.0) " +
                         "    FROM `#_"+ league +"-entries`" +
                         "    WHERE `id-i` = ?" +
-                        ") WHERE `id` = ?";
+                        ") WHERE `id` = ? AND `volatile` = 0";
 
         try {
             if (connection.isClosed()) return false;
@@ -809,7 +809,7 @@ public class Database {
                         "        WHERE `id-i` = ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) WHERE `id` = ?";
+                        "), 0.0) WHERE `id` = ? AND `volatile` = 0";
 
         try {
             if (connection.isClosed()) return false;
@@ -845,7 +845,7 @@ public class Database {
                         "    ORDER BY COUNT(*) DESC " +
                         "    LIMIT 1" +
                         "), 0.0) " +
-                        "WHERE `id` = ?";
+                        "WHERE `id` = ? AND `volatile` = 0";
 
         try {
             if (connection.isClosed()) return false;
@@ -878,7 +878,8 @@ public class Database {
                         "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb');";
 
         String query2 = "UPDATE `#_"+ league +"-items` " +
-                        "SET `exalted` = IF (`mean` = 0.0, 0.0, IF (@exVal = 0.0, 0.0, IFNULL(`mean` / @exVal, 0.0)))";
+                        "SET `exalted` = IF (`mean` = 0.0, 0.0, IF (@exVal = 0.0, 0.0, IFNULL(`mean` / @exVal, 0.0))) " +
+                        "WHERE `volatile` = 0";
 
         try {
             if (connection.isClosed()) return false;
