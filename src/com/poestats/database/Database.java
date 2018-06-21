@@ -939,7 +939,7 @@ public class Database {
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
-                    Integer id = resultSet.getInt("id");
+                    Integer id = resultSet.getInt("id-i");
                     ParcelEntry parcelEntry = parcel.get(id);
 
                     if (parcelEntry == null) continue;
@@ -1190,10 +1190,12 @@ public class Database {
 
         String query1 = "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
                         "SET @entryCount = (SELECT `count` FROM `#_"+ league +"-items` WHERE `id` = ?); " +
+                        "SET @stddevPrice = (SELECT STDDEV(`price`) * ? FROM `#_"+ league +"-entries` WHERE `id-i` = ?); " +
 
                         "DELETE FROM `#_"+ league +"-entries` " +
                         "WHERE `id-i` = ? AND @entryCount > ? && @medianPrice > 0 " +
-                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ?";
+                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ?" +
+                        "    AND `price` NOT BETWEEN @medianPrice - @stddevPrice AND @medianPrice + @stddevPrice";
 
         String query2 = "UPDATE `#_"+ league +"-items` " +
                         "SET `dec` = `dec` + ? " +
@@ -1208,11 +1210,13 @@ public class Database {
                 for (Integer id : idList) {
                     statement.setInt(1, id);
                     statement.setInt(2, id);
+                    statement.setDouble(3, Config.outlier_devMulti);
+                    statement.setInt(4, id);
 
-                    statement.setInt(3, id);
-                    statement.setInt(4, Config.outlier_minCount);
-                    statement.setDouble(5, Config.outlier_priceMulti);
-                    statement.setDouble(6, Config.outlier_priceMulti);
+                    statement.setInt(5, id);
+                    statement.setInt(6, Config.outlier_minCount);
+                    statement.setDouble(7, Config.outlier_priceMulti);
+                    statement.setDouble(8, Config.outlier_priceMulti);
 
                     statement.addBatch();
                 }
