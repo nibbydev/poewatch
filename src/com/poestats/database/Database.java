@@ -679,7 +679,7 @@ public class Database {
         String query =  "INSERT INTO `#_"+ league +"-entries` (" +
                         "   `id-i`, `price`, `account`, `itemid`) " +
                         "VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `id-i` = `id-i`";
+                        "ON DUPLICATE KEY UPDATE `price` = VALUES(`price`)";
 
         try {
             if (connection.isClosed()) return false;
@@ -706,11 +706,16 @@ public class Database {
                     int tmpCounterJ = 0;
 
                     for (int j = 0; j < idToAccountToRawEntry.get(id).size(); j++) {
-                        tmpCounterJ += tmpResults[tmpCounterI];
+                        // 1 if the row is inserted as a new row
+                        // 2 if an existing row is updated
+                        // 0 if an existing row is set to its current values
+
+                        if (tmpResults[tmpCounterI] == 1) tmpCounterJ++;
+
                         tmpCounterI++;
                     }
 
-                    affectedCount.put(id, tmpCounterJ);
+                    if (tmpCounterJ > 0) affectedCount.put(id, tmpCounterJ);
                 }
             }
 
@@ -896,13 +901,14 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` " +
-                        "SET `volatile` = IF(`dec` > 1 && `dec` / `inc` > ?, 1, 0);";
+                        "SET `volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0);";
 
         try {
             if (connection.isClosed()) return false;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setDouble(1, Config.entry_volatileRatio);
+                statement.setDouble(1, Config.entry_volatileFlat);
+                statement.setDouble(2, Config.entry_volatileRatio);
                 statement.execute();
             }
 

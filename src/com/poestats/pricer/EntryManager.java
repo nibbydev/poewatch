@@ -20,6 +20,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    private List<RawEntryLeagueMap> entryMaps = new ArrayList<>();
     private Map<String, List<Integer>> leagueToIds = new HashMap<>();
     private CurrencyLeagueMap currencyLeagueMap;
     private StatusElement status = new StatusElement();
@@ -73,6 +74,40 @@ public class EntryManager {
             CurrencyMap currencyMap = currencyLeagueMap.getOrDefault(league, new CurrencyMap());
             Main.DATABASE.getCurrency(league, currencyMap);
             currencyLeagueMap.putIfAbsent(league, currencyMap);
+        }
+    }
+
+    private void upload() {
+        List<RawEntryLeagueMap> entryMaps = this.entryMaps;
+        this.entryMaps = new ArrayList<>();
+
+        RawEntryLeagueMap mergedMap = new RawEntryLeagueMap();
+
+        // Merge all gathered data
+        for (RawEntryLeagueMap entryMap : entryMaps) {
+            for (String league : entryMap.keySet()) {
+                IndexMap idToAccountToRawEntry = entryMap.get(league);
+                IndexMap mergedIndexMap = mergedMap.getOrDefault(league, new IndexMap());
+
+                for (Integer id : idToAccountToRawEntry.keySet()) {
+                    AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
+                    AccountMap mergedAccountMap = mergedIndexMap.getOrDefault(id, new AccountMap());
+
+                    mergedAccountMap.putAll(accountToRawEntry);
+                    mergedIndexMap.putIfAbsent(id, mergedAccountMap);
+                }
+
+                mergedMap.putIfAbsent(league, mergedIndexMap);
+            }
+        }
+
+        // Upload merged data
+        for (String league : mergedMap.keySet()) {
+            IndexMap idToAccountToRawEntry = mergedMap.get(league);
+            Map<Integer, Integer> affectedCount = new HashMap<>();
+
+            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry, affectedCount);
+            Main.DATABASE.updateCounters(league, affectedCount);
         }
     }
 
@@ -300,6 +335,11 @@ public class EntryManager {
             Main.ADMIN.log_("24 activated", 0);
         }
 
+        // Upload gathered prices
+        long time_upload = System.currentTimeMillis();
+        upload();
+        time_upload = System.currentTimeMillis() - time_upload;
+
         // Sort JSON
         long time_cycle = System.currentTimeMillis();
         cycle();
@@ -325,11 +365,11 @@ public class EntryManager {
 
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%5d", System.currentTimeMillis() - status.lastRunTime) + " ms]";
-        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
+        String tenMinDisplay = "[10m:" + String.format("%2d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
-        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) +
-                " ms)(currency:" + String.format("%5d", time_load_currency) + " ms)";
+        String twentyHourDisplay = "[24h:" + String.format("%4d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
+        String timeTookDisplay = "(C:" + String.format("%5d", time_cycle) + " ms)(J:" + String.format("%4d", time_json) +
+                " ms)(C:" + String.format("%3d", time_load_currency) + " ms)(U:" + String.format("%4d", time_upload) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Switch off flags
@@ -382,13 +422,7 @@ public class EntryManager {
             }
         }
 
-        for (String league : leagueToIdToAccountToRawEntry.keySet()) {
-            IndexMap idToAccountToRawEntry = leagueToIdToAccountToRawEntry.get(league);
-            Map<Integer, Integer> affectedCount = new HashMap<>();
-
-            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry, affectedCount);
-            Main.DATABASE.updateCounters(league, affectedCount);
-        }
+        entryMaps.add(leagueToIdToAccountToRawEntry);
     }
 
     /**
