@@ -11,10 +11,12 @@ $query = "SELECT
 
   `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'child-key', `idc`.`icon`,
 
-  `idp`.`id-cp` AS 'cp-id', `idp`.`id-cc` AS 'cc-id'
+  `cp`.`name` AS 'cp-name', `cc`.`name` AS 'cc-name'
 
 FROM `itemdata-parent` AS `idp`
-LEFT JOIN `itemdata-child` AS `idc` ON `idp`.`id` = `idc`.`id-idp`";
+LEFT JOIN `itemdata-child` AS `idc` ON `idp`.`id` = `idc`.`id-idp`
+LEFT JOIN `category-parent` AS `cp` ON `cp`.`id` = `idp`.`id-cp`
+LEFT JOIN `category-child` AS `cc` ON `cc`.`id` = `idp`.`id-cc`";
 
 $stmt = $pdo->query($query);
 
@@ -29,8 +31,8 @@ while ($row = $stmt->fetch()) {
       "type" => $row["type"],
       "frame" => $row["frame"],
       "key" => $row["parent-key"],
-      "category-parent-id" => $row["cp-id"],
-      "category-child-id" => $row["cc-id"],
+      "parent-category" => $row["cp-name"],
+      "child-category" => $row["cc-name"],
       "members" => array()
     );
   } else if ($tmp["id"] !== $row["idp-id"]) {
@@ -42,8 +44,8 @@ while ($row = $stmt->fetch()) {
       "type" => $row["type"],
       "frame" => $row["frame"],
       "key" => $row["parent-key"],
-      "category-parent-id" => $row["cp-id"],
-      "category-child-id" => $row["cc-id"],
+      "parent-category" => $row["cp-name"],
+      "child-category" => $row["cc-name"],
       "members" => array()
     );
   }
