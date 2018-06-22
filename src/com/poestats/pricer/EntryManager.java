@@ -390,6 +390,8 @@ public class EntryManager {
             String league = null;
 
             for (Item item : stash.items) {
+                if (!Main.WORKER_MANAGER.isFlag_Run()) return;
+
                 if (league == null) league = item.getLeague();
 
                 item.fix();

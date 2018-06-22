@@ -48,7 +48,7 @@ public class AdminSuite {
      * @param newChangeId The latest ChangeId string
      */
     public void setChangeID(String newChangeId) {
-        if (!lastChangeId.equals(newChangeId)) {
+        if (lastChangeId == null || !lastChangeId.equals(newChangeId)) {
             lastChangeId = newChangeId;
             Main.DATABASE.updateChangeID(newChangeId);
         }

@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -55,18 +56,16 @@ public class Worker extends Thread {
             replyJSONString = downloadData();
 
             // If download was unsuccessful, stop
-            if (!replyJSONString.equals("")) {
+            if (replyJSONString != null) {
                 // Deserialize the JSON string
                 reply = gson.fromJson(replyJSONString, Mappers.APIReply.class);
 
                 // Parse the deserialized JSON if deserialization was successful
-                if (!reply.next_change_id.equals("")) {
+                if (reply != null && reply.next_change_id != null) {
                     Main.ENTRY_MANAGER.parseItems(reply);
                 }
-
             }
 
-            // Clear the job
             job = null;
         }
 
@@ -80,8 +79,9 @@ public class Worker extends Thread {
         flagLocalRun = false;
         wakeLocalMonitor();
 
-        while (readyToExit) try {
+        while (!readyToExit) try {
             Thread.sleep(50);
+            wakeLocalMonitor();
         } catch (InterruptedException ex) { }
     }
 
@@ -123,8 +123,7 @@ public class Worker extends Thread {
             // Stream data and count bytes
             while ((byteCount = stream.read(byteBuffer, 0, Config.worker_downloadBufferSize)) != -1) {
                 // Check if run flag is lowered
-                if (!this.flagLocalRun)
-                    return "";
+                if (!flagLocalRun) return null;
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
                 if (byteCount != Config.worker_downloadBufferSize) {
@@ -151,7 +150,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            return "";
+                            return null;
                         }
                     }
                 }

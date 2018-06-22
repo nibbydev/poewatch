@@ -70,8 +70,8 @@ public class Config {
     // Entry
     //------------------------------------------------------------------------------------------------------------
 
-    public static final int entry_volatileFlat = 10;
-    public static final double entry_volatileRatio = 0.8;
+    public static final int entry_volatileFlat = 1;
+    public static final double entry_volatileRatio = 0.5;
     public static final int outlier_hoursCalculated = 1;
     public static final double outlier_discardRatio = 0.7;
     public static final double outlier_devMulti = 2.0;

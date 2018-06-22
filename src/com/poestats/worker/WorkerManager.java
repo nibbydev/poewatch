@@ -248,4 +248,8 @@ public class WorkerManager extends Thread {
     public Object getMonitor() {
         return monitor;
     }
+
+    public boolean isFlag_Run() {
+        return flag_Run;
+    }
 }
