@@ -5,7 +5,6 @@ import com.poestats.*;
 import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.Itemdata.ItemdataEntry;
-import com.poestats.pricer.entries.RawEntry;
 import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
@@ -19,7 +18,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private List<RawEntryLeagueMap> entryMaps = new ArrayList<>();
+    private List<Le2Id2Ac2Raw> entryMaps = new ArrayList<>();
     private Map<String, List<Integer>> leagueToIds = new HashMap<>();
     private Map<String, Map<String, Double>> currencyLeagueMap;
     private StatusElement status = new StatusElement();
@@ -77,20 +76,20 @@ public class EntryManager {
     }
 
     private void upload() {
-        List<RawEntryLeagueMap> entryMaps = this.entryMaps;
+        List<Le2Id2Ac2Raw> entryMaps = this.entryMaps;
         this.entryMaps = new ArrayList<>();
 
-        RawEntryLeagueMap mergedMap = new RawEntryLeagueMap();
+        Le2Id2Ac2Raw mergedMap = new Le2Id2Ac2Raw();
 
         // Merge all gathered data
-        for (RawEntryLeagueMap entryMap : entryMaps) {
+        for (Le2Id2Ac2Raw entryMap : entryMaps) {
             for (String league : entryMap.keySet()) {
-                IndexMap idToAccountToRawEntry = entryMap.get(league);
-                IndexMap mergedIndexMap = mergedMap.getOrDefault(league, new IndexMap());
+                Id2Ac2Raw idToAccountToRawEntry = entryMap.get(league);
+                Id2Ac2Raw mergedIndexMap = mergedMap.getOrDefault(league, new Id2Ac2Raw());
 
                 for (Integer id : idToAccountToRawEntry.keySet()) {
-                    AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
-                    AccountMap mergedAccountMap = mergedIndexMap.getOrDefault(id, new AccountMap());
+                    Ac2Raw accountToRawEntry = idToAccountToRawEntry.get(id);
+                    Ac2Raw mergedAccountMap = mergedIndexMap.getOrDefault(id, new Ac2Raw());
 
                     mergedAccountMap.putAll(accountToRawEntry);
                     mergedIndexMap.putIfAbsent(id, mergedAccountMap);
@@ -102,7 +101,7 @@ public class EntryManager {
 
         // Upload merged data
         for (String league : mergedMap.keySet()) {
-            IndexMap idToAccountToRawEntry = mergedMap.get(league);
+            Id2Ac2Raw idToAccountToRawEntry = mergedMap.get(league);
             Map<Integer, Integer> affectedCount = new HashMap<>();
 
             Main.DATABASE.uploadRaw(league, idToAccountToRawEntry, affectedCount);
@@ -385,7 +384,7 @@ public class EntryManager {
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
-        RawEntryLeagueMap leagueToIdToAccountToRawEntry = new RawEntryLeagueMap();
+        Le2Id2Ac2Raw le2Id2Ac2Raw = new Le2Id2Ac2Raw();
 
         for (Mappers.Stash stash : reply.stashes) {
             String league = null;
@@ -406,13 +405,13 @@ public class EntryManager {
                 Integer id = Main.RELATIONS.indexItem(item, league);
                 if (id == null) continue;
 
-                IndexMap idToAccountToRawEntry = leagueToIdToAccountToRawEntry.getOrDefault(league, new IndexMap());
-                AccountMap accountToRawEntry = idToAccountToRawEntry.getOrDefault(id, new AccountMap());
+                Id2Ac2Raw id2Ac2Raw = le2Id2Ac2Raw.getOrDefault(league, new Id2Ac2Raw());
+                Ac2Raw ac2Raw = id2Ac2Raw.getOrDefault(id, new Ac2Raw());
 
-                accountToRawEntry.put(stash.accountName, rawEntry);
+                ac2Raw.put(stash.accountName, rawEntry);
 
-                idToAccountToRawEntry.putIfAbsent(id, accountToRawEntry);
-                leagueToIdToAccountToRawEntry.putIfAbsent(league, idToAccountToRawEntry);
+                id2Ac2Raw.putIfAbsent(id, ac2Raw);
+                le2Id2Ac2Raw.putIfAbsent(league, id2Ac2Raw);
 
                 // Maintain a list of league-specific item IDs that have had entries added to them
                 List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
@@ -421,7 +420,7 @@ public class EntryManager {
             }
         }
 
-        entryMaps.add(leagueToIdToAccountToRawEntry);
+        entryMaps.add(le2Id2Ac2Raw);
     }
 
     /**

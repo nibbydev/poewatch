@@ -8,7 +8,6 @@ import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.Itemdata.ItemdataEntry;
 import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
-import com.poestats.pricer.entries.RawEntry;
 import com.poestats.relations.IndexRelations;
 import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
@@ -667,7 +666,7 @@ public class Database {
         }
     }
 
-    public boolean uploadRaw(String league, IndexMap idToAccountToRawEntry, Map<Integer, Integer> affectedCount) {
+    public boolean uploadRaw(String league, Id2Ac2Raw idToAccountToRawEntry, Map<Integer, Integer> affectedCount) {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-entries` (" +
@@ -680,7 +679,7 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idToAccountToRawEntry.keySet()) {
-                    AccountMap accountToRawEntry = idToAccountToRawEntry.get(id);
+                    Ac2Raw accountToRawEntry = idToAccountToRawEntry.get(id);
 
                     for (String account : accountToRawEntry.keySet()) {
                         RawEntry rawEntry = accountToRawEntry.get(account);
