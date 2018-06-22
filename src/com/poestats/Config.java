@@ -78,7 +78,7 @@ public class Config {
     public static final double outlier_priceMulti = 2.0;
     public static final int outlier_minCount = 5;
 
-    public static final int entry_maxCount = 96;
+    public static final int entry_maxCount = 64;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;

@@ -1269,12 +1269,10 @@ public class Database {
                         "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = @id); " +
                         "SET @volatileState = (SELECT `volatile` FROM `#_"+ league +"-items` WHERE `id` = @id); " +
                         "SET @entryCount = (SELECT COUNT(*) FROM `#_"+ league +"-entries` WHERE `id-i` = @id); " +
-                        "SET @stddevPrice = (SELECT STDDEV(`price`) * ? FROM `#_"+ league +"-entries` WHERE `id-i` = @id); " +
 
                         "DELETE FROM `#_"+ league +"-entries` " +
                         "WHERE `id-i` = @id AND @volatileState = 0 AND @entryCount > ? AND @medianPrice > 0 " +
-                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ? " +
-                        "    AND `price` NOT BETWEEN @medianPrice - @stddevPrice AND @medianPrice + @stddevPrice; " +
+                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ?; " +
 
                         "UPDATE `#_"+ league +"-items` SET `dec` = `dec` + ROW_COUNT() WHERE `id` = @id;";
 
@@ -1284,11 +1282,9 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (Integer id : idList) {
                     statement.setInt(1, id);
-                    statement.setDouble(2, Config.outlier_devMulti);
-
-                    statement.setInt(3, Config.outlier_minCount);
+                    statement.setInt(2, Config.outlier_minCount);
+                    statement.setDouble(3, Config.outlier_priceMulti);
                     statement.setDouble(4, Config.outlier_priceMulti);
-                    statement.setDouble(5, Config.outlier_priceMulti);
 
                     statement.addBatch();
                 }
