@@ -1,20 +1,10 @@
 package com.poestats.admin;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
-import com.google.gson.Gson;
 import com.poestats.Config;
 import com.poestats.Main;
 import com.poestats.Misc;
-
-import java.io.*;
 
 public class AdminSuite {
     //------------------------------------------------------------------------------------------------------------
@@ -22,8 +12,7 @@ public class AdminSuite {
     //------------------------------------------------------------------------------------------------------------
 
     private final ArrayList<LogMessage> log = new ArrayList<>(Config.admin_logSize);
-    private final ChangeIDElement changeIDElement = new ChangeIDElement();
-    private final Gson gson = Main.getGson();
+    private String lastChangeId = null;
 
     //------------------------------------------------------------------------------------------------------------
     // Logging methods. All of these have slightly different content and need to be formatted.
@@ -54,16 +43,14 @@ public class AdminSuite {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Updates the latest changeID and latest pull time
+     * Updates the change id entry in the database
      *
-     * @param changeID The latest ChangeID string
+     * @param newChangeId The latest ChangeId string
      */
-    public void setChangeID(String changeID) {
-        String oldChangeID = changeIDElement.getChangeId();
-        changeIDElement.update(changeID);
-
-        if (!changeIDElement.getChangeId().equals(oldChangeID)) {
-            Main.DATABASE.updateChangeID(changeID);
+    public void setChangeID(String newChangeId) {
+        if (!lastChangeId.equals(newChangeId)) {
+            lastChangeId = newChangeId;
+            Main.DATABASE.updateChangeID(newChangeId);
         }
     }
 }
