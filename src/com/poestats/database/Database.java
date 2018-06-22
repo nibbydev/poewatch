@@ -5,7 +5,7 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.league.LeagueEntry;
-import com.poestats.pricer.Itemdata.ItemdataEntry;
+import com.poestats.pricer.itemdata.ItemdataEntry;
 import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
 import com.poestats.relations.IndexRelations;

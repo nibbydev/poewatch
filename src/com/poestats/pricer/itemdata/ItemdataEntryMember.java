@@ -1,4 +1,4 @@
-package com.poestats.pricer.Itemdata;
+package com.poestats.pricer.itemdata;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

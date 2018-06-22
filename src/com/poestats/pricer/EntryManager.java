@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
-import com.poestats.pricer.Itemdata.ItemdataEntry;
+import com.poestats.pricer.itemdata.ItemdataEntry;
 import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
