@@ -10,8 +10,7 @@ import com.poestats.pricer.ParcelEntry;
 import com.poestats.pricer.StatusElement;
 import com.poestats.pricer.entries.RawEntry;
 import com.poestats.relations.IndexRelations;
-import com.poestats.pricer.maps.CurrencyMaps.*;
-import com.poestats.pricer.maps.RawMaps.*;
+import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
 import java.sql.*;
@@ -598,19 +597,17 @@ public class Database {
      * Queries database and fills out provided CurrencyMap with CurrencyItems
      *
      * @param league League where to get currency
-     * @param currencyMap CurrencyMap to fill out
+     * @param currencyMap A map of currency name to its price
      * @return True on success
      */
-    public boolean getCurrency(String league, CurrencyMap currencyMap) {
+    public boolean getCurrency(String league, Map<String, Double> currencyMap) {
         league = formatLeague(league);
 
         String query =  "SELECT " +
-                        "   `idp`.`name`, `i`.`id-idp`, `i`.`id-idc`, " +
-                        "   `i`.`mean`, `i`.`median`, `i`.`mode`, `i`.`exalted`, " +
-                        "   `i`.`count`, `i`.`quantity`, `i`.`inc`, `i`.`dec` " +
+                        "   `idp`.`name`, `i`.`median` " +
                         "FROM `#_"+ league +"-items` AS `i` " +
-                        "    INNER JOIN `itemdata-parent` AS `idp` " +
-                        "        ON `i`.`id-idp` = `idp`.`id` " +
+                        "   JOIN `itemdata-parent` AS `idp` " +
+                        "      ON `i`.`id-idp` = `idp`.`id` " +
                         "WHERE `idp`.`id-cp` = 4 AND `idp`.`frame` = 5";
 
         try {
@@ -621,10 +618,7 @@ public class Database {
 
                 while (resultSet.next()) {
                     String name = resultSet.getString("name");
-
-                    CurrencyItem currencyItem = new CurrencyItem();
-                    currencyItem.loadItem(resultSet);
-                    currencyMap.put(name, currencyItem);
+                    currencyMap.put(name, resultSet.getDouble("median"));
                 }
             }
 

@@ -1,4 +1,4 @@
-package com.poestats.pricer.maps;
+package com.poestats.pricer;
 
 import com.poestats.pricer.entries.RawEntry;
 

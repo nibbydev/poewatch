@@ -2,8 +2,8 @@ package com.poestats.pricer.entries;
 
 import com.poestats.Config;
 import com.poestats.Item;
-import com.poestats.database.CurrencyItem;
-import com.poestats.pricer.maps.CurrencyMaps.*;
+
+import java.util.Map;
 
 public class RawEntry {
     //------------------------------------------------------------------------------------------------------------
@@ -23,15 +23,14 @@ public class RawEntry {
         id = item.getId();
     }
 
-    public boolean convertPrice(CurrencyMap currencyMap) {
+    public boolean convertPrice(Map<String, Double> currencyMap) {
         if (!priceType.equals("Chaos Orb")) {
             if (currencyMap == null) return true;
-            CurrencyItem currencyItem = currencyMap.get(priceType);
+            Double chaosValue = currencyMap.get(priceType);
 
-            if (currencyItem == null) return true;
-            else if (currencyItem.getCount() < 20) return true;
+            if (chaosValue == null) return true;
 
-            price = Math.round(price * currencyItem.getMean() * Config.item_pricePrecision) / Config.item_pricePrecision;
+            price = Math.round(price * chaosValue * Config.item_pricePrecision) / Config.item_pricePrecision;
             priceType = "Chaos Orb";
         }
 

@@ -6,8 +6,7 @@ import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.Itemdata.ItemdataEntry;
 import com.poestats.pricer.entries.RawEntry;
-import com.poestats.pricer.maps.CurrencyMaps.*;
-import com.poestats.pricer.maps.RawMaps.*;
+import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
 import java.io.File;
@@ -22,7 +21,7 @@ public class EntryManager {
 
     private List<RawEntryLeagueMap> entryMaps = new ArrayList<>();
     private Map<String, List<Integer>> leagueToIds = new HashMap<>();
-    private CurrencyLeagueMap currencyLeagueMap;
+    private Map<String, Map<String, Double>> currencyLeagueMap;
     private StatusElement status = new StatusElement();
     private Gson gson;
 
@@ -66,12 +65,12 @@ public class EntryManager {
      * Loads in currency rates on program start
      */
     private void loadCurrency() {
-        currencyLeagueMap = new CurrencyLeagueMap();
+        currencyLeagueMap = new HashMap<>();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = leagueEntry.getName();
 
-            CurrencyMap currencyMap = currencyLeagueMap.getOrDefault(league, new CurrencyMap());
+            Map<String, Double> currencyMap = currencyLeagueMap.getOrDefault(league, new HashMap<>());
             Main.DATABASE.getCurrency(league, currencyMap);
             currencyLeagueMap.putIfAbsent(league, currencyMap);
         }
