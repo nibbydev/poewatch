@@ -22,8 +22,6 @@ public class Config {
     public static final String sql_interval_1d = "1 DAY";
     public static final String sql_interval_7d = "7 DAY";
 
-    public static final int sql_id_category_history_hourly = 2;
-
     //------------------------------------------------------------------------------------------------------------
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
@@ -34,18 +32,6 @@ public class Config {
     public static final File folder_output_itemdata = new File(folder_output.getPath(), "itemdata");
     public static final File file_config            = new File(folder_root.getPath(),"config.cfg");
     public static final URL  resource_config        = Main.class.getResource("/resources/" + file_config.getName());
-
-    //------------------------------------------------------------------------------------------------------------
-    // Index definitions
-    //------------------------------------------------------------------------------------------------------------
-
-    public static final String index_separator = ".";
-    public static final String index_separator_regex = "\\.";
-    public static final String index_superBase = "00000";
-    public static final String index_subBase = "00";
-    public static final int index_superSize = index_superBase.length();
-    public static final int index_subSize = index_subBase.length();
-    public static final int index_size = index_superSize + index_subSize;
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
@@ -72,7 +58,6 @@ public class Config {
 
     public static final int entry_volatileFlat = 1;
     public static final double entry_volatileRatio = 0.5;
-    public static final int outlier_hoursCalculated = 1;
     public static final double outlier_discardRatio = 0.7;
     public static final double outlier_devMulti = 2.0;
     public static final double outlier_priceMulti = 2.0;
@@ -105,6 +90,5 @@ public class Config {
     public static final double item_pricePrecision = 10000.0;
     public static final int item_pricePrecision2 = 4;
     public static final int monitorTimeoutMS = 500;
-    public static final long startTime = System.currentTimeMillis();
     public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 }
