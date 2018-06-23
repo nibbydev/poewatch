@@ -40,20 +40,12 @@ public class EntryManager {
      * Loads status data from file on program start
      */
     private void loadStartParameters() {
-        boolean querySuccessful = Main.DATABASE.getStatus(status);
-        if (!querySuccessful) {
-            Main.ADMIN.log_("Could not query status from database", 5);
-            System.exit(-1);
-        }
-
         fixCounters();
 
         String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
-
-        Main.DATABASE.updateStatus(status);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -374,8 +366,6 @@ public class EntryManager {
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
-
-        Main.DATABASE.updateStatus(status);
     }
 
     /**

@@ -228,20 +228,6 @@ CREATE TABLE `sys-leagues` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `sys-counters`
---
-
-CREATE TABLE `sys-counters` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `name`                varchar(32)     NOT NULL UNIQUE,
-    `value`               bigint(19)      unsigned NOT NULL DEFAULT 0,
-    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    INDEX `ind-c-id`      (`id`),
-    INDEX `ind-c-name`    (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
 -- Table structure `sys-change_id`
 --
 
@@ -307,18 +293,6 @@ INSERT INTO `sys-change_id`
     (`change_id`)
 VALUES
     ('0-0-0-0-0');
-
---
--- Base values for `status`
---
-
-INSERT INTO `sys-counters`
-    (`id`, `name`)
-VALUES
-    (1, 'lastRunTime'),
-    (2, '10'),
-    (3, '60'),
-    (4, '24');
 
 --
 -- Base values for `category-history`
