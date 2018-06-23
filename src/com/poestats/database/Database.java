@@ -865,21 +865,20 @@ public class Database {
     public boolean calculateExalted(String league) {
         league = formatLeague(league);
 
-        String query1 = "SET @exVal = (" +
+        String query =  "SET @exVal = (" +
                         "    SELECT `i`.`mean` FROM `#_"+ league +"-items` AS `i` " +
                         "    JOIN `itemdata-parent` AS `idp` ON `i`.`id-idp` = `idp`.`id` " +
-                        "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb');";
+                        "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb'); " +
 
-        String query2 = "UPDATE `#_"+ league +"-items` " +
-                        "SET `exalted` = IF (`mean` = 0.0, 0.0, IF (@exVal = 0.0, 0.0, IFNULL(`mean` / @exVal, 0.0))) " +
-                        "WHERE `volatile` = 0";
+                        "UPDATE `#_"+ league +"-items` " +
+                        "SET `exalted` = TRUNCATE(`mean` / @exVal, 4) " +
+                        "WHERE @exVal > 0 AND `volatile` = 0 AND `mean` > 0";
 
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query1);
-                statement.execute(query2);
+                statement.execute(query);
             }
 
             connection.commit();
