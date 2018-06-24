@@ -166,12 +166,14 @@ CREATE TABLE `#_LEAGUE-entries` (
     `approved`            tinyint(1)      unsigned NOT NULL DEFAULT 0,
 
     `price`               decimal(10,4)   unsigned NOT NULL,
-    `account`             varchar(32)     NOT NULL UNIQUE,
+    `account`             varchar(32)     NOT NULL,
     `itemid`              varchar(32)     NOT NULL,
 
     FOREIGN KEY (`id-i`)
         REFERENCES `#_LEAGUE-items` (`id`)
         ON DELETE CASCADE,
+    CONSTRAINT `pk-e`
+        PRIMARY KEY (`id-i`, `account`),
 
     INDEX `ind-e-id-i`    (`id-i`),
     INDEX `ind-e-time`    (`time`),
