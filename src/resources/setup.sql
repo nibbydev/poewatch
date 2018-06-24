@@ -163,6 +163,7 @@ CREATE TABLE `#_LEAGUE-items` (
 CREATE TABLE `#_LEAGUE-entries` (
     `id-i`                int             unsigned NOT NULL,
     `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `approved`            tinyint(1)      unsigned NOT NULL DEFAULT 0,
 
     `price`               decimal(10,4)   unsigned NOT NULL,
     `account`             varchar(32)     NOT NULL UNIQUE,
@@ -174,6 +175,7 @@ CREATE TABLE `#_LEAGUE-entries` (
 
     INDEX `ind-e-id-i`    (`id-i`),
     INDEX `ind-e-time`    (`time`),
+    INDEX `ind-e-approved`(`approved`),
     INDEX `ind-e-price`   (`price`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

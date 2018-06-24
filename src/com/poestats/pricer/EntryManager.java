@@ -18,7 +18,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private List<Le2Id2Ac2Raw> entryMaps = new ArrayList<>();
+    private List<Le2Id2Ac2Raw> entryMapList = new ArrayList<>();
     private Map<String, List<Integer>> leagueToIds = new HashMap<>();
     private Map<String, Map<String, Double>> currencyLeagueMap;
     private StatusElement status = new StatusElement();
@@ -68,36 +68,40 @@ public class EntryManager {
     }
 
     private void upload() {
-        List<Le2Id2Ac2Raw> entryMaps = this.entryMaps;
-        this.entryMaps = new ArrayList<>();
+        List<Le2Id2Ac2Raw> entryMaps = entryMapList;
+        entryMapList = new ArrayList<>();
 
         Le2Id2Ac2Raw mergedMap = new Le2Id2Ac2Raw();
 
         // Merge all gathered data
         for (Le2Id2Ac2Raw entryMap : entryMaps) {
             for (String league : entryMap.keySet()) {
-                Id2Ac2Raw idToAccountToRawEntry = entryMap.get(league);
-                Id2Ac2Raw mergedIndexMap = mergedMap.getOrDefault(league, new Id2Ac2Raw());
+                Id2Ac2Raw id2Ac2Raw = entryMap.get(league);
+                Id2Ac2Raw mergedId2Ac2Raw = mergedMap.getOrDefault(league, new Id2Ac2Raw());
+                List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
 
-                for (Integer id : idToAccountToRawEntry.keySet()) {
-                    Ac2Raw accountToRawEntry = idToAccountToRawEntry.get(id);
-                    Ac2Raw mergedAccountMap = mergedIndexMap.getOrDefault(id, new Ac2Raw());
+                for (Integer id : id2Ac2Raw.keySet()) {
+                    Ac2Raw ac2Raw = id2Ac2Raw.get(id);
+                    Ac2Raw mergedAc2Raw = mergedId2Ac2Raw.getOrDefault(id, new Ac2Raw());
 
-                    mergedAccountMap.putAll(accountToRawEntry);
-                    mergedIndexMap.putIfAbsent(id, mergedAccountMap);
+                    for (Map.Entry<String, RawEntry> entry : ac2Raw.entrySet()) {
+                        mergedAc2Raw.put(entry.getKey(), entry.getValue());
+                    }
+
+                    mergedId2Ac2Raw.putIfAbsent(id, mergedAc2Raw);
+                    if (!idList.contains(id)) idList.add(id);
                 }
 
-                mergedMap.putIfAbsent(league, mergedIndexMap);
+                mergedMap.putIfAbsent(league, mergedId2Ac2Raw);
+                leagueToIds.putIfAbsent(league, idList);
             }
         }
 
         // Upload merged data
         for (String league : mergedMap.keySet()) {
             Id2Ac2Raw idToAccountToRawEntry = mergedMap.get(league);
-            Map<Integer, Integer> affectedCount = new HashMap<>();
 
-            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry, affectedCount);
-            Main.DATABASE.updateCounters(league, affectedCount);
+            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry);
         }
     }
 
@@ -111,25 +115,29 @@ public class EntryManager {
         // Allow workers to switch to new map
         try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
-        long a, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
+        long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = leagueEntry.getName();
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateApproved(league);
+            a0 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateCounters(league);
+            a1 += System.currentTimeMillis() - a;
 
             List<Integer> idList = leagueToIds.get(league);
 
             if (idList != null) {
                 a = System.currentTimeMillis();
-                Main.DATABASE.calculateMedian(league, idList);
-                a3 += System.currentTimeMillis() - a;
-
-                a = System.currentTimeMillis();
-                Main.DATABASE.removeItemOutliers(league, idList);
-                a1 += System.currentTimeMillis() - a;
-
-                a = System.currentTimeMillis();
                 Main.DATABASE.calculateMean(league, idList);
                 a2 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
+                Main.DATABASE.calculateMedian(league, idList);
+                a3 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.calculateMode(league, idList);
@@ -173,7 +181,7 @@ public class EntryManager {
             }
         }
 
-        //System.out.printf("a1(%4d) a2(%4d) a3(%4d) a4(%4d) a5(%4d) a6(%4d) a7(%4d) a8(%4d) \n", a1, a2, a3, a4, a5, a6, a7, a8);
+        //System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a1, a0, a2, a3, a4, a5, a6, a7, a8);
     }
 
     private void generateOutputFiles() {
@@ -404,15 +412,10 @@ public class EntryManager {
 
                 id2Ac2Raw.putIfAbsent(id, ac2Raw);
                 le2Id2Ac2Raw.putIfAbsent(league, id2Ac2Raw);
-
-                // Maintain a list of league-specific item IDs that have had entries added to them
-                List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
-                if (!idList.contains(id)) idList.add(id);
-                leagueToIds.putIfAbsent(league, idList);
             }
         }
 
-        entryMaps.add(le2Id2Ac2Raw);
+        entryMapList.add(le2Id2Ac2Raw);
     }
 
     /**

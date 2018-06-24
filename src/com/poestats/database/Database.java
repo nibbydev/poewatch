@@ -7,7 +7,6 @@ import com.poestats.Misc;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.itemdata.ItemdataEntry;
 import com.poestats.pricer.ParcelEntry;
-import com.poestats.pricer.StatusElement;
 import com.poestats.relations.IndexRelations;
 import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
@@ -596,18 +595,19 @@ public class Database {
         }
     }
 
-    public boolean uploadRaw(String league, Id2Ac2Raw idToAccountToRawEntry, Map<Integer, Integer> affectedCount) {
+    public boolean uploadRaw(String league, Id2Ac2Raw idToAccountToRawEntry) {
         league = formatLeague(league);
 
-        String query =  "INSERT INTO `#_"+ league +"-entries` (" +
-                        "   `id-i`, `price`, `account`, `itemid`) " +
+        String query =  "INSERT INTO `#_"+ league +"-entries` (`id-i`, `price`, `account`, `itemid`) " +
                         "VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE `price` = VALUES(`price`)";
+                        "ON DUPLICATE KEY UPDATE `approved` = 0, `price` = VALUES(`price`)";
 
         try {
             if (connection.isClosed()) return false;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
+                int count = 0;
+
                 for (Integer id : idToAccountToRawEntry.keySet()) {
                     Ac2Raw accountToRawEntry = idToAccountToRawEntry.get(id);
 
@@ -619,27 +619,14 @@ public class Database {
                         statement.setString(3, account);
                         statement.setString(4, rawEntry.getItemId());
                         statement.addBatch();
+
+                        if (++count % 1000 == 0) {
+                            statement.executeBatch();
+                        }
                     }
                 }
 
-                int[] tmpResults = statement.executeBatch();
-
-                int tmpCounterI = 0;
-                for (Integer id : idToAccountToRawEntry.keySet()) {
-                    int tmpCounterJ = 0;
-
-                    for (int j = 0; j < idToAccountToRawEntry.get(id).size(); j++) {
-                        // 1 if the row is inserted as a new row
-                        // 2 if an existing row is updated
-                        // 0 if an existing row is set to its current values
-
-                        if (tmpResults[tmpCounterI] == 1) tmpCounterJ++;
-
-                        tmpCounterI++;
-                    }
-
-                    if (tmpCounterJ > 0) affectedCount.put(id, tmpCounterJ);
-                }
+                statement.executeBatch();
             }
 
             connection.commit();
@@ -651,39 +638,6 @@ public class Database {
         }
     }
 
-    public boolean updateCounters(String league, Map<Integer, Integer> affectedCount) {
-        league = formatLeague(league);
-
-        String query =  "UPDATE `#_"+ league +"-items` " +
-                        "SET `count` = `count` + ?, `inc` = `inc` + ? " +
-                        "WHERE `id` = ?";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : affectedCount.keySet()) {
-                    int count = affectedCount.get(id);
-
-                    statement.setInt(1, count);
-                    statement.setInt(2, count);
-                    statement.setInt(3, id);
-
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update counters in database", 3);
-            return false;
-        }
-    }
-
     public boolean calculateMean(String league, List<Integer> idList) {
         league = formatLeague(league);
 
@@ -691,7 +645,7 @@ public class Database {
                         "SET `mean` = (" +
                         "    SELECT IFNULL(AVG(`price`), 0.0) " +
                         "    FROM `#_"+ league +"-entries`" +
-                        "    WHERE `id-i` = ?" +
+                        "    WHERE `id-i` = ? AND `approved` = 1" +
                         ") WHERE `id` = ? AND `volatile` = 0";
 
         try {
@@ -724,12 +678,12 @@ public class Database {
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
                         "        FROM `#_"+ league +"-entries` d,  (SELECT @rownum:=0) r" +
-                        "        WHERE `id-i` = ?" +
+                        "        WHERE `id-i` = ? AND `approved` = 1" +
                         "        ORDER BY d.`price`" +
                         "    ) as t1, (" +
                         "        SELECT count(*) as total_rows" +
                         "        FROM `#_"+ league +"-entries` d" +
-                        "        WHERE `id-i` = ?" +
+                        "        WHERE `id-i` = ? AND `approved` = 1" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
                         "), 0.0) WHERE `id` = ? AND `volatile` = 0";
@@ -763,7 +717,7 @@ public class Database {
         String query =  "UPDATE `#_"+ league +"-items` " +
                         "SET `mode` = IFNULL(( " +
                         "    SELECT `price` FROM `#_"+ league +"-entries`" +
-                        "    WHERE `id-i` = ?" +
+                        "    WHERE `id-i` = ? AND `approved` = 1" +
                         "    GROUP BY `price` " +
                         "    ORDER BY COUNT(*) DESC " +
                         "    LIMIT 1" +
@@ -824,7 +778,7 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` " +
-                        "SET `volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0);";
+                        "SET `volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0)";
 
         try {
             if (connection.isClosed()) return false;
@@ -840,6 +794,67 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update volatile status", 3);
+            return false;
+        }
+    }
+
+    public boolean updateApproved(String league){
+        league = formatLeague(league);
+
+        String query =  "UPDATE `#_"+ league +"-entries` AS `e` " +
+                        "  JOIN `#_"+ league +"-items` AS `i` " +
+                        "    ON `e`.`id-i` = `i`.`id` " +
+                        "SET `e`.`approved` = 1 " +
+                        "WHERE `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ? " +
+                        "  AND `i`.`volatile` = 0";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setDouble(1, 2.5);
+                statement.setDouble(2, 2.5);
+
+                statement.execute();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not update approved state", 3);
+            return false;
+        }
+    }
+
+    public boolean updateCounters(String league){
+        league = formatLeague(league);
+
+        String query  = "UPDATE `#_"+ league +"-items` AS `i`" +
+                        "    JOIN (" +
+                        "        SELECT `id-i`, `approved`, count(*) AS 'count' " +
+                        "        FROM `#_"+ league +"-entries`" +
+                        "        WHERE `time` > ADDDATE(NOW(), INTERVAL -1 MINUTE)" +
+                        "        GROUP BY `id-i`, `approved`" +
+                        "    ) AS `e` ON `e`.`id-i` = `i`.`id`" +
+                        "SET " +
+                        "    `i`.`count` = IF(`e`.`approved` = 1, `i`.`count` + `e`.`count`, `i`.`count`), " +
+                        "    `i`.`inc` = IF(`e`.`approved` = 1, `i`.`inc` + `e`.`count`, `i`.`inc`), " +
+                        "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`)" +
+                        "WHERE `i`.`volatile` = 0";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not update counters", 3);
             return false;
         }
     }
@@ -1191,45 +1206,6 @@ public class Database {
         }
     }
 
-    public boolean removeItemOutliers(String league, List<Integer> idList){
-        league = formatLeague(league);
-
-        String query1 = "SET @id = ?; " +
-                        "SET @medianPrice = (SELECT `median` FROM `#_"+ league +"-items` WHERE `id` = @id); " +
-                        "SET @volatileState = (SELECT `volatile` FROM `#_"+ league +"-items` WHERE `id` = @id); " +
-                        "SET @entryCount = (SELECT COUNT(*) FROM `#_"+ league +"-entries` WHERE `id-i` = @id); " +
-
-                        "DELETE FROM `#_"+ league +"-entries` " +
-                        "WHERE `id-i` = @id AND @volatileState = 0 AND @entryCount > ? AND @medianPrice > 0 " +
-                        "    AND `price` NOT BETWEEN @medianPrice / ? AND @medianPrice * ?; " +
-
-                        "UPDATE `#_"+ league +"-items` SET `dec` = `dec` + ROW_COUNT() WHERE `id` = @id;";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (PreparedStatement statement = connection.prepareStatement(query1)) {
-                for (Integer id : idList) {
-                    statement.setInt(1, id);
-                    statement.setInt(2, Config.outlier_minCount);
-                    statement.setDouble(3, Config.outlier_priceMulti);
-                    statement.setDouble(4, Config.outlier_priceMulti);
-
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove outliers", 3);
-            return false;
-        }
-    }
-
     public boolean createLeagueTables(String league) {
         league = formatLeague(league);
 
@@ -1263,6 +1239,7 @@ public class Database {
         String query2 = "CREATE TABLE `#_"+ league +"-entries` (" +
                         "    `id-i`                int             unsigned NOT NULL," +
                         "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `approved`            tinyint(1)      unsigned NOT NULL DEFAULT 0," +
                         "    `price`               decimal(10,4)   unsigned NOT NULL," +
                         "    `account`             varchar(32)     NOT NULL UNIQUE," +
                         "    `itemid`              varchar(32)     NOT NULL," +
@@ -1271,6 +1248,7 @@ public class Database {
                         "        ON DELETE CASCADE," +
                         "    INDEX `ind-e-id-i`    (`id-i`)," +
                         "    INDEX `ind-e-time`    (`time`)," +
+                        "    INDEX `ind-e-approved`(`approved`)," +
                         "    INDEX `ind-e-price`   (`price`)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
