@@ -1086,11 +1086,11 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, `volatile`, " +
+                        "   `id-i`, `id-ch`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `h`.`id-i`, 2, `i`.`volatile`, " +
+                        "   `h`.`id-i`, 2, " +
                         "   AVG(`h`.`mean`), AVG(`h`.`median`), AVG(`h`.`mode`), AVG(`h`.`exalted`), " +
                         "   `i`.`count`, `i`.`quantity`, `i`.`inc`,  `i`.`dec` " +
                         "FROM `#_"+ league +"-history` AS `h` " +
@@ -1118,11 +1118,11 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, `volatile`, " +
+                        "   `id-i`, `id-ch`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id-i`, 3, MAX(`volatile`), " +
+                        "   `id-i`, 3, " +
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
                         "FROM `#_"+ league +"-history` " +
@@ -1283,7 +1283,6 @@ public class Database {
                         "    `id-i`                int             unsigned NOT NULL," +
                         "    `id-ch`               int             unsigned NOT NULL," +
                         "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "    `volatile`            tinyint(1)      unsigned DEFAULT NULL," +
                         "    `mean`                decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `median`              decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `mode`                decimal(10,4)   unsigned DEFAULT NULL," +
@@ -1300,8 +1299,7 @@ public class Database {
                         "        ON DELETE RESTRICT," +
                         "    INDEX `ind-h-id`      (`id-i`)," +
                         "    INDEX `ind-h-id-ch`   (`id-ch`)," +
-                        "    INDEX `ind-h-time`    (`time`)," +
-                        "    INDEX `ind-h-volatile`(`volatile`)" +
+                        "    INDEX `ind-h-time`    (`time`)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         try {
