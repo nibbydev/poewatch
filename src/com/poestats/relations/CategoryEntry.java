@@ -1,43 +1,45 @@
-package com.poestats.admin;
+package com.poestats.relations;
 
-public class ChangeIDElement {
+import java.util.HashMap;
+import java.util.Map;
+
+public class CategoryEntry {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String changeId;
-    private long lastUpdate;
+    private Integer id;
+    private Map<String, Integer> childCategoryToId = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Methods
     //------------------------------------------------------------------------------------------------------------
 
-    public void update(String changeID) {
-        changeId = changeID;
-        lastUpdate = System.currentTimeMillis();
+    public void addChild(String childName, Integer childId) {
+        childCategoryToId.put(childName, childId);
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Getters
     //------------------------------------------------------------------------------------------------------------
 
-    public long getLastUpdate() {
-        return lastUpdate;
+    public int getId() {
+        return id;
     }
 
-    public String getChangeId() {
-        return changeId;
+    public boolean hasChild(String childName) {
+        return childCategoryToId.containsKey(childName);
+    }
+
+    public Integer getChildCategoryId(String childName) {
+        return childCategoryToId.get(childName);
     }
 
     //------------------------------------------------------------------------------------------------------------
     // Setters
     //------------------------------------------------------------------------------------------------------------
 
-    public void setChangeId(String changeId) {
-        this.changeId = changeId;
-    }
-
-    public void setLastUpdate(long lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setId(Integer id) {
+        if (this.id == null) this.id = id;
     }
 }

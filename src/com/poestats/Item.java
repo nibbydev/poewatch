@@ -199,7 +199,7 @@ public class Item extends Mappers.BaseItem {
         }
 
         // See if the currency type listed is valid currency type
-        if (!Main.RELATIONS.getCurrencyAliases().containsKey(noteList[2])) {
+        if (!Main.RELATIONS.getCurrencyAliasToName().containsKey(noteList[2])) {
             discard = true;
             return;
         }
@@ -208,14 +208,14 @@ public class Item extends Mappers.BaseItem {
         // If the seller is selling Chaos Orbs (the default currency), swap the places of the names
         // Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos"
         if (typeLine.equals("Chaos Orb")) {
-            typeLine = Main.RELATIONS.getCurrencyAliases().get(noteList[2]);
+            typeLine = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
             priceType = "Chaos Orb";
             this.price = (Math.round((1 / price) * Config.item_pricePrecision) / Config.item_pricePrecision);
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
             this.price = Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision;
-            priceType = Main.RELATIONS.getCurrencyAliases().get(noteList[2]);
+            priceType = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
         }
     }
 
@@ -564,23 +564,10 @@ public class Item extends Mappers.BaseItem {
      * Gets text-value(s) from category object
      */
     private void parseCategory() {
-        // A rough outline of what it is meant to do:
-        // {"category": "jewels"}                  -> "jewels"                -> {"jewels"}             -> "jewels"
-        // {"category": {"armour": ["gloves"]}}    -> "{armour=[gloves]}"     -> {"armour", "gloves"}   -> "armour:gloves"
-        // {"category": {"weapons": ["bow"]}}      -> "{weapons=[bow]}"       -> {"weapons", "bow"}     -> "weapons:bow"
+        parentCategory = category.keySet().toArray()[0].toString();
 
-        String asString = category.toString();
-
-        // "{armour=[gloves]}" -> "armour=[gloves]"
-        asString = asString.substring(1, asString.length() - 1);
-
-        // "armour=[gloves]" -> {"armour", "[gloves]"}
-        String[] splitString = asString.split("=");
-
-        parentCategory = splitString[0].toLowerCase();
-
-        if (!splitString[1].equals("[]")) {
-            childCategory =  splitString[1].substring(1, splitString[1].length() - 1).toLowerCase();
+        if (category.get(parentCategory).size() > 0) {
+            childCategory = category.get(parentCategory).get(0).toLowerCase();
         }
     }
 

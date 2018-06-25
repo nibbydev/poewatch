@@ -4,11 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.poestats.Config;
 import com.poestats.Main;
-import com.poestats.Misc;
 
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.*;
 
@@ -42,6 +42,9 @@ public class LeagueManager {
             if (!success) {
                 Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
                 return false;
+            } else if (leagues.isEmpty()) {
+                Main.ADMIN.log_("Failed to query leagues from API and database did not contain any records. Shutting down...", 5);
+                return false;
             }
         }
 
@@ -51,7 +54,7 @@ public class LeagueManager {
         Main.DATABASE.updateLeagues(leagues);
 
         for (LeagueEntry leagueEntry : leagues) {
-            Main.DATABASE.createLeagueTables(leagueEntry.getId());
+            Main.DATABASE.createLeagueTables(leagueEntry.getName());
         }
 
         return true;
@@ -83,7 +86,7 @@ public class LeagueManager {
         Main.DATABASE.updateLeagues(leagues);
 
         for (LeagueEntry leagueEntry : leagues) {
-            Main.DATABASE.createLeagueTables(leagueEntry.getId());
+            Main.DATABASE.createLeagueTables(leagueEntry.getName());
         }
 
         return true;
@@ -98,15 +101,15 @@ public class LeagueManager {
 
         // Get rid of SSF
         for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
-            if (leagueEntry.getId().contains("SSF")) {
+            if (leagueEntry.getName().contains("SSF")) {
                 leagueList.remove(leagueEntry);
             }
         }
 
         // Add softcore events
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
-                if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
+                if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
                     sortedLeagueList.add(leagueEntry);
                 }
             }
@@ -114,8 +117,8 @@ public class LeagueManager {
 
         // Add hardcore events
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) {
-                if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
+                if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
                     sortedLeagueList.add(leagueEntry);
                 }
             }
@@ -123,34 +126,34 @@ public class LeagueManager {
 
         // Add main softcore league
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
-            if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) continue;
+            if (leagueEntry.getName().equals("Hardcore") || leagueEntry.getName().equals("Standard")) continue;
 
-            if (!leagueEntry.getId().contains("Hardcore") && !leagueEntry.getId().contains("HC")) {
+            if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
                 sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add main hardcore league
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().contains("Event") || leagueEntry.getId().contains("(")) continue;
-            if (leagueEntry.getId().equals("Hardcore") || leagueEntry.getId().equals("Standard")) continue;
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) continue;
+            if (leagueEntry.getName().equals("Hardcore") || leagueEntry.getName().equals("Standard")) continue;
 
-            if (leagueEntry.getId().contains("Hardcore") || leagueEntry.getId().contains("HC")) {
+            if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
                 sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add Standard
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().equals("Standard")) {
+            if (leagueEntry.getName().equals("Standard")) {
                 sortedLeagueList.add(leagueEntry);
             }
         }
 
         // Add Hardcore
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getId().equals("Hardcore")) {
+            if (leagueEntry.getName().equals("Hardcore")) {
                 sortedLeagueList.add(leagueEntry);
             }
         }
@@ -207,8 +210,12 @@ public class LeagueManager {
             leagueEntryList.addAll(gson.fromJson(stringBuilderBuffer.toString(), listType));
 
             return true;
+        } catch (SocketTimeoutException ex) {
+            Main.ADMIN.log_("Failed to download league list (timeout)", 3);
+            return false;
         } catch (Exception ex) {
             Main.ADMIN.log_("Failed to download league list", 3);
+            ex.printStackTrace();
             return false;
         } finally {
             try {

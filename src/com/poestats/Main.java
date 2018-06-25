@@ -53,16 +53,16 @@ public class Main {
             DATABASE = new Database();
             DATABASE.connect();
 
-            // Get category, item and currency data
-            RELATIONS = new RelationManager();
-            success = RELATIONS.init();
-            if (!success) return;
-
             // Init league manager
             LEAGUE_MANAGER = new LeagueManager();
 
             // Load list of active leagues on startup
             success = LEAGUE_MANAGER.loadLeaguesOnStartup();
+            if (!success) return;
+
+            // Get category, item and currency data
+            RELATIONS = new RelationManager();
+            success = RELATIONS.init();
             if (!success) return;
 
             WORKER_MANAGER = new WorkerManager();

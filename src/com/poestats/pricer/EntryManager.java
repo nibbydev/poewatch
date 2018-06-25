@@ -4,8 +4,9 @@ import com.google.gson.Gson;
 import com.poestats.*;
 import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
-import com.poestats.pricer.entries.RawEntry;
-import com.poestats.pricer.maps.*;
+import com.poestats.pricer.itemdata.ItemdataEntry;
+import com.poestats.pricer.RawMaps.*;
+import com.poestats.relations.CategoryEntry;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,13 +18,11 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private LeagueMap leagueMap = new LeagueMap();
-    private final CurrencyLeagueMap currencyLeagueMap = new CurrencyLeagueMap();
-    private final Object monitor = new Object();
+    private List<Le2Id2Ac2Raw> entryMapList = new ArrayList<>();
+    private Map<String, List<Integer>> leagueToIds = new HashMap<>();
+    private Map<String, Map<String, Double>> currencyLeagueMap;
+    private StatusElement status = new StatusElement();
     private Gson gson;
-
-    private volatile boolean flagPause;
-    private final StatusElement status = new StatusElement();
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -41,20 +40,12 @@ public class EntryManager {
      * Loads status data from file on program start
      */
     private void loadStartParameters() {
-        boolean querySuccessful = Main.DATABASE.getStatus(status);
-        if (!querySuccessful) {
-            Main.ADMIN.log_("Could not query status from database", 5);
-            System.exit(-1);
-        }
-
         fixCounters();
 
         String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
-
-        Main.DATABASE.updateStatus(status);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -65,14 +56,52 @@ public class EntryManager {
      * Loads in currency rates on program start
      */
     private void loadCurrency() {
-        currencyLeagueMap.clear();
+        currencyLeagueMap = new HashMap<>();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getId();
+            String league = leagueEntry.getName();
 
-            CurrencyMap currencyMap = currencyLeagueMap.getOrDefault(league, new CurrencyMap());
+            Map<String, Double> currencyMap = currencyLeagueMap.getOrDefault(league, new HashMap<>());
             Main.DATABASE.getCurrency(league, currencyMap);
             currencyLeagueMap.putIfAbsent(league, currencyMap);
+        }
+    }
+
+    private void upload() {
+        List<Le2Id2Ac2Raw> entryMaps = entryMapList;
+        entryMapList = new ArrayList<>();
+
+        Le2Id2Ac2Raw mergedMap = new Le2Id2Ac2Raw();
+
+        // Merge all gathered data
+        for (Le2Id2Ac2Raw entryMap : entryMaps) {
+            for (String league : entryMap.keySet()) {
+                Id2Ac2Raw id2Ac2Raw = entryMap.get(league);
+                Id2Ac2Raw mergedId2Ac2Raw = mergedMap.getOrDefault(league, new Id2Ac2Raw());
+                List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
+
+                for (Integer id : id2Ac2Raw.keySet()) {
+                    Ac2Raw ac2Raw = id2Ac2Raw.get(id);
+                    Ac2Raw mergedAc2Raw = mergedId2Ac2Raw.getOrDefault(id, new Ac2Raw());
+
+                    for (Map.Entry<String, RawEntry> entry : ac2Raw.entrySet()) {
+                        mergedAc2Raw.put(entry.getKey(), entry.getValue());
+                    }
+
+                    mergedId2Ac2Raw.putIfAbsent(id, mergedAc2Raw);
+                    if (!idList.contains(id)) idList.add(id);
+                }
+
+                mergedMap.putIfAbsent(league, mergedId2Ac2Raw);
+                leagueToIds.putIfAbsent(league, idList);
+            }
+        }
+
+        // Upload merged data
+        for (String league : mergedMap.keySet()) {
+            Id2Ac2Raw idToAccountToRawEntry = mergedMap.get(league);
+
+            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry);
         }
     }
 
@@ -80,48 +109,86 @@ public class EntryManager {
      * Writes all collected data to database
      */
     private void cycle() {
+        Map<String, List<Integer>> leagueToIds = this.leagueToIds;
+        this.leagueToIds = new HashMap<>();
+
+        // Allow workers to switch to new map
+        try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
+
+        if (status.isSixtyBool()) {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                String league = leagueEntry.getName();
+                Main.DATABASE.updateVolatile(league);
+            }
+        }
+
+        long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
+
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getId();
-            IndexMap indexMap = leagueMap.get(league);
-            List<String> ignoreList = new ArrayList<>();
+            String league = leagueEntry.getName();
 
-            if (indexMap != null) {
-                Main.DATABASE.createNewItems(league, indexMap);
-                Main.DATABASE.uploadRaw(league, indexMap);
-                Main.DATABASE.updateCounters(league, indexMap);
-                Main.DATABASE.removeItemOutliers(league, indexMap, ignoreList);
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateApproved(league);
+            a0 += System.currentTimeMillis() - a;
 
-                Main.DATABASE.calculateMean(league, indexMap, ignoreList);
-                Main.DATABASE.calculateMedian(league, indexMap, ignoreList);
-                Main.DATABASE.calculateMode(league, indexMap, ignoreList);
-                Main.DATABASE.removeOldItemEntries(league, indexMap);
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateCounters(league);
+            a1 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.calculateMean(league);
+            a2 += System.currentTimeMillis() - a;
+
+            List<Integer> idList = leagueToIds.get(league);
+
+            if (idList != null) {
+                a = System.currentTimeMillis();
+                Main.DATABASE.calculateMedian(league, idList);
+                a3 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
+                Main.DATABASE.calculateMode(league, idList);
+                a4 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
+                Main.DATABASE.removeOldItemEntries(league, idList);
+                a5 += System.currentTimeMillis() - a;
             }
 
+            a = System.currentTimeMillis();
             Main.DATABASE.calculateExalted(league);
+            a6 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
             Main.DATABASE.addMinutely(league);
-            Main.DATABASE.removeOldHistoryEntries(league, "minutely", Config.sql_interval_1h);
+            a7 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.removeOldHistoryEntries(league, 1, Config.sql_interval_1h);
+            a8 += System.currentTimeMillis() - a;
         }
 
         if (status.isSixtyBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getId();
+                String league = leagueEntry.getName();
 
-                Main.DATABASE.removeOldHistoryEntries(league, "hourly", Config.sql_interval_1d);
+                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 Main.DATABASE.addHourly(league);
+                Main.DATABASE.resetVolatile(league);
                 Main.DATABASE.calcQuantity(league);
             }
         }
 
         if (status.isTwentyFourBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getId();
+                String league = leagueEntry.getName();
 
                 Main.DATABASE.addDaily(league);
-                Main.DATABASE.removeOldHistoryEntries(league, "daily", Config.sql_interval_7d);
+                Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_120d);
             }
         }
 
-        leagueMap = new LeagueMap();
+        //System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a0, a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     private void generateOutputFiles() {
@@ -129,15 +196,17 @@ public class EntryManager {
         List<String> newOutputFiles = new ArrayList<>();
 
         Main.DATABASE.getOutputFiles(oldOutputFiles);
-        Config.folder_newOutput.mkdirs();
+        Config.folder_output_get.mkdirs();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = Database.formatLeague(leagueEntry.getId());
+            String league = Database.formatLeague(leagueEntry.getName());
 
-            for (String category : Main.RELATIONS.getCategories().keySet()) {
-                Map<String, ParcelEntry> tmpParcel = new LinkedHashMap<>();
+            for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
+                Map<Integer, ParcelEntry> tmpParcel = new LinkedHashMap<>();
 
-                Main.DATABASE.getOutputItems(league, category, tmpParcel);
+                int categoryId = category.getValue().getId();
+
+                Main.DATABASE.getOutputItems(league, tmpParcel, categoryId);
                 Main.DATABASE.getOutputHistory(league, tmpParcel);
 
                 List<ParcelEntry> parcel = new ArrayList<>();
@@ -146,8 +215,8 @@ public class EntryManager {
                     parcel.add(parcelEntry);
                 }
 
-                String fileName = league + "_" + category + "_" + System.currentTimeMillis() + ".json";
-                File outputFile = new File(Config.folder_newOutput, fileName);
+                String fileName = league + "_" + category.getKey() + "_" + System.currentTimeMillis() + ".json";
+                File outputFile = new File(Config.folder_output_get, fileName);
 
                 try (Writer writer = Misc.defineWriter(outputFile)) {
                     if (writer == null) throw new IOException();
@@ -160,7 +229,7 @@ public class EntryManager {
                 try {
                     String path = outputFile.getCanonicalPath();
                     newOutputFiles.add(path);
-                    Main.DATABASE.addOutputFile(league, category, path);
+                    Main.DATABASE.addOutputFile(league, category.getKey(), path);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     Main.ADMIN.log_("Couldn't get file's actual path", 3);
@@ -168,7 +237,7 @@ public class EntryManager {
             }
         }
 
-        File[] outputFiles = Config.folder_newOutput.listFiles();
+        File[] outputFiles = Config.folder_output_get.listFiles();
         if (outputFiles == null) return;
 
         try {
@@ -185,6 +254,51 @@ public class EntryManager {
         }
     }
 
+    private void generateItemDataFile() {
+        List<String> oldItemdataFiles = new ArrayList<>();
+        Main.DATABASE.getOutputFiles(oldItemdataFiles);
+
+        Config.folder_output_itemdata.mkdirs();
+
+        List<ItemdataEntry> parcel = new ArrayList<>();
+        Main.DATABASE.getItemdata(parcel);
+
+        String fileName = "itemdata_" + System.currentTimeMillis() + ".json";
+        File itemdataFile = new File(Config.folder_output_itemdata, fileName);
+
+        try (Writer writer = Misc.defineWriter(itemdataFile)) {
+            if (writer == null) throw new IOException();
+            gson.toJson(parcel, writer);
+        } catch (IOException ex) {
+            Main.ADMIN._log(ex, 4);
+            Main.ADMIN.log_("Couldn't write itemdata to file", 3);
+        }
+
+        try {
+            String path = itemdataFile.getCanonicalPath();
+            Main.DATABASE.addOutputFile("itemdata", "itemdata", path);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Couldn't get file's actual path", 3);
+        }
+
+        File[] itemdataFiles = Config.folder_output_itemdata.listFiles();
+        if (itemdataFiles == null) return;
+
+        try {
+            for (File file : itemdataFiles) {
+                if (oldItemdataFiles.contains(file.getCanonicalPath())) continue;
+                else if (itemdataFile.getCanonicalPath().equals(file.getCanonicalPath())) continue;
+
+                boolean success = file.delete();
+                if (!success) Main.ADMIN.log_("Could not delete old itemdata file", 3);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not delete old itemdata files", 3);
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Often called controller methods
     //------------------------------------------------------------------------------------------------------------
@@ -198,9 +312,6 @@ public class EntryManager {
         // Run every minute (-ish)
         if (current - status.lastRunTime < Config.entryController_sleepMS) return;
         status.lastRunTime = System.currentTimeMillis();
-
-        // Raise static flag that suspends other threads while the databases are being worked on
-        flipPauseFlag();
 
         // Allow workers to pause
         try { Thread.sleep(50); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
@@ -229,6 +340,11 @@ public class EntryManager {
             Main.ADMIN.log_("24 activated", 0);
         }
 
+        // Upload gathered prices
+        long time_upload = System.currentTimeMillis();
+        upload();
+        time_upload = System.currentTimeMillis() - time_upload;
+
         // Sort JSON
         long time_cycle = System.currentTimeMillis();
         cycle();
@@ -244,22 +360,27 @@ public class EntryManager {
         generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
+        // Build itemdata
+        if (Main.RELATIONS.isNewIndexedItem()) {
+            long time_itemdata = System.currentTimeMillis();
+            generateItemDataFile();
+            time_itemdata = System.currentTimeMillis() - time_itemdata;
+            Main.ADMIN.log_(String.format("Itemdata rebuilt (%4d ms)", time_itemdata), 0);
+        }
+
         // Prepare message
         String timeElapsedDisplay = "[Took:" + String.format("%5d", System.currentTimeMillis() - status.lastRunTime) + " ms]";
-        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
+        String tenMinDisplay = "[10m:" + String.format("%2d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
-        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
-        String timeTookDisplay = "(Cycle:" + String.format("%5d", time_cycle) + " ms)(JSON:" + String.format("%5d", time_json) +
-                " ms)(currency:" + String.format("%5d", time_load_currency) + " ms)";
+        String twentyHourDisplay = "[24h:" + String.format("%4d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
+        String timeTookDisplay = "(C:" + String.format("%5d", time_cycle) + " ms)(J:" + String.format("%4d", time_json) +
+                " ms)(C:" + String.format("%3d", time_load_currency) + " ms)(U:" + String.format("%4d", time_upload) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Switch off flags
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
-        flipPauseFlag();
-
-        Main.DATABASE.updateStatus(status);
     }
 
     /**
@@ -268,52 +389,40 @@ public class EntryManager {
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
+        Le2Id2Ac2Raw le2Id2Ac2Raw = new Le2Id2Ac2Raw();
+
         for (Mappers.Stash stash : reply.stashes) {
-            //stash.fix();
+            String league = null;
 
             for (Item item : stash.items) {
-                // Snooze. The lock will be lifted in about 0.1 seconds. This loop is NOT time-sensitive
-                while (flagPause) {
-                    synchronized (monitor) {
-                        try {
-                            monitor.wait(Config.monitorTimeoutMS);
-                        } catch (InterruptedException ex) {
-                        }
-                    }
-                }
+                if (!Main.WORKER_MANAGER.isFlag_Run()) return;
+
+                if (league == null) league = item.getLeague();
 
                 item.fix();
                 item.parseItem();
                 if (item.isDiscard()) continue;
 
-                String index = Main.RELATIONS.indexItem(item);
-                if (index == null) continue; // Some currency items have invalid icons
-
-                IndexMap indexMap = leagueMap.getOrDefault(item.getLeague(), new IndexMap());
-                RawList rawList = indexMap.getOrDefault(index, new RawList());
-
                 RawEntry rawEntry = new RawEntry();
-                rawEntry.add(item, stash.accountName);
+                rawEntry.load(item);
 
-                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(item.getLeague()));
+                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(league));
                 if (discard) continue; // Couldn't convert the listed currency to chaos
 
-                rawList.add(rawEntry);
+                Integer id = Main.RELATIONS.indexItem(item, league);
+                if (id == null) continue;
 
-                indexMap.putIfAbsent(index, rawList);
-                leagueMap.putIfAbsent(item.getLeague(), indexMap);
+                Id2Ac2Raw id2Ac2Raw = le2Id2Ac2Raw.getOrDefault(league, new Id2Ac2Raw());
+                Ac2Raw ac2Raw = id2Ac2Raw.getOrDefault(id, new Ac2Raw());
+
+                ac2Raw.put(stash.accountName, rawEntry);
+
+                id2Ac2Raw.putIfAbsent(id, ac2Raw);
+                le2Id2Ac2Raw.putIfAbsent(league, id2Ac2Raw);
             }
         }
-    }
 
-    /**
-     * Switches pause boolean from state to state and wakes monitor
-     */
-    private void flipPauseFlag() {
-        synchronized (monitor) {
-            flagPause = !flagPause;
-            monitor.notifyAll();
-        }
+        entryMapList.add(le2Id2Ac2Raw);
     }
 
     /**

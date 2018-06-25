@@ -79,16 +79,13 @@ public class Mappers {
         List<Socket> sockets;
         List<String> explicitMods;
 
-        // This field varies in the API and cannot be assigned a specific type. A few examples can be seen below:
-        // "category": {"jewels": []}
-        // "category": {"armour": ["gloves"]}
-        Object category;
+        Map<String, List<String>> category;
         List<String> enchantMods;
 
         public void fix() {
             id = id.substring(0, 32);
             name = name.substring(name.lastIndexOf(">") + 1);
-            enchanted = (enchantMods != null);
+            enchanted = enchantMods != null;
         }
     }
 }

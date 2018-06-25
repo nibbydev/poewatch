@@ -77,7 +77,9 @@ public class WorkerManager extends Thread {
 
         // Loop though every worker and call stop method
         for (Worker worker : workerList) {
+            Main.ADMIN.log_("Stopping worker (" + worker.getIndex() + ")", 1);
             worker.stopWorker();
+            Main.ADMIN.log_("Worker (" + worker.getIndex() + ") stopped", 1);
         }
 
         // Wake the monitor that's holding up the main loop, allowing safe exit
@@ -93,9 +95,9 @@ public class WorkerManager extends Thread {
      * Prints out all active workers and their active jobs
      */
     public void printAllWorkers() {
-        // Loop though every worker and print out its job
-        for (Worker workerObject : workerList)
+        for (Worker workerObject : workerList) {
             Main.ADMIN.log_("    " + workerObject.getIndex() + ": " + workerObject.getJob(), 1);
+        }
     }
 
     /**
@@ -245,5 +247,9 @@ public class WorkerManager extends Thread {
      */
     public Object getMonitor() {
         return monitor;
+    }
+
+    public boolean isFlag_Run() {
+        return flag_Run;
     }
 }
