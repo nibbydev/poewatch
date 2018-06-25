@@ -651,14 +651,8 @@ public class Database {
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : idList) {
-                    statement.setInt(1, id);
-                    statement.setInt(2, id);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
             }
 
             connection.commit();
@@ -686,7 +680,7 @@ public class Database {
                         "        WHERE `id-i` = ? AND `approved` = 1" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) WHERE `id` = ? AND `volatile` = 0";
+                        "), 0.0) WHERE `id` = ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -755,8 +749,8 @@ public class Database {
                         "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb'); " +
 
                         "UPDATE `#_"+ league +"-items` " +
-                        "SET `exalted` = TRUNCATE(`mean` / @exVal, 4) " +
-                        "WHERE @exVal > 0 AND `volatile` = 0 AND `mean` > 0";
+                        "SET `exalted` = TRUNCATE(`median` / @exVal, 4) " +
+                        "WHERE @exVal > 0 AND `median` > 0";
 
         try {
             if (connection.isClosed()) return false;
@@ -777,8 +771,10 @@ public class Database {
     public boolean updateVolatile(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_"+ league +"-items` " +
-                        "SET `volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0)";
+        String query =  "UPDATE `#_"+ league +"-items` AS `i`" +
+                        "  JOIN `#_"+ league +"-entries` AS `e` ON `e`.`id-i` = `i`.`id`" +
+                        "SET `i`.`volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0)," +
+                        "`e`.`approved` = `i`.`volatile`";
 
         try {
             if (connection.isClosed()) return false;
@@ -798,6 +794,30 @@ public class Database {
         }
     }
 
+    public boolean resetVolatile(String league) {
+        league = formatLeague(league);
+
+        String query =  "UPDATE `#_"+ league +"-items` AS `i`" +
+                        "  JOIN `#_"+ league +"-entries` AS `e` ON `e`.`id-i` = `i`.`id`" +
+                        "SET `i`.`volatile` = 0, `e`.`approved` = 0 " +
+                        "WHERE `i`.`volatile` = 1 AND `e`.`approved` = 1";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not reset volatile status", 3);
+            return false;
+        }
+    }
+
     public boolean updateApproved(String league){
         league = formatLeague(league);
 
@@ -805,8 +825,9 @@ public class Database {
                         "  JOIN `#_"+ league +"-items` AS `i` " +
                         "    ON `e`.`id-i` = `i`.`id` " +
                         "SET `e`.`approved` = 1 " +
-                        "WHERE `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ? " +
-                        "  AND `i`.`volatile` = 0";
+                        "WHERE `e`.`approved` = 0 " +
+                        "  AND `i`.`volatile` = 0" +
+                        "  AND `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -840,7 +861,7 @@ public class Database {
                         "SET " +
                         "    `i`.`count` = IF(`e`.`approved` = 1, `i`.`count` + `e`.`count`, `i`.`count`), " +
                         "    `i`.`inc` = IF(`e`.`approved` = 1, `i`.`inc` + `e`.`count`, `i`.`inc`), " +
-                        "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`)" +
+                        "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`) " +
                         "WHERE `i`.`volatile` = 0";
 
         try {

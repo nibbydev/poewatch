@@ -115,6 +115,13 @@ public class EntryManager {
         // Allow workers to switch to new map
         try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
+        if (status.isSixtyBool()) {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                String league = leagueEntry.getName();
+                Main.DATABASE.updateVolatile(league);
+            }
+        }
+
         long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
@@ -167,7 +174,7 @@ public class EntryManager {
 
                 Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 Main.DATABASE.addHourly(league);
-                Main.DATABASE.updateVolatile(league);
+                Main.DATABASE.resetVolatile(league);
                 Main.DATABASE.calcQuantity(league);
             }
         }
@@ -181,7 +188,7 @@ public class EntryManager {
             }
         }
 
-        //System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a1, a0, a2, a3, a4, a5, a6, a7, a8);
+        System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a0, a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     private void generateOutputFiles() {
