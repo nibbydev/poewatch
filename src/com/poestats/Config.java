@@ -21,6 +21,7 @@ public class Config {
     public static final String sql_interval_1h = "1 HOUR";
     public static final String sql_interval_1d = "1 DAY";
     public static final String sql_interval_7d = "7 DAY";
+    public static final String sql_interval_120d = "120 DAY";
 
     //------------------------------------------------------------------------------------------------------------
     // File and folder locations

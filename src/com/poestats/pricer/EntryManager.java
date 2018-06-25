@@ -184,11 +184,11 @@ public class EntryManager {
                 String league = leagueEntry.getName();
 
                 Main.DATABASE.addDaily(league);
-                Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_7d);
+                Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_120d);
             }
         }
 
-        System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a0, a1, a2, a3, a4, a5, a6, a7, a8);
+        //System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a0, a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     private void generateOutputFiles() {
