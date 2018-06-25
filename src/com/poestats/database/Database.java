@@ -1150,7 +1150,7 @@ public class Database {
 
         String query =  "UPDATE `#_"+ league +"-items` as `i` " +
                         "SET `quantity` = (" +
-                        "    SELECT SUM(`inc`) / COUNT(`inc`) FROM `#_"+ league +"-history` " +
+                        "    SELECT SUM(`inc`) FROM `#_"+ league +"-history` " +
                         "    WHERE `id-i` = `i`.`id` AND `id-ch` = 2 " +
                         "), `inc` = 0, `dec` = 0;";
 
