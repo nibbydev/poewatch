@@ -135,13 +135,13 @@ public class EntryManager {
             Main.DATABASE.updateCounters(league);
             a1 += System.currentTimeMillis() - a;
 
+            a = System.currentTimeMillis();
+            Main.DATABASE.calculateMean(league);
+            a2 += System.currentTimeMillis() - a;
+
             List<Integer> idList = leagueToIds.get(league);
 
             if (idList != null) {
-                a = System.currentTimeMillis();
-                Main.DATABASE.calculateMean(league, idList);
-                a2 += System.currentTimeMillis() - a;
-
                 a = System.currentTimeMillis();
                 Main.DATABASE.calculateMedian(league, idList);
                 a3 += System.currentTimeMillis() - a;

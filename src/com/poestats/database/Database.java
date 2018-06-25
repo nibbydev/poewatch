@@ -638,15 +638,19 @@ public class Database {
         }
     }
 
-    public boolean calculateMean(String league, List<Integer> idList) {
+    public boolean calculateMean(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_"+ league +"-items` " +
-                        "SET `mean` = (" +
-                        "    SELECT IFNULL(AVG(`price`), 0.0) " +
-                        "    FROM `#_"+ league +"-entries`" +
-                        "    WHERE `id-i` = ? AND `approved` = 1" +
-                        ") WHERE `id` = ? AND `volatile` = 0";
+        String query =  "UPDATE `#_"+ league +"-items` AS `i`" +
+                        "  JOIN (" +
+                        "    SELECT `i`.`id`, TRUNCATE(IFNULL(AVG(`e`.price), 0.0), 4) AS 'avg' " +
+                        "    FROM `#_"+ league +"-items` AS `i`" +
+                        "      JOIN `#_"+ league +"-entries` AS `e` ON `e`.`id-i` = `i`.`id`" +
+                        "    WHERE `approved` = 1" +
+                        "    GROUP BY `e`.`id-i`" +
+                        "  ) AS `tmp` ON `tmp`.`id` = `i`.`id`" +
+                        "SET `i`.`mean` = `tmp`.`avg`" +
+                        "WHERE `i`.`volatile` = 0";
 
         try {
             if (connection.isClosed()) return false;
