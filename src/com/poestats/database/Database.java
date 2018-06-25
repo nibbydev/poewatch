@@ -676,12 +676,12 @@ public class Database {
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
                         "        FROM `#_"+ league +"-entries` d,  (SELECT @rownum:=0) r" +
-                        "        WHERE `id-i` = ? AND `approved` = 1" +
+                        "        WHERE `id-i` = ?" +
                         "        ORDER BY d.`price`" +
                         "    ) as t1, (" +
                         "        SELECT count(*) as total_rows" +
                         "        FROM `#_"+ league +"-entries` d" +
-                        "        WHERE `id-i` = ? AND `approved` = 1" +
+                        "        WHERE `id-i` = ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
                         "), 0.0) WHERE `id` = ?";
