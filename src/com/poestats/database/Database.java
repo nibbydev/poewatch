@@ -676,6 +676,47 @@ public class Database {
                         "    SELECT AVG(t1.`price`) as median_val FROM (" +
                         "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
                         "        FROM `#_"+ league +"-entries` d,  (SELECT @rownum:=0) r" +
+                        "        WHERE `id-i` = ? AND `approved` = 1" +
+                        "        ORDER BY d.`price`" +
+                        "    ) as t1, (" +
+                        "        SELECT count(*) as total_rows" +
+                        "        FROM `#_"+ league +"-entries` d" +
+                        "        WHERE `id-i` = ? AND `approved` = 1" +
+                        "    ) as t2 WHERE 1" +
+                        "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
+                        "), 0.0) WHERE `id` = ? AND `volatile` = 0";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (Integer id : idList) {
+                    statement.setInt(1, id);
+                    statement.setInt(2, id);
+                    statement.setInt(3, id);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate median", 3);
+            return false;
+        }
+    }
+
+    public boolean calculateVolatileMedian(String league, List<Integer> idList) {
+        league = formatLeague(league);
+
+        String query =  "UPDATE `#_"+ league +"-items` " +
+                        "SET `median` = IFNULL((" +
+                        "    SELECT AVG(t1.`price`) as median_val FROM (" +
+                        "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
+                        "        FROM `#_"+ league +"-entries` d,  (SELECT @rownum:=0) r" +
                         "        WHERE `id-i` = ?" +
                         "        ORDER BY d.`price`" +
                         "    ) as t1, (" +
@@ -684,7 +725,7 @@ public class Database {
                         "        WHERE `id-i` = ?" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) WHERE `id` = ?";
+                        "), 0.0) WHERE `id` = ? AND `volatile` = 1";
 
         try {
             if (connection.isClosed()) return false;
@@ -808,10 +849,9 @@ public class Database {
     public boolean resetVolatile(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_"+ league +"-items` AS `i`" +
-                        "  JOIN `#_"+ league +"-entries` AS `e` ON `e`.`id-i` = `i`.`id`" +
-                        "SET `i`.`volatile` = 0, `e`.`approved` = 0 " +
-                        "WHERE `i`.`volatile` = 1 AND `e`.`approved` = 1";
+        String query =  "UPDATE `#_"+ league +"-items` " +
+                        "SET `volatile` = 0 " +
+                        "WHERE `volatile` = 1";
 
         try {
             if (connection.isClosed()) return false;
@@ -872,8 +912,7 @@ public class Database {
                         "SET " +
                         "    `i`.`count` = `i`.`count` + `e`.`count`, " +
                         "    `i`.`inc` = `i`.`inc` + `e`.`count`, " +
-                        "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`) " +
-                        "WHERE `i`.`volatile` = 0";
+                        "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`)";
 
         try {
             if (connection.isClosed()) return false;

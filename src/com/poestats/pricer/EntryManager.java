@@ -112,18 +112,30 @@ public class EntryManager {
         Map<String, List<Integer>> leagueToIds = this.leagueToIds;
         this.leagueToIds = new HashMap<>();
 
-        // Allow workers to switch to new map
-        try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
+        long a;
+        long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
+        long a20 = 0, a23 = 0, a24 = 0, a22 = 0, a25 = 0, a21 = 0;
+        long a30 = 0, a31 = 0;
 
-        long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0, a9 = 0, a10 = 0, a11 = 0, a12 = 0, a13 = 0;
-
-        if (status.isTenBool()) {
+        if (status.isSixtyBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
                 String league = leagueEntry.getName();
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.updateVolatile(league);
-                a9 += System.currentTimeMillis() - a;
+                a20 += System.currentTimeMillis() - a;
+
+                List<Integer> idList = leagueToIds.get(league);
+
+                if (idList != null) {
+                    a = System.currentTimeMillis();
+                    Main.DATABASE.calculateVolatileMedian(league, idList);
+                    a21 += System.currentTimeMillis() - a;
+                }
+
+                a = System.currentTimeMillis();
+                Main.DATABASE.resetVolatile(league);
+                a22 += System.currentTimeMillis() - a;
             }
         }
 
@@ -132,53 +144,43 @@ public class EntryManager {
 
             a = System.currentTimeMillis();
             Main.DATABASE.updateApproved(league);
-            a0 += System.currentTimeMillis() - a;
+            a10 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
             Main.DATABASE.updateCounters(league);
-            a1 += System.currentTimeMillis() - a;
+            a11 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
             Main.DATABASE.calculateMean(league);
-            a2 += System.currentTimeMillis() - a;
+            a12 += System.currentTimeMillis() - a;
 
             List<Integer> idList = leagueToIds.get(league);
 
             if (idList != null) {
                 a = System.currentTimeMillis();
                 Main.DATABASE.calculateMedian(league, idList);
-                a3 += System.currentTimeMillis() - a;
+                a13 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.calculateMode(league, idList);
-                a4 += System.currentTimeMillis() - a;
+                a14 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.removeOldItemEntries(league, idList);
-                a5 += System.currentTimeMillis() - a;
+                a15 += System.currentTimeMillis() - a;
             }
 
             a = System.currentTimeMillis();
             Main.DATABASE.calculateExalted(league);
-            a6 += System.currentTimeMillis() - a;
+            a16 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
             Main.DATABASE.addMinutely(league);
-            a7 += System.currentTimeMillis() - a;
+            a17 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
             Main.DATABASE.removeOldHistoryEntries(league, 1, Config.sql_interval_1h);
-            a8 += System.currentTimeMillis() - a;
-        }
-
-        if (status.isTenBool()) {
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getName();
-
-                a = System.currentTimeMillis();
-                Main.DATABASE.resetVolatile(league);
-                a12 += System.currentTimeMillis() - a;
-            }
+            a18 += System.currentTimeMillis() - a;
         }
 
         if (status.isSixtyBool()) {
@@ -187,30 +189,37 @@ public class EntryManager {
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
-                a10 += System.currentTimeMillis() - a;
+                a23 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.addHourly(league);
-                a11 += System.currentTimeMillis() - a;
+                a24 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
                 Main.DATABASE.calcQuantity(league);
-                a13 += System.currentTimeMillis() - a;
+                a25 += System.currentTimeMillis() - a;
             }
 
-            System.out.printf("SEC: 9(%4d) 10(%4d) 11(%4d) 12(%4d) 13(%4d)\n", a9, a10, a11, a12, a13);
+            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
         }
 
         if (status.isTwentyFourBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
                 String league = leagueEntry.getName();
 
+                a = System.currentTimeMillis();
                 Main.DATABASE.addDaily(league);
+                a30 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_120d);
+                a31 += System.currentTimeMillis() - a;
             }
+
+            System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
         }
 
-        //System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a0, a1, a2, a3, a4, a5, a6, a7, a8);
+        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][1%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
     }
 
     private void generateOutputFiles() {
