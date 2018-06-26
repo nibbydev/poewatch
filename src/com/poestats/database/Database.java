@@ -656,7 +656,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -760,7 +760,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -775,18 +775,25 @@ public class Database {
     public boolean updateVolatile(String league) {
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_"+ league +"-items` AS `i`" +
-                        "  JOIN `#_"+ league +"-entries` AS `e` ON `e`.`id-i` = `i`.`id`" +
-                        "SET `i`.`volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0)," +
-                        "`e`.`approved` = `i`.`volatile`";
+        String query1 = "UPDATE `#_"+ league +"-items`" +
+                        "SET `volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0);";
+
+        String query2 = "UPDATE `#_"+ league +"-entries` AS `e`" +
+                        "JOIN `#_"+ league +"-items` AS `i` ON `e`.`id-i` = `i`.`id`" +
+                        "SET `e`.`approved` = 0 " +
+                        "WHERE `i`.`volatile` = 1";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setDouble(1, Config.entry_volatileFlat);
                 statement.setDouble(2, Config.entry_volatileRatio);
-                statement.execute();
+                statement.executeUpdate();
+            }
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query2);
             }
 
             connection.commit();
@@ -810,7 +817,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -840,7 +847,7 @@ public class Database {
                 statement.setDouble(1, 2.5);
                 statement.setDouble(2, 2.5);
 
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -863,8 +870,8 @@ public class Database {
                         "        GROUP BY `id-i`, `approved`" +
                         "    ) AS `e` ON `e`.`id-i` = `i`.`id`" +
                         "SET " +
-                        "    `i`.`count` = IF(`e`.`approved` = 1, `i`.`count` + `e`.`count`, `i`.`count`), " +
-                        "    `i`.`inc` = IF(`e`.`approved` = 1, `i`.`inc` + `e`.`count`, `i`.`inc`), " +
+                        "    `i`.`count` = `i`.`count` + `e`.`count`, " +
+                        "    `i`.`inc` = `i`.`inc` + `e`.`count`, " +
                         "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`) " +
                         "WHERE `i`.`volatile` = 0";
 
@@ -872,7 +879,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -1070,7 +1077,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -1102,7 +1109,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -1158,7 +1165,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -1182,7 +1189,7 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, type);
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();

@@ -115,14 +115,17 @@ public class EntryManager {
         // Allow workers to switch to new map
         try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
-        if (status.isSixtyBool()) {
+        long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0, a9 = 0, a10 = 0, a11 = 0, a12 = 0, a13 = 0;
+
+        if (status.isTenBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
                 String league = leagueEntry.getName();
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.updateVolatile(league);
+                a9 += System.currentTimeMillis() - a;
             }
         }
-
-        long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             String league = leagueEntry.getName();
@@ -168,15 +171,34 @@ public class EntryManager {
             a8 += System.currentTimeMillis() - a;
         }
 
+        if (status.isTenBool()) {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                String league = leagueEntry.getName();
+
+                a = System.currentTimeMillis();
+                Main.DATABASE.resetVolatile(league);
+                a12 += System.currentTimeMillis() - a;
+            }
+        }
+
         if (status.isSixtyBool()) {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
                 String league = leagueEntry.getName();
 
+                a = System.currentTimeMillis();
                 Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
+                a10 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.addHourly(league);
-                Main.DATABASE.resetVolatile(league);
+                a11 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.calcQuantity(league);
+                a13 += System.currentTimeMillis() - a;
             }
+
+            System.out.printf("SEC: 9(%4d) 10(%4d) 11(%4d) 12(%4d) 13(%4d)\n", a9, a10, a11, a12, a13);
         }
 
         if (status.isTwentyFourBool()) {
