@@ -165,7 +165,7 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, id);
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -236,7 +236,7 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setString(1, parentName);
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -266,7 +266,7 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setInt(1, parentId);
                 statement.setString(2, childName);
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -401,7 +401,7 @@ public class Database {
                 statement.setInt(1, parentId);
                 statement.setInt(2, childId);
 
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -447,7 +447,7 @@ public class Database {
                 statement.setInt(5, item.getFrame());
                 statement.setString(6, item.getGenericKey());
 
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -497,7 +497,7 @@ public class Database {
                 statement.setString(8, item.getUniqueKey());
                 statement.setString(9, Misc.formatIconURL(item.getIcon()));
 
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -877,7 +877,6 @@ public class Database {
                         "    ON `e`.`id-i` = `i`.`id` " +
                         "SET `e`.`approved` = 1 " +
                         "WHERE `e`.`approved` = 0 " +
-                        "  AND `i`.`volatile` = 0" +
                         "  AND `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ?";
 
         try {
@@ -902,23 +901,37 @@ public class Database {
     public boolean updateCounters(String league){
         league = formatLeague(league);
 
-        String query  = "UPDATE `#_"+ league +"-items` AS `i`" +
+        String query1 = "UPDATE `#_"+ league +"-items` AS `i`" +
                         "    JOIN (" +
-                        "        SELECT `id-i`, `approved`, count(*) AS 'count' " +
-                        "        FROM `#_"+ league +"-entries`" +
-                        "        WHERE `time` > ADDDATE(NOW(), INTERVAL -1 MINUTE)" +
-                        "        GROUP BY `id-i`, `approved`" +
-                        "    ) AS `e` ON `e`.`id-i` = `i`.`id`" +
+                        "        SELECT `id-i` AS 'id', count(*) AS 'count'" +
+                        "        FROM `#_incursion-entries`" +
+                        "        WHERE `approved` = 1 " +
+                        "            AND `time` > ADDDATE(NOW(), INTERVAL -50 SECOND)" +
+                        "        GROUP BY `id`" +
+                        "    ) AS `e` ON `e`.`id` = `i`.`id`" +
+                        "SET " +
+                        "    `i`.`count` = `i`.`count` + `e`.`count`, " +
+                        "    `i`.`inc` = `i`.`inc` + `e`.`count`";
+
+        String query2 = "UPDATE `#_"+ league +"-items` AS `i`" +
+                        "    JOIN (" +
+                        "        SELECT `id-i` AS 'id', count(*) AS 'count'" +
+                        "        FROM `#_incursion-entries`" +
+                        "        WHERE `approved` = 0 " +
+                        "            AND `time` > ADDDATE(NOW(), INTERVAL -50 SECOND)" +
+                        "        GROUP BY `id`" +
+                        "    ) AS `e` ON `e`.`id` = `i`.`id`" +
                         "SET " +
                         "    `i`.`count` = `i`.`count` + `e`.`count`, " +
                         "    `i`.`inc` = `i`.`inc` + `e`.`count`, " +
-                        "    `i`.`dec` = IF(`e`.`approved` = 0, `i`.`dec` + `e`.`count`, `i`.`dec`)";
+                        "    `i`.`dec` = `i`.`dec` + `e`.`count`";
 
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
             }
 
             connection.commit();
@@ -1065,7 +1078,7 @@ public class Database {
                 statement.setString(1, league);
                 statement.setString(2, category);
                 statement.setString(3, path);
-                statement.execute();
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -1179,7 +1192,7 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.execute(query);
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -1355,19 +1368,19 @@ public class Database {
 
             if (!tables.contains("#_" + league + "-items")) {
                 try (Statement statement = connection.createStatement()) {
-                    statement.execute(query1);
+                    statement.executeUpdate(query1);
                 }
             }
 
             if (!tables.contains("#_" + league + "-entries")) {
                 try (Statement statement = connection.createStatement()) {
-                    statement.execute(query2);
+                    statement.executeUpdate(query2);
                 }
             }
 
             if (!tables.contains("#_" + league + "-history")) {
                 try (Statement statement = connection.createStatement()) {
-                    statement.execute(query3);
+                    statement.executeUpdate(query3);
                 }
             }
 
