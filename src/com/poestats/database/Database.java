@@ -904,7 +904,7 @@ public class Database {
         String query1 = "UPDATE `#_"+ league +"-items` AS `i`" +
                         "    JOIN (" +
                         "        SELECT `id-i` AS 'id', count(*) AS 'count'" +
-                        "        FROM `#_incursion-entries`" +
+                        "        FROM `#_"+ league +"-entries`" +
                         "        WHERE `approved` = 1 " +
                         "            AND `time` > ADDDATE(NOW(), INTERVAL -50 SECOND)" +
                         "        GROUP BY `id`" +
@@ -916,7 +916,7 @@ public class Database {
         String query2 = "UPDATE `#_"+ league +"-items` AS `i`" +
                         "    JOIN (" +
                         "        SELECT `id-i` AS 'id', count(*) AS 'count'" +
-                        "        FROM `#_incursion-entries`" +
+                        "        FROM `#_"+ league +"-entries`" +
                         "        WHERE `approved` = 0 " +
                         "            AND `time` > ADDDATE(NOW(), INTERVAL -50 SECOND)" +
                         "        GROUP BY `id`" +
