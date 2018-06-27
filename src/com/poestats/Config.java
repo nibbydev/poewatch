@@ -58,13 +58,8 @@ public class Config {
     //------------------------------------------------------------------------------------------------------------
 
     public static final int entry_volatileFlat = 1;
-    public static final double entry_volatileRatio = 0.5;
-    public static final double outlier_discardRatio = 0.7;
-    public static final double outlier_devMulti = 2.0;
-    public static final double outlier_priceMulti = 2.0;
-    public static final int outlier_minCount = 5;
-
-    public static final int entry_maxCount = 96;
+    public static final double entry_volatileRatio = 0.6;
+    public static final int entry_maxCount = 256;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;

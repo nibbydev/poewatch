@@ -649,8 +649,7 @@ public class Database {
                         "    WHERE `approved` = 1" +
                         "    GROUP BY `e`.`id-i`" +
                         "  ) AS `tmp` ON `tmp`.`id` = `i`.`id`" +
-                        "SET `i`.`mean` = `tmp`.`avg`" +
-                        "WHERE `i`.`volatile` = 0";
+                        "SET `i`.`mean` = `tmp`.`avg`";
 
         try {
             if (connection.isClosed()) return false;
@@ -684,7 +683,7 @@ public class Database {
                         "        WHERE `id-i` = ? AND `approved` = 1" +
                         "    ) as t2 WHERE 1" +
                         "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) WHERE `id` = ? AND `volatile` = 0";
+                        "), 0.0) WHERE `id` = ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -761,7 +760,7 @@ public class Database {
                         "    ORDER BY COUNT(*) DESC " +
                         "    LIMIT 1" +
                         "), 0.0) " +
-                        "WHERE `id` = ? AND `volatile` = 0";
+                        "WHERE `id` = ?";
 
         try {
             if (connection.isClosed()) return false;
@@ -1145,11 +1144,11 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, " +
+                        "   `id-i`, `id-ch`, `volatile`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `h`.`id-i`, 2, " +
+                        "   `h`.`id-i`, 2, `i`.`volatile`, " +
                         "   AVG(`h`.`mean`), AVG(`h`.`median`), AVG(`h`.`mode`), AVG(`h`.`exalted`), " +
                         "   `i`.`count`, `i`.`quantity`, `i`.`inc`,  `i`.`dec` " +
                         "FROM `#_"+ league +"-history` AS `h` " +
@@ -1177,11 +1176,11 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "INSERT INTO `#_"+ league +"-history` (" +
-                        "   `id-i`, `id-ch`, " +
+                        "   `id-i`, `id-ch`, `volatile`, " +
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id-i`, 3, " +
+                        "   `id-i`, 3, MAX(`volatile`), " +
                         "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
                         "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
                         "FROM `#_"+ league +"-history` " +
@@ -1342,6 +1341,7 @@ public class Database {
                         "    `id-i`                int             unsigned NOT NULL," +
                         "    `id-ch`               int             unsigned NOT NULL," +
                         "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                        "    `volatile`            tinyint(1)      unsigned DEFAULT NULL," +
                         "    `mean`                decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `median`              decimal(10,4)   unsigned DEFAULT NULL," +
                         "    `mode`                decimal(10,4)   unsigned DEFAULT NULL," +
@@ -1358,7 +1358,8 @@ public class Database {
                         "        ON DELETE RESTRICT," +
                         "    INDEX `ind-h-id`      (`id-i`)," +
                         "    INDEX `ind-h-id-ch`   (`id-ch`)," +
-                        "    INDEX `ind-h-time`    (`time`)" +
+                        "    INDEX `ind-h-time`    (`time`), " +
+                        "    INDEX `ind-h-volatile`(`volatile`)" +
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         try {

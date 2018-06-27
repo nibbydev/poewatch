@@ -132,10 +132,6 @@ public class EntryManager {
                     Main.DATABASE.calculateVolatileMedian(league, idList);
                     a21 += System.currentTimeMillis() - a;
                 }
-
-                a = System.currentTimeMillis();
-                Main.DATABASE.resetVolatile(league);
-                a22 += System.currentTimeMillis() - a;
             }
         }
 
@@ -188,15 +184,19 @@ public class EntryManager {
                 String league = leagueEntry.getName();
 
                 a = System.currentTimeMillis();
+                Main.DATABASE.addHourly(league);
+                a22 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
                 Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 a23 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.addHourly(league);
+                Main.DATABASE.calcQuantity(league);
                 a24 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.calcQuantity(league);
+                //Main.DATABASE.resetVolatile(league);
                 a25 += System.currentTimeMillis() - a;
             }
 

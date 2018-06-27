@@ -189,6 +189,7 @@ CREATE TABLE `#_LEAGUE-history` (
     `id-i`                int             unsigned NOT NULL,
     `id-ch`               int             unsigned NOT NULL,
     `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `volatile`            tinyint(1)      unsigned DEFAULT NULL,
 
     `mean`                decimal(10,4)   unsigned DEFAULT NULL,
     `median`              decimal(10,4)   unsigned DEFAULT NULL,
@@ -208,7 +209,8 @@ CREATE TABLE `#_LEAGUE-history` (
 
     INDEX `ind-h-id`      (`id-i`),
     INDEX `ind-h-id-ch`   (`id-ch`),
-    INDEX `ind-h-time`    (`time`)
+    INDEX `ind-h-time`    (`time`),
+    INDEX `ind-h-volatile`(`volatile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
