@@ -114,7 +114,7 @@ public class EntryManager {
 
         long a;
         long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
-        long a20 = 0, a23 = 0, a24 = 0, a22 = 0, a25 = 0, a21 = 0;
+        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
         long a30 = 0, a31 = 0;
 
         if (status.isSixtyBool()) {

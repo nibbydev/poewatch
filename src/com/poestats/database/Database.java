@@ -687,6 +687,7 @@ public class Database {
 
         try {
             if (connection.isClosed()) return false;
+            int count = 0;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
@@ -694,6 +695,8 @@ public class Database {
                     statement.setInt(2, id);
                     statement.setInt(3, id);
                     statement.addBatch();
+
+                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -728,6 +731,7 @@ public class Database {
 
         try {
             if (connection.isClosed()) return false;
+            int count = 0;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
@@ -735,6 +739,8 @@ public class Database {
                     statement.setInt(2, id);
                     statement.setInt(3, id);
                     statement.addBatch();
+
+                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -764,12 +770,15 @@ public class Database {
 
         try {
             if (connection.isClosed()) return false;
+            int count = 0;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
                     statement.setInt(1, id);
                     statement.setInt(2, id);
                     statement.addBatch();
+
+                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -876,7 +885,10 @@ public class Database {
                         "    ON `e`.`id-i` = `i`.`id` " +
                         "SET `e`.`approved` = 1 " +
                         "WHERE `e`.`approved` = 0 " +
-                        "  AND `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ?";
+                        "  AND (" +
+                        "    `i`.`median` = 0" +
+                        "    OR `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ?" +
+                        "  )";
 
         try {
             if (connection.isClosed()) return false;
@@ -893,6 +905,60 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not update approved state", 3);
+            return false;
+        }
+    }
+
+    public boolean fixUnapprovedMedian(String league){
+        league = formatLeague(league);
+
+        String query1 = "SELECT `id-i` FROM `#_incursion-entries` " +
+                        "GROUP BY `id-i` " +
+                        "HAVING SUM(`approved`) = 0";
+
+        String query2 = "UPDATE `#_"+ league +"-items` " +
+                        "SET `median` = IFNULL((" +
+                        "    SELECT AVG(t1.`price`) as median_val FROM (" +
+                        "        SELECT @rownum:=@rownum+1 as `row_number`, d.`price`" +
+                        "        FROM `#_"+ league +"-entries` d,  (SELECT @rownum:=0) r" +
+                        "        WHERE `id-i` = ?" +
+                        "        ORDER BY d.`price`" +
+                        "    ) as t1, (" +
+                        "        SELECT count(*) as total_rows" +
+                        "        FROM `#_"+ league +"-entries` d" +
+                        "        WHERE `id-i` = ?" +
+                        "    ) as t2 WHERE 1" +
+                        "    AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
+                        "), 0.0) WHERE `id` = ? AND `volatile` = 1";
+
+        try {
+            if (connection.isClosed()) return false;
+            int count = 0;
+
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query1);
+
+                try (PreparedStatement statement2 = connection.prepareStatement(query2)) {
+                    while (resultSet.next()) {
+                        int id = resultSet.getInt(1);
+
+                        statement2.setInt(1, id);
+                        statement2.setInt(2, id);
+                        statement2.setInt(3, id);
+                        statement2.addBatch();
+
+                        if (++count % 100 == 0) statement2.executeBatch();
+                    }
+
+                    statement2.executeBatch();
+                }
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not fix unapproved item medians", 3);
             return false;
         }
     }
@@ -1268,6 +1334,7 @@ public class Database {
 
         try {
             if (connection.isClosed()) return false;
+            int count = 0;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (Integer id : idList) {
@@ -1275,6 +1342,8 @@ public class Database {
                     statement.setInt(2, id);
                     statement.setInt(3, Config.entry_maxCount);
                     statement.addBatch();
+
+                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
