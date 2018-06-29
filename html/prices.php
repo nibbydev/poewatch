@@ -4,7 +4,7 @@
 
   $SERVICE_category = CheckAndGetCategoryParam();
   $SERVICE_categories = GetCategories($pdo, $SERVICE_category);
-  $SERVICE_leagues = GetLeagues($pdo, true);
+  $SERVICE_leagues = GetLeagues($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="en">

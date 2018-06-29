@@ -7,7 +7,7 @@ function CheckAndGetCategoryParam() {
   } else return $_GET["category"];
 }
 
-// Get list of categories from DB
+// Get list of child categories and their display names from DB
 function GetCategories($pdo, $category) {
   $query = "SELECT cc.name, cc.display
     FROM `category-child` AS cc
@@ -27,19 +27,18 @@ function GetCategories($pdo, $category) {
   return $payload;
 }
 
-// Get list of leagues from DB
-function GetLeagues($pdo, $short) {
-  $query = "SELECT * FROM `sys-leagues`";
+// Get list of leagues and their display names from DB
+function GetLeagues($pdo) {
+  $query = "SELECT `name`, display FROM `sys-leagues`";
   $stmt = $pdo->query($query);
   
-  $rows = array();
+  $payload = array();
   
   while ($row = $stmt->fetch()) {
-    if ($short) $rows[] = $row["name"];
-    else $rows[] = $row;
+    $payload[$row["name"]] = $row["display"];
   }
 
-  return $rows;
+  return $payload;
 }
 
 // Add category-specific selector fields to sub-category selector
@@ -54,13 +53,13 @@ function AddSubCategorySelectors($categories) {
 
 // Add league radio buttons to second navbar
 function AddLeagueRadios($leagues) {
-  foreach ($leagues as $league) {
-    $outString = "
-    <label class='btn btn-sm btn-outline-dark p-0 px-1 {{active}}'>
-      <input type='radio' name='league' value='$league'>$league
-    </label>";
+  foreach ($leagues as $key => $value) {
+    if ($value === null) $value = $key;
 
-    echo $outString;
+    echo "
+    <label class='btn btn-sm btn-outline-dark p-0 px-1 {{active}}'>
+      <input type='radio' name='league' value='$key'>$value
+    </label>";
   }
 }
 
