@@ -1344,15 +1344,14 @@ public class Database {
     public boolean removeOldItemEntries(String league, List<Integer> idList) {
         league = formatLeague(league);
 
-        String query =  "DELETE FROM `#_"+ league +"-entries`" +
-                        "WHERE `id-i` = ? AND `time` NOT IN (" +
-                        "    SELECT `time`" +
-                        "    FROM (" +
+        String query =  "DELETE FROM `#_"+ league +"-entries` " +
+                        "WHERE `id-i` = ? AND `time` <= ( " +
+                        "    SELECT * FROM ( " +
                         "        SELECT `time` " +
-                        "        FROM `#_"+ league +"-entries`" +
+                        "        FROM `#_"+ league +"-entries` " +
                         "        WHERE `id-i` = ? " +
-                        "        ORDER BY `time` DESC" +
-                        "        LIMIT ?" +
+                        "        ORDER BY `time` DESC " +
+                        "        LIMIT 1 OFFSET ? " +
                         "    ) foo )";
 
         try {
