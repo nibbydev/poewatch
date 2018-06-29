@@ -8,55 +8,20 @@ function CheckAndGetCategoryParam() {
 }
 
 // Get list of categories from DB
-function GetCategories($pdo) {
-  $query = "SELECT 
-    `cp`.`name` AS 'parent_name', `cc`.`name` AS 'child_name', 
-    `cp`.`display` AS 'parent_display', `cc`.`display` AS 'child_display' 
-    FROM `category_parent` AS `cp`
-    LEFT JOIN `category_child` AS `cc`
-    ON `cp`.`id` = `cc`.`id_parent`";
+function GetCategories($pdo, $category) {
+  $query = "SELECT cc.name, cc.display
+    FROM `category-child` AS cc
+    JOIN `category-parent` AS cp
+    ON cp.id = cc.`id-cp`
+    WHERE cp.name = ?";
 
-  $stmt = $pdo->query($query);
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$category]);
 
   $payload = array();
 
-  $prevParent = null;
-  $parentArray = array();
-
   while ($row = $stmt->fetch()) {
-    if ($prevParent == null) {
-      $prevParent = $row["parent_name"];
-
-      $prevParentArray = array(
-        "name" => $row["parent_name"],
-        "display" => $row["parent_display"],
-        "members" => array(
-          array(
-            "name" => $row["child_name"],
-            "display" => $row["child_display"]
-          )
-        )
-      );
-    } else if ($prevParent !== $row["parent_name"]) {
-      $prevParent = $row["parent_name"];
-      $payload[] = $prevParentArray;
-
-      $prevParentArray = array(
-        "name" => $row["parent_name"],
-        "display" => $row["parent_display"],
-        "members" => array(
-          array(
-            "name" => $row["child_name"],
-            "display" => $row["child_display"]
-          )
-        )
-      );
-    } else {
-      $parentArray["members"][] = array(
-        "name" => $row["child_name"],
-        "display" => $row["child_display"]
-      );
-    }
+    $payload[$row["name"]] = $row["display"];
   }
 
   return $payload;
@@ -64,7 +29,7 @@ function GetCategories($pdo) {
 
 // Get list of leagues from DB
 function GetLeagues($pdo, $short) {
-  $query = "SELECT * FROM `leagues`";
+  $query = "SELECT * FROM `sys-leagues`";
   $stmt = $pdo->query($query);
   
   $rows = array();
@@ -79,21 +44,11 @@ function GetLeagues($pdo, $short) {
 
 // Add category-specific selector fields to sub-category selector
 function AddSubCategorySelectors($categories) {
-  if ( !isset($_GET["category"]) ) return;
+  echo "<option value='all'>All</option>";
 
-  foreach ($categories as $categoryElement) {
-    if ( $categoryElement["name"] !== $_GET["category"] ) continue;
-
-    echo "<option value='all'>All</option>";
-
-    foreach ($categoryElement["members"] as $member) {
-      $outString = "
-      <option value='{$member["name"]}'>{$member["display"]}</option>";
-  
-      echo $outString;
-    }
-
-    break;
+  foreach ($categories as $key => $value) {
+    echo "
+    <option value='$key'>$value</option>";
   }
 }
 

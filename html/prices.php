@@ -3,7 +3,7 @@
   include_once ( "assets/php/functions_prices.php" ); 
 
   $SERVICE_category = CheckAndGetCategoryParam();
-  $SERVICE_categories = GetCategories($pdo);
+  $SERVICE_categories = GetCategories($pdo, $SERVICE_category);
   $SERVICE_leagues = GetLeagues($pdo, true);
 ?>
 <!DOCTYPE html>
