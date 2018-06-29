@@ -1274,7 +1274,7 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "UPDATE `#_"+ league +"-items` as `i` " +
-                        "SET `quantity` = (" +
+                        "SET `quantity` = `inc` + (" +
                         "    SELECT IFNULL(SUM(`inc`), 0.0) FROM `#_"+ league +"-history` " +
                         "    WHERE `id-i` = `i`.`id` AND `id-ch` = 2 " +
                         ")";
