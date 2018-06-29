@@ -21,7 +21,7 @@ function GetCategories($pdo, $category) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
-    $payload[$row["name"]] = $row["display"];
+    $payload[] = array($row["name"], $row["display"]);
   }
 
   return $payload;
@@ -35,7 +35,7 @@ function GetLeagues($pdo) {
   $payload = array();
   
   while ($row = $stmt->fetch()) {
-    $payload[$row["name"]] = $row["display"];
+    $payload[] = array($row["name"], $row["display"]);
   }
 
   return $payload;
@@ -45,20 +45,20 @@ function GetLeagues($pdo) {
 function AddSubCategorySelectors($categories) {
   echo "<option value='all'>All</option>";
 
-  foreach ($categories as $key => $value) {
+  foreach ($categories as $entry) {
     echo "
-    <option value='$key'>$value</option>";
+    <option value='{$entry[0]}'>{$entry[1]}</option>";
   }
 }
 
 // Add league radio buttons to second navbar
 function AddLeagueRadios($leagues) {
-  foreach ($leagues as $key => $value) {
-    if ($value === null) $value = $key;
+  foreach ($leagues as $entry) {
+    if ($entry[1] === null) $entry[1] = $entry[0];
 
     echo "
     <label class='btn btn-sm btn-outline-dark p-0 px-1 {{active}}'>
-      <input type='radio' name='league' value='$key'>$value
+      <input type='radio' name='league' value='{$entry[0]}'>{$entry[1]}
     </label>";
   }
 }
@@ -76,7 +76,7 @@ function AddTableHeaders($category) {
   echo "<th scope='col'>Chaos</th>";
   echo "<th scope='col'>Exalted</th>";
   echo "<th scope='col'>Change</th>";
-  echo "<th scope='col'>Count</th>";
+  echo "<th scope='col'>Quant</th>";
 }
 
 // Adds a message to the MotD box

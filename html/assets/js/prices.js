@@ -18,8 +18,7 @@ var FILTER = {
 };
 
 var ITEMS = [];
-var LEAGUES;
-var CATEGORIES;
+var LEAGUES = null;
 var HISTORY_DATA = {};
 var HISTORY_CHART;
 var HISTORY_LEAGUE;
@@ -47,106 +46,13 @@ var TEMPLATE_imgContainer = `
 $(document).ready(function() {
   if (!SERVICE_category) return;
 
-  LEAGUES = SERVICE_leagues;
-  CATEGORIES = SERVICE_categories;
+  LEAGUES = extractLeagues(SERVICE_leagues);
 
-  //FILTER.league = LEAGUES[0];
-  FILTER.league = "Incursion";
+  FILTER.league = LEAGUES[0];
   FILTER.category = SERVICE_category;
 
   readLeagueFromCookies(FILTER);
-  makeRequest(); 
-
-  // Define league event listener
-  $("#search-league").on("change", function(){
-    FILTER.league = $("input[name=league]:checked", this).val();
-    console.log("Selected league: " + FILTER.league);
-    document.cookie = "league="+FILTER.league;
-    makeRequest();
-  });
-
-  // Define subcategory event listener
-  $("#search-sub").change(function(){
-    FILTER.sub = $(this).find(":selected").val();
-    console.log("Selected sub-category: " + FILTER.sub);
-    sortResults();
-  });
-
-  // Define load all button listener
-  var loadall = $(".loadall");
-  $(loadall, "button").on("click", function(){
-    console.log("Button press: loadall");
-    loadall.hide();
-    FILTER.parseAmount = 0;
-    sortResults();
-  });
-
-  // Define searchbar event listener
-  $("#search-searchbar").on("input", function(){
-    FILTER.search = $(this).val().toLowerCase().trim();
-    console.log("Search: " + FILTER.search);
-    sortResults();
-  });
-
-  // Define low confidence radio button event listener
-  $("#radio-confidence").on("change", function(){
-    let option = $("input:checked", this).val() === "1";
-    console.log("Show low count: " + option);
-    FILTER.showLowConfidence = option;
-    sortResults();
-  });
-
-  // Define link radio button event listener
-  $("#radio-links").on("change", function(){
-    FILTER.links = $("input[name=links]:checked", this).val();
-    console.log("Link filter: " + FILTER.links);
-    if (FILTER.links === "none") FILTER.links = null;
-    sortResults();
-  });
-
-  // Define gem selector and radio event listeners
-  $("#select-level").on("change", function(){
-    FILTER.gemLvl = $(":selected", this).val();
-    console.log("Gem lvl filter: " + FILTER.gemLvl);
-    if (FILTER.gemLvl === "none") FILTER.gemLvl = null;
-    else FILTER.gemLvl = parseInt(FILTER.gemLvl);
-    sortResults();
-  });
-  $("#select-quality").on("change", function(){
-    FILTER.gemQuality = $(":selected", this).val();
-    console.log("Gem quality filter: " + FILTER.gemQuality);
-    if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
-    else FILTER.gemQuality = parseInt(FILTER.gemQuality);
-    sortResults();
-  });
-  $("#radio-corrupted").on("change", function(){
-    FILTER.gemCorrupted = $(":checked", this).val();
-    console.log("Gem corruption filter: " + FILTER.gemCorrupted);
-    if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
-    else FILTER.gemCorrupted = parseInt(FILTER.gemCorrupted);
-    sortResults();
-  });
-
-  // Define tr click event
-  $("#searchResults > tbody").delegate("tr", "click", function(event) {
-    onRowClick(event);
-  });
-
-  // Define live search toggle listener
-  $("#live-updates").on("change", function(){
-    var live = $("input[name=live]:checked", this).val() == "true";
-    console.log("Live updates: " + live);
-    document.cookie = "live="+live;
-
-    var bar = $("#progressbar-live");
-    if (live) {
-      bar.css("animation-name", "progressbar-live");
-      INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
-    } else {
-      bar.css("animation-name", "");
-      clearInterval(INTERVAL);
-    }
-  });
+  makeRequest();
 }); 
 
 //------------------------------------------------------------------------------------------------------------
@@ -164,6 +70,113 @@ function readLeagueFromCookies(FILTER) {
   $("#search-league input").filter(function() { 
     return ($(this).val() === FILTER.league);
   }).prop("active", true).trigger("click");
+}
+
+function extractLeagues(leagues) {
+  let returnList = [];
+
+  for (let i = 0; i < leagues.length; i++) {
+    returnList.push(leagues[i][0]);
+  }
+
+  return returnList;
+}
+
+function defineListeners() {
+  // League
+  $("#search-league").on("change", function(){
+    FILTER.league = $("input[name=league]:checked", this).val();
+    console.log("Selected league: " + FILTER.league);
+    document.cookie = "league="+FILTER.league;
+    makeRequest();
+  });
+
+  // Subcategory
+  $("#search-sub").change(function(){
+    FILTER.sub = $(this).find(":selected").val();
+    console.log("Selected sub-category: " + FILTER.sub);
+    sortResults();
+  });
+
+  // Load all button
+  var loadall = $(".loadall");
+  $(loadall, "button").on("click", function(){
+    console.log("Button press: loadall");
+    loadall.hide();
+    FILTER.parseAmount = 0;
+    sortResults();
+  });
+
+  // Searchbar
+  $("#search-searchbar").on("input", function(){
+    FILTER.search = $(this).val().toLowerCase().trim();
+    console.log("Search: " + FILTER.search);
+    sortResults();
+  });
+
+  // Low confidence
+  $("#radio-confidence").on("change", function(){
+    let option = $("input:checked", this).val() === "1";
+    console.log("Show low count: " + option);
+    FILTER.showLowConfidence = option;
+    sortResults();
+  });
+
+  // Item links/sockets
+  $("#radio-links").on("change", function(){
+    FILTER.links = $("input[name=links]:checked", this).val();
+    console.log("Link filter: " + FILTER.links);
+    if (FILTER.links === "none") FILTER.links = null;
+    sortResults();
+  });
+
+  // Gem level
+  $("#select-level").on("change", function(){
+    FILTER.gemLvl = $(":selected", this).val();
+    console.log("Gem lvl filter: " + FILTER.gemLvl);
+    if (FILTER.gemLvl === "none") FILTER.gemLvl = null;
+    else FILTER.gemLvl = parseInt(FILTER.gemLvl);
+    sortResults();
+  });
+
+  // Gem quality
+  $("#select-quality").on("change", function(){
+    FILTER.gemQuality = $(":selected", this).val();
+    console.log("Gem quality filter: " + FILTER.gemQuality);
+    if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
+    else FILTER.gemQuality = parseInt(FILTER.gemQuality);
+    sortResults();
+  });
+
+  // Gem corrupted
+  $("#radio-corrupted").on("change", function(){
+    FILTER.gemCorrupted = $(":checked", this).val();
+    console.log("Gem corruption filter: " + FILTER.gemCorrupted);
+    if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
+    else FILTER.gemCorrupted = parseInt(FILTER.gemCorrupted);
+    sortResults();
+  });
+
+  // Expand row
+  $("#searchResults > tbody").delegate("tr", "click", function(event) {
+    onRowClick(event);
+  });
+
+  // Live search toggle
+  $("#live-updates").on("change", function(){
+    var live = $("input[name=live]:checked", this).val() == "true";
+    console.log("Live updates: " + live);
+    document.cookie = "live="+live;
+
+    var bar = $("#progressbar-live");
+    if (live) {
+      bar.css("animation-name", "progressbar-live");
+      INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
+    } else {
+      bar.css("animation-name", "");
+      clearInterval(INTERVAL);
+    }
+  });
 }
 
 //------------------------------------------------------------------------------------------------------------
