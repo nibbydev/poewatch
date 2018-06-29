@@ -184,19 +184,19 @@ public class EntryManager {
                 String league = leagueEntry.getName();
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.addHourly(league);
+                Main.DATABASE.calcQuantity(league);
                 a22 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
+                Main.DATABASE.addHourly(league);
                 a23 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.calcQuantity(league);
+                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 a24 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                //Main.DATABASE.resetVolatile(league);
+                Main.DATABASE.resetCounters(league);
                 a25 += System.currentTimeMillis() - a;
             }
 

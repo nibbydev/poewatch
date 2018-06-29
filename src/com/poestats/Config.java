@@ -59,7 +59,8 @@ public class Config {
 
     public static final int entry_volatileFlat = 1;
     public static final double entry_volatileRatio = 0.6;
-    public static final int entry_maxCount = 256;
+    public static final double entry_approvedMulti = 2.0;
+    public static final int entry_maxCount = 96;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;

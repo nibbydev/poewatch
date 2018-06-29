@@ -802,8 +802,8 @@ public class Database {
                         "    WHERE `idp`.`frame` = 5 AND `idp`.`name` = 'Exalted Orb'); " +
 
                         "UPDATE `#_"+ league +"-items` " +
-                        "SET `exalted` = TRUNCATE(`median` / @exVal, 4) " +
-                        "WHERE @exVal > 0 AND `median` > 0";
+                        "SET `exalted` = TRUNCATE(`mean` / @exVal, 4) " +
+                        "WHERE @exVal > 0 AND `mean` > 0";
 
         try {
             if (connection.isClosed()) return false;
@@ -894,8 +894,8 @@ public class Database {
             if (connection.isClosed()) return false;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setDouble(1, 2.5);
-                statement.setDouble(2, 2.5);
+                statement.setDouble(1, Config.entry_approvedMulti);
+                statement.setDouble(2, Config.entry_approvedMulti);
 
                 statement.executeUpdate();
             }
@@ -1246,12 +1246,13 @@ public class Database {
                         "   `mean`, `median`, `mode`, `exalted`, " +
                         "   `count`, `quantity`, `inc`, `dec`)" +
                         "SELECT " +
-                        "   `id-i`, 3, MAX(`volatile`), " +
-                        "   AVG(`mean`), AVG(`median`), AVG(`mode`), AVG(`exalted`), " +
-                        "   MAX(`count`), MAX(`quantity`),  MAX(`inc`),  MAX(`dec`)" +
-                        "FROM `#_"+ league +"-history` " +
-                        "WHERE `id-ch` = 2 " +
-                        "GROUP BY `id-i`";
+                        "   `h`.`id-i`, 3, `i`.`volatile`, " +
+                        "   AVG(`h`.`mean`), AVG(`h`.`median`), AVG(`h`.`mode`), AVG(`h`.`exalted`), " +
+                        "   `i`.`count`, `i`.`quantity`, `i`.`inc`,  `i`.`dec` " +
+                        "FROM `#_"+ league +"-history` AS `h` " +
+                        "JOIN `#_"+ league +"-items` AS `i` ON `h`.`id-i` = `i`.`id` " +
+                        "WHERE `h`.`id-ch` = 2 " +
+                        "GROUP BY `h`.`id-i`";
 
         try {
             if (connection.isClosed()) return false;
@@ -1274,9 +1275,9 @@ public class Database {
 
         String query =  "UPDATE `#_"+ league +"-items` as `i` " +
                         "SET `quantity` = (" +
-                        "    SELECT SUM(`inc`) FROM `#_"+ league +"-history` " +
+                        "    SELECT IFNULL(SUM(`inc`), 0.0) FROM `#_"+ league +"-history` " +
                         "    WHERE `id-i` = `i`.`id` AND `id-ch` = 2 " +
-                        "), `inc` = 0, `dec` = 0;";
+                        ")";
 
         try {
             if (connection.isClosed()) return false;
@@ -1290,6 +1291,28 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not calculate quantity", 3);
+            return false;
+        }
+    }
+
+    public boolean resetCounters(String league) {
+        league = formatLeague(league);
+
+        String query =  "UPDATE `#_"+ league +"-items` " +
+                        "SET `inc` = 0, `dec` = 0;";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not reset counters", 3);
             return false;
         }
     }
