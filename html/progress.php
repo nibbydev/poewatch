@@ -1,8 +1,8 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
-  include_once ( "assets/php/functions_prices.php" ); 
+  include_once ( "assets/php/functions_progress.php" ); 
 
-  $SERVICE_leagues = GetLeagues($pdo, false);
+  $SERVICE_leagues = GetLeagues($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="en">

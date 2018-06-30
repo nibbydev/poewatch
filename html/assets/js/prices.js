@@ -53,6 +53,7 @@ $(document).ready(function() {
 
   readLeagueFromCookies(FILTER);
   makeRequest();
+  defineListeners();
 }); 
 
 //------------------------------------------------------------------------------------------------------------

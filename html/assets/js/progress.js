@@ -2,8 +2,7 @@ $(document).ready(function() {
   var main = $("#main");
 
   $.each(SERVICE_leagues, function(index, element) {
-    if (["Standard", "Hardcore"].includes(element["id"])) return;
-    else if (~element["id"].indexOf("SSF")) return;
+    if (["Standard", "Hardcore"].includes(element["name"])) return;
 
     var start = new Date(element["start"]);
     var end = new Date(element["end"]);
@@ -25,7 +24,7 @@ $(document).ready(function() {
       </div>
     </div>
     `.trim()
-      .replace("{{title}}",   element["id"])
+      .replace("{{title}}",   element["display"] == null ? element["name"] : element["display"])
       .replace("{{start}}",   "Start: " + formatDate(start))
       .replace("{{end}}",     "End: "   + formatDate(end))
       .replace("{{id}}",      index)
