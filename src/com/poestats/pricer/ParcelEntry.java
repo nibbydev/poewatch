@@ -6,11 +6,6 @@ import java.sql.SQLException;
 public class ParcelEntry {
     public class HistoryData {
         public transient Double[] mean = new Double[7];
-        /*public Double[] median = new Double[7];
-        public Double[] mode = new Double[7];
-        public Double[] exalted = new Double[7];
-        public Integer[] count = new Integer[7];
-        public Integer[] quantity = new Integer[7];*/
         public Double[] spark = new Double[7];
         public double change;
     }
@@ -21,19 +16,19 @@ public class ParcelEntry {
 
     // Item
     private int id;
-    private double mean, median, mode, exalted;
-    private int count, quantity;
+    private double mean, exalted;
+    private int quantity;
 
     // Sup
-    private String child, name, type, parentKey;
+    private String child, name, type;
     private int frame;
 
     // Sub
     private Integer tier, lvl, quality, corrupted, links;
-    private String var, childKey, icon;
+    private String var, icon;
 
     private HistoryData history = new HistoryData();
-    private transient int historyCounter = 7;
+    private transient int historyCounter = 6;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -43,20 +38,15 @@ public class ParcelEntry {
         id = result.getInt("id_item");
 
         mean = result.getDouble("mean");
-        median = result.getDouble("median");
-        mode = result.getDouble("mode");
         exalted = result.getDouble("exalted");
-        count = result.getInt("count");
         quantity = result.getInt("quantity");
 
         child = result.getString("category_child");
         name = result.getString("name");
         type = result.getString("type");
-        parentKey = result.getString("key_parent");
         frame = result.getInt("frame");
 
         var = result.getString("var");
-        childKey = result.getString("key_child");
         icon = result.getString("icon");
 
         try {
@@ -82,31 +72,29 @@ public class ParcelEntry {
 
     public void loadHistory(ResultSet result) throws SQLException {
         if (--historyCounter < 0) return;
-
         history.mean[historyCounter] = result.getDouble("mean");
-        /*history.median[historyCounter] = result.getDouble("median");
-        history.mode[historyCounter] = result.getDouble("mode");
-        history.exalted[historyCounter] = result.getDouble("exalted");
-
-        history.count[historyCounter] = result.getInt("count");
-        history.quantity[historyCounter] = result.getInt("quantity");*/
     }
 
     public void calcSpark() {
+        history.mean[6] = mean;
+
         double lowestSpark = 0;
         double highestSpark = 0;
-        double firstMean = 0;
-        double lastMean = 0;
 
+        // Find lowest and highest mean price
         for (Double mean : history.mean) {
             if (mean != null) {
-                if (lowestSpark == 0) lowestSpark = mean;
-                else if (mean < lowestSpark) lowestSpark = mean;
+                if (lowestSpark == 0 || mean < lowestSpark) {
+                    lowestSpark = mean;
+                }
 
-                if (mean > highestSpark) highestSpark = mean;
+                if (mean > highestSpark) {
+                    highestSpark = mean;
+                }
             }
         }
 
+        // Calculate sparkline percentage based on the highest and lowest prices
         for (int i = 7; --i > 0;) {
             Double newSpark = null;
 
@@ -118,18 +106,24 @@ public class ParcelEntry {
             history.spark[i] = newSpark;
         }
 
+        double firstMean = 0;
+        double lastMean = 0;
+
+        // Find the first price that is not null
         for (int i = 7; --i > 0;) {
             if (history.mean[i] != null) {
                 firstMean = history.mean[i];
             }
         }
 
+        // Find the last price that is not null
         for (int i = 0; i < 7; i++) {
             if (history.mean[i] != null) {
                 lastMean = history.mean[i];
             }
         }
 
+        // Find % difference between first price and last price
         history.change = (1 - firstMean / lastMean) * 100;
         history.change = Math.round(history.change * 1000.0) / 1000.0;
     }

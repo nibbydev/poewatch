@@ -1062,12 +1062,10 @@ public class Database {
         league = formatLeague(league);
 
         String query =  "SELECT " +
-                        "    `i`.`id` AS 'id_item', " +
-                        "    `i`.`mean`, `i`.`median`, `i`.`mode`, `i`.`exalted`, " +
-                        "    `i`.`count`, `i`.`quantity`, `i`.`inc`, `i`.`dec`, " +
-                        "    `idp`.`name`, `idp`.`type`, `idp`.`frame`, `idp`.`key` AS 'key_parent', " +
+                        "    `i`.`id` AS 'id_item', `i`.`mean`, `i`.`exalted`, " +
+                        "    `i`.`quantity`, `idp`.`name`, `idp`.`type`, `idp`.`frame`, " +
                         "    `idc`.`tier`, `idc`.`lvl`, `idc`.`quality`, `idc`.`corrupted`, " +
-                        "    `idc`.`links`, `idc`.`var`, `idc`.`key` AS 'key_child', `idc`.`icon`, " +
+                        "    `idc`.`links`, `idc`.`var`, `idc`.`icon`, " +
                         "    `cc`.`name` AS 'category_child' " +
                         "FROM `#_"+ league +"-items` AS `i` " +
                         "JOIN `itemdata-child` AS `idc` ON `i`.`id-idc` = `idc`.`id` " +
