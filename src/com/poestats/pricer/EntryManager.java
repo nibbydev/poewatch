@@ -219,7 +219,7 @@ public class EntryManager {
             System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
         }
 
-        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][1%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
+        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
     }
 
     private void generateOutputFiles() {

@@ -825,7 +825,7 @@ public class Database {
         league = formatLeague(league);
 
         String query1 = "UPDATE `#_"+ league +"-items`" +
-                        "SET `volatile` = IF(`dec` > 1 && `inc` > ? && `dec` / `inc` > ?, 1, 0);";
+                        "SET `volatile` = IF(`dec` > 0 && `inc` > ? && `dec` / `inc` > ?, 1, 0);";
 
         String query2 = "UPDATE `#_"+ league +"-entries` AS `e`" +
                         "JOIN `#_"+ league +"-items` AS `i` ON `e`.`id-i` = `i`.`id`" +
