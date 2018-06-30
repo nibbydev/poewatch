@@ -986,9 +986,9 @@ function checkHideItem(item) {
 
   // Sort gems, I guess
   if (item["frame"] === 4) {
-    if (FILTER.gemLvl && item["lvl"] != FILTER.gemLvl) return true;
-    if (FILTER.gemQuality && item["quality"] != FILTER.gemQuality) return true;
-    if (FILTER.gemCorrupted && item["corrupted"] !== FILTER.gemCorrupted) return true;
+    if (FILTER.gemLvl !== null && item["lvl"] != FILTER.gemLvl) return true;
+    if (FILTER.gemQuality !== null && item["quality"] != FILTER.gemQuality) return true;
+    if (FILTER.gemCorrupted !== null && item["corrupted"] !== FILTER.gemCorrupted) return true;
 
   } else if (FILTER.category === "currency") {
     if (item["frame"] === 3 && FILTER.sub === "all") {
