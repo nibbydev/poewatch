@@ -295,7 +295,11 @@ public class Item extends Mappers.BaseItem {
             else qual = 20;
 
             // Quality doesn't matter for lvl 3 and 4
-            if (lvl > 2) qual = 0;
+            if (lvl > 2) {
+                qual = 0;
+
+                if (this.corrupted != null) corrupted = this.corrupted;
+            }
         } else {
             if (lvl < 15) lvl = 1;          // 1  = 1,2,3,4,5,6,7,8,9,10,11,12,13,14
             else if (lvl < 21) lvl = 20;    // 20 = 15,16,17,18,19,20
@@ -309,8 +313,8 @@ public class Item extends Mappers.BaseItem {
             if (lvl < 20 && qual > 20) qual = 20;         // |4| 1|23|1 and |4|10|23|1
             else if (lvl == 21 && qual < 20) qual = 0;    // |4|21|10|1
 
-            if (lvl < 20 && qual < 20) corrupted = false;
-            if (name.contains("Vaal")) corrupted = true;
+            if (lvl >= 20 || qual >= 20) corrupted = true;
+            else if (name.contains("Vaal")) corrupted = true;
         }
 
         this.level = Integer.toString(lvl);

@@ -124,8 +124,7 @@ public class Database {
                         "   VALUES (?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "   `start` = VALUES(`start`), " +
-                        "   `end` = VALUES(`end`), " +
-                        "   `display` = VALUES(`display`)";
+                        "   `end` = VALUES(`end`)";
 
         try {
             if (connection.isClosed()) return false;
