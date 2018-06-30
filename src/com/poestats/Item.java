@@ -554,10 +554,39 @@ public class Item extends Mappers.BaseItem {
         if (name.contains("\n")) name = name.replace("\n", " ");
 
         // Var contains the enchant value (e.g "var:1-160" or "var:120")
-        String numberString = enchantMods.get(0).replaceAll("[^-.0-9]+", " ");
-        String numbers = String.join("-", numberString.trim().split(" "));
+        String numString = enchantMods.get(0).replaceAll("[^-.0-9]+", " ").trim();
+        String[] numArray = numString.split(" ");
+        findEnchantRolls(numArray);
+        String numbers = String.join("-", numArray);
 
         if (!numbers.equals("")) variation = numbers;
+    }
+
+    /**
+     * Determines the tier/roll of an enchant if it has mod tiers
+     *
+     * @param numArray List of numbers found in enchant
+     */
+    private void findEnchantRolls(String[] numArray) {
+        // Assume name variable has the enchant name with numbers replaced by pound signs
+        switch (name) {
+            case "Lacerate deals # to # added Physical Damage against Bleeding Enemies":
+                int num1 = Integer.parseInt(numArray[0]);
+                int num2 = Integer.parseInt(numArray[1]);
+
+                // Merc: (4-8) to (10-15)
+                if (num1 <= 8 && num2 <= 15) {
+                    numArray[0] = "8";
+                    numArray[1] = "15";
+                }
+                // Uber: (14-18) to (20-25)
+                else if (num1 >= 14 && num1 <= 18 && num2 <= 25 && num2 >= 20) {
+                    numArray[0] = "18";
+                    numArray[1] = "25";
+                }
+
+                break;
+        }
     }
 
     /**
