@@ -10,6 +10,7 @@ var FILTER = {
   sub: "all",
   showLowConfidence: false,
   links: null,
+  tier: null,
   search: null,
   gemLvl: null,
   gemQuality: null,
@@ -128,6 +129,15 @@ function defineListeners() {
     FILTER.links = $("input[name=links]:checked", this).val();
     console.log("Link filter: " + FILTER.links);
     if (FILTER.links === "none") FILTER.links = null;
+    sortResults();
+  });
+
+  // Map tier
+  $("#select-tier").on("change", function(){
+    FILTER.tier = $(":selected", this).val();
+    console.log("Map tier filter: " + FILTER.tier);
+    if (FILTER.tier === "all") FILTER.tier = null;
+    else FILTER.tier = parseInt(FILTER.tier);
     sortResults();
   });
 
@@ -985,7 +995,7 @@ function checkHideItem(item) {
   if (item["links"] != FILTER.links) return true;
 
   // Sort gems, I guess
-  if (item["frame"] === 4) {
+  if (FILTER.category === "gems") {
     if (FILTER.gemLvl !== null && item["lvl"] != FILTER.gemLvl) return true;
     if (FILTER.gemQuality !== null && item["quality"] != FILTER.gemQuality) return true;
     if (FILTER.gemCorrupted !== null && item["corrupted"] !== FILTER.gemCorrupted) return true;
@@ -995,7 +1005,11 @@ function checkHideItem(item) {
       // Hide harbinger pieces under category 'all'
       return true;
     }
-  } else if (FILTER.category === "enchantments" && item["quantity"] < ENCH_QUANT_MED) return true;
+  } else if (FILTER.category === "enchantments") {
+    if (item["quantity"] < ENCH_QUANT_MED) return true;
+  } else if (FILTER.category === "maps") {
+    if (FILTER.tier != null && item["tier"] !== FILTER.tier) return true;
+  }
 
   // String search
   if (FILTER.search) {
