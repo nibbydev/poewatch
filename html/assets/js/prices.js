@@ -667,7 +667,13 @@ function buildNameField(item) {
   }
 
   if (FILTER.category === "enchantments") {
-    template = template.replace("{{name}}", item["name"].replace("#", item["var"]));
+    if (item["var"] != null) {
+      $.each(item["var"].split("-"), function(index, num) {
+        item["name"] = item["name"].replace("#", num);
+      });
+    }
+
+    template = template.replace("{{name}}", item["name"]);
     item["var"] = null;
   } else {
     template = template.replace("{{name}}", item["name"]);
