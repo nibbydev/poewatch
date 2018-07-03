@@ -133,6 +133,7 @@ CREATE TABLE `#_LEAGUE-items` (
     `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     `volatile`            tinyint(1)      unsigned NOT NULL DEFAULT 0,
+    `multiplier`          decimal(6,4)    unsigned NOT NULL DEFAULT 2.0,
     `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
     `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
     `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,

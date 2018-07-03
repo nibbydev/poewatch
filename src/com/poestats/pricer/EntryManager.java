@@ -114,7 +114,7 @@ public class EntryManager {
 
         long a;
         long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
-        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
+        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0, a26 = 0;
         long a30 = 0, a31 = 0;
 
         if (status.isSixtyBool()) {
@@ -188,19 +188,23 @@ public class EntryManager {
                 a22 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.addHourly(league);
+                Main.DATABASE.updateMultipliers(league);
                 a23 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
+                Main.DATABASE.addHourly(league);
                 a24 += System.currentTimeMillis() - a;
 
                 a = System.currentTimeMillis();
-                Main.DATABASE.resetCounters(league);
+                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
                 a25 += System.currentTimeMillis() - a;
+
+                a = System.currentTimeMillis();
+                Main.DATABASE.resetCounters(league);
+                a26 += System.currentTimeMillis() - a;
             }
 
-            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
+            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d][26%5d]\n", a20, a21, a22, a23, a24, a25, a26);
         }
 
         if (status.isTwentyFourBool()) {

@@ -879,22 +879,47 @@ public class Database {
     public boolean updateApproved(String league){
         league = formatLeague(league);
 
-        String query =  "UPDATE `#_"+ league +"-entries` AS `e` " +
-                        "  JOIN `#_"+ league +"-items` AS `i` " +
-                        "    ON `e`.`id-i` = `i`.`id` " +
-                        "SET `e`.`approved` = 1 " +
-                        "WHERE `e`.`approved` = 0 " +
+        String query =  "UPDATE `#_"+ league +"-entries` AS e " +
+                        "  JOIN `#_"+ league +"-items` AS i ON e.`id-i` = i.`id` " +
+                        "SET e.approved = 1 " +
+                        "WHERE e.approved = 0 " +
                         "  AND (" +
-                        "    `i`.`median` = 0" +
-                        "    OR `e`.`price` BETWEEN `i`.`median` / ? AND `i`.`median` * ?" +
+                        "    i.median = 0 " +
+                        "    OR e.price BETWEEN i.median / i.multiplier AND i.median * i.multiplier " +
                         "  )";
 
         try {
             if (connection.isClosed()) return false;
 
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not update approved state", 3);
+            return false;
+        }
+    }
+
+    public boolean updateMultipliers(String league){
+        league = formatLeague(league);
+
+        String query =  "UPDATE `#_"+ league +"-items` " +
+                        "SET multiplier = IF(? - quantity / ? < ?, ?, ? - quantity / ?)";
+
+        try {
+            if (connection.isClosed()) return false;
+
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setDouble(1, Config.entry_approvedMulti);
-                statement.setDouble(2, Config.entry_approvedMulti);
+                statement.setDouble(1, Config.entry_approvedMax);
+                statement.setDouble(2, Config.entry_approvedDiv);
+                statement.setDouble(3, Config.entry_approvedMin);
+                statement.setDouble(4, Config.entry_approvedMin);
+                statement.setDouble(5, Config.entry_approvedMax);
+                statement.setDouble(6, Config.entry_approvedDiv);
 
                 statement.executeUpdate();
             }
@@ -903,7 +928,7 @@ public class Database {
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not update approved state", 3);
+            Main.ADMIN.log_("Could not update multipliers", 3);
             return false;
         }
     }
@@ -1386,6 +1411,7 @@ public class Database {
                         "    `id-idc`              int             unsigned NOT NULL," +
                         "    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                         "    `volatile`            tinyint(1)      unsigned NOT NULL DEFAULT 0," +
+                        "    `multiplier`          decimal(6,4)    unsigned NOT NULL DEFAULT 2.0," +
                         "    `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                         "    `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
                         "    `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0," +
