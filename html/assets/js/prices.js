@@ -195,13 +195,13 @@ function defineListeners() {
 //------------------------------------------------------------------------------------------------------------
 
 function onRowClick(event) {
-  var target = $(event.currentTarget);
-  var index = parseInt(target.attr("value"));
+  let target = $(event.currentTarget);
+  let index = parseInt(target.attr("value"));
 
   // If user clicked on the smaller embedded table
   if ( isNaN(index) ) return;
 
-  var item = ITEMS[index];
+  let item = ITEMS[index];
 
   console.log("Clicked on row: " + index + " (" + item["name"] + ")");
 
@@ -225,9 +225,9 @@ function onRowClick(event) {
   }
 
   let chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-  let history = item["history"]["mean"];
-  let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
-  let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
+  //let history = item["history"]["mean"];
+  //let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
+  //let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
 
   let template = `
   <tr class='selected-row'><td colspan='100'>
@@ -293,23 +293,23 @@ function onRowClick(event) {
 
   template = template
     .replace("{{mean}}",    chaosContainer + roundPrice(item["mean"]))
-    .replace("{{median}}",  chaosContainer + roundPrice(item["median"]))
-    .replace("{{mode}}",    chaosContainer + roundPrice(item["mode"]))
-    .replace("{{count}}",                    roundPrice(item["count"]))
-    .replace("{{1d}}",      chaosContainer + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
-    .replace("{{1w}}",      chaosContainer + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
+    //.replace("{{median}}",  chaosContainer + roundPrice(item["median"]))
+    //.replace("{{mode}}",    chaosContainer + roundPrice(item["mode"]))
+    //.replace("{{count}}",                    roundPrice(item["count"]))
+    //.replace("{{1d}}",      chaosContainer + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
+    //.replace("{{1w}}",      chaosContainer + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
 
   // Set gvar
   ROW_expanded = $(template);
 
   // Load history data
-  if (item["index"] in HISTORY_DATA) {
+  if (index in HISTORY_DATA) {
     console.log("history from: memory");
-    placeCharts(index, ROW_expanded);
-    displayHistory(item["index"], ROW_expanded);
+    //placeCharts(index, ROW_expanded);
+    //displayHistory(item["id"], ROW_expanded);
   } else {
-    console.log("history from: source");
-    makeHistoryRequest(item["parent"], index, ROW_expanded);
+    console.log("history from: request");
+    //makeHistoryRequest(FILTER.league, index, ROW_expanded);
   }
 
   target.addClass("parent-row");
@@ -320,9 +320,9 @@ function onRowClick(event) {
   $("#history-league-radio", ROW_expanded).change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
   
-    if (HISTORY_LEAGUE in HISTORY_DATA[item["index"]]) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[item["index"]][HISTORY_LEAGUE];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[item["index"]][HISTORY_LEAGUE];
+    if (HISTORY_LEAGUE in HISTORY_DATA[index]) {
+      HISTORY_CHART.data.labels = HISTORY_DATA[index][HISTORY_LEAGUE];
+      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][HISTORY_LEAGUE];
       HISTORY_CHART.update();
     }
   });
@@ -568,14 +568,14 @@ function makeRequest() {
   });
 }
 
-function makeHistoryRequest(category, parentIndex, expandedRow) {
-  var index = ITEMS[parentIndex]["index"];
+function makeHistoryRequest(league, index, expandedRow) {
+  let id = ITEMS[index]["id"];
 
-  var request = $.ajax({
+  let request = $.ajax({
     url: "http://api.poe-stats.com/history",
     data: {
-      category: category, 
-      index: index
+      league: league, 
+      id: id
     },
     type: "GET",
     async: true,
@@ -584,8 +584,8 @@ function makeHistoryRequest(category, parentIndex, expandedRow) {
 
   request.done(function(payload) {
     HISTORY_DATA[index] = payload;
-    placeCharts(parentIndex, expandedRow);
-    displayHistory(index, expandedRow);
+    placeCharts(index, expandedRow);
+    displayHistory(id, expandedRow);
   });
 }
 

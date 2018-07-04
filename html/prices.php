@@ -156,7 +156,7 @@
           </div>
         </div>
         <div class="col-6 col-md-4 mb-2 order-4 order-sm-4 order-md-5">
-          <h4>Sub-category</h4>
+          <h4>Category</h4>
           <select class="form-control custom-select" id="search-sub">
           
             <?php AddSubCategorySelectors($SERVICE_categories); ?>
@@ -200,7 +200,7 @@
           </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-          <h4>Sub-category</h4>
+          <h4>Category</h4>
           <select class="form-control custom-select" id="search-sub">
 
             <?php AddSubCategorySelectors($SERVICE_categories); ?>
@@ -254,7 +254,7 @@
           </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-          <h4>Sub-category</h4>
+          <h4>Category</h4>
           <select class="form-control custom-select" id="search-sub">
 
             <?php AddSubCategorySelectors($SERVICE_categories); ?>
@@ -284,7 +284,7 @@
           </div>
         </div>
         <div class="col-6 col-md-3 mb-2 offset-md-3">
-          <h4>Sub-category</h4>
+          <h4>Category</h4>
           <select class="form-control custom-select" id="search-sub">
           
             <?php AddSubCategorySelectors($SERVICE_categories); ?>
