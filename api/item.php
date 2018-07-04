@@ -1,7 +1,7 @@
 <?php
-function error() {
-  header("location:/");
-  die();
+function error($msg) {
+  //header("location:/");
+  die(json_encode( array("error" => $msg) ));
 }
 
 function get_leagues($pdo) {
@@ -99,7 +99,8 @@ function format_league($league) {
 header("Content-Type: application/json");
 
 // Get parameters
-if (!isset($_GET["league"]) || !isset($_GET["id"])) error();
+if (!isset($_GET["league"])) error("Missing league");
+if (!isset($_GET["id"])) error("Missing id");
 $league = $_GET["league"];
 $id = $_GET["id"];
 
@@ -108,11 +109,11 @@ include_once ( "details/pdo.php" );
 
 // Get list of leagues and check if user-provided league was an actual league
 $leagues = get_leagues($pdo);
-if (!in_array($league, $leagues)) error();
+if (!in_array($league, $leagues)) error("Invalid league");
 
 // Get basic item data
 $payload = get_item($pdo, $league, $id);
-if (!$payload) error();
+if (!$payload) error("Invalid id");
 
 // Add expected fields and covert some strings into decimals
 $payload = prep_item($payload);
