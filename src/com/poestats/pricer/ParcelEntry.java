@@ -35,13 +35,13 @@ public class ParcelEntry {
     //------------------------------------------------------------------------------------------------------------
 
     public void loadItem(ResultSet result) throws SQLException {
-        id = result.getInt("id_item");
+        id = result.getInt("id_d");
 
         mean = result.getDouble("mean");
         exalted = result.getDouble("exalted");
         quantity = result.getInt("quantity");
 
-        child = result.getString("category_child");
+        child = result.getString("ccName");
         name = result.getString("name");
         type = result.getString("type");
         frame = result.getInt("frame");

@@ -2,6 +2,7 @@ package com.poestats.relations;
 
 import com.poestats.Item;
 import com.poestats.Main;
+import com.poestats.league.LeagueEntry;
 
 import java.util.*;
 
@@ -13,8 +14,12 @@ public class RelationManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    private Map<Integer, List<Integer>> leagueToIds = new HashMap<>();
+    private Map<String, Integer> keyToId = new HashMap<>();
+
+
     private Map<String, String> currencyAliasToName = new HashMap<>();
-    private IndexRelations indexRelations = new IndexRelations();
+    //private IndexRelations indexRelations = new IndexRelations();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
     private List<String> currentlyIndexingChildKeys = new ArrayList<>();
     private volatile boolean newIndexedItem = false;
@@ -46,28 +51,18 @@ public class RelationManager {
             Main.ADMIN.log_("Database did not contain any category information", 2);
         }
 
-        success = Main.DATABASE.getItemIds(indexRelations, Main.LEAGUE_MANAGER.getLeagues());
+        success = Main.DATABASE.getItemIds(leagueToIds, keyToId);
         if (!success) {
             Main.ADMIN.log_("Failed to query item ids from database. Shutting down...", 5);
             return false;
-        } else if (indexRelations.isEmpty_leagueToKeyToId()) {
+        } else if (keyToId.isEmpty()) {
             Main.ADMIN.log_("Database did not contain any item id information", 2);
         }
 
-        success = Main.DATABASE.getItemDataParentIds(indexRelations);
-        if (!success) {
-            Main.ADMIN.log_("Failed to query parent item ids from database. Shutting down...", 5);
-            return false;
-        } else if (indexRelations.isEmpty_parentKeyToParentId()) {
-            Main.ADMIN.log_("Database did not contain any parent item id information", 2);
-        }
-
-        success = Main.DATABASE.getItemDataChildIds(indexRelations);
-        if (!success) {
-            Main.ADMIN.log_("Failed to query child item ids from database. Shutting down...", 5);
-            return false;
-        } else if (indexRelations.isEmpty_childKeyToChildId()) {
-            Main.ADMIN.log_("Database did not contain any child item id information", 2);
+        if (leagueToIds.isEmpty()) {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                leagueToIds.putIfAbsent(leagueEntry.getId(), new ArrayList<>());
+            }
         }
 
         return true;
@@ -77,61 +72,53 @@ public class RelationManager {
     // Indexing methods
     //------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Provides an interface for saving and retrieving item data (data, leagues, categories) and indexes
-     *
-     * @param item Item object to index
-     * @param league
-     * @return
-     */
-    public Integer indexItem(Item item, String league) {
+    public Integer indexItem(Item item, Integer leagueId) {
         String uniqueKey = item.getUniqueKey();
-        String genericKey = item.getGenericKey();
+        Integer itemId = keyToId.get(uniqueKey);
 
-        Integer id = indexRelations.getItemId(league, uniqueKey);
+        // If the item is indexed and the league contains that item, return item's id
+        if (itemId != null) {
+            List<Integer> idList = leagueToIds.get(leagueId);
+            if (idList != null && idList.contains(itemId)) return itemId;
+        }
 
-        if (id != null) return id;
-        // If there wasn't an already existing parentChildId, return null without indexing
+        // If the item was marked not to be indexed
         if (item.isDoNotIndex()) return null;
 
-        // If the current item is currently being processed/indexed by another worker thread
+        // If the same item is currently being processed in the same method in another thread
         if (currentlyIndexingChildKeys.contains(uniqueKey)) return null;
         else currentlyIndexingChildKeys.add(uniqueKey);
 
-        // Flip flag that indicates a new item was indexed and thus the itemdata files have to be regenerated
-        newIndexedItem = true;
-
         indexCategory(item);
 
-        Integer parentItemDataId = indexRelations.getParentItemDataId(genericKey);
-        if (parentItemDataId == null) {
-            CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
+        // Add itemdata to database
+        if (itemId == null) {
+            // Flip flag that will regenerate the itemdata files
+            newIndexedItem = true;
 
+            // Get the category ids related to the item
+            CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
             Integer parentCategoryId = categoryEntry.getId();
             Integer childCategoryId = categoryEntry.getChildCategoryId(item.getChildCategory());
 
-            parentItemDataId = Main.DATABASE.indexParentItemData(item, parentCategoryId, childCategoryId);
-            indexRelations.addParentKeyToParentItemDataId(genericKey, parentItemDataId);
+            // Add item data to the database and get its id
+            itemId = Main.DATABASE.indexItemData(item, parentCategoryId, childCategoryId);
+            if (itemId != null) keyToId.put(uniqueKey, itemId);
         }
 
-        Integer childItemDataId = indexRelations.getChildItemDataId(uniqueKey);
-        if (childItemDataId == null) {
-            childItemDataId = Main.DATABASE.indexChildItemData(item, parentItemDataId);
-            indexRelations.addChildKeyToChildItemDataId(uniqueKey, childItemDataId);
+        // Check if the item's id is present under the league
+        List<Integer> idList = leagueToIds.get(leagueId);
+        if (idList != null && !idList.contains(itemId)) {
+            idList.add(itemId);
+            leagueToIds.putIfAbsent(leagueId, idList);
+
+            Main.DATABASE.createLeagueItem(leagueId, itemId);
         }
 
-        // Now that we have the item data's ids, we can index the item itself
-        id = Main.DATABASE.indexItem(league, parentItemDataId, childItemDataId);
-
-        if (id != null) {
-            indexRelations.addLeagueToKeyToId(league, uniqueKey, id);
-            indexRelations.addLeagueToIds(league, id);
-        }
-
-        // Remove the unique key from the list
+        // Remove unique key from the list
         currentlyIndexingChildKeys.remove(uniqueKey);
 
-        return id;
+        return itemId;
     }
 
     /**

@@ -19,75 +19,76 @@ public class LeagueManager {
 
     private Gson gson = Main.getGson();
     private List<LeagueEntry> leagues = new ArrayList<>();
+    private Map<String, Integer> leagueIds = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Prepares league data lists on program start.
+     * Prepares league data on program start.
      *
-     * @return False on failure
+     * @return True on success
      */
     public boolean loadLeaguesOnStartup() {
-        boolean success;
+        boolean success = downloadLeagueList(leagues);
 
-        success = downloadLeagueList(leagues);
-
-        // Download failed. Load leagues from database
-        if (!success) {
-            success = Main.DATABASE.getLeagues(leagues);
-
-            // Download failed AND database doesn't have league data. Shut down the program.
-            if (!success) {
-                Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
-                return false;
-            } else if (leagues.isEmpty()) {
-                Main.ADMIN.log_("Failed to query leagues from API and database did not contain any records. Shutting down...", 5);
-                return false;
-            }
+        if (success) {
+            sortLeagues(leagues);
+            Main.DATABASE.updateLeagues(leagues);
         }
 
-        sortLeagues(leagues);
+        success = Main.DATABASE.getLeagues(leagues);
 
-        // Update database leagues
-        Main.DATABASE.updateLeagues(leagues);
+        // Download failed AND database doesn't have league data. Shut down the program.
+        if (!success) {
+            Main.ADMIN.log_("Failed to query leagues from API and database. Shutting down...", 5);
+            return false;
+        } else if (leagues.isEmpty()) {
+            Main.ADMIN.log_("Failed to query leagues from API and database did not contain any records. Shutting down...", 5);
+            return false;
+        }
 
         for (LeagueEntry leagueEntry : leagues) {
-            Main.DATABASE.createLeagueTables(leagueEntry.getName());
+            leagueIds.put(leagueEntry.getName(), leagueEntry.getId());
         }
 
         return true;
     }
 
     /**
-     * Downloads leagues, updates database and local arrays
+     * Control method for connecting to league API, updating local objects and entries in database
      *
-     * @return False of failure
+     * @return True on success
      */
     public boolean download() {
         List<LeagueEntry> tmpLeagueList = new ArrayList<>();
-        boolean success;
 
-        success = downloadLeagueList(tmpLeagueList);
+        // Attempt to connect to league API
+        boolean success = downloadLeagueList(tmpLeagueList);
 
-        // Download failed. Load leagues from database
-        if (!success) {
-            success = Main.DATABASE.getLeagues(tmpLeagueList);
+        // If connection succeeded, filter, sort and upload leagues to database
+        if (success) {
+            sortLeagues(tmpLeagueList);
+            Main.DATABASE.updateLeagues(tmpLeagueList);
+        } else return false;
 
-            // Download failed AND database doesn't have league data. Shut down the program.
-            if (!success) return false;
+        // Since connection succeeded, get leagues from database (including their IDs!)
+        success = Main.DATABASE.getLeagues(tmpLeagueList);
+
+        // Could not connect to database, return
+        if (!success || tmpLeagueList.isEmpty()) {
+            Main.ADMIN.log_("Failed to query leagues from database", 5);
+            return false;
         }
 
-        sortLeagues(tmpLeagueList);
+        // Recreate league name to ID relations map
+        leagueIds.clear();
+        for (LeagueEntry leagueEntry : tmpLeagueList) {
+            leagueIds.put(leagueEntry.getName(), leagueEntry.getId());
+        }
+
         leagues = tmpLeagueList;
-
-        // Update database leagues if there have been any changes
-        Main.DATABASE.updateLeagues(leagues);
-
-        for (LeagueEntry leagueEntry : leagues) {
-            Main.DATABASE.createLeagueTables(leagueEntry.getName());
-        }
 
         return true;
     }
@@ -96,6 +97,12 @@ public class LeagueManager {
     // Utility methods
     //------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Filters and sorts provided ArrayList of league objects.
+     * Removes any SSF leagues and puts the remaining in a certain order
+     *
+     * @param leagueList ArrayList of LeagueEntry objects to be filtered and sorted
+     */
     private void sortLeagues(List<LeagueEntry> leagueList) {
         List<LeagueEntry> sortedLeagueList = new ArrayList<>();
 
@@ -167,9 +174,9 @@ public class LeagueManager {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Downloads a list of active leagues from `api.pathofexile.com/leagues`
+     * Downloads a list of active leagues from the league API
      *
-     * @return List of valid LeagueEntry'ies or null on exception
+     * @return List of valid LeagueEntry'es or null on exception
      */
     private boolean downloadLeagueList(List<LeagueEntry> leagueEntryList) {
         InputStream stream = null;
@@ -232,5 +239,9 @@ public class LeagueManager {
 
     public List<LeagueEntry> getLeagues() {
         return leagues;
+    }
+
+    public Integer getLeagueId(String league) {
+        return leagueIds.get(league);
     }
 }

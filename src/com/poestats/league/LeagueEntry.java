@@ -19,7 +19,7 @@ public class LeagueEntry {
 
     // TODO: SQL database has additional field display
     private String id, display, startAt, endAt;
-    private int dbId;
+    private int dbId, active;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -28,6 +28,7 @@ public class LeagueEntry {
     public void load(ResultSet resultSet) throws SQLException {
         dbId = resultSet.getInt("id");
         id = resultSet.getString("name");
+        active = resultSet.getInt("active");
         display = resultSet.getString("display");
         startAt = resultSet.getString("start");
         endAt = resultSet.getString("end");
@@ -109,5 +110,13 @@ public class LeagueEntry {
 
     public String getDisplay() {
         return display;
+    }
+
+    public Integer getId() {
+        return dbId;
+    }
+
+    public Integer getActive() {
+        return active;
     }
 }

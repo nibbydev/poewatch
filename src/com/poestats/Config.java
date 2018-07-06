@@ -57,11 +57,10 @@ public class Config {
     // Entry
     //------------------------------------------------------------------------------------------------------------
 
-    public static final int entry_volatileFlat = 0;
     public static final double entry_volatileRatio = 0.5;
-    public static final double entry_approvedMin = 1.2;
-    public static final double entry_approvedMax = 2.5;
-    public static final double entry_approvedDiv = 200.0;
+    public static final double entry_approvedMin = 1.1;
+    public static final double entry_approvedMax = 2.0;
+    public static final double entry_approvedDiv = 250.0;
     public static final int entry_maxCount = 96;
 
     public static final int entryController_sleepMS         = 60 * 1000;

@@ -5,58 +5,130 @@
 SET time_zone = "+02:00";
 
 --
--- Database: `ps2_database`
+-- Database: `ps3`
 --
-DROP DATABASE IF EXISTS `ps2_database`;
-CREATE DATABASE IF NOT EXISTS `ps2_database` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+DROP DATABASE IF EXISTS `ps3`;
+CREATE DATABASE IF NOT EXISTS `ps3` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE `ps2_database`;
+USE `ps3`;
+
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure `category-parent`
+-- Table structure `category_parent`
 --
 
-CREATE TABLE `category-parent` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `name`                varchar(32)     NOT NULL UNIQUE,
-    `display`             varchar(32)     DEFAULT NULL,
+CREATE TABLE `category_parent` (
+    `id`                    INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `name`                  VARCHAR(32)     NOT NULL UNIQUE,
+    `display`               VARCHAR(32)     DEFAULT NULL,
 
-    INDEX `ind-cp-id`     (`id`),
-    INDEX `ind-cp-name`   (`name`)
+    INDEX `index_cp_id`         (`id`),
+    INDEX `index_cp_name`       (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `category-child`
+-- Table structure `category_child`
 --
 
-CREATE TABLE `category-child` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `id-cp`               int             unsigned NOT NULL,
+CREATE TABLE `category_child` (
+    `id`                    INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `id_cp`                 INT             UNSIGNED NOT NULL,
+    `name`                  VARCHAR(32)     NOT NULL,
+    `display`               VARCHAR(32)     DEFAULT NULL,
 
-    `name`                varchar(32)     NOT NULL,
-    `display`             varchar(32)     DEFAULT NULL,
+    FOREIGN KEY (`id_cp`) REFERENCES `category_parent` (`id`) ON DELETE CASCADE,
 
-    FOREIGN KEY (`id-cp`)
-        REFERENCES `category-parent` (`id`)
-        ON DELETE CASCADE,
-
-    INDEX `ind-cc-id`     (`id`),
-    INDEX `ind-cc-id_p`   (`id-cp`),
-    INDEX `ind-cc-name`   (`name`)
+    INDEX `index_cc_id`         (`id`),
+    INDEX `index_cc_id_cp`      (`id_cp`),
+    INDEX `index_cc_name`       (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `category-history`
+-- Table structure `category_history`
 --
 
-CREATE TABLE `category-history` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `name`                varchar(32)     NOT NULL UNIQUE,
-    INDEX `ind-ch-id` (`id`)
+CREATE TABLE `category_history` (
+    `id`                    INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `name`                  VARCHAR(32)     NOT NULL UNIQUE,
+
+    INDEX `index_ch_id`         (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Data tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Table structure `data_leagues`
+--
+
+CREATE TABLE `data_leagues` (
+    `id`                  INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `active`              TINYINT(1)      UNSIGNED NOT NULL DEFAULT 1,
+    `name`                VARCHAR(64)     NOT NULL UNIQUE,
+    `display`             VARCHAR(64)     DEFAULT NULL,
+    `start`               VARCHAR(32)     DEFAULT NULL,
+    `end`                 VARCHAR(32)     DEFAULT NULL,
+
+    INDEX `index_l_id`              (`id`),
+    INDEX `index_l_active`          (`active`),
+    INDEX `index_l_name`            (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `data_changeId`
+--
+
+CREATE TABLE `data_changeId` (
+    `changeId`            VARCHAR(256)    NOT NULL UNIQUE,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `data_outputFiles`
+--
+
+CREATE TABLE `data_outputFiles` (
+    `league`              VARCHAR(64)     NOT NULL,
+    `category`            VARCHAR(32)     NOT NULL,
+    `path`                VARCHAR(128)    NOT NULL,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT  `pk_dof`  PRIMARY KEY (`league`, `category`),
+
+    INDEX `index_dof_pk`          (`league`, `category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `data_currencyItems`
+--
+
+CREATE TABLE `data_currencyItems` (
+    `id`                  INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `name`                VARCHAR(64)     NOT NULL,
+
+    INDEX `index_ci_id`               (`id`),
+    INDEX `index_ci_name`             (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `data_currencyAliases`
+--
+
+CREATE TABLE `data_currencyAliases` (
+    `id`                    INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `id_ci`                 INT           UNSIGNED NOT NULL,
+    `name`                  VARCHAR(32)   NOT NULL,
+
+    FOREIGN KEY (`id_ci`) REFERENCES `data_currencyItems` (`id`) ON DELETE CASCADE,
+
+    INDEX `index_ca_id`               (`id`),
+    INDEX `index_ca_id_ci`            (`id_ci`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -64,226 +136,127 @@ CREATE TABLE `category-history` (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure `itemdata-parent`
+-- Table structure `data_itemData`
 --
 
-CREATE TABLE `itemdata-parent` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `id-cp`               int             unsigned NOT NULL,
-    `id-cc`               int             unsigned DEFAULT NULL,
+CREATE TABLE `data_itemData` (
+    `id`                    INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `id_cp`                 INT             UNSIGNED NOT NULL,
+    `id_cc`                 INT             UNSIGNED DEFAULT NULL,
+    `name`                  VARCHAR(128)    NOT NULL,
+    `type`                  VARCHAR(64)     DEFAULT NULL,
+    `frame`                 TINYINT(1)      NOT NULL,
 
-    `name`                varchar(128)    NOT NULL,
-    `type`                varchar(64)     DEFAULT NULL,
-    `frame`               tinyint(1)      NOT NULL,
-    `key`                 varchar(128)    NOT NULL UNIQUE,
+    `tier`                  TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `lvl`                   TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `quality`               TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `corrupted`             TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `links`                 TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `var`                   VARCHAR(32)     DEFAULT NULL,
+    `key`                   VARCHAR(128)    NOT NULL,
+    `icon`                  VARCHAR(256)    NOT NULL,
 
-    FOREIGN KEY (`id-cp`)
-        REFERENCES `category-parent` (`id`)
-        ON DELETE CASCADE,
-    FOREIGN KEY (`id-cc`)
-        REFERENCES `category-child` (`id`)
-        ON DELETE CASCADE,
+    FOREIGN KEY (`id_cp`) REFERENCES `category_parent` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_cc`) REFERENCES `category_child`  (`id`) ON DELETE CASCADE,
 
-    INDEX `ind-idp-id`    (`id`),
-    INDEX `ind-idp-id-cp` (`id-cp`),
-    INDEX `ind-idp-id-cc` (`id-cc`),
-    INDEX `ind-idp-key`   (`key`),
-    INDEX `ind-idp-frame` (`frame`),
-    INDEX `ind-idp-name`  (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure `itemdata-child`
---
-
-CREATE TABLE `itemdata-child` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `id-idp`              int             unsigned NOT NULL,
-
-    `tier`                tinyint(1)      unsigned DEFAULT NULL,
-    `lvl`                 tinyint(1)      unsigned DEFAULT NULL,
-    `quality`             tinyint(1)      unsigned DEFAULT NULL,
-    `corrupted`           tinyint(1)      unsigned DEFAULT NULL,
-    `links`               tinyint(1)      unsigned DEFAULT NULL,
-    `var`                 varchar(32)     DEFAULT NULL,
-    `key`                 varchar(128)    NOT NULL UNIQUE,
-    `icon`                text            NOT NULL,
-
-    FOREIGN KEY (`id-idp`)
-        REFERENCES `itemdata-parent` (`id`)
-        ON DELETE CASCADE,
-
-    INDEX `ind-idc-id`    (`id`),
-    INDEX `ind-idc-id-p`  (`id-idp`),
-    INDEX `ind-idc-key`   (`key`)
+    INDEX `index_idp_id`        (`id`),
+    INDEX `index_idp_id_cp`     (`id_cp`),
+    INDEX `index_idp_id_cc`     (`id_cc`),
+    INDEX `index_idp_key`       (`key`),
+    INDEX `index_idp_frame`     (`frame`),
+    INDEX `index_idp_name`      (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
--- League-specific tables
+-- League tables
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure for table `#_LEAGUE-items`
+-- Table structure for table `league_items`
 --
 
-CREATE TABLE `#_LEAGUE-items` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `id-idp`              int             unsigned NOT NULL,
-    `id-idc`              int             unsigned NOT NULL,
-    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    `volatile`            tinyint(1)      unsigned NOT NULL DEFAULT 0,
-    `multiplier`          decimal(6,4)    unsigned NOT NULL DEFAULT 2.0,
-    `mean`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
-    `median`              decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
-    `mode`                decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
-    `exalted`             decimal(10,4)   unsigned NOT NULL DEFAULT 0.0,
-    `count`               int(16)         unsigned NOT NULL DEFAULT 0,
-    `quantity`            int(8)          unsigned NOT NULL DEFAULT 0,
-    `inc`                 int(8)          unsigned NOT NULL DEFAULT 0,
-    `dec`                 int(8)          unsigned NOT NULL DEFAULT 0,
-
-    FOREIGN KEY (`id-idp`)
-        REFERENCES `itemdata-parent` (`id`)
-        ON DELETE CASCADE,
-    FOREIGN KEY (`id-idc`)
-        REFERENCES `itemdata-child` (`id`)
-        ON DELETE CASCADE,
-
-    INDEX `ind-i-id`      (`id`),
-    INDEX `ind-i-id-idp`  (`id-idp`),
-    INDEX `ind-i-id-idc`  (`id-idc`),
-    INDEX `ind-i-volatile`(`volatile`),
-    INDEX `ind-i-mean`    (`mean`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure `#_LEAGUE-entries`
---
-
-CREATE TABLE `#_LEAGUE-entries` (
-    `id-i`                int             unsigned NOT NULL,
-    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `approved`            tinyint(1)      unsigned NOT NULL DEFAULT 0,
-
-    `price`               decimal(10,4)   unsigned NOT NULL,
-    `account`             varchar(32)     NOT NULL,
-    `itemid`              varchar(32)     NOT NULL,
-
-    FOREIGN KEY (`id-i`)
-        REFERENCES `#_LEAGUE-items` (`id`)
-        ON DELETE CASCADE,
-    CONSTRAINT `pk-e`
-        PRIMARY KEY (`id-i`, `account`),
-
-    INDEX `ind-e-id-i`    (`id-i`),
-    INDEX `ind-e-time`    (`time`),
-    INDEX `ind-e-approved`(`approved`),
-    INDEX `ind-e-price`   (`price`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure `#_LEAGUE-history`
---
-
-CREATE TABLE `#_LEAGUE-history` (
-    `id-i`                int             unsigned NOT NULL,
-    `id-ch`               int             unsigned NOT NULL,
-    `time`                timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `volatile`            tinyint(1)      unsigned DEFAULT NULL,
-
-    `mean`                decimal(10,4)   unsigned DEFAULT NULL,
-    `median`              decimal(10,4)   unsigned DEFAULT NULL,
-    `mode`                decimal(10,4)   unsigned DEFAULT NULL,
-    `exalted`             decimal(10,4)   unsigned DEFAULT NULL,
-    `inc`                 int(8)          unsigned DEFAULT NULL,
-    `dec`                 int(8)          unsigned DEFAULT NULL,
-    `count`               int(16)         unsigned DEFAULT NULL,
-    `quantity`            int(8)          unsigned DEFAULT NULL,
-
-    FOREIGN KEY (`id-i`)
-        REFERENCES `#_LEAGUE-items` (`id`)
-        ON DELETE CASCADE,
-    FOREIGN KEY (`id-ch`)
-        REFERENCES `category-history` (`id`)
-        ON DELETE RESTRICT,
-
-    INDEX `ind-h-id`      (`id-i`),
-    INDEX `ind-h-id-ch`   (`id-ch`),
-    INDEX `ind-h-time`    (`time`),
-    INDEX `ind-h-volatile`(`volatile`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------------------------------------------------------------------
--- System data tables
--- --------------------------------------------------------------------------------------------------------------------
-
---
--- Table structure `sys-leagues`
---
-
-CREATE TABLE `sys-leagues` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `name`                varchar(64)     NOT NULL UNIQUE,
-    `display`             varchar(64)     DEFAULT NULL,
-    `start`               varchar(32)     DEFAULT NULL,
-    `end`                 varchar(32)     DEFAULT NULL,
-
-    INDEX `ind-l-id`      (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure `sys-change_id`
---
-
-CREATE TABLE `sys-change_id` (
-    `change_id`           varchar(128)    NOT NULL UNIQUE,
-    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure `sys-output_files`
---
-
-CREATE TABLE `sys-output_files` (
-    `league`              varchar(64)     NOT NULL,
-    `category`            varchar(32)     NOT NULL,
-    `path`                text            NOT NULL,
+CREATE TABLE `league_items` (
+    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `volatile`            TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
+    `multiplier`          DECIMAL(6,4)    UNSIGNED NOT NULL DEFAULT 2.0,
+    `mean`                DECIMAL(10,4)   UNSIGNED NOT NULL DEFAULT 0.0,
+    `median`              DECIMAL(10,4)   UNSIGNED NOT NULL DEFAULT 0.0,
+    `mode`                DECIMAL(10,4)   UNSIGNED NOT NULL DEFAULT 0.0,
+    `exalted`             DECIMAL(10,4)   UNSIGNED NOT NULL DEFAULT 0.0,
+    `count`               INT(16)         UNSIGNED NOT NULL DEFAULT 0,
+    `quantity`            INT(8)          UNSIGNED NOT NULL DEFAULT 0,
+    `inc`                 INT(8)          UNSIGNED NOT NULL DEFAULT 0,
+    `dec`                 INT(8)          UNSIGNED NOT NULL DEFAULT 0,
 
-    CONSTRAINT `pk-of`
-        PRIMARY KEY (`league`, `category`),
+    FOREIGN KEY (`id_l`) REFERENCES  `data_leagues`   (`id`) ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`) REFERENCES  `data_itemData`  (`id`) ON DELETE CASCADE,
+    CONSTRAINT  `pk_i`   PRIMARY KEY (`id_l`, `id_d`),
 
-    INDEX `ind-of-league` (`league`),
-    INDEX `ind-of-category` (`category`)
+    INDEX `index_i_id_l`        (`id_l`),
+    INDEX `index_i_id_d`        (`id_d`),
+    INDEX `index_i_pk`          (`id_l`, `id_d`),
+    INDEX `index_i_volatile`    (`volatile`),
+    INDEX `index_i_multiplier`  (`multiplier`),
+    INDEX `index_i_mean`        (`mean`),
+    INDEX `index_i_median`      (`median`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `sys-currency_items`
+-- Table structure `league_entries`
 --
 
-CREATE TABLE `sys-currency_items` (
-    `id`                  int             unsigned PRIMARY KEY AUTO_INCREMENT,
-    `name`                varchar(64)     NOT NULL,
+CREATE TABLE `league_entries` (
+    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_d`                INT             UNSIGNED NOT NULL,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `approved`            TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
+    `price`               DECIMAL(10,4)   UNSIGNED NOT NULL,
+    `account`             VARCHAR(32)     NOT NULL,
+    `itemid`              VARCHAR(32)     NOT NULL,
 
-    INDEX `ind-ci-id`     (`id`)
+    FOREIGN KEY (`id_l`) REFERENCES  `data_leagues`   (`id`) ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`) REFERENCES  `league_items` (`id_d`) ON DELETE CASCADE,
+    CONSTRAINT  `pk_e`   PRIMARY KEY (`id_l`, `id_d`, `account`),
+
+    INDEX `index_e_id_l`          (`id_l`),
+    INDEX `index_e_id_d`          (`id_d`),
+    INDEX `index_e_pk`            (`id_l`, `id_d`),
+    INDEX `index_e_time`          (`time`),
+    INDEX `index_e_approved`      (`approved`),
+    INDEX `index_e_price`         (`price`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure `sys-currency_aliases`
+-- Table structure `league_history`
 --
 
-CREATE TABLE `sys-currency_aliases` (
-    `id`                    int           unsigned PRIMARY KEY AUTO_INCREMENT,
-    `id-ci`                 int           unsigned NOT NULL,
-    `name`                  varchar(32)   NOT NULL,
+CREATE TABLE `league_history` (
+    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_ch`               INT             UNSIGNED NOT NULL,
+    `id_d`                INT             UNSIGNED NOT NULL,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `mean`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `median`              DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `mode`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `exalted`             DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `inc`                 INT(8)          UNSIGNED DEFAULT NULL,
+    `dec`                 INT(8)          UNSIGNED DEFAULT NULL,
+    `count`               INT(16)         UNSIGNED DEFAULT NULL,
+    `quantity`            INT(8)          UNSIGNED DEFAULT NULL,
 
-    FOREIGN KEY (`id-ci`)
-        REFERENCES `sys-currency_items` (`id`)
-        ON DELETE CASCADE,
+    FOREIGN KEY (`id_l`)  REFERENCES `league_items`     (`id_l`)  ON DELETE CASCADE,
+    FOREIGN KEY (`id_ch`) REFERENCES `category_history` (`id`)    ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`)  REFERENCES `league_items`     (`id_d`)  ON DELETE CASCADE,
 
-    INDEX `ind-ca-id`       (`id`),
-    INDEX `ind-ca-id-ci`      (`id-ci`)
+    INDEX `index_h_id_l`          (`id_l`),
+    INDEX `index_h_id_ch`         (`id_ch`),
+    INDEX `index_h_id_d`          (`id_d`),
+    INDEX `index_h_pk`            (`id_l`, `id_ch`, `id_d`),
+    INDEX `index_h_time`          (`time`),
+    INDEX `index_h_volatile`      (`volatile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -291,37 +264,47 @@ CREATE TABLE `sys-currency_aliases` (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Base value for `change_id`
+-- Base values for `data_leagues`
 --
 
-INSERT INTO `sys-change_id`
-    (`change_id`)
+INSERT INTO `data_leagues`
+    (`id`, `active`, `name`)
+VALUES
+    (1, 1, 'Standard'),
+    (2, 1, 'Hardcore');
+
+--
+-- Base value for `data_changeId`
+--
+
+INSERT INTO `data_changeId`
+    (`changeId`)
 VALUES
     ('0-0-0-0-0');
 
 --
--- Base values for `category-history`
+-- Base values for `category_history`
 --
 
-INSERT INTO `category-history`
+INSERT INTO `category_history`
     (`id`, `name`)
 VALUES
     (1, 'minutely'),
-    (2, 'hourly'),                          -- Notice: Hourly should always be id 2 (see sql_id_category_history_hourly)
+    (2, 'hourly'),                                -- Notice: id 2 dependency
     (3, 'daily'),
     (4, 'weekly');
 
 --
--- Base values for `category-parent`
+-- Base values for `category_parent`
 --
 
-INSERT INTO `category-parent`
+INSERT INTO `category_parent`
     (`id`, `name`, `display`)
 VALUES
     (1,   'accessories',    'Accessories'),
     (2,   'armour',         'Armour'),
     (3,   'cards',          'Divination cards'),
-    (4,   'currency',       'Currency'),          -- Notice: Currency should always be id 4.
+    (4,   'currency',       'Currency'),          -- Notice: id 4 dependency
     (5,   'enchantments',   'Enchants'),
     (6,   'essence',        'Essences'),
     (7,   'flasks',         'Flasks'),
@@ -332,11 +315,11 @@ VALUES
     (12,  'weapons',        'Weapons');
 
 --
--- Base values for `category-child`
+-- Base values for `category_child`
 --
 
-INSERT INTO `category-child`
-    (`id-cp`, `name`, `display`)
+INSERT INTO `category_child`
+    (`id_cp`, `name`, `display`)
 VALUES
     (1,     'amulet',     'Amulets'),
     (1,     'belt',       'Belts'),
@@ -372,10 +355,10 @@ VALUES
     (12,    'wand',       'Wands');
 
 --
--- Base values for `currency_item`
+-- Base values for `data_currencyItems`
 --
 
-INSERT INTO `sys-currency_items`
+INSERT INTO `data_currencyItems`
     (`id`, `name`)
 VALUES
     (1,   'Chaos Orb'),
@@ -409,11 +392,11 @@ VALUES
     (29,  'Master Cartographer''s Sextant');
 
 --
--- Base values for `currency_alias`
+-- Base values for `data_currencyAliases`
 --
 
-INSERT INTO `sys-currency_aliases`
-    (`id-ci`, `name`)
+INSERT INTO `data_currencyAliases`
+    (`id_ci`, `name`)
 VALUES
     (1,   'chaos'),
     (1,   'choas'),
