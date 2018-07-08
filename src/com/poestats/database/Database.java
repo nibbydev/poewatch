@@ -518,41 +518,21 @@ public class Database {
         }
     }
 
-    public boolean calculateMedian(Integer leagueId, List<Integer> idList) {
-        String query =  "UPDATE league_items " +
-                        "SET median = IFNULL((" +
-                        "    SELECT AVG(t1.price) AS median_val FROM (" +
-                        "        SELECT @rownum:=@rownum+1 AS row_number, d.price" +
-                        "        FROM league_entries AS d, (SELECT @rownum:=0) AS r" +
-                        "        WHERE id_l = ? AND id_d = ? AND approved = 1" +
-                        "        ORDER BY d.price" +
-                        "    ) AS t1, (" +
-                        "        SELECT COUNT(*) AS total_rows" +
-                        "        FROM league_entries AS d" +
-                        "        WHERE id_l = ? AND id_d = ? AND approved = 1" +
-                        "    ) AS t2 " +
-                        "    WHERE t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) " +
-                        "WHERE id_l = ? AND id_d = ?";
+    public boolean calculateMedian() {
+        String query =  "UPDATE league_items AS i " +
+                        "JOIN ( " +
+                        "    SELECT id_l, id_d, MEDIAN(price) AS median " +
+                        "    FROM league_entries " +
+                        "    WHERE approved = 1 " +
+                        "    GROUP BY id_l, id_d " +
+                        ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
+                        "SET i.median = e.median ";
 
         try {
             if (connection.isClosed()) return false;
-            int count = 0;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : idList) {
-                    statement.setInt(1, leagueId);
-                    statement.setInt(2, id);
-                    statement.setInt(3, leagueId);
-                    statement.setInt(4, id);
-                    statement.setInt(5, leagueId);
-                    statement.setInt(6, id);
-                    statement.addBatch();
-
-                    if (++count % 100 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
             }
 
             connection.commit();
@@ -564,48 +544,29 @@ public class Database {
         }
     }
 
-    public boolean calculateVolatileMedian(Integer leagueId, List<Integer> idList) {
-        String query =  "UPDATE league_items " +
-                        "SET median = IFNULL((" +
-                        "    SELECT AVG(t1.price) AS median_val FROM (" +
-                        "        SELECT @rownum:=@rownum+1 AS row_number, d.price" +
-                        "        FROM league_entries AS d, (SELECT @rownum:=0) AS r" +
-                        "        WHERE id_l = ? AND id_d = ? " +
-                        "        ORDER BY d.price" +
-                        "    ) AS t1, (" +
-                        "        SELECT COUNT(*) AS total_rows" +
-                        "        FROM league_entries AS d" +
-                        "        WHERE id_l = ? AND id_d = ? " +
-                        "    ) AS t2 " +
-                        "    WHERE t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) )" +
-                        "), 0.0) " +
-                        "WHERE id_l = ? AND id_d = ? AND volatile = 1";
+    public boolean calculateVolatileMedian() {
+        String query =  "UPDATE league_items AS i " +
+                        "JOIN ( " +
+                        "    SELECT id_l, id_d, MEDIAN(price) AS median " +
+                        "    FROM league_entries " +
+                        "    WHERE approved = 1 " +
+                        "    GROUP BY id_l, id_d " +
+                        ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
+                        "SET i.median = e.median " +
+                        "WHERE volatile = 1 ";
 
         try {
             if (connection.isClosed()) return false;
-            int count = 0;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : idList) {
-                    statement.setInt(1, leagueId);
-                    statement.setInt(2, id);
-                    statement.setInt(3, leagueId);
-                    statement.setInt(4, id);
-                    statement.setInt(5, leagueId);
-                    statement.setInt(6, id);
-                    statement.addBatch();
-
-                    if (++count % 100 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
             }
 
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate volatile median", 3);
+            Main.ADMIN.log_("Could not calculate median", 3);
             return false;
         }
     }

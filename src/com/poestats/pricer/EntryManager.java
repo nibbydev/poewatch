@@ -74,13 +74,9 @@ public class EntryManager {
             Main.DATABASE.updateVolatile();
             a20 += System.currentTimeMillis() - a;
 
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                Integer leagueId = leagueEntry.getId();
-
-                a = System.currentTimeMillis();
-                Main.DATABASE.calculateVolatileMedian(leagueId, idList);
-                a21 += System.currentTimeMillis() - a;
-            }
+            a = System.currentTimeMillis();
+            Main.DATABASE.calculateVolatileMedian();
+            a21 += System.currentTimeMillis() - a;
         }
 
         a = System.currentTimeMillis();
@@ -95,12 +91,12 @@ public class EntryManager {
         Main.DATABASE.calculateMean();
         a12 += System.currentTimeMillis() - a;
 
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMedian();
+        a13 += System.currentTimeMillis() - a;
+
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
             Integer leagueId = leagueEntry.getId();
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.calculateMedian(leagueId, idList);
-            a13 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
             Main.DATABASE.calculateMode(leagueId, idList);
