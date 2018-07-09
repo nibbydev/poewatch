@@ -956,11 +956,13 @@ public class Database {
     }
 
     public boolean calcQuantity() {
-        String query =  "UPDATE league_items AS i " +
-                        "SET i.quantity = i.inc + (" +
-                        "  SELECT IFNULL(SUM(h.inc), 0) FROM league_history AS h" +
-                        "  WHERE h.id_ch = 2 AND h.id_l = i.id_l AND h.id_d = i.id_d" +
-                        ")";
+        String query =  "UPDATE league_items AS i  " +
+                        "JOIN ( " +
+                        "    SELECT id_l, id_d, IFNULL(SUM(inc), 0) AS quantity FROM league_history " +
+                        "    WHERE id_ch = 2 AND time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
+                        "    GROUP BY id_l, id_d " +
+                        ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
+                        "SET i.quantity = h.quantity ";
 
         try {
             if (connection.isClosed()) return false;
