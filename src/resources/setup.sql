@@ -255,7 +255,6 @@ CREATE TABLE `league_history` (
     INDEX `index_h_id_ch`         (`id_ch`),
     INDEX `index_h_id_d`          (`id_d`),
     INDEX `index_h_pk`            (`id_l`, `id_ch`, `id_d`),
-    INDEX `index_h_time`          (`time`),
     INDEX `index_h_volatile`      (`volatile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

@@ -18,8 +18,8 @@ public class Config {
         return db_password;
     }
 
-    public static final String sql_interval_1h = "1 HOUR";
-    public static final String sql_interval_1d = "1 DAY";
+    public static final String sql_interval_60m = "60 MINUTE";
+    public static final String sql_interval_24h = "24 HOUR";
     public static final String sql_interval_7d = "7 DAY";
     public static final String sql_interval_120d = "120 DAY";
 

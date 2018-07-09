@@ -18,8 +18,6 @@ public class EntryManager {
     //------------------------------------------------------------------------------------------------------------
 
     private Set<RawEntry> entrySet = new HashSet<>();
-    private Set<Integer> idSet = new HashSet<>();
-
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
     private Gson gson;
@@ -66,7 +64,7 @@ public class EntryManager {
         long a;
         long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
         long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0, a26 = 0;
-        long a30 = 0, a31 = 0;
+        long a30 = 0, a31 = 0, a32 = 0;
 
         if (status.isSixtyBool()) {
             a = System.currentTimeMillis();
@@ -110,10 +108,6 @@ public class EntryManager {
         Main.DATABASE.addMinutely();
         a17 += System.currentTimeMillis() - a;
 
-        a = System.currentTimeMillis();
-        Main.DATABASE.removeOldHistoryEntries( 1, Config.sql_interval_1h);
-        a18 += System.currentTimeMillis() - a;
-
         if (status.isSixtyBool()) {
             a = System.currentTimeMillis();
             Main.DATABASE.calcQuantity();
@@ -123,12 +117,13 @@ public class EntryManager {
             Main.DATABASE.updateMultipliers();
             a23 += System.currentTimeMillis() - a;
 
+            // Ought to be before addHourly()
             a = System.currentTimeMillis();
-            Main.DATABASE.addHourly();
+            Main.DATABASE.removeOldHistoryEntries( 1, Config.sql_interval_60m);
             a24 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
-            Main.DATABASE.removeOldHistoryEntries(2, Config.sql_interval_1d);
+            Main.DATABASE.addHourly();
             a25 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
@@ -139,15 +134,20 @@ public class EntryManager {
         }
 
         if (status.isTwentyFourBool()) {
+            // Ought to be before addDaily()
             a = System.currentTimeMillis();
-            Main.DATABASE.addDaily();
+            Main.DATABASE.removeOldHistoryEntries(2, Config.sql_interval_24h);
             a30 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
             Main.DATABASE.removeOldHistoryEntries(3, Config.sql_interval_120d);
             a31 += System.currentTimeMillis() - a;
 
-            System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
+            a = System.currentTimeMillis();
+            Main.DATABASE.addDaily();
+            a32 += System.currentTimeMillis() - a;
+
+            System.out.printf("{3X series} > [30%5d][31%5d][32%5d]\n", a30, a31, a32);
         }
 
         System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
@@ -157,12 +157,7 @@ public class EntryManager {
         Set<RawEntry> entrySet = this.entrySet;
         this.entrySet = new HashSet<>();
 
-        idSet = new HashSet<>();
-        for (RawEntry rawEntry : entrySet) {
-            idSet.add(rawEntry.getItemId());
-        }
-
-        System.out.printf("Uploading %d (%d) items\n", entrySet.size(), idSet.size());
+        System.out.printf("Uploading %d items\n", entrySet.size());
 
         Main.DATABASE.uploadRaw(entrySet);
     }
