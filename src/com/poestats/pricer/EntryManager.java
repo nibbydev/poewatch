@@ -94,13 +94,9 @@ public class EntryManager {
         Main.DATABASE.calculateMedian();
         a13 += System.currentTimeMillis() - a;
 
-        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            Integer leagueId = leagueEntry.getId();
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.calculateMode(leagueId, idSet);
-            a14 += System.currentTimeMillis() - a;
-        }
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMode();
+        a14 += System.currentTimeMillis() - a;
 
         a = System.currentTimeMillis();
         Main.DATABASE.removeOldItemEntries();

@@ -560,33 +560,21 @@ public class Database {
         }
     }
 
-    public boolean calculateMode(Integer leagueId, Set<Integer> idSet) {
-        String query =  "UPDATE league_items " +
-                        "SET mode = IFNULL(( " +
-                        "    SELECT price FROM league_entries " +
-                        "    WHERE id_l = ? AND id_d = ? AND approved = 1 " +
-                        "    GROUP BY price " +
-                        "    ORDER BY COUNT(*) DESC " +
-                        "    LIMIT 1 " +
-                        "), 0.0) " +
-                        "WHERE id_l = ? AND id_d = ?";
+    public boolean calculateMode() {
+        String query =  "UPDATE league_items AS i " +
+                        "JOIN ( " +
+                        "    SELECT id_l, id_d, stats_mode(price) AS mode " +
+                        "    FROM league_entries " +
+                        "    WHERE approved = 1 " +
+                        "    GROUP BY id_l, id_d " +
+                        ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
+                        "SET i.mode = e.mode ";
 
         try {
             if (connection.isClosed()) return false;
-            int count = 0;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : idSet) {
-                    statement.setInt(1, leagueId);
-                    statement.setInt(2, id);
-                    statement.setInt(3, leagueId);
-                    statement.setInt(4, id);
-                    statement.addBatch();
-
-                    if (++count % 100 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
             }
 
             connection.commit();
