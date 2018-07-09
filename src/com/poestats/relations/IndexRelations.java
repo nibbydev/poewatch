@@ -1,5 +1,7 @@
 package com.poestats.relations;
 
+import com.poestats.league.LeagueEntry;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -8,103 +10,46 @@ import java.util.List;
 import java.util.Map;
 
 public class IndexRelations {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
+    private Map<Integer, List<Integer>> leagueToIds = new HashMap<>();
+    private Map<String, Integer> keyToId = new HashMap<>();
 
-    private Map<String, Map<String, Integer>> leagueToKeyToId = new HashMap<>();
-    private Map<String, List<Integer>> leagueToIds = new HashMap<>();
-    private Map<String, Integer> parentKeyToParentItemDataId = new HashMap<>();
-    private Map<String, Integer> childKeyToChildItemDataId = new HashMap<>();
-
-    //------------------------------------------------------------------------------------------------------------
-    // Methods
-    //------------------------------------------------------------------------------------------------------------
-
-    public void loadItemIds(ResultSet resultSet, String league) throws SQLException {
-        Map<String, Integer> keyToId = leagueToKeyToId.getOrDefault(league, new HashMap<>());
-        List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
-
-        while (resultSet.next()) {
-            Integer id = resultSet.getInt("id");
-            String key = resultSet.getString("key");
-
-            keyToId.put(key, id);
-            idList.add(id);
-        }
-
-        leagueToKeyToId.putIfAbsent(league, keyToId);
-        leagueToIds.putIfAbsent(league, idList);
-    }
-
-    public void loadItemDataParentIds(ResultSet resultSet) throws SQLException {
-        while (resultSet.next()) {
-            Integer id = resultSet.getInt("id");
-            String key = resultSet.getString("key");
-
-            parentKeyToParentItemDataId.put(key, id);
+    public void loadLeagues(List<LeagueEntry> leagueEntries) {
+        for (LeagueEntry leagueEntry : leagueEntries) {
+            leagueToIds.put(leagueEntry.getId(), new ArrayList<>());
         }
     }
 
-    public void loadItemDataChildIds(ResultSet resultSet) throws SQLException {
+    public void loadItemIds(ResultSet resultSet) throws SQLException {
         while (resultSet.next()) {
-            Integer id = resultSet.getInt("id");
+            Integer leagueId = resultSet.getInt("id_l");
+            Integer dataId = resultSet.getInt("id_d");
             String key = resultSet.getString("key");
 
-            childKeyToChildItemDataId.put(key, id);
+            List<Integer> idList = leagueToIds.getOrDefault(leagueId, new ArrayList<>());
+            idList.add(dataId);
+            leagueToIds.putIfAbsent(leagueId, idList);
+
+            keyToId.putIfAbsent(key, dataId);
         }
     }
 
-
-
-    public boolean isEmpty_childKeyToChildId() {
-        return childKeyToChildItemDataId.isEmpty();
-    }
-
-    public boolean isEmpty_parentKeyToParentId() {
-        return parentKeyToParentItemDataId.isEmpty();
-    }
-
-    public boolean isEmpty_leagueToKeyToId() {
-        return leagueToKeyToId.isEmpty();
-    }
-
-
-
-    public Integer getItemId(String league, String key) {
-        Map<String, Integer> keyToId = leagueToKeyToId.get(league);
-        if (keyToId == null) return null;
-
+    public Integer getItemId(String key) {
         return keyToId.get(key);
     }
 
-    public Integer getParentItemDataId(String key) {
-        return parentKeyToParentItemDataId.get(key);
+    public boolean leagueHasId(Integer leagueId, Integer itemId) {
+        return leagueToIds.get(leagueId) != null || leagueToIds.get(leagueId).contains(itemId);
     }
 
-    public Integer getChildItemDataId(String key) {
-        return childKeyToChildItemDataId.get(key);
+    public void addItemIdToLeague(Integer leagueId, Integer itemId) {
+        leagueToIds.get(leagueId).add(itemId);
     }
 
-
-
-    public void addLeagueToKeyToId(String league, String key, int id) {
-        Map<String, Integer> keyToId = leagueToKeyToId.getOrDefault(league, new HashMap<>());
-        keyToId.put(key, id);
-        leagueToKeyToId.putIfAbsent(league, keyToId);
+    public void addItemIdToKeyMap(String key, Integer itemId) {
+        keyToId.put(key, itemId);
     }
 
-    public void addLeagueToIds(String league, int id) {
-        List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
-        idList.add(id);
-        leagueToIds.putIfAbsent(league, idList);
-    }
-
-    public void addParentKeyToParentItemDataId(String key, int id) {
-        parentKeyToParentItemDataId.put(key, id);
-    }
-
-    public void addChildKeyToChildItemDataId(String key, int id) {
-        childKeyToChildItemDataId.put(key, id);
+    public boolean isEmpty() {
+        return keyToId.isEmpty();
     }
 }

@@ -55,8 +55,6 @@ public class Main {
 
             // Init league manager
             LEAGUE_MANAGER = new LeagueManager();
-
-            // Load list of active leagues on startup
             success = LEAGUE_MANAGER.loadLeaguesOnStartup();
             if (!success) return;
 

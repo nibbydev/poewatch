@@ -2,7 +2,6 @@ package com.poestats.pricer;
 
 import com.google.gson.Gson;
 import com.poestats.*;
-import com.poestats.database.Database;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.itemdata.ItemdataEntry;
 import com.poestats.pricer.RawMaps.*;
@@ -18,9 +17,10 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private List<Le2Id2Ac2Raw> entryMapList = new ArrayList<>();
-    private Map<String, List<Integer>> leagueToIds = new HashMap<>();
-    private Map<String, Map<String, Double>> currencyLeagueMap;
+    private Set<RawEntry> entrySet = new HashSet<>();
+    private Set<Integer> idSet = new HashSet<>();
+
+    private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
     private Gson gson;
 
@@ -56,139 +56,115 @@ public class EntryManager {
      * Loads in currency rates on program start
      */
     private void loadCurrency() {
-        currencyLeagueMap = new HashMap<>();
-
-        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getName();
-
-            Map<String, Double> currencyMap = currencyLeagueMap.getOrDefault(league, new HashMap<>());
-            Main.DATABASE.getCurrency(league, currencyMap);
-            currencyLeagueMap.putIfAbsent(league, currencyMap);
-        }
-    }
-
-    private void upload() {
-        List<Le2Id2Ac2Raw> entryMaps = entryMapList;
-        entryMapList = new ArrayList<>();
-
-        Le2Id2Ac2Raw mergedMap = new Le2Id2Ac2Raw();
-
-        // Merge all gathered data
-        for (Le2Id2Ac2Raw entryMap : entryMaps) {
-            for (String league : entryMap.keySet()) {
-                Id2Ac2Raw id2Ac2Raw = entryMap.get(league);
-                Id2Ac2Raw mergedId2Ac2Raw = mergedMap.getOrDefault(league, new Id2Ac2Raw());
-                List<Integer> idList = leagueToIds.getOrDefault(league, new ArrayList<>());
-
-                for (Integer id : id2Ac2Raw.keySet()) {
-                    Ac2Raw ac2Raw = id2Ac2Raw.get(id);
-                    Ac2Raw mergedAc2Raw = mergedId2Ac2Raw.getOrDefault(id, new Ac2Raw());
-
-                    for (Map.Entry<String, RawEntry> entry : ac2Raw.entrySet()) {
-                        mergedAc2Raw.put(entry.getKey(), entry.getValue());
-                    }
-
-                    mergedId2Ac2Raw.putIfAbsent(id, mergedAc2Raw);
-                    if (!idList.contains(id)) idList.add(id);
-                }
-
-                mergedMap.putIfAbsent(league, mergedId2Ac2Raw);
-                leagueToIds.putIfAbsent(league, idList);
-            }
-        }
-
-        // Upload merged data
-        for (String league : mergedMap.keySet()) {
-            Id2Ac2Raw idToAccountToRawEntry = mergedMap.get(league);
-
-            Main.DATABASE.uploadRaw(league, idToAccountToRawEntry);
-        }
+        Main.DATABASE.getCurrency(currencyLeagueMap);
     }
 
     /**
      * Writes all collected data to database
      */
     private void cycle() {
-        Map<String, List<Integer>> leagueToIds = this.leagueToIds;
-        this.leagueToIds = new HashMap<>();
-
-        // Allow workers to switch to new map
-        try { Thread.sleep(150); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
-
-        if (status.isSixtyBool()) {
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getName();
-                Main.DATABASE.updateVolatile(league);
-            }
-        }
-
-        long a, a0 = 0, a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0, a8 = 0;
-
-        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = leagueEntry.getName();
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.updateApproved(league);
-            a0 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.updateCounters(league);
-            a1 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.calculateMean(league);
-            a2 += System.currentTimeMillis() - a;
-
-            List<Integer> idList = leagueToIds.get(league);
-
-            if (idList != null) {
-                a = System.currentTimeMillis();
-                Main.DATABASE.calculateMedian(league, idList);
-                a3 += System.currentTimeMillis() - a;
-
-                a = System.currentTimeMillis();
-                Main.DATABASE.calculateMode(league, idList);
-                a4 += System.currentTimeMillis() - a;
-
-                a = System.currentTimeMillis();
-                Main.DATABASE.removeOldItemEntries(league, idList);
-                a5 += System.currentTimeMillis() - a;
-            }
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.calculateExalted(league);
-            a6 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.addMinutely(league);
-            a7 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.removeOldHistoryEntries(league, 1, Config.sql_interval_1h);
-            a8 += System.currentTimeMillis() - a;
-        }
+        long a;
+        long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
+        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0, a26 = 0;
+        long a30 = 0, a31 = 0;
 
         if (status.isSixtyBool()) {
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getName();
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateVolatile();
+            a20 += System.currentTimeMillis() - a;
 
-                Main.DATABASE.removeOldHistoryEntries(league, 2, Config.sql_interval_1d);
-                Main.DATABASE.addHourly(league);
-                Main.DATABASE.resetVolatile(league);
-                Main.DATABASE.calcQuantity(league);
-            }
+            a = System.currentTimeMillis();
+            Main.DATABASE.calculateVolatileMedian();
+            a21 += System.currentTimeMillis() - a;
+        }
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.updateApproved();
+        a10 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.updateCounters();
+        a11 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMean();
+        a12 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMedian();
+        a13 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMode();
+        a14 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.removeOldItemEntries();
+        a15 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateExalted();
+        a16 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.addMinutely();
+        a17 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.removeOldHistoryEntries( 1, Config.sql_interval_1h);
+        a18 += System.currentTimeMillis() - a;
+
+        if (status.isSixtyBool()) {
+            a = System.currentTimeMillis();
+            Main.DATABASE.calcQuantity();
+            a22 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateMultipliers();
+            a23 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.addHourly();
+            a24 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.removeOldHistoryEntries(2, Config.sql_interval_1d);
+            a25 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.resetCounters();
+            a26 += System.currentTimeMillis() - a;
+
+            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d][26%5d]\n", a20, a21, a22, a23, a24, a25, a26);
         }
 
         if (status.isTwentyFourBool()) {
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                String league = leagueEntry.getName();
+            a = System.currentTimeMillis();
+            Main.DATABASE.addDaily();
+            a30 += System.currentTimeMillis() - a;
 
-                Main.DATABASE.addDaily(league);
-                Main.DATABASE.removeOldHistoryEntries(league, 3, Config.sql_interval_120d);
-            }
+            a = System.currentTimeMillis();
+            Main.DATABASE.removeOldHistoryEntries(3, Config.sql_interval_120d);
+            a31 += System.currentTimeMillis() - a;
+
+            System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
         }
 
-        //System.out.printf("0(%4d) 1(%4d) 2(%4d) 3(%4d) 4(%4d) 5(%4d) 6(%4d) 7(%4d) 8(%4d)\n", a0, a1, a2, a3, a4, a5, a6, a7, a8);
+        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
+    }
+
+    private void upload() {
+        Set<RawEntry> entrySet = this.entrySet;
+        this.entrySet = new HashSet<>();
+
+        idSet = new HashSet<>();
+        for (RawEntry rawEntry : entrySet) {
+            idSet.add(rawEntry.getItemId());
+        }
+
+        System.out.printf("Uploading %d (%d) items\n", entrySet.size(), idSet.size());
+
+        Main.DATABASE.uploadRaw(entrySet);
     }
 
     private void generateOutputFiles() {
@@ -199,15 +175,16 @@ public class EntryManager {
         Config.folder_output_get.mkdirs();
 
         for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            String league = Database.formatLeague(leagueEntry.getName());
+            Integer leagueId = leagueEntry.getId();
+            String league = leagueEntry.getName();
 
             for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
                 Map<Integer, ParcelEntry> tmpParcel = new LinkedHashMap<>();
 
                 int categoryId = category.getValue().getId();
 
-                Main.DATABASE.getOutputItems(league, tmpParcel, categoryId);
-                Main.DATABASE.getOutputHistory(league, tmpParcel);
+                Main.DATABASE.getOutputItems(leagueId, tmpParcel, categoryId);
+                Main.DATABASE.getOutputHistory(leagueId, tmpParcel);
 
                 List<ParcelEntry> parcel = new ArrayList<>();
                 for (ParcelEntry parcelEntry : tmpParcel.values()) {
@@ -313,6 +290,8 @@ public class EntryManager {
         if (current - status.lastRunTime < Config.entryController_sleepMS) return;
         status.lastRunTime = System.currentTimeMillis();
 
+        System.out.println("starting the fuckfest");
+
         // Allow workers to pause
         try { Thread.sleep(50); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
@@ -357,7 +336,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        generateOutputFiles();
+        //generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Build itemdata
@@ -389,15 +368,14 @@ public class EntryManager {
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
-        Le2Id2Ac2Raw le2Id2Ac2Raw = new Le2Id2Ac2Raw();
-
         for (Mappers.Stash stash : reply.stashes) {
-            String league = null;
+            Integer leagueId = null;
 
             for (Item item : stash.items) {
                 if (!Main.WORKER_MANAGER.isFlag_Run()) return;
 
-                if (league == null) league = item.getLeague();
+                if (leagueId == null) leagueId = Main.LEAGUE_MANAGER.getLeagueId(item.getLeague());
+                if (leagueId == null) continue;
 
                 item.fix();
                 item.parseItem();
@@ -406,23 +384,19 @@ public class EntryManager {
                 RawEntry rawEntry = new RawEntry();
                 rawEntry.load(item);
 
-                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(league));
+                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(leagueId));
                 if (discard) continue; // Couldn't convert the listed currency to chaos
 
-                Integer id = Main.RELATIONS.indexItem(item, league);
-                if (id == null) continue;
+                Integer itemId = Main.RELATIONS.indexItem(item, leagueId);
+                if (itemId == null) continue;
 
-                Id2Ac2Raw id2Ac2Raw = le2Id2Ac2Raw.getOrDefault(league, new Id2Ac2Raw());
-                Ac2Raw ac2Raw = id2Ac2Raw.getOrDefault(id, new Ac2Raw());
+                rawEntry.setItemId(itemId);
+                rawEntry.setLeagueId(leagueId);
+                rawEntry.setAccountName(stash.accountName);
 
-                ac2Raw.put(stash.accountName, rawEntry);
-
-                id2Ac2Raw.putIfAbsent(id, ac2Raw);
-                le2Id2Ac2Raw.putIfAbsent(league, id2Ac2Raw);
+                entrySet.add(rawEntry);
             }
         }
-
-        entryMapList.add(le2Id2Ac2Raw);
     }
 
     /**
