@@ -907,7 +907,7 @@ public class Database {
                         "   i.count, i.quantity, i.inc, i.dec " +
                         "FROM league_history AS h " +
                         "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "WHERE h.id_ch = 1 " +
+                        "WHERE h.id_ch = 1 AND h.time > ADDDATE(NOW(), INTERVAL -60 MINUTE) " +
                         "GROUP BY h.id_l, h.id_d";
 
         try {
@@ -936,7 +936,7 @@ public class Database {
                         "   i.count, i.quantity, i.inc, i.dec " +
                         "FROM league_history AS h " +
                         "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "WHERE h.id_ch = 2 " +
+                        "WHERE h.id_ch = 2 AND h.time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "GROUP BY h.id_l, h.id_d";
 
         try {
@@ -1040,9 +1040,7 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, Config.entry_maxCount);
-                int total = statement.executeUpdate();
-
-                System.out.printf("Total %d old entries deleted\n", total);
+                statement.executeUpdate();
             }
 
             connection.commit();
