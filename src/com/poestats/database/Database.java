@@ -445,7 +445,7 @@ public class Database {
         }
     }
 
-    public boolean uploadRaw(Map<Integer, Map<Integer, Map<String, RawEntry>>> mergedMap) {
+    public boolean uploadRaw(Set<RawEntry> entrySet) {
         String query =  "INSERT INTO league_entries ( " +
                         "  id_l, id_d, price, account, itemid) " +
                         "VALUES (?, ?, ?, ?, ?) " +
@@ -455,29 +455,18 @@ public class Database {
 
         try {
             if (connection.isClosed()) return false;
+            int count = 0;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                int count = 0;
+                for (RawEntry rawEntry : entrySet) {
+                    statement.setInt(1, rawEntry.getLeagueId());
+                    statement.setInt(2, rawEntry.getItemId());
+                    statement.setString(3, rawEntry.getPriceAsRoundedString());
+                    statement.setString(4, rawEntry.getAccountName());
+                    statement.setString(5, rawEntry.getId());
+                    statement.addBatch();
 
-                for (Integer leagueId : mergedMap.keySet()) {
-                    Map<Integer, Map<String, RawEntry>> idMap = mergedMap.get(leagueId);
-
-                    for (Integer itemId : idMap.keySet()) {
-                        Map<String, RawEntry> accountToRawEntry = idMap.get(itemId);
-
-                        for (String account : accountToRawEntry.keySet()) {
-                            RawEntry rawEntry = accountToRawEntry.get(account);
-
-                            statement.setInt(1, leagueId);
-                            statement.setInt(2, itemId);
-                            statement.setString(3, rawEntry.getPriceAsRoundedString());
-                            statement.setString(4, account);
-                            statement.setString(5, rawEntry.getItemId());
-                            statement.addBatch();
-
-                            if (++count % 1000 == 0) statement.executeBatch();
-                        }
-                    }
+                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -571,7 +560,7 @@ public class Database {
         }
     }
 
-    public boolean calculateMode(Integer leagueId, List<Integer> idList) {
+    public boolean calculateMode(Integer leagueId, Set<Integer> idSet) {
         String query =  "UPDATE league_items " +
                         "SET mode = IFNULL(( " +
                         "    SELECT price FROM league_entries " +
@@ -587,7 +576,7 @@ public class Database {
             int count = 0;
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Integer id : idList) {
+                for (Integer id : idSet) {
                     statement.setInt(1, leagueId);
                     statement.setInt(2, id);
                     statement.setInt(3, leagueId);
@@ -723,7 +712,7 @@ public class Database {
                         "  JOIN ( " +
                         "    SELECT id_l, id_d, approved, COUNT(*) AS count " +
                         "    FROM league_entries " +
-                        "    WHERE time > ADDDATE(NOW(), INTERVAL -50 SECOND)" +
+                        "    WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND)" +
                         "    GROUP BY id_l, id_d, approved" +
                         "  ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
                         "SET " +

@@ -17,7 +17,9 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private List<Integer> idList = new ArrayList<>();
+    private Set<RawEntry> entrySet = new HashSet<>();
+    private Set<Integer> idSet = new HashSet<>();
+
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
     private Gson gson;
@@ -61,9 +63,6 @@ public class EntryManager {
      * Writes all collected data to database
      */
     private void cycle() {
-        List<Integer> idList = this.idList;
-        this.idList = new ArrayList<>();
-
         long a;
         long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
         long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0, a26 = 0;
@@ -99,7 +98,7 @@ public class EntryManager {
             Integer leagueId = leagueEntry.getId();
 
             a = System.currentTimeMillis();
-            Main.DATABASE.calculateMode(leagueId, idList);
+            Main.DATABASE.calculateMode(leagueId, idSet);
             a14 += System.currentTimeMillis() - a;
         }
 
@@ -156,6 +155,20 @@ public class EntryManager {
         }
 
         System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
+    }
+
+    private void upload() {
+        Set<RawEntry> entrySet = this.entrySet;
+        this.entrySet = new HashSet<>();
+
+        idSet = new HashSet<>();
+        for (RawEntry rawEntry : entrySet) {
+            idSet.add(rawEntry.getItemId());
+        }
+
+        System.out.printf("Uploading %d (%d) items\n", entrySet.size(), idSet.size());
+
+        Main.DATABASE.uploadRaw(entrySet);
     }
 
     private void generateOutputFiles() {
@@ -312,7 +325,7 @@ public class EntryManager {
 
         // Upload gathered prices
         long time_upload = System.currentTimeMillis();
-        //upload();
+        upload();
         time_upload = System.currentTimeMillis() - time_upload;
 
         // Sort JSON
@@ -327,7 +340,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        generateOutputFiles();
+        //generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Build itemdata
@@ -359,8 +372,6 @@ public class EntryManager {
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
-        Map<Integer, Map<Integer, Map<String, RawEntry>>> entryMap = new HashMap<>();
-
         for (Mappers.Stash stash : reply.stashes) {
             Integer leagueId = null;
 
@@ -383,19 +394,13 @@ public class EntryManager {
                 Integer itemId = Main.RELATIONS.indexItem(item, leagueId);
                 if (itemId == null) continue;
 
-                Map<Integer, Map<String, RawEntry>> idMap = entryMap.getOrDefault(leagueId, new HashMap<>());
-                Map<String, RawEntry> accountMap = idMap.getOrDefault(itemId, new HashMap<>());
+                rawEntry.setItemId(itemId);
+                rawEntry.setLeagueId(leagueId);
+                rawEntry.setAccountName(stash.accountName);
 
-                accountMap.put(stash.accountName, rawEntry);
-
-                idMap.putIfAbsent(itemId, accountMap);
-                entryMap.putIfAbsent(leagueId, idMap);
-
-                if (!idList.contains(itemId)) idList.add(itemId);
+                entrySet.add(rawEntry);
             }
         }
-
-        Main.DATABASE.uploadRaw(entryMap);
     }
 
     /**
