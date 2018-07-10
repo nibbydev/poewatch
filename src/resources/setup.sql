@@ -337,16 +337,22 @@ CREATE TABLE `league_history_minutely_rolling` (
 --
 
 INSERT INTO `data_leagues`
-    (`id`, `active`, `name`)
+    (`id`, `active`, `name`, `display`)
 VALUES
-    (1, 1, 'Standard'),
-    (2, 1, 'Hardcore'),
-    (3, 0, 'Breach'),
-    (4, 0, 'Legacy'),
-    (5, 0, 'Harbinger'),
-    (6, 0, 'Abyss'),
-    (7, 0, 'Bestiary'),
-    (8, 0, 'Incursion');
+    (1,  1, 'Standard',            NULL           ),
+    (2,  1, 'Hardcore',            NULL           ),
+    (3,  0, 'Breach',              NULL           ),
+    (4,  0, 'Hardcore Breach',     'HC Breach'    ),
+    (5,  0, 'Legacy',              NULL           ),
+    (6,  0, 'Hardcore Legacy',     'HC Legacy'    ),
+    (7,  0, 'Harbinger',           NULL           ),
+    (8,  0, 'Hardcore Harbinger',  'HC Harbinger' ),
+    (9,  0, 'Abyss',               NULL           ),
+    (10, 0, 'Hardcore Abyss',      'HC Abyss'     ),
+    (11, 0, 'Bestiary',            NULL           ),
+    (12, 0, 'Hardcore Bestiary',   'HC Bestiary'  ),
+    (13, 0, 'Incursion',           NULL           ),
+    (14, 0, 'Hardcore Incursion',  'HC Incursion' );
 
 --
 -- Base value for `data_changeId`
