@@ -798,7 +798,7 @@ public class Database {
 
     public boolean getOutputHistory(Integer leagueId, Map<Integer, ParcelEntry> parcel) {
         String query  = "SELECT id_d, mean FROM league_history " +
-                        "WHERE id_l = ? AND id_ch = 3 " +
+                        "WHERE id_ch = 3 AND id_l = ? " +
                         "ORDER BY time DESC ";
 
         try {
@@ -1002,9 +1002,10 @@ public class Database {
     }
 
     public boolean removeOldHistoryEntries(int type, String interval) {
-        String query =  "DELETE FROM league_history " +
-                        "WHERE id_ch = ? " +
-                        "AND time < ADDDATE(NOW(), INTERVAL -"+ interval +")";
+        String query =  "DELETE h FROM league_history AS h " +
+                        "JOIN data_leagues AS l ON h.id_l = l.id " +
+                        "WHERE l.active = 1 AND h.id_ch = ? " +
+                        "AND time < ADDDATE(NOW(), INTERVAL -"+ interval +") ";
 
         try {
             if (connection.isClosed()) return false;

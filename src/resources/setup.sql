@@ -233,8 +233,8 @@ CREATE TABLE `league_entries` (
 --
 
 CREATE TABLE `league_history` (
-    `id_l`                INT             UNSIGNED NOT NULL,
     `id_ch`               INT             UNSIGNED NOT NULL,
+    `id_l`                INT             UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
@@ -247,16 +247,15 @@ CREATE TABLE `league_history` (
     `count`               INT(16)         UNSIGNED DEFAULT NULL,
     `quantity`            INT(8)          UNSIGNED DEFAULT NULL,
 
-    FOREIGN KEY (`id_l`)  REFERENCES `league_items`     (`id_l`)  ON DELETE CASCADE,
     FOREIGN KEY (`id_ch`) REFERENCES `category_history` (`id`)    ON DELETE RESTRICT,
+    FOREIGN KEY (`id_l`)  REFERENCES `league_items`     (`id_l`)  ON DELETE CASCADE,
     FOREIGN KEY (`id_d`)  REFERENCES `league_items`     (`id_d`)  ON DELETE CASCADE,
 
-    INDEX `index_h_id_l`          (`id_l`),
     INDEX `index_h_id_ch`         (`id_ch`),
+    INDEX `index_h_id_l`          (`id_l`),
     INDEX `index_h_id_d`          (`id_d`),
-    INDEX `index_h_pk`            (`id_l`, `id_ch`, `id_d`),
-    INDEX `index_h_time`          (`time`),
-    INDEX `index_h_volatile`      (`volatile`)
+    INDEX `index_h_pk`            (`id_ch`, `id_l`, `id_d`),
+    INDEX `index_h_time`          (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
