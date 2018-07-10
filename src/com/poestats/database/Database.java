@@ -686,8 +686,9 @@ public class Database {
     public boolean calcQuantity() {
         String query =  "UPDATE league_items AS i  " +
                         "JOIN ( " +
-                        "    SELECT id_l, id_d, IFNULL(SUM(inc), 0) AS quantity FROM league_history " +
-                        "    WHERE id_ch = 2 AND time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
+                        "    SELECT id_l, id_d, IFNULL(SUM(inc), 0) AS quantity " +
+                        "    FROM league_history_hourly_rolling " +
+                        "    WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "    GROUP BY id_l, id_d " +
                         ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
                         "SET i.quantity = h.quantity ";
@@ -962,8 +963,8 @@ public class Database {
      * @return True on success
      */
     public boolean getOutputHistory(Integer leagueId, Map<Integer, ParcelEntry> parcel) {
-        String query  = "SELECT id_d, mean FROM league_history " +
-                        "WHERE id_ch = 3 AND id_l = ? " +
+        String query  = "SELECT id_d, mean FROM league_history_daily_rolling " +
+                        "WHERE AND id_l = ? " +
                         "ORDER BY time DESC ";
 
         try {
