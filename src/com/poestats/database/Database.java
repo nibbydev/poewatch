@@ -903,7 +903,8 @@ public class Database {
                         "   count, quantity, inc, `dec`)" +
                         "SELECT " +
                         "   i.id_l, 2, i.id_d, i.volatile, " +
-                        "   AVG(h.mean), AVG(h.median), AVG(h.mode), AVG(h.exalted), " +
+                        "   TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median), 4), " +
+                        "   TRUNCATE(AVG(h.mode), 4), TRUNCATE(AVG(h.exalted), 4), " +
                         "   i.count, i.quantity, i.inc, i.dec " +
                         "FROM league_history AS h " +
                         "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
@@ -932,7 +933,8 @@ public class Database {
                         "   count, quantity, inc, `dec`)" +
                         "SELECT " +
                         "   h.id_l, 3, h.id_d, i.volatile, " +
-                        "   AVG(h.mean), AVG(h.median), AVG(h.mode), AVG(h.exalted), " +
+                        "   TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median), 4), " +
+                        "   TRUNCATE(AVG(h.mode), 4), TRUNCATE(AVG(h.exalted), 4), " +
                         "   i.count, i.quantity, i.inc, i.dec " +
                         "FROM league_history AS h " +
                         "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
