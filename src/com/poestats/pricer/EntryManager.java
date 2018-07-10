@@ -63,8 +63,8 @@ public class EntryManager {
     private void cycle() {
         long a;
         long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0, a17 = 0, a18 = 0;
-        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
-        long a30 = 0, a31 = 0, a32 = 0;
+        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0, a26 = 0;
+        long a30 = 0, a31 = 0;
 
         if (status.isSixtyBool()) {
             a = System.currentTimeMillis();
@@ -109,7 +109,7 @@ public class EntryManager {
         a17 += System.currentTimeMillis() - a;
 
         a = System.currentTimeMillis();
-        Main.DATABASE.removeOldHistoryEntries( 1, Config.sql_interval_60m);
+        Main.DATABASE.removeOldMinutelyHistory();
         a18 += System.currentTimeMillis() - a;
 
         System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d][17%5d][18%5d]\n", a10, a11, a12, a13, a14, a15, a16, a17, a18);
@@ -131,23 +131,23 @@ public class EntryManager {
             Main.DATABASE.resetCounters();
             a25 += System.currentTimeMillis() - a;
 
-            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
+            a = System.currentTimeMillis();
+            Main.DATABASE.removeOldHourlyHistory();
+            a26 += System.currentTimeMillis() - a;
+
+            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d][26%5d]\n", a20, a21, a22, a23, a24, a25, a26);
         }
 
         if (status.isTwentyFourBool()) {
             a = System.currentTimeMillis();
-            Main.DATABASE.removeOldHistoryEntries(2, Config.sql_interval_24h);
+            Main.DATABASE.removeOldDailyHistory();
             a30 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
-            Main.DATABASE.removeOldHistoryEntries(3, Config.sql_interval_120d);
+            Main.DATABASE.addDaily();
             a31 += System.currentTimeMillis() - a;
 
-            a = System.currentTimeMillis();
-            Main.DATABASE.addDaily();
-            a32 += System.currentTimeMillis() - a;
-
-            System.out.printf("{3X series} > [30%5d][31%5d][32%5d]\n", a30, a31, a32);
+            System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
         }
     }
 

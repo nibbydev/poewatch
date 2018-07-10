@@ -1055,16 +1055,18 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Copies data from table `league_items` to table `league_history` every minute on a rolling basis with a history
-     * of 60 minutes
+     * Copies data from table `league_items` to table `league_history_minutely_rolling` every minute
+     * on a rolling basis with a history of 60 minutes only if those item entries belong to an active league
      *
      * @return True on success
      */
     public boolean addMinutely() {
-        String query =  "INSERT INTO league_history ( " +
-                        "   id_l, id_ch, id_d, mean, median, mode, exalted) " +
-                        "SELECT id_l, 1, id_d, mean, median, mode, exalted " +
-                        "FROM league_items ";
+        String query =  "INSERT INTO league_history_minutely_rolling ( " +
+                        "    id_l, id_d, mean, median, mode, exalted) " +
+                        "SELECT id_l, id_d, mean, median, mode, exalted  " +
+                        "FROM league_items AS i " +
+                        "JOIN data_leagues AS l ON i.id_l = l.id " +
+                        "WHERE l.active = 1 ";
 
         try {
             if (connection.isClosed()) return false;
@@ -1083,23 +1085,23 @@ public class Database {
     }
 
     /**
-     * Copies data from table `league_history` to table `league_history` every hour on a rolling basis with a history
-     * of 24 hours
+     * Copies data from table `league_history_minutely_rolling` to table `league_history_hourly_rolling` every hour
+     * on a rolling basis with a history of 24 hours
      *
      * @return True on success
      */
     public boolean addHourly() {
-        String query =  "INSERT INTO league_history (" +
-                        "    id_l, id_ch, id_d, volatile, mean, median, mode, exalted, " +
+        String query =  "INSERT INTO league_history_hourly_rolling (" +
+                        "    id_l, id_d, volatile, mean, median, mode, exalted, " +
                         "    count, quantity, inc, `dec`)" +
                         "SELECT " +
-                        "    i.id_l, 2, i.id_d, i.volatile, " +
-                        "    TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median), 4), " +
+                        "    i.id_l, i.id_d, i.volatile, " +
+                        "    TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median ), 4), " +
                         "    TRUNCATE(AVG(h.mode), 4), TRUNCATE(AVG(h.exalted), 4), " +
                         "    i.count, i.quantity, i.inc, i.dec " +
-                        "FROM league_history AS h " +
+                        "FROM league_history_minutely_rolling AS h " +
                         "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "WHERE h.id_ch = 1 AND h.time > ADDDATE(NOW(), INTERVAL -60 MINUTE) " +
+                        "WHERE h.time > ADDDATE(NOW(), INTERVAL -60 MINUTE) " +
                         "GROUP BY h.id_l, h.id_d";
 
         try {
@@ -1119,23 +1121,23 @@ public class Database {
     }
 
     /**
-     * Copies data from table `league_history` to table `league_history` every day on a rolling basis with a history
-     * of 120 days
+     * Copies data from table `league_history_hourly_rolling` to table `league_history_daily_rolling` every day
+     * on a rolling basis with a history of 120 days
      *
      * @return True on success
      */
     public boolean addDaily() {
-        String query =  "INSERT INTO league_history (" +
-                        "    id_l, id_ch, id_d, volatile, mean, median, mode, exalted, " +
+        String query =  "INSERT INTO league_history_daily_rolling (" +
+                        "    id_l, id_d, volatile, mean, median, mode, exalted, " +
                         "    count, quantity, inc, `dec`)" +
                         "SELECT " +
-                        "    h.id_l, 3, h.id_d, i.volatile, " +
-                        "    TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median), 4), " +
+                        "    h.id_l, h.id_d, i.volatile, " +
+                        "    TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median ), 4), " +
                         "    TRUNCATE(AVG(h.mode), 4), TRUNCATE(AVG(h.exalted), 4), " +
                         "    i.count, i.quantity, i.inc, i.dec " +
-                        "FROM league_history AS h " +
+                        "FROM league_history_hourly_rolling AS h " +
                         "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "WHERE h.id_ch = 2 AND h.time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
+                        "WHERE h.time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "GROUP BY h.id_l, h.id_d";
 
         try {
@@ -1155,31 +1157,78 @@ public class Database {
     }
 
     /**
-     * Removes entries from table `league_history` that are older than specified
+     * Removes entries from table `league_history_minutely_rolling` that are older than 60 minutes
      *
-     * @param type Type of entry to remove
-     * @param interval Interval to remove
      * @return True on success
      */
-    public boolean removeOldHistoryEntries(int type, String interval) {
-        String query =  "DELETE h FROM league_history AS h " +
-                        "JOIN data_leagues AS l ON h.id_l = l.id " +
-                        "WHERE l.active = 1 AND h.id_ch = ? " +
-                        "AND time < ADDDATE(NOW(), INTERVAL -"+ interval +") ";
+    public boolean removeOldMinutelyHistory() {
+        String query =  "DELETE FROM league_history_minutely_rolling " +
+                        "WHERE time < ADDDATE(NOW(), INTERVAL -60 MINUTE) ";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setInt(1, type);
-                statement.executeUpdate();
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
             }
 
             connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove old history entries", 3);
+            Main.ADMIN.log_("Could not remove old minutely history", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Removes entries from table `league_history_hourly_rolling` that are older than 24 hours
+     *
+     * @return True on success
+     */
+    public boolean removeOldHourlyHistory() {
+        String query =  "DELETE FROM league_history_hourly_rolling " +
+                        "WHERE time < ADDDATE(NOW(), INTERVAL -24 HOUR) ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not remove old hourly history", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Removes entries from table `league_history_daily_rolling` that are older than 120 days and
+     * belong to an active league
+     *
+     * @return True on success
+     */
+    public boolean removeOldDailyHistory() {
+        String query =  "DELETE h FROM league_history_daily_rolling AS h " +
+                        "JOIN data_leagues AS l ON h.id_l = l.id " +
+                        "WHERE l.active = 1 AND time < ADDDATE(NOW(), INTERVAL -120 DAY) ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not remove old daily history", 3);
             return false;
         }
     }

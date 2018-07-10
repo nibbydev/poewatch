@@ -5,12 +5,12 @@
 SET time_zone = "+02:00";
 
 --
--- Database: `ps3`
+-- Database: `ps4`
 --
-DROP DATABASE IF EXISTS `ps3`;
-CREATE DATABASE IF NOT EXISTS `ps3` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+DROP DATABASE IF EXISTS `ps4`;
+CREATE DATABASE IF NOT EXISTS `ps4` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE `ps3`;
+USE `ps4`;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -222,18 +222,19 @@ CREATE TABLE `league_entries` (
 
     INDEX `index_e_id_l`          (`id_l`),
     INDEX `index_e_id_d`          (`id_d`),
-    INDEX `index_e_pk`            (`id_l`, `id_d`),
     INDEX `index_e_time`          (`time`),
-    INDEX `index_e_approved`      (`approved`),
-    INDEX `index_e_price`         (`price`)
+    INDEX `index_e_approved`      (`approved`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- --------------------------------------------------------------------------------------------------------------------
+-- League history tables
+-- --------------------------------------------------------------------------------------------------------------------
+
 --
--- Table structure `league_history`
+-- Table structure `league_history_daily_inactive`
 --
 
-CREATE TABLE `league_history` (
-    `id_ch`               INT             UNSIGNED NOT NULL,
+CREATE TABLE `league_history_daily_inactive` (
     `id_l`                INT             UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -247,15 +248,84 @@ CREATE TABLE `league_history` (
     `count`               INT(16)         UNSIGNED DEFAULT NULL,
     `quantity`            INT(8)          UNSIGNED DEFAULT NULL,
 
-    FOREIGN KEY (`id_ch`) REFERENCES `category_history` (`id`)    ON DELETE RESTRICT,
-    FOREIGN KEY (`id_l`)  REFERENCES `league_items`     (`id_l`)  ON DELETE CASCADE,
-    FOREIGN KEY (`id_d`)  REFERENCES `league_items`     (`id_d`)  ON DELETE CASCADE,
+    FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
 
-    INDEX `index_h_id_ch`         (`id_ch`),
-    INDEX `index_h_id_l`          (`id_l`),
-    INDEX `index_h_id_d`          (`id_d`),
-    INDEX `index_h_pk`            (`id_ch`, `id_l`, `id_d`),
-    INDEX `index_h_time`          (`time`)
+    INDEX `index_hir_id_l`         (`id_l`),
+    INDEX `index_hir_id_d`         (`id_d`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `league_history_daily_rolling`
+--
+
+CREATE TABLE `league_history_daily_rolling` (
+    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_d`                INT             UNSIGNED NOT NULL,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `mean`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `median`              DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `mode`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `exalted`             DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `inc`                 INT(8)          UNSIGNED DEFAULT NULL,
+    `dec`                 INT(8)          UNSIGNED DEFAULT NULL,
+    `count`               INT(16)         UNSIGNED DEFAULT NULL,
+    `quantity`            INT(8)          UNSIGNED DEFAULT NULL,
+
+    FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
+
+    INDEX `index_hdr_id_l`         (`id_l`),
+    INDEX `index_hdr_id_d`         (`id_d`),
+    INDEX `index_hdr_time`         (`time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `league_history_hourly_rolling`
+--
+
+CREATE TABLE `league_history_hourly_rolling` (
+    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_d`                INT             UNSIGNED NOT NULL,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
+    `mean`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `median`              DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `mode`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `exalted`             DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `inc`                 INT(8)          UNSIGNED DEFAULT NULL,
+    `dec`                 INT(8)          UNSIGNED DEFAULT NULL,
+    `count`               INT(16)         UNSIGNED DEFAULT NULL,
+    `quantity`            INT(8)          UNSIGNED DEFAULT NULL,
+
+    FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
+
+    INDEX `index_hhr_id_l`         (`id_l`),
+    INDEX `index_hhr_id_d`         (`id_d`),
+    INDEX `index_hhr_time`         (`time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure `league_history_minutely_rolling`
+--
+
+CREATE TABLE `league_history_minutely_rolling` (
+    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_d`                INT             UNSIGNED NOT NULL,
+    `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `mean`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `median`              DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `mode`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+    `exalted`             DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
+
+    FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
+    FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
+
+    INDEX `index_hmr_id_l`         (`id_l`),
+    INDEX `index_hmr_id_d`         (`id_d`),
+    INDEX `index_hmr_time`         (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -270,7 +340,13 @@ INSERT INTO `data_leagues`
     (`id`, `active`, `name`)
 VALUES
     (1, 1, 'Standard'),
-    (2, 1, 'Hardcore');
+    (2, 1, 'Hardcore'),
+    (3, 0, 'Breach'),
+    (4, 0, 'Legacy'),
+    (5, 0, 'Harbinger'),
+    (6, 0, 'Abyss'),
+    (7, 0, 'Bestiary'),
+    (8, 0, 'Incursion');
 
 --
 -- Base value for `data_changeId`
