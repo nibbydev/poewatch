@@ -10,9 +10,9 @@ function CheckAndGetCategoryParam() {
 // Get list of child categories and their display names from DB
 function GetCategories($pdo, $category) {
   $query = "SELECT cc.name, cc.display
-    FROM `category-child` AS cc
-    JOIN `category-parent` AS cp
-    ON cp.id = cc.`id-cp`
+    FROM category_child AS cc
+    JOIN category_parent AS cp
+    ON cp.id = cc.id_cp
     WHERE cp.name = ?";
 
   $stmt = $pdo->prepare($query);
@@ -29,9 +29,11 @@ function GetCategories($pdo, $category) {
 
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT `name`, display FROM `sys-leagues`";
+  $query = "SELECT name, display 
+  FROM data_leagues 
+  WHERE active = 1";
+
   $stmt = $pdo->query($query);
-  
   $payload = array();
   
   while ($row = $stmt->fetch()) {
