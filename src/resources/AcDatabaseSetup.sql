@@ -65,8 +65,6 @@ CREATE TABLE relations (
 -- Testing
 -- --------------------------------------------------------------------------------------------------------------------
 
-INSERT INTO accounts (name) VALUES ('test676796😜😀😊😃test676896 我爱你 ❌');
-SET @id_a = LAST_INSERT_ID();
-INSERT INTO characters (name) VALUES ('test123123😜😀😊😃test123123 我爱你 ❌');
-SET @id_c = LAST_INSERT_ID();
-INSERT INTO relations (id_a, id_c) VALUES (@id_a, @id_c);
+INSERT INTO accounts    (name)        VALUES ('test - 😜😊😃我爱你 ❌');
+INSERT INTO characters  (name)        VALUES ('test - 😜😊😃我爱你 ❌');
+INSERT INTO relations   (id_a, id_c)  VALUES (1, 1);
