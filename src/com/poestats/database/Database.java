@@ -912,16 +912,17 @@ public class Database {
     }
 
     /**
-     * Loads provided Map with item data and prices from database
+     * Loads provided List with item data and prices from database
      *
      * @param leagueId ID of target league
-     * @param parcel Map that will contain item ID to ParcelEntry relations
-     * @param category ID of a parent category
+     * @param categoryId ID of target parent category
+     * @param parcelEntryList List that will contain ParcelEntry entries
      * @return True on success
      */
-    public boolean getOutputItems(Integer leagueId, Map<Integer, ParcelEntry> parcel, int category) {
+    public boolean getOutputData(int leagueId, int categoryId, List<ParcelEntry> parcelEntryList) {
         String query =  "SELECT " +
                         "    i.id_l, i.id_d, i.mean, i.exalted, i.quantity, " +
+                        "    GROUP_CONCAT(hdr.mean ORDER BY hdr.time ASC) AS history, " +
                         "    did.name, did.type, did.frame, " +
                         "    did.tier, did.lvl, did.quality, did.corrupted, " +
                         "    did.links, did.var, did.icon, " +
@@ -929,7 +930,9 @@ public class Database {
                         "FROM league_items AS i " +
                         "JOIN data_itemData AS did ON i.id_d = did.id " +
                         "LEFT JOIN category_child AS cc ON did.id_cc = cc.id " +
+                        "JOIN league_history_daily_rolling AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
                         "WHERE i.id_l = ? AND did.id_cp = ? " +
+                        "GROUP BY i.id_l, i.id_d " +
                         "ORDER BY i.mean DESC ";
 
         try {
@@ -937,49 +940,12 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, leagueId);
-                statement.setInt(2, category);
+                statement.setInt(2, categoryId);
+
                 ResultSet resultSet = statement.executeQuery();
-
                 while (resultSet.next()) {
-                    ParcelEntry parcelEntry = new ParcelEntry();
-                    parcelEntry.loadItem(resultSet);
-                    parcel.put(parcelEntry.getId(), parcelEntry);
-                }
-            }
-
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not get output items", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Loads provided Map with item price history from database
-     *
-     * @param leagueId ID of target league
-     * @param parcel Map that will contain item ID to ParcelEntry relations
-     * @return True on success
-     */
-    public boolean getOutputHistory(Integer leagueId, Map<Integer, ParcelEntry> parcel) {
-        String query  = "SELECT id_d, mean FROM league_history_daily_rolling " +
-                        "WHERE id_l = ? " +
-                        "ORDER BY time DESC ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setInt(1, leagueId);
-                ResultSet resultSet = statement.executeQuery();
-
-                while (resultSet.next()) {
-                    Integer id = resultSet.getInt("id_d");
-                    ParcelEntry parcelEntry = parcel.get(id);
-
-                    if (parcelEntry == null) continue;
-                    parcelEntry.loadHistory(resultSet);
+                    ParcelEntry parcelEntry = new ParcelEntry(resultSet);
+                    parcelEntryList.add(parcelEntry);
                 }
             }
 

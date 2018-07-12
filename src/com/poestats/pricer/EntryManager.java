@@ -170,25 +170,18 @@ public class EntryManager {
             String league = leagueEntry.getName();
 
             for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
-                Map<Integer, ParcelEntry> tmpParcel = new LinkedHashMap<>();
-
+                List<ParcelEntry> parcelEntryList = new ArrayList<>();
                 int categoryId = category.getValue().getId();
 
-                Main.DATABASE.getOutputItems(leagueId, tmpParcel, categoryId);
-                Main.DATABASE.getOutputHistory(leagueId, tmpParcel);
-
-                List<ParcelEntry> parcel = new ArrayList<>();
-                for (ParcelEntry parcelEntry : tmpParcel.values()) {
-                    parcelEntry.calcSpark();
-                    parcel.add(parcelEntry);
-                }
+                // Get data from database
+                Main.DATABASE.getOutputData(leagueId, categoryId, parcelEntryList);
 
                 String fileName = league + "_" + category.getKey() + "_" + System.currentTimeMillis() + ".json";
                 File outputFile = new File(Config.folder_output_get, fileName);
 
                 try (Writer writer = Misc.defineWriter(outputFile)) {
                     if (writer == null) throw new IOException();
-                    gson.toJson(parcel, writer);
+                    gson.toJson(parcelEntryList, writer);
                 } catch (IOException ex) {
                     Main.ADMIN._log(ex, 4);
                     Main.ADMIN.log_("Couldn't write output JSON to file", 3);

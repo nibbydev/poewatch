@@ -3,137 +3,119 @@ package com.poestats.pricer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ *
+ */
 public class ParcelEntry {
-    public class HistoryData {
-        public transient Double[] mean = new Double[7];
-        public Double[] spark = new Double[7];
-        public double change;
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
-    // Item
     private int id;
     private double mean, exalted;
     private int quantity;
-
-    // Sup
     private String child, name, type;
     private int frame;
-
-    // Sub
     private Integer tier, lvl, quality, corrupted, links;
     private String var, icon;
-
     private HistoryData history = new HistoryData();
-    private transient int historyCounter = 6;
 
-    //------------------------------------------------------------------------------------------------------------
-    // Main methods
-    //------------------------------------------------------------------------------------------------------------
+    /**
+     * Parses all data on initialization
+     *
+     * @param resultSet ResultSet of output data query
+     * @throws SQLException
+     */
+    public ParcelEntry(ResultSet resultSet) throws SQLException {
+        // Get data that is never null
+        id = resultSet.getInt("id_d");
+        mean = resultSet.getDouble("mean");
+        exalted = resultSet.getDouble("exalted");
+        quantity = resultSet.getInt("quantity");
+        child = resultSet.getString("ccName");
+        name = resultSet.getString("name");
+        type = resultSet.getString("type");
+        frame = resultSet.getInt("frame");
+        var = resultSet.getString("var");
+        icon = resultSet.getString("icon");
 
-    public void loadItem(ResultSet result) throws SQLException {
-        id = result.getInt("id_d");
-
-        mean = result.getDouble("mean");
-        exalted = result.getDouble("exalted");
-        quantity = result.getInt("quantity");
-
-        child = result.getString("ccName");
-        name = result.getString("name");
-        type = result.getString("type");
-        frame = result.getInt("frame");
-
-        var = result.getString("var");
-        icon = result.getString("icon");
-
+        // Get data that might be null
         try {
-            tier = Integer.parseUnsignedInt(result.getString("tier"));
-        } catch (NumberFormatException ex) {}
-
+            tier = Integer.parseUnsignedInt(resultSet.getString("tier"));
+        } catch (NumberFormatException ex) {
+        }
         try {
-            lvl = Integer.parseUnsignedInt(result.getString("lvl"));
-        } catch (NumberFormatException ex) {}
-
+            lvl = Integer.parseUnsignedInt(resultSet.getString("lvl"));
+        } catch (NumberFormatException ex) {
+        }
         try {
-            quality = Integer.parseUnsignedInt(result.getString("quality"));
-        } catch (NumberFormatException ex) {}
-
+            quality = Integer.parseUnsignedInt(resultSet.getString("quality"));
+        } catch (NumberFormatException ex) {
+        }
         try {
-            corrupted = Integer.parseUnsignedInt(result.getString("corrupted"));
-        } catch (NumberFormatException ex) {}
-
+            corrupted = Integer.parseUnsignedInt(resultSet.getString("corrupted"));
+        } catch (NumberFormatException ex) {
+        }
         try {
-            links = Integer.parseUnsignedInt(result.getString("links"));
-        } catch (NumberFormatException ex) {}
+            links = Integer.parseUnsignedInt(resultSet.getString("links"));
+        } catch (NumberFormatException ex) {
+        }
+
+        // Parse history presented as CSV
+        calcSpark(resultSet.getString("history"));
     }
 
-    public void loadHistory(ResultSet result) throws SQLException {
-        if (--historyCounter < 0) return;
-        history.mean[historyCounter] = result.getDouble("mean");
-    }
+    /**
+     * Converts provided values to a format readable by the JS sparkline plugin
+     *
+     * @param historyEntries Doubles as CSV
+     */
+    private void calcSpark(String historyEntries) {
+        Double[] historyMean = new Double[7];
+        int historyCounter = 6;
 
-    public void calcSpark() {
-        history.mean[6] = mean;
+        // Set latest/newest price to current price
+        historyMean[6] = mean;
 
-        double lowestSpark = 0;
-        double highestSpark = 0;
+        // Parse history presented as CSV
+        if (historyEntries != null) {
+            for (String historyEntry : historyEntries.split(",")) {
+                if (--historyCounter < 0) break;
 
-        // Find lowest and highest mean price
-        for (Double mean : history.mean) {
-            if (mean != null) {
-                if (lowestSpark == 0 || mean < lowestSpark) {
-                    lowestSpark = mean;
-                }
-
-                if (mean > highestSpark) {
-                    highestSpark = mean;
-                }
+                try {
+                    historyMean[historyCounter] = Double.parseDouble(historyEntry);
+                } catch (NumberFormatException ex) { }
             }
         }
 
-        // Calculate sparkline percentage based on the highest and lowest prices
-        for (int i = 7; --i > 0;) {
-            Double newSpark = null;
-
-            if (history.mean[i] != null && lowestSpark > 0) {
-                newSpark = history.mean[i] / lowestSpark - 1;
-                newSpark = Math.round(newSpark * 10000.0) / 100.0;
-            }
-
-            history.spark[i] = newSpark;
-        }
-
-        double firstMean = 0;
-        double lastMean = 0;
-
-        // Find the first price that is not null
-        for (int i = 7; --i > 0;) {
-            if (history.mean[i] != null) {
-                firstMean = history.mean[i];
-            }
-        }
-
-        // Find the last price that is not null
+        // Find the first price from the left that is not null
+        Double firstPrice = null;
         for (int i = 0; i < 7; i++) {
-            if (history.mean[i] != null) {
-                lastMean = history.mean[i];
+            if (historyMean[i] != null) {
+                firstPrice = historyMean[i];
+                break;
             }
         }
 
-        // Find % difference between first price and last price
-        history.change = (1 - firstMean / lastMean) * 100;
-        history.change = Math.round(history.change * 1000.0) / 1000.0;
+        if (firstPrice != null) {
+            // Find each value's percentage in relation to the first price
+            for (int i = 0; i < 7; i++) {
+                if (historyMean[i] != null && historyMean[i] > 0) {
+                    historyMean[i] = (historyMean[i] / firstPrice - 1) * 100.0;
+                    historyMean[i] = Math.round(historyMean[i] * 100.0) / 100.0;
+                }
+            }
+
+            // Copy values over
+            System.arraycopy(historyMean, 0, history.spark, 0, 7);
+
+            // Find % difference between first price and last price
+            history.change = (1 - firstPrice / mean) * 1000.0;
+            history.change = Math.round(history.change * 100.0) / 1000.0;
+        }
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Getters
-    //------------------------------------------------------------------------------------------------------------
-
-
-    public int getId() {
-        return id;
+    /**
+     * Inner class for binding variable history to an associative array in output
+     */
+    private class HistoryData {
+        public Double[] spark = new Double[7];
+        public double change;
     }
 }
