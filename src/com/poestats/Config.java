@@ -13,6 +13,7 @@ public class Config {
     public static final String db_username = "root";
     private static final String db_password = "";
     public static final String db_database = "ps4";
+    public static final String acDb_database = "ps_accounts";
 
     public static String getDb_password() {
         return db_password;

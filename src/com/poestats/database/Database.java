@@ -5,9 +5,9 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.league.LeagueEntry;
+import com.poestats.pricer.AccountEntry;
 import com.poestats.pricer.itemdata.ItemdataEntry;
 import com.poestats.pricer.ParcelEntry;
-import com.poestats.relations.IndexRelations;
 import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
@@ -20,6 +20,7 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private Connection connection;
+    private Connection acConnection;
 
     //------------------------------------------------------------------------------------------------------------
     // DB controllers
@@ -33,9 +34,13 @@ public class Database {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
+
+            acConnection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
+            acConnection.setCatalog(Config.acDb_database);
+            acConnection.setAutoCommit(false);
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Failed to connect to database", 5);
+            Main.ADMIN.log_("Failed to connect to databases", 5);
             System.exit(0);
         }
     }
@@ -46,8 +51,57 @@ public class Database {
     public void disconnect() {
         try {
             if (connection != null) connection.close();
+            if (acConnection != null) acConnection.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Account database
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
+     *
+     *
+     * @param accountSet
+     * @return
+     */
+    public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
+        String query =  "BEGIN; " +
+                        "INSERT INTO accounts (name) VALUES (?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "    seen = CURRENT_TIMESTAMP(), " +
+                        "    id = LAST_INSERT_ID(id); " +
+                        "SET @id_a = LAST_INSERT_ID(); " +
+                        "INSERT INTO characters (name) VALUES (?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "    seen = CURRENT_TIMESTAMP(), " +
+                        "    id = LAST_INSERT_ID(id); " +
+                        "SET @id_c = LAST_INSERT_ID(); " +
+                        "INSERT INTO relations (id_a, id_c) VALUES (@id_a, @id_c) " +
+                        "ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP(); " +
+                        "COMMIT; ";
+
+        try {
+            if (acConnection.isClosed()) return false;
+
+            try (PreparedStatement statement = acConnection.prepareStatement(query)) {
+                for (AccountEntry accountEntry : accountSet) {
+                    statement.setString(1, accountEntry.accountName);
+                    statement.setString(2, accountEntry.characterName);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            acConnection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not upload account names", 3);
+            return false;
         }
     }
 
