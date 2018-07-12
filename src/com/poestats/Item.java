@@ -678,7 +678,7 @@ public class Item extends Mappers.BaseItem {
     }
 
     public String isCorrupted() {
-        return corrupted == null ? null : (corrupted ? "1" : "0");
+        return frameType == 4 ? (corrupted != null && corrupted ? "1" : "0") : null;
     }
 
     public int getFrame() {
