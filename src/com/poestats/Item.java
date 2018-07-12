@@ -519,22 +519,6 @@ public class Item extends Mappers.BaseItem {
                     }
                 }
                 break;
-
-            case "Combat Focus":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : explicitMods) {
-                    if (explicitMod.contains("Lightning")) {
-                        variation = "lightning";
-                        break;
-                    } else if (explicitMod.contains("Fire")) {
-                        variation = "fire";
-                        break;
-                    } else if (explicitMod.contains("Cold")) {
-                        variation = "cold";
-                        break;
-                    }
-                }
-                break;
         }
     }
 
