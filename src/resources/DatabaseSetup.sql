@@ -528,6 +528,7 @@ DROP EVENT IF EXISTS remove60;
 
 CREATE EVENT remove60
   ON SCHEDULE EVERY 1 MINUTE
+  STARTS '2018-01-01 08:00:30'
   COMMENT 'Clears out entries older than 1 hour'
   DO
     DELETE FROM league_history_minutely_rolling
@@ -541,6 +542,7 @@ DROP EVENT IF EXISTS remove24;
 
 CREATE EVENT remove24
   ON SCHEDULE EVERY 1 HOUR
+  STARTS '2018-01-01 08:00:35'
   COMMENT 'Clears out entries older than 1 day'
   DO
     DELETE FROM league_history_hourly_rolling
@@ -554,6 +556,7 @@ DROP EVENT IF EXISTS remove120;
 
 CREATE EVENT remove120
   ON SCHEDULE EVERY 1 DAY
+  STARTS '2018-01-01 08:00:40'
   COMMENT 'Clears out entries older than 120 days'
   DO
     DELETE h FROM league_history_daily_rolling AS h
