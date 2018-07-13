@@ -530,12 +530,24 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "INSERT INTO data_leagues (active, name, start, end) " +
-                        "    VALUES (1, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "    active = VALUES(active), " +
-                        "    start = VALUES(start), " +
-                        "    end = VALUES(end)";
+        // Use transactions to avoid incrementing the auto incremented id row with "ON DUPLICATE UPDATE" on every
+        // update, which would result in size ~8,000 index gaps.
+
+        String query =  "BEGIN; " +
+                        "    SET @name = ?; " +
+                        "    SET @start = ?; " +
+                        "    SET @end = ?; " +
+                        "    SET @id = (SELECT id FROM data_leagues WHERE name = @name);" +
+
+                        "    INSERT IGNORE INTO data_leagues (id, name, display, start, end) " +
+                        "    VALUES(@id, @name, @name, @start, @end);" +
+
+                        "    UPDATE data_leagues SET " +
+                        "        active = 1, " +
+                        "        start = @start, " +
+                        "        end = @end " +
+                        "    WHERE name = @name; " +
+                        "COMMIT; ";
 
         try {
             if (connection.isClosed()) return false;

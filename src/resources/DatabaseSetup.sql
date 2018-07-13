@@ -339,20 +339,20 @@ CREATE TABLE `league_history_minutely_rolling` (
 INSERT INTO `data_leagues`
     (`id`, `active`, `name`, `display`)
 VALUES
-    (1,  1, 'Standard',            NULL           ),
-    (2,  1, 'Hardcore',            NULL           ),
-    (3,  0, 'Breach',              NULL           ),
-    (4,  0, 'Hardcore Breach',     'HC Breach'    ),
-    (5,  0, 'Legacy',              NULL           ),
-    (6,  0, 'Hardcore Legacy',     'HC Legacy'    ),
-    (7,  0, 'Harbinger',           NULL           ),
-    (8,  0, 'Hardcore Harbinger',  'HC Harbinger' ),
-    (9,  0, 'Abyss',               NULL           ),
-    (10, 0, 'Hardcore Abyss',      'HC Abyss'     ),
-    (11, 0, 'Bestiary',            NULL           ),
-    (12, 0, 'Hardcore Bestiary',   'HC Bestiary'  ),
-    (13, 0, 'Incursion',           NULL           ),
-    (14, 0, 'Hardcore Incursion',  'HC Incursion' );
+    (1,  1, 'Hardcore',            'Hardcore'     ),
+    (2,  1, 'Standard',            'Standard'     ),
+    (3,  0, 'Hardcore Breach',     'HC Breach'    ),
+    (4,  0, 'Breach',              'Breach'       ),
+    (5,  0, 'Hardcore Legacy',     'HC Legacy'    ),
+    (6,  0, 'Legacy',              'Legacy'       ),
+    (7,  0, 'Hardcore Harbinger',  'HC Harbinger' ),
+    (8,  0, 'Harbinger',           'Harbinger'    ),
+    (9,  0, 'Hardcore Abyss',      'HC Abyss'     ),
+    (10, 0, 'Abyss',               'Abyss'        ),
+    (11, 0, 'Hardcore Bestiary',   'HC Bestiary'  ),
+    (12, 0, 'Bestiary',            'Bestiary'     ),
+    (13, 0, 'Hardcore Incursion',  'HC Incursion' ),
+    (14, 0, 'Incursion',           'Incursion'    );
 
 --
 -- Base value for `data_changeId`
