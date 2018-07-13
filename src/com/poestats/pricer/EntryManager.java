@@ -304,7 +304,7 @@ public class EntryManager {
 
         // Upload account names
         long time_account = System.currentTimeMillis();
-        uploadAccounts();
+        if(status.isTenBool()) uploadAccounts();
         time_account = System.currentTimeMillis() - time_account;
 
         // Sort JSON
