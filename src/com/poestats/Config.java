@@ -12,16 +12,11 @@ public class Config {
     public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true";
     public static final String db_username = "root";
     private static final String db_password = "";
-    public static final String db_database = "ps2_database";
+    public static final String db_database = "ps4";
 
     public static String getDb_password() {
         return db_password;
     }
-
-    public static final String sql_interval_60m = "60 MINUTE";
-    public static final String sql_interval_24h = "24 HOUR";
-    public static final String sql_interval_7d = "7 DAY";
-    public static final String sql_interval_120d = "120 DAY";
 
     //------------------------------------------------------------------------------------------------------------
     // File and folder locations
