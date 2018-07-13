@@ -5,9 +5,9 @@ import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
 import com.poestats.league.LeagueEntry;
+import com.poestats.pricer.AccountEntry;
 import com.poestats.pricer.itemdata.ItemdataEntry;
 import com.poestats.pricer.ParcelEntry;
-import com.poestats.relations.IndexRelations;
 import com.poestats.pricer.RawMaps.*;
 import com.poestats.relations.CategoryEntry;
 
@@ -20,6 +20,7 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private Connection connection;
+    private Connection acConnection;
 
     //------------------------------------------------------------------------------------------------------------
     // DB controllers
@@ -33,9 +34,13 @@ public class Database {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
+
+            acConnection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
+            acConnection.setCatalog(Config.acDb_database);
+            acConnection.setAutoCommit(false);
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Failed to connect to database", 5);
+            Main.ADMIN.log_("Failed to connect to databases", 5);
             System.exit(0);
         }
     }
@@ -46,8 +51,72 @@ public class Database {
     public void disconnect() {
         try {
             if (connection != null) connection.close();
+            if (acConnection != null) acConnection.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Account database
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Uploads gathered account and character names to the account database
+     *
+     * @param accountSet Set of AccountEntries, containing accountName and characterName
+     * @return True on success
+     */
+    public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
+
+        // This retard of a query though
+
+        String query =  "BEGIN; " +
+                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
+                        "    INSERT IGNORE INTO accounts (id, name) VALUES(@id_a, ?); " +
+                        "    UPDATE accounts SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
+                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
+
+                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
+                        "    INSERT IGNORE INTO characters (id, name) VALUES(@id_c, ?); " +
+                        "    UPDATE characters SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
+                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
+
+                        "    INSERT IGNORE INTO relations (id_a, id_c) VALUES (@id_a, @id_c) " +
+                        "    ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP(); " +
+                        "COMMIT; ";
+
+        // Can't use `ON DUPLICATE UPDATE` with InnoDB because it treats it as an "insert" and increments the auto
+        // increment id, resulting in MASSIVE index gaps. Around 20-30 times skipped indexed per entry, to be precise.
+        // After 3 hours of operation, the 50,000th row ended up getting an id of 1,350,000. Which is why we have this
+        // retarded query here. To avoid this bullshittery, use MyISAM, be better with SQL queries than I or read about
+        // innodb_autoinc_lock_mode.
+
+        try {
+            if (acConnection.isClosed()) return false;
+
+            try (PreparedStatement statement = acConnection.prepareStatement(query)) {
+                for (AccountEntry accountEntry : accountSet) {
+                    statement.setString(1, accountEntry.accountName);
+                    statement.setString(2, accountEntry.accountName);
+                    statement.setString(3, accountEntry.accountName);
+                    statement.setString(4, accountEntry.accountName);
+                    statement.setString(5, accountEntry.characterName);
+                    statement.setString(6, accountEntry.characterName);
+                    statement.setString(7, accountEntry.characterName);
+                    statement.setString(8, accountEntry.characterName);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            acConnection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not upload account names", 3);
+            return false;
         }
     }
 
@@ -912,16 +981,17 @@ public class Database {
     }
 
     /**
-     * Loads provided Map with item data and prices from database
+     * Loads provided List with item data and prices from database
      *
      * @param leagueId ID of target league
-     * @param parcel Map that will contain item ID to ParcelEntry relations
-     * @param category ID of a parent category
+     * @param categoryId ID of target parent category
+     * @param parcelEntryList List that will contain ParcelEntry entries
      * @return True on success
      */
-    public boolean getOutputItems(Integer leagueId, Map<Integer, ParcelEntry> parcel, int category) {
+    public boolean getOutputData(int leagueId, int categoryId, List<ParcelEntry> parcelEntryList) {
         String query =  "SELECT " +
                         "    i.id_l, i.id_d, i.mean, i.exalted, i.quantity, " +
+                        "    GROUP_CONCAT(hdr.mean ORDER BY hdr.time ASC) AS history, " +
                         "    did.name, did.type, did.frame, " +
                         "    did.tier, did.lvl, did.quality, did.corrupted, " +
                         "    did.links, did.var, did.icon, " +
@@ -929,7 +999,9 @@ public class Database {
                         "FROM league_items AS i " +
                         "JOIN data_itemData AS did ON i.id_d = did.id " +
                         "LEFT JOIN category_child AS cc ON did.id_cc = cc.id " +
+                        "JOIN league_history_daily_rolling AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
                         "WHERE i.id_l = ? AND did.id_cp = ? " +
+                        "GROUP BY i.id_l, i.id_d " +
                         "ORDER BY i.mean DESC ";
 
         try {
@@ -937,49 +1009,12 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, leagueId);
-                statement.setInt(2, category);
+                statement.setInt(2, categoryId);
+
                 ResultSet resultSet = statement.executeQuery();
-
                 while (resultSet.next()) {
-                    ParcelEntry parcelEntry = new ParcelEntry();
-                    parcelEntry.loadItem(resultSet);
-                    parcel.put(parcelEntry.getId(), parcelEntry);
-                }
-            }
-
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not get output items", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Loads provided Map with item price history from database
-     *
-     * @param leagueId ID of target league
-     * @param parcel Map that will contain item ID to ParcelEntry relations
-     * @return True on success
-     */
-    public boolean getOutputHistory(Integer leagueId, Map<Integer, ParcelEntry> parcel) {
-        String query  = "SELECT id_d, mean FROM league_history_daily_rolling " +
-                        "WHERE AND id_l = ? " +
-                        "ORDER BY time DESC ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setInt(1, leagueId);
-                ResultSet resultSet = statement.executeQuery();
-
-                while (resultSet.next()) {
-                    Integer id = resultSet.getInt("id_d");
-                    ParcelEntry parcelEntry = parcel.get(id);
-
-                    if (parcelEntry == null) continue;
-                    parcelEntry.loadHistory(resultSet);
+                    ParcelEntry parcelEntry = new ParcelEntry(resultSet);
+                    parcelEntryList.add(parcelEntry);
                 }
             }
 

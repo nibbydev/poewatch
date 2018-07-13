@@ -9,10 +9,11 @@ public class Config {
     // Database
     //------------------------------------------------------------------------------------------------------------
 
-    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true";
+    public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true&useUnicode=true&character_set_server=utf8mb4";
     public static final String db_username = "root";
     private static final String db_password = "";
     public static final String db_database = "ps4";
+    public static final String acDb_database = "ps_accounts";
 
     public static String getDb_password() {
         return db_password;

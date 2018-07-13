@@ -17,6 +17,7 @@ public class EntryManager {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    private Set<AccountEntry> accountSet = new HashSet<>();
     private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
@@ -158,6 +159,13 @@ public class EntryManager {
         Main.DATABASE.uploadRaw(entrySet);
     }
 
+    private void uploadAccounts() {
+        Set<AccountEntry> accountSet = this.accountSet;
+        this.accountSet = new HashSet<>();
+
+        Main.DATABASE.uploadAccountNames(accountSet);
+    }
+
     private void generateOutputFiles() {
         List<String> oldOutputFiles = new ArrayList<>();
         List<String> newOutputFiles = new ArrayList<>();
@@ -170,25 +178,18 @@ public class EntryManager {
             String league = leagueEntry.getName();
 
             for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
-                Map<Integer, ParcelEntry> tmpParcel = new LinkedHashMap<>();
-
+                List<ParcelEntry> parcelEntryList = new ArrayList<>();
                 int categoryId = category.getValue().getId();
 
-                Main.DATABASE.getOutputItems(leagueId, tmpParcel, categoryId);
-                Main.DATABASE.getOutputHistory(leagueId, tmpParcel);
-
-                List<ParcelEntry> parcel = new ArrayList<>();
-                for (ParcelEntry parcelEntry : tmpParcel.values()) {
-                    parcelEntry.calcSpark();
-                    parcel.add(parcelEntry);
-                }
+                // Get data from database
+                Main.DATABASE.getOutputData(leagueId, categoryId, parcelEntryList);
 
                 String fileName = league + "_" + category.getKey() + "_" + System.currentTimeMillis() + ".json";
                 File outputFile = new File(Config.folder_output_get, fileName);
 
                 try (Writer writer = Misc.defineWriter(outputFile)) {
                     if (writer == null) throw new IOException();
-                    gson.toJson(parcel, writer);
+                    gson.toJson(parcelEntryList, writer);
                 } catch (IOException ex) {
                     Main.ADMIN._log(ex, 4);
                     Main.ADMIN.log_("Couldn't write output JSON to file", 3);
@@ -313,6 +314,11 @@ public class EntryManager {
         upload();
         time_upload = System.currentTimeMillis() - time_upload;
 
+        // Upload account names
+        long time_account = System.currentTimeMillis();
+        uploadAccounts();
+        time_account = System.currentTimeMillis() - time_account;
+
         // Sort JSON
         long time_cycle = System.currentTimeMillis();
         cycle();
@@ -325,7 +331,7 @@ public class EntryManager {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        //generateOutputFiles();
+        generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Build itemdata
@@ -342,7 +348,8 @@ public class EntryManager {
         String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
         String twentyHourDisplay = "[24h:" + String.format("%4d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
         String timeTookDisplay = "(C:" + String.format("%5d", time_cycle) + " ms)(J:" + String.format("%4d", time_json) +
-                " ms)(C:" + String.format("%3d", time_load_currency) + " ms)(U:" + String.format("%4d", time_upload) + " ms)";
+                " ms)(C:" + String.format("%3d", time_load_currency) + " ms)(U:" + String.format("%4d", time_upload) +
+                " ms)(A:" + String.format("%4d", time_account) + " ms)";
         Main.ADMIN.log_(timeElapsedDisplay + tenMinDisplay + resetTimeDisplay + twentyHourDisplay + timeTookDisplay, -1);
 
         // Switch off flags
@@ -359,6 +366,10 @@ public class EntryManager {
     public void parseItems(Mappers.APIReply reply) {
         for (Mappers.Stash stash : reply.stashes) {
             Integer leagueId = null;
+
+            if (stash.accountName != null && stash.lastCharacterName != null) {
+                accountSet.add(new AccountEntry(stash.accountName, stash.lastCharacterName));
+            }
 
             for (Item item : stash.items) {
                 if (!Main.WORKER_MANAGER.isFlag_Run()) return;

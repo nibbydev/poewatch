@@ -301,19 +301,18 @@ public class Item extends Mappers.BaseItem {
                 if (this.corrupted != null) corrupted = this.corrupted;
             }
         } else {
-            if (lvl < 15) lvl = 1;          // 1  = 1,2,3,4,5,6,7,8,9,10,11,12,13,14
-            else if (lvl < 21) lvl = 20;    // 20 = 15,16,17,18,19,20
-            // 21 = 21
+            if (lvl < 19) lvl = 1;          // lvl       1 = 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+            else if (lvl < 21) lvl = 20;    // lvl      20 = 19,20
+                                            // lvl      21 = 21
 
-            if (qual < 17) qual = 0;          // 0  = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
-            else if (qual < 22) qual = 20;    // 20 = 17,18,19,20,21
-            // 22,23 = 23
+            if (qual < 17) qual = 0;        // quality   0 = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+            else if (qual < 22) qual = 20;  // quality  20 = 17,18,19,20,21
+                                            // quality  23 = 22,23
 
             // Gets rid of specific gems
-            if (lvl < 20 && qual > 20) qual = 20;         // |4| 1|23|1 and |4|10|23|1
-            else if (lvl == 21 && qual < 20) qual = 0;    // |4|21|10|1
+            if (lvl < 20 && qual > 20) qual = 20;  // lvl:1 quality:23-> lvl:1 quality:20
 
-            if (lvl >= 20 || qual >= 20) corrupted = true;
+            if (lvl > 20 || qual > 20) corrupted = true;
             else if (name.contains("Vaal")) corrupted = true;
         }
 
@@ -519,22 +518,6 @@ public class Item extends Mappers.BaseItem {
                     }
                 }
                 break;
-
-            case "Combat Focus":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : explicitMods) {
-                    if (explicitMod.contains("Lightning")) {
-                        variation = "lightning";
-                        break;
-                    } else if (explicitMod.contains("Fire")) {
-                        variation = "fire";
-                        break;
-                    } else if (explicitMod.contains("Cold")) {
-                        variation = "cold";
-                        break;
-                    }
-                }
-                break;
         }
     }
 
@@ -694,7 +677,7 @@ public class Item extends Mappers.BaseItem {
     }
 
     public String isCorrupted() {
-        return corrupted == null ? null : (corrupted ? "1" : "0");
+        return frameType == 4 ? (corrupted != null && corrupted ? "1" : "0") : null;
     }
 
     public int getFrame() {
