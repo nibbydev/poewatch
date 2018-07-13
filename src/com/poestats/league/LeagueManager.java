@@ -98,7 +98,7 @@ public class LeagueManager {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Filters and sorts provided ArrayList of league objects.
+     * Filters out and sorts list of league objects.
      * Removes any SSF leagues and puts the remaining in a certain order
      *
      * @param leagueList ArrayList of LeagueEntry objects to be filtered and sorted
@@ -113,30 +113,16 @@ public class LeagueManager {
             }
         }
 
-        // Add softcore events
+        // Add Hardcore
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
-                if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
-                    sortedLeagueList.add(leagueEntry);
-                }
+            if (leagueEntry.getName().equals("Hardcore")) {
+                sortedLeagueList.add(leagueEntry);
             }
         }
 
-        // Add hardcore events
+        // Add Standard
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
-                if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
-                    sortedLeagueList.add(leagueEntry);
-                }
-            }
-        }
-
-        // Add main softcore league
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) continue;
-            if (leagueEntry.getName().equals("Hardcore") || leagueEntry.getName().equals("Standard")) continue;
-
-            if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
+            if (leagueEntry.getName().equals("Standard")) {
                 sortedLeagueList.add(leagueEntry);
             }
         }
@@ -151,17 +137,31 @@ public class LeagueManager {
             }
         }
 
-        // Add Standard
+        // Add main softcore league
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().equals("Standard")) {
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) continue;
+            if (leagueEntry.getName().equals("Hardcore") || leagueEntry.getName().equals("Standard")) continue;
+
+            if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
                 sortedLeagueList.add(leagueEntry);
             }
         }
 
-        // Add Hardcore
+        // Add hardcore events
         for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().equals("Hardcore")) {
-                sortedLeagueList.add(leagueEntry);
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
+                if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
+                    sortedLeagueList.add(leagueEntry);
+                }
+            }
+        }
+
+        // Add softcore events
+        for (LeagueEntry leagueEntry : leagueList) {
+            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
+                if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
+                    sortedLeagueList.add(leagueEntry);
+                }
             }
         }
 

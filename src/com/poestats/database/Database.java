@@ -20,7 +20,6 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private Connection connection;
-    private Connection acConnection;
 
     //------------------------------------------------------------------------------------------------------------
     // DB controllers
@@ -34,10 +33,6 @@ public class Database {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
-
-            acConnection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
-            acConnection.setCatalog(Config.acDb_database);
-            acConnection.setAutoCommit(false);
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Failed to connect to databases", 5);
@@ -51,7 +46,6 @@ public class Database {
     public void disconnect() {
         try {
             if (connection != null) connection.close();
-            if (acConnection != null) acConnection.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -68,50 +62,39 @@ public class Database {
      * @return True on success
      */
     public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
-
-        // This retard of a query though
-
         String query =  "BEGIN; " +
-                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
-                        "    INSERT IGNORE INTO accounts (id, name) VALUES(@id_a, ?); " +
-                        "    UPDATE accounts SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
-                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
+                        "    INSERT INTO account_accounts (name) VALUES(?) " +
+                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
 
-                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
-                        "    INSERT IGNORE INTO characters (id, name) VALUES(@id_c, ?); " +
-                        "    UPDATE characters SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
-                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
+                        "    INSERT INTO account_characters (name) VALUES(?) " +
+                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
 
-                        "    INSERT IGNORE INTO relations (id_a, id_c) VALUES (@id_a, @id_c) " +
-                        "    ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP(); " +
+                        "    INSERT INTO account_relations (id_l, id_a, id_c) " +
+                        "        SELECT ?, a.id, c.id " +
+                        "        FROM account_accounts AS a " +
+                        "        INNER JOIN account_characters AS c " +
+                        "        WHERE a.name = ? AND c.name = ? " +
+                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
                         "COMMIT; ";
 
-        // Can't use `ON DUPLICATE UPDATE` with InnoDB because it treats it as an "insert" and increments the auto
-        // increment id, resulting in MASSIVE index gaps. Around 20-30 times skipped indexed per entry, to be precise.
-        // After 3 hours of operation, the 50,000th row ended up getting an id of 1,350,000. Which is why we have this
-        // retarded query here. To avoid this bullshittery, use MyISAM, be better with SQL queries than I or read about
-        // innodb_autoinc_lock_mode.
-
         try {
-            if (acConnection.isClosed()) return false;
+            if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = acConnection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (AccountEntry accountEntry : accountSet) {
-                    statement.setString(1, accountEntry.accountName);
-                    statement.setString(2, accountEntry.accountName);
-                    statement.setString(3, accountEntry.accountName);
-                    statement.setString(4, accountEntry.accountName);
-                    statement.setString(5, accountEntry.characterName);
-                    statement.setString(6, accountEntry.characterName);
-                    statement.setString(7, accountEntry.characterName);
-                    statement.setString(8, accountEntry.characterName);
+                    statement.setString(1, accountEntry.account);
+                    statement.setString(2, accountEntry.character);
+                    statement.setInt(3, accountEntry.league);
+                    statement.setString(4, accountEntry.account);
+                    statement.setString(5, accountEntry.character);
+
                     statement.addBatch();
                 }
 
                 statement.executeBatch();
             }
 
-            acConnection.commit();
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -530,12 +513,24 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "INSERT INTO data_leagues (active, name, start, end) " +
-                        "    VALUES (1, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "    active = VALUES(active), " +
-                        "    start = VALUES(start), " +
-                        "    end = VALUES(end)";
+        // Use transactions to avoid incrementing the auto incremented id row with "ON DUPLICATE UPDATE" on every
+        // update, which would result in size ~8,000 index gaps.
+
+        String query =  "BEGIN; " +
+                        "    SET @name = ?; " +
+                        "    SET @start = ?; " +
+                        "    SET @end = ?; " +
+                        "    SET @id = (SELECT id FROM data_leagues WHERE name = @name);" +
+
+                        "    INSERT IGNORE INTO data_leagues (id, name, display, start, end) " +
+                        "    VALUES(@id, @name, @name, @start, @end);" +
+
+                        "    UPDATE data_leagues SET " +
+                        "        active = 1, " +
+                        "        start = @start, " +
+                        "        end = @end " +
+                        "    WHERE name = @name; " +
+                        "COMMIT; ";
 
         try {
             if (connection.isClosed()) return false;
@@ -886,23 +881,38 @@ public class Database {
      * @return True on success
      */
     public boolean updateCounters(){
-        String query =  "UPDATE league_items AS i " +
+        String query1 = "UPDATE league_items AS i " +
                         "    JOIN ( " +
-                        "        SELECT id_l, id_d, approved, COUNT(*) AS count " +
+                        "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
                         "        WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND)" +
-                        "        GROUP BY id_l, id_d, approved" +
+                        "           AND approved = 1" +
+                        "        GROUP BY id_l, id_d" +
+                        "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
+                        "SET " +
+                        "    i.count = i.count + e.count, " +
+                        "    i.inc = i.inc + e.count ";
+
+        String query2 = "UPDATE league_items AS i " +
+                        "    JOIN ( " +
+                        "        SELECT id_l, id_d, COUNT(*) AS count " +
+                        "        FROM league_entries " +
+                        "        WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND) " +
+                        "           AND approved = 0" +
+                        "        GROUP BY id_l, id_d" +
                         "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
                         "SET " +
                         "    i.count = i.count + e.count, " +
                         "    i.inc = i.inc + e.count, " +
-                        "    i.dec = IF(e.approved = 0, i.dec, i.dec + e.count) ";
+                        "    i.dec = i.dec + e.count ";
+
 
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
             }
 
             connection.commit();
@@ -1188,83 +1198,6 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not add daily", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Removes entries from table `league_history_minutely_rolling` that are older than 60 minutes
-     *
-     * @return True on success
-     */
-    public boolean removeOldMinutelyHistory() {
-        String query =  "DELETE FROM league_history_minutely_rolling " +
-                        "WHERE time < ADDDATE(NOW(), INTERVAL -60 MINUTE) ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove old minutely history", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Removes entries from table `league_history_hourly_rolling` that are older than 24 hours
-     *
-     * @return True on success
-     */
-    public boolean removeOldHourlyHistory() {
-        String query =  "DELETE FROM league_history_hourly_rolling " +
-                        "WHERE time < ADDDATE(NOW(), INTERVAL -24 HOUR) ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove old hourly history", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Removes entries from table `league_history_daily_rolling` that are older than 120 days and
-     * belong to an active league
-     *
-     * @return True on success
-     */
-    public boolean removeOldDailyHistory() {
-        String query =  "DELETE h FROM league_history_daily_rolling AS h " +
-                        "JOIN data_leagues AS l ON h.id_l = l.id " +
-                        "WHERE l.active = 1 AND time < ADDDATE(NOW(), INTERVAL -120 DAY) ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove old daily history", 3);
             return false;
         }
     }
