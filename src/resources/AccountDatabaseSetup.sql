@@ -23,10 +23,7 @@ CREATE TABLE accounts (
     id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    INDEX   index_a_id    (id),
-    INDEX   index_a_name  (name)
+    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -37,10 +34,7 @@ CREATE TABLE characters (
     id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    INDEX   index_c_id    (id),
-    INDEX   index_c_name  (name)
+    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -55,10 +49,7 @@ CREATE TABLE relations (
 
     FOREIGN KEY (id_a)    REFERENCES  accounts      (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_c)    REFERENCES  characters    (id) ON DELETE RESTRICT,
-    CONSTRAINT  pk_r      PRIMARY KEY (id_a, id_c),
-
-    INDEX   index_r_id_a  (id_a),
-    INDEX   index_r_id_c  (id_c)
+    CONSTRAINT  pk_r      PRIMARY KEY (id_a, id_c)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

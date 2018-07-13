@@ -23,10 +23,7 @@ USE `ps4`;
 CREATE TABLE `category_parent` (
     `id`                    INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `name`                  VARCHAR(32)     NOT NULL UNIQUE,
-    `display`               VARCHAR(32)     DEFAULT NULL,
-
-    INDEX `index_cp_id`         (`id`),
-    INDEX `index_cp_name`       (`name`)
+    `display`               VARCHAR(32)     DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -41,8 +38,6 @@ CREATE TABLE `category_child` (
 
     FOREIGN KEY (`id_cp`) REFERENCES `category_parent` (`id`) ON DELETE CASCADE,
 
-    INDEX `index_cc_id`         (`id`),
-    INDEX `index_cc_id_cp`      (`id_cp`),
     INDEX `index_cc_name`       (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -52,9 +47,7 @@ CREATE TABLE `category_child` (
 
 CREATE TABLE `category_history` (
     `id`                    INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    `name`                  VARCHAR(32)     NOT NULL UNIQUE,
-
-    INDEX `index_ch_id`         (`id`)
+    `name`                  VARCHAR(32)     NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -74,9 +67,7 @@ CREATE TABLE `data_leagues` (
     `start`               VARCHAR(32)     DEFAULT NULL,
     `end`                 VARCHAR(32)     DEFAULT NULL,
 
-    INDEX `index_l_id`              (`id`),
-    INDEX `index_l_active`          (`active`),
-    INDEX `index_l_name`            (`name`)
+    INDEX `index_l_active`          (`active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -98,9 +89,7 @@ CREATE TABLE `data_outputFiles` (
     `path`                VARCHAR(128)    NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT  `pk_dof`  PRIMARY KEY (`league`, `category`),
-
-    INDEX `index_dof_pk`          (`league`, `category`)
+    CONSTRAINT  `pk_dof`  PRIMARY KEY (`league`, `category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -111,7 +100,6 @@ CREATE TABLE `data_currencyItems` (
     `id`                  INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `name`                VARCHAR(64)     NOT NULL,
 
-    INDEX `index_ci_id`               (`id`),
     INDEX `index_ci_name`             (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -124,10 +112,7 @@ CREATE TABLE `data_currencyAliases` (
     `id_ci`                 INT           UNSIGNED NOT NULL,
     `name`                  VARCHAR(32)   NOT NULL,
 
-    FOREIGN KEY (`id_ci`) REFERENCES `data_currencyItems` (`id`) ON DELETE CASCADE,
-
-    INDEX `index_ca_id`               (`id`),
-    INDEX `index_ca_id_ci`            (`id_ci`)
+    FOREIGN KEY (`id_ci`) REFERENCES `data_currencyItems` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -158,9 +143,6 @@ CREATE TABLE `data_itemData` (
     FOREIGN KEY (`id_cp`) REFERENCES `category_parent` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`id_cc`) REFERENCES `category_child`  (`id`) ON DELETE CASCADE,
 
-    INDEX `index_idp_id`        (`id`),
-    INDEX `index_idp_id_cp`     (`id_cp`),
-    INDEX `index_idp_id_cc`     (`id_cc`),
     INDEX `index_idp_key`       (`key`),
     INDEX `index_idp_frame`     (`frame`),
     INDEX `index_idp_name`      (`name`)
@@ -193,9 +175,6 @@ CREATE TABLE `league_items` (
     FOREIGN KEY (`id_d`) REFERENCES  `data_itemData`  (`id`) ON DELETE CASCADE,
     CONSTRAINT  `pk_i`   PRIMARY KEY (`id_l`, `id_d`),
 
-    INDEX `index_i_id_l`        (`id_l`),
-    INDEX `index_i_id_d`        (`id_d`),
-    INDEX `index_i_pk`          (`id_l`, `id_d`),
     INDEX `index_i_volatile`    (`volatile`),
     INDEX `index_i_multiplier`  (`multiplier`),
     INDEX `index_i_mean`        (`mean`),
@@ -219,8 +198,6 @@ CREATE TABLE `league_entries` (
     FOREIGN KEY (`id_d`) REFERENCES  `league_items` (`id_d`) ON DELETE CASCADE,
     CONSTRAINT  `pk_e`   PRIMARY KEY (`id_l`, `id_d`, `account`),
 
-    INDEX `index_e_id_l`          (`id_l`),
-    INDEX `index_e_id_d`          (`id_d`),
     INDEX `index_e_time`          (`time`),
     INDEX `index_e_approved`      (`approved`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -248,10 +225,7 @@ CREATE TABLE `league_history_daily_inactive` (
     `quantity`            INT(8)          UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
-    FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
-
-    INDEX `index_hir_id_l`         (`id_l`),
-    INDEX `index_hir_id_d`         (`id_d`)
+    FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -275,8 +249,6 @@ CREATE TABLE `league_history_daily_rolling` (
     FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
     FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
 
-    INDEX `index_hdr_id_l`         (`id_l`),
-    INDEX `index_hdr_id_d`         (`id_d`),
     INDEX `index_hdr_time`         (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -301,8 +273,6 @@ CREATE TABLE `league_history_hourly_rolling` (
     FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
     FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
 
-    INDEX `index_hhr_id_l`         (`id_l`),
-    INDEX `index_hhr_id_d`         (`id_d`),
     INDEX `index_hhr_time`         (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -322,8 +292,6 @@ CREATE TABLE `league_history_minutely_rolling` (
     FOREIGN KEY (`id_l`)  REFERENCES `data_leagues`  (`id`) ON DELETE RESTRICT,
     FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
 
-    INDEX `index_hmr_id_l`         (`id_l`),
-    INDEX `index_hmr_id_d`         (`id_d`),
     INDEX `index_hmr_time`         (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
