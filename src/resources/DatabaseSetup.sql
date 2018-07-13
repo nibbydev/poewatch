@@ -607,4 +607,4 @@ CREATE EVENT remove120
   DO
     DELETE h FROM league_history_daily_rolling AS h
     JOIN data_leagues AS l ON h.id_l = l.id
-    WHERE l.active = 1 AND time < ADDDATE(NOW(), INTERVAL -120 DAY);
+    WHERE time < ADDDATE(NOW(), INTERVAL -120 DAY) AND l.id <= 2;
