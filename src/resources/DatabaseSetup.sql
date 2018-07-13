@@ -60,7 +60,7 @@ CREATE TABLE `category_history` (
 --
 
 CREATE TABLE `data_leagues` (
-    `id`                  INT             UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `id`                  SMALLINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `active`              TINYINT(1)      UNSIGNED NOT NULL DEFAULT 1,
     `name`                VARCHAR(64)     NOT NULL UNIQUE,
     `display`             VARCHAR(64)     DEFAULT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE `data_itemData` (
 --
 
 CREATE TABLE `league_items` (
-    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_l`                SMALLINT        UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `volatile`            TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
@@ -186,7 +186,7 @@ CREATE TABLE `league_items` (
 --
 
 CREATE TABLE `league_entries` (
-    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_l`                SMALLINT        UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `approved`            TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
@@ -211,7 +211,7 @@ CREATE TABLE `league_entries` (
 --
 
 CREATE TABLE `league_history_daily_inactive` (
-    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_l`                SMALLINT        UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
@@ -233,7 +233,7 @@ CREATE TABLE `league_history_daily_inactive` (
 --
 
 CREATE TABLE `league_history_daily_rolling` (
-    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_l`                SMALLINT        UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
@@ -257,7 +257,7 @@ CREATE TABLE `league_history_daily_rolling` (
 --
 
 CREATE TABLE `league_history_hourly_rolling` (
-    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_l`                SMALLINT        UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `volatile`            TINYINT(1)      UNSIGNED DEFAULT NULL,
@@ -281,7 +281,7 @@ CREATE TABLE `league_history_hourly_rolling` (
 --
 
 CREATE TABLE `league_history_minutely_rolling` (
-    `id_l`                INT             UNSIGNED NOT NULL,
+    `id_l`                SMALLINT        UNSIGNED NOT NULL,
     `id_d`                INT             UNSIGNED NOT NULL,
     `time`                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `mean`                DECIMAL(10,4)   UNSIGNED DEFAULT NULL,
@@ -300,11 +300,11 @@ CREATE TABLE `league_history_minutely_rolling` (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure `account_accounts`
+-- Table structure account_accounts
 --
 
 CREATE TABLE account_accounts (
-    id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id      BIGINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     hidden  TINYINT(1)    UNSIGNED NOT NULL DEFAULT 0,
     name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -314,25 +314,25 @@ CREATE TABLE account_accounts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Table structure `account_characters`
+-- Table structure account_characters
 --
 
 CREATE TABLE account_characters (
-    id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id      BIGINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Table structure `account_relations`
+-- Table structure account_relations
 --
 
 CREATE TABLE account_relations (
-    id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_l    INT           UNSIGNED NOT NULL,
-    id_a    INT           UNSIGNED NOT NULL,
-    id_c    INT           UNSIGNED NOT NULL,
+    id      BIGINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id_l    SMALLINT      UNSIGNED NOT NULL,
+    id_a    BIGINT        UNSIGNED NOT NULL,
+    id_c    BIGINT        UNSIGNED NOT NULL,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

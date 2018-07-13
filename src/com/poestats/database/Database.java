@@ -62,37 +62,20 @@ public class Database {
      * @return True on success
      */
     public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
-
-        // This retard of a query though
-
         String query =  "BEGIN; " +
-                        "    SET @id_a = (SELECT id FROM account_accounts WHERE name = ?); " +
-                        "    INSERT IGNORE INTO account_accounts (id, name) VALUES(@id_a, ?); " +
-                        "    UPDATE account_accounts SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
-                        "    SET @id_a = (SELECT id FROM account_accounts WHERE name = ?); " +
+                        "    INSERT INTO account_accounts (name) VALUES(?) " +
+                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
 
-                        "    SET @id_c = (SELECT id FROM account_characters WHERE name = ?); " +
-                        "    INSERT IGNORE INTO account_characters (id, name) VALUES(@id_c, ?); " +
-                        "    UPDATE account_characters SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
-                        "    SET @id_c = (SELECT id FROM account_characters WHERE name = ?); " +
+                        "    INSERT INTO account_characters (name) VALUES(?) " +
+                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
 
-                        "    SET @id_r = (SELECT id FROM account_relations WHERE id_a = @id_a AND id_c = @id_c); " +
-                        "    INSERT IGNORE INTO account_relations (id, id_l, id_a, id_c) VALUES(@id_r, ?, @id_a, @id_c); " +
-                        "    UPDATE account_relations SET seen = CURRENT_TIMESTAMP() WHERE id_a = @id_a AND id_c = @id_c; " +
+                        "    INSERT INTO account_relations (id_l, id_a, id_c) " +
+                        "        SELECT ?, a.id, c.id " +
+                        "        FROM account_accounts AS a " +
+                        "        INNER JOIN account_characters AS c " +
+                        "        WHERE a.name = ? AND c.name = ? " +
+                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
                         "COMMIT; ";
-
-        // Can't use `ON DUPLICATE UPDATE` with InnoDB because it treats it as an "insert" and increments the auto
-        // increment id, resulting in MASSIVE index gaps. Around 20-30 times skipped indexed per entry, to be precise.
-        // After 3 hours of operation, the 50,000th row ended up getting an id of 1,350,000. Which is why we have this
-        // retarded query here. To explain what happens in this godforsaken transaction, let us start from the top.
-        // First, near `SET @id_a` we try to get the id related to `@account`, which will either return a valid id on
-        // success or NULL, and store it under `@id_a`. Next, `INSERT IGNORE` will execute if `@id_a` was NULL and
-        // throw an error if it wasn't (hence why the `IGNORE`). After that, the `UPDATE` query updates the `seen`
-        // field since the `INSERT` query might not have executed. And finally, we find the id and store it under
-        // `@id_a` yet again as it might be NULL and the id will be needed when creating/updating entries in table
-        // `account_relations`. Please don't do this at home. This abomination of a query should not exist in this
-        // world. To avoid this level of autism, use MyISAM (and live without foreign keys), be better with SQL queries
-        // than I am and create some procedures or read about the InnodDB autoinc lock mode.
 
         try {
             if (connection.isClosed()) return false;
@@ -100,14 +83,10 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (AccountEntry accountEntry : accountSet) {
                     statement.setString(1, accountEntry.account);
-                    statement.setString(2, accountEntry.account);
-                    statement.setString(3, accountEntry.account);
+                    statement.setString(2, accountEntry.character);
+                    statement.setInt(3, accountEntry.league);
                     statement.setString(4, accountEntry.account);
                     statement.setString(5, accountEntry.character);
-                    statement.setString(6, accountEntry.character);
-                    statement.setString(7, accountEntry.character);
-                    statement.setString(8, accountEntry.character);
-                    statement.setInt(9, accountEntry.league);
 
                     statement.addBatch();
                 }
