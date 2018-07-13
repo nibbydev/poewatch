@@ -12,7 +12,6 @@ CREATE DATABASE IF NOT EXISTS `ps4` DEFAULT CHARACTER SET utf8 COLLATE utf8_gene
 
 USE `ps4`;
 
-
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
 -- --------------------------------------------------------------------------------------------------------------------
@@ -548,3 +547,47 @@ VALUES
     (28,  'journeyman'),
     (29,  'master-sextant'),
     (29,  'master');
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Event setup
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Event configuration `remove60`
+--
+
+DROP EVENT IF EXISTS remove60;
+
+CREATE EVENT remove60
+  ON SCHEDULE EVERY 1 MINUTE
+  COMMENT 'Clears out entries older than 1 hour'
+  DO
+    DELETE FROM league_history_minutely_rolling
+    WHERE time < ADDDATE(NOW(), INTERVAL -60 MINUTE);
+
+--
+-- Event configuration `remove24`
+--
+
+DROP EVENT IF EXISTS remove24;
+
+CREATE EVENT remove24
+  ON SCHEDULE EVERY 1 HOUR
+  COMMENT 'Clears out entries older than 1 day'
+  DO
+    DELETE FROM league_history_hourly_rolling
+    WHERE time < ADDDATE(NOW(), INTERVAL -24 HOUR);
+
+--
+-- Event configuration `remove120`
+--
+
+DROP EVENT IF EXISTS remove120;
+
+CREATE EVENT remove120
+  ON SCHEDULE EVERY 1 DAY
+  COMMENT 'Clears out entries older than 120 days'
+  DO
+    DELETE h FROM league_history_daily_rolling AS h
+    JOIN data_leagues AS l ON h.id_l = l.id
+    WHERE l.active = 1 AND time < ADDDATE(NOW(), INTERVAL -120 DAY);
