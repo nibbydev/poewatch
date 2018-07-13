@@ -355,10 +355,6 @@ public class EntryManager {
         for (Mappers.Stash stash : reply.stashes) {
             Integer leagueId = null;
 
-            if (stash.accountName != null && stash.lastCharacterName != null) {
-                accountSet.add(new AccountEntry(stash.accountName, stash.lastCharacterName));
-            }
-
             for (Item item : stash.items) {
                 if (!Main.WORKER_MANAGER.isFlag_Run()) return;
 
@@ -383,6 +379,10 @@ public class EntryManager {
                 rawEntry.setAccountName(stash.accountName);
 
                 entrySet.add(rawEntry);
+            }
+
+            if (stash.accountName != null && stash.lastCharacterName != null && leagueId != null) {
+                accountSet.add(new AccountEntry(stash.accountName, stash.lastCharacterName, leagueId));
             }
         }
     }

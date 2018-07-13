@@ -5,12 +5,12 @@
 SET time_zone = "+02:00";
 
 --
--- Database: `ps4`
+-- Database: ps5
 --
-DROP DATABASE IF EXISTS `ps4`;
-CREATE DATABASE IF NOT EXISTS `ps4` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+DROP DATABASE IF EXISTS ps5;
+CREATE DATABASE IF NOT EXISTS ps5 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE `ps4`;
+USE ps5;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
@@ -293,6 +293,52 @@ CREATE TABLE `league_history_minutely_rolling` (
     FOREIGN KEY (`id_d`)  REFERENCES `data_itemData` (`id`) ON DELETE RESTRICT,
 
     INDEX `index_hmr_time`         (`time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Account tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Table structure `account_accounts`
+--
+
+CREATE TABLE account_accounts (
+    id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    name    VARCHAR(32)   NOT NULL UNIQUE,
+    hidden  TINYINT(1)    UNSIGNED NOT NULL DEFAULT 0,
+    found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX   hidden       (hidden)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Table structure `account_characters`
+--
+
+CREATE TABLE account_characters (
+    id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    name    VARCHAR(32)   NOT NULL UNIQUE,
+    found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Table structure `account_relations`
+--
+
+CREATE TABLE account_relations (
+    id_l    INT           UNSIGNED NOT NULL,
+    id_a    INT           UNSIGNED NOT NULL,
+    id_c    INT           UNSIGNED NOT NULL,
+    found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (id_l)    REFERENCES  data_leagues        (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_a)    REFERENCES  account_accounts    (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_c)    REFERENCES  account_characters  (id) ON DELETE RESTRICT,
+    CONSTRAINT  pk_r      PRIMARY KEY (id_a, id_c)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

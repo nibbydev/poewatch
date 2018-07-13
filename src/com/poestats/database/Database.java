@@ -20,7 +20,6 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     private Connection connection;
-    private Connection acConnection;
 
     //------------------------------------------------------------------------------------------------------------
     // DB controllers
@@ -34,10 +33,6 @@ public class Database {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
-
-            acConnection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
-            acConnection.setCatalog(Config.acDb_database);
-            acConnection.setAutoCommit(false);
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Failed to connect to databases", 5);
@@ -51,7 +46,6 @@ public class Database {
     public void disconnect() {
         try {
             if (connection != null) connection.close();
-            if (acConnection != null) acConnection.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -72,18 +66,18 @@ public class Database {
         // This retard of a query though
 
         String query =  "BEGIN; " +
-                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
-                        "    INSERT IGNORE INTO accounts (id, name) VALUES(@id_a, ?); " +
-                        "    UPDATE accounts SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
-                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
+                        "    SET @id_a = (SELECT id FROM account_accounts WHERE name = ?); " +
+                        "    INSERT IGNORE INTO account_accounts (id, name) VALUES(@id_a, ?); " +
+                        "    UPDATE account_accounts SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
+                        "    SET @id_a = (SELECT id FROM account_accounts WHERE name = ?); " +
 
-                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
-                        "    INSERT IGNORE INTO characters (id, name) VALUES(@id_c, ?); " +
-                        "    UPDATE characters SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
-                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
+                        "    SET @id_c = (SELECT id FROM account_characters WHERE name = ?); " +
+                        "    INSERT IGNORE INTO account_characters (id, name) VALUES(@id_c, ?); " +
+                        "    UPDATE account_characters SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
+                        "    SET @id_c = (SELECT id FROM account_characters WHERE name = ?); " +
 
-                        "    INSERT IGNORE INTO relations (id_a, id_c) VALUES (@id_a, @id_c) " +
-                        "    ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP(); " +
+                        "    INSERT INTO account_relations (id_l, id_a, id_c) VALUES (?, @id_a, @id_c)  " +
+                        "    ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP();  " +
                         "COMMIT; ";
 
         // Can't use `ON DUPLICATE UPDATE` with InnoDB because it treats it as an "insert" and increments the auto
@@ -93,25 +87,26 @@ public class Database {
         // innodb_autoinc_lock_mode.
 
         try {
-            if (acConnection.isClosed()) return false;
+            if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = acConnection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
                 for (AccountEntry accountEntry : accountSet) {
-                    statement.setString(1, accountEntry.accountName);
-                    statement.setString(2, accountEntry.accountName);
-                    statement.setString(3, accountEntry.accountName);
-                    statement.setString(4, accountEntry.accountName);
-                    statement.setString(5, accountEntry.characterName);
-                    statement.setString(6, accountEntry.characterName);
-                    statement.setString(7, accountEntry.characterName);
-                    statement.setString(8, accountEntry.characterName);
+                    statement.setString(1, accountEntry.account);
+                    statement.setString(2, accountEntry.account);
+                    statement.setString(3, accountEntry.account);
+                    statement.setString(4, accountEntry.account);
+                    statement.setString(5, accountEntry.character);
+                    statement.setString(6, accountEntry.character);
+                    statement.setString(7, accountEntry.character);
+                    statement.setString(8, accountEntry.character);
+                    statement.setInt(9, accountEntry.league);
                     statement.addBatch();
                 }
 
                 statement.executeBatch();
             }
 
-            acConnection.commit();
+            connection.commit();
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
