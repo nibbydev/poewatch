@@ -17,6 +17,7 @@ public class WorkerManager extends Thread {
     private final Gson gson = Main.getGson();
     private final Object monitor = new Object();
     private volatile boolean flag_Run = true;
+    private volatile boolean readyToExit = false;
     private String nextChangeID;
 
     //------------------------------------------------------------------------------------------------------------
@@ -55,6 +56,8 @@ public class WorkerManager extends Thread {
             // controller itself has some checks whether it should run on method call or not
             Main.ENTRY_MANAGER.run();
         }
+
+        readyToExit = true;
     }
 
     /**
@@ -82,10 +85,20 @@ public class WorkerManager extends Thread {
             Main.ADMIN.log_("Worker (" + worker.getIndex() + ") stopped", 1);
         }
 
-        // Wake the monitor that's holding up the main loop, allowing safe exit
-        synchronized (getMonitor()) {
-            getMonitor().notify();
-        }
+        Main.ADMIN.log_("Stopping controller", 1);
+
+        // Wait until run() function is ready to exit
+        while (!readyToExit) try {
+            Thread.sleep(50);
+
+            // Wake the monitor that's holding up the main loop, allowing safe exit
+            synchronized (getMonitor()) {
+                getMonitor().notify();
+            }
+
+        } catch (InterruptedException ex) { }
+
+        Main.ADMIN.log_("Controller stopped", 1);
     }
 
     //------------------------------------------------------------------------------------------------------------
