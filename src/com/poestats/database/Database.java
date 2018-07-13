@@ -62,33 +62,60 @@ public class Database {
      * @return True on success
      */
     public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
-        String query =  "BEGIN; " +
-                        "    INSERT INTO account_accounts (name) VALUES(?) " +
-                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
+        String query1 = "INSERT INTO account_accounts (name) VALUES(?) " +
+                        "ON DUPLICATE KEY UPDATE seen = NOW() ";
 
-                        "    INSERT INTO account_characters (name) VALUES(?) " +
-                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
+        String query2 = "INSERT INTO account_characters (name) VALUES(?) " +
+                        "ON DUPLICATE KEY UPDATE seen = NOW() ";
 
-                        "    INSERT INTO account_relations (id_l, id_a, id_c) " +
-                        "        SELECT ?, a.id, c.id " +
-                        "        FROM account_accounts AS a " +
-                        "        INNER JOIN account_characters AS c " +
-                        "        WHERE a.name = ? AND c.name = ? " +
-                        "    ON DUPLICATE KEY UPDATE seen = NOW(); " +
-                        "COMMIT; ";
+        String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
+                        "    SELECT ?, a.id, c.id " +
+                        "    FROM account_accounts AS a " +
+                        "    INNER JOIN account_characters AS c " +
+                        "    WHERE a.name = ? AND c.name = ? " +
+                        "ON DUPLICATE KEY UPDATE seen = NOW() ";
 
         try {
             if (connection.isClosed()) return false;
+            int counter;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                counter = 0;
+
                 for (AccountEntry accountEntry : accountSet) {
                     statement.setString(1, accountEntry.account);
-                    statement.setString(2, accountEntry.character);
-                    statement.setInt(3, accountEntry.league);
-                    statement.setString(4, accountEntry.account);
-                    statement.setString(5, accountEntry.character);
-
                     statement.addBatch();
+
+                    if (++counter % 500 == 0) statement.executeBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                counter = 0;
+
+                for (AccountEntry accountEntry : accountSet) {
+                    statement.setString(1, accountEntry.character);
+                    statement.addBatch();
+
+                    if (++counter % 500 == 0) statement.executeBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query3)) {
+                counter = 0;
+
+                for (AccountEntry accountEntry : accountSet) {
+                    statement.setInt(1, accountEntry.league);
+                    statement.setString(2, accountEntry.account);
+                    statement.setString(3, accountEntry.character);
+                    statement.addBatch();
+
+                    if (++counter % 500 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
