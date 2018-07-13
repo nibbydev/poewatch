@@ -898,23 +898,38 @@ public class Database {
      * @return True on success
      */
     public boolean updateCounters(){
-        String query =  "UPDATE league_items AS i " +
+        String query1 = "UPDATE league_items AS i " +
                         "    JOIN ( " +
-                        "        SELECT id_l, id_d, approved, COUNT(*) AS count " +
+                        "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
                         "        WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND)" +
-                        "        GROUP BY id_l, id_d, approved" +
+                        "           AND approved = 1" +
+                        "        GROUP BY id_l, id_d" +
+                        "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
+                        "SET " +
+                        "    i.count = i.count + e.count, " +
+                        "    i.inc = i.inc + e.count ";
+
+        String query2 = "UPDATE league_items AS i " +
+                        "    JOIN ( " +
+                        "        SELECT id_l, id_d, COUNT(*) AS count " +
+                        "        FROM league_entries " +
+                        "        WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND) " +
+                        "           AND approved = 0" +
+                        "        GROUP BY id_l, id_d" +
                         "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
                         "SET " +
                         "    i.count = i.count + e.count, " +
                         "    i.inc = i.inc + e.count, " +
-                        "    i.dec = IF(e.approved = 0, i.dec, i.dec + e.count) ";
+                        "    i.dec = i.dec + e.count ";
+
 
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
             }
 
             connection.commit();
