@@ -305,8 +305,8 @@ CREATE TABLE `league_history_minutely_rolling` (
 
 CREATE TABLE account_accounts (
     id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    name    VARCHAR(32)   NOT NULL UNIQUE,
     hidden  TINYINT(1)    UNSIGNED NOT NULL DEFAULT 0,
+    name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -329,6 +329,7 @@ CREATE TABLE account_characters (
 --
 
 CREATE TABLE account_relations (
+    id      INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     id_l    INT           UNSIGNED NOT NULL,
     id_a    INT           UNSIGNED NOT NULL,
     id_c    INT           UNSIGNED NOT NULL,
@@ -338,7 +339,7 @@ CREATE TABLE account_relations (
     FOREIGN KEY (id_l)    REFERENCES  data_leagues        (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_a)    REFERENCES  account_accounts    (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_c)    REFERENCES  account_characters  (id) ON DELETE RESTRICT,
-    CONSTRAINT  pk_r      PRIMARY KEY (id_a, id_c)
+    CONSTRAINT  unique_r  UNIQUE (id_a, id_c)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

@@ -358,8 +358,10 @@ public class EntryManager {
             for (Item item : stash.items) {
                 if (!Main.WORKER_MANAGER.isFlag_Run()) return;
 
-                if (leagueId == null) leagueId = Main.LEAGUE_MANAGER.getLeagueId(item.getLeague());
-                if (leagueId == null) continue;
+                if (leagueId == null) {
+                    leagueId = Main.LEAGUE_MANAGER.getLeagueId(item.getLeague());
+                    if (leagueId == null) break;
+                }
 
                 item.fix();
                 item.parseItem();
