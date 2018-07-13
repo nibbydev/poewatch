@@ -62,26 +62,35 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
+     * Uploads gathered account and character names to the account database
      *
-     *
-     * @param accountSet
-     * @return
+     * @param accountSet Set of AccountEntries, containing accountName and characterName
+     * @return True on success
      */
     public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
+
+        // This retard of a query though
+
         String query =  "BEGIN; " +
-                        "INSERT INTO accounts (name) VALUES (?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "    seen = CURRENT_TIMESTAMP(), " +
-                        "    id = LAST_INSERT_ID(id); " +
-                        "SET @id_a = LAST_INSERT_ID(); " +
-                        "INSERT INTO characters (name) VALUES (?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "    seen = CURRENT_TIMESTAMP(), " +
-                        "    id = LAST_INSERT_ID(id); " +
-                        "SET @id_c = LAST_INSERT_ID(); " +
-                        "INSERT INTO relations (id_a, id_c) VALUES (@id_a, @id_c) " +
-                        "ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP(); " +
+                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
+                        "    INSERT IGNORE INTO accounts (id, name) VALUES(@id_a, ?); " +
+                        "    UPDATE accounts SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
+                        "    SET @id_a = (SELECT id FROM accounts WHERE name = ?); " +
+
+                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
+                        "    INSERT IGNORE INTO characters (id, name) VALUES(@id_c, ?); " +
+                        "    UPDATE characters SET seen = CURRENT_TIMESTAMP() WHERE name = ?; " +
+                        "    SET @id_c = (SELECT id FROM characters WHERE name = ?); " +
+
+                        "    INSERT IGNORE INTO relations (id_a, id_c) VALUES (@id_a, @id_c) " +
+                        "    ON DUPLICATE KEY UPDATE seen = CURRENT_TIMESTAMP(); " +
                         "COMMIT; ";
+
+        // Can't use `ON DUPLICATE UPDATE` with InnoDB because it treats it as an "insert" and increments the auto
+        // increment id, resulting in MASSIVE index gaps. Around 20-30 times skipped indexed per entry, to be precise.
+        // After 3 hours of operation, the 50,000th row ended up getting an id of 1,350,000. Which is why we have this
+        // retarded query here. To avoid this bullshittery, use MyISAM, be better with SQL queries than I or read about
+        // innodb_autoinc_lock_mode.
 
         try {
             if (acConnection.isClosed()) return false;
@@ -89,7 +98,13 @@ public class Database {
             try (PreparedStatement statement = acConnection.prepareStatement(query)) {
                 for (AccountEntry accountEntry : accountSet) {
                     statement.setString(1, accountEntry.accountName);
-                    statement.setString(2, accountEntry.characterName);
+                    statement.setString(2, accountEntry.accountName);
+                    statement.setString(3, accountEntry.accountName);
+                    statement.setString(4, accountEntry.accountName);
+                    statement.setString(5, accountEntry.characterName);
+                    statement.setString(6, accountEntry.characterName);
+                    statement.setString(7, accountEntry.characterName);
+                    statement.setString(8, accountEntry.characterName);
                     statement.addBatch();
                 }
 
