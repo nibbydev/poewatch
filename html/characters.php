@@ -2,7 +2,17 @@
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_characters.php" ); 
 
+  $DATA = array(
+    "resultCount" => null,
+    "searchString" => isset($_POST["name"]) ? $_POST["name"] : null,
+    "searchType" => isset($_POST["type"]) ? $_POST["type"] : null
+  );
+
   $ERRORCODE = CheckPOSTVariableError();
+
+  if (!$ERRORCODE && $DATA["searchString"]) {
+    $DATA["resultCount"] = GetResultCount($pdo, $DATA);
+  }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,6 +45,7 @@
         <li class="nav-item"><a class="nav-link" href="api">API</a></li>
         <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
         <li class="nav-item"><a class="nav-link active" href="characters">Characters</a></li>
+        <li class="nav-item"><a class="nav-link" href="easybuyout">EasyBuyout</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
     </div>
@@ -81,8 +92,10 @@
             <!--/Search options/-->
           </form>
 
-          <?php if ($ERRORCODE > 1) DisplayError($ERRORCODE); ?>
-          <?php if ($ERRORCODE <= 1) DisplayResultCount($pdo); ?>
+          <?php 
+            if ($ERRORCODE) DisplayError($ERRORCODE); 
+            else DisplayResultCount($DATA); 
+          ?>
 
           <hr>
 
@@ -99,27 +112,36 @@
               </thead>
               <tbody>
 
-                <?php if ($ERRORCODE <= 1) FillTable($pdo); ?>
+                <?php if (!$ERRORCODE) FillTable($pdo, $DATA); ?>
 
               </tbody>
             </table>
           </div>
           <!--/Main table/-->
 
+          <!-- Pagination -->
           <div class="btn-toolbar justify-content-center mt-3" role="toolbar">
-            <div class="btn-group mr-2" role="group">
-              <button type="button" class="btn btn-outline-dark">Previous</button>
-            </div>
-            <div class="btn-group mr-2" role="group">
-            <button type="button" class="btn btn-outline-dark">1</button>
-              <button type="button" class="btn btn-outline-dark">2</button>
-              <button type="button" class="btn btn-outline-dark">3</button>
-              <button type="button" class="btn btn-outline-dark">4</button>
-            </div>
-            <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-dark">Next</button>
-            </div>
+            <form method="POST">
+              <div class="btn-group mr-2" role="group">
+                <button type="submit" class="btn btn-outline-dark">Previous</button>
+              </div>
+
+              <div class="btn-group mr-2" role="group">
+
+                <?php DisplayPagination(); ?>
+
+                <button type="submit" class="btn btn-outline-dark">1</button>
+                <button type="submit" class="btn btn-outline-dark">2</button>
+                <button type="submit" class="btn btn-outline-dark">3</button>
+                <button type="submit" class="btn btn-outline-dark">4</button>
+              </div>
+
+              <div class="btn-group" role="group">
+                <button type="submit" class="btn btn-outline-dark">Next</button>
+              </div>
+            </form>
           </div>
+        <!--/Pagination/-->
 
         </div>
 

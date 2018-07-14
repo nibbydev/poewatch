@@ -1,8 +1,14 @@
 <?php
 function CheckPOSTVariableError() {
-  if ( !isset($_POST["type"]) && !isset($_POST["name"]) ) return 1;
-  if ( !$_POST["type"] || !$_POST["name"] ) return 2;
-  if ( strlen($_POST["name"]) < 3 ) return 3;
+  // 0 - Request was not a POST request
+  // 1 - POST request didn't contain expected fields
+  // 2 - POST name field was too short
+
+  if ( empty($_POST) ) return 0;
+  if ( !isset($_POST["type"]) ) return 1;
+  if ( !isset($_POST["name"]) ) return 1;
+
+  if ( $_POST["name"] && strlen($_POST["name"]) < 3 ) return 2;
 
   return 0;
 }
@@ -11,8 +17,7 @@ function DisplayError($code) {
   switch ($code) {
     case 0:  $msg = "There was not error";            break;
     case 1:  $msg = "Missing search fields";          break;
-    case 2:  $msg = "Invalid search fields";          break;
-    case 3:  $msg = "Minimum length is 3 characters"; break;
+    case 2:  $msg = "Minimum length is 3 characters"; break;
     default: $msg = "Unknown error";                  break;
   }
 
@@ -39,27 +44,21 @@ function SetCheckboxState($mode, $type) {
 }
 
 
-function FillTable($pdo) {
-  if ( isset($_POST["type"]) && isset($_POST["name"]) && $_POST["type"] && $_POST["name"] ) {
-    if ($_POST["type"] === "account") {
-      CharacterSearch($pdo, $_POST["name"], 0);
-    } else {
-      AccountSearch($pdo, $_POST["name"], 0);
-    }
+function FillTable($pdo, $DATA) {
+  $len = strlen($DATA["searchString"]);
+
+  if ($len > 2 && $DATA["searchType"] === "account") {
+    CharacterSearch($pdo, $DATA["searchString"], 0);
+  } else if ($len > 2 && $DATA["searchType"] === "character") {
+    AccountSearch($pdo, $DATA["searchString"], 0);
   } else {
     GetData($pdo, 0);
   }
 }
 
-function DisplayResultCount($pdo) {
-  if ( isset($_POST["type"]) && isset($_POST["name"]) && $_POST["type"] && $_POST["name"] ) {
-    if ($_POST["type"] === "account") {
-      $count = CharacterCount($pdo, $_POST["name"]);
-    } else {
-      $count = AccountCount($pdo, $_POST["name"]);
-    }
-
-    echo "<span class='custom-text-green'>" . $count . "</span> matches";
+function DisplayResultCount($DATA) {
+  if ($DATA["resultCount"] !== null) {
+    echo "<span class='custom-text-green'>{$DATA["resultCount"]}</span> matches for string '{$DATA["searchString"]}' in {$DATA["searchType"]}s";
   }
 }
 
@@ -86,7 +85,17 @@ function FormatTimestamp($timestamp) {
   else return "Moments ago";
 }
 
+function GetResultCount($pdo, $DATA) {
+  if ($DATA["searchType"] === "account") {
+    return CharacterCount($pdo, $_POST["name"]);
+  } else if ($DATA["searchType"] === "character") {
+    return AccountCount($pdo, $_POST["name"]);
+  }
+}
 
+function DisplayPagination() {
+
+}
 
 
 
