@@ -1036,7 +1036,7 @@ public class Database {
                         "FROM league_items AS i " +
                         "JOIN data_itemData AS did ON i.id_d = did.id " +
                         "LEFT JOIN category_child AS cc ON did.id_cc = cc.id " +
-                        "JOIN league_history_daily_rolling AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
+                        "LEFT JOIN league_history_daily_rolling AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
                         "WHERE i.id_l = ? AND did.id_cp = ? " +
                         "GROUP BY i.id_l, i.id_d " +
                         "ORDER BY i.mean DESC ";
