@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - Pricer</title>
+  <title>Poe-Stats - EasyBuyout</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -27,7 +27,9 @@
         <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
         <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
         <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-        <li class="nav-item"><a class="nav-link active" href="progress">Progress</a></li>
+        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
+        <li class="nav-item"><a class="nav-link" href="characters">Characters</a></li>
+        <li class="nav-item"><a class="nav-link" active href="easybuyout">EasyBuyout</a></li>
         <li class="nav-item"><a class="nav-link" href="about">About</a></li>
       </ul>
     </div>
@@ -56,7 +58,7 @@
         <div class="card-body">
           <img src="assets/img/pricer.gif" class="float-right ml-3 rounded img-fluid">
           <h5 class="text-white">Where can I get one?</h5>
-          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/Pricer/releases/latest" role="button">Over at GitHub</a>
+          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/EasyBuyout/releases/latest" role="button">Over at GitHub</a>
           <h5 class="text-white">How does it work?</h5>
           <p class="paragraph-text">When you right-click an item in a premium tab (or any tab), this handy program copies the item data, matches it against its database and instantly pastes a buyout note containing the average price.</p>
           <h5 class="text-white">Who is it for?</h5>
