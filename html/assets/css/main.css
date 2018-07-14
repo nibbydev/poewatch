@@ -34,8 +34,8 @@ hr {
 //----------------------------------------------------------------------------------------------------------*/
 
 input.form-control,select.form-control {
-  background-color: transparent !important;
-  border: 1px solid #333 !important;
+  background-color: rgba(0,0,0,.1) !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
   color: #ddd !important;
 }
 
@@ -127,6 +127,10 @@ a:hover {text-decoration: none !important}
 
 .api-data-table {
   background-color: transparent;
+  color: #aaa;
+}
+
+.api-data-table thead {
   color: #ddd;
 }
 
