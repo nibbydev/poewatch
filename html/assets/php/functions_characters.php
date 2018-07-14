@@ -34,7 +34,7 @@ function DisplayMotD($pdo) {
 
   $accDisplay = "<span class='custom-text-green'>{$row["accCount"]}</span>";
   $charDisplay = "<span class='custom-text-green'>{$row["charCount"]}</span>";
-  $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-13 00:00:00") . "</span>";
+  $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-14 00:00:00") . "</span>";
 
   echo "Explore $accDisplay account names, $charDisplay character names and their history since $timeDisplay.";
 }

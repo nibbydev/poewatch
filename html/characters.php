@@ -122,7 +122,8 @@
             </table>
           </div>
           <!--/Main table/-->
-
+          
+          <?php if (ceil($DATA["resultCount"] / $DATA["resultLimit"]) > 1): ?>
           <!-- Pagination -->
           <div class="btn-toolbar justify-content-center mt-3">
             <form method="POST">
@@ -135,7 +136,8 @@
 
             </form>
           </div>
-        <!--/Pagination/-->
+          <!--/Pagination/-->
+          <?php endif; ?>
 
         </div>
 
