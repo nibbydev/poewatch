@@ -1,23 +1,52 @@
 <?php
-// Set header to json
+function get_param_league() {
+  if ( !isset($_GET["league"]) ) {
+    die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
+  }
+
+  $league = strtolower(trim(preg_replace("/[^A-Za-z0-9-]/", "", $_GET["league"])));
+
+  if (!$league || strlen($league) <  3) {
+    die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
+  }
+
+  return $league;
+}
+
+function get_param_category() {
+  if ( !isset($_GET["category"]) ) {
+    die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+  }
+
+  $category = strtolower(trim(preg_replace("/[^A-Za-z]/", "", $_GET["category"])));
+
+  if (!$category || strlen($category) < 3) {
+    die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+  }
+
+  return $category;
+}
+
+function get_file_path($pdo, $league, $category) {
+  $query = "SELECT path FROM data_outputFiles WHERE league = ? AND category = ?";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$league, $category]);
+
+  return $stmt->fetch();
+}
+
 header("Content-Type: application/json");
 
-if (array_key_exists("league", $_GET)) {
-  $PARAM_league = trim(preg_replace("/[^A-Za-z0-9( )]/", "", $_GET["league"]));
-  if (!$PARAM_league) die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
-} else die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
+include_once ( "details/pdo.php" );
 
-if (array_key_exists("category", $_GET)) {
-  $PARAM_category = strtolower(trim(preg_replace("/[^A-Za-z ]/", "", $_GET["category"])));
-  if (!$PARAM_category) die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
-} else die("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+$league = get_param_league();
+$category = get_param_category();
 
-// Check if file exists
-$filePath = dirname(getcwd(), 2) . "/data/output/$PARAM_league/$PARAM_category.json";
-if ( !file_exists($filePath) ) die("{\"error\": \"Invalid params\"}");
+$payload = get_file_path($pdo, $league, $category);
 
-$data = file_get_contents( $filePath );
-// If there was an error opening the file
-if ($data === false) die("{\"error\": \"An error occurred\"}");
+if (!$payload || !file_exists($payload["path"])) {
+  die ("{\"error\": \"Invalid params\", \"field\": \"category\"}");
+}
 
-echo $data;
+echo file_get_contents($payload["path"]);

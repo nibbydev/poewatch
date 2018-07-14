@@ -1,23 +1,8 @@
-var TEMPLATE = `
-<div class="col-md-6 mb-4">
-  <h4>{{title}}</h4>
-  <div class="mb-1">{{start}}</div>
-  <div class="mb-1">{{end}}</div>
-  <div class="mt-3 mb-0">{{desc}}</div>
-  <div id="counter-{{id}}" class="mb-1"></div>
-  <div class="progress" style="height: 20px;">
-    <div class="progress-bar" role="progressbar" id="bar-{{id}}"></div>
-  </div>
-</div>`;
-
 $(document).ready(function() {
   var main = $("#main");
-  var payload = $("#service-data").data("payload");
-  var elements = JSON.parse( payload.replace(/'/g, '"') );
 
-  $.each(elements, function(index, element) {
-    if (["Standard", "Hardcore"].includes(element["id"])) return;
-    else if (~element["id"].indexOf("SSF")) return;
+  $.each(SERVICE_leagues, function(index, element) {
+    if (["Standard", "Hardcore"].includes(element["name"])) return;
 
     var start = new Date(element["start"]);
     var end = new Date(element["end"]);
@@ -27,8 +12,19 @@ $(document).ready(function() {
     if (start < now) tmp += "end:"
     else tmp += "start:"
 
-    let template = TEMPLATE.trim()
-      .replace("{{title}}",   element["id"])
+    let template = `
+    <div class="col-md-6 mb-4">
+      <h4>{{title}}</h4>
+      <div class="mb-1">{{start}}</div>
+      <div class="mb-1">{{end}}</div>
+      <div class="mt-3 mb-0">{{desc}}</div>
+      <div id="counter-{{id}}" class="mb-1"></div>
+      <div class="progress" style="height: 20px;">
+        <div class="progress-bar" role="progressbar" id="bar-{{id}}"></div>
+      </div>
+    </div>
+    `.trim()
+      .replace("{{title}}",   element["display"] == null ? element["name"] : element["display"])
       .replace("{{start}}",   "Start: " + formatDate(start))
       .replace("{{end}}",     "End: "   + formatDate(end))
       .replace("{{id}}",      index)

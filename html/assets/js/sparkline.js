@@ -45,6 +45,11 @@ var sparkline =
 /******/ 		}
 /******/ 	};
 /******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
 /******/ 	__webpack_require__.n = function(module) {
 /******/ 		var getter = module && module.__esModule ?
@@ -60,12 +65,18 @@ var sparkline =
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
 /******/
+/******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/sparkline.js");
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ "./src/sparkline.js":
+/*!**************************!*\
+  !*** ./src/sparkline.js ***!
+  \**************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -79,8 +90,7 @@ exports.sparkline = sparkline;
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function getY(max, height, diff, value) {
-  var y = parseFloat((height - value * height / max + diff).toFixed(2));
-  return isNaN(y) ? height : y;
+  return parseFloat((height - value * height / max + diff).toFixed(2));
 }
 
 function removeChildren(svg) {
@@ -104,7 +114,7 @@ function buildElement(tag, attrs) {
 }
 
 function sparkline(svg, entries, options) {
-  //removeChildren(svg);
+  removeChildren(svg);
 
   if (entries.length <= 1) {
     return;
@@ -112,11 +122,9 @@ function sparkline(svg, entries, options) {
 
   options = options || {};
 
-  if (typeof entries[0] === "number") {
     entries = entries.map(function (entry) {
       return { value: entry };
     });
-  }
 
   // This function will be called whenever the mouse moves
   // over the SVG. You can use it to render something like a
@@ -175,19 +183,22 @@ function sparkline(svg, entries, options) {
   var lastItemIndex = values.length - 1;
 
   // Calculate the X coord base step.
-  var offset = width / lastItemIndex;
-
+  var offset = parseFloat((width / lastItemIndex).toFixed(2));
+  
   // Hold all datapoints, which is whatever we got as the entry plus
   // x/y coords and the index.
   var datapoints = [];
 
   // Hold the line coordinates.
-  var pathY = getY(max, height, strokeWidth + spotRadius, values[0]);
-  var pathCoords = "M" + spotDiameter + " " + pathY;
+  var pathCoords = "";
 
   values.forEach(function (value, index) {
+    if (value === null) return; //123
+
     var x = index * offset + spotDiameter;
     var y = getY(max, height, strokeWidth + spotRadius, value);
+
+    if (isNaN(y)) y = height; //123
 
     datapoints.push(Object.assign({}, entries[index], {
       index: index,
@@ -195,19 +206,31 @@ function sparkline(svg, entries, options) {
       y: y
     }));
 
-    pathCoords += " L " + x + " " + y;
+    pathCoords += !pathCoords ? "M " : " L "; //123
+    pathCoords += x + " " + y; //123
   });
 
   var path = buildElement("path", {
+    class: "sparkline--line",
     d: pathCoords,
     fill: "none"
   });
 
+  var fillCoords = !pathCoords ? "" : pathCoords + " V " + fullHeight + " L " + spotDiameter + " " + fullHeight + " Z"; //123
+  
+  var fill = buildElement("path", {
+    class: "sparkline--fill",
+    d: fillCoords,
+    stroke: "none"
+  });
+
+  svg.appendChild(fill);
   svg.appendChild(path);
 }
 
 exports.default = sparkline;
 
 /***/ })
-/******/ ]);
+
+/******/ });
 //# sourceMappingURL=sparkline.js.map

@@ -1,7 +1,14 @@
 <?php
-  // Set header to json
-  header("Content-Type: application/json");
+header("Content-Type: application/json");
+include_once ( "details/pdo.php" );
 
-  // Get and echo file contents
-  echo file_get_contents(dirname(getcwd(), 2) . "/data/leagues.json");
-?>
+$query = "SELECT * FROM `sys-leagues`";
+$stmt = $pdo->query($query);
+
+$rows = array();
+
+while ($row = $stmt->fetch()) {
+  $rows[] = $row;
+}
+
+echo json_encode($rows);
