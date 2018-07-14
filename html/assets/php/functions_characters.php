@@ -32,7 +32,11 @@ function DisplayMotD($pdo) {
   $stmt = $pdo->query($query);
   $row = $stmt->fetch();
 
-  echo "Explore <span class='custom-text-green'>{$row["accCount"]}</span> account names, <span class='custom-text-green'>{$row["charCount"]}</span> character names and their history";
+  $accDisplay = "<span class='custom-text-green'>{$row["accCount"]}</span>";
+  $charDisplay = "<span class='custom-text-green'>{$row["charCount"]}</span>";
+  $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-13 00:00:00") . "</span>";
+
+  echo "Explore $accDisplay account names, $charDisplay character names and their history since $timeDisplay.";
 }
 
 function SetCheckboxState($mode, $type) {
@@ -48,17 +52,17 @@ function FillTable($pdo, $DATA) {
   $len = strlen($DATA["searchString"]);
 
   if ($len > 2 && $DATA["searchType"] === "account") {
-    CharacterSearch($pdo, $DATA["searchString"], 0);
+    CharacterSearch($pdo, $DATA);
   } else if ($len > 2 && $DATA["searchType"] === "character") {
-    AccountSearch($pdo, $DATA["searchString"], 0);
+    AccountSearch($pdo, $DATA);
   } else {
-    GetData($pdo, 0);
+    GetData($pdo, $DATA);
   }
 }
 
 function DisplayResultCount($DATA) {
   if ($DATA["resultCount"] !== null) {
-    echo "<span class='custom-text-green'>{$DATA["resultCount"]}</span> matches for string '{$DATA["searchString"]}' in {$DATA["searchType"]}s";
+    echo "<span class='custom-text-green'>{$DATA["resultCount"]}</span> matches for {$DATA["searchType"]} '{$DATA["searchString"]}'";
   }
 }
 
@@ -93,14 +97,19 @@ function GetResultCount($pdo, $DATA) {
   }
 }
 
-function DisplayPagination() {
+function DisplayPagination($DATA) {
+  $pageCount = ceil($DATA["resultCount"] / $DATA["resultLimit"]);
+  $currentPage = ceil(($DATA["resultOffset"] + 1) / $DATA["resultLimit"]);
+  $nextPage = $pageCount - $currentPage;
+  $nextOffset = $DATA["resultOffset"] + $DATA["resultLimit"];
+  $prevOffset = $DATA["resultOffset"] - $DATA["resultLimit"];
 
+  if ($currentPage > 1) echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$prevOffset'>Previous</button>";
+  if ($pageCount > 1)   echo "<div class='input-group-text btn-outline-dark mx-3'>$currentPage / $pageCount</div>";
+  if ($nextPage > 0)    echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$nextOffset'>Next</button>";
 }
 
-
-
-
-function GetData($pdo, $offset) {
+function GetData($pdo, $DATA) {
   $query = "SELECT
     a.name AS account,
 	  c.name AS `character`, 
@@ -111,11 +120,11 @@ function GetData($pdo, $offset) {
   JOIN     account_characters AS c ON c.id   = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
   ORDER BY r.seen DESC
-  LIMIT    15
+  LIMIT    ?
   OFFSET   ?";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$offset]);
+  $stmt->execute([$DATA["resultLimit"], $DATA["resultOffset"]]);
 
   while ($row = $stmt->fetch()) {
     $timestamp = FormatTimestamp($row["seen"]);
@@ -144,7 +153,7 @@ function CharacterCount($pdo, $name) {
   return $stmt->fetch()["count"];
 }
 // Search based on account name
-function CharacterSearch($pdo, $name, $offset) {
+function CharacterSearch($pdo, $DATA) {
   $query = "SELECT   
 	  a.name AS account, 
     c.name AS `character`,
@@ -156,15 +165,15 @@ function CharacterSearch($pdo, $name, $offset) {
   JOIN     data_leagues       AS l ON r.id_l = l.id
   WHERE    a.name LIKE ?
   ORDER BY a.name, r.seen
-  LIMIT    15
+  LIMIT    ?
   OFFSET   ?";
 
   // Execute get query and get the data
   $stmt = $pdo->prepare($query);
-  $stmt->execute(["%$name%", $offset]);
+  $stmt->execute(["%{$DATA["searchString"]}%", $DATA["resultLimit"], $DATA["resultOffset"]]);
 
   while ($row = $stmt->fetch()) {
-    $highlighted = HighLightMatch($name, $row["account"]);
+    $highlighted = HighLightMatch($DATA["searchString"], $row["account"]);
     $timestamp = FormatTimestamp($row["seen"]);
 
     echo "<tr>
@@ -191,7 +200,7 @@ function AccountCount($pdo, $name) {
   return $stmt->fetch()["count"];
 }
 // Search based on character name
-function AccountSearch($pdo, $name, $offset) {
+function AccountSearch($pdo, $DATA) {
   $query = "SELECT   
     a.name AS account,
 	  c.name AS `character`,
@@ -203,14 +212,14 @@ function AccountSearch($pdo, $name, $offset) {
   JOIN     data_leagues       AS l ON r.id_l = l.id
   WHERE    c.name LIKE ?
   ORDER BY c.name, r.seen
-  LIMIT    15
+  LIMIT    ?
   OFFSET   ?";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute(["%$name%", $offset]);
+  $stmt->execute(["%{$DATA["searchString"]}%", $DATA["resultLimit"], $DATA["resultOffset"]]);
 
   while ($row = $stmt->fetch()) {
-    $highlighted = HighLightMatch($name, $row["character"]);
+    $highlighted = HighLightMatch($DATA["searchString"], $row["character"]);
     $timestamp = FormatTimestamp($row["seen"]);
 
     echo "<tr>

@@ -3,7 +3,9 @@
   include_once ( "assets/php/functions_characters.php" ); 
 
   $DATA = array(
+    "resultLimit" => 25,
     "resultCount" => null,
+    "resultOffset" => isset($_POST["offset"]) ? intval($_POST["offset"]) : 0,
     "searchString" => isset($_POST["name"]) ? $_POST["name"] : null,
     "searchType" => isset($_POST["type"]) ? $_POST["type"] : null
   );
@@ -17,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - Pricer</title>
+  <title>Poe-Stats - Characters</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -69,6 +71,8 @@
           <form method="POST">
             <!-- Search options -->
             <div class="row">
+              <input type="hidden" name="offset" value="0">
+
               <div class="col-6 col-md-3 mb-2">
                 <input type="text" class="form-control" name="name" placeholder="Name" value="<?php if (isset($_POST["name"])) echo $_POST["name"]; ?>">
               </div>
@@ -85,7 +89,7 @@
               </div>
 
               <div class="col-6">
-                <button type="submit" class="btn btn-block btn-outline-dark">Search</button>
+                <button type="submit" class="btn btn-outline-dark">Search</button>
               </div>
 
             </div>
@@ -120,25 +124,15 @@
           <!--/Main table/-->
 
           <!-- Pagination -->
-          <div class="btn-toolbar justify-content-center mt-3" role="toolbar">
+          <div class="btn-toolbar justify-content-center mt-3">
             <form method="POST">
-              <div class="btn-group mr-2" role="group">
-                <button type="submit" class="btn btn-outline-dark">Previous</button>
+              <input type="hidden" name="name" value="<?php echo $DATA["searchString"]; ?>">
+              <input type="hidden" name="type" value="<?php echo $DATA["searchType"]; ?>">
+
+              <div class="btn-group mr-2">
+                <?php DisplayPagination($DATA); ?>
               </div>
 
-              <div class="btn-group mr-2" role="group">
-
-                <?php DisplayPagination(); ?>
-
-                <button type="submit" class="btn btn-outline-dark">1</button>
-                <button type="submit" class="btn btn-outline-dark">2</button>
-                <button type="submit" class="btn btn-outline-dark">3</button>
-                <button type="submit" class="btn btn-outline-dark">4</button>
-              </div>
-
-              <div class="btn-group" role="group">
-                <button type="submit" class="btn btn-outline-dark">Next</button>
-              </div>
             </form>
           </div>
         <!--/Pagination/-->
