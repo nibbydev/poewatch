@@ -1,6 +1,6 @@
 <?php
-$host = "localhost:3306";
-$db   = "ps4";
+$host = "";
+$db   = "ps5";
 $user = "";
 $pass = "";
 $charset = "utf8";

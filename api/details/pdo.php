@@ -1,8 +1,8 @@
 <?php
-$host = "localhost:3306";
-$db   = "ps4";
-$user = "root";
-$pass = "sqHw6h&<W=#&Tf#(";
+$host = "";
+$db   = "ps5";
+$user = "";
+$pass = "";
 $charset = "utf8";
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

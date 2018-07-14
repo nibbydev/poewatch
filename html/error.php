@@ -1,2 +1,2 @@
 <?php
-header('location:/');
+header('Location: /html');
