@@ -7,10 +7,14 @@
     "resultCount" => null,
     "resultOffset" => isset($_POST["offset"]) ? intval($_POST["offset"]) : 0,
     "searchString" => isset($_POST["name"]) ? $_POST["name"] : null,
-    "searchType" => isset($_POST["type"]) ? $_POST["type"] : null
+    "searchType" => isset($_POST["type"]) ? $_POST["type"] : null,
+    "searchExact" => isset($_POST["exact"]) ? !!$_POST["exact"] : false
   );
 
-  $ERRORCODE = CheckPOSTVariableError();
+  // Since PDO doesn't escape "%LIKE%" syntax
+  $DATA["searchString"] = preg_replace('/[^\p{L}\p{N}\s]/u', '', $DATA["searchString"]);
+  
+  $ERRORCODE = CheckPOSTVariableError($DATA);
 
   if (!$ERRORCODE && $DATA["searchString"]) {
     $DATA["resultCount"] = GetResultCount($pdo, $DATA);
@@ -77,18 +81,18 @@
                 <input type="text" class="form-control" name="name" placeholder="Name" value="<?php if (isset($_POST["name"])) echo $_POST["name"]; ?>">
               </div>
 
-              <div class="col-6 col-md-3 mb-2">
+              <div class="col-6 col-md-4 mb-2">
                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                  <label class="btn btn-outline-dark <?php SetCheckboxState("active", "account"); ?>">
-                    <input type="radio" name="type" value="account" <?php SetCheckboxState("checked", "account"); ?>><a>Account</a>
+                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "account"); ?>">
+                    <input type="radio" name="type" value="account" <?php SetCheckboxState($DATA, "checked", "account"); ?>><a>Account</a>
                   </label>
-                  <label class="btn btn-outline-dark <?php SetCheckboxState("active", "character"); ?>">
-                    <input type="radio" name="type" value="character" <?php SetCheckboxState("checked", "character"); ?>><a>Character</a>
+                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "character"); ?>">
+                    <input type="radio" name="type" value="character" <?php SetCheckboxState($DATA, "checked", "character"); ?>><a>Character</a>
                   </label>
                 </div>
               </div>
-
-              <div class="col-6">
+              
+              <div class="col">
                 <button type="submit" class="btn btn-outline-dark">Search</button>
               </div>
 

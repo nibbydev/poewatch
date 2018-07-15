@@ -1,14 +1,13 @@
 <?php
-function CheckPOSTVariableError() {
+function CheckPOSTVariableError($DATA) {
   // 0 - Request was not a POST request
   // 1 - POST request didn't contain expected fields
   // 2 - POST name field was too short
 
   if ( empty($_POST) ) return 0;
-  if ( !isset($_POST["type"]) ) return 1;
-  if ( !isset($_POST["name"]) ) return 1;
+  if ( $DATA["searchType"] === null || $DATA["searchString"] === null ) return 1;
 
-  if ( $_POST["name"] && strlen($_POST["name"]) < 3 ) return 2;
+  if ( $DATA["searchString"] && strlen($DATA["searchString"]) < 3 ) return 2;
 
   return 0;
 }
@@ -39,9 +38,9 @@ function DisplayMotD($pdo) {
   echo "Explore $accDisplay account names, $charDisplay character names and their history since $timeDisplay.";
 }
 
-function SetCheckboxState($mode, $type) {
-  if (isset($_POST["type"])) {
-    echo ($_POST["type"] === $type) ? $mode : "";
+function SetCheckboxState($DATA, $mode, $type) {
+  if ($DATA["searchType"] !== null) {
+    echo ($DATA["searchType"] === $type) ? $mode : "";
   } else if ($type === "account") {
     echo $mode;
   }
@@ -61,9 +60,12 @@ function FillTable($pdo, $DATA) {
 }
 
 function DisplayResultCount($DATA) {
-  if ($DATA["resultCount"] !== null) {
-    echo "<span class='custom-text-green'>{$DATA["resultCount"]}</span> matches for {$DATA["searchType"]} '{$DATA["searchString"]}'";
-  }
+  if ($DATA["resultCount"] === null) return;
+
+  $countDisplay = "<span class='custom-text-green'>{$DATA["resultCount"]}</span>";
+  $nameDisplay = "<span class='custom-text-orange'>{$DATA["searchString"]}</span>";
+
+  echo "$countDisplay matches for {$DATA["searchType"]} names containing '$nameDisplay'";
 }
 
 
@@ -91,9 +93,9 @@ function FormatTimestamp($timestamp) {
 
 function GetResultCount($pdo, $DATA) {
   if ($DATA["searchType"] === "account") {
-    return CharacterCount($pdo, $_POST["name"]);
+    return CharacterCount($pdo, $DATA["searchString"]);
   } else if ($DATA["searchType"] === "character") {
-    return AccountCount($pdo, $_POST["name"]);
+    return AccountCount($pdo, $DATA["searchString"]);
   }
 }
 
@@ -164,7 +166,7 @@ function CharacterSearch($pdo, $DATA) {
   JOIN     account_characters AS c ON c.id = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
   WHERE    a.name LIKE ?
-  ORDER BY a.name, r.seen
+  ORDER BY r.seen DESC
   LIMIT    ?
   OFFSET   ?";
 
@@ -211,7 +213,7 @@ function AccountSearch($pdo, $DATA) {
   JOIN     account_characters AS c ON c.id   = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
   WHERE    c.name LIKE ?
-  ORDER BY c.name, r.seen
+  ORDER BY r.seen DESC
   LIMIT    ?
   OFFSET   ?";
 
