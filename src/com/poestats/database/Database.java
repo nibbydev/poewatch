@@ -73,6 +73,7 @@ public class Database {
                         "    FROM account_accounts AS a " +
                         "    INNER JOIN account_characters AS c " +
                         "    WHERE a.name = ? AND c.name = ? " +
+                        "    LIMIT 1 " +
                         "ON DUPLICATE KEY UPDATE seen = NOW() ";
 
         try {
@@ -684,7 +685,6 @@ public class Database {
                         "JOIN ( " +
                         "    SELECT id_l, id_d, MEDIAN(price) AS median " +
                         "    FROM league_entries " +
-                        "    WHERE approved = 1 " +
                         "    GROUP BY id_l, id_d " +
                         ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
                         "SET i.median = e.median " +
