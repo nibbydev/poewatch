@@ -147,11 +147,13 @@ function CharacterCount($pdo, $name) {
   JOIN     account_accounts   AS a ON a.id = r.id_a
   JOIN     account_characters AS c ON c.id = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    a.name LIKE ?";
+  WHERE    a.name LIKE ? ESCAPE '='";
+
+  $preppedString = "%" . likeEscape($name) . "%";
 
   // Execute count query and see how many results there are
   $stmt = $pdo->prepare($query);
-  $stmt->execute(["%$name%"]);
+  $stmt->execute([$preppedString]);
   return $stmt->fetch()["count"];
 }
 // Search based on account name
@@ -160,27 +162,31 @@ function CharacterSearch($pdo, $DATA) {
 	  a.name AS account, 
     c.name AS `character`,
     l.display AS league,
-    r.seen
+    r.seen,
+    a.hidden
   FROM     account_relations  AS r
   JOIN     account_accounts   AS a ON a.id = r.id_a
   JOIN     account_characters AS c ON c.id = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    a.name LIKE ?
+  WHERE    a.name LIKE ? ESCAPE '='
   ORDER BY r.seen DESC
   LIMIT    ?
   OFFSET   ?";
 
+  $preppedString = "%" . likeEscape($DATA["searchString"]) . "%";
+
   // Execute get query and get the data
   $stmt = $pdo->prepare($query);
-  $stmt->execute(["%{$DATA["searchString"]}%", $DATA["resultLimit"], $DATA["resultOffset"]]);
+  $stmt->execute([$preppedString, $DATA["resultLimit"], $DATA["resultOffset"]]);
 
   while ($row = $stmt->fetch()) {
     $highlighted = HighLightMatch($DATA["searchString"], $row["account"]);
     $timestamp = FormatTimestamp($row["seen"]);
+    $charDisplay = $row["hidden"] ? "<span class='custom-text-dark'>Requested privacy</span>": $row["character"];
 
     echo "<tr>
     <td>$highlighted</td>
-    <td>{$row["character"]}</td>
+    <td>$charDisplay</td>
     <td>{$row["league"]}</td>
     <td>$timestamp</td>
     </tr>";
@@ -194,11 +200,13 @@ function AccountCount($pdo, $name) {
   JOIN     account_accounts   AS a ON a.id = r.id_a
   JOIN     account_characters AS c ON c.id = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    c.name LIKE ?";
+  WHERE    c.name LIKE ? ESCAPE '=' AND a.hidden = 0";
+
+  $preppedString = "%" . likeEscape($name) . "%";
 
   // Execute count query and see how many results there are
   $stmt = $pdo->prepare($query);
-  $stmt->execute(["%$name%"]);
+  $stmt->execute([$preppedString]);
   return $stmt->fetch()["count"];
 }
 // Search based on character name
@@ -212,13 +220,15 @@ function AccountSearch($pdo, $DATA) {
   JOIN     account_accounts   AS a ON a.id   = r.id_a
   JOIN     account_characters AS c ON c.id   = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    c.name LIKE ?
+  WHERE    c.name LIKE ? ESCAPE '=' AND a.hidden = 0
   ORDER BY r.seen DESC
   LIMIT    ?
   OFFSET   ?";
 
+  $preppedString = "%" . likeEscape($DATA["searchString"]) . "%";
+
   $stmt = $pdo->prepare($query);
-  $stmt->execute(["%{$DATA["searchString"]}%", $DATA["resultLimit"], $DATA["resultOffset"]]);
+  $stmt->execute([$preppedString, $DATA["resultLimit"], $DATA["resultOffset"]]);
 
   while ($row = $stmt->fetch()) {
     $highlighted = HighLightMatch($DATA["searchString"], $row["character"]);
@@ -231,4 +241,8 @@ function AccountSearch($pdo, $DATA) {
       <td>$timestamp</td>
     </tr>";
   }
+}
+
+function likeEscape($s) {
+  return str_replace(array("=", "_", "%"), array("==", "=_", "=%"), $s);
 }

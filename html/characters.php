@@ -11,9 +11,6 @@
     "searchExact" => isset($_POST["exact"]) ? !!$_POST["exact"] : false
   );
 
-  // Since PDO doesn't escape "%LIKE%" syntax
-  $DATA["searchString"] = preg_replace('/[^\p{L}\p{N}\s]/u', '', $DATA["searchString"]);
-  
   $ERRORCODE = CheckPOSTVariableError($DATA);
 
   if (!$ERRORCODE && $DATA["searchString"]) {
@@ -72,16 +69,10 @@
         </div>
 
         <div class="card-body">
+          <!-- Search options -->
           <form method="POST">
-            <!-- Search options -->
-            <div class="row">
-              <input type="hidden" name="offset" value="0">
-
-              <div class="col-6 col-md-3 mb-2">
-                <input type="text" class="form-control" name="name" placeholder="Name" value="<?php if (isset($_POST["name"])) echo $_POST["name"]; ?>">
-              </div>
-
-              <div class="col-6 col-md-4 mb-2">
+            <div class="row mb-3">
+              <div class="col">
                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
                   <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "account"); ?>">
                     <input type="radio" name="type" value="account" <?php SetCheckboxState($DATA, "checked", "account"); ?>><a>Account</a>
@@ -91,14 +82,19 @@
                   </label>
                 </div>
               </div>
-              
-              <div class="col">
-                <button type="submit" class="btn btn-outline-dark">Search</button>
+            </div>
+
+            <div class="row">
+              <div class="col-6 col-md-3 mb-2">
+                <input type="text" class="form-control" name="name" placeholder="Name" value="<?php if (isset($_POST["name"])) echo $_POST["name"]; ?>">
               </div>
 
+              <div class="col-6 col-md-4 mb-2">
+                <button type="submit" class="btn btn-outline-dark">Search</button>
+              </div>
             </div>
-            <!--/Search options/-->
           </form>
+          <!--/Search options/-->
 
           <?php 
             if ($ERRORCODE) DisplayError($ERRORCODE); 
