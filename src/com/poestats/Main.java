@@ -78,6 +78,7 @@ public class Main {
             commandLoop();
         } finally {
             if (WORKER_MANAGER != null) WORKER_MANAGER.stopController();
+            if (WORKER_MANAGER != null) ENTRY_MANAGER.shutdown();
             if (DATABASE != null) DATABASE.disconnect();
         }
     }

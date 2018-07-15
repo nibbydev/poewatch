@@ -58,6 +58,15 @@ public class EntryManager {
         Main.DATABASE.getCurrency(currencyLeagueMap);
     }
 
+    public void shutdown() {
+        Main.ADMIN.log_("Stopping EntryManager", 1);
+
+        upload();
+        uploadAccounts();
+
+        Main.ADMIN.log_("EntryManager stopped", 1);
+    }
+
     /**
      * Writes all collected data to database
      */
