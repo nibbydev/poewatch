@@ -106,9 +106,9 @@ function DisplayPagination($DATA) {
   $nextOffset = $DATA["resultOffset"] + $DATA["resultLimit"];
   $prevOffset = $DATA["resultOffset"] - $DATA["resultLimit"];
 
-  if ($currentPage > 1) echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$prevOffset'>Previous</button>";
-  if ($pageCount > 1)   echo "<div class='input-group-text btn-outline-dark mx-3'>$currentPage / $pageCount</div>";
-  if ($nextPage > 0)    echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$nextOffset'>Next</button>";
+  if ($currentPage > 1) echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$prevOffset'>«</button>";
+  if ($pageCount > 1)   echo "<div class='mx-3 d-flex'><span class='justify-content-center align-self-center'>$currentPage / $pageCount</span></div>";
+  if ($nextPage > 0)    echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$nextOffset'>»</button>";
 }
 
 function GetData($pdo, $DATA) {
