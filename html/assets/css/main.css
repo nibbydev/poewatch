@@ -130,6 +130,10 @@ a:hover {text-decoration: none !important}
   color: #aaa;
 }
 
+.api-data-table a {
+  color: #aaa;
+}
+
 .api-data-table thead {
   color: #ddd;
 }

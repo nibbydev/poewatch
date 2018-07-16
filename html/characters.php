@@ -5,13 +5,13 @@
   $DATA = array(
     "limit"  => 25,
     "count"  => null,
-    "offset" => isset($_POST["offset"]) ? intval($_POST["offset"]) : 0,
-    "search" => isset($_POST["name"])   ? $_POST["name"]           : null,
-    "mode"   => isset($_POST["mode"])   ? $_POST["mode"]           : null,
-    "exact"  => isset($_POST["exact"])  ? !!$_POST["exact"]        : false
+    "page"   => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"])   : 1,
+    "search" => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]         : null,
+    "mode"   => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]           : "account",
+    "exact"  => isset($_GET["exact"])                     ? !!$_GET["exact"]        : false
   );
 
-  $ERRORCODE = CheckPOSTVariableError($DATA);
+  $ERRORCODE = CheckGETVariableError($DATA);
 
   if (!$ERRORCODE && $DATA["search"]) {
     $DATA["count"] = GetResultCount($pdo, $DATA);
@@ -68,9 +68,11 @@
           </div>
         </div>
 
+        <!-- Main card body -->
         <div class="card-body">
           <!-- Search options -->
-          <form method="POST">
+          <form method="GET">
+            <!-- Mode -->
             <div class="row mb-3">
               <div class="col">
                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
@@ -83,23 +85,27 @@
                 </div>
               </div>
             </div>
+            <!--/Mode/-->
 
+            <!-- Search -->
             <div class="row">
               <div class="col-6 col-md-3 mb-2">
-                <input type="text" class="form-control" name="name" placeholder="Name" value="<?php if (isset($_POST["name"])) echo $_POST["name"]; ?>">
+                <input type="text" class="form-control" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
               </div>
 
               <div class="col-6 col-md-4 mb-2">
                 <button type="submit" class="btn btn-outline-dark">Search</button>
               </div>
             </div>
+            <!--/Search/-->
+
+            <?php 
+              if ($ERRORCODE) DisplayError($ERRORCODE); 
+              else DisplayResultCount($DATA); 
+            ?>
+
           </form>
           <!--/Search options/-->
-
-          <?php 
-            if ($ERRORCODE) DisplayError($ERRORCODE); 
-            else DisplayResultCount($DATA); 
-          ?>
 
           <hr>
 
@@ -122,24 +128,21 @@
             </table>
           </div>
           <!--/Main table/-->
-          
+
           <?php if (ceil($DATA["count"] / $DATA["limit"]) > 1): ?>
           <!-- Pagination -->
           <div class="btn-toolbar justify-content-center mt-3">
-            <form method="POST">
-              <input type="hidden" name="name" value="<?php echo $DATA["search"]; ?>">
-              <input type="hidden" name="mode" value="<?php echo $DATA["mode"]; ?>">
-
-              <div class="btn-group mr-2">
-                <?php DisplayPagination($DATA); ?>
-              </div>
-
-            </form>
+            <div class="btn-group mr-2">
+              <?php DisplayPagination($DATA); ?>
+            </div>
           </div>
           <!--/Pagination/-->
           <?php endif; ?>
 
+
+
         </div>
+        <!--/Main card body/-->
 
         <div class="card-footer slim-card-edge"></div>
       </div>

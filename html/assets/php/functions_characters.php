@@ -1,13 +1,16 @@
 <?php
-function CheckPOSTVariableError($DATA) {
-  // 0 - Request was not a POST request
-  // 1 - POST request didn't contain expected fields
-  // 2 - POST name field was too short
+function CheckGETVariableError($DATA) {
+  // 0 - Request was not a GET request
+  // 1 - Invalid mode
+  // 2 - Search string too short
+  // 3 - Invalid page
 
-  if ( empty($_POST) ) return 0;
-  if ( $DATA["mode"] === null || $DATA["search"] === null ) return 1;
+  if ( empty($_GET) ) return 0;
+  if ( !$DATA["mode"] || $DATA["mode"] !== "account" && $DATA["mode"] !== "character") return 1;
 
-  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) return 2;
+  if ( !$DATA["search"] || strlen($DATA["search"]) < 3 ) return 2;
+
+  if ( !$DATA["page"] || $DATA["page"] < 1 || $DATA["page"] > 999 ) return 3;
 
   return 0;
 }
@@ -15,8 +18,9 @@ function CheckPOSTVariableError($DATA) {
 function DisplayError($code) {
   switch ($code) {
     case 0:  $msg = "There was not error";            break;
-    case 1:  $msg = "Missing search fields";          break;
+    case 1:  $msg = "Invalid mode";                   break;
     case 2:  $msg = "Minimum length is 3 characters"; break;
+    case 3:  $msg = "Invalid page";                   break;
     default: $msg = "Unknown error";                  break;
   }
 
@@ -69,6 +73,15 @@ function DisplayResultCount($DATA) {
 }
 
 
+function FormSearchHyperlink($mode, $search, $display) {
+  return "<a href='characters?mode=$mode&search=$search'>$display</a>";
+}
+
+function FormSearchURL($mode, $search, $page) {
+  return "characters?mode=$mode&search=$search&page=$page";
+}
+
+
 function HighLightMatch($needle, $haystack) {
   $pos = stripos($haystack, $needle);
   
@@ -101,14 +114,21 @@ function GetResultCount($pdo, $DATA) {
 
 function DisplayPagination($DATA) {
   $pageCount = ceil($DATA["count"] / $DATA["limit"]);
-  $currentPage = ceil(($DATA["offset"] + 1) / $DATA["limit"]);
-  $nextPage = $pageCount - $currentPage;
-  $nextOffset = $DATA["offset"] + $DATA["limit"];
-  $prevOffset = $DATA["offset"] - $DATA["limit"];
 
-  if ($currentPage > 1) echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$prevOffset'>«</button>";
-  if ($pageCount > 1)   echo "<div class='mx-3 d-flex'><span class='justify-content-center align-self-center'>$currentPage / $pageCount</span></div>";
-  if ($nextPage > 0)    echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$nextOffset'>»</button>";
+  if ($DATA["page"] > 1) {
+    $url = FormSearchURL($DATA["mode"], $DATA["search"], $DATA["page"] - 1);
+    echo "<a class='btn btn-outline-dark' href='$url'>«</a>";
+  }
+
+  if ($pageCount > 1) {
+    $counter = $DATA["page"] . " / " . $pageCount;
+    echo "<div class='mx-3 d-flex'><span class='justify-content-center align-self-center'>$counter</span></div>";
+  }
+
+  if ($DATA["page"] < $pageCount) {
+    $url = FormSearchURL($DATA["mode"], $DATA["search"], $DATA["page"] + 1);
+    echo "<a class='btn btn-outline-dark' href='$url'>»</a>";
+  }
 }
 
 function GetData($pdo, $DATA) {
@@ -125,8 +145,10 @@ function GetData($pdo, $DATA) {
   LIMIT    ?
   OFFSET   ?";
 
+  $offset = ($DATA["page"] - 1) * $DATA["limit"];
+
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$DATA["limit"], $DATA["offset"]]);
+  $stmt->execute([$DATA["limit"], $offset]);
 
   while ($row = $stmt->fetch()) {
     $timestamp = FormatTimestamp($row["seen"]);
@@ -174,21 +196,26 @@ function CharacterSearch($pdo, $DATA) {
   OFFSET   ?";
 
   $preppedString = "%" . likeEscape($DATA["search"]) . "%";
+  $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   // Execute get query and get the data
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString, $DATA["limit"], $DATA["offset"]]);
+  $stmt->execute([$preppedString, $DATA["limit"], $offset]);
 
   while ($row = $stmt->fetch()) {
-    $highlighted = HighLightMatch($DATA["search"], $row["account"]);
-    $timestamp = FormatTimestamp($row["seen"]);
-    $charDisplay = $row["hidden"] ? "<span class='custom-text-dark'>Requested privacy</span>": $row["character"];
+    $displayStamp = FormatTimestamp($row["seen"]);
+
+    if ($row["hidden"]) $displayChar = "<span class='custom-text-dark'>Requested privacy</span>";
+    else $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
+
+    $displayAcc = HighLightMatch($DATA["search"], $row["account"]);
+    $displayAcc = FormSearchHyperlink("account", $row["account"], $displayAcc);
 
     echo "<tr>
-    <td>$highlighted</td>
-    <td>$charDisplay</td>
+    <td>$displayAcc</td>
+    <td>$displayChar</td>
     <td>{$row["league"]}</td>
-    <td>$timestamp</td>
+    <td>$displayStamp</td>
     </tr>";
   }
 }
@@ -226,19 +253,24 @@ function AccountSearch($pdo, $DATA) {
   OFFSET   ?";
 
   $preppedString = "%" . likeEscape($DATA["search"]) . "%";
+  $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString, $DATA["limit"], $DATA["offset"]]);
+  $stmt->execute([$preppedString, $DATA["limit"], $offset]);
 
   while ($row = $stmt->fetch()) {
-    $highlighted = HighLightMatch($DATA["search"], $row["character"]);
-    $timestamp = FormatTimestamp($row["seen"]);
+    $displayStamp = FormatTimestamp($row["seen"]);
+
+    $displayChar = HighLightMatch($DATA["search"], $row["character"]);
+    $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
+
+    $displayAcc = FormSearchHyperlink("account", $row["account"], $row["account"]);
 
     echo "<tr>
-      <td>{$row["account"]}</td>
-      <td>$highlighted</td>
+      <td>$displayAcc</td>
+      <td>$displayChar</td>
       <td>{$row["league"]}</td>
-      <td>$timestamp</td>
+      <td>$displayStamp</td>
     </tr>";
   }
 }
