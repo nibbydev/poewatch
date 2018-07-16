@@ -8,7 +8,7 @@
     "page"   => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"])   : 1,
     "search" => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]         : null,
     "mode"   => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]           : "account",
-    "exact"  => isset($_GET["exact"])                     ? !!$_GET["exact"]        : false
+    "exact"  => isset($_GET["exact"])  && $_GET["exact"]  ? !!$_GET["exact"]        : false
   );
 
   $ERRORCODE = CheckGETVariableError($DATA);
@@ -16,6 +16,8 @@
   if (!$ERRORCODE && $DATA["search"]) {
     $DATA["count"] = GetResultCount($pdo, $DATA);
   }
+
+  $displayPagination = ceil($DATA["count"] / $DATA["limit"]) > 1;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -109,6 +111,16 @@
 
           <hr>
 
+          <?php if ($displayPagination): ?>
+          <!-- Top pagination -->
+          <div class="btn-toolbar justify-content-center my-3">
+            <div class="btn-group mr-2">
+              <?php DisplayPagination($DATA); ?>
+            </div>
+          </div>
+          <!--/Top pagination/-->
+          <?php endif; ?>
+
           <!-- Main table -->
           <div class="card api-data-table">
             <table class="table table-striped table-hover mb-0">
@@ -129,17 +141,15 @@
           </div>
           <!--/Main table/-->
 
-          <?php if (ceil($DATA["count"] / $DATA["limit"]) > 1): ?>
-          <!-- Pagination -->
+          <?php if ($displayPagination): ?>
+          <!-- Bottom pagination -->
           <div class="btn-toolbar justify-content-center mt-3">
             <div class="btn-group mr-2">
               <?php DisplayPagination($DATA); ?>
             </div>
           </div>
-          <!--/Pagination/-->
+          <!--/Bottom pagination/-->
           <?php endif; ?>
-
-
 
         </div>
         <!--/Main card body/-->

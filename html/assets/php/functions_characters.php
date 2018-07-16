@@ -68,13 +68,14 @@ function DisplayResultCount($DATA) {
 
   $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
   $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
+  $limitDisplay = "<span class='custom-text-green'>{$DATA["limit"]}</span>";
 
-  echo "$countDisplay matches for {$DATA["mode"]} names containing '$nameDisplay'";
+  echo "$countDisplay matches for {$DATA["mode"]} names containing '$nameDisplay'. Displaying $limitDisplay per page.";
 }
 
 
 function FormSearchHyperlink($mode, $search, $display) {
-  return "<a href='characters?mode=$mode&search=$search'>$display</a>";
+  return "<a href='characters?mode=$mode&search=$search&exact=1'>$display</a>";
 }
 
 function FormSearchURL($mode, $search, $page) {
@@ -141,7 +142,7 @@ function GetData($pdo, $DATA) {
   JOIN     account_accounts   AS a ON a.id   = r.id_a
   JOIN     account_characters AS c ON c.id   = r.id_c
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  ORDER BY r.seen DESC
+  ORDER BY r.found DESC
   LIMIT    ?
   OFFSET   ?";
 
@@ -195,7 +196,7 @@ function CharacterSearch($pdo, $DATA) {
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = "%" . likeEscape($DATA["search"]) . "%";
+  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   // Execute get query and get the data
@@ -252,7 +253,7 @@ function AccountSearch($pdo, $DATA) {
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = "%" . likeEscape($DATA["search"]) . "%";
+  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   $stmt = $pdo->prepare($query);
