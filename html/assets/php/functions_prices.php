@@ -31,7 +31,8 @@ function GetCategories($pdo, $category) {
 function GetLeagues($pdo) {
   $query = "SELECT name, display 
   FROM data_leagues 
-  WHERE active = 1";
+  WHERE active = 1
+  ORDER BY id DESC";
 
   $stmt = $pdo->query($query);
   $payload = array();

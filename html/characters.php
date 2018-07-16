@@ -3,18 +3,18 @@
   include_once ( "assets/php/functions_characters.php" ); 
 
   $DATA = array(
-    "resultLimit" => 25,
-    "resultCount" => null,
-    "resultOffset" => isset($_POST["offset"]) ? intval($_POST["offset"]) : 0,
-    "searchString" => isset($_POST["name"]) ? $_POST["name"] : null,
-    "searchType" => isset($_POST["type"]) ? $_POST["type"] : null,
-    "searchExact" => isset($_POST["exact"]) ? !!$_POST["exact"] : false
+    "limit"  => 25,
+    "count"  => null,
+    "offset" => isset($_POST["offset"]) ? intval($_POST["offset"]) : 0,
+    "search" => isset($_POST["name"])   ? $_POST["name"]           : null,
+    "mode"   => isset($_POST["mode"])   ? $_POST["mode"]           : null,
+    "exact"  => isset($_POST["exact"])  ? !!$_POST["exact"]        : false
   );
 
   $ERRORCODE = CheckPOSTVariableError($DATA);
 
-  if (!$ERRORCODE && $DATA["searchString"]) {
-    $DATA["resultCount"] = GetResultCount($pdo, $DATA);
+  if (!$ERRORCODE && $DATA["search"]) {
+    $DATA["count"] = GetResultCount($pdo, $DATA);
   }
 ?>
 <!DOCTYPE html>
@@ -75,10 +75,10 @@
               <div class="col">
                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
                   <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "account"); ?>">
-                    <input type="radio" name="type" value="account" <?php SetCheckboxState($DATA, "checked", "account"); ?>><a>Account</a>
+                    <input type="radio" name="mode" value="account" <?php SetCheckboxState($DATA, "checked", "account"); ?>><a>Account</a>
                   </label>
                   <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "character"); ?>">
-                    <input type="radio" name="type" value="character" <?php SetCheckboxState($DATA, "checked", "character"); ?>><a>Character</a>
+                    <input type="radio" name="mode" value="character" <?php SetCheckboxState($DATA, "checked", "character"); ?>><a>Character</a>
                   </label>
                 </div>
               </div>
@@ -123,12 +123,12 @@
           </div>
           <!--/Main table/-->
           
-          <?php if (ceil($DATA["resultCount"] / $DATA["resultLimit"]) > 1): ?>
+          <?php if (ceil($DATA["count"] / $DATA["limit"]) > 1): ?>
           <!-- Pagination -->
           <div class="btn-toolbar justify-content-center mt-3">
             <form method="POST">
-              <input type="hidden" name="name" value="<?php echo $DATA["searchString"]; ?>">
-              <input type="hidden" name="type" value="<?php echo $DATA["searchType"]; ?>">
+              <input type="hidden" name="name" value="<?php echo $DATA["search"]; ?>">
+              <input type="hidden" name="mode" value="<?php echo $DATA["mode"]; ?>">
 
               <div class="btn-group mr-2">
                 <?php DisplayPagination($DATA); ?>

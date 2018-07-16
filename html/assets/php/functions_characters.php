@@ -5,9 +5,9 @@ function CheckPOSTVariableError($DATA) {
   // 2 - POST name field was too short
 
   if ( empty($_POST) ) return 0;
-  if ( $DATA["searchType"] === null || $DATA["searchString"] === null ) return 1;
+  if ( $DATA["mode"] === null || $DATA["search"] === null ) return 1;
 
-  if ( $DATA["searchString"] && strlen($DATA["searchString"]) < 3 ) return 2;
+  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) return 2;
 
   return 0;
 }
@@ -38,21 +38,21 @@ function DisplayMotD($pdo) {
   echo "Explore $accDisplay account names, $charDisplay character names and their history since $timeDisplay.";
 }
 
-function SetCheckboxState($DATA, $mode, $type) {
-  if ($DATA["searchType"] !== null) {
-    echo ($DATA["searchType"] === $type) ? $mode : "";
-  } else if ($type === "account") {
-    echo $mode;
+function SetCheckboxState($DATA, $state, $mode) {
+  if ($DATA["mode"] !== null) {
+    echo ($DATA["mode"] === $mode) ? $state : "";
+  } else if ($mode === "account") {
+    echo $state;
   }
 }
 
 
 function FillTable($pdo, $DATA) {
-  $len = strlen($DATA["searchString"]);
+  $len = strlen($DATA["search"]);
 
-  if ($len > 2 && $DATA["searchType"] === "account") {
+  if ($len > 2 && $DATA["mode"] === "account") {
     CharacterSearch($pdo, $DATA);
-  } else if ($len > 2 && $DATA["searchType"] === "character") {
+  } else if ($len > 2 && $DATA["mode"] === "character") {
     AccountSearch($pdo, $DATA);
   } else {
     GetData($pdo, $DATA);
@@ -60,12 +60,12 @@ function FillTable($pdo, $DATA) {
 }
 
 function DisplayResultCount($DATA) {
-  if ($DATA["resultCount"] === null) return;
+  if ($DATA["count"] === null) return;
 
-  $countDisplay = "<span class='custom-text-green'>{$DATA["resultCount"]}</span>";
-  $nameDisplay = "<span class='custom-text-orange'>{$DATA["searchString"]}</span>";
+  $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
+  $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
 
-  echo "$countDisplay matches for {$DATA["searchType"]} names containing '$nameDisplay'";
+  echo "$countDisplay matches for {$DATA["mode"]} names containing '$nameDisplay'";
 }
 
 
@@ -92,19 +92,19 @@ function FormatTimestamp($timestamp) {
 }
 
 function GetResultCount($pdo, $DATA) {
-  if ($DATA["searchType"] === "account") {
-    return CharacterCount($pdo, $DATA["searchString"]);
-  } else if ($DATA["searchType"] === "character") {
-    return AccountCount($pdo, $DATA["searchString"]);
+  if ($DATA["mode"] === "account") {
+    return CharacterCount($pdo, $DATA["search"]);
+  } else if ($DATA["mode"] === "character") {
+    return AccountCount($pdo, $DATA["search"]);
   }
 }
 
 function DisplayPagination($DATA) {
-  $pageCount = ceil($DATA["resultCount"] / $DATA["resultLimit"]);
-  $currentPage = ceil(($DATA["resultOffset"] + 1) / $DATA["resultLimit"]);
+  $pageCount = ceil($DATA["count"] / $DATA["limit"]);
+  $currentPage = ceil(($DATA["offset"] + 1) / $DATA["limit"]);
   $nextPage = $pageCount - $currentPage;
-  $nextOffset = $DATA["resultOffset"] + $DATA["resultLimit"];
-  $prevOffset = $DATA["resultOffset"] - $DATA["resultLimit"];
+  $nextOffset = $DATA["offset"] + $DATA["limit"];
+  $prevOffset = $DATA["offset"] - $DATA["limit"];
 
   if ($currentPage > 1) echo "<button type='submit' class='btn btn-outline-dark' name='offset' value='$prevOffset'>«</button>";
   if ($pageCount > 1)   echo "<div class='mx-3 d-flex'><span class='justify-content-center align-self-center'>$currentPage / $pageCount</span></div>";
@@ -126,7 +126,7 @@ function GetData($pdo, $DATA) {
   OFFSET   ?";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$DATA["resultLimit"], $DATA["resultOffset"]]);
+  $stmt->execute([$DATA["limit"], $DATA["offset"]]);
 
   while ($row = $stmt->fetch()) {
     $timestamp = FormatTimestamp($row["seen"]);
@@ -158,7 +158,7 @@ function CharacterCount($pdo, $name) {
 }
 // Search based on account name
 function CharacterSearch($pdo, $DATA) {
-  $query = "SELECT   
+  $query = "SELECT
 	  a.name AS account, 
     c.name AS `character`,
     l.display AS league,
@@ -173,14 +173,14 @@ function CharacterSearch($pdo, $DATA) {
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = "%" . likeEscape($DATA["searchString"]) . "%";
+  $preppedString = "%" . likeEscape($DATA["search"]) . "%";
 
   // Execute get query and get the data
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString, $DATA["resultLimit"], $DATA["resultOffset"]]);
+  $stmt->execute([$preppedString, $DATA["limit"], $DATA["offset"]]);
 
   while ($row = $stmt->fetch()) {
-    $highlighted = HighLightMatch($DATA["searchString"], $row["account"]);
+    $highlighted = HighLightMatch($DATA["search"], $row["account"]);
     $timestamp = FormatTimestamp($row["seen"]);
     $charDisplay = $row["hidden"] ? "<span class='custom-text-dark'>Requested privacy</span>": $row["character"];
 
@@ -225,13 +225,13 @@ function AccountSearch($pdo, $DATA) {
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = "%" . likeEscape($DATA["searchString"]) . "%";
+  $preppedString = "%" . likeEscape($DATA["search"]) . "%";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString, $DATA["resultLimit"], $DATA["resultOffset"]]);
+  $stmt->execute([$preppedString, $DATA["limit"], $DATA["offset"]]);
 
   while ($row = $stmt->fetch()) {
-    $highlighted = HighLightMatch($DATA["searchString"], $row["character"]);
+    $highlighted = HighLightMatch($DATA["search"], $row["character"]);
     $timestamp = FormatTimestamp($row["seen"]);
 
     echo "<tr>
