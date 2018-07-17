@@ -17,6 +17,7 @@ function CheckGETVariableError($DATA) {
   return 0;
 }
 
+
 function DisplayError($code) {
   switch ($code) {
     case 0:  $msg = "There was not error";            break;
@@ -110,9 +111,9 @@ function FormatTimestamp($timestamp) {
 
 function GetResultCount($pdo, $DATA) {
   if ($DATA["mode"] === "account") {
-    return CharacterCount($pdo, $DATA["search"]);
+    return CharacterCount($pdo, $DATA);
   } else if ($DATA["mode"] === "character") {
-    return AccountCount($pdo, $DATA["search"]);
+    return AccountCount($pdo, $DATA);
   }
 }
 
@@ -165,7 +166,7 @@ function GetData($pdo, $DATA) {
 }
 
 // Search based on account name
-function CharacterCount($pdo, $name) {
+function CharacterCount($pdo, $DATA) {
   $query = "SELECT COUNT(*) AS count
   FROM     account_relations  AS r
   JOIN     account_accounts   AS a ON a.id = r.id_a
@@ -173,7 +174,7 @@ function CharacterCount($pdo, $name) {
   JOIN     data_leagues       AS l ON r.id_l = l.id
   WHERE    a.name LIKE ? ESCAPE '='";
 
-  $preppedString = "%" . likeEscape($name) . "%";
+  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
 
   // Execute count query and see how many results there are
   $stmt = $pdo->prepare($query);
@@ -223,7 +224,7 @@ function CharacterSearch($pdo, $DATA) {
 }
 
 // Search based on character name
-function AccountCount($pdo, $name) {
+function AccountCount($pdo, $DATA) {
   $query = "SELECT COUNT(*) AS count
   FROM     account_relations  AS r
   JOIN     account_accounts   AS a ON a.id = r.id_a
@@ -231,7 +232,7 @@ function AccountCount($pdo, $name) {
   JOIN     data_leagues       AS l ON r.id_l = l.id
   WHERE    c.name LIKE ? ESCAPE '=' AND a.hidden = 0";
 
-  $preppedString = "%" . likeEscape($name) . "%";
+  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
 
   // Execute count query and see how many results there are
   $stmt = $pdo->prepare($query);
