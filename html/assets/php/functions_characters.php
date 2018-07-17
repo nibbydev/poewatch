@@ -1,9 +1,9 @@
 <?php
 function CheckGETVariableError($DATA) {
-  // 0 - Request was not a GET request
-  // 1 - Invalid mode
-  // 2 - Search string too short
-  // 3 - Invalid page
+  // 0    - Request was not a GET request
+  // 1    - Invalid mode
+  // 2    - Search string too short
+  // 3, 4 - Invalid page
 
   if ( empty($_GET) ) return 0;
   if ( !$DATA["mode"] || $DATA["mode"] !== "account" && $DATA["mode"] !== "character") return 1;
@@ -11,6 +11,8 @@ function CheckGETVariableError($DATA) {
   if ( !$DATA["search"] || strlen($DATA["search"]) < 3 ) return 2;
 
   if ( !$DATA["page"] || $DATA["page"] < 1 || $DATA["page"] > 999 ) return 3;
+
+  if ( $DATA["pages"] && $DATA["page"] > $DATA["pages"] ) return 4;
 
   return 0;
 }
@@ -20,7 +22,8 @@ function DisplayError($code) {
     case 0:  $msg = "There was not error";            break;
     case 1:  $msg = "Invalid mode";                   break;
     case 2:  $msg = "Minimum length is 3 characters"; break;
-    case 3:  $msg = "Invalid page";                   break;
+    case 3:
+    case 4:  $msg = "Invalid page";                   break;
     default: $msg = "Unknown error";                  break;
   }
 
@@ -68,9 +71,9 @@ function DisplayResultCount($DATA) {
 
   $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
   $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
-  $limitDisplay = "<span class='custom-text-green'>{$DATA["limit"]}</span>";
+  $matches = $DATA["count"] === 1 ? "match" : "matches";
 
-  echo "$countDisplay matches for {$DATA["mode"]} names containing '$nameDisplay'. Displaying $limitDisplay per page.";
+  echo "$countDisplay $matches for {$DATA["mode"]} names containing '$nameDisplay'";
 }
 
 
@@ -114,19 +117,17 @@ function GetResultCount($pdo, $DATA) {
 }
 
 function DisplayPagination($DATA) {
-  $pageCount = ceil($DATA["count"] / $DATA["limit"]);
-
   if ($DATA["page"] > 1) {
     $url = FormSearchURL($DATA["mode"], $DATA["search"], $DATA["page"] - 1);
     echo "<a class='btn btn-outline-dark' href='$url'>«</a>";
   }
 
-  if ($pageCount > 1) {
-    $counter = $DATA["page"] . " / " . $pageCount;
+  if ($DATA["pages"] > 1) {
+    $counter = $DATA["page"] . " / " . $DATA["pages"];
     echo "<div class='mx-3 d-flex'><span class='justify-content-center align-self-center'>$counter</span></div>";
   }
 
-  if ($DATA["page"] < $pageCount) {
+  if ($DATA["page"] < $DATA["pages"]) {
     $url = FormSearchURL($DATA["mode"], $DATA["search"], $DATA["page"] + 1);
     echo "<a class='btn btn-outline-dark' href='$url'>»</a>";
   }

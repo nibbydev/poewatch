@@ -2,22 +2,29 @@
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_characters.php" ); 
 
+  // General page-related data array
   $DATA = array(
     "limit"  => 25,
     "count"  => null,
     "page"   => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"])   : 1,
+    "pages"  => null,
     "search" => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]         : null,
     "mode"   => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]           : "account",
     "exact"  => isset($_GET["exact"])  && $_GET["exact"]  ? !!$_GET["exact"]        : false
   );
 
+  // Check if user-provided parameters are valid
   $ERRORCODE = CheckGETVariableError($DATA);
 
-  if (!$ERRORCODE && $DATA["search"]) {
-    $DATA["count"] = GetResultCount($pdo, $DATA);
-  }
+  // If there was no problem with the user-provided parameters, check how many results there 
+  // would be to create accurate pagination
+  if (!$ERRORCODE && $DATA["search"]) $DATA["count"] = GetResultCount($pdo, $DATA);
+  
+  // Find the number of pages there should be
+  $DATA["pages"] = ceil($DATA["count"] / $DATA["limit"]);
 
-  $displayPagination = ceil($DATA["count"] / $DATA["limit"]) > 1;
+  // Check if the page number exceeds the actual page count
+  $ERRORCODE = CheckGETVariableError($DATA);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -90,15 +97,15 @@
             <!--/Mode/-->
 
             <!-- Search -->
-            <div class="row">
-              <div class="col-6 col-md-3 mb-2">
-                <input type="text" class="form-control" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
-              </div>
-
-              <div class="col-6 col-md-4 mb-2">
-                <button type="submit" class="btn btn-outline-dark">Search</button>
+            <div class="row mb-3">
+              <div class="col">
+                <div class="btn-group">
+                  <input type="text" class="form-control" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
+                  <button type="submit" class="btn btn-outline-dark">Search</button>
+                </div>
               </div>
             </div>
+
             <!--/Search/-->
 
             <?php 
@@ -111,7 +118,7 @@
 
           <hr>
 
-          <?php if ($displayPagination): ?>
+          <?php if (!$ERRORCODE && $DATA["pages"] > 1): ?>
           <!-- Top pagination -->
           <div class="btn-toolbar justify-content-center my-3">
             <div class="btn-group mr-2">
@@ -141,7 +148,7 @@
           </div>
           <!--/Main table/-->
 
-          <?php if ($displayPagination): ?>
+          <?php if (!$ERRORCODE && $DATA["pages"] > 1): ?>
           <!-- Bottom pagination -->
           <div class="btn-toolbar justify-content-center mt-3">
             <div class="btn-group mr-2">
