@@ -7,11 +7,8 @@ function CheckGETVariableError($DATA) {
 
   if ( empty($_GET) ) return 0;
   if ( !$DATA["mode"] || $DATA["mode"] !== "account" && $DATA["mode"] !== "character") return 1;
-
-  if ( !$DATA["search"] || strlen($DATA["search"]) < 3 ) return 2;
-
-  if ( !$DATA["page"] || $DATA["page"] < 1 || $DATA["page"] > 999 ) return 3;
-
+  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) return 2;
+  if ( !$DATA["page"] ) return 3;
   if ( $DATA["pages"] && $DATA["page"] > $DATA["pages"] ) return 4;
 
   return 0;
@@ -31,16 +28,9 @@ function DisplayError($code) {
   echo "<span class='custom-text-red'>Error: " . $msg . "</span>";
 }
 
-function DisplayMotD($pdo) {
-  $query = "SELECT
-  (SELECT FORMAT(COUNT(*), 0) FROM account_accounts  ) AS accCount, 
-  (SELECT FORMAT(COUNT(*), 0) FROM account_characters) AS charCount";
-
-  $stmt = $pdo->query($query);
-  $row = $stmt->fetch();
-
-  $accDisplay = "<span class='custom-text-green'>{$row["accCount"]}</span>";
-  $charDisplay = "<span class='custom-text-green'>{$row["charCount"]}</span>";
+function DisplayMotD($DATA) {
+  $accDisplay = "<span class='custom-text-green'>{$DATA["totalAccs"]}</span>";
+  $charDisplay = "<span class='custom-text-green'>{$DATA["totalChars"]}</span>";
   $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-14 00:00:00") . "</span>";
 
   echo "Explore $accDisplay account names, $charDisplay character names and their history since $timeDisplay.";
@@ -72,14 +62,14 @@ function DisplayResultCount($DATA) {
 
   $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
   $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
-  $matches = $DATA["count"] === 1 ? "match" : "matches";
+  $results = $DATA["count"] === 1 ? "result" : "results";
 
-  echo "$countDisplay $matches for {$DATA["mode"]} names containing '$nameDisplay'";
+  echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
 }
 
 
 function FormSearchHyperlink($mode, $search, $display) {
-  return "<a href='characters?mode=$mode&search=$search&exact=1'>$display</a>";
+  return "<a href='characters?mode=$mode&search=$search'>$display</a>";
 }
 
 function FormSearchURL($mode, $search, $page) {
@@ -134,19 +124,40 @@ function DisplayPagination($DATA) {
   }
 }
 
+
+function GetTotalCounts($pdo, $DATA) {
+  $query = "SELECT
+  (SELECT COUNT(*) FROM account_accounts  ) AS accCount, 
+  (SELECT COUNT(*) FROM account_relations ) AS relCount, 
+  (SELECT COUNT(*) FROM account_characters) AS charCount";
+
+  $stmt = $pdo->query($query);
+  $row = $stmt->fetch();
+
+  $DATA["totalAccs"]  = $row["accCount"];
+  $DATA["totalRels"]  = $row["relCount"];
+  $DATA["totalChars"] = $row["charCount"];
+
+  return $DATA;
+}
+
+
 function GetData($pdo, $DATA) {
   $query = "SELECT
     a.name AS account,
-	  c.name AS `character`, 
+    c.name AS `character`, 
     l.display AS league,
     r.seen
-  FROM     account_relations  AS r
-  JOIN     account_accounts   AS a ON a.id   = r.id_a
-  JOIN     account_characters AS c ON c.id   = r.id_c
-  JOIN     data_leagues       AS l ON r.id_l = l.id
-  ORDER BY r.found DESC
-  LIMIT    ?
-  OFFSET   ?";
+  FROM (
+    SELECT   *
+    FROM     account_relations 
+    ORDER BY seen DESC 
+    LIMIT    ?
+    OFFSET   ?
+  ) AS r
+  JOIN     account_accounts   AS a ON a.id = r.id_a
+  JOIN     account_characters AS c ON c.id = r.id_c
+  JOIN     data_leagues       AS l ON l.id = r.id_l";
 
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
@@ -156,9 +167,12 @@ function GetData($pdo, $DATA) {
   while ($row = $stmt->fetch()) {
     $timestamp = FormatTimestamp($row["seen"]);
 
+    $displayAcc  = FormSearchHyperlink("account",   $row["account"],   $row["account"]);
+    $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
+
     echo "<tr>
-      <td>{$row["account"]}</td>
-      <td>{$row["character"]}</td>
+      <td>$displayAcc</td>
+      <td>$displayChar</td>
       <td>{$row["league"]}</td>
       <td>$timestamp</td>
     </tr>";
@@ -167,38 +181,42 @@ function GetData($pdo, $DATA) {
 
 // Search based on account name
 function CharacterCount($pdo, $DATA) {
-  $query = "SELECT COUNT(*) AS count
-  FROM     account_relations  AS r
-  JOIN     account_accounts   AS a ON a.id = r.id_a
-  JOIN     account_characters AS c ON c.id = r.id_c
-  JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    a.name LIKE ? ESCAPE '='";
-
-  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
+  $query = "SELECT COUNT(*) AS count 
+  FROM   account_relations
+  WHERE  id_a = (
+    SELECT id 
+    FROM   account_accounts 
+    WHERE  name LIKE ? ESCAPE '=' 
+    LIMIT  1
+  )";
 
   // Execute count query and see how many results there are
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString]);
+  $stmt->execute([likeEscape($DATA["search"])]);
   return $stmt->fetch()["count"];
 }
 // Search based on account name
 function CharacterSearch($pdo, $DATA) {
-  $query = "SELECT
-	  a.name AS account, 
+  $query = "SELECT   
+    a.name AS account,
     c.name AS `character`,
     l.display AS league,
     r.seen,
-    a.hidden
-  FROM     account_relations  AS r
-  JOIN     account_accounts   AS a ON a.id = r.id_a
-  JOIN     account_characters AS c ON c.id = r.id_c
+    a.hidden,
+    r.inactive
+  FROM (
+    SELECT *
+    FROM   account_accounts 
+    WHERE  name LIKE ? ESCAPE '=' 
+  ) AS a
+  JOIN     account_relations  AS r ON r.id_a = a.id
+  JOIN     account_characters AS c ON r.id_c = c.id
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    a.name LIKE ? ESCAPE '='
-  ORDER BY r.seen DESC
+  ORDER BY r.seen DESC, c.name DESC
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
+  $preppedString = likeEscape($DATA["search"]);
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   // Execute get query and get the data
@@ -208,8 +226,12 @@ function CharacterSearch($pdo, $DATA) {
   while ($row = $stmt->fetch()) {
     $displayStamp = FormatTimestamp($row["seen"]);
 
-    if ($row["hidden"]) $displayChar = "<span class='custom-text-dark'>Requested privacy</span>";
-    else $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
+    if ($row["hidden"]) {
+      $displayChar = "<span class='custom-text-dark'>Requested privacy</span>";
+    } else {
+      $tmp = $row["inactive"] ? "<span class='custom-text-dark'>{$row["character"]}</span>" : $row["character"];
+      $displayChar = FormSearchHyperlink("character", $row["character"], $tmp);
+    }
 
     $displayAcc = HighLightMatch($DATA["search"], $row["account"]);
     $displayAcc = FormSearchHyperlink("account", $row["account"], $displayAcc);
@@ -225,47 +247,55 @@ function CharacterSearch($pdo, $DATA) {
 
 // Search based on character name
 function AccountCount($pdo, $DATA) {
-  $query = "SELECT COUNT(*) AS count
-  FROM     account_relations  AS r
-  JOIN     account_accounts   AS a ON a.id = r.id_a
-  JOIN     account_characters AS c ON c.id = r.id_c
-  JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    c.name LIKE ? ESCAPE '=' AND a.hidden = 0";
-
-  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
+  $query = "SELECT COUNT(*) AS count 
+  FROM   account_relations
+  WHERE  id_c = (
+    SELECT id 
+    FROM   account_characters 
+    WHERE  name LIKE ? ESCAPE '=' 
+    LIMIT  1
+  )";
 
   // Execute count query and see how many results there are
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString]);
+  $stmt->execute([likeEscape($DATA["search"])]);
   return $stmt->fetch()["count"];
 }
 // Search based on character name
 function AccountSearch($pdo, $DATA) {
   $query = "SELECT   
     a.name AS account,
-	  c.name AS `character`,
+    c.name AS `character`,
     l.display AS league,
-    r.seen
-  FROM     account_relations  AS r
-  JOIN     account_accounts   AS a ON a.id   = r.id_a
-  JOIN     account_characters AS c ON c.id   = r.id_c
+    r.seen,
+    r.inactive
+  FROM (
+    SELECT *
+    FROM   account_characters 
+    WHERE  name LIKE ? ESCAPE '='
+  ) AS c
+  JOIN     account_relations  AS r ON r.id_c = c.id
+  JOIN     account_accounts   AS a ON r.id_a = a.id
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  WHERE    c.name LIKE ? ESCAPE '=' AND a.hidden = 0
-  ORDER BY r.seen DESC
+  ORDER BY r.seen DESC, c.name DESC
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = $DATA["exact"] ? likeEscape($DATA["search"]) : "%" . likeEscape($DATA["search"]) . "%";
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString, $DATA["limit"], $offset]);
+  $stmt->execute([likeEscape($DATA["search"]), $DATA["limit"], $offset]);
 
   while ($row = $stmt->fetch()) {
     $displayStamp = FormatTimestamp($row["seen"]);
 
-    $displayChar = HighLightMatch($DATA["search"], $row["character"]);
-    $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
+    if ($row["inactive"]) {
+      $displayChar = "<span class='custom-text-dark'>{$row["character"]}</span>";
+      $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
+    } else {
+      $displayChar = HighLightMatch($DATA["search"], $row["character"]);
+      $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
+    }
 
     $displayAcc = FormSearchHyperlink("account", $row["account"], $row["account"]);
 

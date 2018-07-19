@@ -4,27 +4,37 @@
 
   // General page-related data array
   $DATA = array(
-    "limit"  => 25,
-    "count"  => null,
-    "page"   => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"])   : 1,
-    "pages"  => null,
-    "search" => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]         : null,
-    "mode"   => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]           : "account",
-    "exact"  => isset($_GET["exact"])  && $_GET["exact"]  ? !!$_GET["exact"]        : false
+    "limit"      => 25,
+    "count"      => null,
+    "page"       => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"]) : 1,
+    "pages"      => null,
+    "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
+    "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : "account",
+    "totalAccs"  => null,
+    "totalChars" => null,
+    "totalRels"  => null
   );
 
   // Check if user-provided parameters are valid
   $ERRORCODE = CheckGETVariableError($DATA);
 
+  
+  // Get total number of unique account and character names
+  $DATA = GetTotalCounts($pdo, $DATA);
+
   // If there was no problem with the user-provided parameters, check how many results there 
   // would be to create accurate pagination
-  if (!$ERRORCODE && $DATA["search"]) $DATA["count"] = GetResultCount($pdo, $DATA);
-  
-  // Find the number of pages there should be
-  $DATA["pages"] = ceil($DATA["count"] / $DATA["limit"]);
+  if (!$ERRORCODE && $DATA["search"]) {
+    $DATA["count"] = GetResultCount($pdo, $DATA);
 
-  // Check if the page number exceeds the actual page count
-  $ERRORCODE = CheckGETVariableError($DATA);
+    // Find the number of pages there should be
+    $DATA["pages"] = ceil($DATA["count"] / $DATA["limit"]);
+
+    // Check if the user-provided page number exceeds the actual page count
+    $ERRORCODE = CheckGETVariableError($DATA);
+  } else {
+    $DATA["pages"] = ceil($DATA["totalRels"] / $DATA["limit"]);
+  }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,7 +83,7 @@
         <div class="card-header">
           <h2 class="text-white">Characters</h3>
           <div>
-            <?php DisplayMotD($pdo); ?>
+            <?php DisplayMotD($DATA); ?>
           </div>
         </div>
 
