@@ -69,7 +69,7 @@ public class Config {
     // league manager
     //------------------------------------------------------------------------------------------------------------
 
-    public static final String league_APIBaseURL = "http://api.pathofexile.com/leagues?type=main&compact=1";
+    public static final String league_APIBaseURL = "http://api.pathofexile.com/leagues?type=main";
     public static final String league_timeFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final int league_readTimeoutMS = 3000;
     public static final int league_connectTimeoutMS = 5000;

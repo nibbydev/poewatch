@@ -137,7 +137,7 @@ public class Database {
      * @return True on success
      */
     public boolean getLeagues(List<LeagueEntry> leagueEntries) {
-        String query =  "SELECT * FROM data_leagues WHERE active = 1 ";
+        String query = "SELECT * FROM data_leagues WHERE active = 1 ";
 
         try {
             if (connection.isClosed()) return false;
@@ -536,33 +536,42 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        // Use transactions to avoid incrementing the auto incremented id row with "ON DUPLICATE UPDATE" on every
-        // update, which would result in size ~8,000 index gaps.
+        String query1 = "INSERT INTO data_leagues (name, display, active, event) " +
+                        "SELECT ?, ?, ?, ? " +
+                        "FROM   DUAL " +
+                        "WHERE  NOT EXISTS ( " +
+                        "  SELECT 1 " +
+                        "  FROM   data_leagues " +
+                        "  WHERE  name = ? " +
+                        "  LIMIT  1); ";
 
-        String query =  "BEGIN; " +
-                        "    SET @name = ?; " +
-                        "    SET @start = ?; " +
-                        "    SET @end = ?; " +
-                        "    SET @id = (SELECT id FROM data_leagues WHERE name = @name);" +
-
-                        "    INSERT IGNORE INTO data_leagues (id, name, display, start, end) " +
-                        "    VALUES(@id, @name, @name, @start, @end);" +
-
-                        "    UPDATE data_leagues SET " +
-                        "        active = 1, " +
-                        "        start = @start, " +
-                        "        end = @end " +
-                        "    WHERE name = @name; " +
-                        "COMMIT; ";
+        String query2 = "UPDATE data_leagues " +
+                        "SET    start   = ?, " +
+                        "       end     = ? " +
+                        "WHERE  name    = ? " +
+                        "LIMIT  1; ";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getName());
-                    statement.setString(2, leagueEntry.getStartAt());
-                    statement.setString(3, leagueEntry.getEndAt());
+                    statement.setString(2, leagueEntry.getDisplay());
+                    statement.setInt(3, leagueEntry.isEvent() ? 0 : 1);
+                    statement.setInt(4, leagueEntry.isEvent() ? 1 : 0);
+                    statement.setString(5, leagueEntry.getName());
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                for (LeagueEntry leagueEntry : leagueEntries) {
+                    statement.setString(1, leagueEntry.getStartAt());
+                    statement.setString(2, leagueEntry.getEndAt());
+                    statement.setString(3, leagueEntry.getName());
                     statement.addBatch();
                 }
 

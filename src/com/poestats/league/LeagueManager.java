@@ -108,7 +108,7 @@ public class LeagueManager {
 
         // Get rid of SSF
         for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
-            if (leagueEntry.getName().contains("SSF")) {
+            if (leagueEntry.getName().contains("SSF") || leagueEntry.getName().contains("Solo")) {
                 leagueList.remove(leagueEntry);
             }
         }
@@ -117,6 +117,8 @@ public class LeagueManager {
         for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getName().equals("Hardcore")) {
                 sortedLeagueList.add(leagueEntry);
+                leagueList.remove(leagueEntry);
+                break;
             }
         }
 
@@ -124,44 +126,48 @@ public class LeagueManager {
         for (LeagueEntry leagueEntry : leagueList) {
             if (leagueEntry.getName().equals("Standard")) {
                 sortedLeagueList.add(leagueEntry);
+                leagueList.remove(leagueEntry);
+                break;
             }
         }
 
-        // Add main hardcore league
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) continue;
-            if (leagueEntry.getName().equals("Hardcore") || leagueEntry.getName().equals("Standard")) continue;
+        // Add main hardcore leagues
+        for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
+            if (leagueEntry.isEvent()) continue;
 
             if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
                 sortedLeagueList.add(leagueEntry);
+                leagueList.remove(leagueEntry);
             }
         }
 
-        // Add main softcore league
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) continue;
-            if (leagueEntry.getName().equals("Hardcore") || leagueEntry.getName().equals("Standard")) continue;
+        // Add main softcore leagues
+        for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
+            if (leagueEntry.isEvent()) continue;
 
             if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
                 sortedLeagueList.add(leagueEntry);
+                leagueList.remove(leagueEntry);
             }
         }
 
         // Add hardcore events
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
-                if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
-                    sortedLeagueList.add(leagueEntry);
-                }
+        for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
+            if (!leagueEntry.isEvent()) continue;
+
+            if (leagueEntry.getName().contains("Hardcore") || leagueEntry.getName().contains("HC")) {
+                sortedLeagueList.add(leagueEntry);
+                leagueList.remove(leagueEntry);
             }
         }
 
         // Add softcore events
-        for (LeagueEntry leagueEntry : leagueList) {
-            if (leagueEntry.getName().contains("Event") || leagueEntry.getName().contains("(")) {
-                if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
-                    sortedLeagueList.add(leagueEntry);
-                }
+        for (LeagueEntry leagueEntry : new ArrayList<>(leagueList)) {
+            if (!leagueEntry.isEvent()) continue;
+
+            if (!leagueEntry.getName().contains("Hardcore") && !leagueEntry.getName().contains("HC")) {
+                sortedLeagueList.add(leagueEntry);
+                leagueList.remove(leagueEntry);
             }
         }
 

@@ -56,18 +56,19 @@ CREATE TABLE `category_history` (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure `data_leagues`
+-- Table structure data_leagues
 --
 
-CREATE TABLE `data_leagues` (
-    `id`                  SMALLINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    `active`              TINYINT(1)      UNSIGNED NOT NULL DEFAULT 1,
-    `name`                VARCHAR(64)     NOT NULL UNIQUE,
-    `display`             VARCHAR(64)     DEFAULT NULL,
-    `start`               VARCHAR(32)     DEFAULT NULL,
-    `end`                 VARCHAR(32)     DEFAULT NULL,
+CREATE TABLE data_leagues (
+    id       SMALLINT     UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    active   TINYINT(1)   UNSIGNED NOT NULL DEFAULT 1,
+    event    TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    name     VARCHAR(64)  NOT NULL UNIQUE,
+    display  VARCHAR(64)  DEFAULT NULL,
+    start    VARCHAR(32)  DEFAULT NULL,
+    end      VARCHAR(32)  DEFAULT NULL,
 
-    INDEX `index_l_active`          (`active`)
+    INDEX    active       (active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
