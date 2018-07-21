@@ -305,12 +305,11 @@ CREATE TABLE `league_history_minutely_rolling` (
 
 CREATE TABLE account_accounts (
     id      BIGINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    hidden  TINYINT(1)    UNSIGNED NOT NULL DEFAULT 0,
     name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX   hidden       (hidden)
+    INDEX   seen         (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -321,7 +320,9 @@ CREATE TABLE account_characters (
     id      BIGINT        UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name    VARCHAR(32)   NOT NULL UNIQUE,
     found   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+    seen    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX   seen         (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -339,7 +340,9 @@ CREATE TABLE account_relations (
     FOREIGN KEY (id_l)    REFERENCES  data_leagues        (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_a)    REFERENCES  account_accounts    (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_c)    REFERENCES  account_characters  (id) ON DELETE RESTRICT,
-    CONSTRAINT  unique_r  UNIQUE (id_a, id_c)
+    CONSTRAINT  unique_r  UNIQUE (id_a, id_c),
+
+    INDEX   seen          (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -609,3 +612,30 @@ CREATE EVENT remove120
     DELETE h FROM league_history_daily_rolling AS h
     JOIN data_leagues AS l ON h.id_l = l.id
     WHERE time < ADDDATE(NOW(), INTERVAL -120 DAY) AND l.id <= 2;
+
+--
+-- Event configuration inactive_account_relation_check
+--
+
+DROP EVENT IF EXISTS inactive_account_relation_check;
+
+CREATE EVENT inactive_account_relation_check
+  ON SCHEDULE EVERY 10 MINUTE
+  STARTS '2018-01-01 08:00:00'
+  COMMENT 'Marks old relations inactive'
+  DO
+    UPDATE account_relations as r1
+    JOIN (
+        SELECT   r3.id_c, MAX(r3.found) as found
+        FROM     account_relations AS r3
+        JOIN (
+            SELECT   id_c
+            FROM     account_relations
+            GROUP BY id_c
+            HAVING   COUNT(*) > 1
+        ) AS r4 ON r4.id_c = r3.id_c
+        WHERE    r3.inactive = 0
+        GROUP BY r3.id_c
+    ) AS r2 ON r2.id_c = r1.id_c
+    SET inactive = 1
+    WHERE r1.found < r2.found;

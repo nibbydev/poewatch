@@ -62,19 +62,14 @@ public class Database {
      * @return True on success
      */
     public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
-        String query1 = "INSERT INTO account_accounts (name) VALUES(?) " +
-                        "ON DUPLICATE KEY UPDATE seen = NOW() ";
-
-        String query2 = "INSERT INTO account_characters (name) VALUES(?) " +
-                        "ON DUPLICATE KEY UPDATE seen = NOW() ";
+        String query1 = "INSERT INTO account_accounts   (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
+        String query2 = "INSERT INTO account_characters (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
 
         String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
-                        "    SELECT ?, a.id, c.id " +
-                        "    FROM account_accounts AS a " +
-                        "    INNER JOIN account_characters AS c " +
-                        "    WHERE a.name = ? AND c.name = ? " +
-                        "    LIMIT 1 " +
-                        "ON DUPLICATE KEY UPDATE seen = NOW() ";
+                        "    SELECT ?, " +
+                        "    (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
+                        "    (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
+                        "ON DUPLICATE KEY UPDATE seen = NOW(); ";
 
         try {
             if (connection.isClosed()) return false;
@@ -590,7 +585,7 @@ public class Database {
      * @return True on success
      */
     public boolean updateChangeID(String id) {
-        String query =  "UPDATE `data_changeId` SET `changeId` = ?, `time` = CURRENT_TIMESTAMP";
+        String query =  "UPDATE data_changeId SET changeId = ?, time = CURRENT_TIMESTAMP; ";
 
         try {
             if (connection.isClosed()) return false;
