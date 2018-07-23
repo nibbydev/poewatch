@@ -171,14 +171,13 @@ public class Database {
     public boolean getCategories(Map<String, CategoryEntry> categoryRelations) {
         Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
 
-        String query =  "SELECT " +
-                        "    cp.name AS parentName, " +
-                        "    cc.name AS childName, " +
-                        "    cp.id AS parentId, " +
-                        "    cc.id AS childId " +
-                        "FROM category_parent AS cp " +
-                        "    LEFT JOIN category_child AS cc " +
-                        "        ON cp.id = cc.id_cp ";
+        String query =  "SELECT    cp.name AS parentName, " +
+                        "          cc.name AS childName, " +
+                        "          cp.id AS parentId, " +
+                        "          cc.id AS childId " +
+                        "FROM      category_parent AS cp " +
+                        "LEFT JOIN category_child  AS cc " +
+                        "  ON      cp.id = cc.id_cp; ";
 
         try {
             if (connection.isClosed()) return false;
