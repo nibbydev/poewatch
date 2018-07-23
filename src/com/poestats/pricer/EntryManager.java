@@ -220,7 +220,9 @@ public class EntryManager {
         }
     }
 
-    private void generateItemDataFile() {
+    public void generateItemDataFile() {
+        long startTime = System.currentTimeMillis();
+
         List<String> oldItemdataFiles = new ArrayList<>();
         Main.DATABASE.getOutputFiles(oldItemdataFiles);
 
@@ -263,6 +265,8 @@ public class EntryManager {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not delete old itemdata files", 3);
         }
+
+        Main.ADMIN.log_(String.format("Itemdata rebuilt (%4d ms)", System.currentTimeMillis() - startTime), 0);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -333,10 +337,7 @@ public class EntryManager {
 
         // Build itemdata
         if (Main.RELATIONS.isNewIndexedItem()) {
-            long time_itemdata = System.currentTimeMillis();
             generateItemDataFile();
-            time_itemdata = System.currentTimeMillis() - time_itemdata;
-            Main.ADMIN.log_(String.format("Itemdata rebuilt (%4d ms)", time_itemdata), 0);
         }
 
         // Prepare message

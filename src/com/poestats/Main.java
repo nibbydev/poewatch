@@ -142,6 +142,7 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    counter - counter commands\n"
+                + "    gen - generate files manually\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -171,6 +172,9 @@ public class Main {
                         break;
                     case "counter":
                         commandCounter(userInput);
+                        break;
+                    case "gen":
+                        commandGen(userInput);
                         break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -389,6 +393,18 @@ public class Main {
         }
 
         System.out.println("Value of '"+userInput[1]+"' changed ("+oldValue+") -> ("+newValue+") [change: "+(newValue-oldValue)+"]");
+    }
+
+    private static void commandGen(String[] userInput) {
+        switch (userInput[1]) {
+            case "itemdata":
+                ENTRY_MANAGER.generateItemDataFile();
+                break;
+
+            default:
+                System.out.println("Unknown gen");
+                break;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
