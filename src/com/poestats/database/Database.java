@@ -66,9 +66,9 @@ public class Database {
         String query2 = "INSERT INTO account_characters (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
 
         String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
-                        "    SELECT ?, " +
-                        "    (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
-                        "    (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
+                        "SELECT ?, " +
+                        "  (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
+                        "  (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
                         "ON DUPLICATE KEY UPDATE seen = NOW(); ";
 
         try {
@@ -137,7 +137,7 @@ public class Database {
      * @return True on success
      */
     public boolean getLeagues(List<LeagueEntry> leagueEntries) {
-        String query = "SELECT * FROM data_leagues WHERE active = 1 ";
+        String query = "SELECT * FROM data_leagues WHERE active = 1; ";
 
         try {
             if (connection.isClosed()) return false;
@@ -217,10 +217,10 @@ public class Database {
      * @return True on success
      */
     public boolean getItemIds(Map<Integer, List<Integer>> leagueToIds, Map<String, Integer> keyToId) {
-        String query =  "SELECT i.id_l, did.id as id_d, did.key " +
-                        "FROM league_items AS i " +
-                        "JOIN data_itemData AS did " +
-                        "    ON i.id_d = did.id " +
+        String query =  "SELECT   i.id_l, did.id AS id_d, did.key " +
+                        "FROM     league_items  AS i " +
+                        "JOIN     data_itemData AS did " +
+                        "  ON     i.id_d = did.id " +
                         "ORDER BY i.id_l, did.id ASC";
 
         try {
@@ -259,12 +259,13 @@ public class Database {
     public boolean getCurrency(Map<Integer, Map<String, Double>> currencyLeagueMap) {
         Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
 
-        String query =  "SELECT i.id_l, did.name, i.median " +
-                        "FROM league_items AS i " +
-                        "   JOIN data_itemData AS did " +
-                        "      ON i.id_d = did.id " +
-                        "WHERE did.id_cp = 4 AND did.frame = 5 " +
-                        "ORDER BY i.id_l";
+        String query =  "SELECT   i.id_l, did.name, i.median " +
+                        "FROM     league_items  AS i " +
+                        "JOIN     data_itemData AS did " +
+                        "  ON     i.id_d = did.id " +
+                        "WHERE    did.id_cp = 4 " +
+                        "  AND    did.frame = 5 " +
+                        "ORDER BY i.id_l; ";
 
         try {
             if (connection.isClosed()) return false;
@@ -301,12 +302,11 @@ public class Database {
      * @return True on success
      */
     public boolean getCurrencyAliases(Map<String, String> currencyAliasToName) {
-        String query =  "SELECT " +
-                        "    ci.name AS name, " +
-                        "    ca.name AS alias " +
-                        "FROM data_currencyItems AS ci " +
-                        "    JOIN data_currencyAliases AS ca " +
-                        "        ON ci.id = ca.id_ci";
+        String query =  "SELECT ci.name AS name, " +
+                        "       ca.name AS alias " +
+                        "FROM   data_currencyItems   AS ci " +
+                        "JOIN   data_currencyAliases AS ca " +
+                        "  ON   ci.id = ca.id_ci; ";
 
         try {
             if (connection.isClosed()) return false;
@@ -341,8 +341,12 @@ public class Database {
      * @return ID of created category on success, null on failure
      */
     public Integer addParentCategory(String parentName) {
-        String query1 = "INSERT INTO category_parent (name) VALUES (?)";
-        String query2 = "SELECT LAST_INSERT_ID()";
+        String query1 = "INSERT INTO category_parent (name) VALUES (?); ";
+
+        String query2 = "SELECT id " +
+                        "FROM   category_parent " +
+                        "WHERE  name = ? " +
+                        "LIMIT  1;";
 
         try {
             if (connection.isClosed()) return null;
@@ -354,8 +358,9 @@ public class Database {
 
             connection.commit();
 
-            try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query2);
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setString(1, parentName);
+                ResultSet resultSet = statement.executeQuery();
                 return resultSet.next() ? resultSet.getInt(1) : null;
             }
 
@@ -375,7 +380,12 @@ public class Database {
      */
     public Integer addChildCategory(Integer parentId, String childName) {
         String query1 = "INSERT INTO category_child (id_cp, name) VALUES (?, ?)";
-        String query2 = "SELECT LAST_INSERT_ID()";
+
+        String query2 = "SELECT id " +
+                        "FROM   category_child " +
+                        "WHERE  id_cp = ? " +
+                        "  AND  name = ? " +
+                        "LIMIT  1; ";
 
         try {
             if (connection.isClosed()) return null;
@@ -388,8 +398,10 @@ public class Database {
 
             connection.commit();
 
-            try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query2);
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                statement.setInt(1, parentId);
+                statement.setString(2, childName);
+                ResultSet resultSet = statement.executeQuery();
                 return resultSet.next() ? resultSet.getInt(1) : null;
             }
 
@@ -408,12 +420,12 @@ public class Database {
      * @return True on success
      */
     public boolean createLeagueItem(Integer leagueId, Integer dataId) {
-        String query1 = "INSERT INTO league_items (id_l, id_d) VALUES (?, ?)" +
-                        "ON DUPLICATE KEY UPDATE id_l = id_l";
+        String query  = "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) " +
+                        "ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, leagueId);
                 statement.setInt(2, dataId);
                 statement.executeUpdate();
@@ -438,10 +450,10 @@ public class Database {
      */
     public Integer indexItemData(Item item, Integer parentCategoryId, Integer childCategoryId) {
         String query1 = "INSERT INTO data_itemData (" +
-                        "    id_cp, id_cc, name, type, frame, tier, lvl, " +
-                        "    quality, corrupted, links, var, `key`, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        String query2 = "SELECT LAST_INSERT_ID()";
+                        "  id_cp, id_cc, name, type, frame, tier, lvl, " +
+                        "  quality, corrupted, links, var, `key`, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+        String query2 = "SELECT LAST_INSERT_ID(); ";
 
         try {
             if (connection.isClosed()) return null;
@@ -494,11 +506,11 @@ public class Database {
      */
     public boolean uploadRaw(Set<RawEntry> entrySet) {
         String query =  "INSERT INTO league_entries ( " +
-                        "    id_l, id_d, price, account, itemid) " +
+                        "  id_l, id_d, price, account, itemid) " +
                         "VALUES (?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
-                        "    approved = 0, " +
-                        "    price = VALUES(price) ";
+                        "  approved = 0, " +
+                        "  price = VALUES(price) ";
 
         try {
             if (connection.isClosed()) return false;
@@ -535,7 +547,9 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query1 = "INSERT INTO data_leagues (name, display, active, event) " +
+        String query1 = "INSERT INTO data_leagues (" +
+                        "  name, display, " +
+                        "  active, event) " +
                         "SELECT ?, ?, ?, ? " +
                         "FROM   DUAL " +
                         "WHERE  NOT EXISTS ( " +
@@ -817,9 +831,11 @@ public class Database {
                         "SET volatile = IF(`dec` > 0 && inc > 0 && `dec` / inc > ?, 1, 0);";
 
         String query2 = "UPDATE league_entries AS e " +
-                        "JOIN league_items AS i ON e.id_d = i.id_d " +
-                        "SET e.approved = 0 " +
-                        "WHERE i.volatile = 1 AND e.approved = 1";
+                        "JOIN   league_items AS i " +
+                        "  ON   e.id_d = i.id_d " +
+                        "SET    e.approved = 0 " +
+                        "WHERE  i.volatile = 1 " +
+                        "  AND  e.approved = 1; ";
 
         try {
             if (connection.isClosed()) return false;
