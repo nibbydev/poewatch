@@ -580,6 +580,6 @@ CREATE EVENT remove120
     FROM   league_history_daily_rolling AS h
     JOIN   data_leagues AS l
       ON   h.id_l = l.id
-    WHERE  time < ADDDATE(NOW(), INTERVAL -120 DAY)
-      AND  l.id <= 2;
+    WHERE  l.id > 2
+      AND  time < ADDDATE(NOW(), INTERVAL -120 DAY);
 
