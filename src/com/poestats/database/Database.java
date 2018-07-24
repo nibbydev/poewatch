@@ -636,7 +636,7 @@ public class Database {
      * @return True on success
      */
     public boolean calculateMean() {
-        String query =  "UPDATE league_items AS i" +
+        String query =  "UPDATE league_items AS i " +
                         "    JOIN (" +
                         "        SELECT id_l, id_d, TRUNCATE(IFNULL(AVG(price), 0.0), 4) AS avg " +
                         "        FROM league_entries " +
@@ -1147,54 +1147,21 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Copies data from table `league_items` to table `league_history_minutely_rolling` every minute
-     * on a rolling basis with a history of 60 minutes only if those item entries belong to an active league
-     *
-     * @return True on success
-     */
-    public boolean addMinutely() {
-        String query =  "INSERT INTO league_history_minutely_rolling ( " +
-                        "    id_l, id_d, mean, median, mode, exalted) " +
-                        "SELECT id_l, id_d, mean, median, mode, exalted  " +
-                        "FROM league_items AS i " +
-                        "JOIN data_leagues AS l ON i.id_l = l.id " +
-                        "WHERE l.active = 1 ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add minutely", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Copies data from table `league_history_minutely_rolling` to table `league_history_hourly_rolling` every hour
+     * Copies data from table `league_items` to table `league_history_hourly_rolling` every hour
      * on a rolling basis with a history of 24 hours
      *
      * @return True on success
      */
     public boolean addHourly() {
-        String query =  "INSERT INTO league_history_hourly_rolling (" +
-                        "    id_l, id_d, volatile, mean, median, mode, exalted, " +
-                        "    count, quantity, inc, `dec`)" +
-                        "SELECT " +
-                        "    i.id_l, i.id_d, i.volatile, " +
-                        "    TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median ), 4), " +
-                        "    TRUNCATE(AVG(h.mode), 4), TRUNCATE(AVG(h.exalted), 4), " +
-                        "    i.count, i.quantity, i.inc, i.dec " +
-                        "FROM league_history_minutely_rolling AS h " +
-                        "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "WHERE h.time > ADDDATE(NOW(), INTERVAL -60 MINUTE) " +
-                        "GROUP BY h.id_l, h.id_d";
+        String query =  "INSERT INTO league_history_hourly_rolling ( " +
+                        "  id_l, id_d, volatile, mean, median, mode, " +
+                        "  exalted, count, quantity, inc, `dec`) " +
+                        "SELECT id_l, id_d, volatile, mean, median, mode, " +
+                        "       exalted, count, quantity, inc, `dec` " +
+                        "FROM   league_items AS i " +
+                        "JOIN   data_leagues AS l " +
+                        "  ON   i.id_l = l.id " +
+                        "WHERE  l.active = 1 ";
 
         try {
             if (connection.isClosed()) return false;

@@ -276,25 +276,6 @@ CREATE TABLE league_history_hourly_rolling (
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Table structure league_history_minutely_rolling
---
-
-CREATE TABLE league_history_minutely_rolling (
-    id_l     SMALLINT       UNSIGNED NOT NULL,
-    id_d     INT            UNSIGNED NOT NULL,
-    time     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    mean     DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    median   DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    mode     DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    exalted  DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE RESTRICT,
-
-    INDEX time (time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 -- --------------------------------------------------------------------------------------------------------------------
 -- Account tables
 -- --------------------------------------------------------------------------------------------------------------------
@@ -569,20 +550,6 @@ VALUES
 -- --------------------------------------------------------------------------------------------------------------------
 -- Event setup
 -- --------------------------------------------------------------------------------------------------------------------
-
---
--- Event configuration remove60
---
-
-DROP EVENT IF EXISTS remove60;
-
-CREATE EVENT remove60
-  ON SCHEDULE EVERY 1 MINUTE
-  STARTS '2018-01-01 08:00:00'
-  COMMENT 'Clears out entries older than 1 hour'
-  DO
-    DELETE FROM league_history_minutely_rolling
-    WHERE       time < ADDDATE(NOW(), INTERVAL -60 MINUTE);
 
 --
 -- Event configuration remove24
