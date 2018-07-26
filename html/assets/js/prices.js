@@ -739,7 +739,7 @@ function buildSparkLine(item) {
   svg.setAttribute("height", 25);
   svg.setAttribute("stroke-width", 3);
 
-  sparkline.sparkline(svg, item["history"]["spark"]);
+  sparkline(svg, item["history"]["spark"]);
 
   return svg.outerHTML;
 }
