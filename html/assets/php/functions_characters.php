@@ -8,6 +8,7 @@ function CheckGETVariableError($DATA) {
   if ( empty($_GET) ) return 0;
   if ( !$DATA["mode"] || $DATA["mode"] !== "account" && $DATA["mode"] !== "character") return 1;
   if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) return 2;
+  if ( $DATA["search"] && strlen($DATA["search"]) > 32 ) return 2;
   if ( !$DATA["page"] ) return 3;
   if ( $DATA["pages"] && $DATA["page"] > $DATA["pages"] ) return 4;
 
@@ -19,7 +20,7 @@ function DisplayError($code) {
   switch ($code) {
     case 0:  $msg = "There was not error";            break;
     case 1:  $msg = "Invalid mode";                   break;
-    case 2:  $msg = "Minimum length is 3 characters"; break;
+    case 2:  $msg = "Invalid search string length";   break;
     case 3:
     case 4:  $msg = "Invalid page";                   break;
     default: $msg = "Unknown error";                  break;
@@ -29,11 +30,16 @@ function DisplayError($code) {
 }
 
 function DisplayMotD($DATA) {
-  $accDisplay = "<span class='custom-text-green'>{$DATA["totalAccs"]}</span>";
-  $charDisplay = "<span class='custom-text-green'>{$DATA["totalChars"]}</span>";
+  $accDisplay = number_format($DATA["totalAccs"]);
+  $charDisplay = number_format($DATA["totalChars"]);
+  $relDisplay = number_format($DATA["totalRels"]);
+
+  $accDisplay = "<span class='custom-text-green'>$accDisplay</span>";
+  $charDisplay = "<span class='custom-text-green'>$charDisplay</span>";
+  $relDisplay = "<span class='custom-text-green'>$relDisplay</span>";
   $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-14 00:00:00") . "</span>";
 
-  echo "Explore $accDisplay account names, $charDisplay character names and their history since $timeDisplay.";
+  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations from $timeDisplay.";
 }
 
 function SetCheckboxState($DATA, $state, $mode) {
@@ -52,8 +58,6 @@ function FillTable($pdo, $DATA) {
     CharacterSearch($pdo, $DATA);
   } else if ($len > 2 && $DATA["mode"] === "character") {
     AccountSearch($pdo, $DATA);
-  } else {
-    GetData($pdo, $DATA);
   }
 }
 
@@ -107,7 +111,15 @@ function GetResultCount($pdo, $DATA) {
   }
 }
 
-function DisplayPagination($DATA) {
+function DisplayPagination($DATA, $pos) {
+  if ($DATA["pages"] <= 1) return;
+
+  if ($pos === "top") {
+    echo "<div class='btn-toolbar justify-content-center my-3'><div class='btn-group mr-2'>";
+  } else {
+    echo "<div class='btn-toolbar justify-content-center mt-3'><div class='btn-group mr-2'>";
+  }
+
   if ($DATA["page"] > 1) {
     $url = FormSearchURL($DATA["mode"], $DATA["search"], $DATA["page"] - 1);
     echo "<a class='btn btn-outline-dark' href='$url'>«</a>";
@@ -122,6 +134,8 @@ function DisplayPagination($DATA) {
     $url = FormSearchURL($DATA["mode"], $DATA["search"], $DATA["page"] + 1);
     echo "<a class='btn btn-outline-dark' href='$url'>»</a>";
   }
+
+  echo "</div></div>";
 }
 
 
@@ -139,44 +153,6 @@ function GetTotalCounts($pdo, $DATA) {
   $DATA["totalChars"] = $row["charCount"];
 
   return $DATA;
-}
-
-
-function GetData($pdo, $DATA) {
-  $query = "SELECT
-    a.name AS account,
-    c.name AS `character`, 
-    l.display AS league,
-    r.seen
-  FROM (
-    SELECT   *
-    FROM     account_relations 
-    ORDER BY seen DESC 
-    LIMIT    ?
-    OFFSET   ?
-  ) AS r
-  JOIN     account_accounts   AS a ON a.id = r.id_a
-  JOIN     account_characters AS c ON c.id = r.id_c
-  JOIN     data_leagues       AS l ON l.id = r.id_l";
-
-  $offset = ($DATA["page"] - 1) * $DATA["limit"];
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$DATA["limit"], $offset]);
-
-  while ($row = $stmt->fetch()) {
-    $timestamp = FormatTimestamp($row["seen"]);
-
-    $displayAcc  = FormSearchHyperlink("account",   $row["account"],   $row["account"]);
-    $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
-
-    echo "<tr>
-      <td>$displayAcc</td>
-      <td>$displayChar</td>
-      <td>{$row["league"]}</td>
-      <td>$timestamp</td>
-    </tr>";
-  }
 }
 
 // Search based on account name
@@ -201,9 +177,7 @@ function CharacterSearch($pdo, $DATA) {
     a.name AS account,
     c.name AS `character`,
     l.display AS league,
-    r.seen,
-    a.hidden,
-    r.inactive
+    r.seen
   FROM (
     SELECT *
     FROM   account_accounts 
@@ -226,12 +200,7 @@ function CharacterSearch($pdo, $DATA) {
   while ($row = $stmt->fetch()) {
     $displayStamp = FormatTimestamp($row["seen"]);
 
-    if ($row["hidden"]) {
-      $displayChar = "<span class='custom-text-dark'>Requested privacy</span>";
-    } else {
-      $tmp = $row["inactive"] ? "<span class='custom-text-dark'>{$row["character"]}</span>" : $row["character"];
-      $displayChar = FormSearchHyperlink("character", $row["character"], $tmp);
-    }
+    $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
 
     $displayAcc = HighLightMatch($DATA["search"], $row["account"]);
     $displayAcc = FormSearchHyperlink("account", $row["account"], $displayAcc);
@@ -267,8 +236,7 @@ function AccountSearch($pdo, $DATA) {
     a.name AS account,
     c.name AS `character`,
     l.display AS league,
-    r.seen,
-    r.inactive
+    r.seen
   FROM (
     SELECT *
     FROM   account_characters 
@@ -289,13 +257,8 @@ function AccountSearch($pdo, $DATA) {
   while ($row = $stmt->fetch()) {
     $displayStamp = FormatTimestamp($row["seen"]);
 
-    if ($row["inactive"]) {
-      $displayChar = "<span class='custom-text-dark'>{$row["character"]}</span>";
-      $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
-    } else {
-      $displayChar = HighLightMatch($DATA["search"], $row["character"]);
-      $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
-    }
+    $displayChar = HighLightMatch($DATA["search"], $row["character"]);
+    $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
 
     $displayAcc = FormSearchHyperlink("account", $row["account"], $row["account"]);
 

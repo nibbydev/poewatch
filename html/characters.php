@@ -126,17 +126,14 @@
           </form>
           <!--/Search options/-->
 
+          <!-- Content card -->
+          <?php if (!$ERRORCODE && $DATA["search"]): ?>
+
           <hr>
 
-          <?php if (!$ERRORCODE && $DATA["pages"] > 1): ?>
           <!-- Top pagination -->
-          <div class="btn-toolbar justify-content-center my-3">
-            <div class="btn-group mr-2">
-              <?php DisplayPagination($DATA); ?>
-            </div>
-          </div>
+          <?php if (!$ERRORCODE) DisplayPagination($DATA, "top"); ?>
           <!--/Top pagination/-->
-          <?php endif; ?>
 
           <!-- Main table -->
           <div class="card api-data-table">
@@ -158,15 +155,12 @@
           </div>
           <!--/Main table/-->
 
-          <?php if (!$ERRORCODE && $DATA["pages"] > 1): ?>
           <!-- Bottom pagination -->
-          <div class="btn-toolbar justify-content-center mt-3">
-            <div class="btn-group mr-2">
-              <?php DisplayPagination($DATA); ?>
-            </div>
-          </div>
+          <?php if (!$ERRORCODE) DisplayPagination($DATA, "bottom"); ?>
           <!--/Bottom pagination/-->
+
           <?php endif; ?>
+          <!--/Content card/-->
 
         </div>
         <!--/Main card body/-->
