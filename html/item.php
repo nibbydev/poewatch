@@ -179,9 +179,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <!-- Service script -->
 <script>

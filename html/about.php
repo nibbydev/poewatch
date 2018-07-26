@@ -41,19 +41,6 @@
   <div class="row">
     <!-- Main content -->
     <div class="col-md-10 offset-md-1 mt-4">
-      <div class="row mb-3">
-        <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-header">
-              <h3 class="text-center">Attention!</h3>
-            </div>
-            <div class="card-body">
-              <p>This site is still a work in progress. Since there have not been any official releases to date and the service is currently in its testing phase, prices may be inaccurate, data may be wiped regularly, API endpoints may change, layout will change.</p>
-            </div>
-            <div class="card-footer slim-card-edge"></div>
-          </div>
-        </div>
-      </div> 
       <div class="row">
         <div class="col-lg">
           <div class="card custom-card">
@@ -67,6 +54,7 @@
               <h5>FAQ</h5>
               <p><em>Where do you get your prices?</em><br>The public stash API over at pathofexile.com. Prices are automatically generated from the items players list for sale.</p>
               <p><em>How up to date are the prices?</em><br>All data is recalculated within 60 second intervals. Prices on the website are always the most recent unless stated otherwise.</p>
+              <p><em>How do you acquire account and character names?</em><br>Through the stash API. Meaning that if a player has listed an item in a public stash tab, that character is recorded.</p>
               <hr>
               <h5>Legal text</h5>
               <p>As this is a relatively new service, price history for Abyss, Breach, Harbinger and Legacy leagues is provided by <a href="http://poe.ninja">poe.ninja</a> under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">SA 3.0</a> license.</p>
@@ -82,9 +70,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>

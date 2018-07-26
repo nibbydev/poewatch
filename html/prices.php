@@ -307,7 +307,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body p-2">
               <table class="table price-table table-striped table-hover mb-0" id="searchResults">
                 <thead>
                   <tr>
@@ -333,9 +333,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <!-- Service script -->
 <script>

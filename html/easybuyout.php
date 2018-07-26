@@ -65,9 +65,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="assets/js/progress.js"></script>

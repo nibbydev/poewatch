@@ -18,7 +18,6 @@
   // Check if user-provided parameters are valid
   $ERRORCODE = CheckGETVariableError($DATA);
 
-  
   // Get total number of unique account and character names
   $DATA = GetTotalCounts($pdo, $DATA);
 
@@ -110,12 +109,11 @@
             <div class="row mb-3">
               <div class="col">
                 <div class="btn-group">
-                  <input type="text" class="form-control" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
+                  <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
                   <button type="submit" class="btn btn-outline-dark">Search</button>
                 </div>
               </div>
             </div>
-
             <!--/Search/-->
 
             <?php 
@@ -173,9 +171,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
