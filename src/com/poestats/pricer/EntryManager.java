@@ -166,12 +166,6 @@ public class EntryManager extends Thread {
             a = System.currentTimeMillis();
             Main.DATABASE.addHourly();
             a24 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.resetCounters();
-            a25 += System.currentTimeMillis() - a;
-
-            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
         }
 
         if (status.isTwentyFourBool()) {
@@ -180,6 +174,14 @@ public class EntryManager extends Thread {
             a30 += System.currentTimeMillis() - a;
 
             System.out.printf("{3X series} > [30%5d]\n", a30);
+        }
+
+        if (status.isSixtyBool()) {
+            a = System.currentTimeMillis();
+            Main.DATABASE.resetCounters();
+            a25 += System.currentTimeMillis() - a;
+
+            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
         }
     }
 
