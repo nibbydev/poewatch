@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 
-public class EntryManager {
+public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,53 @@ public class EntryManager {
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
     private Gson gson;
+
+    private volatile boolean flagLocalRun = true;
+    private volatile boolean readyToExit = false;
+    private final Object monitor = new Object();
+
+    //------------------------------------------------------------------------------------------------------------
+    // Thread control
+    //------------------------------------------------------------------------------------------------------------
+
+    public void run() {
+        while (flagLocalRun) {
+            synchronized (monitor) {
+                try {
+                    monitor.wait(100);
+                } catch (InterruptedException e) { }
+            }
+
+            if (System.currentTimeMillis() - status.lastRunTime > Config.entryController_sleepMS) {
+                status.lastRunTime = System.currentTimeMillis();
+                run2();
+            }
+        }
+
+        readyToExit = true;
+    }
+
+    /**
+     * Stops the controller
+     */
+    public void stopController() {
+        Main.ADMIN.log_("Stopping EntryManager", 1);
+
+        flagLocalRun = false;
+
+        while (!readyToExit) try {
+            synchronized (monitor) {
+                monitor.notify();
+            }
+
+            Thread.sleep(50);
+        } catch (InterruptedException ex) { }
+
+        upload();
+        uploadAccounts();
+
+        Main.ADMIN.log_("EntryManager stopped", 1);
+    }
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -56,15 +103,6 @@ public class EntryManager {
      */
     private void loadCurrency() {
         Main.DATABASE.getCurrency(currencyLeagueMap);
-    }
-
-    public void shutdown() {
-        Main.ADMIN.log_("Stopping EntryManager", 1);
-
-        upload();
-        uploadAccounts();
-
-        Main.ADMIN.log_("EntryManager stopped", 1);
     }
 
     /**
@@ -272,15 +310,8 @@ public class EntryManager {
     /**
      * Main loop of the pricing service. Can be called whenever, only runs after specific amount of time has passed
      */
-    public void run() {
+    private void run2() {
         long current = System.currentTimeMillis();
-
-        // Run every minute (-ish)
-        if (current - status.lastRunTime < Config.entryController_sleepMS) return;
-        status.lastRunTime = System.currentTimeMillis();
-
-        // Allow workers to pause
-        try { Thread.sleep(50); } catch(InterruptedException ex) { Thread.currentThread().interrupt(); }
 
         // Run once every 10min
         if (current - status.tenCounter > Config.entryController_tenMS) {

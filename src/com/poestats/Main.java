@@ -67,6 +67,7 @@ public class Main {
             ENTRY_MANAGER = new EntryManager();
             ENTRY_MANAGER.setGson(gsonBuilder.create());
             ENTRY_MANAGER.init();
+            ENTRY_MANAGER.start();
 
             // Parse CLI parameters
             parseCommandParameters(args);
@@ -78,7 +79,7 @@ public class Main {
             commandLoop();
         } finally {
             if (WORKER_MANAGER != null) WORKER_MANAGER.stopController();
-            if (WORKER_MANAGER != null) ENTRY_MANAGER.shutdown();
+            if (ENTRY_MANAGER != null) ENTRY_MANAGER.stopController();
             if (DATABASE != null) DATABASE.disconnect();
         }
     }
