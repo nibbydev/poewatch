@@ -43,19 +43,20 @@
     <div class="col-md-10 offset-md-1 mt-4">
       <div class="card custom-card">
         <div class="card-header">
-          <h2 class="text-white">Hey, you!</h3>
-          <div>Ever felt a need for a tool for quickly adding buyout notes to masses of items based on their average prices? Well, look no further!</div>
+          <h3>EasyBuyout</h3>
         </div>
         <div class="card-body">
+          <div>Ever felt a need for a tool for quickly adding buyout notes to masses of items based on their average prices?</div>
+          <div class='mb-3'>Well, look no further!</div>
           <img src="assets/img/pricer.gif" class="float-right ml-3 rounded img-fluid">
-          <h5 class="text-white">Where can I get one?</h5>
-          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/EasyBuyout/releases/latest" role="button">Over at GitHub</a>
           <h5 class="text-white">How does it work?</h5>
           <p class="paragraph-text">When you right-click an item in a premium tab (or any tab), this handy program copies the item data, matches it against its database and instantly pastes a buyout note containing the average price.</p>
           <h5 class="text-white">Who is it for?</h5>
           <p class="paragraph-text">Players who are tired of induvidually pricing hundreds of items in their stash tabs. Be you a labrunner or an Uber Atziri farmer who has dozens upon dozens of gems or maps that need prices or maybe just your average player who wants to actually enjoy the game instead of playing Shoppe Keep all day long. Well, in that case this program is perfect for you.</p>
           <h5 class="text-white">What can it price?</h5>
           <p class="paragraph-text">Armours, weapons, accessories, flasks, 6-links, 5-links, jewels, gems, divination cards, maps, currency, prophecies, essences, normal, magic and rare items. In short: if it's an item, this program can find a price for it.</p>
+          <h5 class="text-white">Where can I get one?</h5>
+          <a class="btn btn-outline-dark mb-2" href="https://github.com/siegrest/EasyBuyout/releases/latest">Over at GitHub</a>
         </div>
         <div class="card-footer slim-card-edge"></div>
       </div>
