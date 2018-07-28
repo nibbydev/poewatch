@@ -29,7 +29,7 @@ public class RelationManager {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Reads currency and item data from file on object init
+     * Reads currency and item data from file on object prep
      */
     public boolean init() {
         boolean success;

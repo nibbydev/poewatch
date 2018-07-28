@@ -326,6 +326,32 @@ CREATE TABLE account_relations (
     INDEX seen (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure account_history
+--
+
+CREATE TABLE account_history (
+    id_old  BIGINT     UNSIGNED NOT NULL,
+    id_new  BIGINT     UNSIGNED NOT NULL,
+    moved   TINYINT    UNSIGNED NOT NULL DEFAULT 1,
+    found   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (id_old) REFERENCES account_accounts (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_new) REFERENCES account_accounts (id) ON DELETE RESTRICT,
+    CONSTRAINT `unique` UNIQUE (id_old, id_new)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure account_data
+--
+
+CREATE TABLE account_data (
+    id        BIGINT          UNSIGNED PRIMARY KEY,
+    private   TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
+
+    FOREIGN KEY (id) REFERENCES account_accounts (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Base values
 -- --------------------------------------------------------------------------------------------------------------------

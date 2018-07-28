@@ -2,6 +2,7 @@ package com.poestats;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.poestats.account.AccountManager;
 import com.poestats.admin.AdminSuite;
 import com.poestats.database.Database;
 import com.poestats.league.LeagueManager;
@@ -26,6 +27,7 @@ public class Main {
     public static AdminSuite ADMIN;
     public static LeagueManager LEAGUE_MANAGER;
     public static Database DATABASE;
+    public static AccountManager ACCOUNT_MANAGER;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
@@ -63,21 +65,23 @@ public class Main {
             success = RELATIONS.init();
             if (!success) return;
 
+            ACCOUNT_MANAGER = new AccountManager();
             WORKER_MANAGER = new WorkerManager();
             ENTRY_MANAGER = new EntryManager();
             ENTRY_MANAGER.setGson(gsonBuilder.create());
-            ENTRY_MANAGER.init();
-            ENTRY_MANAGER.start();
 
             // Parse CLI parameters
             parseCommandParameters(args);
 
-            // Start controller
+            // Start controllers
+            ENTRY_MANAGER.start();
             WORKER_MANAGER.start();
+            ACCOUNT_MANAGER.start();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
+            if (ACCOUNT_MANAGER != null) ACCOUNT_MANAGER.stopController();
             if (WORKER_MANAGER != null) WORKER_MANAGER.stopController();
             if (ENTRY_MANAGER != null) ENTRY_MANAGER.stopController();
             if (DATABASE != null) DATABASE.disconnect();
@@ -144,6 +148,7 @@ public class Main {
                 + "    id - add a start changeID\n"
                 + "    counter - counter commands\n"
                 + "    gen - generate files manually\n"
+                + "    acc - account manager commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -176,6 +181,9 @@ public class Main {
                         break;
                     case "gen":
                         commandGen(userInput);
+                        break;
+                    case "acc":
+                        commandAcc(userInput);
                         break;
                     default:
                         System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
@@ -404,6 +412,18 @@ public class Main {
 
             default:
                 System.out.println("Unknown gen");
+                break;
+        }
+    }
+
+    private static void commandAcc(String[] userInput) {
+        switch (userInput[1]) {
+            case "run":
+                ACCOUNT_MANAGER.getAccountRelations();
+                break;
+
+            default:
+                System.out.println("Unknown account cmd");
                 break;
         }
     }

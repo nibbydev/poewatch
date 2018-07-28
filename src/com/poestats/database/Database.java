@@ -4,6 +4,7 @@ import com.poestats.Config;
 import com.poestats.Item;
 import com.poestats.Main;
 import com.poestats.Misc;
+import com.poestats.account.AccountRelation;
 import com.poestats.league.LeagueEntry;
 import com.poestats.pricer.AccountEntry;
 import com.poestats.pricer.itemdata.ItemdataEntry;
@@ -122,6 +123,192 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not upload account names", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Gets potential accounts that might have changed names
+     *
+     * @param accountRelations Empty List of AccountRelation to be filled
+     * @return True on success
+     */
+    public boolean getAccountRelations(List<AccountRelation> accountRelations) {
+        String query =  "SELECT oldAcc.id         AS oldAccountId, " +
+                        "       oldAcc.accName    AS oldAccountName, " +
+                        "       newAcc.id         AS newAccountId, " +
+                        "       newAcc.accName    AS newAccountName, " +
+                        "       COUNT(oldAcc.idC) AS matches " +
+                        "FROM ( " +
+                        "    SELECT   a.id   AS id, " +
+                        "             a.name AS accName, " +
+                        "             c.id   AS idC, " +
+                        "             a.seen AS seen " +
+                        "    FROM     account_relations  AS r " +
+                        "    INNER JOIN ( " +
+                        "        SELECT   id_c " +
+                        "        FROM     account_relations  " +
+                        "        GROUP BY id_c  " +
+                        "        HAVING   COUNT(*) > 1 " +
+                        "    ) AS tmp1 ON tmp1.id_c = r.id_c " +
+                        "    JOIN     account_accounts   AS a ON a.id = r.id_a " +
+                        "    JOIN     account_characters AS c ON c.id = r.id_c " +
+                        ") AS oldAcc " +
+                        "JOIN ( " +
+                        "    SELECT   a.id   AS id, " +
+                        "             a.name AS accName, " +
+                        "             c.id   AS idC, " +
+                        "             a.seen AS seen " +
+                        "    FROM     account_relations  AS r " +
+                        "    INNER JOIN ( " +
+                        "        SELECT   id_c " +
+                        "        FROM     account_relations  " +
+                        "        GROUP BY id_c  " +
+                        "        HAVING   COUNT(*) > 1 " +
+                        "    ) AS tmp1 ON tmp1.id_c = r.id_c " +
+                        "    JOIN     account_accounts   AS a ON a.id = r.id_a " +
+                        "    JOIN     account_characters AS c ON c.id = r.id_c " +
+                        ") AS newAcc " +
+                        "  ON      oldAcc.idC  = newAcc.idC " +
+                        "    AND   oldAcc.seen < newAcc.seen " +
+                        "    AND   oldAcc.id  != newAcc.id " +
+                        "LEFT JOIN account_history AS h " +
+                        "  ON      h.id_old = oldAcc.id " +
+                        "    AND   h.id_new = newAcc.id " +
+                        "WHERE     h.found IS NULL " +
+                        "  OR      h.moved = 0 " +
+                        "GROUP BY  oldAcc.id, newAcc.id " +
+                        "HAVING    matches > 1; ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    AccountRelation accountRelation = new AccountRelation();
+                    accountRelation.load(resultSet);
+                    accountRelations.add(accountRelation);
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not get account name relations", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Creates an entry in table `account_history`, indicating account name change
+     *
+     * @param accountRelations List of AccountRelation to be created
+     * @return True on success
+     */
+    public boolean createAccountRelation(List<AccountRelation> accountRelations) {
+        String query = "INSERT INTO account_history (id_old, id_new, moved) VALUES (?, ?, ?); ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (AccountRelation accountRelation : accountRelations) {
+                    statement.setLong(1, accountRelation.oldAccountId);
+                    statement.setLong(2, accountRelation.newAccountId);
+                    statement.setInt(3, accountRelation.moved);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not create account relation", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Routes all data from old account entries to new entry, does so in 4 steps:
+     *   1. Deletes duplicate character names shared between the two accounts
+     *   2. Routes history entries from old account to new account
+     *   3. Routes relations from old account to new account
+     *   4. Routes account data from old account to new account
+     *
+     * @param accountRelations List of AccountRelation to be routed
+     * @return True on success
+     */
+    public boolean routeAccountData(List<AccountRelation> accountRelations) {
+        String query0 = "DELETE del  " +
+                        "FROM account_relations AS del " +
+                        "JOIN ( " +
+                        "  SELECT r2.id  " +
+                        "  FROM account_relations AS r1 " +
+                        "  JOIN ( " +
+                        "    SELECT *  " +
+                        "    FROM account_relations  " +
+                        "    WHERE id_a = ? " +
+                        "  ) AS r2 ON r1.id_c = r2.id_c " +
+                        "  WHERE r1.id_a = ? " +
+                        ") AS r ON del.id = r.id";
+
+        String query1 = "UPDATE account_history   SET id_new = ? WHERE id_new = ?; ";
+        String query2 = "UPDATE account_relations SET id_a   = ? WHERE id_a   = ?; ";
+        String query3 = "UPDATE account_data      SET id     = ? WHERE id     = ?; ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query0)) {
+                for (AccountRelation accountRelation : accountRelations) {
+                    statement.setLong(1, accountRelation.newAccountId);
+                    statement.setLong(2, accountRelation.oldAccountId);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query1)) {
+                for (AccountRelation accountRelation : accountRelations) {
+                    statement.setLong(1, accountRelation.newAccountId);
+                    statement.setLong(2, accountRelation.oldAccountId);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query2)) {
+                for (AccountRelation accountRelation : accountRelations) {
+                    statement.setLong(1, accountRelation.newAccountId);
+                    statement.setLong(2, accountRelation.oldAccountId);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query3)) {
+                for (AccountRelation accountRelation : accountRelations) {
+                    statement.setLong(1, accountRelation.newAccountId);
+                    statement.setLong(2, accountRelation.oldAccountId);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not route account data", 3);
             return false;
         }
     }

@@ -32,6 +32,14 @@ public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     public void run() {
+        loadCurrency();
+        fixCounters();
+
+        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
+        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
+        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
+        Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
+
         while (flagLocalRun) {
             synchronized (monitor) {
                 try {
@@ -41,7 +49,7 @@ public class EntryManager extends Thread {
 
             if (System.currentTimeMillis() - status.lastRunTime > Config.entryController_sleepMS) {
                 status.lastRunTime = System.currentTimeMillis();
-                run2();
+                startCycle();
             }
         }
 
@@ -64,7 +72,7 @@ public class EntryManager extends Thread {
             Thread.sleep(50);
         } catch (InterruptedException ex) { }
 
-        upload();
+        uploadRawEntries();
         uploadAccounts();
 
         Main.ADMIN.log_("EntryManager stopped", 1);
@@ -75,117 +83,13 @@ public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Loads data in from file on object initialization
-     */
-    public void init() {
-        loadStartParameters();
-        loadCurrency();
-    }
-
-    /**
-     * Loads status data from file on program start
-     */
-    private void loadStartParameters() {
-        fixCounters();
-
-        String tenMinDisplay = "[10m:" + String.format("%3d", 10 - (System.currentTimeMillis() - status.tenCounter) / 60000) + " min]";
-        String resetTimeDisplay = "[1h:" + String.format("%3d", 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000) + " min]";
-        String twentyHourDisplay = "[24h:" + String.format("%5d", 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000) + " min]";
-        Main.ADMIN.log_("Loaded params: " + tenMinDisplay + resetTimeDisplay + twentyHourDisplay, -1);
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Methods for multi-db file structure
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
      * Loads in currency rates on program start
      */
     private void loadCurrency() {
         Main.DATABASE.getCurrency(currencyLeagueMap);
     }
 
-    /**
-     * Writes all collected data to database
-     */
-    private void cycle() {
-        long a;
-        long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0;
-        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
-        long a30 = 0;
-
-        if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
-            Main.DATABASE.updateVolatile();
-            a20 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.calculateVolatileMedian();
-            a21 += System.currentTimeMillis() - a;
-        }
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.updateApproved();
-        a10 += System.currentTimeMillis() - a;
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.updateCounters();
-        a11 += System.currentTimeMillis() - a;
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.calculateMean();
-        a12 += System.currentTimeMillis() - a;
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.calculateMedian();
-        a13 += System.currentTimeMillis() - a;
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.calculateMode();
-        a14 += System.currentTimeMillis() - a;
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.removeOldItemEntries();
-        a15 += System.currentTimeMillis() - a;
-
-        a = System.currentTimeMillis();
-        Main.DATABASE.calculateExalted();
-        a16 += System.currentTimeMillis() - a;
-
-        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d]\n", a10, a11, a12, a13, a14, a15, a16);
-
-        if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
-            Main.DATABASE.calcQuantity();
-            a22 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.updateMultipliers();
-            a23 += System.currentTimeMillis() - a;
-
-            a = System.currentTimeMillis();
-            Main.DATABASE.addHourly();
-            a24 += System.currentTimeMillis() - a;
-        }
-
-        if (status.isTwentyFourBool()) {
-            a = System.currentTimeMillis();
-            Main.DATABASE.addDaily();
-            a30 += System.currentTimeMillis() - a;
-
-            System.out.printf("{3X series} > [30%5d]\n", a30);
-        }
-
-        if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
-            Main.DATABASE.resetCounters();
-            a25 += System.currentTimeMillis() - a;
-
-            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
-        }
-    }
-
-    private void upload() {
+    private void uploadRawEntries() {
         Set<RawEntry> entrySet = this.entrySet;
         this.entrySet = new HashSet<>();
 
@@ -305,14 +209,7 @@ public class EntryManager extends Thread {
         Main.ADMIN.log_(String.format("Itemdata rebuilt (%4d ms)", System.currentTimeMillis() - startTime), 0);
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Often called controller methods
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Main loop of the pricing service. Can be called whenever, only runs after specific amount of time has passed
-     */
-    private void run2() {
+    private void startCycle() {
         long current = System.currentTimeMillis();
 
         // Run once every 10min
@@ -337,11 +234,12 @@ public class EntryManager extends Thread {
             status.twentyFourCounter += (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
             status.setTwentyFourBool(true);
             Main.ADMIN.log_("24 activated", 0);
+            Main.ACCOUNT_MANAGER.getAccountRelations();
         }
 
         // Upload gathered prices
         long time_upload = System.currentTimeMillis();
-        upload();
+        uploadRawEntries();
         time_upload = System.currentTimeMillis() - time_upload;
 
         // Upload account names
@@ -383,6 +281,86 @@ public class EntryManager extends Thread {
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
+    }
+
+    /**
+     * Writes all collected data to database
+     */
+    private void cycle() {
+        long a;
+        long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0, a15 = 0, a16 = 0;
+        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
+        long a30 = 0;
+
+        if (status.isSixtyBool()) {
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateVolatile();
+            a20 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.calculateVolatileMedian();
+            a21 += System.currentTimeMillis() - a;
+        }
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.updateApproved();
+        a10 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.updateCounters();
+        a11 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMean();
+        a12 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMedian();
+        a13 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateMode();
+        a14 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.removeOldItemEntries();
+        a15 += System.currentTimeMillis() - a;
+
+        a = System.currentTimeMillis();
+        Main.DATABASE.calculateExalted();
+        a16 += System.currentTimeMillis() - a;
+
+        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d][15%5d][16%5d]\n", a10, a11, a12, a13, a14, a15, a16);
+
+        if (status.isSixtyBool()) {
+            a = System.currentTimeMillis();
+            Main.DATABASE.calcQuantity();
+            a22 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.updateMultipliers();
+            a23 += System.currentTimeMillis() - a;
+
+            a = System.currentTimeMillis();
+            Main.DATABASE.addHourly();
+            a24 += System.currentTimeMillis() - a;
+        }
+
+        if (status.isTwentyFourBool()) {
+            a = System.currentTimeMillis();
+            Main.DATABASE.addDaily();
+            a30 += System.currentTimeMillis() - a;
+
+            System.out.printf("{3X series} > [30%5d]\n", a30);
+        }
+
+        if (status.isSixtyBool()) {
+            a = System.currentTimeMillis();
+            Main.DATABASE.resetCounters();
+            a25 += System.currentTimeMillis() - a;
+
+            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
+        }
     }
 
     /**
