@@ -244,7 +244,7 @@ public class Database {
      * @return True on success
      */
     public boolean routeAccountData(List<AccountRelation> accountRelations) {
-        String query0 = "DELETE del  " +
+        String query1 = "DELETE del  " +
                         "FROM account_relations AS del " +
                         "JOIN ( " +
                         "  SELECT r2.id  " +
@@ -257,25 +257,17 @@ public class Database {
                         "  WHERE r1.id_a = ? " +
                         ") AS r ON del.id = r.id";
 
-        String query1 = "UPDATE account_history   SET id_new = ? WHERE id_new = ?; ";
-        String query2 = "UPDATE account_relations SET id_a   = ? WHERE id_a   = ?; ";
-        String query3 = "UPDATE account_data      SET id     = ? WHERE id     = ?; ";
+        String query2 = "UPDATE account_history   SET id_new = ? WHERE id_new = ?; ";
+        String query3 = "UPDATE account_relations SET id_a   = ? WHERE id_a   = ?; ";
+        String query4 = "UPDATE account_data      SET id     = ? WHERE id     = ?; ";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query0)) {
-                for (AccountRelation accountRelation : accountRelations) {
-                    statement.setLong(1, accountRelation.newAccountId);
-                    statement.setLong(2, accountRelation.oldAccountId);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (AccountRelation accountRelation : accountRelations) {
+                    if (accountRelation.moved == 0) continue;
+
                     statement.setLong(1, accountRelation.newAccountId);
                     statement.setLong(2, accountRelation.oldAccountId);
                     statement.addBatch();
@@ -286,6 +278,8 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query2)) {
                 for (AccountRelation accountRelation : accountRelations) {
+                    if (accountRelation.moved == 0) continue;
+
                     statement.setLong(1, accountRelation.newAccountId);
                     statement.setLong(2, accountRelation.oldAccountId);
                     statement.addBatch();
@@ -296,6 +290,20 @@ public class Database {
 
             try (PreparedStatement statement = connection.prepareStatement(query3)) {
                 for (AccountRelation accountRelation : accountRelations) {
+                    if (accountRelation.moved == 0) continue;
+
+                    statement.setLong(1, accountRelation.newAccountId);
+                    statement.setLong(2, accountRelation.oldAccountId);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query4)) {
+                for (AccountRelation accountRelation : accountRelations) {
+                    if (accountRelation.moved == 0) continue;
+
                     statement.setLong(1, accountRelation.newAccountId);
                     statement.setLong(2, accountRelation.oldAccountId);
                     statement.addBatch();
