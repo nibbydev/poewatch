@@ -409,6 +409,9 @@ public class Main {
             case "itemdata":
                 ENTRY_MANAGER.generateItemDataFile();
                 break;
+            case "get":
+                ENTRY_MANAGER.generateOutputFiles();
+                break;
 
             default:
                 System.out.println("Unknown gen");

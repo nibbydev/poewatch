@@ -173,12 +173,14 @@ public class Database {
                         "    AND   oldAcc.seen < newAcc.seen " +
                         "    AND   oldAcc.id  != newAcc.id " +
                         "LEFT JOIN account_history AS h " +
-                        "  ON      h.id_old = oldAcc.id " +
-                        "    AND   h.id_new = newAcc.id " +
-                        "WHERE     h.found IS NULL " +
-                        "  OR      h.moved = 0 " +
+                        "  ON      h.id_old    = oldAcc.id " +
+                        "    AND   h.id_new    = newAcc.id " +
+                        "WHERE     h.id_old IS NULL " +
                         "GROUP BY  oldAcc.id, newAcc.id " +
-                        "HAVING    matches > 1; ";
+                        "HAVING    matches > 0 " +
+                        "ORDER BY  oldAcc.seen ASC, newAcc.seen ASC; ";
+
+        ArrayList<Long> filter = new ArrayList<>();
 
         try {
             if (connection.isClosed()) return false;
@@ -187,6 +189,10 @@ public class Database {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
+                    long id = resultSet.getLong("oldAccountId");
+                    if (filter.contains(id)) continue;
+                    filter.add(id);
+
                     AccountRelation accountRelation = new AccountRelation();
                     accountRelation.load(resultSet);
                     accountRelations.add(accountRelation);
@@ -1381,18 +1387,15 @@ public class Database {
      * @return True on success
      */
     public boolean addDaily() {
-        String query =  "INSERT INTO league_history_daily_rolling (" +
-                        "    id_l, id_d, volatile, mean, median, mode, exalted, " +
-                        "    count, quantity, inc, `dec`)" +
-                        "SELECT " +
-                        "    h.id_l, h.id_d, i.volatile, " +
-                        "    TRUNCATE(AVG(h.mean), 4), TRUNCATE(AVG(h.median ), 4), " +
-                        "    TRUNCATE(AVG(h.mode), 4), TRUNCATE(AVG(h.exalted), 4), " +
-                        "    i.count, i.quantity, i.inc, i.dec " +
-                        "FROM league_history_hourly_rolling AS h " +
-                        "JOIN league_items AS i ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "WHERE h.time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
-                        "GROUP BY h.id_l, h.id_d";
+        String query =  "INSERT INTO league_history_daily_rolling ( " +
+                        "  id_l, id_d, volatile, mean, median, mode, " +
+                        "  exalted, count, quantity, inc, `dec`) " +
+                        "SELECT id_l, id_d, volatile, mean, median, mode, " +
+                        "       exalted, count, quantity, inc, `dec` " +
+                        "FROM   league_items AS i " +
+                        "JOIN   data_leagues AS l " +
+                        "  ON   i.id_l = l.id " +
+                        "WHERE  l.active = 1 ";
 
         try {
             if (connection.isClosed()) return false;

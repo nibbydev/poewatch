@@ -198,7 +198,7 @@ CREATE TABLE league_entries (
     FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
-    INDEX time   (time),
+    INDEX time     (time),
     INDEX approved (approved)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

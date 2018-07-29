@@ -103,7 +103,7 @@ public class EntryManager extends Thread {
         Main.DATABASE.uploadAccountNames(accountSet);
     }
 
-    private void generateOutputFiles() {
+    public void generateOutputFiles() {
         List<String> oldOutputFiles = new ArrayList<>();
         List<String> newOutputFiles = new ArrayList<>();
 

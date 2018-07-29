@@ -86,9 +86,9 @@ public class ParcelEntry {
 
         // Find the first price from the left that is not null
         Double firstPrice = null;
-        for (int i = 0; i < 7; i++) {
-            if (historyMean[i] != null) {
-                firstPrice = historyMean[i];
+        for (Double mean : historyMean) {
+            if (mean != null) {
+                firstPrice = mean;
                 break;
             }
         }
