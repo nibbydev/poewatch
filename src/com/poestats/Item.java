@@ -603,6 +603,22 @@ public class Item extends Mappers.BaseItem {
             case "Regal Shard":
             case "Alchemy Shard":
             case "Transmutation Shard":
+            case "Bestiary Orb":
+            case "Necromancy Net":
+            case "Thaumaturgical Net":
+            case "Reinforced Steel Net":
+            case "Strong Steel Net":
+            case "Simple Steel Net":
+            case "Reinforced Iron Net":
+            case "Strong Iron Net":
+            case "Simple Iron Net":
+            case "Reinforced Rope Net":
+            case "Strong Rope Net":
+            case "Simple Rope Net":
+            case "Unshaping Orb":
+            case "Master Cartographer's Seal":
+            case "Journeyman Cartographer's Seal":
+            case "Apprentice Cartographer's Seal":
                 discard = true;
                 break;
         }
