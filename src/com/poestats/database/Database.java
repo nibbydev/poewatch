@@ -707,8 +707,8 @@ public class Database {
      */
     public boolean uploadRaw(Set<RawEntry> entrySet) {
         String query =  "INSERT INTO league_entries ( " +
-                        "  id_l, id_d, price, account, itemid) " +
-                        "VALUES (?, ?, ?, ?, ?) " +
+                        "  id_l, id_d, price, account) " +
+                        "VALUES (?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  approved = 0, " +
                         "  price = VALUES(price) ";
@@ -723,7 +723,6 @@ public class Database {
                     statement.setInt(2, rawEntry.getItemId());
                     statement.setString(3, rawEntry.getPriceAsRoundedString());
                     statement.setString(4, rawEntry.getAccountName());
-                    statement.setString(5, rawEntry.getId());
                     statement.addBatch();
 
                     if (++count % 100 == 0) statement.executeBatch();

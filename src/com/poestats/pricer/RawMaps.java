@@ -36,7 +36,7 @@ public class RawMaps {
         // Class variables
         //------------------------------------------------------------------------------------------------------------
 
-        private String priceType, id, accountName;
+        private String priceType, accountName;
         private double price;
         private int id_l, id_d;
 
@@ -47,7 +47,6 @@ public class RawMaps {
         public void load(Item item) {
             priceType = item.getPriceType();
             price = item.getPrice();
-            id = item.getId();
         }
 
         public boolean convertPrice(Map<String, Double> currencyMap) {
@@ -105,10 +104,6 @@ public class RawMaps {
         //------------------------------------------------------------------------------------------------------------
         // Getters and Setters
         //------------------------------------------------------------------------------------------------------------
-
-        public String getId() {
-            return id;
-        }
 
         public String getPriceAsRoundedString() {
             return String.format("%."+ Config.item_pricePrecision2 +"f", price);

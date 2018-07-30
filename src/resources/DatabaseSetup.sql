@@ -192,7 +192,6 @@ CREATE TABLE league_entries (
     approved   TINYINT(1)     UNSIGNED NOT NULL DEFAULT 0,
     price      DECIMAL(10,4)  UNSIGNED NOT NULL,
     account    VARCHAR(32)    NOT NULL,
-    itemid     VARCHAR(32)    NOT NULL,
 
     FOREIGN KEY (id_l) REFERENCES  data_leagues   (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
