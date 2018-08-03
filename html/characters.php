@@ -38,7 +38,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - Characters</title>
+  <title>PCharacters - PoeWatch</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -54,7 +54,7 @@
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      Poe-Stats
+      PoeWatch
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>

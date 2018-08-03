@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - API</title>
+  <title>API - PoeWatch</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -17,7 +17,7 @@
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      Poe-Stats
+      PoeWatch
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -46,7 +46,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/id</h2>
+              <h2>api.poe.watch/id</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
@@ -91,7 +91,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/leagueList</h2>
+              <h2>api.poe.watch/leagueList</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
@@ -109,7 +109,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/leagueData</h2>
+              <h2>api.poe.watch/leagueData</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
@@ -159,7 +159,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/categories</h2>
+              <h2>api.poe.watch/categories</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
@@ -177,12 +177,12 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/itemdata</h2>
+              <h2>api.poe.watch/itemdata</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
               <h5 class="card-title">Description</h5>
-              <p class="card-text">For all your poe-stats-index-to-item-data-mappings needs. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
+              <p class="card-text">For all your poewatch-index-to-item-data-mappings needs. Indexes are not, however, permanent and can change (but only on manual intervention). Updated dynamically.</p>
               <!--/Description/-->
             </div>
             <div class="card-footer slim-card-edge"></div>
@@ -195,7 +195,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header">
-              <h2>api.poe-stats.com/get</h2>
+              <h2>api.poe.watch/get</h2>
             </div>
             <div class="card-body">
               <!-- Description -->
