@@ -38,7 +38,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>PCharacters - PoeWatch</title>
+  <title>Characters - PoeWatch</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
