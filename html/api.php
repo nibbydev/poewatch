@@ -39,17 +39,8 @@
 <!-- Page body -->
 <div class="container-fluid pb-4">    
   <div class="row">
-    <!-- Menu -->
-    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
-      <div class="row mt-4 mb-xl-4">
-
-          <?php include ( "assets/php/menu.php" ) ?>
-
-      </div>
-    </div>
-    <!--/Menu/-->
     <!-- Main content -->
-    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
+    <div class="col-md-10 offset-md-1 mt-4"> 
       <!-- API: id -->
       <div class="row mb-4">
         <div class="col-lg">
@@ -443,6 +434,5 @@
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<link rel="stylesheet" href="assets/css/responsive.css">
 </body>
 </html>

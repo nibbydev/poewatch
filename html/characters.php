@@ -58,7 +58,7 @@
 <div class="container-fluid pb-4">    
   <div class="row">
     <!-- Main content -->
-    <div class="col-lg-10 offset-lg-1 mt-4">
+    <div class="col-md-10 offset-md-1 mt-4">
       <div class="card custom-card">
         <div class="card-header">
           <h2 class="text-white">Characters</h3>
