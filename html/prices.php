@@ -91,7 +91,7 @@
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body p-1">
 
               <?php AddMotdMessage($SERVICE_category); ?>
 

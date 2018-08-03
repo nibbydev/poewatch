@@ -190,12 +190,12 @@ function CharacterSearch($pdo, $DATA) {
   LIMIT    ?
   OFFSET   ?";
 
-  $preppedString = likeEscape($DATA["search"]);
+  $escapedSearch = likeEscape($DATA["search"]);
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
 
   // Execute get query and get the data
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$preppedString, $DATA["limit"], $offset]);
+  $stmt->execute([$escapedSearch, $DATA["limit"], $offset]);
 
   while ($row = $stmt->fetch()) {
     $displayStamp = FormatTimestamp($row["seen"]);
@@ -250,9 +250,10 @@ function AccountSearch($pdo, $DATA) {
   OFFSET   ?";
 
   $offset = ($DATA["page"] - 1) * $DATA["limit"];
+  $escapedSearch = likeEscape($DATA["search"]);
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([likeEscape($DATA["search"]), $DATA["limit"], $offset]);
+  $stmt->execute([$escapedSearch, $DATA["limit"], $offset]);
 
   while ($row = $stmt->fetch()) {
     $displayStamp = FormatTimestamp($row["seen"]);
