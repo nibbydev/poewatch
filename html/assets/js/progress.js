@@ -8,9 +8,7 @@ $(document).ready(function() {
     var end = new Date(element["end"]);
     var now = new Date();
 
-    let tmp = "Time until ";
-    if (start < now) tmp += "end:"
-    else tmp += "start:"
+    let tmp = "Time until " + (start < now ? "end:" : "start:");
 
     let template = `
     <div class="col-md-6 mb-4">

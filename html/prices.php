@@ -9,7 +9,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - Prices</title>
+  <title>Prices - PoeWatch</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -26,7 +26,7 @@
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      Poe-Stats
+      PoeWatch
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -91,7 +91,7 @@
         <div class="col-xl col-lg-8 col-md-8 col-sm"> 
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body p-1">
 
               <?php AddMotdMessage($SERVICE_category); ?>
 
@@ -307,7 +307,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body p-2">
               <table class="table price-table table-striped table-hover mb-0" id="searchResults">
                 <thead>
                   <tr>
@@ -333,9 +333,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <!-- Service script -->
 <script>

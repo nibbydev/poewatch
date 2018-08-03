@@ -18,7 +18,7 @@ function makeRequest(index) {
   };
 
   var request = $.ajax({
-    url: "http://api.poe-stats.com/priceData",
+    url: "http://api.poe.watch/priceData",
     data: data,
     type: "GET",
     async: true,

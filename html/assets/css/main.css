@@ -130,6 +130,10 @@ a:hover {text-decoration: none !important}
   color: #aaa;
 }
 
+.api-data-table a {
+  color: #aaa;
+}
+
 .api-data-table thead {
   color: #ddd;
 }
@@ -243,6 +247,11 @@ a:hover {text-decoration: none !important}
 .custom-badge-block {
   display: block;
   max-width: 64px;
+}
+
+.seamless-input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 /*------------------------------------------------------------------------------------------------------------

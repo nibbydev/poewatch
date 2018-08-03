@@ -2,24 +2,43 @@
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_characters.php" ); 
 
+  // General page-related data array
   $DATA = array(
-    "resultLimit" => 25,
-    "resultCount" => null,
-    "resultOffset" => isset($_POST["offset"]) ? intval($_POST["offset"]) : 0,
-    "searchString" => isset($_POST["name"]) ? $_POST["name"] : null,
-    "searchType" => isset($_POST["type"]) ? $_POST["type"] : null
+    "limit"      => 25,
+    "count"      => null,
+    "page"       => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"]) : 1,
+    "pages"      => null,
+    "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
+    "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : "account",
+    "totalAccs"  => null,
+    "totalChars" => null,
+    "totalRels"  => null
   );
 
-  $ERRORCODE = CheckPOSTVariableError();
+  // Check if user-provided parameters are valid
+  $ERRORCODE = CheckGETVariableError($DATA);
 
-  if (!$ERRORCODE && $DATA["searchString"]) {
-    $DATA["resultCount"] = GetResultCount($pdo, $DATA);
+  // Get total number of unique account and character names
+  $DATA = GetTotalCounts($pdo, $DATA);
+
+  // If there was no problem with the user-provided parameters, check how many results there 
+  // would be to create accurate pagination
+  if (!$ERRORCODE && $DATA["search"]) {
+    $DATA["count"] = GetResultCount($pdo, $DATA);
+
+    // Find the number of pages there should be
+    $DATA["pages"] = ceil($DATA["count"] / $DATA["limit"]);
+
+    // Check if the user-provided page number exceeds the actual page count
+    $ERRORCODE = CheckGETVariableError($DATA);
+  } else {
+    $DATA["pages"] = ceil($DATA["totalRels"] / $DATA["limit"]);
   }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - Characters</title>
+  <title>Characters - PoeWatch</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -35,7 +54,7 @@
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      Poe-Stats
+      PoeWatch
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -63,45 +82,56 @@
         <div class="card-header">
           <h2 class="text-white">Characters</h3>
           <div>
-            <?php DisplayMotD($pdo); ?>
+            <?php DisplayMotD($DATA); ?>
           </div>
         </div>
 
+        <!-- Main card body -->
         <div class="card-body">
-          <form method="POST">
-            <!-- Search options -->
-            <div class="row">
-              <input type="hidden" name="offset" value="0">
-
-              <div class="col-6 col-md-3 mb-2">
-                <input type="text" class="form-control" name="name" placeholder="Name" value="<?php if (isset($_POST["name"])) echo $_POST["name"]; ?>">
-              </div>
-
-              <div class="col-6 col-md-3 mb-2">
+          <!-- Search options -->
+          <form method="GET">
+            <!-- Mode -->
+            <div class="row mb-3">
+              <div class="col">
                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                  <label class="btn btn-outline-dark <?php SetCheckboxState("active", "account"); ?>">
-                    <input type="radio" name="type" value="account" <?php SetCheckboxState("checked", "account"); ?>><a>Account</a>
+                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "account"); ?>">
+                    <input type="radio" name="mode" value="account" <?php SetCheckboxState($DATA, "checked", "account"); ?>><a>Account</a>
                   </label>
-                  <label class="btn btn-outline-dark <?php SetCheckboxState("active", "character"); ?>">
-                    <input type="radio" name="type" value="character" <?php SetCheckboxState("checked", "character"); ?>><a>Character</a>
+                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "character"); ?>">
+                    <input type="radio" name="mode" value="character" <?php SetCheckboxState($DATA, "checked", "character"); ?>><a>Character</a>
                   </label>
                 </div>
               </div>
-
-              <div class="col-6">
-                <button type="submit" class="btn btn-outline-dark">Search</button>
-              </div>
-
             </div>
-            <!--/Search options/-->
-          </form>
+            <!--/Mode/-->
 
-          <?php 
-            if ($ERRORCODE) DisplayError($ERRORCODE); 
-            else DisplayResultCount($DATA); 
-          ?>
+            <!-- Search -->
+            <div class="row mb-3">
+              <div class="col">
+                <div class="btn-group">
+                  <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
+                  <button type="submit" class="btn btn-outline-dark">Search</button>
+                </div>
+              </div>
+            </div>
+            <!--/Search/-->
+
+            <?php 
+              if ($ERRORCODE) DisplayError($ERRORCODE); 
+              else DisplayResultCount($DATA); 
+            ?>
+
+          </form>
+          <!--/Search options/-->
+
+          <!-- Content card -->
+          <?php if (!$ERRORCODE && $DATA["search"]): ?>
 
           <hr>
+
+          <!-- Top pagination -->
+          <?php if (!$ERRORCODE) DisplayPagination($DATA, "top"); ?>
+          <!--/Top pagination/-->
 
           <!-- Main table -->
           <div class="card api-data-table">
@@ -122,24 +152,16 @@
             </table>
           </div>
           <!--/Main table/-->
-          
-          <?php if (ceil($DATA["resultCount"] / $DATA["resultLimit"]) > 1): ?>
-          <!-- Pagination -->
-          <div class="btn-toolbar justify-content-center mt-3">
-            <form method="POST">
-              <input type="hidden" name="name" value="<?php echo $DATA["searchString"]; ?>">
-              <input type="hidden" name="type" value="<?php echo $DATA["searchType"]; ?>">
 
-              <div class="btn-group mr-2">
-                <?php DisplayPagination($DATA); ?>
-              </div>
+          <!-- Bottom pagination -->
+          <?php if (!$ERRORCODE) DisplayPagination($DATA, "bottom"); ?>
+          <!--/Bottom pagination/-->
 
-            </form>
-          </div>
-          <!--/Pagination/-->
           <?php endif; ?>
+          <!--/Content card/-->
 
         </div>
+        <!--/Main card body/-->
 
         <div class="card-footer slim-card-edge"></div>
       </div>
@@ -149,9 +171,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>

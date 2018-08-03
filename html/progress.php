@@ -7,7 +7,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Poe-Stats - Progress</title>
+  <title>Progress - PoeWatch</title>
   <meta charset="utf-8">
   <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
   <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
@@ -23,7 +23,7 @@
   <div class="container-fluid">
     <a href="/" class="navbar-brand">
       <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      Poe-Stats
+      PoeWatch
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -51,7 +51,7 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body pb-0">
               <p class="mb-0">A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end. All dates displayed are in your local timezone.</p>
               <hr>
               <div class="row" id="main"></div>
@@ -66,9 +66,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<footer class="container-fluid text-center">
-  <p>Poe-Stats © 2018</p>
-</footer>
+<?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
 <!-- Service script -->
 <script>

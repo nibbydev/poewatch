@@ -2,9 +2,10 @@
 // Checks whether a category param was passed on to the request
 function CheckAndGetCategoryParam() {
   if ( !isset($_GET["category"]) ) {
-    header('location:/prices?category=currency');
-    die();
-  } else return $_GET["category"];
+    $_GET["category"] = "currency";
+  }
+  
+  return $_GET["category"];
 }
 
 // Get list of child categories and their display names from DB
@@ -31,7 +32,8 @@ function GetCategories($pdo, $category) {
 function GetLeagues($pdo) {
   $query = "SELECT name, display 
   FROM data_leagues 
-  WHERE active = 1";
+  WHERE active = 1
+  ORDER BY id DESC";
 
   $stmt = $pdo->query($query);
   $payload = array();
