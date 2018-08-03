@@ -36,10 +36,10 @@ const MINOR_CHANGE = 50;
 const MAJOR_CHANGE = 100;
 
 // Re-used icon urls
-const ICON_ENCHANTMENT = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
-const ICON_EXALTED = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1";
-const ICON_CHAOS = "http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
-const ICON_MISSING = "http://poe.watch/assets/img/missing.png";
+const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
+const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1";
+const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
+const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 
 var TEMPLATE_imgContainer = `
 <span class='table-img-container text-center mr-1'><img src={{img}}></span>`;
@@ -545,7 +545,7 @@ function makeRequest() {
   };
 
   var request = $.ajax({
-    url: "http://159.69.15.81/api/get.php",
+    url: "https://api.poe.watch/get.php",
     data: data,
     type: "GET",
     async: true,
@@ -572,7 +572,7 @@ function makeHistoryRequest(league, index, expandedRow) {
   let id = ITEMS[index]["id"];
 
   let request = $.ajax({
-    url: "http://api.poe.watch/history",
+    url: "https://api.poe.watch/history",
     data: {
       league: league, 
       id: id
@@ -598,7 +598,7 @@ function timedRequestCallback() {
   };
 
   var request = $.ajax({
-    url: "http://api.poe.watch/get",
+    url: "https://api.poe.watch/get",
     data: data,
     type: "GET",
     async: true,
