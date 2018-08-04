@@ -655,6 +655,7 @@ function buildNameField(item) {
   `.trim();
 
   if ( item["icon"] ) {
+    item["icon"] = item["icon"].replace("http://", "https://");
     template = template.replace("{{icon}}", item["icon"]);
   } else {
     template = template.replace("{{icon}}", ICON_MISSING);
