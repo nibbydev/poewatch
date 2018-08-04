@@ -4,7 +4,7 @@ function get_param_league() {
     die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
   }
 
-  $league = strtolower(trim(preg_replace("/[^A-Za-z0-9-]/", "", $_GET["league"])));
+  $league = strtolower(trim(preg_replace("/[^A-Za-z0-9-( )]/", "", $_GET["league"])));
 
   if (!$league || strlen($league) <  3) {
     die("{\"error\": \"Invalid params\", \"field\": \"league\"}");
