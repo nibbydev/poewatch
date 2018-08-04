@@ -63,6 +63,12 @@ public class RelationManager {
             for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
                 leagueToIds.putIfAbsent(leagueEntry.getId(), new ArrayList<>());
             }
+        } else {
+            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
+                if (!leagueToIds.containsKey(leagueEntry.getId())) {
+                    leagueToIds.put(leagueEntry.getId(), new ArrayList<>());
+                }
+            }
         }
 
         return true;
