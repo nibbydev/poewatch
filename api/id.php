@@ -1,9 +1,21 @@
 <?php
-header("Content-Type: application/json");
-include_once ( "details/pdo.php" );
+function get_data($pdo) {
+  $query = 'SELECT changeId as id, time FROM data_changeId';
 
-$query = "SELECT `change_id` as `id`, `time` FROM `sys-change_id`";
-$stmt = $pdo->query($query);
-$row = $stmt->fetch();
+  $stmt = $pdo->query($query);
+  $payload = $stmt->fetch();
 
-echo json_encode($row);
+  return $payload;
+}
+
+// Define content type
+header('Content-Type: application/json');
+
+// Connect to database
+include_once ( 'details/pdo.php' );
+
+// Get data from database
+$payload = get_data($pdo);
+
+// Display generated data
+echo json_encode($payload);
