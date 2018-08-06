@@ -79,7 +79,7 @@ public class RelationManager {
     //------------------------------------------------------------------------------------------------------------
 
     public Integer indexItem(Item item, Integer leagueId) {
-        String uniqueKey = item.getUniqueKey();
+        String uniqueKey = item.getKey();
         Integer itemId = keyToId.get(uniqueKey);
 
         // If the item is indexed and the league contains that item, return item's id

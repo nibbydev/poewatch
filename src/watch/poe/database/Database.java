@@ -675,7 +675,7 @@ public class Database {
                 statement.setString(9, item.isCorrupted());
                 statement.setString(10, item.getLinks());
                 statement.setString(11, item.getVariation());
-                statement.setString(12, item.getUniqueKey());
+                statement.setString(12, item.getKey());
                 statement.setString(13, Misc.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
