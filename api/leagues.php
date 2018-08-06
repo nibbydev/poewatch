@@ -1,14 +1,36 @@
 <?php
-header("Content-Type: application/json");
-include_once ( "details/pdo.php" );
+function get_data($pdo) {
+  $query = 'SELECT * FROM data_leagues WHERE active = 1';
 
-$query = "SELECT * FROM `sys-leagues`";
-$stmt = $pdo->query($query);
+  $stmt = $pdo->query($query);
 
-$rows = array();
-
-while ($row = $stmt->fetch()) {
-  $rows[] = $row;
+  return $stmt;
 }
 
-echo json_encode($rows);
+function parse_data($stmt) {
+  $payload = array();
+
+  while ($row = $stmt->fetch()) {
+    unset( $row['active'] );
+    $row['event'] = $row['event'] === 1 ? true : false;
+
+    $payload[] = $row;
+  }
+
+  return $payload;
+}
+
+// Define content type
+header('Content-Type: application/json');
+
+// Connect to database
+include_once ( 'details/pdo.php' );
+
+// Get data from database
+$stmt = get_data($pdo);
+
+// Parse received data
+$payload = parse_data($stmt);
+
+// Display generated data
+echo json_encode($payload);
