@@ -4,13 +4,10 @@ function error($code, $msg) {
   die( json_encode( array("error" => $msg) ) );
 }
 
-function get_data($pdo, $id) {
+function get_league_data($pdo, $id) {
   $query = "SELECT 
     l.id AS id_l, l.name AS league, 
     i.mean, i.median, i.mode, i.exalted, i.count, i.quantity,
-    d.name, d.type, d.frame, d.icon,
-    d.tier, d.lvl, d.quality, d.corrupted, d.links, d.var,
-    cc.name AS cc, cp.name AS cp,
     GROUP_CONCAT(h.mean      ORDER BY h.time DESC) AS mean_list,
     GROUP_CONCAT(h.median    ORDER BY h.time DESC) AS median_list,
     GROUP_CONCAT(h.mode      ORDER BY h.time DESC) AS mode_list,
@@ -20,9 +17,6 @@ function get_data($pdo, $id) {
   FROM      league_history_daily_rolling AS h
   JOIN      data_leagues    AS l  ON h.id_l  = l.id
   JOIN      league_items    AS i  ON i.id_l  = l.id AND i.id_d = h.id_d
-  JOIN      data_itemData   AS d  ON i.id_d  = d.id 
-  JOIN      category_parent AS cp ON d.id_cp = cp.id 
-  LEFT JOIN category_child  AS cc ON d.id_cc = cc.id 
   WHERE     h.id_d = ?
   GROUP BY  h.id_l, h.id_d";
 
@@ -32,7 +26,25 @@ function get_data($pdo, $id) {
   return $stmt;
 }
 
-function parse_data($stmt) {
+function get_item_data($pdo, $id) {
+  $query = "SELECT 
+    d.name, d.type, d.frame, d.icon,
+    d.tier, d.lvl, d.quality, d.corrupted, 
+    d.links, d.var AS variation,
+    cp.name AS categoryParent, cc.name AS categoryChild
+  FROM      data_itemData   AS d
+  JOIN      category_parent AS cp ON d.id_cp = cp.id 
+  LEFT JOIN category_child  AS cc ON d.id_cc = cc.id 
+  WHERE     d.id = ?
+  LIMIT     1";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$id]);
+
+  return $stmt;
+}
+
+function parse_history_data($stmt) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
@@ -54,18 +66,6 @@ function parse_data($stmt) {
       'exalted'       => (float)  $row['exalted'],
       'count'         => (int)    $row['count'],
       'quantity'      => (int)    $row['quantity'],
-      'name'          =>          $row['name'],
-      'type'          =>          $row['type'],
-      'frame'         => (int)    $row['frame'],
-      'icon'          =>          $row['icon'],
-      'tier'          =>          $row['tier']      === null ? null : (int)   $row['tier'],
-      'lvl'           =>          $row['lvl']       === null ? null : (int)   $row['lvl'],
-      'quality'       =>          $row['quality']   === null ? null : (int)   $row['quality'],
-      'corrupted'     =>          $row['corrupted'] === null ? null : (bool)  $row['corrupted'],
-      'links'         =>          $row['links']     === null ? null : (int)   $row['links'],
-      'variation'     =>          $row['var'],
-      'categoryParent'=>          $row['cp'],
-      'categoryChild' =>          $row['cc'],
       'history'       =>          array()
     );
 
@@ -85,6 +85,19 @@ function parse_data($stmt) {
   return $payload;
 }
 
+function form_payload($itemData, $historyData) {
+  $payload = $itemData;
+
+  if ($payload['tier']      !== null) $payload['tier']      = (int)   $payload['tier'];
+  if ($payload['lvl']       !== null) $payload['lvl']       = (int)   $payload['lvl'];
+  if ($payload['quality']   !== null) $payload['quality']   = (int)   $payload['quality'];
+  if ($payload['corrupted'] !== null) $payload['corrupted'] = (bool)  $payload['corrupted'];
+  if ($payload['links']     !== null) $payload['links']     = (int)   $payload['links'];
+
+  $payload["leagues"] = $historyData;
+  return $payload;
+}
+
 // Define content type
 header("Content-Type: application/json");
 
@@ -94,14 +107,20 @@ if (!isset($_GET["id"])) error(400, "Missing id parameter");
 // Connect to database
 include_once ( "details/pdo.php" );
 
-// Get data from database
-$stmt = get_data($pdo, $_GET["id"]);
-
+// Get item's name, frame, icon, etc.
+$stmt = get_item_data($pdo, $_GET["id"]);
 // If no results with provided id
 if ($stmt->rowCount() === 0) error(400, "Invalid id parameter");
+// Get the one row of item data
+$itemData = $stmt->fetch();
 
-// Parse received data
-$payload = parse_data($stmt);
+// Get league-specific data from database
+$stmt = get_league_data($pdo, $_GET["id"]);
+// Parse received league-specific data
+$historyData = parse_history_data($stmt);
+
+// Form the payload
+$payload = form_payload($itemData, $historyData);
 
 // Display generated data
 echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
