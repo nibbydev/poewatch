@@ -6,7 +6,13 @@ function error($code, $msg) {
 
 function get_league_data($pdo, $id) {
   $query = "SELECT 
-    l.id AS id_l, l.name AS league, 
+    l.id      AS leagueId, 
+    l.name    AS leagueName, 
+    l.display AS leagueDisplay, 
+    l.active  AS leagueActive, 
+    l.event   AS leagueEvent, 
+    DATE_FORMAT(l.start,  '%Y-%m-%d') AS leagueStart,
+    DATE_FORMAT(l.end,    '%Y-%m-%d') AS leagueEnd,
     i.mean, i.median, i.mode, i.exalted, i.count, i.quantity,
     GROUP_CONCAT(h.mean      ORDER BY h.time DESC) AS mean_list,
     GROUP_CONCAT(h.median    ORDER BY h.time DESC) AS median_list,
@@ -58,8 +64,13 @@ function parse_history_data($stmt) {
 
     // Form a temporary entry array
     $tmp = array(
-      'leagueId'      => (int)    $row['id_l'],
-      'league'        =>          $row['league'],
+      'leagueId'      => (int)    $row['leagueId'],
+      'leagueName'    =>          $row['leagueName'],
+      'leagueDisplay' =>          $row['leagueDisplay'],
+      'leagueActive'  => (bool)   $row['leagueActive'],
+      'leagueEvent'   => (bool)   $row['leagueEvent'],
+      'leagueStart'   =>          $row['leagueStart'],
+      'leagueEnd'     =>          $row['leagueEnd'],
       'mean'          => (float)  $row['mean'],
       'median'        => (float)  $row['median'],
       'mode'          => (float)  $row['mode'],
