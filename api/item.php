@@ -14,17 +14,17 @@ function get_league_data($pdo, $id) {
     DATE_FORMAT(l.start,  '%Y-%m-%d') AS leagueStart,
     DATE_FORMAT(l.end,    '%Y-%m-%d') AS leagueEnd,
     i.mean, i.median, i.mode, i.exalted, i.count, i.quantity,
-    GROUP_CONCAT(h.mean      ORDER BY h.time DESC) AS mean_list,
-    GROUP_CONCAT(h.median    ORDER BY h.time DESC) AS median_list,
-    GROUP_CONCAT(h.mode      ORDER BY h.time DESC) AS mode_list,
-    GROUP_CONCAT(h.quantity  ORDER BY h.time DESC) AS quantity_list,
-    GROUP_CONCAT(h.inc       ORDER BY h.time DESC) AS inc_list,
-    GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time DESC) AS time_list
+    GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
+    GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
+    GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
+    GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
+    GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
   FROM      league_history_daily_rolling AS h
   JOIN      data_leagues    AS l  ON h.id_l  = l.id
   JOIN      league_items    AS i  ON i.id_l  = l.id AND i.id_d = h.id_d
   WHERE     h.id_d = ?
-  GROUP BY  h.id_l, h.id_d";
+  GROUP BY  h.id_l, h.id_d
+  ORDER BY  l.id DESC";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
@@ -59,7 +59,6 @@ function parse_history_data($stmt) {
     $medians  = explode(',', $row['median_list']);
     $modes    = explode(',', $row['mode_list']);
     $quants   = explode(',', $row['quantity_list']);
-    $incs     = explode(',', $row['inc_list']);
     $times    = explode(',', $row['time_list']);
 
     // Form a temporary entry array
@@ -80,14 +79,65 @@ function parse_history_data($stmt) {
       'history'       =>          array()
     );
 
+    // Add null values to counter missing entries from league start
+    // Don't run for Hardcore (id 1) nor Standard (id 2)
+    if ($tmp['leagueId'] > 2) {
+      // Get the two dates as Unix timestamps (ie number of seconds 
+      // since January 1 1970 00:00:00 UTC)
+      $startDate = strtotime($tmp['leagueStart']);
+      $firstDate = strtotime($times[0]);
+
+      // Find the number of days of difference between the two dates
+      $dateDiff = ceil( ($firstDate - $startDate) / 60 / 60 / 24);
+
+      // Fill tmp array with null values for the amount of missing days
+      for ($i = 0; $i < $dateDiff; $i++) { 
+        $stamp = date('Y-m-d', $startDate + $i * 86400);
+        $tmp['history'][ $stamp ] = null;
+      }
+    } else {
+      // Get the two dates as Unix timestamps (ie number of seconds 
+      // since January 1 1970 00:00:00 UTC)
+      $lastDate = strtotime(end($times));
+      $firstDate = strtotime($times[0]);
+      // startDate points to 120 days before the newest timestamp
+      $startDate = $lastDate - 60 * 60 * 24 * 120;
+      
+      // Find the number of days of difference between the two dates
+      $dateDiff = ceil( ($firstDate - $startDate) / 60 / 60 / 24);
+
+      // Fill tmp array with null values for the amount of missing days
+      for ($i = 0; $i < $dateDiff; $i++) { 
+        $stamp = date('Y-m-d', $startDate + $i * 86400);
+        $tmp['history'][ $stamp ] = null;
+      }
+    }
+
     for ($i = 0; $i < sizeof($means); $i++) { 
       $tmp['history'][ $times[$i] ] = array(
         'mean'     => (float) $means[$i],
         'median'   => (float) $medians[$i],
         'mode'     => (float) $modes[$i],
         'quantity' => (int)   $quants[$i],
-        'inc'      => (int)   $incs[$i]
       );
+    }
+
+    // Add null values to counter missing entries after latest entry
+    // Don't run for Hardcore (id 1) nor Standard (id 2)
+    if ($tmp['leagueId'] > 2) {
+      // Get the two dates as Unix timestamps (ie number of seconds 
+      // since January 1 1970 00:00:00 UTC)
+      $endDate = strtotime($tmp['leagueEnd']);
+      $lastDate = strtotime(end($times));
+
+      // Find the number of days of difference between the two dates
+      $dateDiff = ceil( ($endDate - $lastDate) / 60 / 60 / 24);
+
+      // Fill tmp array with null values for the amount of missing days
+      for ($i = 0; $i <= $dateDiff; $i++) { 
+        $stamp = date('Y-m-d', $lastDate + $i * 86400);
+        $tmp['history'][ $stamp ] = null;
+      }
     }
 
     $payload[] = $tmp;
@@ -134,4 +184,4 @@ $historyData = parse_history_data($stmt);
 $payload = form_payload($itemData, $historyData);
 
 // Display generated data
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
