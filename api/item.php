@@ -121,7 +121,8 @@ function parse_history_data($stmt) {
         'quantity' => (int)   $quants[$i],
       );
     }
-
+    
+  /*
     // Add null values to counter missing entries after latest entry
     // Don't run for Hardcore (id 1) nor Standard (id 2)
     if ($tmp['leagueId'] > 2) {
@@ -139,6 +140,7 @@ function parse_history_data($stmt) {
         $tmp['history'][ $stamp ] = null;
       }
     }
+  */
 
     $payload[] = $tmp;
   }
