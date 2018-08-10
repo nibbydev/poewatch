@@ -25,6 +25,7 @@ var CHART_HISTORY = null;
 var CHART_MEAN = null;
 var CHART_QUANT = null;
 var HISTORY_LEAGUE = null;
+var HISTORY_DATASET = 1;
 var INTERVAL;
 
 var ROW_last_id = null;
@@ -285,6 +286,12 @@ function displayFillerRow() {
       <div class='col-sm'>
         <h4>Past leagues</h4>
         <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-dataset-radio">
+          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+        </div>
         <div class='chart-large'><canvas id="chart-past"></canvas></div>
       </div>
     </div>
@@ -355,7 +362,13 @@ function formatHistory(leaguePayload) {
         if (leaguePayload.history[key] === null) {
           vals.push(0);
         } else {
-          vals.push(leaguePayload.history[key].mean);
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
+          }
         }
       }
     }
@@ -368,7 +381,14 @@ function formatHistory(leaguePayload) {
           vals.push(null);
         } else {
           keys.push(formatDate(key));
-          vals.push(leaguePayload.history[key].mean);
+
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
+          }
         }
       }
     }
@@ -433,7 +453,7 @@ function buildExpandedRow(id) {
   ROW_parent.after(ROW_expanded);
 
   // Create event listener for league selector
-  createExpandedRowListener(id, ROW_expanded);
+  createExpandedRowListeners(id, ROW_expanded);
 
   paintCharts();
 }
@@ -449,7 +469,7 @@ function placeCharts(expandedRow) {
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         borderColor: "#fff",
         borderWidth: 1,
-        lineTension: 0,
+        lineTension: 0.3,
         pointRadius: 0
       }]
     },
@@ -496,7 +516,7 @@ function placeCharts(expandedRow) {
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         borderColor: "#fff",
         borderWidth: 1,
-        lineTension: 0,
+        lineTension: 0.3,
         pointRadius: 0
       }]
     },
@@ -542,14 +562,12 @@ function placeCharts(expandedRow) {
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         borderColor: "#fff",
         borderWidth: 1,
-        lineTension: 0,
+        lineTension: 0.3,
         pointRadius: 0
       }]
     },
     options: {
-      legend: {
-        display: false
-      },
+      legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
       animation: {duration: 0},
@@ -561,7 +579,7 @@ function placeCharts(expandedRow) {
         callbacks: {
           title: function(tooltipItem, data) {
             let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-            return price ? price + "c" : "No data";
+            return price ? price : "No data";
           },
           label: function(tooltipItem, data) {
             return data['labels'][tooltipItem['index']];
@@ -710,6 +728,12 @@ function createExpandedRow(leaguePayload) {
       <div class='col-sm'>
         <h4>Past leagues</h4>
         <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-dataset-radio">
+          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+        </div>
         <div class='chart-large'><canvas id="chart-past"></canvas></div>
       </div>
     </div>
@@ -733,9 +757,17 @@ function createExpandedRow(leaguePayload) {
   return $(template);
 }
 
-function createExpandedRowListener(id, expandedRow) {
+function createExpandedRowListeners(id, expandedRow) {
   $("#history-league-radio", expandedRow).change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();
+
+    // Get the payload associated with the selected league
+    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
+    fillChartData(leaguePayload);
+  });
+
+  $("#history-dataset-radio", expandedRow).change(function(){
+    HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
 
     // Get the payload associated with the selected league
     let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
