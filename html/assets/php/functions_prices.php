@@ -79,8 +79,8 @@ function AddTableHeaders($category) {
   
   echo "<th scope='col'>Chaos</th>";
   echo "<th scope='col'>Exalted</th>";
-  echo "<th scope='col'>Change</th>";
-  echo "<th scope='col'>Quant</th>";
+  echo "<th scope='col' class='fixedSizeCol'>Change</th>";
+  echo "<th scope='col' class='fixedSizeCol'>Count</th>";
 }
 
 // Adds a message to the MotD box

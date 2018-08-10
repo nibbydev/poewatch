@@ -25,10 +25,10 @@ var CHART_HISTORY = null;
 var CHART_MEAN = null;
 var CHART_QUANT = null;
 var HISTORY_LEAGUE = null;
-var HISTORY_ID = null;
 var INTERVAL;
 
-var ROW_parent, ROW_expanded;
+var ROW_last_id = null;
+var ROW_parent = null, ROW_expanded = null, ROW_filler = null;
 
 // Re-used icon urls
 const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
@@ -180,41 +180,120 @@ function onRowClick(event) {
   let target = $(event.currentTarget);
   let id = parseInt(target.attr("value"));
 
-  // If user clicked on the smaller embedded table
-  if ( isNaN(id) ) return;
-  console.log("Clicked on item id: " + id);
+  // If user clicked on a table that does not contain an id
+  if (isNaN(id)) {
+    return;
+  }
 
-  // Close expanded row if user clicked on a parentRow
+  // Get rid of any filler rows
+  if (ROW_filler) {
+    $(".filler-row").remove();
+    ROW_filler = null;
+  }
+
+  // User clicked on open parent-row
   if (target.is(ROW_parent)) {
-    console.log("Closed row");
-    ROW_expanded.remove();
-    ROW_parent.removeAttr("class");
+    console.log("Closed open row");
+
+    $(".parent-row").removeAttr("class");
     ROW_parent = null;
+
+    $(".selected-row").remove();
     ROW_expanded = null;
     return;
   }
 
-  // Don't add a new row if user clicked on expandedRow
-  if ( target.is(ROW_expanded) ) return;
+  // There's an open row somewhere
+  if (ROW_parent !== null || ROW_expanded !== null) {
+    $(".selected-row").remove();
+    $(".parent-row").removeAttr("class");
 
-  // If there's an expanded row open somewhere, remove it
-  if (ROW_expanded) {
-    ROW_expanded.remove();
-    ROW_parent.removeAttr("class");
+    console.log("Closed row: " + ROW_last_id);
+
+    ROW_parent = null;
+    ROW_expanded = null;
   }
+
+  console.log("Clicked on row id: " + id);
 
   // Define current row as parent target row
   target.addClass("parent-row");
   ROW_parent = target;
+  ROW_last_id = id;
 
   // Load history data
   if (id in HISTORY_DATA) {
     console.log("History source: local");
-    generateExpandedRow(id);
+    buildExpandedRow(id);
   } else {
     console.log("History source: remote");
+
+    // Display a filler row
+    displayFillerRow();
+
     makeHistoryRequest(id);
   }
+}
+
+function displayFillerRow() {
+  let template = `
+  <tr class='filler-row'><td colspan='100'>
+    <div class='row m-1'>
+      <div class='col-md'>
+        <h4>Chaos value</h4>
+        <div class='chart-small'><canvas id="chart-price"></canvas></div>
+      </div>
+      <div class='col-md'>
+        <h4>Listed per 24h</h4>
+        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1 mt-2'>
+      <div class='col-md'>
+        <table class="table table-sm details-table">
+          <tbody>
+            <tr>
+              <td>Mean</td>
+            </tr>
+            <tr>
+              <td>Median</td>
+            </tr>
+            <tr>
+              <td>Mode</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class='col-md'>
+        <table class="table table-sm details-table">
+          <tbody>
+            <tr>
+              <td>Total amount listed</td>
+            </tr>
+            <tr>
+              <td>Listed every 24h</td>
+            </tr>
+            <tr>
+              <td>Price in exalted</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1 mb-3'>
+      <div class='col-sm'>
+        <h4>Past leagues</h4>
+        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <div class='chart-large'><canvas id="chart-past"></canvas></div>
+      </div>
+    </div>
+  </td></tr>
+  `.trim();
+
+  ROW_filler = $(template);
+  ROW_parent.after(ROW_filler);
 }
 
 function makeHistoryRequest(id) {
@@ -227,6 +306,12 @@ function makeHistoryRequest(id) {
   });
 
   request.done(function(payload) {
+    // Get rid of any filler rows
+    if (ROW_filler) {
+      $(".filler-row").remove();
+      ROW_filler = null;
+    }
+    
     let tmp = {};
 
     // Make league data accessible through league name
@@ -237,7 +322,7 @@ function makeHistoryRequest(id) {
 
     HISTORY_DATA[id] = tmp;
 
-    generateExpandedRow(id);
+    buildExpandedRow(id);
   });
 }
 
@@ -331,7 +416,7 @@ function formatWeek(leaguePayload) {
   }
 }
 
-function generateExpandedRow(id) {
+function buildExpandedRow(id) {
   // Get list of past leagues available for the item
   let leagues = getItemHistoryLeagues(id);
 
@@ -382,7 +467,8 @@ function placeCharts(expandedRow) {
             return "Price: " + data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
           },
           label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']] + ' days ago';
+            let day = data['labels'][tooltipItem['index']];
+            return day === 1 ? '1 day ago' : day + ' days ago';
           }
         },
         backgroundColor: '#fff',
@@ -567,15 +653,15 @@ function createExpandedRow(leaguePayload) {
         <table class="table table-sm details-table">
           <tbody>
             <tr>
-              <td>Current mean</td>
+              <td>Mean</td>
               <td>{{mean}}</td>
             </tr>
             <tr>
-              <td>Current median</td>
+              <td>Median</td>
               <td>{{median}}</td>
             </tr>
             <tr>
-              <td>Current mode</td>
+              <td>Mode</td>
               <td>{{mode}}</td>
             </tr>
           </tbody>
@@ -589,12 +675,12 @@ function createExpandedRow(leaguePayload) {
               <td>{{count}}</td>
             </tr>
             <tr>
-              <td>Price since yesterday</td>
+              <td>Listed every 24h</td>
               <td>{{1d}}</td>
             </tr>
             <tr>
-              <td>Price since 1 week</td>
-              <td>{{1w}}</td>
+              <td>Price in exalted</td>
+              <td>{{exalted}}</td>
             </tr>
           </tbody>
         </table>
@@ -612,16 +698,17 @@ function createExpandedRow(leaguePayload) {
   `.trim();
 
   // Create base chaos icon container
-  let chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+  let chaosContainer   = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+  let exaltedContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
 
   // Fill basic data
   template = template
-    .replace("{{mean}}",    chaosContainer + roundPrice(leaguePayload.mean))
-    .replace("{{median}}",  chaosContainer + roundPrice(leaguePayload.median))
-    .replace("{{mode}}",    chaosContainer + roundPrice(leaguePayload.mode))
-    .replace("{{count}}",                    roundPrice(leaguePayload.count))
-    //.replace("{{1d}}",      chaosContainer + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
-    //.replace("{{1w}}",      chaosContainer + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
+    .replace("{{mean}}",    formatNum(leaguePayload.mean)    +  ' c')
+    .replace("{{median}}",  formatNum(leaguePayload.median)  +  ' c')
+    .replace("{{mode}}",    formatNum(leaguePayload.mode)    +  ' c')
+    .replace("{{count}}",   formatNum(leaguePayload.count)          )
+    .replace("{{1d}}",      formatNum(leaguePayload.quantity)       )
+    .replace("{{exalted}}", formatNum(leaguePayload.exalted) + ' ex');
   
   // Convert into jQuery object and return
   return $(template);
@@ -945,6 +1032,16 @@ function buildQuantField(item) {
 //------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
+
+function formatNum(num) {
+  const numberWithCommas = (x) => {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+  }
+
+  return numberWithCommas(num);
+}
 
 function roundPrice(price) {
   const numberWithCommas = (x) => {

@@ -18,13 +18,19 @@
 .price-table, 
 .price-table > thead > tr > th,
 .price-table > tbody > tr > td {
-  border: 0px solid #222;
+  border: 0;
   vertical-align: middle;
-  padding: 2px 0.5rem 1px 0.5rem;
+  padding: 0 5px 0 2px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .price-table > tbody > tr:hover {
   background-color: #222;
+}
+
+.price-table > thead > tr > th.fixedSizeCol {
+  min-width: 60px;
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -72,7 +78,9 @@
 }
 
 .price-table tr.selected-row,
-.price-table tr.selected-row:hover {
+.price-table tr.selected-row:hover,
+.price-table tr.filler-row,
+.price-table tr.filler-row:hover  {
   background-color: #282828 !important;
   border: 1px solid #444;
 }
@@ -84,6 +92,7 @@
   vertical-align: middle;
   padding: 2px 2px 2px 4px;
   background-color: transparent !important;
+  margin-bottom: 0;
 }
 
 .price-table hr {
