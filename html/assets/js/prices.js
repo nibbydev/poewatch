@@ -262,18 +262,30 @@ function formatHistory(leaguePayload) {
       vals.push(null);
       keys.push(null);
     }
-  }
 
-  // Grab values
+    // Grab values
     for (var key in leaguePayload.history) {
       if (leaguePayload.history.hasOwnProperty(key)) {
-        let formattedKey = formatDate(key);
-        keys.push(formattedKey);
+        keys.push(formatDate(key));
 
-      if (leaguePayload.history[key] === null) {
-        vals.push(0);
-      } else {
-        vals.push(leaguePayload.history[key].mean);
+        if (leaguePayload.history[key] === null) {
+          vals.push(0);
+        } else {
+          vals.push(leaguePayload.history[key].mean);
+        }
+      }
+    }
+  } else {
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        if (leaguePayload.history[key] === null) {
+          keys.push(null);
+          vals.push(null);
+        } else {
+          keys.push(formatDate(key));
+          vals.push(leaguePayload.history[key].mean);
+        }
       }
     }
   }
@@ -282,7 +294,7 @@ function formatHistory(leaguePayload) {
   return {
     'keys': keys,
     'vals': vals
-}
+  }
 }
 
 function formatWeek(leaguePayload) {
