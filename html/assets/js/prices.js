@@ -25,6 +25,7 @@ var CHART_HISTORY = null;
 var CHART_MEAN = null;
 var CHART_QUANT = null;
 var HISTORY_LEAGUE = null;
+var HISTORY_ID = null;
 var INTERVAL;
 
 var ROW_parent, ROW_expanded;
@@ -202,11 +203,340 @@ function onRowClick(event) {
     ROW_parent.removeAttr("class");
   }
 
-  let chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-  //let history = item["history"]["mean"];
-  //let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
-  //let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
+  // Define current row as parent target row
+  target.addClass("parent-row");
+  ROW_parent = target;
 
+  // Load history data
+  if (id in HISTORY_DATA) {
+    console.log("History source: local");
+    generateExpandedRow(id);
+  } else {
+    console.log("History source: remote");
+    makeHistoryRequest(id);
+  }
+}
+
+function makeHistoryRequest(id) {
+  let request = $.ajax({
+    url: "https://api.poe.watch/item.php",
+    data: {id: id},
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(payload) {
+    let tmp = {};
+
+    // Make league data accessible through league name
+    for (let i = 0; i < payload.leagues.length; i++) {
+      let leagueData = payload.leagues[i];
+      tmp[leagueData.leagueName] = leagueData;
+    }
+
+    HISTORY_DATA[id] = tmp;
+
+    generateExpandedRow(id);
+  });
+}
+
+function formatHistory(leaguePayload) {
+  let vals = [], keys = [];
+
+  // Skip Hardcore (id 1) and Standard (id 2)
+  if (leaguePayload.leagueId > 2) {
+    // Because javascript is "special"
+    let size = Object.keys(leaguePayload.history).length;
+
+    // Convert date strings into dates
+    let endDate = new Date(leaguePayload.leagueEnd);
+    let startDate = new Date(leaguePayload.leagueStart);
+
+    // Get difference in days between the two dates
+    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    
+    // Bloat if less entries than league duration
+    for (let i = 0; i < dateDiff - size; i++) {
+      vals.push(null);
+      keys.push(null);
+    }
+  }
+
+  // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        let formattedKey = formatDate(key);
+        keys.push(formattedKey);
+
+      if (leaguePayload.history[key] === null) {
+        vals.push(0);
+      } else {
+        vals.push(leaguePayload.history[key].mean);
+      }
+    }
+  }
+
+  // Return generated data
+  return {
+    'keys': keys,
+    'vals': vals
+}
+}
+
+function formatWeek(leaguePayload) {
+  // Because javascript is "special"
+  let size = Object.keys(leaguePayload.history).length;
+  let means = [], quants = [], count = 0;
+
+  // If less than 7 entries, need to bloat
+  for (let i = 0; i < 7 - size; i++) {
+    means.push(null);
+    quants.push(null);
+  }
+
+  // Grab latest 7 values
+  for (var key in leaguePayload.history) {
+    if (leaguePayload.history.hasOwnProperty(key)) {
+      if (size - count++ <= 7) {
+        if (leaguePayload.history[key] === null) {
+          means.push(null);
+          quants.push(null);
+        } else {
+          means.push(leaguePayload.history[key].mean);
+          quants.push(leaguePayload.history[key].quantity);
+        }
+      }
+    }
+  }
+
+  // Return generated data
+  return {
+    'keys':  [7, 6, 5, 4, 3, 2, 1],
+    'means': means,
+    'quants': quants
+  }
+}
+
+function generateExpandedRow(id) {
+  // Get list of past leagues available for the item
+  let leagues = getItemHistoryLeagues(id);
+
+  // Get league-specific data pack
+  let selectedLeague = getSelectedLeague(leagues);
+  let leaguePayload = HISTORY_DATA[id][selectedLeague];
+
+  // Create jQuery object based on data from request and set gvar
+  ROW_expanded = createExpandedRow(leaguePayload);
+  placeCharts(ROW_expanded);
+  fillChartData(leaguePayload);
+  createHistoryRadio(ROW_expanded, leagues, selectedLeague);
+
+  // Place jQuery object in table
+  ROW_parent.after(ROW_expanded);
+
+  // Create event listener for league selector
+  createExpandedRowListener(id, ROW_expanded);
+}
+
+function placeCharts(expandedRow) {
+  var priceData = {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Price in chaos",
+        data: [],
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: "#fff",
+        borderWidth: 1,
+        lineTension: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      legend: {display: false},
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index",
+        callbacks: {
+          title: function(tooltipItem, data) {
+            return "Price: " + data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']] + ' days ago';
+          }
+        },
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
+      },
+      // remove x-axes labels (but not grids)
+      scales: {xAxes: [{ticks: {display: false}}]}
+      }
+    }
+  
+  var quantData = {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Quantity",
+        data: [],
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: "#fff",
+        borderWidth: 1,
+        lineTension: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      legend: {display: false},
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index",
+        callbacks: {
+          title: function(tooltipItem, data) {
+            return "Quantity: " + data['datasets'][0]['data'][tooltipItem[0]['index']];
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']] + ' days ago';
+          }
+        },
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
+      },
+      // remove x-axes labels (but not grids)
+      scales: {xAxes: [{ticks: {display: false}}]}
+    }
+  }
+
+  var pastData = {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Price in chaos",
+        data: [],
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: "#fff",
+        borderWidth: 1,
+        lineTension: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      legend: {
+        display: false
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index",
+        callbacks: {
+          title: function(tooltipItem, data) {
+            let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+            return price ? price + "c" : "No data";
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']];
+          }
+        },
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
+      },
+      scales: {
+        yAxes: [{ticks: {beginAtZero:true}}],
+        xAxes: [{
+          ticks: {
+            //autoSkip: false,
+            callback: function(value, index, values) {
+              return (value ? value : '');
+            }
+          }
+        }]
+      }
+    }
+  }
+
+  CHART_MEAN    = new Chart($("#chart-price",     expandedRow),  priceData);
+  CHART_QUANT   = new Chart($("#chart-quantity",  expandedRow),  quantData);
+  CHART_HISTORY = new Chart($("#chart-past",      expandedRow),   pastData);
+}
+
+function fillChartData(leaguePayload) {
+  // Pad history with leading nulls
+  let formattedHistory = formatHistory(leaguePayload);
+
+  // Assign history chart datasets
+  CHART_HISTORY.data.labels = formattedHistory.keys;
+  CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
+  CHART_HISTORY.update();
+
+  // Get a fixed size of 7 latest history entries
+  let formattedWeek = formatWeek(leaguePayload);
+
+  CHART_MEAN.data.labels = formattedWeek.keys;
+  CHART_MEAN.data.datasets[0].data = formattedWeek.means;
+  CHART_MEAN.update();
+
+  CHART_QUANT.data.labels = formattedWeek.keys;
+  CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
+  CHART_QUANT.update();
+  }
+
+function createHistoryRadio(expandedRow, leagues, selectedLeague) {
+  let template = `
+  <label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
+    <input type="radio" name="league" value="{{value}}">{{name}}
+  </label>
+  `.trim();
+
+  let buffer = "";
+  for (let i = 0; i < leagues.length; i++) {
+    buffer += template
+      .replace("{{active}}",  (selectedLeague === leagues[i] ? "active" : ""))
+      .replace("{{value}}",   leagues[i])
+      .replace("{{name}}",    leagues[i]);
+  }
+
+  $("#history-league-radio", expandedRow).append(buffer);
+}
+
+function createExpandedRow(leaguePayload) {
+  // Define the base template
   let template = `
   <tr class='selected-row'><td colspan='100'>
     <div class='row m-1'>
@@ -269,276 +599,52 @@ function onRowClick(event) {
   </td></tr>
   `.trim();
 
+  // Create base chaos icon container
+  let chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+
+  // Fill basic data
   template = template
-    //.replace("{{mean}}",    chaosContainer + roundPrice(item["mean"]))
-    //.replace("{{median}}",  chaosContainer + roundPrice(item["median"]))
-    //.replace("{{mode}}",    chaosContainer + roundPrice(item["mode"]))
-    //.replace("{{count}}",                    roundPrice(item["count"]))
+    .replace("{{mean}}",    chaosContainer + roundPrice(leaguePayload.mean))
+    .replace("{{median}}",  chaosContainer + roundPrice(leaguePayload.median))
+    .replace("{{mode}}",    chaosContainer + roundPrice(leaguePayload.mode))
+    .replace("{{count}}",                    roundPrice(leaguePayload.count))
     //.replace("{{1d}}",      chaosContainer + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
     //.replace("{{1w}}",      chaosContainer + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
+  
+  // Convert into jQuery object and return
+  return $(template);
+}
 
-  // Set gvar
-  ROW_expanded = $(template);
-
-  // Load history data
-  if (id in HISTORY_DATA) {
-    console.log("History source: local");
-    placeCharts(ROW_expanded);
-    displayHistory(id, ROW_expanded);
-    fillRowData(id, ROW_expanded);
-  } else {
-    console.log("History source: remote");
-    makeHistoryRequest(id, ROW_expanded);
-  }
-
-  target.addClass("parent-row");
-  target.after(ROW_expanded);
-  ROW_parent = target;
-
-  // Create event listener for league selector
-  $("#history-league-radio", ROW_expanded).change(function(){
+function createExpandedRowListener(id, expandedRow) {
+  $("#history-league-radio", expandedRow).change(function(){
     HISTORY_LEAGUE = $("input[name=league]:checked", this).val();
 
     // Get the payload associated with the selected league
     let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
-
-    // This shouldn't run
-    if (!leaguePayload) {
-      console.log("Something went wrong when attempting to match league names for history");
-      return;
-    }
-
-    // Get some data from the array
-    let keys = [];
-    let values = [];
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        keys.push(key);
-
-        let historyEntry = leaguePayload.history[key];
-        values.push(historyEntry === null ? null : historyEntry.mean);
-      }
-    }
-
-    // Assign history chart datasets
-    CHART_HISTORY.data.labels = keys;
-    CHART_HISTORY.data.datasets[0].data = values;
-    CHART_HISTORY.update();
+    fillChartData(leaguePayload);
   });
 }
 
-function placeCharts(expandedRow) {
-  var priceData = {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Price in chaos",
-        data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      }
-    }
-  }
-  
-  var quantData = {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Quantity",
-        data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return "Quantity: " + data['datasets'][0]['data'][tooltipItem[0]['index']];
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      }
-    }
-  }
+function getSelectedLeague(leagues) {
+  // If user has not selected a league in the history menu before, use the first one
+  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
 
-  var pastData = {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Price in chaos",
-        data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {
-        display: false
-      },
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            return "Day " + (tooltipItem['index'] + 1);
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      },
-      scales: {
-        yAxes: [{ticks: {beginAtZero:true}}],
-        xAxes: [{
-          /*ticks: {
-            autoSkip: false,
-            callback: function(value, index, values) {
-              return (index % 7 === 0) ? "Week " + (~~(index / 7) + 1) : null;
-            }
-          }*/
-        }]
-      }
-    }
-  }
-
-  CHART_MEAN    = new Chart($("#chart-price",     expandedRow),  priceData);
-  CHART_QUANT   = new Chart($("#chart-quantity",  expandedRow),  quantData);
-  CHART_HISTORY = new Chart($("#chart-past",      expandedRow),   pastData);
+  // If user had selected a league before in the history menu, check if that league
+  // is present for this item. If yes, select it; if no, use the first one
+  return leagues.indexOf(HISTORY_LEAGUE) > -1 ? HISTORY_LEAGUE : leagues[0];
 }
 
-function displayHistory(id, expandedRow) {
+function getItemHistoryLeagues(id) {
   // Get list of past leagues available for the item
   let leagues = [];
+
   for (var key in HISTORY_DATA[id]) {
     if (HISTORY_DATA[id].hasOwnProperty(key)) {
       leagues.push(key);
     }
   }
 
-  // If user has not selected a league in the history menu before, use the first one
-  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
-
-  // If user had selected a league before in the history menu, check if that league
-  // is present for this item. If yes, select it; if no, use the first one
-  let selectedLeague = leagues.indexOf(HISTORY_LEAGUE) > -1 ? HISTORY_LEAGUE : leagues[0];
-
-  // Get the payload associated with the selected league
-  let leaguePayload = HISTORY_DATA[id][selectedLeague];
-
-  // This shouldn't run
-  if (!leaguePayload) {
-    console.log("Something went wrong when attempting to match league names for history");
-    return;
-  }
-
-  // Get history data from the array
-  let historyKeys = [];
-  let historyValues = [];
-  for (var key in leaguePayload.history) {
-    if (leaguePayload.history.hasOwnProperty(key)) {
-      historyKeys.push(key);
-
-      let historyEntry = leaguePayload.history[key];
-      historyValues.push(historyEntry === null ? null : historyEntry.mean);
-    }
-  }
-
-  // Assign history chart datasets
-  CHART_HISTORY.data.labels = historyKeys;
-  CHART_HISTORY.data.datasets[0].data = historyValues;
-  CHART_HISTORY.update();
-
-  let template = `
-  <label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
-    <input type="radio" name="league" value="{{value}}">{{name}}
-  </label>
-  `.trim();
-
-  let buffer = "";
-  for (let i = 0; i < leagues.length; i++) {
-    buffer += template
-      .replace("{{active}}",  (selectedLeague === leagues[i] ? "active" : ""))
-      .replace("{{value}}",   leagues[i])
-      .replace("{{name}}",    leagues[i]);
-  }
-
-  $("#history-league-radio", expandedRow).append(buffer);
-}
-
-function fillRowData(id, expandedRow) {
-
+  return leagues;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -585,30 +691,6 @@ function parseRequest(json) {
   return items;
 }
 
-function makeHistoryRequest(id, expandedRow) {
-  let request = $.ajax({
-    url: "https://api.poe.watch/item.php",
-    data: {id: id},
-    type: "GET",
-    async: true,
-    dataTypes: "json"
-  });
-
-  request.done(function(payload) {
-    HISTORY_DATA[id] = {};
-
-    // Make league data accessible through league name
-    for (let i = 0; i < payload.leagues.length; i++) {
-      let element = bloatHistory(payload.leagues[i]);
-      HISTORY_DATA[id][element.leagueName] = element;
-    }
-
-    placeCharts(expandedRow);
-    displayHistory(id, expandedRow);
-    fillRowData(id, expandedRow);
-  });
-}
-
 function timedRequestCallback() {
   console.log("Automatic update");
 
@@ -630,32 +712,6 @@ function timedRequestCallback() {
     sortResults(items);
     ITEMS = items;
   });
-}
-
-function bloatHistory(element) {
-  // Skip Standard (id 1) and Hardcore (id 2)
-  if (element.leagueId <= 2) return element;
-
-  // Loop through keys and get the last one
-  let lastDate;
-  for (lastDate in element.history);
-
-  // Convert date strings into dates
-  let endDate = new Date(element.leagueEnd);
-  lastDate = new Date(lastDate);
-
-  // Get difference in days between the two dates
-  let timeDiff = Math.abs(endDate.getTime() - lastDate.getTime());
-  let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-
-  for (let i = 0; i < dateDiff; i++) {
-    // Increment date by 1 day
-    lastDate.setDate(lastDate.getDate() + 1);
-    // Create null element using generated date as key
-    element.history[ lastDate.toISOString().substring(0, 10) ] = null;
-  }
-
-  return element;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -890,9 +946,18 @@ function roundPrice(price) {
   return numberWithCommas(Math.round(price * 100) / 100);
 }
 
+function formatDate(date) {
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  let s = new Date(date);
+  return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
+}
+
 function getAllDays(length) {
   const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
   var a = [];
   
