@@ -625,9 +625,9 @@ function createHistoryRadio(expandedRow, leagues, selectedLeague) {
   let buffer = "";
   for (let i = 0; i < leagues.length; i++) {
     buffer += template
-      .replace("{{active}}",  (selectedLeague === leagues[i] ? "active" : ""))
-      .replace("{{value}}",   leagues[i])
-      .replace("{{name}}",    leagues[i]);
+      .replace("{{active}}",  (selectedLeague === leagues[i].name ? "active" : ""))
+      .replace("{{value}}",   leagues[i].name)
+      .replace("{{name}}",    leagues[i].display);
   }
 
   $("#history-league-radio", expandedRow).append(buffer);
@@ -697,10 +697,6 @@ function createExpandedRow(leaguePayload) {
   </td></tr>
   `.trim();
 
-  // Create base chaos icon container
-  let chaosContainer   = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-  let exaltedContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
-
   // Fill basic data
   template = template
     .replace("{{mean}}",    formatNum(leaguePayload.mean)    +  ' c')
@@ -726,11 +722,17 @@ function createExpandedRowListener(id, expandedRow) {
 
 function getSelectedLeague(leagues) {
   // If user has not selected a league in the history menu before, use the first one
-  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
+  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0].name;
 
   // If user had selected a league before in the history menu, check if that league
   // is present for this item. If yes, select it; if no, use the first one
-  return leagues.indexOf(HISTORY_LEAGUE) > -1 ? HISTORY_LEAGUE : leagues[0];
+  for (let i = 0; i < leagues.length; i++) {
+    if (leagues[i].name === HISTORY_LEAGUE) {
+      return HISTORY_LEAGUE;
+    }
+  }
+
+  return leagues[0].name;
 }
 
 function getItemHistoryLeagues(id) {
@@ -739,7 +741,10 @@ function getItemHistoryLeagues(id) {
 
   for (var key in HISTORY_DATA[id]) {
     if (HISTORY_DATA[id].hasOwnProperty(key)) {
-      leagues.push(key);
+      leagues.push({
+        name: key,
+        display: HISTORY_DATA[id][key].leagueDisplay
+      });
     }
   }
 
