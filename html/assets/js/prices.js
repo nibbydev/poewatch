@@ -36,8 +36,7 @@ const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/Currency
 const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 
-var TEMPLATE_imgContainer = `
-<span class='table-img-container text-center mr-1'><img src={{img}}></span>`;
+var TEMPLATE_imgContainer = "<span class='table-img-container text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
   if (!SERVICE_category) return;
@@ -435,6 +434,8 @@ function buildExpandedRow(id) {
 
   // Create event listener for league selector
   createExpandedRowListener(id, ROW_expanded);
+
+  paintCharts();
 }
 
 function placeCharts(expandedRow) {
@@ -594,6 +595,24 @@ function placeCharts(expandedRow) {
   CHART_HISTORY = new Chart($("#chart-past",      expandedRow),   pastData);
 }
 
+function paintCharts() {
+  var ctx = document.getElementById('chart-price').getContext('2d');
+
+  var gradient = ctx.createLinearGradient(0, 0, 0, 450);
+  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 0.5)');
+  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 0.5)');
+  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 0.5)');
+
+  CHART_MEAN.data.datasets[0].backgroundColor = gradient;
+  CHART_MEAN.update();
+
+  CHART_QUANT.data.datasets[0].backgroundColor = gradient;
+  CHART_QUANT.update();
+
+  CHART_HISTORY.data.datasets[0].backgroundColor = gradient;
+  CHART_HISTORY.update();
+}
+
 function fillChartData(leaguePayload) {
   // Pad history with leading nulls
   let formattedHistory = formatHistory(leaguePayload);
@@ -697,14 +716,18 @@ function createExpandedRow(leaguePayload) {
   </td></tr>
   `.trim();
 
+  let containterTemplate = "<span class='table-img-container-sm text-center mr-1'><img src={{img}}></span>";
+  let chaosContainer = containterTemplate.replace("{{img}}", ICON_CHAOS);
+  let exaltedContainer = containterTemplate.replace("{{img}}", ICON_EXALTED);
+
   // Fill basic data
   template = template
-    .replace("{{mean}}",    formatNum(leaguePayload.mean)    +  ' c')
-    .replace("{{median}}",  formatNum(leaguePayload.median)  +  ' c')
-    .replace("{{mode}}",    formatNum(leaguePayload.mode)    +  ' c')
-    .replace("{{count}}",   formatNum(leaguePayload.count)          )
-    .replace("{{1d}}",      formatNum(leaguePayload.quantity)       )
-    .replace("{{exalted}}", formatNum(leaguePayload.exalted) + ' ex');
+    .replace("{{mean}}",       chaosContainer + formatNum(leaguePayload.mean))
+    .replace("{{median}}",     chaosContainer + formatNum(leaguePayload.median))
+    .replace("{{mode}}",       chaosContainer + formatNum(leaguePayload.mode))
+    .replace("{{count}}",                       formatNum(leaguePayload.count))
+    .replace("{{1d}}",                          formatNum(leaguePayload.quantity))
+    .replace("{{exalted}}", exaltedContainer  + formatNum(leaguePayload.exalted));
   
   // Convert into jQuery object and return
   return $(template);
