@@ -515,7 +515,7 @@ function fillChartData(leaguePayload) {
   CHART_QUANT.data.labels = formattedWeek.keys;
   CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
   CHART_QUANT.update();
-  }
+}
 
 function createHistoryRadio(expandedRow, leagues, selectedLeague) {
   let template = `
@@ -755,7 +755,7 @@ function buildNameField(item) {
   </td>
   `.trim();
 
-  if ( item.icon ) {
+  if (item.icon) {
     // Use SSL for icons for that sweet, sweet secure site badge
     item.icon = item.icon.replace("http://", "https://");
     template = template.replace("{{icon}}", item.icon);
@@ -770,12 +770,10 @@ function buildNameField(item) {
   }
 
   if (FILTER.category === "enchantments") {
-    if (item.var != null) {
+    if (item.var !== null) {
       let splitVar = item.var.split('-');
       for (var num in splitVar) {
-        if (splitVar.hasOwnProperty(num)) {
-          item.name = item.name.replace("#", num);
-        }
+        item.name = item.name.replace("#", splitVar[num]);
       }
     }
 
@@ -792,7 +790,7 @@ function buildNameField(item) {
     template = template.replace("{{type}}", "");
   }
 
-  if (item.var) {
+  if (item.var && FILTER.category !== "enchantments") {
     let tmp = " <span class='badge custom-badge-gray'>" + item.var + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else if (item.tier) {
