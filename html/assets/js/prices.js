@@ -454,11 +454,16 @@ function buildExpandedRow(id) {
 
   // Create event listener for league selector
   createExpandedRowListeners(id, ROW_expanded);
-
-  paintCharts();
 }
 
 function placeCharts(expandedRow) {
+  var ctx = $("#chart-price", expandedRow)[0].getContext('2d');
+  var gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+
+  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
+  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
+  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
+
   var priceData = {
     type: "line",
     data: {
@@ -466,10 +471,10 @@ function placeCharts(expandedRow) {
       datasets: [{
         label: "Price in chaos",
         data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0.3,
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: gradient,
+        borderWidth: 3,
+        lineTension: 0.2,
         pointRadius: 0
       }]
     },
@@ -513,10 +518,10 @@ function placeCharts(expandedRow) {
       datasets: [{
         label: "Quantity",
         data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0.3,
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: gradient,
+        borderWidth: 3,
+        lineTension: 0.2,
         pointRadius: 0
       }]
     },
@@ -559,10 +564,10 @@ function placeCharts(expandedRow) {
       datasets: [{
         label: "Price in chaos",
         data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0.3,
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: gradient,
+        borderWidth: 3,
+        lineTension: 0.2,
         pointRadius: 0
       }]
     },
@@ -611,24 +616,6 @@ function placeCharts(expandedRow) {
   CHART_MEAN    = new Chart($("#chart-price",     expandedRow),  priceData);
   CHART_QUANT   = new Chart($("#chart-quantity",  expandedRow),  quantData);
   CHART_HISTORY = new Chart($("#chart-past",      expandedRow),   pastData);
-}
-
-function paintCharts() {
-  var ctx = document.getElementById('chart-price').getContext('2d');
-
-  var gradient = ctx.createLinearGradient(0, 0, 0, 450);
-  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 0.5)');
-  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 0.5)');
-  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 0.5)');
-
-  CHART_MEAN.data.datasets[0].backgroundColor = gradient;
-  CHART_MEAN.update();
-
-  CHART_QUANT.data.datasets[0].backgroundColor = gradient;
-  CHART_QUANT.update();
-
-  CHART_HISTORY.data.datasets[0].backgroundColor = gradient;
-  CHART_HISTORY.update();
 }
 
 function fillChartData(leaguePayload) {
