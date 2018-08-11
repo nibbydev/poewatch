@@ -65,8 +65,15 @@
 .second-navbar .live-updates {float: right}
 #live-updates {margin-bottom: 1px}
 
-.second-navbar .search-league {float: right}
-#search-league {margin-bottom: 1px}
+#search-league {
+  float: right;
+}
+
+.small-selector {
+  width: auto;
+  display: inline-block;
+}
+
 
 /*------------------------------------------------------------------------------------------------------------
 // Progressbar

@@ -294,7 +294,7 @@ function displayFillerRow() {
     <div class='row m-1 mb-3'>
       <div class='col-sm'>
         <h4>Past leagues</h4>
-        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
         <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-dataset-radio">
           <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
           <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
@@ -456,7 +456,7 @@ function buildExpandedRow(id) {
   ROW_expanded = createExpandedRow(leaguePayload);
   placeCharts(ROW_expanded);
   fillChartData(leaguePayload);
-  createHistoryRadio(ROW_expanded, leagues, selectedLeague);
+  createHistoryLeagueSelectorFields(ROW_expanded, leagues, selectedLeague);
 
   // Place jQuery object in table
   ROW_parent.after(ROW_expanded);
@@ -583,22 +583,17 @@ function fillChartData(leaguePayload) {
   CHART_QUANT.update();
 }
 
-function createHistoryRadio(expandedRow, leagues, selectedLeague) {
-  let template = `
-  <label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
-    <input type="radio" name="league" value="{{value}}">{{name}}
-  </label>
-  `.trim();
-
+function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague) {
   let buffer = "";
+
   for (let i = 0; i < leagues.length; i++) {
-    buffer += template
-      .replace("{{active}}",  (selectedLeague === leagues[i].name ? "active" : ""))
-      .replace("{{value}}",   leagues[i].name)
-      .replace("{{name}}",    leagues[i].display);
+    buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
+      .replace("{{selected}}",  (selectedLeague === leagues[i].name ? "selected" : ""))
+      .replace("{{value}}",     leagues[i].name)
+      .replace("{{name}}",      leagues[i].display);
   }
 
-  $("#history-league-radio", expandedRow).append(buffer);
+  $("#history-league-selector", expandedRow).append(buffer);
 }
 
 function createExpandedRow(leaguePayload) {
@@ -658,7 +653,7 @@ function createExpandedRow(leaguePayload) {
     <div class='row m-1 mb-3'>
       <div class='col-sm'>
         <h4>Past leagues</h4>
-        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
         <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-dataset-radio">
           <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
           <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
@@ -689,8 +684,8 @@ function createExpandedRow(leaguePayload) {
 }
 
 function createExpandedRowListeners(id, expandedRow) {
-  $("#history-league-radio", expandedRow).change(function(){
-    HISTORY_LEAGUE = $("input[name=league]:checked", this).val();
+  $("#history-league-selector", expandedRow).change(function(){
+    HISTORY_LEAGUE = $(":selected", this).val();
 
     // Get the payload associated with the selected league
     let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
