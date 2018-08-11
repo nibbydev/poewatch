@@ -2,10 +2,21 @@
 // Price table
 //----------------------------------------------------------------------------------------------------------*/
 
+.namebox {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 .table-img-container {
-  display: inline-block;
-  width: 35px;
-  height: 35px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  justify-content: center;
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
 }
 
 .table-img-container img {

@@ -840,8 +840,10 @@ function parseItem(item) {
 function buildNameField(item) {
   let template = `
   <td>
-    <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
-    <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+    <div class='namebox'>
+      <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
+      <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+    </div>
   </td>
   `.trim();
 
