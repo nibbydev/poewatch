@@ -48,11 +48,11 @@
 <!-- Secondary navbar -->
 <div class="container-fluid second-navbar m-0 py-1 pr-3">
   <div class="form-group search-league m-0 ml-3">
-    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="search-league">
+    <select class="form-control form-control-sm" id="search-league">
 
-      <?php AddLeagueRadios($SERVICE_leagues); ?>
-    
-    </div>
+      <?php AddLeagueSelects($SERVICE_leagues); ?>
+
+    </select>
   </div>
   <div class="form-group live-updates m-0">
     <label for="live-updates" class="m-0">Live updates</label>

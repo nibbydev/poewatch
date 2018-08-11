@@ -45,7 +45,7 @@ $(document).ready(function() {
   FILTER.league = SERVICE_leagues[0][0];
   FILTER.category = SERVICE_category;
 
-  readLeagueFromCookies(FILTER);
+  readLeagueFromCookies(FILTER, SERVICE_leagues);
   makeGetRequest(FILTER.league, FILTER.category);
   defineListeners();
 }); 
@@ -54,23 +54,32 @@ $(document).ready(function() {
 // Data prep
 //------------------------------------------------------------------------------------------------------------
 
-function readLeagueFromCookies(FILTER) {
+function readLeagueFromCookies(FILTER, leagues) {
   let league = getCookie("league");
 
   if (league) {
     console.log("Got league from cookie: " + league);
-    FILTER.league = league;
-  }
 
-  $("#search-league input").filter(function() { 
-    return ($(this).val() === FILTER.league);
-  }).prop("active", true).trigger("click");
+    // Check if league from cookie is still active
+    for (let i = 0; i < leagues.length; i++) {
+      const entry = leagues[i];
+      
+      if (league === entry[0]) {
+        FILTER.league = league;
+        // Point league dropdown to that league
+        $("#search-league").val(league);
+        return;
+      }
+    }
+
+    console.log("League cookie did not match any active leagues");
+  }
 }
 
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
-    FILTER.league = $("input[name=league]:checked", this).val();
+    FILTER.league = $(":selected", this).val();
     console.log("Selected league: " + FILTER.league);
     document.cookie = "league="+FILTER.league;
     makeGetRequest(FILTER.league, FILTER.category);
