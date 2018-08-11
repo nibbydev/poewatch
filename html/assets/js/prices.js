@@ -457,19 +457,18 @@ function buildExpandedRow(id) {
 }
 
 function placeCharts(expandedRow) {
-  var ctx = $("#chart-price", expandedRow)[0].getContext('2d');
-  var gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+  let ctx = $("#chart-price", expandedRow)[0].getContext('2d');
+  let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
 
   gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
   gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
   gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
 
-  var priceData = {
+  let baseSettings = {
     type: "line",
     data: {
       labels: [],
       datasets: [{
-        label: "Price in chaos",
         data: [],
         backgroundColor: "rgba(0, 0, 0, 0.2)",
         borderColor: gradient,
@@ -488,15 +487,7 @@ function placeCharts(expandedRow) {
       tooltips: {
         intersect: false,
         mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return "Price: " + data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            let day = data['labels'][tooltipItem['index']];
-            return day === 1 ? '1 day ago' : day + ' days ago';
-          }
-        },
+        callbacks: {},
         backgroundColor: '#fff',
         titleFontSize: 16,
         titleFontColor: '#222',
@@ -506,116 +497,60 @@ function placeCharts(expandedRow) {
         borderWidth: 1,
         borderColor: '#aaa'
       },
-      // remove x-axes labels (but not grids)
-      scales: {xAxes: [{ticks: {display: false}}]}
-      }
-    }
-  
-  var quantData = {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Quantity",
-        data: [],
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: gradient,
-        borderWidth: 3,
-        lineTension: 0.2,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return "Quantity: " + data['datasets'][0]['data'][tooltipItem[0]['index']];
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']] + ' days ago';
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      },
-      // remove x-axes labels (but not grids)
-      scales: {xAxes: [{ticks: {display: false}}]}
+      scales: {yAxes: [{ticks: {beginAtZero:true}}]}
     }
   }
 
-  var pastData = {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Price in chaos",
-        data: [],
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: gradient,
-        borderWidth: 3,
-        lineTension: 0.2,
-        pointRadius: 0
-      }]
+  // Create deep clones of the base settings
+  let priceSettings   = $.extend(true, {}, baseSettings);
+  let quantSettings   = $.extend(true, {}, baseSettings);
+  let historySettings = $.extend(true, {}, baseSettings);
+
+  // Set price chart unique options
+  priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
+  priceSettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      return data['datasets'][0]['data'][tooltipItem[0]['index']];
     },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-            return price ? price : "No data";
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      },
-      scales: {
-        yAxes: [{ticks: {beginAtZero:true}}],
-        xAxes: [{
-          ticks: {
-            //autoSkip: false,
-            callback: function(value, index, values) {
-              return (value ? value : '');
-            }
-          }
-        }]
+    label: function(tooltipItem, data) {
+      let day = data['labels'][tooltipItem['index']];
+      return day === 1 ? '1 day ago' : day + ' days ago';
+    }
+  };
+
+  // Set quantity chart unique options
+  quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
+  quantSettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']] + ' days ago';
+    }
+  };
+
+  // Set history chart unique options
+  historySettings.options.scales.xAxes = [{
+    ticks: {
+      callback: function(value, index, values) {
+        return (value ? value : '');
       }
     }
-  }
+  }];
+  historySettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return price ? price : "No data";
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
+  };
 
-  CHART_MEAN    = new Chart($("#chart-price",     expandedRow),  priceData);
-  CHART_QUANT   = new Chart($("#chart-quantity",  expandedRow),  quantData);
-  CHART_HISTORY = new Chart($("#chart-past",      expandedRow),   pastData);
+  // Create charts
+  CHART_MEAN    = new Chart($("#chart-price",    expandedRow), priceSettings);
+  CHART_QUANT   = new Chart($("#chart-quantity", expandedRow), quantSettings);
+  CHART_HISTORY = new Chart($("#chart-past",     expandedRow), historySettings);
 }
 
 function fillChartData(leaguePayload) {
