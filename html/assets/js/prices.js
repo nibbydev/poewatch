@@ -470,7 +470,7 @@ function buildExpandedRow(id) {
   HISTORY_LEAGUE = FILTER.league;
 
   // Create jQuery object based on data from request and set gvar
-  ROW_expanded = createExpandedRow(leaguePayload);
+  ROW_expanded = createExpandedRow();
   placeCharts(ROW_expanded);
   fillChartData(leaguePayload);
   createHistoryLeagueSelectorFields(ROW_expanded, leagues, FILTER.league);
@@ -480,6 +480,15 @@ function buildExpandedRow(id) {
 
   // Create event listener for league selector
   createExpandedRowListeners(id, ROW_expanded);
+}
+
+function setDetailsTableValues(expandedRow, leaguePayload) {
+  $("#details-table-mean",    expandedRow).html(  formatNum(leaguePayload.mean)      );
+  $("#details-table-median",  expandedRow).html(  formatNum(leaguePayload.median)    );
+  $("#details-table-mode",    expandedRow).html(  formatNum(leaguePayload.mode)      );
+  $("#details-table-count",   expandedRow).html(  formatNum(leaguePayload.count)     );
+  $("#details-table-1d",      expandedRow).html(  formatNum(leaguePayload.quantity)  );
+  $("#details-table-exalted", expandedRow).html(  formatNum(leaguePayload.exalted)   );
 }
 
 function placeCharts(expandedRow) {
@@ -598,6 +607,9 @@ function fillChartData(leaguePayload) {
   CHART_QUANT.data.labels = formattedWeek.quantKeys;
   CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
   CHART_QUANT.update();
+  
+  // Set data in details table
+  setDetailsTableValues(ROW_expanded, leaguePayload);
 }
 
 function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague) {
@@ -613,7 +625,7 @@ function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague)
   $("#history-league-selector", expandedRow).append(buffer);
 }
 
-function createExpandedRow(leaguePayload) {
+function createExpandedRow() {
   // Define the base template
   let template = `
   <tr class='selected-row'><td colspan='100'>
@@ -641,15 +653,15 @@ function createExpandedRow(leaguePayload) {
           <tbody>
             <tr>
               <td>Mean</td>
-              <td>{{mean}}</td>
+              <td>{{chaosContainter}}<span id='details-table-mean'></span></td>
             </tr>
             <tr>
               <td>Median</td>
-              <td>{{median}}</td>
+              <td>{{chaosContainter}}<span id='details-table-median'></span></td>
             </tr>
             <tr>
               <td>Mode</td>
-              <td>{{mode}}</td>
+              <td>{{chaosContainter}}<span id='details-table-mode'></span></td>
             </tr>
           </tbody>
         </table>
@@ -659,15 +671,15 @@ function createExpandedRow(leaguePayload) {
           <tbody>
             <tr>
               <td>Total amount listed</td>
-              <td>{{count}}</td>
+              <td><span id='details-table-count'></span></td>
             </tr>
             <tr>
               <td>Listed every 24h</td>
-              <td>{{1d}}</td>
+              <td><span id='details-table-1d'></span></td>
             </tr>
             <tr>
               <td>Price in exalted</td>
-              <td>{{exalted}}</td>
+              <td>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
             </tr>
           </tbody>
         </table>
@@ -693,14 +705,12 @@ function createExpandedRow(leaguePayload) {
   let chaosContainer = containterTemplate.replace("{{img}}", ICON_CHAOS);
   let exaltedContainer = containterTemplate.replace("{{img}}", ICON_EXALTED);
 
-  // Fill basic data
+  // :thinking:
   template = template
-    .replace("{{mean}}",       chaosContainer + formatNum(leaguePayload.mean))
-    .replace("{{median}}",     chaosContainer + formatNum(leaguePayload.median))
-    .replace("{{mode}}",       chaosContainer + formatNum(leaguePayload.mode))
-    .replace("{{count}}",                       formatNum(leaguePayload.count))
-    .replace("{{1d}}",                          formatNum(leaguePayload.quantity))
-    .replace("{{exalted}}", exaltedContainer  + formatNum(leaguePayload.exalted));
+    .replace("{{chaosContainter}}",   chaosContainer)
+    .replace("{{chaosContainter}}",   chaosContainer)
+    .replace("{{chaosContainter}}",   chaosContainer)
+    .replace("{{exaltedContainter}}", exaltedContainer);
   
   // Convert into jQuery object and return
   return $(template);
