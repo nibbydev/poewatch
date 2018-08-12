@@ -93,11 +93,10 @@ function defineListeners() {
   });
 
   // Load all button
-  var loadall = $(".loadall");
-  $(loadall, "button").on("click", function(){
+  $(".loadall button").on("click", function(){
     console.log("Button press: loadall");
-    loadall.hide();
-    FILTER.parseAmount = 0;
+    $(this).hide();
+    FILTER.parseAmount = -1;
     sortResults(ITEMS);
   });
 
@@ -1127,7 +1126,7 @@ function sortResults(items) {
   for (var key in items) {
     if (items.hasOwnProperty(key)) {
       // Stop if specified item limit has been reached
-      if ( count > FILTER.parseAmount ) {
+      if ( FILTER.parseAmount > 0 && count > FILTER.parseAmount ) {
         break;
       }
 
