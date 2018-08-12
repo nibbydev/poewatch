@@ -75,10 +75,31 @@ sudo systemctl reload apache2.service
 
 ##### 1.5. Run database configuration script from `/src/resources/DatabbaseSetup.sql`
 
-## 2. Program set up
+## 2. Firewall (assuming CloudFlare is set up and working)
 
-##### 2.1. Obtain Gson `com.google.code.gson:gson:2.8.5` and MySQL connector `mysql:mysql-connector-java:8.0.12` from Maven
+##### 2.1. Whitelist port 22 so we don't get locked out
+`ufw allow 22`
 
-##### 2.2. Compile project and export artifacts
+##### 2.2. Create batch script for whitelisting CloudFlare IPs
+`nano ufw.sh`
 
-##### 2.3. Run the program `java -Xmx128M -jar poewatch.jar`
+```
+#!/bin/bash
+for i in `curl https://www.cloudflare.com/ips-v4`; do ufw allow from $i to any port 80; done
+for i in `curl https://www.cloudflare.com/ips-v6`; do ufw allow from $i to any port 80; done
+```
+
+Original script by [raeesbhatti](https://gist.github.com/raeesbhatti/e336ab920ab523335937).
+
+Set permissions `chmod 744 ufw.sh` and run the script `./ufw.sh`.
+
+##### 2.3. Deny all other connections
+`ufw default deny`
+
+## 3. Artifact set up
+
+##### 3.1. Obtain Gson `com.google.code.gson:gson:2.8.5` and MySQL connector `mysql:mysql-connector-java:8.0.12` from Maven
+
+##### 3.2. Compile project and export artifacts
+
+##### 3.3. Run the program `java -Xmx128M -jar poewatch.jar`
