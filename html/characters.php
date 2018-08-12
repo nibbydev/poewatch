@@ -100,6 +100,9 @@
                   <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "character"); ?>">
                     <input type="radio" name="mode" value="character" <?php SetCheckboxState($DATA, "checked", "character"); ?>><a>Character</a>
                   </label>
+                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "transfer"); ?>">
+                    <input type="radio" name="mode" value="transfer" <?php SetCheckboxState($DATA, "checked", "transfer"); ?>><a>Transfer</a>
+                  </label>
                 </div>
               </div>
             </div>
@@ -137,12 +140,20 @@
           <div class="card api-data-table">
             <table class="table table-striped table-hover mb-0">
               <thead>
+                <?php if ($DATA["mode"] === "transfer"): ?>
+                <tr>
+                  <th>Account</th>
+                  <th>Was account</th>
+                  <th>Changed</th>
+                </tr>
+                <?php else: ?>
                 <tr>
                   <th>Account</th>
                   <th>Has character</th>
                   <th>In league</th>
                   <th>Last seen</th>
                 </tr>
+                <?php endif; ?>
               </thead>
               <tbody>
 

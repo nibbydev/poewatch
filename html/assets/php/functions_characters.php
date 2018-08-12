@@ -6,7 +6,12 @@ function CheckGETVariableError($DATA) {
   // 3, 4 - Invalid page
 
   if ( empty($_GET) ) return 0;
-  if ( !$DATA["mode"] || $DATA["mode"] !== "account" && $DATA["mode"] !== "character") return 1;
+
+  if ( !$DATA["mode"] ) return 1;
+  if ($DATA["mode"] !== "account" && 
+    $DATA["mode"] !== "character" && 
+    $DATA["mode"] !== "transfer") return 1;
+
   if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) return 2;
   if ( $DATA["search"] && strlen($DATA["search"]) > 32 ) return 2;
   if ( !$DATA["page"] ) return 3;
@@ -14,7 +19,6 @@ function CheckGETVariableError($DATA) {
 
   return 0;
 }
-
 
 function DisplayError($code) {
   switch ($code) {
@@ -50,14 +54,13 @@ function SetCheckboxState($DATA, $state, $mode) {
   }
 }
 
-
 function FillTable($pdo, $DATA) {
-  $len = strlen($DATA["search"]);
-
-  if ($len > 2 && $DATA["mode"] === "account") {
+  if ($DATA["mode"] === "account") {
     CharacterSearch($pdo, $DATA);
-  } else if ($len > 2 && $DATA["mode"] === "character") {
+  } else if ($DATA["mode"] === "character") {
     AccountSearch($pdo, $DATA);
+  } else if ($DATA["mode"] === "transfer") {
+    TransferSearch($pdo, $DATA);
   }
 }
 
@@ -71,7 +74,6 @@ function DisplayResultCount($DATA) {
   echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
 }
 
-
 function FormSearchHyperlink($mode, $search, $display) {
   return "<a href='characters?mode=$mode&search=$search'>$display</a>";
 }
@@ -79,7 +81,6 @@ function FormSearchHyperlink($mode, $search, $display) {
 function FormSearchURL($mode, $search, $page) {
   return "characters?mode=$mode&search=$search&page=$page";
 }
-
 
 function HighLightMatch($needle, $haystack) {
   $pos = stripos($haystack, $needle);
@@ -137,7 +138,6 @@ function DisplayPagination($DATA, $pos) {
 
   echo "</div></div>";
 }
-
 
 function GetTotalCounts($pdo, $DATA) {
   $query = "SELECT
@@ -267,6 +267,44 @@ function AccountSearch($pdo, $DATA) {
       <td>$displayAcc</td>
       <td>$displayChar</td>
       <td>{$row["league"]}</td>
+      <td>$displayStamp</td>
+    </tr>";
+  }
+}
+
+function TransferSearch($pdo, $DATA) {
+  $query = "SELECT   a1.name AS oldName, a2.name AS newName, a2.found
+  FROM     account_accounts AS a1
+  JOIN (
+    SELECT h.id_old AS id,
+           h.found,
+           a.name
+    FROM (
+      SELECT id, name
+      FROM   account_accounts 
+      WHERE  name LIKE ? ESCAPE '='
+      LIMIT  1
+    ) AS   a
+    JOIN   account_history AS h 
+      ON   h.id_new = a.id
+  ) AS     a2 
+    ON     a1.id = a2.id
+  ORDER BY a2.found DESC";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([ likeEscape($DATA["search"]) ]);
+
+  while ($row = $stmt->fetch()) {
+    $displayStamp = FormatTimestamp($row["found"]);
+
+    $displayOldAcc = HighLightMatch($DATA["search"], $row["newName"]);
+    $displayOldAcc = FormSearchHyperlink("account", $row["newName"], $displayOldAcc);
+
+    $displayNewAcc = FormSearchHyperlink("account", $row["oldName"], $row["oldName"]);
+
+    echo "<tr>
+      <td>$displayOldAcc</td>
+      <td>$displayNewAcc</td>
       <td>$displayStamp</td>
     </tr>";
   }
