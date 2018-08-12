@@ -411,6 +411,7 @@ public class Main {
                 break;
             case "get":
                 ENTRY_MANAGER.generateOutputFiles();
+                System.out.println("done");
                 break;
 
             default:

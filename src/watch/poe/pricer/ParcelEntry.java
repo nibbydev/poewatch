@@ -67,47 +67,51 @@ public class ParcelEntry {
      * @param historyEntries Doubles as CSV
      */
     private void calcSpark(String historyEntries) {
-        Double[] historyMean = new Double[7];
+        Double[] tmpMean = new Double[7];
         int historyCounter = 6;
 
         // Set latest/newest price to current price
-        historyMean[6] = mean;
+        tmpMean[6] = mean;
 
         // Parse history presented as CSV
         if (historyEntries != null) {
-            for (String historyEntry : historyEntries.split(",")) {
+            String[] splitEntries = historyEntries.split(",");
+
+            // Reverse the order of data
+            for (int i = 0; i < splitEntries.length / 2; i++) {
+                String temp = splitEntries[i];
+                splitEntries[i] = splitEntries[splitEntries.length - i - 1];
+                splitEntries[splitEntries.length - i - 1] = temp;
+            }
+
+            for (String historyEntry : splitEntries) {
                 if (--historyCounter < 0) break;
 
                 try {
-                    historyMean[historyCounter] = Double.parseDouble(historyEntry);
+                    tmpMean[historyCounter] = Double.parseDouble(historyEntry);
                 } catch (NumberFormatException ex) { }
             }
         }
 
-        // Find the first price from the left that is not null
-        Double firstPrice = null;
-        for (Double mean : historyMean) {
-            if (mean != null) {
-                firstPrice = mean;
-                break;
+        // Find each price percentage in relation to the first price
+        for (int i = 0; i < 7; i++) {
+            if (tmpMean[i] != null && tmpMean[i] > 0) {
+                history.spark[i] = Math.round(((tmpMean[i] / mean * 100.0) - 100.0) * 100.0) / 100.0;
             }
         }
 
-        if (firstPrice != null) {
-            // Find each value's percentage in relation to the first price
-            for (int i = 0; i < 7; i++) {
-                if (historyMean[i] != null && historyMean[i] > 0) {
-                    historyMean[i] = (historyMean[i] / firstPrice - 1) * 100.0;
-                    historyMean[i] = Math.round(historyMean[i] * 100.0) / 100.0;
-                }
+        // Find the first and last spark percentages that are not null
+        Double firstSpark = null, lastSpark = null;
+        for (Double spark : history.spark) {
+            if (spark != null) {
+                if (firstSpark == null) firstSpark = spark;
+                lastSpark = spark;
             }
+        }
 
-            // Copy values over
-            System.arraycopy(historyMean, 0, history.spark, 0, 7);
-
-            // Find % difference between first price and last price
-            history.change = (1 - firstPrice / mean) * 1000.0;
-            history.change = Math.round(history.change * 100.0) / 1000.0;
+        // Find % difference between first price and last price
+        if (firstSpark != null) {
+            history.change = lastSpark - firstSpark;
         }
     }
 
