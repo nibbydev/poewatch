@@ -248,6 +248,13 @@ function displayFillerRow() {
   let template = `
   <tr class='filler-row'><td colspan='100'>
     <div class='row m-1'>
+      <div class='col-sm'>
+        <h4>League</h4>
+        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1'>
       <div class='col-md'>
         <h4>Chaos value</h4>
         <div class='chart-small'><canvas id="chart-price"></canvas></div>
@@ -264,12 +271,15 @@ function displayFillerRow() {
           <tbody>
             <tr>
               <td>Mean</td>
+              <td>{{mean}}</td>
             </tr>
             <tr>
               <td>Median</td>
+              <td>{{median}}</td>
             </tr>
             <tr>
               <td>Mode</td>
+              <td>{{mode}}</td>
             </tr>
           </tbody>
         </table>
@@ -279,12 +289,15 @@ function displayFillerRow() {
           <tbody>
             <tr>
               <td>Total amount listed</td>
+              <td>{{count}}</td>
             </tr>
             <tr>
               <td>Listed every 24h</td>
+              <td>{{1d}}</td>
             </tr>
             <tr>
               <td>Price in exalted</td>
+              <td>{{exalted}}</td>
             </tr>
           </tbody>
         </table>
@@ -293,9 +306,8 @@ function displayFillerRow() {
     <hr>
     <div class='row m-1 mb-3'>
       <div class='col-sm'>
-        <h4>Past leagues</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
-        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-dataset-radio">
+        <h4>Past data</h4>
+        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
           <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
           <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
           <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
@@ -436,9 +448,14 @@ function formatWeek(leaguePayload) {
     }
   }
 
+  // Add today's values
+  means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);
+
   // Return generated data
   return {
-    'keys':  [7, 6, 5, 4, 3, 2, 1],
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
     'means': means,
     'quants': quants
   }
@@ -449,14 +466,14 @@ function buildExpandedRow(id) {
   let leagues = getItemHistoryLeagues(id);
 
   // Get league-specific data pack
-  let selectedLeague = getSelectedLeague(leagues);
-  let leaguePayload = HISTORY_DATA[id][selectedLeague];
+  let leaguePayload = HISTORY_DATA[id][FILTER.league];
+  HISTORY_LEAGUE = FILTER.league;
 
   // Create jQuery object based on data from request and set gvar
   ROW_expanded = createExpandedRow(leaguePayload);
   placeCharts(ROW_expanded);
   fillChartData(leaguePayload);
-  createHistoryLeagueSelectorFields(ROW_expanded, leagues, selectedLeague);
+  createHistoryLeagueSelectorFields(ROW_expanded, leagues, FILTER.league);
 
   // Place jQuery object in table
   ROW_parent.after(ROW_expanded);
@@ -506,7 +523,7 @@ function placeCharts(expandedRow) {
         borderWidth: 1,
         borderColor: '#aaa'
       },
-      scales: {yAxes: [{ticks: {beginAtZero:true}}]}
+      scales: {}
     }
   }
 
@@ -522,8 +539,7 @@ function placeCharts(expandedRow) {
       return data['datasets'][0]['data'][tooltipItem[0]['index']];
     },
     label: function(tooltipItem, data) {
-      let day = data['labels'][tooltipItem['index']];
-      return day === 1 ? '1 day ago' : day + ' days ago';
+      return data['labels'][tooltipItem['index']];
     }
   };
 
@@ -534,11 +550,12 @@ function placeCharts(expandedRow) {
       return data['datasets'][0]['data'][tooltipItem[0]['index']];
     },
     label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']] + ' days ago';
+      return data['labels'][tooltipItem['index']];
     }
   };
 
-  // Set history chart unique options
+  // Set history chart unique options 
+  historySettings.options.scales.yAxes = [{ticks: {beginAtZero:true}}];
   historySettings.options.scales.xAxes = [{
     ticks: {
       callback: function(value, index, values) {
@@ -574,11 +591,11 @@ function fillChartData(leaguePayload) {
   // Get a fixed size of 7 latest history entries
   let formattedWeek = formatWeek(leaguePayload);
 
-  CHART_MEAN.data.labels = formattedWeek.keys;
+  CHART_MEAN.data.labels = formattedWeek.meanKeys;
   CHART_MEAN.data.datasets[0].data = formattedWeek.means;
   CHART_MEAN.update();
 
-  CHART_QUANT.data.labels = formattedWeek.keys;
+  CHART_QUANT.data.labels = formattedWeek.quantKeys;
   CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
   CHART_QUANT.update();
 }
@@ -600,6 +617,13 @@ function createExpandedRow(leaguePayload) {
   // Define the base template
   let template = `
   <tr class='selected-row'><td colspan='100'>
+    <div class='row m-1'>
+      <div class='col-sm'>
+        <h4>League</h4>
+        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+      </div>
+    </div>
+    <hr>
     <div class='row m-1'>
       <div class='col-md'>
         <h4>Chaos value</h4>
@@ -652,9 +676,8 @@ function createExpandedRow(leaguePayload) {
     <hr>
     <div class='row m-1 mb-3'>
       <div class='col-sm'>
-        <h4>Past leagues</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
-        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-dataset-radio">
+        <h4>Past data</h4>
+        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
           <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
           <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
           <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
@@ -699,21 +722,6 @@ function createExpandedRowListeners(id, expandedRow) {
     let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
     fillChartData(leaguePayload);
   });
-}
-
-function getSelectedLeague(leagues) {
-  // If user has not selected a league in the history menu before, use the first one
-  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0].name;
-
-  // If user had selected a league before in the history menu, check if that league
-  // is present for this item. If yes, select it; if no, use the first one
-  for (let i = 0; i < leagues.length; i++) {
-    if (leagues[i].name === HISTORY_LEAGUE) {
-      return HISTORY_LEAGUE;
-    }
-  }
-
-  return leagues[0].name;
 }
 
 function getItemHistoryLeagues(id) {
