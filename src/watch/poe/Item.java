@@ -531,7 +531,7 @@ public class Item extends Mappers.BaseItem {
         typeLine = null;
 
         // Match any negative or positive integer or double
-        // name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
+        name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
 
         // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle
         if (name.contains("\n")) name = name.replace("\n", " ");
