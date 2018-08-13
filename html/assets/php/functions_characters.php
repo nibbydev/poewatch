@@ -12,7 +12,7 @@ $DATA = array(
   // Search string
   "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
   // Search mode
-  "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : "account",
+  "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : null,
   // Table sizes for MotD
   "totalAccs"  => null,
   "totalChars" => null,
