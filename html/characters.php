@@ -1,39 +1,6 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_characters.php" ); 
-
-  // General page-related data array
-  $DATA = array(
-    "limit"      => 25,
-    "count"      => null,
-    "page"       => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"]) : 1,
-    "pages"      => null,
-    "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
-    "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : "account",
-    "totalAccs"  => null,
-    "totalChars" => null,
-    "totalRels"  => null
-  );
-
-  // Check if user-provided parameters are valid
-  $ERRORCODE = CheckGETVariableError($DATA);
-
-  // Get total number of unique account and character names
-  $DATA = GetTotalCounts($pdo, $DATA);
-
-  // If there was no problem with the user-provided parameters, check how many results there 
-  // would be to create accurate pagination
-  if (!$ERRORCODE && $DATA["search"]) {
-    $DATA["count"] = GetResultCount($pdo, $DATA);
-
-    // Find the number of pages there should be
-    $DATA["pages"] = ceil($DATA["count"] / $DATA["limit"]);
-
-    // Check if the user-provided page number exceeds the actual page count
-    $ERRORCODE = CheckGETVariableError($DATA);
-  } else {
-    $DATA["pages"] = ceil($DATA["totalRels"] / $DATA["limit"]);
-  }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -91,24 +58,21 @@
           <!-- Search options -->
           <form method="GET">
             <!-- Mode -->
-            <div class="row mb-3">
+            <div class="row">
               <div class="col">
-                <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "account"); ?>">
-                    <input type="radio" name="mode" value="account" <?php SetCheckboxState($DATA, "checked", "account"); ?>><a>Account</a>
+                <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
+                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "account") ? "active" : ""; ?>">
+                    <input type="radio" name="mode" value="account" <?php echo ($DATA["mode"] === "account") ? "checked" : ""; ?>><a>Account</a>
                   </label>
-                  <label class="btn btn-outline-dark <?php SetCheckboxState($DATA, "active", "character"); ?>">
-                    <input type="radio" name="mode" value="character" <?php SetCheckboxState($DATA, "checked", "character"); ?>><a>Character</a>
+                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "character") ? "active" : ""; ?>">
+                    <input type="radio" name="mode" value="character" <?php echo ($DATA["mode"] === "character") ? "checked" : ""; ?>><a>Character</a>
+                  </label>
+                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "transfer") ? "active" : ""; ?>">
+                    <input type="radio" name="mode" value="transfer" <?php echo ($DATA["mode"] === "transfer") ? "checked" : ""; ?>><a>Transfer</a>
                   </label>
                 </div>
-              </div>
-            </div>
-            <!--/Mode/-->
 
-            <!-- Search -->
-            <div class="row mb-3">
-              <div class="col">
-                <div class="btn-group">
+                <div class="btn-group mb-3">
                   <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
                   <button type="submit" class="btn btn-outline-dark">Search</button>
                 </div>
@@ -117,45 +81,47 @@
             <!--/Search/-->
 
             <?php 
-              if ($ERRORCODE) DisplayError($ERRORCODE); 
-              else DisplayResultCount($DATA); 
+              if ( $DATA["errorCode"] ) {
+                echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
+              } else {
+                DisplayResultCount($DATA);
+              }
             ?>
 
           </form>
           <!--/Search options/-->
 
           <!-- Content card -->
-          <?php if (!$ERRORCODE && $DATA["search"]): ?>
+          <?php if (!$DATA["errorCode"] && $DATA["search"]): ?>
 
-          <hr>
+            <hr>
+            <!-- Main table -->
+            <div class="card api-data-table">
+              <table class="table table-striped table-hover mb-0">
+                <thead>
+                  <?php if ($DATA["mode"] === "transfer"): ?>
+                  <tr>
+                    <th>Account</th>
+                    <th>Was account</th>
+                    <th>Changed</th>
+                  </tr>
+                  <?php else: ?>
+                  <tr>
+                    <th>Account</th>
+                    <th>Has character</th>
+                    <th>In league</th>
+                    <th>Last seen</th>
+                  </tr>
+                  <?php endif; ?>
+                </thead>
+                <tbody>
 
-          <!-- Top pagination -->
-          <?php if (!$ERRORCODE) DisplayPagination($DATA, "top"); ?>
-          <!--/Top pagination/-->
+                  <?php if (!$DATA["errorCode"]) FillTable($DATA); ?>
 
-          <!-- Main table -->
-          <div class="card api-data-table">
-            <table class="table table-striped table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>Account</th>
-                  <th>Has character</th>
-                  <th>In league</th>
-                  <th>Last seen</th>
-                </tr>
-              </thead>
-              <tbody>
-
-                <?php if (!$ERRORCODE) FillTable($pdo, $DATA); ?>
-
-              </tbody>
-            </table>
-          </div>
-          <!--/Main table/-->
-
-          <!-- Bottom pagination -->
-          <?php if (!$ERRORCODE) DisplayPagination($DATA, "bottom"); ?>
-          <!--/Bottom pagination/-->
+                </tbody>
+              </table>
+            </div>
+            <!--/Main table/-->
 
           <?php endif; ?>
           <!--/Content card/-->

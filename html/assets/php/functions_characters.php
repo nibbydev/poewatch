@@ -1,34 +1,40 @@
 <?php
-function CheckGETVariableError($DATA) {
-  // 0    - Request was not a GET request
-  // 1    - Invalid mode
-  // 2    - Search string too short
-  // 3, 4 - Invalid page
+// General page-related data array
+$DATA = array(
+  // Search results per page                [not in use]
+  "limit"      => 25, 
+  // Nr of results from search
+  "count"      => null,
+  // Current (user-provided) page nmber     [not in use]
+  "page"       => isset($_GET["page"])   && $_GET["page"]   ? intval($_GET["page"]) : 1,
+  // Total pages based on: count / limit    [not in use]
+  "pages"      => null,
+  // Search string
+  "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
+  // Search mode
+  "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : "account",
+  // Table sizes for MotD
+  "totalAccs"  => null,
+  "totalChars" => null,
+  "totalRels"  => null,
+  // Error handling. Explanation under CheckVariableErrors()
+  "errorCode"  => null,
+  "errorMsg"   => null,
+  // Values that can be passed to $_GET["mode"]
+  "validModes" => array("account", "character", "transfer"),
+  // Array consisting of pure HTML '<tr></tr>' elements
+  "resultRows" => array()
+);
 
-  if ( empty($_GET) ) return 0;
-  if ( !$DATA["mode"] || $DATA["mode"] !== "account" && $DATA["mode"] !== "character") return 1;
-  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) return 2;
-  if ( $DATA["search"] && strlen($DATA["search"]) > 32 ) return 2;
-  if ( !$DATA["page"] ) return 3;
-  if ( $DATA["pages"] && $DATA["page"] > $DATA["pages"] ) return 4;
+$DATA = CheckVariableErrors ($DATA);
+$DATA = GetTotalCounts($pdo, $DATA);
+$DATA = MakeSearch    ($pdo, $DATA);
 
-  return 0;
-}
+//------------------------------------------------------------------------------------------------------------
+// General display functions
+//------------------------------------------------------------------------------------------------------------
 
-
-function DisplayError($code) {
-  switch ($code) {
-    case 0:  $msg = "There was not error";            break;
-    case 1:  $msg = "Invalid mode";                   break;
-    case 2:  $msg = "Invalid search string length";   break;
-    case 3:
-    case 4:  $msg = "Invalid page";                   break;
-    default: $msg = "Unknown error";                  break;
-  }
-
-  echo "<span class='custom-text-red'>Error: " . $msg . "</span>";
-}
-
+// Shows a MotD message of table sizes
 function DisplayMotD($DATA) {
   $accDisplay = number_format($DATA["totalAccs"]);
   $charDisplay = number_format($DATA["totalChars"]);
@@ -42,25 +48,7 @@ function DisplayMotD($DATA) {
   echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations from $timeDisplay.";
 }
 
-function SetCheckboxState($DATA, $state, $mode) {
-  if ($DATA["mode"] !== null) {
-    echo ($DATA["mode"] === $mode) ? $state : "";
-  } else if ($mode === "account") {
-    echo $state;
-  }
-}
-
-
-function FillTable($pdo, $DATA) {
-  $len = strlen($DATA["search"]);
-
-  if ($len > 2 && $DATA["mode"] === "account") {
-    CharacterSearch($pdo, $DATA);
-  } else if ($len > 2 && $DATA["mode"] === "character") {
-    AccountSearch($pdo, $DATA);
-  }
-}
-
+// Shows nr of results for search
 function DisplayResultCount($DATA) {
   if ($DATA["count"] === null) return;
 
@@ -71,46 +59,7 @@ function DisplayResultCount($DATA) {
   echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
 }
 
-
-function FormSearchHyperlink($mode, $search, $display) {
-  return "<a href='characters?mode=$mode&search=$search'>$display</a>";
-}
-
-function FormSearchURL($mode, $search, $page) {
-  return "characters?mode=$mode&search=$search&page=$page";
-}
-
-
-function HighLightMatch($needle, $haystack) {
-  $pos = stripos($haystack, $needle);
-  
-  $haystack = substr_replace($haystack, "</span>", $pos + strlen($needle), 0);
-  $haystack = substr_replace($haystack, "<span class='custom-text-orange'>", $pos, 0);
-
-  return $haystack;
-}
-
-function FormatTimestamp($timestamp) {
-  $time = new DateTime($timestamp);
-  $now = new DateTime();
-  $interval = $time->diff($now, true);
-
-  if     ($interval->y) return ($interval->y === 1) ? "1 year ago"   : $interval->y . " years ago";
-  elseif ($interval->m) return ($interval->m === 1) ? "1 month ago"  : $interval->m . " months ago";
-  elseif ($interval->d) return ($interval->d === 1) ? "1 day ago"    : $interval->d . " days ago";
-  elseif ($interval->h) return ($interval->h === 1) ? "1 hour ago"   : $interval->h . " hours ago";
-  elseif ($interval->i) return ($interval->i === 1) ? "1 minute ago" : $interval->i . " minutes ago";
-  else return "Moments ago";
-}
-
-function GetResultCount($pdo, $DATA) {
-  if ($DATA["mode"] === "account") {
-    return CharacterCount($pdo, $DATA);
-  } else if ($DATA["mode"] === "character") {
-    return AccountCount($pdo, $DATA);
-  }
-}
-
+// Shows pagination if results exceeded limit
 function DisplayPagination($DATA, $pos) {
   if ($DATA["pages"] <= 1) return;
 
@@ -138,41 +87,55 @@ function DisplayPagination($DATA, $pos) {
   echo "</div></div>";
 }
 
+//------------------------------------------------------------------------------------------------------------
+// Main table data displaying
+//------------------------------------------------------------------------------------------------------------
 
+function MakeSearch($pdo, $DATA) {
+  switch ($DATA["mode"]) {
+    case 'account':   return CharacterSearch ($pdo, $DATA);
+    case 'character': return AccountSearch   ($pdo, $DATA);
+    case 'transfer':  return TransferSearch  ($pdo, $DATA);
+    default:          return $DATA;
+  }
+}
+
+function FillTable($DATA) {
+  foreach ($DATA["resultRows"] as $index => $row) {
+    echo $row;
+  }
+}
+
+//------------------------------------------------------------------------------------------------------------
+// DB queries
+//------------------------------------------------------------------------------------------------------------
+
+// Get table sizes
 function GetTotalCounts($pdo, $DATA) {
-  $query = "SELECT
-  (SELECT COUNT(*) FROM account_accounts  ) AS accCount, 
-  (SELECT COUNT(*) FROM account_relations ) AS relCount, 
-  (SELECT COUNT(*) FROM account_characters) AS charCount";
+  $query = "SELECT  TABLE_NAME, TABLE_ROWS 
+  FROM    information_schema.TABLES 
+  WHERE   table_schema = 'ps5'
+    AND ( table_name = 'account_characters'
+    OR    table_name = 'account_accounts'
+    OR    table_name = 'account_relations')";
 
   $stmt = $pdo->query($query);
-  $row = $stmt->fetch();
-
-  $DATA["totalAccs"]  = $row["accCount"];
-  $DATA["totalRels"]  = $row["relCount"];
-  $DATA["totalChars"] = $row["charCount"];
+  while ($row = $stmt->fetch()) {
+    switch ($row['TABLE_NAME']) {
+      case 'account_characters':  $DATA["totalChars"] = $row["TABLE_ROWS"]; break;
+      case 'account_accounts':    $DATA["totalAccs"]  = $row["TABLE_ROWS"]; break;
+      case 'account_relations':   $DATA["totalRels"]  = $row["TABLE_ROWS"]; break;
+      default:  break;
+    }
+  }
 
   return $DATA;
 }
 
-// Search based on account name
-function CharacterCount($pdo, $DATA) {
-  $query = "SELECT COUNT(*) AS count 
-  FROM   account_relations
-  WHERE  id_a = (
-    SELECT id 
-    FROM   account_accounts 
-    WHERE  name LIKE ? ESCAPE '=' 
-    LIMIT  1
-  )";
-
-  // Execute count query and see how many results there are
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([likeEscape($DATA["search"])]);
-  return $stmt->fetch()["count"];
-}
-// Search based on account name
+// Search for characters based on account name
 function CharacterSearch($pdo, $DATA) {
+  $DATA["count"] = 0;
+
   $query = "SELECT   
     a.name AS account,
     c.name AS `character`,
@@ -187,51 +150,36 @@ function CharacterSearch($pdo, $DATA) {
   JOIN     account_characters AS c ON r.id_c = c.id
   JOIN     data_leagues       AS l ON r.id_l = l.id
   ORDER BY r.seen DESC, c.name DESC
-  LIMIT    ?
-  OFFSET   ?";
-
-  $escapedSearch = likeEscape($DATA["search"]);
-  $offset = ($DATA["page"] - 1) * $DATA["limit"];
+  LIMIT 200";
 
   // Execute get query and get the data
+  $escapedSearch = likeEscape( $DATA["search"] );
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$escapedSearch, $DATA["limit"], $offset]);
+  $stmt->execute([ $escapedSearch ]);
 
   while ($row = $stmt->fetch()) {
+    $DATA["count"]++;
+
     $displayStamp = FormatTimestamp($row["seen"]);
-
     $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
-
     $displayAcc = HighLightMatch($DATA["search"], $row["account"]);
     $displayAcc = FormSearchHyperlink("account", $row["account"], $displayAcc);
 
-    echo "<tr>
+    $DATA["resultRows"][] = "<tr>
     <td>$displayAcc</td>
     <td>$displayChar</td>
     <td>{$row["league"]}</td>
     <td>$displayStamp</td>
     </tr>";
   }
+
+  return $DATA;
 }
 
-// Search based on character name
-function AccountCount($pdo, $DATA) {
-  $query = "SELECT COUNT(*) AS count 
-  FROM   account_relations
-  WHERE  id_c = (
-    SELECT id 
-    FROM   account_characters 
-    WHERE  name LIKE ? ESCAPE '=' 
-    LIMIT  1
-  )";
-
-  // Execute count query and see how many results there are
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([likeEscape($DATA["search"])]);
-  return $stmt->fetch()["count"];
-}
-// Search based on character name
+// Search for accounts based on character name
 function AccountSearch($pdo, $DATA) {
+  $DATA["count"] = 0;
+
   $query = "SELECT   
     a.name AS account,
     c.name AS `character`,
@@ -245,33 +193,146 @@ function AccountSearch($pdo, $DATA) {
   JOIN     account_relations  AS r ON r.id_c = c.id
   JOIN     account_accounts   AS a ON r.id_a = a.id
   JOIN     data_leagues       AS l ON r.id_l = l.id
-  ORDER BY r.seen DESC, c.name DESC
-  LIMIT    ?
-  OFFSET   ?";
+  ORDER BY r.seen DESC, c.name DESC";
 
-  $offset = ($DATA["page"] - 1) * $DATA["limit"];
-  $escapedSearch = likeEscape($DATA["search"]);
-
+  $escapedSearch = likeEscape( $DATA["search"] );
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$escapedSearch, $DATA["limit"], $offset]);
+  $stmt->execute([ $escapedSearch ]);
 
   while ($row = $stmt->fetch()) {
-    $displayStamp = FormatTimestamp($row["seen"]);
+    $DATA["count"]++;
 
+    $displayStamp = FormatTimestamp($row["seen"]);
     $displayChar = HighLightMatch($DATA["search"], $row["character"]);
     $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
-
     $displayAcc = FormSearchHyperlink("account", $row["account"], $row["account"]);
 
-    echo "<tr>
+    $DATA["resultRows"][] = "<tr>
       <td>$displayAcc</td>
       <td>$displayChar</td>
       <td>{$row["league"]}</td>
       <td>$displayStamp</td>
     </tr>";
   }
+
+  return $DATA;
 }
 
+// Search for accounts based on account name
+function TransferSearch($pdo, $DATA) {
+  $DATA["count"] = 0;
+
+  $query = "SELECT   a1.name AS oldName, a2.name AS newName, a2.found
+  FROM     account_accounts AS a1
+  JOIN (
+    SELECT h.id_old AS id,
+           h.found,
+           a.name
+    FROM (
+      SELECT id, name
+      FROM   account_accounts 
+      WHERE  name LIKE ? ESCAPE '='
+      LIMIT  1
+    ) AS   a
+    JOIN   account_history AS h 
+      ON   h.id_new = a.id
+  ) AS     a2 
+    ON     a1.id = a2.id
+  ORDER BY a2.found DESC
+  LIMIT 200";
+
+  $escapedSearch = likeEscape( $DATA["search"] );
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([ $escapedSearch ]);
+
+  while ($row = $stmt->fetch()) {
+    $DATA["count"]++;
+
+    $displayStamp = FormatTimestamp($row["found"]);
+    $displayOldAcc = HighLightMatch($DATA["search"], $row["newName"]);
+    $displayOldAcc = FormSearchHyperlink("account", $row["newName"], $displayOldAcc);
+    $displayNewAcc = FormSearchHyperlink("account", $row["oldName"], $row["oldName"]);
+
+    $DATA["resultRows"][] = "<tr>
+      <td>$displayOldAcc</td>
+      <td>$displayNewAcc</td>
+      <td>$displayStamp</td>
+    </tr>";
+  }
+
+  return $DATA;
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Utility functions
+//------------------------------------------------------------------------------------------------------------
+
+// Check for errors in user-provided parameters
+function CheckVariableErrors($DATA) {
+  // 1    - Invalid mode
+  // 2    - Search string too short
+  // 3    - Search string too long
+
+  if ( empty($_GET) ) {
+    return $DATA;
+  }
+
+  // User-provided mode was not in list of accepted modes
+  if ( !in_array($DATA["mode"], $DATA["validModes"]) ) {
+    $DATA["errorCode"] = 1;
+    $DATA["errorMsg"] = "Invalid mode";
+    return $DATA;
+  }
+
+  // Search string too small
+  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) {
+    $DATA["errorCode"] = 2;
+    $DATA["errorMsg"] = "Minimum 3 characters";
+    return $DATA;
+  }
+
+  // Search string too large
+  if ( $DATA["search"] && strlen($DATA["search"]) > 42 ) {
+    $DATA["errorCode"] = 3;
+    $DATA["errorMsg"] = "Maximum 42 characters";
+    return $DATA;
+  }
+
+  return $DATA;
+}
+
+// Escape MySQL LIKE syntax
 function likeEscape($s) {
   return str_replace(array("=", "_", "%"), array("==", "=_", "=%"), $s);
+}
+
+// Turn timestamp into readable string
+function FormatTimestamp($timestamp) {
+  $time = new DateTime($timestamp);
+  $now = new DateTime();
+  $interval = $time->diff($now, true);
+
+  if     ($interval->y) return ($interval->y === 1) ? "1 year ago"   : $interval->y . " years ago";
+  elseif ($interval->m) return ($interval->m === 1) ? "1 month ago"  : $interval->m . " months ago";
+  elseif ($interval->d) return ($interval->d === 1) ? "1 day ago"    : $interval->d . " days ago";
+  elseif ($interval->h) return ($interval->h === 1) ? "1 hour ago"   : $interval->h . " hours ago";
+  elseif ($interval->i) return ($interval->i === 1) ? "1 minute ago" : $interval->i . " minutes ago";
+  else return "Moments ago";
+}
+
+function FormSearchHyperlink($mode, $search, $display) {
+  return "<a href='characters?mode=$mode&search=$search'>$display</a>";
+}
+
+function FormSearchURL($mode, $search, $page) {
+  return "characters?mode=$mode&search=$search&page=$page";
+}
+
+function HighLightMatch($needle, $haystack) {
+  $pos = stripos($haystack, $needle);
+  
+  $haystack = substr_replace($haystack, "</span>", $pos + strlen($needle), 0);
+  $haystack = substr_replace($haystack, "<span class='custom-text-orange'>", $pos, 0);
+
+  return $haystack;
 }

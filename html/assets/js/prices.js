@@ -18,22 +18,18 @@ var FILTER = {
   parseAmount: 100
 };
 
-var ITEMS = [];
+var ITEMS = {};
 var LEAGUES = null;
 var HISTORY_DATA = {};
-var HISTORY_CHART;
-var HISTORY_LEAGUE;
+var CHART_HISTORY = null;
+var CHART_MEAN = null;
+var CHART_QUANT = null;
+var HISTORY_LEAGUE = null;
+var HISTORY_DATASET = 1;
 var INTERVAL;
 
-var ROW_parent, ROW_expanded;
-
-const PRICE_PERCISION = 100;
-const ENCH_QUANT_HIGH = 10;
-const ENCH_QUANT_MED = 5;
-const QUANT_HIGH = 10;
-const QUANT_MED = 5;
-const MINOR_CHANGE = 50;
-const MAJOR_CHANGE = 100;
+var ROW_last_id = null;
+var ROW_parent = null, ROW_expanded = null, ROW_filler = null;
 
 // Re-used icon urls
 const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
@@ -41,19 +37,16 @@ const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/Currency
 const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 
-var TEMPLATE_imgContainer = `
-<span class='table-img-container text-center mr-1'><img src={{img}}></span>`;
+var TEMPLATE_imgContainer = "<span class='table-img-container text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
   if (!SERVICE_category) return;
 
-  LEAGUES = extractLeagues(SERVICE_leagues);
-
-  FILTER.league = LEAGUES[0];
+  FILTER.league = SERVICE_leagues[0][0];
   FILTER.category = SERVICE_category;
 
-  readLeagueFromCookies(FILTER);
-  makeRequest();
+  readLeagueFromCookies(FILTER, SERVICE_leagues);
+  makeGetRequest(FILTER.league, FILTER.category);
   defineListeners();
 }); 
 
@@ -61,59 +54,57 @@ $(document).ready(function() {
 // Data prep
 //------------------------------------------------------------------------------------------------------------
 
-function readLeagueFromCookies(FILTER) {
+function readLeagueFromCookies(FILTER, leagues) {
   let league = getCookie("league");
 
   if (league) {
     console.log("Got league from cookie: " + league);
-    FILTER.league = league;
+
+    // Check if league from cookie is still active
+    for (let i = 0; i < leagues.length; i++) {
+      const entry = leagues[i];
+      
+      if (league === entry[0]) {
+        FILTER.league = league;
+        // Point league dropdown to that league
+        $("#search-league").val(league);
+        return;
+      }
+    }
+
+    console.log("League cookie did not match any active leagues");
   }
-
-  $("#search-league input").filter(function() { 
-    return ($(this).val() === FILTER.league);
-  }).prop("active", true).trigger("click");
-}
-
-function extractLeagues(leagues) {
-  let returnList = [];
-
-  for (let i = 0; i < leagues.length; i++) {
-    returnList.push(leagues[i][0]);
-  }
-
-  return returnList;
 }
 
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
-    FILTER.league = $("input[name=league]:checked", this).val();
+    FILTER.league = $(":selected", this).val();
     console.log("Selected league: " + FILTER.league);
     document.cookie = "league="+FILTER.league;
-    makeRequest();
+    makeGetRequest(FILTER.league, FILTER.category);
   });
 
   // Subcategory
   $("#search-sub").change(function(){
     FILTER.sub = $(this).find(":selected").val();
     console.log("Selected sub-category: " + FILTER.sub);
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Load all button
-  var loadall = $(".loadall");
-  $(loadall, "button").on("click", function(){
+  $(".loadall button").on("click", function(){
     console.log("Button press: loadall");
-    loadall.hide();
-    FILTER.parseAmount = 0;
-    sortResults();
+    $(this).hide();
+    FILTER.parseAmount = -1;
+    sortResults(ITEMS);
   });
 
   // Searchbar
   $("#search-searchbar").on("input", function(){
     FILTER.search = $(this).val().toLowerCase().trim();
     console.log("Search: " + FILTER.search);
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Low confidence
@@ -121,7 +112,7 @@ function defineListeners() {
     let option = $("input:checked", this).val() === "1";
     console.log("Show low count: " + option);
     FILTER.showLowConfidence = option;
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Item links/sockets
@@ -129,7 +120,7 @@ function defineListeners() {
     FILTER.links = $("input[name=links]:checked", this).val();
     console.log("Link filter: " + FILTER.links);
     if (FILTER.links === "none") FILTER.links = null;
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Map tier
@@ -138,7 +129,7 @@ function defineListeners() {
     console.log("Map tier filter: " + FILTER.tier);
     if (FILTER.tier === "all") FILTER.tier = null;
     else FILTER.tier = parseInt(FILTER.tier);
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Gem level
@@ -147,7 +138,7 @@ function defineListeners() {
     console.log("Gem lvl filter: " + FILTER.gemLvl);
     if (FILTER.gemLvl === "none") FILTER.gemLvl = null;
     else FILTER.gemLvl = parseInt(FILTER.gemLvl);
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Gem quality
@@ -156,7 +147,7 @@ function defineListeners() {
     console.log("Gem quality filter: " + FILTER.gemQuality);
     if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
     else FILTER.gemQuality = parseInt(FILTER.gemQuality);
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Gem corrupted
@@ -165,7 +156,7 @@ function defineListeners() {
     console.log("Gem corruption filter: " + FILTER.gemCorrupted);
     if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
     else FILTER.gemCorrupted = parseInt(FILTER.gemCorrupted);
-    sortResults();
+    sortResults(ITEMS);
   });
 
   // Expand row
@@ -175,16 +166,15 @@ function defineListeners() {
 
   // Live search toggle
   $("#live-updates").on("change", function(){
-    var live = $("input[name=live]:checked", this).val() == "true";
+    let live = $("input[name=live]:checked", this).val() === "true";
     console.log("Live updates: " + live);
     document.cookie = "live="+live;
 
-    var bar = $("#progressbar-live");
     if (live) {
-      bar.css("animation-name", "progressbar-live");
+      $("#progressbar-live").css("animation-name", "progressbar-live");
       INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
     } else {
-      bar.css("animation-name", "");
+      $("#progressbar-live").css("animation-name", "");
       clearInterval(INTERVAL);
     }
   });
@@ -196,41 +186,73 @@ function defineListeners() {
 
 function onRowClick(event) {
   let target = $(event.currentTarget);
-  let index = parseInt(target.attr("value"));
+  let id = parseInt(target.attr("value"));
 
-  // If user clicked on the smaller embedded table
-  if ( isNaN(index) ) return;
+  // If user clicked on a table that does not contain an id
+  if (isNaN(id)) {
+    return;
+  }
 
-  let item = ITEMS[index];
+  // Get rid of any filler rows
+  if (ROW_filler) {
+    $(".filler-row").remove();
+    ROW_filler = null;
+  }
 
-  console.log("Clicked on row: " + index + " (" + item["name"] + ")");
-
-  // Close expanded row if user clicked on a parentRow
+  // User clicked on open parent-row
   if (target.is(ROW_parent)) {
-    console.log("Closed row");
-    ROW_expanded.remove();
-    ROW_parent.removeAttr("class");
+    console.log("Closed open row");
+
+    $(".parent-row").removeAttr("class");
     ROW_parent = null;
+
+    $(".selected-row").remove();
     ROW_expanded = null;
     return;
   }
 
-  // Don't add a new row if user clicked on expandedRow
-  if ( target.is(ROW_expanded) ) return;
+  // There's an open row somewhere
+  if (ROW_parent !== null || ROW_expanded !== null) {
+    $(".selected-row").remove();
+    $(".parent-row").removeAttr("class");
 
-  // If there's an expanded row open somewhere, remove it
-  if (ROW_expanded) {
-    ROW_expanded.remove();
-    ROW_parent.removeAttr("class");
+    console.log("Closed row: " + ROW_last_id);
+
+    ROW_parent = null;
+    ROW_expanded = null;
   }
 
-  let chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-  //let history = item["history"]["mean"];
-  //let chaosChangeDay = roundPrice(item["mean"] - history[history.length - 1]);
-  //let chaosChangeWeek = roundPrice(item["mean"] - history[0]);
+  console.log("Clicked on row id: " + id);
 
+  // Define current row as parent target row
+  target.addClass("parent-row");
+  ROW_parent = target;
+  ROW_last_id = id;
+
+  // Load history data
+  if (id in HISTORY_DATA) {
+    console.log("History source: local");
+    buildExpandedRow(id);
+  } else {
+    console.log("History source: remote");
+
+    // Display a filler row
+    displayFillerRow();
+
+    makeHistoryRequest(id);
+  }
+}
+
+function displayFillerRow() {
   let template = `
-  <tr class='selected-row'><td colspan='100'>
+  <tr class='filler-row'><td colspan='100'>
+    <div class='row m-1'>
+      <div class='col-sm'>
+        <h4>League</h4>
+        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+      </div>
+    </div>
+    <hr>
     <div class='row m-1'>
       <div class='col-md'>
         <h4>Chaos value</h4>
@@ -247,15 +269,15 @@ function onRowClick(event) {
         <table class="table table-sm details-table">
           <tbody>
             <tr>
-              <td>Current mean</td>
+              <td>Mean</td>
               <td>{{mean}}</td>
             </tr>
             <tr>
-              <td>Current median</td>
+              <td>Median</td>
               <td>{{median}}</td>
             </tr>
             <tr>
-              <td>Current mode</td>
+              <td>Mode</td>
               <td>{{mode}}</td>
             </tr>
           </tbody>
@@ -269,12 +291,12 @@ function onRowClick(event) {
               <td>{{count}}</td>
             </tr>
             <tr>
-              <td>Price since yesterday</td>
+              <td>Listed every 24h</td>
               <td>{{1d}}</td>
             </tr>
             <tr>
-              <td>Price since 1 week</td>
-              <td>{{1w}}</td>
+              <td>Price in exalted</td>
+              <td>{{exalted}}</td>
             </tr>
           </tbody>
         </table>
@@ -283,362 +305,543 @@ function onRowClick(event) {
     <hr>
     <div class='row m-1 mb-3'>
       <div class='col-sm'>
-        <h4>Past leagues</h4>
-        <div class="btn-group btn-group-toggle my-3" data-toggle="buttons" id="history-league-radio"></div>
+        <h4>Past data</h4>
+        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
+          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+        </div>
         <div class='chart-large'><canvas id="chart-past"></canvas></div>
       </div>
     </div>
   </td></tr>
   `.trim();
 
-  template = template
-    .replace("{{mean}}",    chaosContainer + roundPrice(item["mean"]))
-    //.replace("{{median}}",  chaosContainer + roundPrice(item["median"]))
-    //.replace("{{mode}}",    chaosContainer + roundPrice(item["mode"]))
-    //.replace("{{count}}",                    roundPrice(item["count"]))
-    //.replace("{{1d}}",      chaosContainer + (chaosChangeDay   > 0 ? '+' : '') + chaosChangeDay)
-    //.replace("{{1w}}",      chaosContainer + (chaosChangeWeek  > 0 ? '+' : '') + chaosChangeWeek);
-
-  // Set gvar
-  ROW_expanded = $(template);
-
-  // Load history data
-  if (index in HISTORY_DATA) {
-    console.log("history from: memory");
-    //placeCharts(index, ROW_expanded);
-    //displayHistory(item["id"], ROW_expanded);
-  } else {
-    console.log("history from: request");
-    //makeHistoryRequest(FILTER.league, index, ROW_expanded);
-  }
-
-  target.addClass("parent-row");
-  target.after(ROW_expanded);
-  ROW_parent = target;
-
-  // Create event listener for league selector
-  $("#history-league-radio", ROW_expanded).change(function(){
-    HISTORY_LEAGUE = $("input[name=league]:checked", this).val();;
-  
-    if (HISTORY_LEAGUE in HISTORY_DATA[index]) {
-      HISTORY_CHART.data.labels = HISTORY_DATA[index][HISTORY_LEAGUE];
-      HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][HISTORY_LEAGUE];
-      HISTORY_CHART.update();
-    }
-  });
+  ROW_filler = $(template);
+  ROW_parent.after(ROW_filler);
 }
 
-function placeCharts(index, expandedRow) {
-  var priceData = {
-    type: "line",
-    data: {
-      labels: getAllDays(ITEMS[index]["history"]["mean"].length),
-      datasets: [{
-        label: "Price in chaos",
-        data: ITEMS[index]["history"]["mean"],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      }
-    }
-  }
-  
-  var quantData = {
-    type: "line",
-    data: {
-      labels: getAllDays(ITEMS[index]["history"]["quantity"].length),
-      datasets: [{
-        label: "Quantity",
-        data: ITEMS[index]["history"]["quantity"],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return "Quantity: " + data['datasets'][0]['data'][tooltipItem[0]['index']];
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      }
-    }
-  }
-
-  var pastData = {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Price in chaos",
-        data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {
-        display: false
-      },
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            return "Day " + tooltipItem['index'];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      },
-      scales: {
-        yAxes: [{ticks: {beginAtZero:true}}],
-        xAxes: [{
-          ticks: {
-            autoSkip: false,
-            callback: function(value, index, values) {
-              return (index % 7 === 0) ? "Week " + (~~(index / 7) + 1) : null;
-            }
-          }
-        }]
-      }
-    }
-  }
-
-  new Chart($("#chart-price", expandedRow), priceData);
-  new Chart($("#chart-quantity", expandedRow), quantData);
-  HISTORY_CHART = new Chart($("#chart-past", expandedRow), pastData);
-}
-
-function displayHistory(index, expandedRow) {
-  if ("error" in HISTORY_DATA[index]) {
-    console.log("History data: no results");
-
-    var chartArea = $(".chart-large", expandedRow);
-    chartArea.append("<h5 class='text-center my-3'>No results</h5>");
-    $("#chart-past", expandedRow).remove();
-    $("#history-league-radio", expandedRow).remove();
-
-    return;
-  }
-
-  var leagues = Object.keys(HISTORY_DATA[index]);
-
-  if (!HISTORY_LEAGUE) HISTORY_LEAGUE = leagues[0];
-
-  let selectedLeague;
-  if (HISTORY_LEAGUE in HISTORY_DATA[index]) selectedLeague = HISTORY_LEAGUE;
-  else selectedLeague = leagues[0];
-
-  HISTORY_CHART.data.labels = HISTORY_DATA[index][selectedLeague];
-  HISTORY_CHART.data.datasets[0].data = HISTORY_DATA[index][selectedLeague];
-  HISTORY_CHART.update();
-
-  let template = `
-  <label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
-    <input type="radio" name="league" value="{{value}}">{{name}}
-  </label>
-  `.trim();
-
-  let tmp_leagueBtnString = "";
-
-  $.each(leagues, function(index, league) {
-    if (!~LEAGUES.indexOf(league)) return;
-
-    tmp_leagueBtnString += template
-      .replace("{{active}}", (selectedLeague === league ? "active" : ""))
-      .replace("{{value}}", league)
-      .replace("{{name}}", formatLeague(league));
-  });
-
-  $.each(leagues, function(index, league) {
-    if (~LEAGUES.indexOf(league)) return;
-
-    tmp_leagueBtnString += template
-      .replace("{{active}}", (selectedLeague === league ? "active" : ""))
-      .replace("{{value}}", league)
-      .replace("{{name}}", formatLeague(league));
-  });
-
-  $("#history-league-radio", expandedRow).append(tmp_leagueBtnString);
-}
-
-//------------------------------------------------------------------------------------------------------------
-// Requests
-//------------------------------------------------------------------------------------------------------------
-
-function makeRequest() {
-  ITEMS = [];
-
-  var data = {
-    league: FILTER.league, 
-    category: FILTER.category
-  };
-
-  var request = $.ajax({
-    url: "https://api.poe.watch/get.php",
-    data: data,
-    type: "GET",
-    async: true,
-    dataTypes: "json"
-  });
-
-  request.done(function(json) {
-    console.log("got " + json.length + " items");
-
-    ITEMS = json;
-
-    sortResults(json);
-    
-    // Enable "show more" button
-    if (json.length > FILTER.parseAmount) {
-      var loadAllDiv = $(".loadall");
-      $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
-      loadAllDiv.show();
-    }
-  });
-}
-
-function makeHistoryRequest(league, index, expandedRow) {
-  let id = ITEMS[index]["id"];
-
+function makeHistoryRequest(id) {
   let request = $.ajax({
-    url: "https://api.poe.watch/history",
-    data: {
-      league: league, 
-      id: id
-    },
+    url: "https://api.poe.watch/item.php",
+    data: {id: id},
     type: "GET",
     async: true,
     dataTypes: "json"
   });
 
   request.done(function(payload) {
-    HISTORY_DATA[index] = payload;
-    placeCharts(index, expandedRow);
-    displayHistory(id, expandedRow);
+    // Get rid of any filler rows
+    if (ROW_filler) {
+      $(".filler-row").remove();
+      ROW_filler = null;
+    }
+    
+    let tmp = {};
+
+    // Make league data accessible through league name
+    for (let i = 0; i < payload.leagues.length; i++) {
+      let leagueData = payload.leagues[i];
+      tmp[leagueData.leagueName] = leagueData;
+    }
+
+    HISTORY_DATA[id] = tmp;
+
+    buildExpandedRow(id);
   });
 }
 
-function timedRequestCallback() {
-  console.log("Automatic update");
+function formatHistory(leaguePayload) {
+  let vals = [], keys = [];
 
-  var data = {
-    league: FILTER.league, 
-    category: FILTER.category
+  // Skip Hardcore (id 1) and Standard (id 2)
+  if (leaguePayload.leagueId > 2) {
+    // Because javascript is "special"
+    let size = Object.keys(leaguePayload.history).length;
+
+    // Convert date strings into dates
+    let endDate = new Date(leaguePayload.leagueEnd);
+    let startDate = new Date(leaguePayload.leagueStart);
+
+    // Get difference in days between the two dates
+    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    
+    // Bloat if less entries than league duration
+    for (let i = 0; i < dateDiff - size; i++) {
+      vals.push(null);
+      keys.push(null);
+    }
+
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        keys.push(formatDate(key));
+
+        if (leaguePayload.history[key] === null) {
+          vals.push(0);
+        } else {
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
+          }
+        }
+      }
+    }
+  } else {
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        if (leaguePayload.history[key] === null) {
+          keys.push(null);
+          vals.push(null);
+        } else {
+          keys.push(formatDate(key));
+
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
+          }
+        }
+      }
+    }
+  }
+
+  // Return generated data
+  return {
+    'keys': keys,
+    'vals': vals
+  }
+}
+
+function formatWeek(leaguePayload) {
+  // Because javascript is "special"
+  let size = Object.keys(leaguePayload.history).length;
+  let means = [], quants = [], count = 0;
+
+  // If less than 7 entries, need to bloat
+  for (let i = 0; i < 7 - size; i++) {
+    means.push(null);
+    quants.push(null);
+  }
+
+  // Grab latest 7 values
+  for (var key in leaguePayload.history) {
+    if (leaguePayload.history.hasOwnProperty(key)) {
+      if (size - count++ <= 7) {
+        if (leaguePayload.history[key] === null) {
+          means.push(null);
+          quants.push(null);
+        } else {
+          means.push(leaguePayload.history[key].mean);
+          quants.push(leaguePayload.history[key].quantity);
+        }
+      }
+    }
+  }
+
+  // Add today's values
+  means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);
+
+  // Return generated data
+  return {
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
+    'means': means,
+    'quants': quants
+  }
+}
+
+function buildExpandedRow(id) {
+  // Get list of past leagues available for the item
+  let leagues = getItemHistoryLeagues(id);
+
+  // Get league-specific data pack
+  let leaguePayload = HISTORY_DATA[id][FILTER.league];
+  HISTORY_LEAGUE = FILTER.league;
+
+  // Create jQuery object based on data from request and set gvar
+  ROW_expanded = createExpandedRow();
+  placeCharts(ROW_expanded);
+  fillChartData(leaguePayload);
+  createHistoryLeagueSelectorFields(ROW_expanded, leagues, FILTER.league);
+
+  // Place jQuery object in table
+  ROW_parent.after(ROW_expanded);
+
+  // Create event listener for league selector
+  createExpandedRowListeners(id, ROW_expanded);
+}
+
+function setDetailsTableValues(expandedRow, leaguePayload) {
+  $("#details-table-mean",    expandedRow).html(  formatNum(leaguePayload.mean)      );
+  $("#details-table-median",  expandedRow).html(  formatNum(leaguePayload.median)    );
+  $("#details-table-mode",    expandedRow).html(  formatNum(leaguePayload.mode)      );
+  $("#details-table-count",   expandedRow).html(  formatNum(leaguePayload.count)     );
+  $("#details-table-1d",      expandedRow).html(  formatNum(leaguePayload.quantity)  );
+  $("#details-table-exalted", expandedRow).html(  formatNum(leaguePayload.exalted)   );
+}
+
+function placeCharts(expandedRow) {
+  let ctx = $("#chart-price", expandedRow)[0].getContext('2d');
+  let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+
+  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
+  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
+  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
+
+  let baseSettings = {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: gradient,
+        borderWidth: 3,
+        lineTension: 0.2,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      legend: {display: false},
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 0},
+      hover: {animationDuration: 0},
+      responsiveAnimationDuration: 0,
+      tooltips: {
+        intersect: false,
+        mode: "index",
+        callbacks: {},
+        backgroundColor: '#fff',
+        titleFontSize: 16,
+        titleFontColor: '#222',
+        bodyFontColor: '#444',
+        bodyFontSize: 14,
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: '#aaa'
+      },
+      scales: {}
+    }
+  }
+
+  // Create deep clones of the base settings
+  let priceSettings   = $.extend(true, {}, baseSettings);
+  let quantSettings   = $.extend(true, {}, baseSettings);
+  let historySettings = $.extend(true, {}, baseSettings);
+
+  // Set price chart unique options
+  priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
+  priceSettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
   };
 
-  var request = $.ajax({
-    url: "https://api.poe.watch/get",
-    data: data,
+  // Set quantity chart unique options
+  quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
+  quantSettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
+  };
+
+  // Set history chart unique options 
+  historySettings.options.scales.yAxes = [{ticks: {beginAtZero:true}}];
+  historySettings.options.scales.xAxes = [{
+    ticks: {
+      callback: function(value, index, values) {
+        return (value ? value : '');
+      }
+    }
+  }];
+  historySettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return price ? price : "No data";
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
+  };
+
+  // Create charts
+  CHART_MEAN    = new Chart($("#chart-price",    expandedRow), priceSettings);
+  CHART_QUANT   = new Chart($("#chart-quantity", expandedRow), quantSettings);
+  CHART_HISTORY = new Chart($("#chart-past",     expandedRow), historySettings);
+}
+
+function fillChartData(leaguePayload) {
+  // Pad history with leading nulls
+  let formattedHistory = formatHistory(leaguePayload);
+
+  // Assign history chart datasets
+  CHART_HISTORY.data.labels = formattedHistory.keys;
+  CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
+  CHART_HISTORY.update();
+
+  // Get a fixed size of 7 latest history entries
+  let formattedWeek = formatWeek(leaguePayload);
+
+  CHART_MEAN.data.labels = formattedWeek.meanKeys;
+  CHART_MEAN.data.datasets[0].data = formattedWeek.means;
+  CHART_MEAN.update();
+
+  CHART_QUANT.data.labels = formattedWeek.quantKeys;
+  CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
+  CHART_QUANT.update();
+  
+  // Set data in details table
+  setDetailsTableValues(ROW_expanded, leaguePayload);
+}
+
+function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague) {
+  let buffer = "";
+
+  for (let i = 0; i < leagues.length; i++) {
+    buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
+      .replace("{{selected}}",  (selectedLeague === leagues[i].name ? "selected" : ""))
+      .replace("{{value}}",     leagues[i].name)
+      .replace("{{name}}",      leagues[i].display);
+  }
+
+  $("#history-league-selector", expandedRow).append(buffer);
+}
+
+function createExpandedRow() {
+  // Define the base template
+  let template = `
+  <tr class='selected-row'><td colspan='100'>
+    <div class='row m-1'>
+      <div class='col-sm'>
+        <h4>League</h4>
+        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1'>
+      <div class='col-md'>
+        <h4>Chaos value</h4>
+        <div class='chart-small'><canvas id="chart-price"></canvas></div>
+      </div>
+      <div class='col-md'>
+        <h4>Listed per 24h</h4>
+        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1 mt-2'>
+      <div class='col-md'>
+        <table class="table table-sm details-table">
+          <tbody>
+            <tr>
+              <td>Mean</td>
+              <td>{{chaosContainter}}<span id='details-table-mean'></span></td>
+            </tr>
+            <tr>
+              <td>Median</td>
+              <td>{{chaosContainter}}<span id='details-table-median'></span></td>
+            </tr>
+            <tr>
+              <td>Mode</td>
+              <td>{{chaosContainter}}<span id='details-table-mode'></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class='col-md'>
+        <table class="table table-sm details-table">
+          <tbody>
+            <tr>
+              <td>Total amount listed</td>
+              <td><span id='details-table-count'></span></td>
+            </tr>
+            <tr>
+              <td>Listed every 24h</td>
+              <td><span id='details-table-1d'></span></td>
+            </tr>
+            <tr>
+              <td>Price in exalted</td>
+              <td>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <hr>
+    <div class='row m-1 mb-3'>
+      <div class='col-sm'>
+        <h4>Past data</h4>
+        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
+          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+        </div>
+        <div class='chart-large'><canvas id="chart-past"></canvas></div>
+      </div>
+    </div>
+  </td></tr>
+  `.trim();
+
+  let containterTemplate = "<span class='table-img-container-sm text-center mr-1'><img src={{img}}></span>";
+  let chaosContainer = containterTemplate.replace("{{img}}", ICON_CHAOS);
+  let exaltedContainer = containterTemplate.replace("{{img}}", ICON_EXALTED);
+
+  // :thinking:
+  template = template
+    .replace("{{chaosContainter}}",   chaosContainer)
+    .replace("{{chaosContainter}}",   chaosContainer)
+    .replace("{{chaosContainter}}",   chaosContainer)
+    .replace("{{exaltedContainter}}", exaltedContainer);
+  
+  // Convert into jQuery object and return
+  return $(template);
+}
+
+function createExpandedRowListeners(id, expandedRow) {
+  $("#history-league-selector", expandedRow).change(function(){
+    HISTORY_LEAGUE = $(":selected", this).val();
+
+    // Get the payload associated with the selected league
+    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
+    fillChartData(leaguePayload);
+  });
+
+  $("#history-dataset-radio", expandedRow).change(function(){
+    HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
+
+    // Get the payload associated with the selected league
+    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
+    fillChartData(leaguePayload);
+  });
+}
+
+function getItemHistoryLeagues(id) {
+  // Get list of past leagues available for the item
+  let leagues = [];
+
+  for (var key in HISTORY_DATA[id]) {
+    if (HISTORY_DATA[id].hasOwnProperty(key)) {
+      leagues.push({
+        name: key,
+        display: HISTORY_DATA[id][key].leagueDisplay
+      });
+    }
+  }
+
+  return leagues;
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Requests
+//------------------------------------------------------------------------------------------------------------
+
+function makeGetRequest(league, category) {
+  let request = $.ajax({
+    url: "https://api.poe.watch/get.php",
+    data: {
+      league: league, 
+      category: category
+    },
     type: "GET",
     async: true,
     dataTypes: "json"
   });
 
   request.done(function(json) {
-    ITEMS = json;
-    sortResults();
+    console.log("Got " + json.length + " items from request");
 
-    console.log("got " + ITEMS.length + " items");
+    let items = parseRequest(json);
+    sortResults(items);
+    ITEMS = items;
+    
+    // Enable "show more" button
+    if (json.length > FILTER.parseAmount) {
+      let loadAllDiv = $(".loadall");
+      $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
+      loadAllDiv.show();
+    }
+  });
+}
+
+function parseRequest(json) {
+  let items = new Map();
+
+  // Loop though array, creating an associative array based on IDs
+  for (let i = 0; i < json.length; i++) {
+    const item = json[i];
+    items['_' + item.id] = item;
+  }
+
+  return items;
+}
+
+function timedRequestCallback() {
+  console.log("Automatic update");
+
+  var request = $.ajax({
+    url: "https://api.poe.watch/get.php",
+    data: {
+      league: FILTER.league, 
+      category: FILTER.category
+    },
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  });
+
+  request.done(function(json) {
+    console.log("Got " + json.length + " items from request");
+
+    let items = parseRequest(json);
+    sortResults(items);
+    ITEMS = items;
   });
 }
 
 //------------------------------------------------------------------------------------------------------------
-// Item data parsing and displaying
+// Item parsing and table HTML generation
 //------------------------------------------------------------------------------------------------------------
 
-function parseItem(item, index) {
+function parseItem(item) {
   // Format name and variant/links badge
-  var nameField = buildNameField(item);
+  let nameField = buildNameField(item);
 
   // Format gem fields
-  var gemFields = buildGemFields(item);
+  let gemFields = buildGemFields(item);
   
   // Format price and sparkline field
-  var priceFields = buildPriceFields(item);
+  let priceFields = buildPriceFields(item);
 
   // Format change field
-  var changeField = buildChangeField(item);
+  let changeField = buildChangeField(item);
 
   // Format count badge
-  var quantField = buildQuantField(item);
+  let quantField = buildQuantField(item);
 
   let template = `
     <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
-  return template
-    .replace("{{id}}",      index)
+  item.tableData = template
+    .replace("{{id}}",      item.id)
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
     .replace("{{price}}",   priceFields)
@@ -649,56 +852,60 @@ function parseItem(item, index) {
 function buildNameField(item) {
   let template = `
   <td>
-    <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
-    <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+    <div class='namebox'>
+      <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
+      <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+    </div>
   </td>
   `.trim();
 
-  if ( item["icon"] ) {
-    template = template.replace("{{icon}}", item["icon"]);
+  if (item.icon) {
+    // Use SSL for icons for that sweet, sweet secure site badge
+    item.icon = item.icon.replace("http://", "https://");
+    template = template.replace("{{icon}}", item.icon);
   } else {
     template = template.replace("{{icon}}", ICON_MISSING);
   }
 
-  if (item["frame"] === 9) {
+  if (item.frame === 9) {
     template = template.replace("{{foil}}", "class='item-foil'");
   } else {
     template = template.replace("{{foil}}", "");
   }
 
   if (FILTER.category === "enchantments") {
-    if (item["var"] != null) {
-      $.each(item["var"].split("-"), function(index, num) {
-        item["name"] = item["name"].replace("#", num);
-      });
+    if (item.var !== null) {
+      let splitVar = item.var.split('-');
+      for (var num in splitVar) {
+        item.name = item.name.replace("#", splitVar[num]);
+      }
     }
 
-    template = template.replace("{{name}}", item["name"]);
-    item["var"] = null;
+    template = template.replace("{{name}}", item.name);
+    item.name = null;
   } else {
-    template = template.replace("{{name}}", item["name"]);
+    template = template.replace("{{name}}", item.name);
   }
 
-  if (item["type"]) {
-    let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
+  if (item.type) {
+    let tmp = "<span class='subtext-1'>, " + item.type + "</span>";;
     template = template.replace("{{type}}", tmp);
   } else {
     template = template.replace("{{type}}", "");
   }
 
-  if (item["var"]) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
+  if (item.var && FILTER.category !== "enchantments") {
+    let tmp = " <span class='badge custom-badge-gray'>" + item.var + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
-  } else if (item["tier"]) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
+  } else if (item.tier) {
+    let tmp = " <span class='badge custom-badge-gray'>" + item.tier + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else {
     template = template.replace("{{var_or_tier}}", "");
   }
 
-  if (item["history"]["spark"].length < 7) {
-    let tmp = "<span class='badge badge-light'>New</span>";
-    template = template.replace("{{new}}", tmp);
+  if (item.history.spark.length < 7) {
+    template = template.replace("{{new}}", "<span class='badge badge-light'>New</span>");
   } else {
     template = template.replace("{{new}}", "");
   }
@@ -707,18 +914,19 @@ function buildNameField(item) {
 }
 
 function buildGemFields(item) {
-  if (item["frame"] !== 4) return "";
+  // Don't run if item is not a gem
+  if (item.frame !== 4) return "";
 
-  template = `
+  let template = `
   <td>{{lvl}}</td>
   <td>{{quality}}</td>
   <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
   `.trim();
 
-  template = template.replace("{{lvl}}",      item["lvl"]);
-  template = template.replace("{{quality}}",  item["quality"]);
+  template = template.replace("{{lvl}}",      item.lvl);
+  template = template.replace("{{quality}}",  item.quality);
   
-  if (item["corrupted"] === 1) {
+  if (item.corrupted === 1) {
     template = template.replace("{{color}}",  "red");
     template = template.replace("{{corr}}",   "✓");
   } else {
@@ -729,23 +937,8 @@ function buildGemFields(item) {
   return template;
 }
 
-function buildSparkLine(item) {
-  var svgColorClass = item["history"]["change"] > 0 ? "sparkline-green" : "sparkline-orange";
-  
-  let svg = document.createElement("svg");
-  
-  svg.setAttribute("class", "sparkline " + svgColorClass);
-  svg.setAttribute("width", 60);
-  svg.setAttribute("height", 25);
-  svg.setAttribute("stroke-width", 3);
-
-  sparkline(svg, item["history"]["spark"]);
-
-  return svg.outerHTML;
-}
-
 function buildPriceFields(item) {
-  var template = `
+  let template = `
   <td>
     <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
   </td>
@@ -754,23 +947,37 @@ function buildPriceFields(item) {
   </td>
   `.trim();
 
-  var chaosContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-  var exContainer = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
+  let chaosContainer  = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+  let exContainer     = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
+  let sparkLine       = buildSparkLine(item);
 
-  let sparkLine = buildSparkLine( item );
-  template = template.replace("{{sparkline}}", sparkLine);
-  template = template.replace("{{chaos_price}}", roundPrice( item["mean"] ));
-  template = template.replace("{{chaos_icon}}", chaosContainer);
+  template = template.replace("{{sparkline}}",    sparkLine);
+  template = template.replace("{{chaos_price}}",  roundPrice(item.mean));
+  template = template.replace("{{chaos_icon}}",   chaosContainer);
 
-  if (item["exalted"] >= 1) {
-    template = template.replace("{{ex_icon}}", exContainer);
-    template = template.replace("{{ex_price}}", roundPrice( item["exalted"] ));
+  if (item.exalted >= 1) {
+    template = template.replace("{{ex_icon}}",    exContainer);
+    template = template.replace("{{ex_price}}",   roundPrice(item.exalted));
   } else {
-    template = template.replace("{{ex_icon}}", "");
-    template = template.replace("{{ex_price}}", "");
+    template = template.replace("{{ex_icon}}",    "");
+    template = template.replace("{{ex_price}}",   "");
   }
   
   return template;
+}
+
+function buildSparkLine(item) {
+  let svgColorClass = item.history.change > 0 ? "sparkline-green" : "sparkline-orange";
+  let svg = document.createElement("svg");
+  
+  svg.setAttribute("class", "sparkline " + svgColorClass);
+  svg.setAttribute("width", 60);
+  svg.setAttribute("height", 25);
+  svg.setAttribute("stroke-width", 3);
+
+  sparkline(svg, item.history.spark);
+
+  return svg.outerHTML;
 }
 
 function buildChangeField(item) {
@@ -782,15 +989,23 @@ function buildChangeField(item) {
   </td>
   `.trim();
 
-  let change = item["history"]["change"] > 999 ? "> +999" : (item["history"]["change"] < -999 ? "< -999" : Math.round(item["history"]["change"]));
+  let change = 0;
 
-  if (item["history"]["change"] > MAJOR_CHANGE) {
+  if (item.history.change > 999) {
+    change = 999;
+  } else if (item.history.change < -999) {
+    change = -999;
+  } else {
+    change = Math.round(item.history.change); 
+  }
+
+  if (change > 100) {
     template = template.replace("{{color}}", "green");
-  } else if (item["history"]["change"] < -1*MAJOR_CHANGE) {
+  } else if (change < -100) {
     template = template.replace("{{color}}", "orange");
-  } else if (item["history"]["change"] > MINOR_CHANGE) {
+  } else if (change > 50) {
     template = template.replace("{{color}}", "green-lo");
-  } else if (item["history"]["change"] < -1*MINOR_CHANGE) {
+  } else if (change < -50) {
     template = template.replace("{{color}}", "orange-lo");
   } else {
     template = template.replace("{{color}}", "gray");
@@ -808,32 +1023,30 @@ function buildQuantField(item) {
   </td>
   `.trim();
 
-  if (item["frame"] === -1) {
-    if (item["quantity"] >= ENCH_QUANT_HIGH) {
-      template = template.replace("{{color}}", "gray");
-    } else if (item["quantity"] >= ENCH_QUANT_MED) {
-      template = template.replace("{{color}}", "orange");
-    } else {
-      template = template.replace("{{color}}", "red");
-    }
+  if (item.quantity >= 10) {
+    template = template.replace("{{color}}", "gray");
+  } else if (item.quantity >= 5) {
+    template = template.replace("{{color}}", "orange");
   } else {
-    if (item["quantity"] >= QUANT_HIGH) {
-      template = template.replace("{{color}}", "gray");
-    } else if (item["quantity"] >= QUANT_MED) {
-      template = template.replace("{{color}}", "orange");
-    } else {
-      template = template.replace("{{color}}", "red");
-    }
+    template = template.replace("{{color}}", "red");
   }
 
-  template = template.replace("{{quant}}", item["quantity"]);
-
-  return template;
+  return template.replace("{{quant}}", item.quantity);
 }
 
 //------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
+
+function formatNum(num) {
+  const numberWithCommas = (x) => {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+  }
+
+  return numberWithCommas(num);
+}
 
 function roundPrice(price) {
   const numberWithCommas = (x) => {
@@ -842,22 +1055,21 @@ function roundPrice(price) {
     return parts.join(".");
   }
 
-  return numberWithCommas(Math.round(price * PRICE_PERCISION) / PRICE_PERCISION);
+  return numberWithCommas(Math.round(price * 100) / 100);
 }
 
-function randNumbers(size, add, mult) {
-  var numbers = [];
-  
-  for (var i = 0; i < size; i += 1) {
-    numbers.push(add + Math.random() * mult);
-  }
-  
-  return numbers;
+function formatDate(date) {
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  let s = new Date(date);
+  return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
 }
 
 function getAllDays(length) {
   const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
   var a = [];
   
@@ -876,151 +1088,100 @@ function getCookie(cname) {
   var name = cname + "=";
   var decodedCookie = decodeURIComponent(document.cookie);
   var ca = decodedCookie.split(';');
+
   for(var i = 0; i <ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') {
-          c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-      }
+    var c = ca[i];
+
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
   }
+
   return "";
 }
 
 function toTitleCase(str) {
-  return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-}
-
-function formatLeague(name) {
-  if (~name.indexOf(" Event")) return name.substring(0, name.indexOf(" Event"));
-  else if (~name.indexOf("Hardcore ")) return "HC " + name.substring(9);
-  else return name;
-}
-
-function formatCategory(name) {
-  switch (name) {
-    case "activegem":
-      return "Skill Gems";
-    case "supportgem":
-      return "Support Gems";
-    case "vaalgem":
-      return "Vaal gems";
-
-    case "twomace":
-      return "2H Maces";
-    case "onemace":
-      return "1H Maces";
-
-    case "twosword":
-      return "2H Swords";
-    case "onesword":
-      return "1H Swords";
-
-    case "twoaxe":
-      return "2H Axes";
-    case "oneaxe":
-      return "1H Axes";
-
-    case "wand":
-      return "Wands";
-    case "bow":
-      return "Bows";
-    case "rod":
-      return "Rods";
-    case "dagger":
-      return "Daggers";
-    case "claw":
-      return "Claws";
-    case "staff":
-      return "Staves";
-
-    case "boots":
-      return "Boots";
-    case "helmet":
-      return "Helmets";
-    case "chest":
-      return "Body Armours";
-    case "gloves":
-      return "Gloves";
-    case "shield":
-      return "Shields";
-    case "quiver":
-      return "Quivers";
-
-    case "ring":
-      return "Rings";
-    case "amulet":
-      return "Amulets";
-    case "belt":
-      return "Belts";
-
-    default:
-      return toTitleCase(name);
-  }
+  return str.replace(/\w\S*/g, function(txt){
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
 }
 
 //------------------------------------------------------------------------------------------------------------
-// Sorting and searching
+// Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
 
-function sortResults() {
+function sortResults(items) {
   // Empty the table
-  var table = $("#searchResults");
+  let table = $("#searchResults");
   $("tbody", table).empty();
 
-  var parsed_count = 0;
-  var tableDataBuffer = "";
+  let count = 0;
+  let buffer = "";
 
-  for (let index = 0; index < ITEMS.length; index++) {
-    const item = ITEMS[index];
+  // Loop through every item provided
+  for (var key in items) {
+    if (items.hasOwnProperty(key)) {
+      // Stop if specified item limit has been reached
+      if ( FILTER.parseAmount > 0 && count > FILTER.parseAmount ) {
+        break;
+      }
 
-    if (FILTER.parseAmount && parsed_count > FILTER.parseAmount) break;
-    if ( checkHideItem(item) ) continue;
+      // Skip parsing if item should be hidden according to filters
+      if ( checkHideItem(items[key]) ) {
+        continue;
+      }
 
-    // If item has not been parsed, parse it 
-    if ( !("tableData" in item) ) item["tableData"] = parseItem(item, index);
+      // If item has not been parsed, parse it 
+      if ( !('tableData' in items[key]) ) {
+        parseItem(items[key]);
+      }
 
-    tableDataBuffer += item["tableData"];
-    parsed_count++;
+      // Append generated table data to buffer
+      buffer += items[key].tableData;
+      count++;
+    }
   }
 
-  table.append(tableDataBuffer);
+  // Add the generated HTML table data to the table
+  table.append(buffer);
 }
 
 function checkHideItem(item) {
   // Hide low confidence items
   if (!FILTER.showLowConfidence) {
-    if (item["quantity"] < QUANT_MED) return true;
-  }
-
-  // Hide sub-categories
-  if (FILTER.sub !== "all" && FILTER.sub !== item["child"]) return true;
-
-  // Hide items with different links
-  if (item["links"] != FILTER.links) return true;
-
-  // Sort gems, I guess
-  if (FILTER.category === "gems") {
-    if (FILTER.gemLvl !== null && item["lvl"] != FILTER.gemLvl) return true;
-    if (FILTER.gemQuality !== null && item["quality"] != FILTER.gemQuality) return true;
-    if (FILTER.gemCorrupted !== null && item["corrupted"] !== FILTER.gemCorrupted) return true;
-
-  } else if (FILTER.category === "currency") {
-    if (item["frame"] === 3 && FILTER.sub === "all") {
-      // Hide harbinger pieces under category 'all'
-      return true;
-    }
-  } else if (FILTER.category === "enchantments") {
-    if (item["quantity"] < ENCH_QUANT_MED) return true;
-  } else if (FILTER.category === "maps") {
-    if (FILTER.tier != null && item["tier"] !== FILTER.tier) return true;
+    if (item.quantity < 5) return true;
   }
 
   // String search
   if (FILTER.search) {
-    var nameBool = (item["name"] && item["name"].toLowerCase().indexOf(FILTER.search) !== -1);
-    var typeBool = (item["type"] && item["type"].toLowerCase().indexOf(FILTER.search) !== -1);
-    if (!nameBool && !typeBool) return true;
+    if (item.name && item.name.toLowerCase().indexOf(FILTER.search) === -1) return true;
+    if (item.type && item.type.toLowerCase().indexOf(FILTER.search) === -1) return true;
   }
+
+  // Hide sub-categories
+  if (FILTER.sub !== "all" && FILTER.sub !== item.child) return true;
+
+  // Hide items with different links
+  if (item.links != FILTER.links) return true;
+
+  // Sort gems, I guess
+  if (FILTER.category === "gems") {
+    if (FILTER.gemLvl !== null && item.lvl != FILTER.gemLvl) return true;
+    if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
+    if (FILTER.gemCorrupted !== null && item.corrupted !== FILTER.gemCorrupted) return true;
+
+  } else if (FILTER.category === "currency") {
+    if (item.frame === 3 && FILTER.sub === "all") {
+      // Hide harbinger pieces under category 'all'
+      return true;
+    }
+  } else if (FILTER.category === "maps") {
+    if (FILTER.tier != null && item.tier !== FILTER.tier) return true;
+  }
+
+  return false;
 }

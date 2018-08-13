@@ -55,15 +55,11 @@ function AddSubCategorySelectors($categories) {
   }
 }
 
-// Add league radio buttons to second navbar
-function AddLeagueRadios($leagues) {
+// Add league select fields to second navbar
+function AddLeagueSelects($leagues) {
   foreach ($leagues as $entry) {
     if ($entry[1] === null) $entry[1] = $entry[0];
-
-    echo "
-    <label class='btn btn-sm btn-outline-dark p-0 px-1 {{active}}'>
-      <input type='radio' name='league' value='{$entry[0]}'>{$entry[1]}
-    </label>";
+    echo "<option value='{$entry[0]}'>{$entry[1]}</option>";
   }
 }
 
@@ -79,8 +75,8 @@ function AddTableHeaders($category) {
   
   echo "<th scope='col'>Chaos</th>";
   echo "<th scope='col'>Exalted</th>";
-  echo "<th scope='col'>Change</th>";
-  echo "<th scope='col'>Quant</th>";
+  echo "<th scope='col' class='fixedSizeCol'>Change</th>";
+  echo "<th scope='col' class='fixedSizeCol'>Count</th>";
 }
 
 // Adds a message to the MotD box

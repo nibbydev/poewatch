@@ -2,10 +2,21 @@
 // Price table
 //----------------------------------------------------------------------------------------------------------*/
 
+.namebox {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 .table-img-container {
-  display: inline-block;
-  width: 35px;
-  height: 35px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  justify-content: center;
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
 }
 
 .table-img-container img {
@@ -14,17 +25,35 @@
   vertical-align: middle;
 }
 
+.table-img-container-sm {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+}
+
+.table-img-container-sm img {
+  max-height: 26px;
+  max-width: 26px;
+  vertical-align: middle;
+}
+
 /* Styling for central table */
 .price-table, 
 .price-table > thead > tr > th,
 .price-table > tbody > tr > td {
-  border: 0px solid #222;
+  border: 0;
   vertical-align: middle;
-  padding: 2px 0.5rem 1px 0.5rem;
+  padding: 0 5px 0 2px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .price-table > tbody > tr:hover {
   background-color: #222;
+}
+
+.price-table > thead > tr > th.fixedSizeCol {
+  min-width: 60px;
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -36,8 +65,15 @@
 .second-navbar .live-updates {float: right}
 #live-updates {margin-bottom: 1px}
 
-.second-navbar .search-league {float: right}
-#search-league {margin-bottom: 1px}
+#search-league {
+  float: right;
+}
+
+.small-selector {
+  width: auto;
+  display: inline-block;
+}
+
 
 /*------------------------------------------------------------------------------------------------------------
 // Progressbar
@@ -72,7 +108,9 @@
 }
 
 .price-table tr.selected-row,
-.price-table tr.selected-row:hover {
+.price-table tr.selected-row:hover,
+.price-table tr.filler-row,
+.price-table tr.filler-row:hover  {
   background-color: #282828 !important;
   border: 1px solid #444;
 }
@@ -84,6 +122,7 @@
   vertical-align: middle;
   padding: 2px 2px 2px 4px;
   background-color: transparent !important;
+  margin-bottom: 0;
 }
 
 .price-table hr {
@@ -95,7 +134,7 @@
 //----------------------------------------------------------------------------------------------------------*/
 
 .sparkline-green {stroke: #4c9b4c}
-.sparkline-red {stroke: #dc2b33}
+.sparkline-red {stroke: #d12b33}
 .sparkline-orange {stroke: #e36023}
 .sparkline {fill: none}
 
