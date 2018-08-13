@@ -544,7 +544,7 @@ function placeCharts(expandedRow) {
   priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
   priceSettings.options.tooltips.callbacks = {
     title: function(tooltipItem, data) {
-      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return "Price: " + tooltipItem[0]['yLabel'];
     },
     label: function(tooltipItem, data) {
       return data['labels'][tooltipItem['index']];
@@ -555,7 +555,7 @@ function placeCharts(expandedRow) {
   quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
   quantSettings.options.tooltips.callbacks = {
     title: function(tooltipItem, data) {
-      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return "Amount: " + tooltipItem[0]['yLabel'];
     },
     label: function(tooltipItem, data) {
       return data['labels'][tooltipItem['index']];
