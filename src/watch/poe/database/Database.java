@@ -675,7 +675,7 @@ public class Database {
                 statement.setString(9, item.isCorrupted());
                 statement.setString(10, item.getLinks());
                 statement.setString(11, item.getVariation());
-                statement.setString(12, item.getUniqueKey());
+                statement.setString(12, item.getKey());
                 statement.setString(13, Misc.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
@@ -1246,8 +1246,8 @@ public class Database {
      */
     public boolean getOutputData(int leagueId, int categoryId, List<ParcelEntry> parcelEntryList) {
         String query =  "SELECT " +
-                        "    i.id_l, i.id_d, i.mean, i.exalted, i.quantity, " +
-                        "    GROUP_CONCAT(hdr.mean ORDER BY hdr.time ASC) AS history, " +
+                        "    i.id_l, i.id_d, i.mean, i.exalted, i.quantity + i.inc AS quantity, " +
+                        "    SUBSTRING_INDEX(GROUP_CONCAT(hdr.mean ORDER BY hdr.time DESC SEPARATOR ','), ',', 7) AS history, " +
                         "    did.name, did.type, did.frame, " +
                         "    did.tier, did.lvl, did.quality, did.corrupted, " +
                         "    did.links, did.var, did.icon, " +

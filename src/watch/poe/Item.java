@@ -10,7 +10,7 @@ public class Item extends Mappers.BaseItem {
 
     private volatile boolean discard = false;
     private String priceType, parentCategory, childCategory, variation;
-    private String genericKey, uniqueKey;
+    private String key;
     private double price;
     private String links, level, quality, tier;
     private boolean doNotIndex;
@@ -118,9 +118,6 @@ public class Item extends Mappers.BaseItem {
         key.append('|');
         key.append(frameType);
 
-        // Save the super key
-        genericKey = key.toString();
-
         // If the item has a 5- or 6-link
         if (links != null) {
             key.append("|links:");
@@ -143,8 +140,7 @@ public class Item extends Mappers.BaseItem {
             key.append(corrupted ? 1 : 0);
         }
 
-        // Save the sub-key
-        uniqueKey = key.toString();
+        this.key = key.toString();
     }
 
     /**
@@ -535,7 +531,7 @@ public class Item extends Mappers.BaseItem {
         typeLine = null;
 
         // Match any negative or positive integer or double
-        name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
+        // name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
 
         // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle
         if (name.contains("\n")) name = name.replace("\n", " ");
@@ -672,12 +668,8 @@ public class Item extends Mappers.BaseItem {
         return discard;
     }
 
-    public String getUniqueKey() {
-        return uniqueKey;
-    }
-
-    public String getGenericKey() {
-        return genericKey;
+    public String getKey() {
+        return key;
     }
 
     public String getIcon() {
