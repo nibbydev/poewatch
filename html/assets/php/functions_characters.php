@@ -10,9 +10,9 @@ $DATA = array(
   // Total pages based on: count / limit    [not in use]
   "pages"      => null,
   // Search string
-  "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
+  "search"     => isset($_GET["search"]) ? $_GET["search"] : null,
   // Search mode
-  "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : null,
+  "mode"       => isset($_GET["mode"])   ? $_GET["mode"]   : null,
   // Table sizes for MotD
   "totalAccs"  => null,
   "totalChars" => null,
@@ -89,10 +89,7 @@ function DisplayPagination($DATA, $pos) {
   echo "</div></div>";
 }
 
-//------------------------------------------------------------------------------------------------------------
-// Main table data displaying
-//------------------------------------------------------------------------------------------------------------
-
+// Displays radio buttons and sets their active state
 function CreateModeRadios($DATA) {
   foreach ($DATA["validModes"] as $index => $mode) {
     if ($DATA['mode'] === null) {
@@ -111,8 +108,9 @@ function CreateModeRadios($DATA) {
   }
 }
 
+// Prints main content table
 function CreateTable($DATA) {
-  if ($DATA["errorCode"] || !$DATA["search"]) {
+  if ($DATA["errorCode"] || !$DATA["search"] || !$DATA["count"]) {
     return;
   }
 
@@ -123,9 +121,9 @@ function CreateTable($DATA) {
   $table .= "<thead>";
   // Pick table header based on mode
   if ($DATA["mode"] === "transfer") {
-    $header .= "<tr><th>Account</th><th>Was account</th><th>Changed</th></tr>";
+    $table .= "<tr><th>Account</th><th>Was account</th><th>Changed</th></tr>";
   } else {
-    $header .= "<tr><th>Account</th><th>Has character</th><th>In league</th><th>Last seen</th></tr>";
+    $table .= "<tr><th>Account</th><th>Has character</th><th>In league</th><th>Last seen</th></tr>";
   }
   // Close table header
   $table .= "</thead>";
@@ -333,14 +331,14 @@ function CheckVariableErrors($DATA) {
   }
 
   // Search string too small
-  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) {
+  if ( $DATA["search"] !== null && strlen($DATA["search"]) < 3 ) {
     $DATA["errorCode"] = 2;
     $DATA["errorMsg"] = "Minimum 3 characters";
     return $DATA;
   }
 
   // Search string too large
-  if ( $DATA["search"] && strlen($DATA["search"]) > 42 ) {
+  if ( $DATA["search"] !== null && strlen($DATA["search"]) > 42 ) {
     $DATA["errorCode"] = 3;
     $DATA["errorMsg"] = "Maximum 42 characters";
     return $DATA;
