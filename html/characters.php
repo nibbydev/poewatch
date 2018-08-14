@@ -55,7 +55,7 @@
 
         <!-- Main card body -->
         <div class="card-body">
-          <!-- Search options -->
+          <!-- Search form -->
           <form method="GET">
             <!-- Mode -->
             <div class="row">
@@ -78,18 +78,12 @@
                 </div>
               </div>
             </div>
-            <!--/Search/-->
+            <!--/Mode/-->
 
-            <?php 
-              if ( $DATA["errorCode"] ) {
-                echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
-              } else {
-                DisplayResultCount($DATA);
-              }
-            ?>
+            <?php DisplayNotification($DATA); ?>
 
           </form>
-          <!--/Search options/-->
+          <!--/Search form/-->
 
           <!-- Content card -->
           <?php CreateTable($DATA); ?>

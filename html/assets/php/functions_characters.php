@@ -48,15 +48,17 @@ function DisplayMotD($DATA) {
   echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations from $timeDisplay.";
 }
 
-// Shows nr of results for search
-function DisplayResultCount($DATA) {
-  if ($DATA["count"] === null) return;
-
-  $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
-  $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
-  $results = $DATA["count"] === 1 ? "result" : "results";
-
-  echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
+// Display notification
+function DisplayNotification($DATA) {
+  if ( $DATA["errorCode"] ) {
+    echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
+  } else if ($DATA["count"] !== null) {
+    $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
+    $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
+    $results = $DATA["count"] === 1 ? "result" : "results";
+  
+    echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
+  }
 }
 
 // Shows pagination if results exceeded limit
