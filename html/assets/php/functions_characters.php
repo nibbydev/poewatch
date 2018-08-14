@@ -52,7 +52,7 @@ function DisplayMotD($DATA) {
 function DisplayNotification($DATA) {
   if ( $DATA["errorCode"] ) {
     echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
-  } else if ($DATA["count"] !== null) {
+  } else if ($DATA["count"] !== null && $DATA["search"] !== null) {
     $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
     $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
     $results = $DATA["count"] === 1 ? "result" : "results";
@@ -148,6 +148,10 @@ function CreateTable($DATA) {
 
 // Pick a function based on mode
 function MakeSearch($pdo, $DATA) {
+  if ($DATA["errorCode"] || $DATA["search"] === null) {
+    return $DATA;
+  }
+  
   switch ($DATA["mode"]) {
     case 'account':   return CharacterSearch ($pdo, $DATA);
     case 'character': return AccountSearch   ($pdo, $DATA);
