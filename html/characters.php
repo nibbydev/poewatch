@@ -92,38 +92,7 @@
           <!--/Search options/-->
 
           <!-- Content card -->
-          <?php if (!$DATA["errorCode"] && $DATA["search"]): ?>
-
-            <hr>
-            <!-- Main table -->
-            <div class="card api-data-table">
-              <table class="table table-striped table-hover mb-0">
-                <thead>
-                  <?php if ($DATA["mode"] === "transfer"): ?>
-                  <tr>
-                    <th>Account</th>
-                    <th>Was account</th>
-                    <th>Changed</th>
-                  </tr>
-                  <?php else: ?>
-                  <tr>
-                    <th>Account</th>
-                    <th>Has character</th>
-                    <th>In league</th>
-                    <th>Last seen</th>
-                  </tr>
-                  <?php endif; ?>
-                </thead>
-                <tbody>
-
-                  <?php if (!$DATA["errorCode"]) FillTable($DATA); ?>
-
-                </tbody>
-              </table>
-            </div>
-            <!--/Main table/-->
-
-          <?php endif; ?>
+          <?php CreateTable($DATA); ?>
           <!--/Content card/-->
 
         </div>

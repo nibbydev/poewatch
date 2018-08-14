@@ -91,6 +91,44 @@ function DisplayPagination($DATA, $pos) {
 // Main table data displaying
 //------------------------------------------------------------------------------------------------------------
 
+function CreateTable($DATA) {
+  if ($DATA["errorCode"] || !$DATA["search"]) {
+    return;
+  }
+
+  // Create div and table
+  $table = "<hr><div class='card api-data-table'><table class='table table-striped table-hover mb-0'>";
+
+  // Create table header
+  $table .= "<thead>";
+  // Pick table header based on mode
+  if ($DATA["mode"] === "transfer") {
+    $header .= "<tr><th>Account</th><th>Was account</th><th>Changed</th></tr>";
+  } else {
+    $header .= "<tr><th>Account</th><th>Has character</th><th>In league</th><th>Last seen</th></tr>";
+  }
+  // Close table header
+  $table .= "</thead>";
+
+  // Create table body
+  $table .= "<tbody>";
+  // Fill with data from database
+  foreach ($DATA["resultRows"] as $index => $row) {
+    $table .= $row;
+  }
+  // Close body, table and div
+  $table .= "</tbody>";
+  $table .= "</table></div>";
+
+  // Print the full table
+  echo $table;
+}
+
+//------------------------------------------------------------------------------------------------------------
+// DB queries
+//------------------------------------------------------------------------------------------------------------
+
+// Pick a function based on mode
 function MakeSearch($pdo, $DATA) {
   switch ($DATA["mode"]) {
     case 'account':   return CharacterSearch ($pdo, $DATA);
@@ -99,16 +137,6 @@ function MakeSearch($pdo, $DATA) {
     default:          return $DATA;
   }
 }
-
-function FillTable($DATA) {
-  foreach ($DATA["resultRows"] as $index => $row) {
-    echo $row;
-  }
-}
-
-//------------------------------------------------------------------------------------------------------------
-// DB queries
-//------------------------------------------------------------------------------------------------------------
 
 // Get table sizes
 function GetTotalCounts($pdo, $DATA) {
