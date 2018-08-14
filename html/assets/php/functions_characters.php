@@ -93,6 +93,24 @@ function DisplayPagination($DATA, $pos) {
 // Main table data displaying
 //------------------------------------------------------------------------------------------------------------
 
+function CreateModeRadios($DATA) {
+  foreach ($DATA["validModes"] as $index => $mode) {
+    if ($DATA['mode'] === null) {
+      $active   = $mode === 'account' ? 'active'  : '';
+      $checked  = $mode === 'account' ? 'checked' : '';
+    } else {
+      $active   = $mode === $DATA['mode'] ? 'active'  : '';
+      $checked  = $mode === $DATA['mode'] ? 'checked' : '';  
+    }
+
+    $name = ucwords($mode);
+
+    echo "<label class='btn btn-outline-dark $active'>
+      <input type='radio' name='mode' value='$mode' $checked><a>$name</a>
+    </label>";
+  }
+}
+
 function CreateTable($DATA) {
   if ($DATA["errorCode"] || !$DATA["search"]) {
     return;

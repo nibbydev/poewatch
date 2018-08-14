@@ -61,15 +61,7 @@
             <div class="row">
               <div class="col">
                 <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
-                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "account") ? "active" : ""; ?>">
-                    <input type="radio" name="mode" value="account" <?php echo ($DATA["mode"] === "account") ? "checked" : ""; ?>><a>Account</a>
-                  </label>
-                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "character") ? "active" : ""; ?>">
-                    <input type="radio" name="mode" value="character" <?php echo ($DATA["mode"] === "character") ? "checked" : ""; ?>><a>Character</a>
-                  </label>
-                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "transfer") ? "active" : ""; ?>">
-                    <input type="radio" name="mode" value="transfer" <?php echo ($DATA["mode"] === "transfer") ? "checked" : ""; ?>><a>Transfer</a>
-                  </label>
+                  <?php CreateModeRadios($DATA); ?>
                 </div>
 
                 <div class="btn-group mb-3">
