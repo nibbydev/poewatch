@@ -249,7 +249,7 @@ function displayFillerRow() {
     <div class='row m-1'>
       <div class='col-sm'>
         <h4>League</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
       </div>
     </div>
     <hr>
@@ -470,7 +470,7 @@ function buildExpandedRow(id) {
 
   // Create jQuery object based on data from request and set gvar
   ROW_expanded = createExpandedRow();
-  placeCharts(ROW_expanded);
+  createCharts(ROW_expanded);
   fillChartData(leaguePayload);
   createHistoryLeagueSelectorFields(ROW_expanded, leagues, FILTER.league);
 
@@ -490,7 +490,7 @@ function setDetailsTableValues(expandedRow, leaguePayload) {
   $("#details-table-exalted", expandedRow).html(  formatNum(leaguePayload.exalted)   );
 }
 
-function placeCharts(expandedRow) {
+function createCharts(expandedRow) {
   let ctx = $("#chart-price", expandedRow)[0].getContext('2d');
   let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
 
@@ -631,7 +631,7 @@ function createExpandedRow() {
     <div class='row m-1'>
       <div class='col-sm'>
         <h4>League</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
       </div>
     </div>
     <hr>

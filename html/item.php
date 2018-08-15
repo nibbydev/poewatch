@@ -115,7 +115,7 @@
     <div class='row m-1'>
       <div class='col-sm'>
         <h4>League</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
       </div>
     </div>
     <hr>
