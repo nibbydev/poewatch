@@ -1,4 +1,3 @@
-
 /*------------------------------------------------------------------------------------------------------------
 // Img containers
 //----------------------------------------------------------------------------------------------------------*/
@@ -83,44 +82,11 @@
   max-width: 26px;
   min-height: 26px;
   max-height: 26px;
+  display: inline-block;
 }
 .img-container-xs img {
   max-height: 26px;
   max-width: 26px;
-}
-
-
-
-
-
-/* Remove */
-.table-img-container {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  justify-content: center;
-  min-width: 35px;
-  max-width: 35px;
-  min-height: 35px;
-  max-height: 35px;
-}
-/* Remove */
-.table-img-container img {
-  max-height: 35px;
-  max-width: 35px;
-  vertical-align: middle;
-}
-/* Remove */
-.table-img-container-sm {
-  display: inline-block;
-  width: 26px;
-  height: 26px;
-}
-/* Remove */
-.table-img-container-sm img {
-  max-height: 26px;
-  max-width: 26px;
-  vertical-align: middle;
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -266,8 +232,3 @@ canvas {
 
 /* Styling for foil uniques */
 .item-foil {color: #4c9b4c}
-
-/*------------------------------------------------------------------------------------------------------------
-// Item page
-//----------------------------------------------------------------------------------------------------------*/
-

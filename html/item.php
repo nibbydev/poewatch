@@ -137,34 +137,28 @@
             <tr>
               <td>Mean</td>
               <td>
-                <div class='pricebox'>
-                  <span class="img-container img-container-xs mr-1">
-                    <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
-                  </span>
-                  <span id='details-table-mean'>55.5654</span>
-                </div>
+                <span class="img-container img-container-xs mr-1">
+                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                </span>
+                <span id='details-table-mean'>55.5654</span>
               </td>
             </tr>
             <tr>
               <td>Median</td>
               <td>
-                <div class='pricebox'>
-                  <span class="img-container img-container-xs mr-1">
-                    <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
-                  </span>
-                  <span id='details-table-median'>55.5654</span>
-                </div>
+                <span class="img-container img-container-xs mr-1">
+                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                </span>
+                <span id='details-table-median'>55.5654</span>
               </td>
             </tr>
             <tr>
               <td>Mode</td>
               <td>
-                <div class='pricebox'>
-                  <span class="img-container img-container-xs mr-1">
-                    <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
-                  </span>
-                  <span id='details-table-mode'>55.5654</span>
-                </div>
+                <span class="img-container img-container-xs mr-1">
+                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                </span>
+                <span id='details-table-mode'>55.5654</span>
               </td>
             </tr>
           </tbody>
@@ -174,30 +168,24 @@
         <table class="table table-sm details-table table-striped">
           <tbody>
             <tr>
-              <div class='pricebox'>
-                <td>Total amount listed</td>
-                <td>
-                  <span id='details-table-count'>55.5654</span>
-                </td>
-              </div>
+              <td>Total amount listed</td>
+              <td>
+                <span id='details-table-count'>55.5654</span>
+              </td>
             </tr>
             <tr>
-              <div class='pricebox'>
-                <td>Listed every 24h</td>
-                <td>
-                  <span id='details-table-1d'>55.5654</span>
-                </td>
-              </div>
+              <td>Listed every 24h</td>
+              <td>
+                <span id='details-table-1d'>55.5654</span>
+              </td>
             </tr>
             <tr>
               <td>Price in exalted</td>
               <td>
-                <div class='pricebox'>
-                  <span class="img-container img-container-xs mr-1">
-                    <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
-                  </span>
-                  <span id='details-table-exalted'>55.5654</span>
-                </div>
+                <span class="img-container img-container-xs mr-1">
+                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
+                </span>
+                <span id='details-table-exalted'>55.5654</span>
               </td>
             </tr>
           </tbody>

@@ -37,7 +37,7 @@ const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/Currency
 const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 
-var TEMPLATE_imgContainer = "<span class='table-img-container text-center mr-1'><img src={{img}}></span>";
+var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
   if (!SERVICE_category) return;
@@ -700,7 +700,7 @@ function createExpandedRow() {
   </td></tr>
   `.trim();
 
-  let containterTemplate = "<span class='table-img-container-sm text-center mr-1'><img src={{img}}></span>";
+  let containterTemplate = "<span class='img-container img-container-xs text-center mr-1'><img src={{img}}></span>";
   let chaosContainer = containterTemplate.replace("{{img}}", ICON_CHAOS);
   let exaltedContainer = containterTemplate.replace("{{img}}", ICON_EXALTED);
 
@@ -853,7 +853,7 @@ function buildNameField(item) {
   let template = `
   <td>
     <div class='namebox'>
-      <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
+      <span class='img-container img-container-sm text-center mr-1'><img src='{{icon}}'></span>
       <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
     </div>
   </td>
