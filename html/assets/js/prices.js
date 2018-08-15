@@ -895,21 +895,15 @@ function buildNameField(item) {
   }
 
   if (item.var && FILTER.category !== "enchantments") {
-    let tmp = " <span class='badge custom-badge-gray'>" + item.var + "</span>";
+    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else if (item.tier) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item.tier + "</span>";
+    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.tier + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else {
     template = template.replace("{{var_or_tier}}", "");
   }
 
-  if (item.history.spark.length < 7) {
-    template = template.replace("{{new}}", "<span class='badge badge-light'>New</span>");
-  } else {
-    template = template.replace("{{new}}", "");
-  }
-  
   return template;
 }
 
