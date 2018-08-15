@@ -46,13 +46,13 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
-<div class="container-fluid second-navbar m-0 py-1 pr-3">
-  <select class="form-control form-control-sm small-selector ml-2" id="search-league">
+<div class="container-fluid second-navbar d-inline-block m-0 py-1 pr-3">
+  <select class="form-control form-control-sm w-auto d-inline-block float-right ml-2" id="search-league">
 
     <?php AddLeagueSelects($SERVICE_leagues); ?>
 
   </select>
-  <div class="form-group live-updates m-0">
+  <div class="form-group live-updates float-right m-0">
     <label for="live-updates" class="m-0">Live updates</label>
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="live-updates">
       <label class="btn btn-sm btn-outline-dark p-0 px-1">
