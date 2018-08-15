@@ -1,13 +1,99 @@
+
 /*------------------------------------------------------------------------------------------------------------
-// Price table
+// Img containers
 //----------------------------------------------------------------------------------------------------------*/
 
-.namebox {
+/* Base style for containers */
+
+.img-container {
   display: flex;
   align-items: center;
   white-space: nowrap;
+  justify-content: center;
+  text-align: center !important;
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
+}
+.img-container img {
+  max-height: 35px;
+  max-width: 35px;
+  vertical-align: middle;
 }
 
+/* XL image containers */
+
+.img-container-xl {
+  min-width: 100px;
+  max-width: 100px;
+  min-height: 120px;
+  max-height: 120px;
+  background-color: rgba(0,0,0,.15);
+  border-radius: .25rem !important;
+}
+.img-container-xl img {
+  max-height: 120px;
+  max-width: 100px;
+}
+
+/* LG image containers */
+
+.img-container-lg {
+  min-width: 60px;
+  max-width: 60px;
+  min-height: 60px;
+  max-height: 60px;
+}
+.img-container-lg img {
+  max-height: 60px;
+  max-width: 60px;
+}
+
+/* MD image containers */
+
+.img-container-md {
+  min-width: 60px;
+  max-width: 60px;
+  min-height: 60px;
+  max-height: 60px;
+}
+.img-container-md img {
+  max-height: 60px;
+  max-width: 60px;
+}
+
+/* SM image containers */
+
+.img-container-sm {
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
+}
+.img-container-sm img {
+  max-height: 35px;
+  max-width: 35px;
+}
+
+/* XS image containers */
+
+.img-container-xs {
+  min-width: 26px;
+  max-width: 26px;
+  min-height: 26px;
+  max-height: 26px;
+}
+.img-container-xs img {
+  max-height: 26px;
+  max-width: 26px;
+}
+
+
+
+
+
+/* Remove */
 .table-img-container {
   display: flex;
   align-items: center;
@@ -18,23 +104,33 @@
   min-height: 35px;
   max-height: 35px;
 }
-
+/* Remove */
 .table-img-container img {
   max-height: 35px;
   max-width: 35px;
   vertical-align: middle;
 }
-
+/* Remove */
 .table-img-container-sm {
   display: inline-block;
   width: 26px;
   height: 26px;
 }
-
+/* Remove */
 .table-img-container-sm img {
   max-height: 26px;
   max-width: 26px;
   vertical-align: middle;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Price table
+//----------------------------------------------------------------------------------------------------------*/
+
+.namebox {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 /* Styling for central table */
@@ -141,7 +237,7 @@
 .pricebox {
   display: flex;
   align-items: center;
-  white-space: nowrap;
+  /*white-space: nowrap;*/
 }
 
 .pricebox .sparkline {padding: 0,5px,0,0}
@@ -170,3 +266,8 @@ canvas {
 
 /* Styling for foil uniques */
 .item-foil {color: #4c9b4c}
+
+/*------------------------------------------------------------------------------------------------------------
+// Item page
+//----------------------------------------------------------------------------------------------------------*/
+
