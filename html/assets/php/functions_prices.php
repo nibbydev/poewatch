@@ -73,6 +73,7 @@ function AddTableHeaders($category) {
     echo "<th scope='col'>Corr</th>";
   }
   
+  echo "<th scope='col'></th>";
   echo "<th scope='col'>Chaos</th>";
   echo "<th scope='col'>Exalted</th>";
   echo "<th scope='col' class='fixedSizeCol'>Change</th>";

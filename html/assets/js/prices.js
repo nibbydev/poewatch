@@ -830,6 +830,9 @@ function parseItem(item) {
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
 
+  // Format link field
+  let linkField = buildLinkField(item);
+
   // Format change field
   let changeField = buildChangeField(item);
 
@@ -837,13 +840,14 @@ function parseItem(item) {
   let quantField = buildQuantField(item);
 
   let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>
+    <tr value={{id}}>{{name}}{{gem}}{{link}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
   item.tableData = template
     .replace("{{id}}",      item.id)
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
+    .replace("{{link}}",    linkField)
     .replace("{{price}}",   priceFields)
     .replace("{{change}}",  changeField)
     .replace("{{quant}}",   quantField);
@@ -972,6 +976,16 @@ function buildSparkLine(item) {
   sparkline(svg, item.history.spark);
 
   return svg.outerHTML;
+}
+
+function buildLinkField(item) {
+  return `
+  <td>
+    <a href='{{url}}' target="_blank">
+      <span class='custom-text-dark'>🗗</span>
+    </a>
+  </td>
+  `.trim().replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id);
 }
 
 function buildChangeField(item) {
