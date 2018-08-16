@@ -56,159 +56,150 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body" id="content">
 
+              <!-- Ico+name+league+price row -->
               <div class="row d-flex mx-1">
+                <!-- Ico+name+league col -->
+                <div class="col-8 p-0">
+                  <div class="d-flex">
+                    <div class="img-container img-container-xl mr-3">
+                      <img id="item-icon">
+                    </div>
+                    <div class="d-flex flex-column justify-content-between">
+                      <div>
+                        <h4 id="item-name"></h4>
+                      </div>
+                      <div class="d-flex">
+                        <h5 class="mr-2">League</h5>
+                        <select class="form-control form-control-sm w-auto" id="history-league-selector"></select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--/Ico+name+league col/-->
+                <!-- Large price col -->
+                <div class="col-4 p-0">
+                  <div class="pricebox">
+                    <div class="img-container img-container-lg mr-1">
+                      <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                    </div>
+                    <div class="align-items-center">
+                      <h4 id="item-chaos"></h4>
+                    </div>
+                  </div>
 
-
-
-
-<div class="col-8 p-0">
-  <div class="pricebox">
-
-    <div class="img-container img-container-xl mr-3">
-      <img id="item-icon" src="http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png">
-    </div>
-
-
-    <div class="align-self-start">
-      <h4 id="item-name">Double Strike has a 15% chance to deal Double Damage to Bleeding Enemies</h4>
-    </div>
-
-  </div>
-</div>
-
-
-<div class="col-4 p-0">
-  <div class="pricebox">
-    <div class="img-container img-container-lg mr-1">
-      <img src="http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
-    </div>
-    <div class="align-items-center">
-      <h4 id="item-chaos">55.45</h4>
-    </div>
-  </div>
-
-  <div class="pricebox">
-    <div class="img-container img-container-lg mr-1">
-      <img src="http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
-    </div>
-    <div class="align-items-center">
-      <h4 id="item-exalt">0.054</h4>
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-
-
-
+                  <div class="pricebox">
+                    <div class="img-container img-container-lg mr-1">
+                      <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+                    </div>
+                    <div class="align-items-center">
+                      <h4 id="item-exalt"></h4>
+                    </div>
+                  </div>
+                </div>
+                <!--/Large price col/-->
               </div>
+              <!--/Ico+name+league+price row/-->
+
               <hr>
 
+              <!-- Small chart row -->
+              <div class='row m-1'>
+                <div class='col-md'>
+                  <h4>Chaos value</h4>
+                  <div class='chart-small'><canvas id="chart-price"></canvas></div>
+                </div>
+                <div class='col-md'>
+                  <h4>Listed per 24h</h4>
+                  <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
+                </div>
+              </div>
+              <!--/Small chart row/-->
+
+              <hr>
+
+              <!-- Details table row -->
+              <div class='row m-1 mt-2'>
+                <div class='col-md'>
+                  <table class="table table-sm details-table table-striped table-hover">
+                    <tbody>
+                      <tr>
+                        <td>Mean</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-mean'></span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Median</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-median'></span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Mode</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-mode'></span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class='col-md'>
+                  <table class="table table-sm details-table table-striped table-hover">
+                    <tbody>
+                      <tr>
+                        <td>Total amount listed</td>
+                        <td>
+                          <span id='details-table-count'></span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Listed every 24h</td>
+                        <td>
+                          <span id='details-table-1d'></span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Price in exalted</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-exalted'></span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!--/Details table row/-->
+
+              <hr>
               
-
-    <div class='row m-1'>
-      <div class='col-sm'>
-        <h4>League</h4>
-        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1'>
-      <div class='col-md'>
-        <h4>Chaos value</h4>
-        <div class='chart-small'><canvas id="chart-price"></canvas></div>
-      </div>
-      <div class='col-md'>
-        <h4>Listed per 24h</h4>
-        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mt-2'>
-      <div class='col-md'>
-        <table class="table table-sm details-table table-striped">
-          <tbody>
-            <tr>
-              <td>Mean</td>
-              <td>
-                <span class="img-container img-container-xs mr-1">
-                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
-                </span>
-                <span id='details-table-mean'>55.5654</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Median</td>
-              <td>
-                <span class="img-container img-container-xs mr-1">
-                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
-                </span>
-                <span id='details-table-median'>55.5654</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Mode</td>
-              <td>
-                <span class="img-container img-container-xs mr-1">
-                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
-                </span>
-                <span id='details-table-mode'>55.5654</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class='col-md'>
-        <table class="table table-sm details-table table-striped">
-          <tbody>
-            <tr>
-              <td>Total amount listed</td>
-              <td>
-                <span id='details-table-count'>55.5654</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Listed every 24h</td>
-              <td>
-                <span id='details-table-1d'>55.5654</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Price in exalted</td>
-              <td>
-                <span class="img-container img-container-xs mr-1">
-                  <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
-                </span>
-                <span id='details-table-exalted'>55.5654</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mb-3'>
-      <div class='col-sm'>
-        <h4>Past data</h4>
-        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
-        </div>
-        <div class='chart-large'><canvas id="chart-past"></canvas></div>
-      </div>
-    </div>
-
-
-
-
+              <!-- Past data row -->
+              <div class='row m-1 mb-3'>
+                <div class='col-sm'>
+                  <h4>Past data</h4>
+                  <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+                  </div>
+                  <div class='chart-large'><canvas id="chart-past"></canvas></div>
+                </div>
+              </div>
+              <!--/Past data row/-->
 
             </div>
             <div class="card-footer slim-card-edge"></div>
@@ -223,6 +214,12 @@
 <!-- Footer -->
 <?php include_once ( "assets/php/footer.php" ); ?>
 <!--/Footer/-->
+<!-- Service script -->
+<script>
+  var ID      = <?php echo $_GET['id']      ?    $_GET['id']        : 'null'; ?>;
+  var LEAGUE  = <?php echo $_GET['league']  ? "'{$_GET['league']}'" : 'null'; ?>;
+</script>
+<!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
