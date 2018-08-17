@@ -262,3 +262,9 @@ a:hover {text-decoration: none !important}
 .mv-lg {max-width: 992px}
 .mv-md {max-width: 768px}
 .mv-sm {max-width: 576px}
+
+.justify-content-evenly {
+  -webkit-box-pack: justify!important;
+  -ms-flex-pack: justify!important;
+  justify-content: space-evenly!important;
+}

@@ -3,31 +3,17 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
-var LEAGUES = null;
 var ITEM = {};
-var CHART_HISTORY = null;
-var CHART_MEAN = null;
-var CHART_QUANT = null;
-var HISTORY_LEAGUE = null;
+var CHART_HISTORY = null, CHART_MEAN = null, CHART_QUANT = null;
 var HISTORY_DATASET = 1;
 
-// Re-used icon urls
-const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
-const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1";
-const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
-const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
-
-var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
-
 $(document).ready(function() {
-  if (!ID || !LEAGUE) return;
-  makeHistoryRequest(ID);
+  if (ID && LEAGUE) makeHistoryRequest(ID);
 }); 
 
 //------------------------------------------------------------------------------------------------------------
 // Expanded row
 //------------------------------------------------------------------------------------------------------------
-
 
 function makeHistoryRequest(id) {
   let request = $.ajax({
@@ -41,29 +27,26 @@ function makeHistoryRequest(id) {
   request.done(function(payload) {
     // Create deep clone of the payload
     let tmp = $.extend(true, {}, payload);
+    let leagues = [];
 
     // Make league data accessible through league name
     tmp.leagues = {};
     for (let i = 0; i < payload.leagues.length; i++) {
       let leagueData = payload.leagues[i];
       tmp.leagues[leagueData.leagueName] = leagueData;
+      
+      leagues.push({
+        name: leagueData.leagueName,
+        display: leagueData.leagueDisplay
+      });
     }
-
     ITEM = tmp;
-    buildExpandedRow(id);
+
+    createCharts();
+    fillData();
+    createSelectorFields(leagues);
+    createListeners(id);
   });
-}
-
-function buildExpandedRow(id) {
-  // Get list of past leagues available for the item
-  let leagues = getItemHistoryLeagues(id);
-
-  createCharts();
-  fillData();
-  createHistoryLeagueSelectorFields(leagues);
-
-  // Create event listener for league selector
-  createExpandedRowListeners(id);
 }
 
 function formatHistory(leaguePayload) {
@@ -126,6 +109,15 @@ function formatHistory(leaguePayload) {
         }
       }
     }
+  }
+
+  // Add current values
+  switch (HISTORY_DATASET) {
+    case 1: vals.push(leaguePayload.mean);     keys.push("Right now");      break;
+    case 2: vals.push(leaguePayload.median);   keys.push("Right now");      break;
+    case 3: vals.push(leaguePayload.mode);     keys.push("Right now");      break;
+    case 4: vals.push(leaguePayload.quantity); keys.push("Last 24 hours");  break;
+    default:                                                                break;
   }
 
   // Return generated data
@@ -301,14 +293,14 @@ function fillData() {
   $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
   $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
   
-  $("#item-icon").attr('src', ITEM.icon.replace('http://', 'https://'));
+  $("#item-icon").attr('src', fixIcon(ITEM.icon) );
   $("#item-name").html( buildNameField(ITEM.name) );
 
   $("#item-chaos").html(formatNum(leaguePayload.mean));
   $("#item-exalt").html(formatNum(leaguePayload.exalted));
 }
 
-function createHistoryLeagueSelectorFields(leagues) {
+function createSelectorFields(leagues) {
   let buffer = "";
 
   for (let i = 0; i < leagues.length; i++) {
@@ -321,36 +313,16 @@ function createHistoryLeagueSelectorFields(leagues) {
   $("#history-league-selector").append(buffer);
 }
 
-function createExpandedRowListeners() {
+function createListeners() {
   $("#history-league-selector").change(function(){
     LEAGUE = $(":selected", this).val();
-
-    // Get the payload associated with the selected league
     fillData( ITEM.leagues[LEAGUE] );
   });
 
   $("#history-dataset-radio").change(function(){
     HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
-
-    // Get the payload associated with the selected league
     fillData( ITEM.leagues[LEAGUE] );
   });
-}
-
-function getItemHistoryLeagues() {
-  // Get list of past leagues available for the item
-  let leagues = [];
-
-  for (var key in ITEM.leagues) {
-    if (ITEM.leagues.hasOwnProperty(key)) {
-      leagues.push({
-        name: key,
-        display: ITEM.leagues[key].leagueDisplay
-      });
-    }
-  }
-
-  return leagues;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -358,13 +330,6 @@ function getItemHistoryLeagues() {
 //------------------------------------------------------------------------------------------------------------
 
 function buildNameField() {
-  // Fix icon
-  if (ITEM.icon) {
-    ITEM.icon = ITEM.icon.replace("http://", "https://");
-  } else {
-    ITEM.icon = ICON_MISSING;
-  }
-
   // Fix name if item is enchantment
   if (ITEM.categoryParent === "enchantments" && ITEM.variation !== null) {
     let splitVar = ITEM.variation.split('-');
@@ -409,6 +374,35 @@ function buildNameField() {
   return builder;
 }
 
+function fixIcon(icon) {
+  if (!icon) return "https://poe.watch/assets/img/missing.png";
+
+  // Use SSL
+  icon = icon.replace("http://", "https://");
+
+  let splitIcon = icon.split("?");
+  let splitParams = splitIcon[1].split("&");
+  let newParams = "";
+
+  for (let i = 0; i < splitParams.length; i++) {
+    switch (splitParams[i].split("=")[0]) {
+      case "scale": 
+      case "w":
+      case "h":
+        break;
+      default:
+        newParams += "&" + splitParams[i];
+        break;
+    }
+  }
+
+  if (newParams) {
+    return splitIcon[0] + "?" + newParams.substr(1);
+  } else {
+    return splitIcon[0];
+  }
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
@@ -422,7 +416,6 @@ function formatNum(num) {
 
   return numberWithCommas(Math.round(num * 100) / 100);
 }
-
 
 function formatDate(date) {
   const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 

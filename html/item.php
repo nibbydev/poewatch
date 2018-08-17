@@ -60,45 +60,49 @@
 
               <!-- Ico+name+league+price row -->
               <div class="row d-flex mx-1">
-                <!-- Ico+name+league col -->
-                <div class="col-8 p-0">
+                <div class="col d-flex p-0">
+                  <!-- Large ico col -->
                   <div class="d-flex">
                     <div class="img-container img-container-xl mr-3">
                       <img id="item-icon">
                     </div>
-                    <div class="d-flex flex-column justify-content-between">
-                      <div>
-                        <h4 id="item-name"></h4>
-                      </div>
-                      <div class="d-flex">
-                        <h5 class="mr-2">League</h5>
-                        <select class="form-control form-control-sm w-auto" id="history-league-selector"></select>
-                      </div>
-                    </div>
                   </div>
-                </div>
-                <!--/Ico+name+league col/-->
-                <!-- Large price col -->
-                <div class="col-4 p-0">
-                  <div class="pricebox">
-                    <div class="img-container img-container-lg mr-1">
-                      <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
-                    </div>
-                    <div class="align-items-center">
-                      <h4 id="item-chaos"></h4>
-                    </div>
-                  </div>
+                  <!--/Large ico col/-->
 
-                  <div class="pricebox">
-                    <div class="img-container img-container-lg mr-1">
-                      <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+                  <!-- Name+league col -->
+                  <div class="d-flex flex-column justify-content-evenly mr-5">
+                    <div>
+                      <h4 id="item-name"></h4>
                     </div>
-                    <div class="align-items-center">
-                      <h4 id="item-exalt"></h4>
+                    <div class="d-flex">
+                      <h5 class="mr-2">League</h5>
+                      <select class="form-control form-control-sm w-auto" id="history-league-selector"></select>
                     </div>
                   </div>
+                  <!--/Name+league col/-->
+
+                  <!-- Large price col -->
+                  <div class="d-flex flex-column justify-content-evenly">
+                    <div class="d-flex">
+                      <div class="img-container img-container-md mr-1">
+                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                      </div>
+                      <div class="align-self-center">
+                        <h4 id="item-chaos"></h4>
+                      </div>
+                    </div>
+                    <div class="d-flex">
+                      <div class="img-container img-container-md mr-1">
+                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+                      </div>
+                      <div class="align-self-center">
+                        <h4 id="item-exalt"></h4>
+                      </div>
+                    </div>
+                  </div>
+                  <!--/Large price col/-->
+
                 </div>
-                <!--/Large price col/-->
               </div>
               <!--/Ico+name+league+price row/-->
 
