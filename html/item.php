@@ -61,6 +61,7 @@
               <!-- Ico+name+league+price row -->
               <div class="row d-flex mx-1">
                 <div class="col d-flex p-0">
+                
                   <!-- Large ico col -->
                   <div class="d-flex">
                     <div class="img-container img-container-xl mr-3">

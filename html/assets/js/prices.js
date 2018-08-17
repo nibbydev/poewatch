@@ -27,6 +27,7 @@ var CHART_QUANT = null;
 var HISTORY_LEAGUE = null;
 var HISTORY_DATASET = 1;
 var INTERVAL;
+var ITEM_LINK = "🗗";
 
 var ROW_last_id = null;
 var ROW_parent = null, ROW_expanded = null, ROW_filler = null;
@@ -190,6 +191,8 @@ function onRowClick(event) {
 
   // If user clicked on a table that does not contain an id
   if (isNaN(id)) {
+    return;
+  } else if (event.target.innerHTML === ITEM_LINK) {
     return;
   }
 
@@ -982,10 +985,12 @@ function buildLinkField(item) {
   return `
   <td>
     <a href='{{url}}' target="_blank">
-      <span class='custom-text-dark'>🗗</span>
+      <span class='custom-text-dark'>{{ico}}</span>
     </a>
   </td>
-  `.trim().replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id);
+  `.trim()
+  .replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id)
+  .replace("{{ico}}", ITEM_LINK);
 }
 
 function buildChangeField(item) {
