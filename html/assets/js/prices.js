@@ -27,7 +27,6 @@ var CHART_QUANT = null;
 var HISTORY_LEAGUE = null;
 var HISTORY_DATASET = 1;
 var INTERVAL;
-var ITEM_LINK = "🗗";
 
 var ROW_last_id = null;
 var ROW_parent = null, ROW_expanded = null, ROW_filler = null;
@@ -189,10 +188,12 @@ function onRowClick(event) {
   let target = $(event.currentTarget);
   let id = parseInt(target.attr("value"));
 
+  console.log(event)
+
   // If user clicked on a table that does not contain an id
   if (isNaN(id)) {
     return;
-  } else if (event.target.innerHTML === ITEM_LINK) {
+  } else if (event.target.href) {
     return;
   }
 
@@ -833,9 +834,6 @@ function parseItem(item) {
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
 
-  // Format link field
-  let linkField = buildLinkField(item);
-
   // Format change field
   let changeField = buildChangeField(item);
 
@@ -843,14 +841,13 @@ function parseItem(item) {
   let quantField = buildQuantField(item);
 
   let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{link}}{{price}}{{change}}{{quant}}</tr>
+    <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
   item.tableData = template
     .replace("{{id}}",      item.id)
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
-    .replace("{{link}}",    linkField)
     .replace("{{price}}",   priceFields)
     .replace("{{change}}",  changeField)
     .replace("{{quant}}",   quantField);
@@ -861,10 +858,12 @@ function buildNameField(item) {
   <td>
     <div class='namebox'>
       <span class='img-container img-container-sm text-center mr-1'><img src='{{icon}}'></span>
-      <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var_or_tier}}
     </div>
   </td>
   `.trim();
+
+  template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id);
 
   if (item.icon) {
     // Use SSL for icons for that sweet, sweet secure site badge
@@ -979,18 +978,6 @@ function buildSparkLine(item) {
   sparkline(svg, item.history.spark);
 
   return svg.outerHTML;
-}
-
-function buildLinkField(item) {
-  return `
-  <td>
-    <a href='{{url}}' target="_blank">
-      <span class='custom-text-dark'>{{ico}}</span>
-    </a>
-  </td>
-  `.trim()
-  .replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id)
-  .replace("{{ico}}", ITEM_LINK);
 }
 
 function buildChangeField(item) {
