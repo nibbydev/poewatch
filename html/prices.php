@@ -348,6 +348,5 @@
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-<link rel="stylesheet" href="assets/css/responsive.css">
 </body>
 </html>

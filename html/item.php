@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/prices.css">
-  <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 <body>
 <!-- Primary navbar -->
