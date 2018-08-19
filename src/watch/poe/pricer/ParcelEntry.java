@@ -35,6 +35,8 @@ public class ParcelEntry {
         var = resultSet.getString("var");
         icon = resultSet.getString("icon");
 
+        exalted = Math.round(exalted * 1000.0) / 1000.0;
+
         // Get data that might be null
         try {
             tier = Integer.parseUnsignedInt(resultSet.getString("tier"));
@@ -67,51 +69,36 @@ public class ParcelEntry {
      * @param historyEntries Doubles as CSV
      */
     private void calcSpark(String historyEntries) {
-        Double[] tmpMean = new Double[7];
         int historyCounter = 6;
 
         // Set latest/newest price to current price
-        tmpMean[6] = mean;
+        history.values[6] = mean;
 
         // Parse history presented as CSV
         if (historyEntries != null) {
             String[] splitEntries = historyEntries.split(",");
 
-            // Reverse the order of data
-            for (int i = 0; i < splitEntries.length / 2; i++) {
-                String temp = splitEntries[i];
-                splitEntries[i] = splitEntries[splitEntries.length - i - 1];
-                splitEntries[splitEntries.length - i - 1] = temp;
-            }
-
             for (String historyEntry : splitEntries) {
                 if (--historyCounter < 0) break;
 
                 try {
-                    tmpMean[historyCounter] = Double.parseDouble(historyEntry);
+                    history.values[historyCounter] = Double.parseDouble(historyEntry);
                 } catch (NumberFormatException ex) { }
             }
         }
 
-        // Find each price percentage in relation to the first price
-        for (int i = 0; i < 7; i++) {
-            if (tmpMean[i] != null && tmpMean[i] > 0) {
-                history.spark[i] = Math.round(((tmpMean[i] / mean * 100.0) - 100.0) * 100.0) / 100.0;
-            }
-        }
-
         // Find the first and last spark percentages that are not null
-        Double firstSpark = null, lastSpark = null;
-        for (Double spark : history.spark) {
-            if (spark != null) {
-                if (firstSpark == null) firstSpark = spark;
-                lastSpark = spark;
+        Double firstVal = null, lastVal = null;
+        for (Double val : history.values) {
+            if (val != null) {
+                if (firstVal == null) firstVal = val;
+                lastVal = val;
             }
         }
 
         // Find % difference between first price and last price
-        if (firstSpark != null) {
-            history.change = lastSpark - firstSpark;
+        if (firstVal != null) {
+            history.change =  Math.round((lastVal / firstVal * 100.0 - 100) * 100.0) / 100.0;
         }
     }
 
@@ -119,7 +106,7 @@ public class ParcelEntry {
      * Inner class for binding variable history to an associative array in output
      */
     private class HistoryData {
-        public Double[] spark = new Double[7];
+        public Double[] values = new Double[7];
         public double change;
     }
 }

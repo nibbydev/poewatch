@@ -410,8 +410,9 @@ public class Main {
                 ENTRY_MANAGER.generateItemDataFile();
                 break;
             case "get":
+                long startTime = System.currentTimeMillis();
                 ENTRY_MANAGER.generateOutputFiles();
-                System.out.println("done");
+                System.out.printf("done (%5d ms)\n", System.currentTimeMillis() - startTime);
                 break;
 
             default:

@@ -139,6 +139,8 @@ public class EntryManager extends Thread {
                     ex.printStackTrace();
                     Main.ADMIN.log_("Couldn't get file's actual path", 3);
                 }
+
+                System.out.printf("Created %s\n", fileName);
             }
         }
 
