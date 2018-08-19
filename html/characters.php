@@ -55,21 +55,13 @@
 
         <!-- Main card body -->
         <div class="card-body">
-          <!-- Search options -->
+          <!-- Search form -->
           <form method="GET">
             <!-- Mode -->
             <div class="row">
               <div class="col">
                 <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
-                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "account") ? "active" : ""; ?>">
-                    <input type="radio" name="mode" value="account" <?php echo ($DATA["mode"] === "account") ? "checked" : ""; ?>><a>Account</a>
-                  </label>
-                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "character") ? "active" : ""; ?>">
-                    <input type="radio" name="mode" value="character" <?php echo ($DATA["mode"] === "character") ? "checked" : ""; ?>><a>Character</a>
-                  </label>
-                  <label class="btn btn-outline-dark <?php echo ($DATA["mode"] === "transfer") ? "active" : ""; ?>">
-                    <input type="radio" name="mode" value="transfer" <?php echo ($DATA["mode"] === "transfer") ? "checked" : ""; ?>><a>Transfer</a>
-                  </label>
+                  <?php CreateModeRadios($DATA); ?>
                 </div>
 
                 <div class="btn-group mb-3">
@@ -78,52 +70,15 @@
                 </div>
               </div>
             </div>
-            <!--/Search/-->
+            <!--/Mode/-->
 
-            <?php 
-              if ( $DATA["errorCode"] ) {
-                echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
-              } else {
-                DisplayResultCount($DATA);
-              }
-            ?>
+            <?php DisplayNotification($DATA); ?>
 
           </form>
-          <!--/Search options/-->
+          <!--/Search form/-->
 
           <!-- Content card -->
-          <?php if (!$DATA["errorCode"] && $DATA["search"]): ?>
-
-            <hr>
-            <!-- Main table -->
-            <div class="card api-data-table">
-              <table class="table table-striped table-hover mb-0">
-                <thead>
-                  <?php if ($DATA["mode"] === "transfer"): ?>
-                  <tr>
-                    <th>Account</th>
-                    <th>Was account</th>
-                    <th>Changed</th>
-                  </tr>
-                  <?php else: ?>
-                  <tr>
-                    <th>Account</th>
-                    <th>Has character</th>
-                    <th>In league</th>
-                    <th>Last seen</th>
-                  </tr>
-                  <?php endif; ?>
-                </thead>
-                <tbody>
-
-                  <?php if (!$DATA["errorCode"]) FillTable($DATA); ?>
-
-                </tbody>
-              </table>
-            </div>
-            <!--/Main table/-->
-
-          <?php endif; ?>
+          <?php CreateTable($DATA); ?>
           <!--/Content card/-->
 
         </div>

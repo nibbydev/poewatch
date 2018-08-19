@@ -1,40 +1,102 @@
 /*------------------------------------------------------------------------------------------------------------
+// Img containers
+//----------------------------------------------------------------------------------------------------------*/
+
+/* Base style for containers */
+
+.img-container {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  justify-content: center;
+  text-align: center !important;
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
+}
+.img-container img {
+  max-height: 35px;
+  max-width: 35px;
+  vertical-align: middle;
+}
+
+/* XL image containers */
+
+.img-container-xl {
+  min-width: 100px;
+  max-width: 100px;
+  min-height: 120px;
+  max-height: 120px;
+  background-color: rgba(0,0,0,.15);
+  border-radius: .25rem !important;
+}
+.img-container-xl img {
+  max-height: 120px;
+  max-width: 100px;
+}
+
+/* LG image containers */
+
+.img-container-lg {
+  min-width: 60px;
+  max-width: 60px;
+  min-height: 60px;
+  max-height: 60px;
+}
+.img-container-lg img {
+  max-height: 60px;
+  max-width: 60px;
+}
+
+/* MD image containers */
+
+.img-container-md {
+  min-width: 47px;
+  max-width: 47px;
+  min-height: 47px;
+  max-height: 47px;
+}
+.img-container-md img {
+  max-height: 47px;
+  max-width: 47px;
+}
+
+/* SM image containers */
+
+.img-container-sm {
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
+}
+.img-container-sm img {
+  max-height: 35px;
+  max-width: 35px;
+}
+
+/* XS image containers */
+
+.img-container-xs {
+  min-width: 26px;
+  max-width: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  display: inline-block;
+}
+.img-container-xs img {
+  max-height: 26px;
+  max-width: 26px;
+}
+
+/*------------------------------------------------------------------------------------------------------------
 // Price table
 //----------------------------------------------------------------------------------------------------------*/
 
 .namebox {
   display: flex;
   align-items: center;
-  white-space: nowrap;
-}
-
-.table-img-container {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  justify-content: center;
-  min-width: 35px;
-  max-width: 35px;
-  min-height: 35px;
-  max-height: 35px;
-}
-
-.table-img-container img {
-  max-height: 35px;
-  max-width: 35px;
-  vertical-align: middle;
-}
-
-.table-img-container-sm {
-  display: inline-block;
-  width: 26px;
-  height: 26px;
-}
-
-.table-img-container-sm img {
-  max-height: 26px;
-  max-width: 26px;
-  vertical-align: middle;
+  /*white-space: nowrap;*/
 }
 
 /* Styling for central table */
@@ -60,29 +122,23 @@
 // Second navbar
 //----------------------------------------------------------------------------------------------------------*/
 
-.second-navbar {display: inline-block}
+.w-auto {width: auto}
 
-.second-navbar .live-updates {float: right}
-#live-updates {margin-bottom: 1px}
-
-#search-league {
-  float: right;
+.second-navbar {
+  background-color: #2c2c2c;
+  white-space: nowrap;
 }
-
-.small-selector {
-  width: auto;
-  display: inline-block;
+.second-navbar select.btn {
+  -webkit-appearance: button;
+     -moz-appearance: button;
 }
-
 
 /*------------------------------------------------------------------------------------------------------------
 // Progressbar
 //----------------------------------------------------------------------------------------------------------*/
 
 .progressbar-live {
-  margin-top: -0.35rem !important;
   height: 5px;
-  border-radius: 0px;
   background-color: #222;
 }
 
@@ -93,8 +149,8 @@
 }
 
 @keyframes progressbar-live {
-  from {width: 0%;}
-  to {width: 100%;}
+  from {width: 0%}
+  to {width: 100%}
 }
 
 /*------------------------------------------------------------------------------------------------------------
@@ -141,11 +197,9 @@
 .pricebox {
   display: flex;
   align-items: center;
-  white-space: nowrap;
 }
 
-.pricebox .sparkline {padding: 0,5px,0,0}
-
+.pricebox .sparkline {padding: 0 5px 0 0}
 .chart-large {height: 250px}
 .chart-small {height: 110px}
 
@@ -160,13 +214,6 @@ canvas {
 
 /* Hide some search controls */
 .loadall {display: none}
-
-/* Styling for second navbar */
-.second-navbar {background-color: #2c2c2c}
-.second-navbar select.btn {
-  -webkit-appearance: button;
-     -moz-appearance: button;
-}
 
 /* Styling for foil uniques */
 .item-foil {color: #4c9b4c}

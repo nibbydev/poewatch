@@ -46,14 +46,10 @@
 </nav>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
-<div class="container-fluid second-navbar m-0 py-1 pr-3">
-  <select class="form-control form-control-sm small-selector ml-2" id="search-league">
+<div class="container-fluid second-navbar d-flex justify-content-end align-items-center m-0 py-1 px-2"> 
 
-    <?php AddLeagueSelects($SERVICE_leagues); ?>
-
-  </select>
-  <div class="form-group live-updates m-0">
-    <label for="live-updates" class="m-0">Live updates</label>
+  <div class="form-group live-updates d-flex float-right m-0 mr-3">
+    <label for="live-updates" class="m-0 mr-2">Live updates</label>
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="live-updates">
       <label class="btn btn-sm btn-outline-dark p-0 px-1">
         <input name="live" type="radio" value="true">On
@@ -63,6 +59,13 @@
       </label>
     </div>
   </div>
+
+  <select class="form-control form-control-sm w-auto d-flex float-right" id="search-league">
+
+    <?php AddLeagueSelects($SERVICE_leagues); ?>
+
+  </select>
+
 </div>
 <!--/Secondary navbar/-->
 <div class="container-fluid p-0 m-0">  
@@ -345,6 +348,5 @@
 <script type="text/javascript" src="assets/js/sparkline.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-<link rel="stylesheet" href="assets/css/responsive.css">
 </body>
 </html>

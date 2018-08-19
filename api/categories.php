@@ -1,48 +1,64 @@
 <?php
-header("Content-Type: application/json");
-include_once ( "details/pdo.php" );
+function get_data($pdo) {
+  $query = "SELECT 
+    cp.id                     AS parentId, 
+    cp.name                   AS parentName, 
+    cp.display                AS parentDisplay,
+    GROUP_CONCAT(cc.id)       AS memberIds,
+    GROUP_CONCAT(cc.name)     AS memberNames,
+    GROUP_CONCAT(cc.display)  AS memberDisplays
+  FROM      category_parent AS cp
+  LEFT JOIN category_child  AS cc
+    ON      cp.id = cc.id_cp
+  GROUP BY  cp.id
+  ORDER BY  cp.id ASC";
 
-$query = <<<EOT
-SELECT 
-  cp.id AS 'cp-id', cp.name AS 'cp-name', cp.display AS 'cp-display',
-  cc.id AS 'cc-id', cc.name AS 'cc-name', cc.display AS 'cc-display'
-FROM category_parent AS cp
-LEFT JOIN category_child AS cc
-  ON cp.id = cc.id_cp
-ORDER BY cp.id, cc.id ASC
-EOT;
-
-$stmt = $pdo->query($query);
-$payload = array();
-
-$tmp = null;
-
-while ($row = $stmt->fetch()) {
-  if ($tmp === null) {
-    $tmp = array(
-      "id" => $row["cp-id"],
-      "name" => $row["cp-name"],
-      "display" => $row["cp-display"],
-      "members" => array()
-    );
-  } else if ($tmp["name"] !== $row["cp-name"]) {
-    $payload[] = $tmp;
-
-    $tmp = array(
-      "id" => $row["cp-id"],
-      "name" => $row["cp-name"],
-      "display" => $row["cp-display"],
-      "members" => array()
-    );
-  }
-
-  if ($row["cc-name"] !== null) {
-    $tmp["members"][] = array(
-      "id" => $row["cc-id"],
-      "name" => $row["cc-name"],
-      "display" => $row["cc-display"]
-    );
-  }
+  return $pdo->query($query);
 }
 
+function parse_data($stmt) {
+  $payload = array();
+
+  while ($row = $stmt->fetch()) {
+    $tmp = array(
+      'parentId' => $row['parentId'],
+      'parentName' => $row['parentName'],
+      'parentDisplay' => $row['parentDisplay'],
+      'members' => array()
+    );
+
+    $explMemberIds = explode(',', $row['memberIds']);
+    $explMemberNames = explode(',', $row['memberNames']);
+    $explMemberDisplays = explode(',', $row['memberDisplays']);
+    $count = sizeof($explMemberIds);
+
+    if ($count > 1) {
+      for ($i = 0; $i < $count; $i++) { 
+        $tmp['members'][] = array(
+          'memberId' => (int) $explMemberIds[$i],
+          'memberName' => $explMemberNames[$i],
+          'memberDisplay' => $explMemberDisplays[$i]
+        );
+      }
+    }
+
+    $payload[] = $tmp;
+  }
+
+  return $payload;
+}
+
+// Define content type
+header('Content-Type: application/json');
+
+// Connect to database
+include_once ( 'details/pdo.php' );
+
+// Get data from database
+$stmt = get_data($pdo);
+
+// Parse received data
+$payload = parse_data($stmt);
+
+// Display generated data
 echo json_encode($payload);

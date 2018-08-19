@@ -11,8 +11,6 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/prices.css">
-  <link rel="stylesheet" href="assets/css/item.css">
-  <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 <body>
 <!-- Primary navbar -->
@@ -57,116 +55,155 @@
         <div class="col-lg">
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body">
+            <div class="card-body" id="content">
 
-              <div class="row m-1">
+              <!-- Ico+name+league+price row -->
+              <div class="row d-flex mx-1">
+                <div class="col d-flex p-0">
+                
+                  <!-- Large ico col -->
+                  <div class="d-flex">
+                    <div class="img-container img-container-xl mr-3">
+                      <img id="item-icon">
+                    </div>
+                  </div>
+                  <!--/Large ico col/-->
 
-<div class="d-flex mr-3">
-  <div class="mega-img-container rounded mr-3 p-2 d-flex align-items-center">
-    <img id="item-icon" src="assets/img/missing.png">
-  </div>
+                  <!-- Name+league col -->
+                  <div class="d-flex flex-column justify-content-evenly mr-5">
+                    <div>
+                      <h4 id="item-name"></h4>
+                    </div>
+                    <div class="d-flex">
+                      <h5 class="mr-2">League</h5>
+                      <select class="form-control form-control-sm w-auto" id="history-league-selector"></select>
+                    </div>
+                  </div>
+                  <!--/Name+league col/-->
 
+                  <!-- Large price col -->
+                  <div class="d-flex flex-column justify-content-evenly">
+                    <div class="d-flex">
+                      <div class="img-container img-container-md mr-1">
+                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                      </div>
+                      <div class="align-self-center">
+                        <h4 id="item-chaos"></h4>
+                      </div>
+                    </div>
+                    <div class="d-flex">
+                      <div class="img-container img-container-md mr-1">
+                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+                      </div>
+                      <div class="align-self-center">
+                        <h4 id="item-exalt"></h4>
+                      </div>
+                    </div>
+                  </div>
+                  <!--/Large price col/-->
 
-  <div class="d-flex flex-column mr-3">
-    <div class="d-flex mr-3 mb-auto">
-      <div class="rounded mr-3 p-2 d-flex align-items-center">
-        <img src="http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
-      </div>
-      <div class="d-flex align-items-center">
-        <h4 id="item-exalt">?</h4>
-      </div>
-    </div>
-    <div class="d-flex mr-3">
-      <div class="rounded mr-3 p-2 d-flex align-items-center">
-        <img src="http://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
-      </div>
-      <div class="d-flex align-items-center">
-        <h4 id="item-chaos">?</h4>
-      </div>
-    </div>
-  </div>
-
-  <div class="d-flex flex-column">
-    <div class="mt-3">
-      <h4 id="item-name">?</h4>
-    </div>
-    <div class="d-flex align-items-center mt-auto mb-3">
-      <svg class="mega-sparkline mr-2"></svg>
-      <span class="d-flex mr-2"><h4 id="item-change">?</h4></span>
-    </div>
-  </div>
-
-</div>
-
-
-
+                </div>
               </div>
+              <!--/Ico+name+league+price row/-->
+
               <hr>
-              <div class="row m-1 mt-2">
-                <div class="col-sm">
-                  <table class="table table-sm details-table table-striped">
+
+              <!-- Small chart row -->
+              <div class='row m-1'>
+                <div class='col-md'>
+                  <h4>Chaos value</h4>
+                  <div class='chart-small'><canvas id="chart-price"></canvas></div>
+                </div>
+                <div class='col-md'>
+                  <h4>Listed per 24h</h4>
+                  <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
+                </div>
+              </div>
+              <!--/Small chart row/-->
+
+              <hr>
+
+              <!-- Details table row -->
+              <div class='row m-1 mt-2'>
+                <div class='col-md'>
+                  <table class="table table-sm details-table table-striped table-hover">
                     <tbody>
                       <tr>
-                        <td>Current mean</td>
-                        <td id="item-mean">?</td>
+                        <td>Mean</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-mean'></span>
+                        </td>
                       </tr>
                       <tr>
-                        <td>Current median</td>
-                        <td id="item-median">?</td>
+                        <td>Median</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-median'></span>
+                        </td>
                       </tr>
                       <tr>
-                        <td>Current mode</td>
-                        <td id="item-mode">?</td>
+                        <td>Mode</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-mode'></span>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <div class="col-sm">
-                  <table class="table table-sm details-table table-striped">
+                <div class='col-md'>
+                  <table class="table table-sm details-table table-striped table-hover">
                     <tbody>
                       <tr>
                         <td>Total amount listed</td>
-                        <td id="item-count">?</td>
+                        <td>
+                          <span id='details-table-count'></span>
+                        </td>
                       </tr>
                       <tr>
-                        <td>Listed per 24h</td>
-                        <td id="item-quantity">?</td>
+                        <td>Listed every 24h</td>
+                        <td>
+                          <span id='details-table-1d'></span>
+                        </td>
                       </tr>
                       <tr>
-                        <td>Price since 1 week</td>
-                        <td id="item-1w">?</td>
+                        <td>Price in exalted</td>
+                        <td>
+                          <span class="img-container img-container-xs mr-1">
+                            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
+                          </span>
+                          <span id='details-table-exalted'></span>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
-              <hr>
-              <div class="row m-1">
-                <div class="col-sm">
-                  <h4>Chaos value</h4>
-                  <div class="chart-small"><canvas id="chart-price"></canvas></div>
-                </div>
-                <div class="col-sm">
-                  <h4>Listed per 24h</h4>
-                  <div class="chart-small"><canvas id="chart-quantity"></canvas></div>
-                </div>
-              </div>
-              <hr>
-              <div class="row m-1 mb-3">
-                <div class="col-sm">
-                  <h4>League charts</h4>
-                  <div class="mb-1">
-                    <label class="m-0 mr-2" for="history-league-radio-new">Current leagues:</label>
-                    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="history-league-radio-new"></div>
-                  </div>
-                  <div class="mb-3">
-                    <label class="m-0 mr-2" for="history-league-radio-old">Past leagues: </label>
-                    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="history-league-radio-old"></div>
-                  </div>
-                  <div class="chart-large"><canvas id="chart-past"></canvas></div>
-                </div>
-              </div>
+              <!--/Details table row/-->
 
+              <hr>
+              
+              <!-- Past data row -->
+              <div class='row m-1 mb-3'>
+                <div class='col-sm'>
+                  <h4>Past data</h4>
+                  <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+                    <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+                  </div>
+                  <div class='chart-large'><canvas id="chart-past"></canvas></div>
+                </div>
+              </div>
+              <!--/Past data row/-->
 
             </div>
             <div class="card-footer slim-card-edge"></div>
@@ -183,7 +220,8 @@
 <!--/Footer/-->
 <!-- Service script -->
 <script>
-  var index = <?php echo isset($_GET["index"])    ? "\"" . $_GET["index"]    . "\"" : "null" ?>;
+  var ID      = <?php echo $_GET['id']      ?    $_GET['id']        : 'null'; ?>;
+  var LEAGUE  = <?php echo $_GET['league']  ? "'{$_GET['league']}'" : 'null'; ?>;
 </script>
 <!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>

@@ -1,237 +1,194 @@
-var LEAGUE = "Incursion";
-var itemData = null;
-var HISTORY_CHART = null;
+/*
+  There's not much here except for some poorly written JS functions. And since you're 
+  already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
+*/
 
-var TEMPLATE_leagueBtn = `
-<label class="btn btn-sm btn-outline-dark p-0 px-1 {{active}}">
-  <input type="radio" name="league" value="{{value}}">{{name}}
-</label>`;
+var ITEM = {};
+var CHART_HISTORY = null, CHART_MEAN = null, CHART_QUANT = null;
+var HISTORY_DATASET = 1;
 
 $(document).ready(function() {
-  if (index) makeRequest(index);
-});
+  if (ID && LEAGUE) makeHistoryRequest(ID);
+}); 
 
+//------------------------------------------------------------------------------------------------------------
+// Expanded row
+//------------------------------------------------------------------------------------------------------------
 
-function makeRequest(index) {
-  var data = {
-    index: index
-  };
-
-  var request = $.ajax({
-    url: "http://api.poe.watch/priceData",
-    data: data,
+function makeHistoryRequest(id) {
+  let request = $.ajax({
+    url: "https://api.poe.watch/item.php",
+    data: {id: id},
     type: "GET",
     async: true,
     dataTypes: "json"
   });
 
-  request.done(function(json) {
-    if ("error" in json) return;
-    console.log("we did it");
-    itemData = json;
+  request.done(function(payload) {
+    // Create deep clone of the payload
+    let tmp = $.extend(true, {}, payload);
+    let leagues = [];
 
+    // Make league data accessible through league name
+    tmp.leagues = {};
+    for (let i = 0; i < payload.leagues.length; i++) {
+      let leagueData = payload.leagues[i];
+      tmp.leagues[leagueData.leagueName] = leagueData;
+      
+      leagues.push({
+        name: leagueData.leagueName,
+        display: leagueData.leagueDisplay
+      });
+    }
+    ITEM = tmp;
+
+    createCharts();
     fillData();
-    buildSparkLine();
-    placeCharts();
-    displayNewHistory();
-    displayOldHistory();
+    createSelectorFields(leagues);
+    createListeners(id);
   });
 }
 
-function buildSparkLine() {
-  var svgColorClass = itemData["data"][LEAGUE]["history"]["change"] > 0 ? "green" : "orange";
-  
-  let svg = document.createElement("svg");
-  
-  svg.setAttribute("class", "sparkline sparkline-" + svgColorClass);
-  svg.setAttribute("width", 100);
-  svg.setAttribute("height", 40);
-  svg.setAttribute("stroke-width", 3);
+function formatHistory(leaguePayload) {
+  let vals = [], keys = [];
 
-  sparkline.sparkline(svg, itemData["data"][LEAGUE]["history"]["spark"]);
+  // Skip Hardcore (id 1) and Standard (id 2)
+  if (leaguePayload.leagueId > 2) {
+    // Because javascript is "special"
+    let size = Object.keys(leaguePayload.history).length;
 
-  $(".mega-sparkline").html(svg.outerHTML);
-}
+    // Convert date strings into dates
+    let endDate = new Date(leaguePayload.leagueEnd);
+    let startDate = new Date(leaguePayload.leagueStart);
 
-//------------------------------------------------------------------------------------------------------------
-// Data displaying
-//------------------------------------------------------------------------------------------------------------
+    // Get difference in days between the two dates
+    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    
+    // Bloat if less entries than league duration
+    for (let i = 0; i < dateDiff - size; i++) {
+      vals.push(null);
+      keys.push(null);
+    }
 
-function fillData() {
-  $("#item-icon").prop("src", itemData["data"][LEAGUE]["icon"]);
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        keys.push(formatDate(key));
 
-  $("#item-name").html( buildNameField(itemData) );
-  $("#item-change").html(itemData["data"][LEAGUE]["history"]["change"] + "%");
-  
-  $("#item-chaos").html( roundPrice(itemData["data"][LEAGUE]["mean"]) );
-  $("#item-exalt").html( roundPrice(itemData["data"][LEAGUE]["exalted"]) );
-
-  $("#item-mean").html(itemData["data"][LEAGUE]["mean"]);
-  $("#item-median").html(itemData["data"][LEAGUE]["median"]);
-  $("#item-mode").html(itemData["data"][LEAGUE]["mode"]);
-
-  $("#item-count").html(itemData["data"][LEAGUE]["count"]);
-  $("#item-quantity").html(itemData["data"][LEAGUE]["quantity"]);
-  //$("#item-1w")  .html(itemData["data"][LEAGUE]["quantity"]);
-}
-
-function buildNameField(itemData) {
-  let template = "<span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}{{links}}";
-  let item = itemData["data"][LEAGUE];
-
-  if (item["frame"] === 9) {
-    template = template.replace("{{foil}}", "class='item-foil'");
-  } else {
-    template = template.replace("{{foil}}", "");
-  }
-
-  template = template.replace("{{name}}", item["name"]);
-
-  if ("type" in item) {
-    let tmp = "<span class='subtext-1'>, " + item["type"] + "</span>";;
-    template = template.replace("{{type}}", tmp);
-  } else {
-    template = template.replace("{{type}}", "");
-  }
-
-  if ("var" in item && item["frame"] !== -1) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["var"] + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
-  } else if ("tier" in item) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["tier"] + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
-  } else {
-    template = template.replace("{{var_or_tier}}", "");
-  }
-
-  if ("links" in item) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item["links"] + " link</span>";
-    template = template.replace("{{links}}", tmp);
-  } else {
-    template = template.replace("{{links}}", "");
-  }
-
-  if (item["history"]["mean"].length < 7) {
-    let tmp = "<span class='badge badge-light'>New</span>";
-    template = template.replace("{{new}}", tmp);
-  } else {
-    template = template.replace("{{new}}", "");
-  }
-  
-  return template;
-}
-
-//------------------------------------------------------------------------------------------------------------
-// Chart displaying
-//------------------------------------------------------------------------------------------------------------
-
-function placeCharts() {
-  var priceData = {
-    type: "line",
-    data: {
-      labels: getAllDays(itemData["data"][LEAGUE]["history"]["mean"].length),
-      datasets: [{
-        label: "Price in chaos",
-        data: itemData["data"][LEAGUE]["history"]["mean"],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
+        if (leaguePayload.history[key] === null) {
+          vals.push(0);
+        } else {
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
           }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
+        }
       }
     }
-  }
-  
-  var quantData = {
-    type: "line",
-    data: {
-      labels: getAllDays(itemData["data"][LEAGUE]["history"]["quantity"].length),
-      datasets: [{
-        label: "Quantity",
-        data: itemData["data"][LEAGUE]["history"]["quantity"],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return "Quantity: " + data['datasets'][0]['data'][tooltipItem[0]['index']];
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
+  } else {
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        if (leaguePayload.history[key] === null) {
+          keys.push(null);
+          vals.push(null);
+        } else {
+          keys.push(formatDate(key));
+
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
           }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
+        }
       }
     }
   }
 
-  var pastData = {
+  // Add current values
+  switch (HISTORY_DATASET) {
+    case 1: vals.push(leaguePayload.mean);     keys.push("Right now");      break;
+    case 2: vals.push(leaguePayload.median);   keys.push("Right now");      break;
+    case 3: vals.push(leaguePayload.mode);     keys.push("Right now");      break;
+    case 4: vals.push(leaguePayload.quantity); keys.push("Last 24 hours");  break;
+    default:                                                                break;
+  }
+
+  // Return generated data
+  return {
+    'keys': keys,
+    'vals': vals
+  }
+}
+
+function formatWeek(leaguePayload) {
+  // Because javascript is "special"
+  let size = Object.keys(leaguePayload.history).length;
+  let means = [], quants = [], count = 0;
+
+  // If less than 7 entries, need to bloat
+  for (let i = 0; i < 7 - size; i++) {
+    means.push(null);
+    quants.push(null);
+  }
+
+  // Grab latest 7 values
+  for (var key in leaguePayload.history) {
+    if (leaguePayload.history.hasOwnProperty(key)) {
+      if (size - count++ <= 7) {
+        if (leaguePayload.history[key] === null) {
+          means.push(null);
+          quants.push(null);
+        } else {
+          means.push(leaguePayload.history[key].mean);
+          quants.push(leaguePayload.history[key].quantity);
+        }
+      }
+    }
+  }
+
+  // Add today's values
+  means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);
+
+  // Return generated data
+  return {
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
+    'means': means,
+    'quants': quants
+  }
+}
+
+function createCharts() {
+  let ctx = $("#chart-price")[0].getContext('2d');
+  let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+
+  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
+  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
+  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
+
+  let baseSettings = {
     type: "line",
     data: {
       labels: [],
       datasets: [{
-        label: "Price in chaos",
         data: [],
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderColor: "#fff",
-        borderWidth: 1,
-        lineTension: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: gradient,
+        borderWidth: 3,
+        lineTension: 0.2,
         pointRadius: 0
       }]
     },
     options: {
-      legend: {
-        display: false
-      },
+      legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
       animation: {duration: 0},
@@ -240,14 +197,7 @@ function placeCharts() {
       tooltips: {
         intersect: false,
         mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            return data['datasets'][0]['data'][tooltipItem[0]['index']] + "c";
-          },
-          label: function(tooltipItem, data) {
-            return "Day " + tooltipItem['index'];
-          }
-        },
+        callbacks: {},
         backgroundColor: '#fff',
         titleFontSize: 16,
         titleFontColor: '#222',
@@ -257,121 +207,221 @@ function placeCharts() {
         borderWidth: 1,
         borderColor: '#aaa'
       },
-      scales: {
-        yAxes: [{ticks: {beginAtZero:true}}],
-        xAxes: [{
-          ticks: {
-            autoSkip: false,
-            callback: function(value, index, values) {
-              return (index % 7 === 0) ? "Week " + (~~(index / 7) + 1) : null;
-            }
-          }
-        }]
-      }
+      scales: {}
     }
   }
 
-  new Chart($("#chart-price"), priceData);
-  new Chart($("#chart-quantity"), quantData);
-  HISTORY_CHART = new Chart($("#chart-past"), pastData);
+  // Create deep clones of the base settings
+  let priceSettings   = $.extend(true, {}, baseSettings);
+  let quantSettings   = $.extend(true, {}, baseSettings);
+  let historySettings = $.extend(true, {}, baseSettings);
+
+  // Set price chart unique options
+  priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
+  priceSettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      return "Price: " + tooltipItem[0]['yLabel'];
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
+  };
+
+  // Set quantity chart unique options
+  quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
+  quantSettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      return "Amount: " + tooltipItem[0]['yLabel'];
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
+  };
+
+  // Set history chart unique options 
+  historySettings.options.scales.yAxes = [{ticks: {beginAtZero:true}}];
+  historySettings.options.scales.xAxes = [{
+    ticks: {
+      callback: function(value, index, values) {
+        return (value ? value : '');
+      }
+    }
+  }];
+  historySettings.options.tooltips.callbacks = {
+    title: function(tooltipItem, data) {
+      let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return price ? price : "No data";
+    },
+    label: function(tooltipItem, data) {
+      return data['labels'][tooltipItem['index']];
+    }
+  };
+
+  // Create charts
+  CHART_MEAN    = new Chart($("#chart-price"),    priceSettings);
+  CHART_QUANT   = new Chart($("#chart-quantity"), quantSettings);
+  CHART_HISTORY = new Chart($("#chart-past"),     historySettings);
 }
 
-function displayNewHistory() {
-  var newLeagues = Object.keys(itemData["new"]);
+function fillData() {
+  let leaguePayload = ITEM.leagues[LEAGUE];
 
-  HISTORY_CHART.data.labels = itemData["new"][newLeagues[0]];
-  HISTORY_CHART.data.datasets[0].data = itemData["new"][newLeagues[0]];
-  HISTORY_CHART.update();
+  // Pad history with leading nulls
+  let formattedHistory = formatHistory(leaguePayload);
 
-  let tmp_leagueBtnString = "";
+  // Assign history chart datasets
+  CHART_HISTORY.data.labels = formattedHistory.keys;
+  CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
+  CHART_HISTORY.update();
 
-  $.each(newLeagues, function(index, league) {
-    tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
-      .replace("{{active}}", (league === newLeagues[0] ? "active" : ""))
-      .replace("{{value}}", league)
-      .replace("{{name}}", formatLeague(league));
-  });
+  // Get a fixed size of 7 latest history entries
+  let formattedWeek = formatWeek(leaguePayload);
 
-  let radio = $("#history-league-radio-new");
-  radio.append(tmp_leagueBtnString);
+  CHART_MEAN.data.labels = formattedWeek.meanKeys;
+  CHART_MEAN.data.datasets[0].data = formattedWeek.means;
+  CHART_MEAN.update();
 
-  radio.change(function(){
+  CHART_QUANT.data.labels = formattedWeek.quantKeys;
+  CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
+  CHART_QUANT.update();
+  
+  // Set data in details table
+  $("#details-table-mean")    .html(  formatNum(leaguePayload.mean)      );
+  $("#details-table-median")  .html(  formatNum(leaguePayload.median)    );
+  $("#details-table-mode")    .html(  formatNum(leaguePayload.mode)      );
+  $("#details-table-count")   .html(  formatNum(leaguePayload.count)     );
+  $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
+  $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
+  
+  $("#item-icon").attr('src', fixIcon(ITEM.icon) );
+  $("#item-name").html( buildNameField(ITEM.name) );
 
-    $("#history-league-radio-old[data-toggle='buttons'] :radio").prop("checked", false);
-    $("#history-league-radio-old[data-toggle='buttons'] label").removeClass("active");
-
-    selectedLeague = $("input[name=league]:checked", this).val();
-    console.log(selectedLeague);
-
-    HISTORY_CHART.data.labels = itemData["new"][selectedLeague];
-    HISTORY_CHART.data.datasets[0].data = itemData["new"][selectedLeague];
-    HISTORY_CHART.update();
-  });
+  $("#item-chaos").html(formatNum(leaguePayload.mean));
+  $("#item-exalt").html(formatNum(leaguePayload.exalted));
 }
 
-function displayOldHistory() {
-  var oldLeagues = Object.keys(itemData["old"]);
-  let tmp_leagueBtnString = "";
+function createSelectorFields(leagues) {
+  let buffer = "";
 
-  if (oldLeagues.length > 0) {
-    $.each(oldLeagues, function(index, league) {
-      tmp_leagueBtnString += TEMPLATE_leagueBtn.trim()
-        .replace("{{active}}", "")
-        .replace("{{value}}", league)
-        .replace("{{name}}", formatLeague(league));
-    });
-  } else {
-    tmp_leagueBtnString = "<span class='text-muted'>No results</span>"
+  for (let i = 0; i < leagues.length; i++) {
+    buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
+      .replace("{{selected}}",  (LEAGUE === leagues[i].name ? "selected" : ""))
+      .replace("{{value}}",     leagues[i].name)
+      .replace("{{name}}",      leagues[i].display);
   }
 
-  let radio = $("#history-league-radio-old");
-  radio.append(tmp_leagueBtnString);
+  $("#history-league-selector").append(buffer);
+}
 
-  radio.change(function(){
-    $("#history-league-radio-new[data-toggle='buttons'] :radio").prop("checked", false);
-    $("#history-league-radio-new[data-toggle='buttons'] label").removeClass("active");
-
-    selectedLeague = $("input[name=league]:checked", this).val();
-
-    HISTORY_CHART.data.labels = itemData["old"][selectedLeague];
-    HISTORY_CHART.data.datasets[0].data = itemData["old"][selectedLeague];
-    HISTORY_CHART.update();
+function createListeners() {
+  $("#history-league-selector").change(function(){
+    LEAGUE = $(":selected", this).val();
+    fillData( ITEM.leagues[LEAGUE] );
   });
+
+  $("#history-dataset-radio").change(function(){
+    HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
+    fillData( ITEM.leagues[LEAGUE] );
+  });
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Item parsing and table HTML generation
+//------------------------------------------------------------------------------------------------------------
+
+function buildNameField() {
+  // Fix name if item is enchantment
+  if (ITEM.categoryParent === "enchantments" && ITEM.variation !== null) {
+    let splitVar = ITEM.variation.split('-');
+    
+    for (var num in splitVar) {
+      ITEM.name = ITEM.name.replace("#", splitVar[num]);
+    }
+  }
+
+  // Begin builder
+  let builder = ITEM.name;
+
+  if (ITEM.type) {
+    builder += "<span class='subtext-1'>, " + ITEM.type + "</span>";;
+  }
+
+  if (ITEM.frame === 9) {
+    builder = "<span class='item-foil'>" + builder + "</span>";
+  }
+
+  if (ITEM.variation && ITEM.categoryParent !== "enchantments") {
+    builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
+  } 
+  
+  if (ITEM.tier) {
+    builder += " <span class='badge custom-badge-gray ml-1'>Tier " + ITEM.tier + "</span>";
+  } 
+  
+  if (ITEM.links) {
+    builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.links + " Link</span>";
+  }
+
+  if (ITEM.frame === 4) {
+    builder += "<span class='badge custom-badge-gray ml-1'>Lvl " + ITEM.lvl + "</span>";
+    builder += "<span class='badge custom-badge-gray ml-1'>Quality " + ITEM.quality + "</span>";
+
+    if (ITEM.corrupted) {
+      builder += "<span class='badge custom-badge-red ml-1'>Corrupted</span>";
+    }
+  }
+
+  return builder;
+}
+
+function fixIcon(icon) {
+  if (!icon) return "https://poe.watch/assets/img/missing.png";
+
+  // Use SSL
+  icon = icon.replace("http://", "https://");
+
+  let splitIcon = icon.split("?");
+  let splitParams = splitIcon[1].split("&");
+  let newParams = "";
+
+  for (let i = 0; i < splitParams.length; i++) {
+    switch (splitParams[i].split("=")[0]) {
+      case "scale": 
+      case "w":
+      case "h":
+        break;
+      default:
+        newParams += "&" + splitParams[i];
+        break;
+    }
+  }
+
+  if (newParams) {
+    return splitIcon[0] + "?" + newParams.substr(1);
+  } else {
+    return splitIcon[0];
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
 
-function getAllDays(length) {
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"
-  ];
-  var a = [];
-  
-  for (let index = length; index > 1; index--) {
-    var s = new Date();
-    var n = new Date(s.setDate(s.getDate() - index))
-    a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
-  }
-  
-  a.push("Atm");
-
-  return a;
-}
-
-function roundPrice(price) {
+function formatNum(num) {
   const numberWithCommas = (x) => {
     var parts = x.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return parts.join(".");
   }
 
-  return numberWithCommas(Math.round(price * 100) / 100);
+  return numberWithCommas(Math.round(num * 100) / 100);
 }
 
-function formatLeague(name) {
-  if (~name.indexOf(" Event")) return name.substring(0, name.indexOf(" Event"));
-  else if (~name.indexOf("Hardcore ")) return "HC " + name.substring(9);
-  else return name;
+function formatDate(date) {
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  let s = new Date(date);
+  return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
 }

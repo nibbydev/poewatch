@@ -37,7 +37,7 @@ const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/Currency
 const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
 const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 
-var TEMPLATE_imgContainer = "<span class='table-img-container text-center mr-1'><img src={{img}}></span>";
+var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
   if (!SERVICE_category) return;
@@ -191,6 +191,8 @@ function onRowClick(event) {
   // If user clicked on a table that does not contain an id
   if (isNaN(id)) {
     return;
+  } else if (event.target.href) {
+    return;
   }
 
   // Get rid of any filler rows
@@ -249,7 +251,7 @@ function displayFillerRow() {
     <div class='row m-1'>
       <div class='col-sm'>
         <h4>League</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
       </div>
     </div>
     <hr>
@@ -470,7 +472,7 @@ function buildExpandedRow(id) {
 
   // Create jQuery object based on data from request and set gvar
   ROW_expanded = createExpandedRow();
-  placeCharts(ROW_expanded);
+  createCharts(ROW_expanded);
   fillChartData(leaguePayload);
   createHistoryLeagueSelectorFields(ROW_expanded, leagues, FILTER.league);
 
@@ -490,7 +492,7 @@ function setDetailsTableValues(expandedRow, leaguePayload) {
   $("#details-table-exalted", expandedRow).html(  formatNum(leaguePayload.exalted)   );
 }
 
-function placeCharts(expandedRow) {
+function createCharts(expandedRow) {
   let ctx = $("#chart-price", expandedRow)[0].getContext('2d');
   let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
 
@@ -544,7 +546,7 @@ function placeCharts(expandedRow) {
   priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
   priceSettings.options.tooltips.callbacks = {
     title: function(tooltipItem, data) {
-      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return "Price: " + tooltipItem[0]['yLabel'];
     },
     label: function(tooltipItem, data) {
       return data['labels'][tooltipItem['index']];
@@ -555,7 +557,7 @@ function placeCharts(expandedRow) {
   quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
   quantSettings.options.tooltips.callbacks = {
     title: function(tooltipItem, data) {
-      return data['datasets'][0]['data'][tooltipItem[0]['index']];
+      return "Amount: " + tooltipItem[0]['yLabel'];
     },
     label: function(tooltipItem, data) {
       return data['labels'][tooltipItem['index']];
@@ -631,7 +633,7 @@ function createExpandedRow() {
     <div class='row m-1'>
       <div class='col-sm'>
         <h4>League</h4>
-        <select class="form-control form-control-sm small-selector mr-2" id="history-league-selector"></select>
+        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
       </div>
     </div>
     <hr>
@@ -700,7 +702,7 @@ function createExpandedRow() {
   </td></tr>
   `.trim();
 
-  let containterTemplate = "<span class='table-img-container-sm text-center mr-1'><img src={{img}}></span>";
+  let containterTemplate = "<span class='img-container img-container-xs text-center mr-1'><img src={{img}}></span>";
   let chaosContainer = containterTemplate.replace("{{img}}", ICON_CHAOS);
   let exaltedContainer = containterTemplate.replace("{{img}}", ICON_EXALTED);
 
@@ -853,11 +855,13 @@ function buildNameField(item) {
   let template = `
   <td>
     <div class='namebox'>
-      <span class='table-img-container text-center mr-1'><img src='{{icon}}'></span>
-      <span {{foil}}>{{name}}{{type}}</span>{{var_or_tier}}
+      <span class='img-container img-container-sm text-center mr-1'><img src='{{icon}}'></span>
+      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var_or_tier}}
     </div>
   </td>
   `.trim();
+
+  template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id);
 
   if (item.icon) {
     // Use SSL for icons for that sweet, sweet secure site badge
@@ -895,21 +899,15 @@ function buildNameField(item) {
   }
 
   if (item.var && FILTER.category !== "enchantments") {
-    let tmp = " <span class='badge custom-badge-gray'>" + item.var + "</span>";
+    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else if (item.tier) {
-    let tmp = " <span class='badge custom-badge-gray'>" + item.tier + "</span>";
+    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.tier + "</span>";
     template = template.replace("{{var_or_tier}}", tmp);
   } else {
     template = template.replace("{{var_or_tier}}", "");
   }
 
-  if (item.history.spark.length < 7) {
-    template = template.replace("{{new}}", "<span class='badge badge-light'>New</span>");
-  } else {
-    template = template.replace("{{new}}", "");
-  }
-  
   return template;
 }
 
@@ -972,10 +970,10 @@ function buildSparkLine(item) {
   
   svg.setAttribute("class", "sparkline " + svgColorClass);
   svg.setAttribute("width", 60);
-  svg.setAttribute("height", 25);
+  svg.setAttribute("height", 30);
   svg.setAttribute("stroke-width", 3);
 
-  sparkline(svg, item.history.spark);
+  sparkline(svg, item.history.values);
 
   return svg.outerHTML;
 }

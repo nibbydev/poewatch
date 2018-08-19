@@ -10,9 +10,9 @@ $DATA = array(
   // Total pages based on: count / limit    [not in use]
   "pages"      => null,
   // Search string
-  "search"     => isset($_GET["search"]) && $_GET["search"] ? $_GET["search"]       : null,
+  "search"     => isset($_GET["search"]) ? $_GET["search"] : null,
   // Search mode
-  "mode"       => isset($_GET["mode"])   && $_GET["mode"]   ? $_GET["mode"]         : "account",
+  "mode"       => isset($_GET["mode"])   ? $_GET["mode"]   : null,
   // Table sizes for MotD
   "totalAccs"  => null,
   "totalChars" => null,
@@ -45,18 +45,20 @@ function DisplayMotD($DATA) {
   $relDisplay = "<span class='custom-text-green'>$relDisplay</span>";
   $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-14 00:00:00") . "</span>";
 
-  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations from $timeDisplay.";
+  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations collected from the stash API since $timeDisplay.";
 }
 
-// Shows nr of results for search
-function DisplayResultCount($DATA) {
-  if ($DATA["count"] === null) return;
-
-  $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
-  $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
-  $results = $DATA["count"] === 1 ? "result" : "results";
-
-  echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
+// Display notification
+function DisplayNotification($DATA) {
+  if ( $DATA["errorCode"] ) {
+    echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
+  } else if ($DATA["count"] !== null && $DATA["search"] !== null) {
+    $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
+    $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
+    $results = $DATA["count"] === 1 ? "result" : "results";
+  
+    echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";
+  }
 }
 
 // Shows pagination if results exceeded limit
@@ -87,11 +89,69 @@ function DisplayPagination($DATA, $pos) {
   echo "</div></div>";
 }
 
+// Displays radio buttons and sets their active state
+function CreateModeRadios($DATA) {
+  foreach ($DATA["validModes"] as $index => $mode) {
+    if ($DATA['mode'] === null) {
+      $active   = $mode === 'account' ? 'active'  : '';
+      $checked  = $mode === 'account' ? 'checked' : '';
+    } else {
+      $active   = $mode === $DATA['mode'] ? 'active'  : '';
+      $checked  = $mode === $DATA['mode'] ? 'checked' : '';  
+    }
+
+    $name = ucwords($mode);
+
+    echo "<label class='btn btn-outline-dark $active'>
+      <input type='radio' name='mode' value='$mode' $checked><a>$name</a>
+    </label>";
+  }
+}
+
+// Prints main content table
+function CreateTable($DATA) {
+  if ($DATA["errorCode"] || !$DATA["search"] || !$DATA["count"]) {
+    return;
+  }
+
+  // Create div and table
+  $table = "<hr><div class='card api-data-table'><table class='table table-striped table-hover mb-0'>";
+
+  // Create table header
+  $table .= "<thead>";
+  // Pick table header based on mode
+  if ($DATA["mode"] === "transfer") {
+    $table .= "<tr><th>Account</th><th>Was account</th><th>Changed</th></tr>";
+  } else {
+    $table .= "<tr><th>Account</th><th>Has character</th><th>In league</th><th>Last seen</th></tr>";
+  }
+  // Close table header
+  $table .= "</thead>";
+
+  // Create table body
+  $table .= "<tbody>";
+  // Fill with data from database
+  foreach ($DATA["resultRows"] as $index => $row) {
+    $table .= $row;
+  }
+  // Close body, table and div
+  $table .= "</tbody>";
+  $table .= "</table></div>";
+
+  // Print the full table
+  echo $table;
+}
+
 //------------------------------------------------------------------------------------------------------------
-// Main table data displaying
+// DB queries
 //------------------------------------------------------------------------------------------------------------
 
+// Pick a function based on mode
 function MakeSearch($pdo, $DATA) {
+  if ($DATA["errorCode"] || $DATA["search"] === null) {
+    return $DATA;
+  }
+  
   switch ($DATA["mode"]) {
     case 'account':   return CharacterSearch ($pdo, $DATA);
     case 'character': return AccountSearch   ($pdo, $DATA);
@@ -99,16 +159,6 @@ function MakeSearch($pdo, $DATA) {
     default:          return $DATA;
   }
 }
-
-function FillTable($DATA) {
-  foreach ($DATA["resultRows"] as $index => $row) {
-    echo $row;
-  }
-}
-
-//------------------------------------------------------------------------------------------------------------
-// DB queries
-//------------------------------------------------------------------------------------------------------------
 
 // Get table sizes
 function GetTotalCounts($pdo, $DATA) {
@@ -285,14 +335,14 @@ function CheckVariableErrors($DATA) {
   }
 
   // Search string too small
-  if ( $DATA["search"] && strlen($DATA["search"]) < 3 ) {
+  if ( $DATA["search"] !== null && strlen($DATA["search"]) < 3 ) {
     $DATA["errorCode"] = 2;
     $DATA["errorMsg"] = "Minimum 3 characters";
     return $DATA;
   }
 
   // Search string too large
-  if ( $DATA["search"] && strlen($DATA["search"]) > 42 ) {
+  if ( $DATA["search"] !== null && strlen($DATA["search"]) > 42 ) {
     $DATA["errorCode"] = 3;
     $DATA["errorMsg"] = "Maximum 42 characters";
     return $DATA;
