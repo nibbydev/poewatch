@@ -972,7 +972,7 @@ function buildSparkLine(item) {
   
   svg.setAttribute("class", "sparkline " + svgColorClass);
   svg.setAttribute("width", 60);
-  svg.setAttribute("height", 25);
+  svg.setAttribute("height", 30);
   svg.setAttribute("stroke-width", 3);
 
   sparkline(svg, item.history.spark);
