@@ -188,8 +188,6 @@ function onRowClick(event) {
   let target = $(event.currentTarget);
   let id = parseInt(target.attr("value"));
 
-  console.log(event)
-
   // If user clicked on a table that does not contain an id
   if (isNaN(id)) {
     return;
@@ -975,7 +973,7 @@ function buildSparkLine(item) {
   svg.setAttribute("height", 30);
   svg.setAttribute("stroke-width", 3);
 
-  sparkline(svg, item.history.spark);
+  sparkline(svg, item.history.values);
 
   return svg.outerHTML;
 }

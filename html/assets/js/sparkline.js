@@ -19,12 +19,30 @@ function buildElement(tag, attrs) {
 }
 
 function scaleValues(values) {
-  var min = Math.min.apply(Math, _toConsumableArray(values));
-  if (min < 0) min *= -1;
+  let firstVal = null;
+  let min = 0;
 
   for (let i = 0; i < values.length; i++) {
     if (values[i] !== null) {
-      values[i] += min;
+      if (firstVal === null) {
+        firstVal = values[i];
+      }
+
+      values[i] = values[i] / firstVal * 100 - 100;
+
+      if (values[i] < min) {
+        min = values[i];
+      }
+    }
+  }
+  
+  if (min < 0) {
+    min *= -1;
+
+    for (let i = 0; i < values.length; i++) {
+      if (values[i] !== null) {
+        values[i] += min;
+      }
     }
   }
 }

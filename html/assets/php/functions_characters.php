@@ -45,7 +45,7 @@ function DisplayMotD($DATA) {
   $relDisplay = "<span class='custom-text-green'>$relDisplay</span>";
   $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-14 00:00:00") . "</span>";
 
-  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations from $timeDisplay.";
+  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations collected from the stash API since $timeDisplay.";
 }
 
 // Display notification
