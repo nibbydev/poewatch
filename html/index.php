@@ -1,5 +1,6 @@
 <?php 
   include_once ( "assets/php/menu.php" ); 
+  include_once ( "assets/php/footer.php" );
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,7 +47,7 @@
     <!-- Menu -->
     <?php GenCatMenuHTML() ?>
     <!--/Menu/-->
-    
+
     <!-- Main content -->
     <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
       <div class="row">
@@ -74,7 +75,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<?php include_once ( "assets/php/footer.php" ); ?>
+<?php GenFooter() ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>

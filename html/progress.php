@@ -1,6 +1,7 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_progress.php" ); 
+  include_once ( "assets/php/footer.php" );
 
   $SERVICE_leagues = GetLeagues($pdo);
 ?>
@@ -66,7 +67,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<?php include_once ( "assets/php/footer.php" ); ?>
+<?php GenFooter() ?>
 <!--/Footer/-->
 <!-- Service script -->
 <script>

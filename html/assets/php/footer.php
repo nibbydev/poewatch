@@ -1,4 +1,5 @@
 <?php
-echo "<footer class='container-fluid text-center'><p>PoeWatch © ";
-echo date('Y');
-echo "</p></footer>";
+function GenFooter() {
+  echo "<footer class='container-fluid text-center'><p>PoeWatch © " . date('Y') . "</p></footer>";
+}
+

@@ -1,6 +1,7 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_characters.php" ); 
+  include_once ( "assets/php/footer.php" );
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -92,7 +93,7 @@
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<?php include_once ( "assets/php/footer.php" ); ?>
+<?php GenFooter() ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>

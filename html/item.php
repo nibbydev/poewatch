@@ -1,5 +1,6 @@
 <?php 
   include_once ( "assets/php/menu.php" ); 
+  include_once ( "assets/php/footer.php" );
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,7 +48,7 @@
     <!-- Menu -->
     <?php GenCatMenuHTML() ?>
     <!--/Menu/-->
-    
+
     <!-- Main content -->
     <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
       <div class="row">
@@ -214,9 +215,11 @@
   </div>
 </div>
 <!--/Page body/-->
+
 <!-- Footer -->
-<?php include_once ( "assets/php/footer.php" ); ?>
+<?php GenFooter() ?>
 <!--/Footer/-->
+
 <!-- Service script -->
 <script>
   var ID      = <?php echo $_GET['id']      ?    $_GET['id']        : 'null'; ?>;
