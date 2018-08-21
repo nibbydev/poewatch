@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------------------------------------------
-// Main block formatting
+// Base HMTL style override
 //----------------------------------------------------------------------------------------------------------*/
 
 html {
@@ -13,37 +13,119 @@ body {
   margin-bottom: 70px;
 }
 
-.custom-card {
-  background-color: #333;
-}
-
-hr {
-  border-color: #282828;
-}
-
-.card-header, .card-footer {
-  background-color: rgba(0,0,0,.2);
-}
-
-.slim-card-edge {
-  padding: .1rem .75rem;
-}
+hr {border-color: #282828}
 
 a {color: #ddd}
 a:hover {color: #bbb}
 
 /*------------------------------------------------------------------------------------------------------------
-// Form elements
+// Img containers
+//----------------------------------------------------------------------------------------------------------*/
+
+/* Base style for containers */
+
+.img-container {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  justify-content: center;
+  text-align: center !important;
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
+}
+.img-container img {
+  max-height: 35px;
+  max-width: 35px;
+  vertical-align: middle;
+}
+
+/* XL image containers */
+
+.img-container-xl {
+  min-width: 100px;
+  max-width: 100px;
+  min-height: 120px;
+  max-height: 120px;
+  background-color: rgba(0,0,0,.15);
+  border-radius: .25rem !important;
+}
+.img-container-xl img {
+  max-height: 120px;
+  max-width: 100px;
+}
+
+/* LG image containers */
+
+.img-container-lg {
+  min-width: 60px;
+  max-width: 60px;
+  min-height: 60px;
+  max-height: 60px;
+}
+.img-container-lg img {
+  max-height: 60px;
+  max-width: 60px;
+}
+
+/* MD image containers */
+
+.img-container-md {
+  min-width: 47px;
+  max-width: 47px;
+  min-height: 47px;
+  max-height: 47px;
+}
+.img-container-md img {
+  max-height: 47px;
+  max-width: 47px;
+}
+
+/* SM image containers */
+
+.img-container-sm {
+  min-width: 35px;
+  max-width: 35px;
+  min-height: 35px;
+  max-height: 35px;
+}
+.img-container-sm img {
+  max-height: 35px;
+  max-width: 35px;
+}
+
+/* XS image containers */
+
+.img-container-xs {
+  min-width: 26px;
+  max-width: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  display: inline-block;
+}
+.img-container-xs img {
+  max-height: 26px;
+  max-width: 26px;
+}
+
+/*------------------------------------------------------------------------------------------------------------
+// Card styling
+//----------------------------------------------------------------------------------------------------------*/
+
+.card-header, 
+.card-footer {background-color: rgba(0,0,0,.2)}
+.custom-card {background-color: #333}
+.slim-card-edge {padding: .1rem .75rem}
+
+/*------------------------------------------------------------------------------------------------------------
+// Form element styling
 //----------------------------------------------------------------------------------------------------------*/
 
 input.form-control,select.form-control {
   background-color: rgba(0,0,0,.1) !important;
   border: 1px solid rgba(255,255,255,.15) !important;
   color: #ddd !important;
-}
-
-option {
-  background-color: #333;
 }
 
 .btn-outline-dark {
@@ -68,22 +150,15 @@ option {
   border-color: #333;
 }
 
-.form-group input {
-  background-color: #222 !important;
-}
+.form-group input {background-color: #222 !important}
+option {background-color: #333}
 
 /*------------------------------------------------------------------------------------------------------------
-// Navbars
+// Navs
 //----------------------------------------------------------------------------------------------------------*/
 
-/* Remove the navbar's default margin-bottom and rounded borders */ 
-.navbar {
-  margin-bottom: 0;
-  border-radius: 0;
-  background-color: #222;
-}
+.navbar {background-color: #222}
 
-/* Set white text and some padding */
 footer {
   padding: 15px;
   background-color: #222;
@@ -104,21 +179,10 @@ footer {
   white-space: nowrap;
   overflow-x: hidden;
 }
-.custom-menu-item.active, 
-.custom-menu-item:hover {
-  background-color: #444;
-}
 
-.custom-menu-img-container {
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-}
-.custom-menu-img-container img {
-  max-height: 30px;
-}
-
-a:hover {text-decoration: none !important}
+.custom-menu-item.active {background-color: #3f3f3f} 
+.custom-menu-item:hover {background-color: #444}
+.custom-sidebar-column a:hover {text-decoration: none !important}
 
 @media (min-width: 1200px) {
   .custom-sidebar-column {
@@ -165,17 +229,9 @@ a:hover {text-decoration: none !important}
 // Progress bars
 //----------------------------------------------------------------------------------------------------------*/
 
-#leagueProgressBar {
-  width: 0%;
-}
-
-.progress {
-  background-color: #444;
-}
-
-.progress-bar {
-  background-color: #888;
-}
+#leagueProgressBar {width: 0%}
+.progress {background-color: #444}
+.progress-bar {background-color: #888}
 
 /*------------------------------------------------------------------------------------------------------------
 // Misc
@@ -221,29 +277,14 @@ a:hover {text-decoration: none !important}
 // Text
 */
 
-.custom-text-red {
-  color: rgb(202, 90, 90);
-}
-.custom-text-orange {
-  color:rgb(202, 163, 90);
-}
-.custom-text-orange-lo {
-  color:rgb(192, 185, 146);
-}
-.custom-text-green {
-  color: rgb(112, 202, 90);
-}
-.custom-text-green-lo {
-  color: rgb(155, 192, 146);
-}
-.custom-text-gray {
-  color: rgb(161, 161, 161);
-}
-.custom-text-dark {
-  color: rgb(88, 88, 88);
-}
-
-.paragraph-text {color: #bbb}
+.custom-text-red        {color: rgb(202, 90, 90)}
+.custom-text-orange     {color: rgb(202, 163, 90)}
+.custom-text-orange-lo  {color: rgb(192, 185, 146)}
+.custom-text-green      {color: rgb(112, 202, 90)}
+.custom-text-green-lo   {color: rgb(155, 192, 146)}
+.custom-text-gray       {color: rgb(161, 161, 161)}
+.custom-text-dark       {color: rgb(88, 88, 88)}
+.paragraph-text         {color: #bbb}
 
 /*------------------------------------------------------------------------------------------------------------
 // Other
@@ -267,6 +308,8 @@ a:hover {text-decoration: none !important}
 .mv-lg {max-width: 992px}
 .mv-md {max-width: 768px}
 .mv-sm {max-width: 576px}
+
+.w-auto {width: auto}
 
 /*------------------------------------------------------------------------------------------------------------
 // Responsive rounded edges

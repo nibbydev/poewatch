@@ -100,11 +100,13 @@ function GenCatMenuHTML() {
 
     echo "<div class='col-xl-12 col-lg-3 col-md-4 col-6 {$data[$i]['order']}'>
       <a href='{$data[$i]['href']}'>
-        <div class='custom-menu-item p-2 {$data[$i]['round']} $active'>
-          <div class='custom-menu-img-container text-center ml-1 mr-2'>
+        <div class='custom-menu-item d-flex p-2 {$data[$i]['round']} $active'>
+          <div class='img-container img-container-sm mr-2'>
             <img src='{$data[$i]['icon']}'>
           </div>
-          {$data[$i]['name']}
+          <div class='align-self-center'>
+            <span>{$data[$i]['name']}</span>
+          </div>
         </div>
       </a>
     </div>";

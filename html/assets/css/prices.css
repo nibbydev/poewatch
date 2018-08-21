@@ -1,95 +1,4 @@
 /*------------------------------------------------------------------------------------------------------------
-// Img containers
-//----------------------------------------------------------------------------------------------------------*/
-
-/* Base style for containers */
-
-.img-container {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  justify-content: center;
-  text-align: center !important;
-  min-width: 35px;
-  max-width: 35px;
-  min-height: 35px;
-  max-height: 35px;
-}
-.img-container img {
-  max-height: 35px;
-  max-width: 35px;
-  vertical-align: middle;
-}
-
-/* XL image containers */
-
-.img-container-xl {
-  min-width: 100px;
-  max-width: 100px;
-  min-height: 120px;
-  max-height: 120px;
-  background-color: rgba(0,0,0,.15);
-  border-radius: .25rem !important;
-}
-.img-container-xl img {
-  max-height: 120px;
-  max-width: 100px;
-}
-
-/* LG image containers */
-
-.img-container-lg {
-  min-width: 60px;
-  max-width: 60px;
-  min-height: 60px;
-  max-height: 60px;
-}
-.img-container-lg img {
-  max-height: 60px;
-  max-width: 60px;
-}
-
-/* MD image containers */
-
-.img-container-md {
-  min-width: 47px;
-  max-width: 47px;
-  min-height: 47px;
-  max-height: 47px;
-}
-.img-container-md img {
-  max-height: 47px;
-  max-width: 47px;
-}
-
-/* SM image containers */
-
-.img-container-sm {
-  min-width: 35px;
-  max-width: 35px;
-  min-height: 35px;
-  max-height: 35px;
-}
-.img-container-sm img {
-  max-height: 35px;
-  max-width: 35px;
-}
-
-/* XS image containers */
-
-.img-container-xs {
-  min-width: 26px;
-  max-width: 26px;
-  min-height: 26px;
-  max-height: 26px;
-  display: inline-block;
-}
-.img-container-xs img {
-  max-height: 26px;
-  max-width: 26px;
-}
-
-/*------------------------------------------------------------------------------------------------------------
 // Price table
 //----------------------------------------------------------------------------------------------------------*/
 
@@ -121,8 +30,6 @@
 /*------------------------------------------------------------------------------------------------------------
 // Second navbar
 //----------------------------------------------------------------------------------------------------------*/
-
-.w-auto {width: auto}
 
 .second-navbar {
   background-color: #2c2c2c;
