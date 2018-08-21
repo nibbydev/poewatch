@@ -1,3 +1,6 @@
+<?php 
+  include_once ( "assets/php/menu.php" ); 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,15 +43,11 @@
 <!-- Page body -->
 <div class="container-fluid pb-4">    
   <div class="row">
+
     <!-- Menu -->
-    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
-      <div class="row mt-4 mb-xl-4">
-
-          <?php include ( "assets/php/menu.php" ) ?>
-
-      </div>
-    </div>
+    <?php GenCatMenuHTML() ?>
     <!--/Menu/-->
+    
     <!-- Main content -->
     <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
       <div class="row">

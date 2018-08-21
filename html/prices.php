@@ -1,6 +1,7 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_prices.php" ); 
+  include_once ( "assets/php/menu.php" ); 
 
   $SERVICE_category = CheckAndGetCategoryParam();
   $SERVICE_categories = GetCategories($pdo, $SERVICE_category);
@@ -76,15 +77,11 @@
 <!-- Page body -->
 <div class="container-fluid pb-4">    
   <div class="row">
+  
     <!-- Menu -->
-    <div class="col-xl-3 custom-sidebar-column"> 
-      <div class="row mt-4 mb-xl-4">
-
-          <?php include ( "assets/php/menu.php" ) ?>
-
-      </div>
-    </div>
+    <?php GenCatMenuHTML() ?>
     <!--/Menu/-->
+
     <!-- Main content -->
     <div class="col-xl-9 col-lg mt-4"> 
       <!-- Title row -->
