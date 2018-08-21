@@ -50,7 +50,7 @@
     <!--/Menu/-->
 
     <!-- Main content -->
-    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4">
+    <div class="col-xl-9 col-lg mt-4">
       <div class="row">
         <div class="col-lg">
           <div class="card custom-card">

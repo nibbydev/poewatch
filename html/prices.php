@@ -49,7 +49,6 @@
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
 <div class="container-fluid second-navbar d-flex justify-content-end align-items-center m-0 py-1 px-2"> 
-
   <div class="form-group live-updates d-flex float-right m-0 mr-3">
     <label for="live-updates" class="m-0 mr-2">Live updates</label>
     <div class="btn-group btn-group-toggle" data-toggle="buttons" id="live-updates">
@@ -61,20 +60,20 @@
       </label>
     </div>
   </div>
-
   <select class="form-control form-control-sm w-auto d-flex float-right" id="search-league">
 
     <?php AddLeagueSelects($SERVICE_leagues); ?>
 
   </select>
-
 </div>
 <!--/Secondary navbar/-->
+<!-- Progressbar -->
 <div class="container-fluid p-0 m-0">  
   <div class="progress progressbar-live m-0">
     <div class="progress-bar bg-secondary" role="progressbar" id="progressbar-live"></div>
   </div>
 </div>
+<!--/Progressbar/-->
 <!-- Page body -->
 <div class="container-fluid pb-4">    
   <div class="row">
