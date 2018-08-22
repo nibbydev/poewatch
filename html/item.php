@@ -17,28 +17,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-md navbar-dark">
-  <div class="container-fluid">
-    <a href="/" class="navbar-brand">
-      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      PoeWatch
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" href="/">Front</a></li>
-        <li class="nav-item"><a class="nav-link active" href="prices">Prices</a></li>
-        <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
-        <li class="nav-item"><a class="nav-link" href="characters">Characters</a></li>
-        <li class="nav-item"><a class="nav-link" href="easybuyout">EasyBuyout</a></li>
-        <li class="nav-item"><a class="nav-link" href="about">About</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<?php GenNavbar() ?>
 <!--/Primary navbar/-->
 <!-- Page body -->
 <div class="container-fluid pb-4">    

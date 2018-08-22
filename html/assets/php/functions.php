@@ -118,3 +118,61 @@ function GenCatMenuHTML() {
 
   echo "</div></div>";
 }
+
+function GenNavbar() {
+  $items = array(
+    array(
+      'display' => 'Front',
+      'href'    => '/'
+    ),
+    array(
+      'display' => 'Prices',
+      'href'    => '/prices'
+    ),
+    array(
+      'display' => 'API',
+      'href'    => '/api'
+    ),
+    array(
+      'display' => 'Progress',
+      'href'    => '/progress'
+    ),
+    array(
+      'display' => 'Characters',
+      'href'    => '/characters'
+    ),
+    array(
+      'display' => 'EasyBuyout',
+      'href'    => '/easybuyout'
+    ),
+    array(
+      'display' => 'About',
+      'href'    => '/about'
+    )
+  );
+
+  echo "
+  <nav class='navbar navbar-expand-md navbar-dark'>
+    <div class='container-fluid'>
+      <a href='/' class='navbar-brand'>
+        <img src='assets/img/favico.png' class='d-inline-block align-top mr-2'>
+        PoeWatch
+      </a>
+      <button class='navbar-toggler' type='button' data-toggle='collapse' data-target='#navbarNavDropdown' aria-controls='navbarNavDropdown' aria-expanded='false' aria-label='Toggle navigation'>
+        <span class='navbar-toggler-icon'></span>
+      </button>
+      <div class='collapse navbar-collapse' id='navbarNavDropdown'>
+        <ul class='navbar-nav mr-auto'>";
+
+  for ($i = 0; $i < sizeof($items); $i++) {
+    $active = $_SERVER['REQUEST_URI'] === $items[$i]['href'] ? 'active' : '';
+    echo "<li class='nav-item'><a class='nav-link $active' href='{$items[$i]['href']}'>{$items[$i]['display']}</a></li>";
+  }
+
+  echo  "
+        </ul>
+      </div>
+    </div>
+  </nav>";
+
+}
