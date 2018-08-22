@@ -1,8 +1,7 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
   include_once ( "assets/php/functions_prices.php" ); 
-  include_once ( "assets/php/menu.php" ); 
-  include_once ( "assets/php/footer.php" );
+  include_once ( "assets/php/functions.php" );
 
   $SERVICE_category = CheckAndGetCategoryParam();
   $SERVICE_categories = GetCategories($pdo, $SERVICE_category);

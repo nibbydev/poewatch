@@ -1,6 +1,5 @@
 <?php 
-  include_once ( "assets/php/menu.php" ); 
-  include_once ( "assets/php/footer.php" );
+  include_once ( "assets/php/functions.php" );
 ?>
 <!DOCTYPE html>
 <html lang="en">
