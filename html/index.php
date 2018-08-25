@@ -1,3 +1,6 @@
+<?php 
+  include_once ( "assets/php/functions.php" );
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,69 +16,43 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<nav class="navbar navbar-expand-md navbar-dark">
-  <div class="container-fluid">
-    <a href="/" class="navbar-brand">
-      <img src="assets/img/favico.png" class="d-inline-block align-top mr-2">
-      PoeWatch
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link active" href="/">Front</a></li>
-        <li class="nav-item"><a class="nav-link" href="prices">Prices</a></li>
-        <li class="nav-item"><a class="nav-link" href="api">API</a></li>
-        <li class="nav-item"><a class="nav-link" href="progress">Progress</a></li>
-        <li class="nav-item"><a class="nav-link" href="characters">Characters</a></li>
-        <li class="nav-item"><a class="nav-link" href="easybuyout">EasyBuyout</a></li>
-        <li class="nav-item"><a class="nav-link" href="about">About</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<?php GenNavbar() ?>
 <!--/Primary navbar/-->
 <!-- Page body -->
-<div class="container-fluid pb-4">
+<div class="container-fluid">
   <div class="row">
-    <!-- Menu -->
-    <div class="col-xl-3 custom-sidebar-column col-lg-10 offset-xl-0 offset-lg-1 offset-md-0"> 
-      <div class="row mt-4 mb-xl-4">
+    <div class="col d-flex my-3">
 
-          <?php include ( "assets/php/menu.php" ) ?>
+      <!-- Menu -->
+      <?php GenCatMenuHTML() ?>
+      <!--/Menu/-->
 
-      </div>
-    </div>
-    <!--/Menu/-->
-    <!-- Main content -->
-    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
-      <div class="row">
-        <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-header">
-              <h2 class="text-center">PoeWatch</h2>
-            </div>
-            <div class="card-body">
-              <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">
-              <h5>Overview</h5>
-              <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
-              <h5>The general idea</h5>
-              <p>The general goal is to combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> with a nice sleek style while being as user friendly as possible.</a></p>
-              <h5>The API</h5>
-              <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
-            </div>
-            <div class="card-footer slim-card-edge"></div>
+      <!-- Main content -->
+      <div> 
+        <div class="card custom-card">
+          <div class="card-header">
+            <h2 class="text-center">PoeWatch</h2>
           </div>
+          <div class="card-body">
+            <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">
+            <h5>Overview</h5>
+            <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
+            <h5>The general idea</h5>
+            <p>The general goal is to combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> with a nice sleek style while being as user friendly as possible.</a></p>
+            <h5>The API</h5>
+            <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
+          </div>
+          <div class="card-footer slim-card-edge"></div>
         </div>
       </div>
+      <!--/Main content/-->
+
     </div>
-    <!--/Main content/-->
   </div>
 </div>
 <!--/Page body/-->
 <!-- Footer -->
-<?php include_once ( "assets/php/footer.php" ); ?>
+<?php GenFooter() ?>
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
