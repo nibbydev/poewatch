@@ -19,36 +19,35 @@
 <?php GenNavbar() ?>
 <!--/Primary navbar/-->
 <!-- Page body -->
-<div class="container-fluid pb-4">
+<div class="container-fluid">
   <div class="row">
+    <div class="col d-flex my-3">
 
-    <!-- Menu -->
-    <?php GenCatMenuHTML() ?>
-    <!--/Menu/-->
+      <!-- Menu -->
+      <?php GenCatMenuHTML() ?>
+      <!--/Menu/-->
 
-    <!-- Main content -->
-    <div class="col-xl-9 col-lg-10 offset-xl-0 offset-lg-1 offset-md-0 mt-4"> 
-      <div class="row">
-        <div class="col-lg">
-          <div class="card custom-card">
-            <div class="card-header">
-              <h2 class="text-center">PoeWatch</h2>
-            </div>
-            <div class="card-body">
-              <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">
-              <h5>Overview</h5>
-              <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
-              <h5>The general idea</h5>
-              <p>The general goal is to combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> with a nice sleek style while being as user friendly as possible.</a></p>
-              <h5>The API</h5>
-              <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
-            </div>
-            <div class="card-footer slim-card-edge"></div>
+      <!-- Main content -->
+      <div> 
+        <div class="card custom-card">
+          <div class="card-header">
+            <h2 class="text-center">PoeWatch</h2>
           </div>
+          <div class="card-body">
+            <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">
+            <h5>Overview</h5>
+            <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
+            <h5>The general idea</h5>
+            <p>The general goal is to combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> with a nice sleek style while being as user friendly as possible.</a></p>
+            <h5>The API</h5>
+            <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
+          </div>
+          <div class="card-footer slim-card-edge"></div>
         </div>
       </div>
+      <!--/Main content/-->
+
     </div>
-    <!--/Main content/-->
   </div>
 </div>
 <!--/Page body/-->
