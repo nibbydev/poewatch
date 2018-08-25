@@ -2,12 +2,6 @@
 // Price table
 //----------------------------------------------------------------------------------------------------------*/
 
-.namebox {
-  display: flex;
-  align-items: center;
-  /*white-space: nowrap;*/
-}
-
 /* Styling for central table */
 .price-table, 
 .price-table > thead > tr > th,
