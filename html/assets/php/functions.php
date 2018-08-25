@@ -165,7 +165,7 @@ function GenNavbar() {
         <ul class='navbar-nav mr-auto'>";
 
   for ($i = 0; $i < sizeof($items); $i++) {
-    $active = $_SERVER['REQUEST_URI'] === $items[$i]['href'] ? 'active' : '';
+    $active = explode('?', $_SERVER['REQUEST_URI'])[0] === $items[$i]['href'] ? 'active' : '';
     echo "<li class='nav-item'><a class='nav-link $active' href='{$items[$i]['href']}'>{$items[$i]['display']}</a></li>";
   }
 
