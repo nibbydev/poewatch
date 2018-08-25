@@ -117,6 +117,7 @@ a:hover {color: #bbb}
 .card-footer {background-color: rgba(0,0,0,.2)}
 .custom-card {background-color: #333}
 .slim-card-edge {padding: .1rem .75rem}
+.body-boundaries {max-width: 1200px}
 
 /*------------------------------------------------------------------------------------------------------------
 // Form element styling

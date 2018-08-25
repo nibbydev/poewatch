@@ -62,247 +62,248 @@
       <!--/Menu/-->
 
       <!-- Main content -->
-      <div> 
+      <div class="d-flex w-100 justify-content-center"> 
+        <div class='body-boundaries w-100'>
+          <!-- MotD -->
+          <div class="row d-block mb-3">
+            <div class="col"> 
+              <div class="card custom-card">
+                <div class="card-header slim-card-edge"></div>
+                <div class="card-body p-1">
 
-        <!-- MotD -->
-        <div class="row d-block mb-3">
-          <div class="col"> 
-            <div class="card custom-card">
-              <div class="card-header slim-card-edge"></div>
-              <div class="card-body p-1">
+                  <?php AddMotdMessage($SERVICE_category); ?>
 
-                <?php AddMotdMessage($SERVICE_category); ?>
-
+                </div>
+                <div class="card-footer slim-card-edge"></div>
               </div>
-              <div class="card-footer slim-card-edge"></div>
             </div>
           </div>
-        </div>
-        <!--/MotD/-->
+          <!--/MotD/-->
 
-        <?php if ($SERVICE_category === "gems"): ?>
-        
-        <!-- Gem field row -->
-        <div class="row mb-3 gem-fields">
-          <div class="col-6 col-md-4 mb-2 order-1 order-sm-1 order-md-1 mb-3">
-            <h4>Corrupted</h4>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
-              <label class="btn btn-outline-dark active">
-                <input type="radio" name="corrupted" value="all">Both
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="corrupted" value="0">No
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="corrupted" value="1" checked>Yes
-              </label>
+          <?php if ($SERVICE_category === "gems"): ?>
+          
+          <!-- Gem field row -->
+          <div class="row mb-3 gem-fields">
+            <div class="col-6 col-md-4 mb-2 order-1 order-sm-1 order-md-1 mb-3">
+              <h4>Corrupted</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-corrupted">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="corrupted" value="all">Both
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="corrupted" value="0">No
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="corrupted" value="1" checked>Yes
+                </label>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 mb-2 order-3 order-sm-3 order-md-2">
-            <h4>Level</h4>
-            <div class="form-group">
-              <select class="form-control" id="select-level">
-                <option value="all" selected>All</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="21">21</option>
-              </select>
+            <div class="col-6 col-md-4 mb-2 order-3 order-sm-3 order-md-2">
+              <h4>Level</h4>
+              <div class="form-group">
+                <select class="form-control" id="select-level">
+                  <option value="all" selected>All</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="21">21</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 mb-2 order-5 order-sm-5 order-md-3">
-            <h4>Quality</h4>
-            <div class="form-group">
-              <select class="form-control" id="select-quality">
-                <option value="all" selected>All</option>
-                <option value="0">0</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="23">23</option>
-              </select>
+            <div class="col-6 col-md-4 mb-2 order-5 order-sm-5 order-md-3">
+              <h4>Quality</h4>
+              <div class="form-group">
+                <select class="form-control" id="select-quality">
+                  <option value="all" selected>All</option>
+                  <option value="0">0</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="23">23</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 mb-2 order-2 order-sm-2 order-md-4 mb-3">
-            <h4 class='nowrap'>Low count</h4>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-              <label class="btn btn-outline-dark active">
-                <input type="radio" name="confidence" value="0" checked><a>Hide</a>
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="confidence" value="1"><a>Show</a>
-              </label>
+            <div class="col-6 col-md-4 mb-2 order-2 order-sm-2 order-md-4 mb-3">
+              <h4 class='nowrap'>Low count</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="confidence" value="1"><a>Show</a>
+                </label>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-md-4 mb-2 order-4 order-sm-4 order-md-5">
-            <h4>Category</h4>
-            <select class="form-control custom-select" id="search-sub">
-            
-              <?php AddSubCategorySelectors($SERVICE_categories); ?>
-
-            </select>
-          </div>
-          <div class="col-6 col-md-4 mb-2 order-6 order-sm-6 order-md-6">
-            <h4>Search</h4>
-            <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-          </div>
-        </div>
-        <!--/Gem field row/-->
-
-        <?php elseif ($SERVICE_category === "armour" || $SERVICE_category === "weapons"): ?>
-
-        <!-- Link + generic field row -->
-        <div class="row mb-3">
-          <div class="col-6 col-md-3 mb-2">
-            <h4 class='nowrap'>Low count</h4>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-              <label class="btn btn-outline-dark active">
-                <input type="radio" name="confidence" value="0" checked><a>Hide</a>
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="confidence" value="1"><a>Show</a>
-              </label>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 mb-2 link-fields">
-            <h4>Links</h4>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
-              <label class="btn btn-outline-dark active">
-                <input type="radio" name="links" value="none" checked>None
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="links" value="5">5L
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="links" value="6">6L
-              </label>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 mb-2">
-            <h4>Category</h4>
-            <select class="form-control custom-select" id="search-sub">
-
-              <?php AddSubCategorySelectors($SERVICE_categories); ?>
-
-            </select>
-          </div>
-          <div class="col-6 col-md-3 mb-2">
-            <h4>Search</h4>
-            <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-          </div>
-        </div>
-        <!--/Link + generic field row/-->
-
-        <?php elseif ($SERVICE_category === "maps"): ?>
-
-        <!-- Map tier + generic field row -->
-        <div class="row mb-3">
-          <div class="col-6 col-md-3 mb-2">
-            <h4 class='nowrap'>Low count</h4>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-              <label class="btn btn-outline-dark active">
-                <input type="radio" name="confidence" value="0" checked><a>Hide</a>
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="confidence" value="1"><a>Show</a>
-              </label>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 mb-2 link-fields">
-            <h4>Tier</h4>
-            <div class="form-group">
-              <select class="form-control" id="select-tier">
-                <option value="all" selected>All</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">3</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-                <option value="13">13</option>
-                <option value="14">14</option>
-                <option value="15">15</option>
-                <option value="16">16</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 mb-2">
-            <h4>Category</h4>
-            <select class="form-control custom-select" id="search-sub">
-
-              <?php AddSubCategorySelectors($SERVICE_categories); ?>
-
-            </select>
-          </div>
-          <div class="col-6 col-md-3 mb-2">
-            <h4>Search</h4>
-            <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-          </div>
-        </div>
-        <!--/Map tier + generic field row/-->
-
-        <?php else: ?>
-
-        <!-- Generic field row -->
-        <div class="row mb-3">
-          <div class="col-6 col-md-3 mb-2">
-            <h4 class='nowrap'>Low count</h4>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-              <label class="btn btn-outline-dark active">
-                <input type="radio" name="confidence" value="0" checked><a>Hide</a>
-              </label>
-              <label class="btn btn-outline-dark">
-                <input type="radio" name="confidence" value="1"><a>Show</a>
-              </label>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 mb-2 offset-md-3">
-            <h4>Category</h4>
-            <select class="form-control custom-select" id="search-sub">
-            
-              <?php AddSubCategorySelectors($SERVICE_categories); ?>
-            
-            </select>
-          </div>
-          <div class="col-6 col-md-3 mb-2 offset-md-0 offset-6">
-            <h4>Search</h4>
-            <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-          </div>
-        </div>
-        <!--/Generic field row/-->
-
-        <?php endif; ?>
-
-        <!-- Main table -->
-        <div class="card custom-card">
-          <div class="card-header slim-card-edge"></div>
-          <div class="card-body p-2">
-            <table class="table price-table table-striped table-hover mb-0" id="searchResults">
-              <thead>
-                <tr>
+            <div class="col-6 col-md-4 mb-2 order-4 order-sm-4 order-md-5">
+              <h4>Category</h4>
+              <select class="form-control custom-select" id="search-sub">
               
-                  <?php AddTableHeaders($SERVICE_category); ?>
-              
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-            <div class="loadall mt-2">
-              <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
+                <?php AddSubCategorySelectors($SERVICE_categories); ?>
+
+              </select>
+            </div>
+            <div class="col-6 col-md-4 mb-2 order-6 order-sm-6 order-md-6">
+              <h4>Search</h4>
+              <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
             </div>
           </div>
-          <div class="card-footer slim-card-edge"></div>
-        </div>
-        <!--/Main table/-->
+          <!--/Gem field row/-->
 
+          <?php elseif ($SERVICE_category === "armour" || $SERVICE_category === "weapons"): ?>
+
+          <!-- Link + generic field row -->
+          <div class="row mb-3">
+            <div class="col-6 col-md-3 mb-2">
+              <h4 class='nowrap'>Low count</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="confidence" value="1"><a>Show</a>
+                </label>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2 link-fields">
+              <h4>Links</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="links" value="none" checked>None
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="links" value="5">5L
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="links" value="6">6L
+                </label>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+              <h4>Category</h4>
+              <select class="form-control custom-select" id="search-sub">
+
+                <?php AddSubCategorySelectors($SERVICE_categories); ?>
+
+              </select>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+              <h4>Search</h4>
+              <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+            </div>
+          </div>
+          <!--/Link + generic field row/-->
+
+          <?php elseif ($SERVICE_category === "maps"): ?>
+
+          <!-- Map tier + generic field row -->
+          <div class="row mb-3">
+            <div class="col-6 col-md-3 mb-2">
+              <h4 class='nowrap'>Low count</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="confidence" value="1"><a>Show</a>
+                </label>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2 link-fields">
+              <h4>Tier</h4>
+              <div class="form-group">
+                <select class="form-control" id="select-tier">
+                  <option value="all" selected>All</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">3</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+              <h4>Category</h4>
+              <select class="form-control custom-select" id="search-sub">
+
+                <?php AddSubCategorySelectors($SERVICE_categories); ?>
+
+              </select>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+              <h4>Search</h4>
+              <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+            </div>
+          </div>
+          <!--/Map tier + generic field row/-->
+
+          <?php else: ?>
+
+          <!-- Generic field row -->
+          <div class="row mb-3">
+            <div class="col-6 col-md-3 mb-2">
+              <h4 class='nowrap'>Low count</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="confidence" value="1"><a>Show</a>
+                </label>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2 offset-md-3">
+              <h4>Category</h4>
+              <select class="form-control custom-select" id="search-sub">
+              
+                <?php AddSubCategorySelectors($SERVICE_categories); ?>
+              
+              </select>
+            </div>
+            <div class="col-6 col-md-3 mb-2 offset-md-0 offset-6">
+              <h4>Search</h4>
+              <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+            </div>
+          </div>
+          <!--/Generic field row/-->
+
+          <?php endif; ?>
+
+          <!-- Main table -->
+          <div class="card custom-card">
+            <div class="card-header slim-card-edge"></div>
+            <div class="card-body p-2">
+              <table class="table price-table table-striped table-hover mb-0" id="searchResults">
+                <thead>
+                  <tr>
+                
+                    <?php AddTableHeaders($SERVICE_category); ?>
+                
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+              <div class="loadall mt-2">
+                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
+              </div>
+            </div>
+            <div class="card-footer slim-card-edge"></div>
+          </div>
+          <!--/Main table/-->
+
+        </div>
       </div>
       <!--/Main content/-->
 
