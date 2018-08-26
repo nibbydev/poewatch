@@ -201,6 +201,8 @@ function onRowClick(event) {
     return;
   } else if (event.target.href) {
     return;
+  } else if (event.target.parentElement.href) {
+    return;
   }
 
   // Get rid of any filler rows
