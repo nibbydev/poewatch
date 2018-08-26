@@ -760,9 +760,10 @@ public class Database {
                         "  LIMIT  1); ";
 
         String query2 = "UPDATE data_leagues " +
-                        "SET    start   = ?, " +
-                        "       end     = ? " +
-                        "WHERE  name    = ? " +
+                        "SET    start    = ?, " +
+                        "       end      = ?, " +
+                        "       upcoming = 0 " +
+                        "WHERE  name     = ? " +
                         "LIMIT  1; ";
 
         try {
