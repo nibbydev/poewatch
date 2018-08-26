@@ -1094,8 +1094,15 @@ function checkHideItem(item) {
 
   // String search
   if (FILTER.search) {
-    if (item.name && item.name.toLowerCase().indexOf(FILTER.search) === -1) return true;
-    if (item.type && item.type.toLowerCase().indexOf(FILTER.search) === -1) return true;
+    if (item.name.toLowerCase().indexOf(FILTER.search) === -1) {
+      if (item.type) {
+        if (item.type.toLowerCase().indexOf(FILTER.search) === -1) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
   }
 
   // Hide sub-categories
