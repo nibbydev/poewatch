@@ -305,3 +305,31 @@ footer {
 .w-auto {width: auto}
 
 .nowrap {white-space: nowrap}
+
+
+/*------------------------------------------------------------------------------------------------------------
+// Buffering
+//----------------------------------------------------------------------------------------------------------*/
+
+.buffering {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+}
+
+.buffering:after {
+  content: " ";
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  border-color: #ccc transparent #ccc transparent;
+  animation: buffering 1.2s linear infinite;
+}
+
+@keyframes buffering {
+  0%   {transform: rotate(0deg)}
+  100% {transform: rotate(360deg)}
+}

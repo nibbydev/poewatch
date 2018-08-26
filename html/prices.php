@@ -284,7 +284,7 @@
           <!-- Main table -->
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
-            <div class="card-body p-2">
+            <div class="card-body d-flex flex-column p-2">
               <table class="table price-table table-striped table-hover mb-0" id="searchResults">
                 <thead>
                   <tr>
@@ -295,6 +295,7 @@
                 </thead>
                 <tbody></tbody>
               </table>
+              <div class="buffering align-self-center mb-2"></div>
               <div class="loadall mt-2">
                 <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
               </div>

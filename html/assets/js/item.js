@@ -42,6 +42,9 @@ function makeHistoryRequest(id) {
     }
     ITEM = tmp;
 
+    $(".buffering").hide();
+    createContent();
+
     createCharts();
     fillData();
     createSelectorFields(leagues);
@@ -49,121 +52,158 @@ function makeHistoryRequest(id) {
   });
 }
 
-function formatHistory(leaguePayload) {
-  let vals = [], keys = [];
-
-  // Skip Hardcore (id 1) and Standard (id 2)
-  if (leaguePayload.leagueId > 2) {
-    // Because javascript is "special"
-    let size = Object.keys(leaguePayload.history).length;
-
-    // Convert date strings into dates
-    let endDate = new Date(leaguePayload.leagueEnd);
-    let startDate = new Date(leaguePayload.leagueStart);
-
-    // Get difference in days between the two dates
-    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
-    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+function createContent() {
+  let template = `
+  <!-- Ico+name+league+price row -->
+  <div class="row d-flex mx-1">
+    <div class="col d-flex p-0">
     
-    // Bloat if less entries than league duration
-    for (let i = 0; i < dateDiff - size; i++) {
-      vals.push(null);
-      keys.push(null);
-    }
+      <!-- Large ico col -->
+      <div class="d-flex">
+        <div class="img-container img-container-xl mr-3">
+          <img id="item-icon">
+        </div>
+      </div>
+      <!--/Large ico col/-->
 
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        keys.push(formatDate(key));
+      <!-- Name+league col -->
+      <div class="d-flex flex-column justify-content-around mr-5">
+        <div>
+          <h4 id="item-name"></h4>
+        </div>
+        <div class="d-flex">
+          <h5 class="mr-2">League</h5>
+          <select class="form-control form-control-sm w-auto" id="history-league-selector"></select>
+        </div>
+      </div>
+      <!--/Name+league col/-->
 
-        if (leaguePayload.history[key] === null) {
-          vals.push(0);
-        } else {
-          switch (HISTORY_DATASET) {
-            case 1: vals.push(leaguePayload.history[key].mean);     break;
-            case 2: vals.push(leaguePayload.history[key].median);   break;
-            case 3: vals.push(leaguePayload.history[key].mode);     break;
-            case 4: vals.push(leaguePayload.history[key].quantity); break;
-            default:                                                break;
-          }
-        }
-      }
-    }
-  } else {
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        if (leaguePayload.history[key] === null) {
-          keys.push(null);
-          vals.push(null);
-        } else {
-          keys.push(formatDate(key));
+      <!-- Large price col -->
+      <div class="d-flex flex-column justify-content-around">
+        <div class="d-flex">
+          <div class="img-container img-container-md mr-1">
+            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+          </div>
+          <div class="align-self-center">
+            <h4 id="item-chaos"></h4>
+          </div>
+        </div>
+        <div class="d-flex">
+          <div class="img-container img-container-md mr-1">
+            <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+          </div>
+          <div class="align-self-center">
+            <h4 id="item-exalt"></h4>
+          </div>
+        </div>
+      </div>
+      <!--/Large price col/-->
 
-          switch (HISTORY_DATASET) {
-            case 1: vals.push(leaguePayload.history[key].mean);     break;
-            case 2: vals.push(leaguePayload.history[key].median);   break;
-            case 3: vals.push(leaguePayload.history[key].mode);     break;
-            case 4: vals.push(leaguePayload.history[key].quantity); break;
-            default:                                                break;
-          }
-        }
-      }
-    }
-  }
+    </div>
+  </div>
+  <!--/Ico+name+league+price row/-->
 
-  // Add current values
-  switch (HISTORY_DATASET) {
-    case 1: vals.push(leaguePayload.mean);     keys.push("Right now");      break;
-    case 2: vals.push(leaguePayload.median);   keys.push("Right now");      break;
-    case 3: vals.push(leaguePayload.mode);     keys.push("Right now");      break;
-    case 4: vals.push(leaguePayload.quantity); keys.push("Last 24 hours");  break;
-    default:                                                                break;
-  }
+  <hr>
 
-  // Return generated data
-  return {
-    'keys': keys,
-    'vals': vals
-  }
-}
+  <!-- Small chart row -->
+  <div class='row m-1'>
+    <div class='col-md'>
+      <h4>Chaos value</h4>
+      <div class='chart-small'><canvas id="chart-price"></canvas></div>
+    </div>
+    <div class='col-md'>
+      <h4>Listed per 24h</h4>
+      <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
+    </div>
+  </div>
+  <!--/Small chart row/-->
 
-function formatWeek(leaguePayload) {
-  // Because javascript is "special"
-  let size = Object.keys(leaguePayload.history).length;
-  let means = [], quants = [], count = 0;
+  <hr>
 
-  // If less than 7 entries, need to bloat
-  for (let i = 0; i < 7 - size; i++) {
-    means.push(null);
-    quants.push(null);
-  }
+  <!-- Details table row -->
+  <div class='row m-1 mt-2'>
+    <div class='col-md'>
+      <table class="table table-sm details-table table-striped table-hover">
+        <tbody>
+          <tr>
+            <td>Mean</td>
+            <td>
+              <span class="img-container img-container-xs mr-1">
+                <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+              </span>
+              <span id='details-table-mean'></span>
+            </td>
+          </tr>
+          <tr>
+            <td>Median</td>
+            <td>
+              <span class="img-container img-container-xs mr-1">
+                <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+              </span>
+              <span id='details-table-median'></span>
+            </td>
+          </tr>
+          <tr>
+            <td>Mode</td>
+            <td>
+              <span class="img-container img-container-xs mr-1">
+                <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+              </span>
+              <span id='details-table-mode'></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class='col-md'>
+      <table class="table table-sm details-table table-striped table-hover">
+        <tbody>
+          <tr>
+            <td>Total amount listed</td>
+            <td>
+              <span id='details-table-count'></span>
+            </td>
+          </tr>
+          <tr>
+            <td>Listed every 24h</td>
+            <td>
+              <span id='details-table-1d'></span>
+            </td>
+          </tr>
+          <tr>
+            <td>Price in exalted</td>
+            <td>
+              <span class="img-container img-container-xs mr-1">
+                <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
+              </span>
+              <span id='details-table-exalted'></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!--/Details table row/-->
 
-  // Grab latest 7 values
-  for (var key in leaguePayload.history) {
-    if (leaguePayload.history.hasOwnProperty(key)) {
-      if (size - count++ <= 7) {
-        if (leaguePayload.history[key] === null) {
-          means.push(null);
-          quants.push(null);
-        } else {
-          means.push(leaguePayload.history[key].mean);
-          quants.push(leaguePayload.history[key].quantity);
-        }
-      }
-    }
-  }
+  <hr>
+  
+  <!-- Past data row -->
+  <div class='row m-1 mb-3'>
+    <div class='col-sm'>
+      <h4>Past data</h4>
+      <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
+        <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+        <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+        <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+        <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+      </div>
+      <div class='chart-large'><canvas id="chart-past"></canvas></div>
+    </div>
+  </div>
+  <!--/Past data row/-->
+  `.trim();
 
-  // Add today's values
-  means.push(leaguePayload.mean);
-  quants.push(leaguePayload.quantity);
-
-  // Return generated data
-  return {
-    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
-    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
-    'means': means,
-    'quants': quants
-  }
+  $("#content").append(template);
 }
 
 function createCharts() {
@@ -406,6 +446,123 @@ function fixIcon(icon) {
 //------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
+
+function formatHistory(leaguePayload) {
+  let vals = [], keys = [];
+
+  // Skip Hardcore (id 1) and Standard (id 2)
+  if (leaguePayload.leagueId > 2) {
+    // Because javascript is "special"
+    let size = Object.keys(leaguePayload.history).length;
+
+    // Convert date strings into dates
+    let endDate = new Date(leaguePayload.leagueEnd);
+    let startDate = new Date(leaguePayload.leagueStart);
+
+    // Get difference in days between the two dates
+    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    
+    // Bloat if less entries than league duration
+    for (let i = 0; i < dateDiff - size; i++) {
+      vals.push(null);
+      keys.push(null);
+    }
+
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        keys.push(formatDate(key));
+
+        if (leaguePayload.history[key] === null) {
+          vals.push(0);
+        } else {
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
+          }
+        }
+      }
+    }
+  } else {
+    // Grab values
+    for (var key in leaguePayload.history) {
+      if (leaguePayload.history.hasOwnProperty(key)) {
+        if (leaguePayload.history[key] === null) {
+          keys.push(null);
+          vals.push(null);
+        } else {
+          keys.push(formatDate(key));
+
+          switch (HISTORY_DATASET) {
+            case 1: vals.push(leaguePayload.history[key].mean);     break;
+            case 2: vals.push(leaguePayload.history[key].median);   break;
+            case 3: vals.push(leaguePayload.history[key].mode);     break;
+            case 4: vals.push(leaguePayload.history[key].quantity); break;
+            default:                                                break;
+          }
+        }
+      }
+    }
+  }
+
+  // Add current values
+  switch (HISTORY_DATASET) {
+    case 1: vals.push(leaguePayload.mean);     keys.push("Right now");      break;
+    case 2: vals.push(leaguePayload.median);   keys.push("Right now");      break;
+    case 3: vals.push(leaguePayload.mode);     keys.push("Right now");      break;
+    case 4: vals.push(leaguePayload.quantity); keys.push("Last 24 hours");  break;
+    default:                                                                break;
+  }
+
+  // Return generated data
+  return {
+    'keys': keys,
+    'vals': vals
+  }
+}
+
+function formatWeek(leaguePayload) {
+  // Because javascript is "special"
+  let size = Object.keys(leaguePayload.history).length;
+  let means = [], quants = [], count = 0;
+
+  // If less than 7 entries, need to bloat
+  for (let i = 0; i < 7 - size; i++) {
+    means.push(null);
+    quants.push(null);
+  }
+
+  // Grab latest 7 values
+  for (var key in leaguePayload.history) {
+    if (leaguePayload.history.hasOwnProperty(key)) {
+      if (size - count++ <= 7) {
+        if (leaguePayload.history[key] === null) {
+          means.push(null);
+          quants.push(null);
+        } else {
+          means.push(leaguePayload.history[key].mean);
+          quants.push(leaguePayload.history[key].quantity);
+        }
+      }
+    }
+  }
+
+  // Add today's values
+  means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);
+
+  // Return generated data
+  return {
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
+    'means': means,
+    'quants': quants
+  }
+}
 
 function formatNum(num) {
   const numberWithCommas = (x) => {

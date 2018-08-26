@@ -240,7 +240,6 @@ function onRowClick(event) {
 
     // Display a filler row
     displayFillerRow();
-
     makeHistoryRequest(id);
   }
 }
@@ -248,74 +247,8 @@ function onRowClick(event) {
 function displayFillerRow() {
   let template = `
   <tr class='filler-row'><td colspan='100'>
-    <div class='row m-1'>
-      <div class='col-sm'>
-        <h4>League</h4>
-        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1'>
-      <div class='col-md'>
-        <h4>Chaos value</h4>
-        <div class='chart-small'><canvas id="chart-price"></canvas></div>
-      </div>
-      <div class='col-md'>
-        <h4>Listed per 24h</h4>
-        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mt-2'>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
-          <tbody>
-            <tr>
-              <td>Mean</td>
-              <td>{{mean}}</td>
-            </tr>
-            <tr>
-              <td>Median</td>
-              <td>{{median}}</td>
-            </tr>
-            <tr>
-              <td>Mode</td>
-              <td>{{mode}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
-          <tbody>
-            <tr>
-              <td>Total amount listed</td>
-              <td>{{count}}</td>
-            </tr>
-            <tr>
-              <td>Listed every 24h</td>
-              <td>{{1d}}</td>
-            </tr>
-            <tr>
-              <td>Price in exalted</td>
-              <td>{{exalted}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mb-3'>
-      <div class='col-sm'>
-        <h4>Past data</h4>
-        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
-        </div>
-        <div class='chart-large'><canvas id="chart-past"></canvas></div>
-      </div>
+    <div class="d-flex justify-content-center">
+      <div class="buffering m-2"></div>
     </div>
   </td></tr>
   `.trim();
@@ -756,6 +689,9 @@ function getItemHistoryLeagues(id) {
 //------------------------------------------------------------------------------------------------------------
 
 function makeGetRequest(league, category) {
+  $("#searchResults tbody").empty();
+  $(".buffering").show();
+
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
@@ -769,6 +705,7 @@ function makeGetRequest(league, category) {
 
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
+    $(".buffering").hide();
 
     let items = parseRequest(json);
     sortResults(items);
