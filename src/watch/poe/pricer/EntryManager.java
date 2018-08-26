@@ -2,13 +2,13 @@ package watch.poe.pricer;
 
 import com.google.gson.Gson;
 import watch.poe.*;
-import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.itemdata.ItemdataEntry;
-import watch.poe.relations.CategoryEntry;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class EntryManager extends Thread {
@@ -103,57 +103,71 @@ public class EntryManager extends Thread {
     }
 
     public void generateOutputFiles() {
-        List<String> oldOutputFiles = new ArrayList<>();
-        List<String> newOutputFiles = new ArrayList<>();
+        List<String> oldFiles = new ArrayList<>();
+        List<FileEntry> newFiles = new ArrayList<>();
 
-        Main.DATABASE.getOutputFiles(oldOutputFiles);
+        Main.DATABASE.getOutputFiles(oldFiles);
         Config.folder_output_get.mkdirs();
 
-        for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-            Integer leagueId = leagueEntry.getId();
-            String league = leagueEntry.getName();
+        // Process database data and write it to file as JSON
+        Main.DATABASE.getOutputData(newFiles);
 
-            for (Map.Entry<String, CategoryEntry> category : Main.RELATIONS.getCategoryRelations().entrySet()) {
-                List<ParcelEntry> parcelEntryList = new ArrayList<>();
-                int categoryId = category.getValue().getId();
+        // Update database file pointers
+        Main.DATABASE.addNewFilePaths(newFiles);
 
-                // Get data from database
-                Main.DATABASE.getOutputData(leagueId, categoryId, parcelEntryList);
+        // Delete old unused files
+        deleteGetFiles(oldFiles, newFiles);
+    }
 
-                String fileName = league + "_" + category.getKey() + "_" + System.currentTimeMillis() + ".json";
-                File outputFile = new File(Config.folder_output_get, fileName);
+    public String writeGetFile(List<ParcelEntry> parcelEntryList, String league, String category) {
+        // Replace spaces in league name
+        league = league.replace(' ', '-');
 
-                try (Writer writer = Misc.defineWriter(outputFile)) {
-                    if (writer == null) throw new IOException();
-                    gson.toJson(parcelEntryList, writer);
-                } catch (IOException ex) {
-                    Main.ADMIN._log(ex, 4);
-                    Main.ADMIN.log_("Couldn't write output JSON to file", 3);
-                }
+        String fileName = String.format("%s_%s_%d.json", league, category, System.currentTimeMillis());
+        File outputFile = new File(Config.folder_output_get, fileName);
 
-                try {
-                    String path = outputFile.getCanonicalPath();
-                    newOutputFiles.add(path);
-                    Main.DATABASE.addOutputFile(league, category.getKey(), path);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    Main.ADMIN.log_("Couldn't get file's actual path", 3);
-                }
-
-                System.out.printf("Created %s\n", fileName);
-            }
+        try (Writer writer = Misc.defineWriter(outputFile)) {
+            if (writer == null) throw new IOException();
+            gson.toJson(parcelEntryList, writer);
+        } catch (IOException ex) {
+            Main.ADMIN._log(ex, 4);
+            Main.ADMIN.log_("Couldn't write output JSON to file", 3);
         }
 
-        File[] outputFiles = Config.folder_output_get.listFiles();
-        if (outputFiles == null) return;
+        try {
+            return outputFile.getCanonicalPath();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Couldn't get file's actual path", 3);
+        }
+
+        return null;
+    }
+
+    private void deleteGetFiles(List<String> oldFiles, List<FileEntry> newFiles) {
+        File[] currentFiles = Config.folder_output_get.listFiles();
+        if (currentFiles == null) return;
 
         try {
-            for (File outputFile : outputFiles) {
-                if (oldOutputFiles.contains(outputFile.getCanonicalPath())) continue;
-                if (newOutputFiles.contains(outputFile.getCanonicalPath())) continue;
+            for (File currentFile : currentFiles) {
+                String currentCanonicalPath = currentFile.getCanonicalPath();
 
-                boolean success = outputFile.delete();
-                if (!success) Main.ADMIN.log_("Could not delete old output file", 3);
+                if (oldFiles.contains(currentCanonicalPath)) continue;
+
+                for (FileEntry newFileEntry : newFiles) {
+                    if (newFileEntry.path.equals(currentCanonicalPath)) {
+                        currentCanonicalPath = null;
+                        break;
+                    }
+                }
+
+                // Check if previous loop wants this one to skip
+                if (currentCanonicalPath == null) continue;
+
+                // Delete the file
+                if (!currentFile.delete()) {
+                    Main.ADMIN.log_("Could not delete old output file", 3);
+                }
             }
         } catch (IOException ex) {
             ex.printStackTrace();

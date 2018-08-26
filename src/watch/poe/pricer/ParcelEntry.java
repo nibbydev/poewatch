@@ -16,6 +16,8 @@ public class ParcelEntry {
     private String var, icon;
     private HistoryData history = new HistoryData();
 
+    public int id_l, id_cp;
+
     /**
      * Parses all data on initialization
      *
@@ -23,6 +25,9 @@ public class ParcelEntry {
      * @throws SQLException
      */
     public ParcelEntry(ResultSet resultSet) throws SQLException {
+        id_l = resultSet.getInt("id_l");
+        id_cp = resultSet.getInt("id_cp");
+
         // Get data that is never null
         id = resultSet.getInt("id_d");
         mean = resultSet.getDouble("mean");
