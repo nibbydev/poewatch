@@ -424,7 +424,7 @@ public class Main {
     private static void commandAcc(String[] userInput) {
         switch (userInput[1]) {
             case "run":
-                ACCOUNT_MANAGER.getAccountRelations();
+                ACCOUNT_MANAGER.checkAccountNameChanges();
                 break;
 
             default:

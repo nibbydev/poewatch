@@ -453,12 +453,12 @@ public class Database {
     }
 
     /**
-     * Loads provided Map with currency price data from database
+     * Creates a map containing currency price data from database in the format of:
+     * {leagueID: {currencyName: chaosValue}}
      *
-     * @param currencyLeagueMap Map that will contain league id - currency name - chaos value relations
-     * @return True on success
+     * @return Generated Map
      */
-    public boolean getCurrency(Map<Integer, Map<String, Double>> currencyLeagueMap) {
+    public Map<Integer, Map<String, Double>> getCurrencyMap() {
         Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
 
         String query =  "SELECT   i.id_l, did.name, i.median " +
@@ -470,7 +470,7 @@ public class Database {
                         "ORDER BY i.id_l; ";
 
         try {
-            if (connection.isClosed()) return false;
+            if (connection.isClosed()) return null;
 
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
@@ -486,14 +486,11 @@ public class Database {
                 }
             }
 
-            currencyLeagueMap.clear();
-            currencyLeagueMap.putAll(tmpCurrencyLeagueMap);
-
-            return true;
+            return tmpCurrencyLeagueMap;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query currency rates from database", 3);
-            return false;
+            return null;
         }
     }
 
