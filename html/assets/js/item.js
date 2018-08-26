@@ -415,10 +415,16 @@ function buildNameField() {
 }
 
 function fixIcon(icon) {
-  if (!icon) return "https://poe.watch/assets/img/missing.png";
+  if (!icon) {
+    return "https://poe.watch/assets/img/missing.png";
+  }
 
   // Use SSL
   icon = icon.replace("http://", "https://");
+
+  if (!icon.includes("?")) {
+    return icon;
+  }
 
   let splitIcon = icon.split("?");
   let splitParams = splitIcon[1].split("&");

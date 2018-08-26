@@ -691,6 +691,7 @@ function getItemHistoryLeagues(id) {
 function makeGetRequest(league, category) {
   $("#searchResults tbody").empty();
   $(".buffering").show();
+  $(".loadall").hide();
 
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
