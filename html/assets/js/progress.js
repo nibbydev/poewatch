@@ -26,7 +26,7 @@ $(document).ready(function() {
       .replace("{{start}}",   "Start: " + formatDate(start))
       .replace("{{end}}",     "End: "   + formatDate(end))
       .replace("{{id}}",      index)
-      .replace("{{id}}",      index) // I am lazy
+      .replace("{{id}}",      index)
       .replace("{{desc}}",    tmp);
 
     main.append(template);
@@ -72,8 +72,6 @@ function addCountDownTimer(start, end, index) {
     var hours = Math.floor((distance % _day) / _hour);
     var minutes = Math.floor((distance % _hour) / _minute);
     var seconds = Math.floor((distance % _minute) / _second);
-
-    let TEMPLATE_span = "<span class='custom-text-{{color}}'>{{val}}</span>";
 
     let dayString;
     if (days === 0) {
