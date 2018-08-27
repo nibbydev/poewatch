@@ -65,19 +65,7 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'>
           <!-- MotD -->
-          <div class="row d-block mb-3">
-            <div class="col"> 
-              <div class="card custom-card">
-                <div class="card-header slim-card-edge"></div>
-                <div class="card-body p-1">
-
-                  <?php AddMotdMessage($SERVICE_category); ?>
-
-                </div>
-                <div class="card-footer slim-card-edge"></div>
-              </div>
-            </div>
-          </div>
+          <?php GenMotDBox(); ?>
           <!--/MotD/-->
 
           <?php if ($SERVICE_category === "gems"): ?>

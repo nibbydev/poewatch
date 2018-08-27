@@ -26,10 +26,6 @@ function GenNavbar() {
       'href'    => '/characters'
     ),
     array(
-      'display' => 'EasyBuyout',
-      'href'    => '/easybuyout'
-    ),
-    array(
       'display' => 'About',
       'href'    => '/about'
     )
@@ -152,6 +148,23 @@ function GenCatMenuHTML() {
 
   echo "  </div>
         <div class='card-footer slim-card-edge'>
+      </div>
+    </div>
+  </div>";
+}
+
+function GenMotDBox() {
+  echo "
+  <div class='row d-block mb-3'>
+    <div class='col'> 
+      <div class='card custom-card'>
+        <div class='card-header slim-card-edge'></div>
+        <div class='card-body p-1'>
+          <p class='mb-0 text-center subtext-1'>
+            [ allan please add advertisement ]
+          </p>
+        </div>
+        <div class='card-footer slim-card-edge'></div>
       </div>
     </div>
   </div>";

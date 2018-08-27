@@ -79,7 +79,8 @@ function AddTableHeaders($category) {
   echo "<th scope='col' class='fixedSizeCol'>Count</th>";
 }
 
-// Adds a message to the MotD box
+// Adds a message to the MotD box 
+/*
 function AddMotdMessage($category) {
   echo "<p class='mb-0 text-center subtext-1'>";
 
@@ -90,4 +91,5 @@ function AddMotdMessage($category) {
   }
 
   echo "</p>";
-}
+} 
+*/
