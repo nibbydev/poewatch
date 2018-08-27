@@ -1,0 +1,16 @@
+Options -Indexes
+
+ErrorDocument 400 /html/error.php
+ErrorDocument 403 /html/error.php
+ErrorDocument 404 /html/error.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule !.*\.php$ %{REQUEST_FILENAME}.php [QSA,L]
+</IfModule>
+
+AuthType Basic
+AuthName "Password Protected Area"
+AuthUserFile /home/ps/http/html/.htpasswd
+Require valid-user
