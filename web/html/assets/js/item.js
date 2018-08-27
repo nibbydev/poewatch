@@ -16,6 +16,7 @@ $(document).ready(function() {
 //------------------------------------------------------------------------------------------------------------
 
 function makeHistoryRequest(id) {
+
   let request = $.ajax({
     url: "https://api.poe.watch/item.php",
     data: {id: id},

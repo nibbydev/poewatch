@@ -32,12 +32,12 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
           <div class="card custom-card">
-            <div class="card-header slim-card-edge"></div>
-            <div class="card-body d-flex flex-column">
-              <div class="buffering align-self-center"></div>
+            <div class="card-header p-0">
+
               <div class="content d-none">
+            
                 <!-- Ico+name+league+price row -->
-                <div class="row d-flex mx-1">
+                <div class="row d-flex mx-0">
                   <div class="col d-flex p-0">
                   
                     <!-- Large ico col -->
@@ -85,8 +85,12 @@
                 </div>
                 <!--/Ico+name+league+price row/-->
 
-                <hr>
+              </div>
 
+            </div>
+            <div class="card-body d-flex flex-column">
+              <div class="buffering align-self-center"></div>
+              <div class="content d-none">
                 <!-- Small chart row -->
                 <div class='row m-1'>
                   <div class='col-md'>
