@@ -75,7 +75,7 @@ public class AccountManager extends Thread {
     // Class methods
     //------------------------------------------------------------------------------------------------------------
 
-    public void getAccountRelations() {
+    public void checkAccountNameChanges() {
         List<AccountRelation> accountRelations = new ArrayList<>();
         Main.DATABASE.getAccountRelations(accountRelations);
 

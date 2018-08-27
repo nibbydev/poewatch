@@ -303,7 +303,7 @@ public class Item extends Mappers.BaseItem {
 
             if (qual < 17) qual = 0;        // quality   0 = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
             else if (qual < 22) qual = 20;  // quality  20 = 17,18,19,20,21
-                                            // quality  23 = 22,23
+            else qual = 23;                 // quality  23 = 22,23
 
             // Gets rid of specific gems
             if (lvl < 20 && qual > 20) qual = 20;  // lvl:1 quality:23-> lvl:1 quality:20
@@ -531,7 +531,7 @@ public class Item extends Mappers.BaseItem {
         typeLine = null;
 
         // Match any negative or positive integer or double
-        // name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
+        name = enchantMods.get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
 
         // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle
         if (name.contains("\n")) name = name.replace("\n", " ");

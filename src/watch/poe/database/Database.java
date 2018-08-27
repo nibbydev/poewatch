@@ -7,6 +7,7 @@ import watch.poe.Misc;
 import watch.poe.account.AccountRelation;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
+import watch.poe.pricer.FileEntry;
 import watch.poe.pricer.itemdata.ItemdataEntry;
 import watch.poe.pricer.ParcelEntry;
 import watch.poe.pricer.RawMaps.*;
@@ -452,12 +453,12 @@ public class Database {
     }
 
     /**
-     * Loads provided Map with currency price data from database
+     * Creates a map containing currency price data from database in the format of:
+     * {leagueID: {currencyName: chaosValue}}
      *
-     * @param currencyLeagueMap Map that will contain league id - currency name - chaos value relations
-     * @return True on success
+     * @return Generated Map
      */
-    public boolean getCurrency(Map<Integer, Map<String, Double>> currencyLeagueMap) {
+    public Map<Integer, Map<String, Double>> getCurrencyMap() {
         Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
 
         String query =  "SELECT   i.id_l, did.name, i.median " +
@@ -469,7 +470,7 @@ public class Database {
                         "ORDER BY i.id_l; ";
 
         try {
-            if (connection.isClosed()) return false;
+            if (connection.isClosed()) return null;
 
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
@@ -485,14 +486,11 @@ public class Database {
                 }
             }
 
-            currencyLeagueMap.clear();
-            currencyLeagueMap.putAll(tmpCurrencyLeagueMap);
-
-            return true;
+            return tmpCurrencyLeagueMap;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not query currency rates from database", 3);
-            return false;
+            return null;
         }
     }
 
@@ -759,9 +757,10 @@ public class Database {
                         "  LIMIT  1); ";
 
         String query2 = "UPDATE data_leagues " +
-                        "SET    start   = ?, " +
-                        "       end     = ? " +
-                        "WHERE  name    = ? " +
+                        "SET    start    = ?, " +
+                        "       end      = ?, " +
+                        "       upcoming = 0 " +
+                        "WHERE  name     = ? " +
                         "LIMIT  1; ";
 
         try {
@@ -1237,39 +1236,59 @@ public class Database {
     }
 
     /**
-     * Loads provided List with item data and prices from database
+     * Gets item data and prices from database
      *
-     * @param leagueId ID of target league
-     * @param categoryId ID of target parent category
-     * @param parcelEntryList List that will contain ParcelEntry entries
-     * @return True on success
+     * @param newFiles List of FileEntries to be filled
+     * @return True of success
      */
-    public boolean getOutputData(int leagueId, int categoryId, List<ParcelEntry> parcelEntryList) {
+    public boolean getOutputData(List<FileEntry> newFiles) {
         String query =  "SELECT " +
-                        "    i.id_l, i.id_d, i.mean, i.exalted, i.quantity + i.inc AS quantity, " +
-                        "    SUBSTRING_INDEX(GROUP_CONCAT(hdr.mean ORDER BY hdr.time DESC SEPARATOR ','), ',', 7) AS history, " +
-                        "    did.name, did.type, did.frame, " +
-                        "    did.tier, did.lvl, did.quality, did.corrupted, " +
-                        "    did.links, did.var, did.icon, " +
-                        "    cc.name AS ccName " +
+                        "  i.id_l, did.id_cp, i.id_d, i.mean, i.exalted, i.quantity + i.inc AS quantity, " +
+                        "  hdr.history AS history, " +
+                        "  did.name, did.type, did.frame, " +
+                        "  did.tier, did.lvl, did.quality, did.corrupted, " +
+                        "  did.links, did.var, did.icon, " +
+                        "  cc.name AS ccName " +
                         "FROM league_items AS i " +
                         "JOIN data_itemData AS did ON i.id_d = did.id " +
                         "LEFT JOIN category_child AS cc ON did.id_cc = cc.id " +
-                        "LEFT JOIN league_history_daily_rolling AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
-                        "WHERE i.id_l = ? AND did.id_cp = ? " +
+                        "LEFT JOIN (" +
+                        "  SELECT    id_l, id_d," +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(mean ORDER BY time DESC SEPARATOR ','), ',', 7) AS history" +
+                        "  FROM      league_history_daily_rolling" +
+                        "  GROUP BY  id_l, id_d" +
+                        ") AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
                         "GROUP BY i.id_l, i.id_d " +
-                        "ORDER BY i.mean DESC ";
+                        "ORDER BY i.id_l DESC, did.id_cp DESC, i.mean DESC";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setInt(1, leagueId);
-                statement.setInt(2, categoryId);
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-                ResultSet resultSet = statement.executeQuery();
+                Integer lastCategoryId = null;
+                List<ParcelEntry> parcelEntryList = new ArrayList<>();
+
                 while (resultSet.next()) {
                     ParcelEntry parcelEntry = new ParcelEntry(resultSet);
+
+                    if (lastCategoryId == null) {
+                        lastCategoryId = parcelEntry.id_cp;
+                    } else if (lastCategoryId != parcelEntry.id_cp) {
+                        lastCategoryId = parcelEntry.id_cp;
+
+                        // Get string representations of league and category ids
+                        String league = Main.LEAGUE_MANAGER.getLeagueName(parcelEntryList.get(0).id_l);
+                        String category = Main.RELATIONS.getCategoryName(parcelEntryList.get(0).id_cp);
+
+                        // Write JSON file and get its canonical path
+                        String canonicalPath = Main.ENTRY_MANAGER.writeGetFile(parcelEntryList, league, category);
+                        newFiles.add(new FileEntry(canonicalPath, league, category));
+
+                        parcelEntryList = new ArrayList<>();
+                    }
+
                     parcelEntryList.add(parcelEntry);
                 }
             }
@@ -1278,6 +1297,40 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not get output items", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Adds/updates output file entries in table `data_outputFiles`
+     *
+     * @param files List of FileEntry objects
+     * @return True on success
+     */
+    public boolean addNewFilePaths(List<FileEntry> files) {
+        String query =  "INSERT INTO data_outputFiles (league, category, path) " +
+                        "VALUES (?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE path = VALUES(path)";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (FileEntry file : files) {
+                    statement.setString(1, file.league);
+                    statement.setString(2, file.category);
+                    statement.setString(3, file.path);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not add output file to database", 3);
             return false;
         }
     }

@@ -173,4 +173,14 @@ public class RelationManager {
             return true;
         } else return false;
     }
+
+    public String getCategoryName(Integer id) {
+        for (Map.Entry<String, CategoryEntry> entry : categoryRelations.entrySet()) {
+            if (entry.getValue().getId() == id) {
+                return entry.getKey();
+            }
+        }
+
+        return  null;
+    }
 }
