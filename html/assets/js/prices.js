@@ -89,6 +89,7 @@ function defineListeners() {
   $("#search-sub").change(function(){
     FILTER.sub = $(this).find(":selected").val();
     console.log("Selected sub-category: " + FILTER.sub);
+    updateQueryString("sub", FILTER.sub);
     sortResults(ITEMS);
   });
 
@@ -104,6 +105,7 @@ function defineListeners() {
   $("#search-searchbar").on("input", function(){
     FILTER.search = $(this).val().toLowerCase().trim();
     console.log("Search: " + FILTER.search);
+    updateQueryString("search", FILTER.search);
     sortResults(ITEMS);
   });
 
@@ -112,6 +114,7 @@ function defineListeners() {
     let option = $("input:checked", this).val() === "1";
     console.log("Show low count: " + option);
     FILTER.showLowConfidence = option;
+    updateQueryString("confidence", option);
     sortResults(ITEMS);
   });
 
@@ -120,6 +123,7 @@ function defineListeners() {
     FILTER.links = $("input[name=links]:checked", this).val();
     console.log("Link filter: " + FILTER.links);
     if (FILTER.links === "none") FILTER.links = null;
+    updateQueryString("links", FILTER.links);
     sortResults(ITEMS);
   });
 
@@ -129,6 +133,7 @@ function defineListeners() {
     console.log("Map tier filter: " + FILTER.tier);
     if (FILTER.tier === "all") FILTER.tier = null;
     else FILTER.tier = parseInt(FILTER.tier);
+    updateQueryString("tier", FILTER.tier);
     sortResults(ITEMS);
   });
 
@@ -136,8 +141,9 @@ function defineListeners() {
   $("#select-level").on("change", function(){
     FILTER.gemLvl = $(":selected", this).val();
     console.log("Gem lvl filter: " + FILTER.gemLvl);
-    if (FILTER.gemLvl === "none") FILTER.gemLvl = null;
+    if (FILTER.gemLvl === "all") FILTER.gemLvl = null;
     else FILTER.gemLvl = parseInt(FILTER.gemLvl);
+    updateQueryString("lvl", FILTER.gemLvl);
     sortResults(ITEMS);
   });
 
@@ -147,6 +153,7 @@ function defineListeners() {
     console.log("Gem quality filter: " + FILTER.gemQuality);
     if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
     else FILTER.gemQuality = parseInt(FILTER.gemQuality);
+    updateQueryString("quality", FILTER.gemQuality);
     sortResults(ITEMS);
   });
 
@@ -156,6 +163,7 @@ function defineListeners() {
     console.log("Gem corruption filter: " + FILTER.gemCorrupted);
     if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
     else FILTER.gemCorrupted = parseInt(FILTER.gemCorrupted);
+    updateQueryString("corrupted", FILTER.gemCorrupted);
     sortResults(ITEMS);
   });
 
@@ -192,6 +200,8 @@ function onRowClick(event) {
   if (isNaN(id)) {
     return;
   } else if (event.target.href) {
+    return;
+  } else if (event.target.parentElement.href) {
     return;
   }
 
@@ -240,7 +250,6 @@ function onRowClick(event) {
 
     // Display a filler row
     displayFillerRow();
-
     makeHistoryRequest(id);
   }
 }
@@ -248,74 +257,8 @@ function onRowClick(event) {
 function displayFillerRow() {
   let template = `
   <tr class='filler-row'><td colspan='100'>
-    <div class='row m-1'>
-      <div class='col-sm'>
-        <h4>League</h4>
-        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1'>
-      <div class='col-md'>
-        <h4>Chaos value</h4>
-        <div class='chart-small'><canvas id="chart-price"></canvas></div>
-      </div>
-      <div class='col-md'>
-        <h4>Listed per 24h</h4>
-        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mt-2'>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
-          <tbody>
-            <tr>
-              <td>Mean</td>
-              <td>{{mean}}</td>
-            </tr>
-            <tr>
-              <td>Median</td>
-              <td>{{median}}</td>
-            </tr>
-            <tr>
-              <td>Mode</td>
-              <td>{{mode}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
-          <tbody>
-            <tr>
-              <td>Total amount listed</td>
-              <td>{{count}}</td>
-            </tr>
-            <tr>
-              <td>Listed every 24h</td>
-              <td>{{1d}}</td>
-            </tr>
-            <tr>
-              <td>Price in exalted</td>
-              <td>{{exalted}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mb-3'>
-      <div class='col-sm'>
-        <h4>Past data</h4>
-        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
-        </div>
-        <div class='chart-large'><canvas id="chart-past"></canvas></div>
-      </div>
+    <div class="d-flex justify-content-center">
+      <div class="buffering m-2"></div>
     </div>
   </td></tr>
   `.trim();
@@ -756,6 +699,10 @@ function getItemHistoryLeagues(id) {
 //------------------------------------------------------------------------------------------------------------
 
 function makeGetRequest(league, category) {
+  $("#searchResults tbody").empty();
+  $(".buffering").show();
+  $(".loadall").hide();
+
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
@@ -769,6 +716,7 @@ function makeGetRequest(league, category) {
 
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
+    $(".buffering").hide();
 
     let items = parseRequest(json);
     sortResults(items);
@@ -1108,6 +1056,42 @@ function toTitleCase(str) {
   });
 }
 
+function updateQueryString(key, value) {
+  switch (key) {
+    case "confidence": value = value === false  ? null : value;   break;
+    case "search":     value = value === ""     ? null : value;   break;
+    case "sub":        value = value === "all"  ? null : value;   break;
+    default:           break;
+  }
+
+  var url = document.location.href;
+  var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
+  var hash;
+
+  if (re.test(url)) {
+    if (typeof value !== 'undefined' && value !== null) {
+      url = url.replace(re, '$1' + key + "=" + value + '$2$3');
+    } else {
+      hash = url.split('#');
+      url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+      
+      if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+        url += '#' + hash[1];
+      }
+    }
+  } else if (typeof value !== 'undefined' && value !== null) {
+    var separator = url.indexOf('?') !== -1 ? '&' : '?';
+    hash = url.split('#');
+    url = hash[0] + separator + key + '=' + value;
+
+    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+      url += '#' + hash[1];
+    }
+  }
+
+  history.replaceState({}, "foo", url);
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
@@ -1156,8 +1140,15 @@ function checkHideItem(item) {
 
   // String search
   if (FILTER.search) {
-    if (item.name && item.name.toLowerCase().indexOf(FILTER.search) === -1) return true;
-    if (item.type && item.type.toLowerCase().indexOf(FILTER.search) === -1) return true;
+    if (item.name.toLowerCase().indexOf(FILTER.search) === -1) {
+      if (item.type) {
+        if (item.type.toLowerCase().indexOf(FILTER.search) === -1) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
   }
 
   // Hide sub-categories

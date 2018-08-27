@@ -23,12 +23,17 @@
 <?php GenNavbar() ?>
 <!--/Primary navbar/-->
 <!-- Page body -->
-<div class="container-fluid pb-4">    
+<div class="container-fluid">
   <div class="row">
-    <!-- Main content -->
-    <div class="col-md-10 offset-md-1 mt-4">
-      <div class="row">
-        <div class="col-lg">
+    <div class="col d-flex my-3">
+
+      <!-- Menu -->
+      <?php GenCatMenuHTML() ?>
+      <!--/Menu/-->
+
+      <!-- Main content -->
+      <div class="d-flex w-100 justify-content-center"> 
+        <div class='body-boundaries w-100'> 
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
             <div class="card-body pb-0">
@@ -40,8 +45,9 @@
           </div>
         </div>
       </div>
+      <!--/Main content/-->
+
     </div>
-    <!--/Main content/-->
   </div>
 </div>
 <!--/Page body/-->

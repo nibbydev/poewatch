@@ -21,53 +21,63 @@
 <?php GenNavbar() ?>
 <!--/Primary navbar/-->
 <!-- Page body -->
-<div class="container-fluid pb-4">    
+<div class="container-fluid">
   <div class="row">
-    <!-- Main content -->
-    <div class="col-md-10 offset-md-1 mt-4">
-      <div class="card custom-card">
-        <div class="card-header">
-          <h2 class="text-white">Characters</h3>
-          <div>
-            <?php DisplayMotD($DATA); ?>
-          </div>
-        </div>
+    <div class="col d-flex my-3">
 
-        <!-- Main card body -->
-        <div class="card-body">
-          <!-- Search form -->
-          <form method="GET">
-            <!-- Mode -->
-            <div class="row">
-              <div class="col">
-                <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
-                  <?php CreateModeRadios($DATA); ?>
-                </div>
+      <!-- Menu -->
+      <?php GenCatMenuHTML() ?>
+      <!--/Menu/-->
 
-                <div class="btn-group mb-3">
-                  <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
-                  <button type="submit" class="btn btn-outline-dark">Search</button>
-                </div>
+      <!-- Main content -->
+      <div class="d-flex w-100 justify-content-center"> 
+        <div class='body-boundaries w-100'> 
+          <div class="card custom-card">
+            <div class="card-header">
+              <h2 class="text-white">Characters</h3>
+              <div>
+                <?php DisplayMotD($DATA); ?>
               </div>
             </div>
-            <!--/Mode/-->
 
-            <?php DisplayNotification($DATA); ?>
+            <!-- Main card body -->
+            <div class="card-body">
+              <!-- Search form -->
+              <form method="GET">
+                <!-- Mode -->
+                <div class="row">
+                  <div class="col">
+                    <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
+                      <?php CreateModeRadios($DATA); ?>
+                    </div>
 
-          </form>
-          <!--/Search form/-->
+                    <div class="btn-group mb-3">
+                      <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
+                      <button type="submit" class="btn btn-outline-dark">Search</button>
+                    </div>
+                  </div>
+                </div>
+                <!--/Mode/-->
 
-          <!-- Content card -->
-          <?php CreateTable($DATA); ?>
-          <!--/Content card/-->
+                <?php DisplayNotification($DATA); ?>
 
+              </form>
+              <!--/Search form/-->
+
+              <!-- Content card -->
+              <?php CreateTable($DATA); ?>
+              <!--/Content card/-->
+
+            </div>
+            <!--/Main card body/-->
+
+            <div class="card-footer slim-card-edge"></div>
+          </div>
         </div>
-        <!--/Main card body/-->
-
-        <div class="card-footer slim-card-edge"></div>
       </div>
+      <!--/Main content/-->
+
     </div>
-    <!--/Main content/-->
   </div>
 </div>
 <!--/Page body/-->

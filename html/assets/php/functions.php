@@ -134,7 +134,7 @@ function GenCatMenuHTML() {
     // If category param matches current category, mark it as active
     $active = "";
     if (isset($_GET["category"])) {
-      if ($_GET["category"] === strtolower($data[$i]["name"])) {
+      if ($_GET["category"] === explode('=', $data[$i]["href"])[1]) {
         $active = "active";
       }
     }
