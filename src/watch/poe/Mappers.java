@@ -26,15 +26,7 @@ public class Mappers {
         public String stash;
         public String lastCharacterName;
         public List<Item> items;
-
-        public void fix() {
-            if (accountName != null)
-                accountName = accountName.replaceAll("[^A-Za-z0-9]", "_");
-            if (lastCharacterName != null)
-                lastCharacterName = lastCharacterName.replaceAll("[^A-Za-z0-9]", "_");
-        }
     }
-
 
     /**
      * Universal deserializer for poe.ninja, poe.rates and pathofexile.com/api

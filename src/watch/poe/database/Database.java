@@ -8,9 +8,9 @@ import watch.poe.account.AccountRelation;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.FileEntry;
+import watch.poe.pricer.RawEntry;
 import watch.poe.pricer.itemdata.ItemdataEntry;
 import watch.poe.pricer.ParcelEntry;
-import watch.poe.pricer.RawMaps.*;
 import watch.poe.relations.CategoryEntry;
 
 import java.sql.*;

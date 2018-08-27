@@ -15,7 +15,7 @@ public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     private Set<AccountEntry> accountSet = new HashSet<>();
-    private Set<RawMaps.RawEntry> entrySet = new HashSet<>();
+    private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
     private Gson gson;
@@ -119,7 +119,7 @@ public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     private void uploadRawEntries() {
-        Set<RawMaps.RawEntry> entrySet = this.entrySet;
+        Set<RawEntry> entrySet = this.entrySet;
         this.entrySet = new HashSet<>();
 
         Main.DATABASE.uploadRaw(entrySet);
@@ -474,23 +474,25 @@ public class EntryManager extends Thread {
                     if (leagueId == null) break;
                 }
 
-                item.fix();
                 item.parseItem();
                 if (item.isDiscard()) continue;
 
-                RawMaps.RawEntry rawEntry = new RawMaps.RawEntry();
-                rawEntry.load(item);
-
-                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(leagueId));
-                if (discard) continue; // Couldn't convert the listed currency to chaos
+                // If the Item's price is not in chaos, convert it to chaos using the latest currency ratios
+                item.convertPrice(currencyLeagueMap.get(leagueId));
 
                 Integer itemId = Main.RELATIONS.indexItem(item, leagueId);
                 if (itemId == null) continue;
 
+                // Create a RawEntry
+                RawEntry rawEntry = new RawEntry();
+
+                // Get the Item's values
                 rawEntry.setItemId(itemId);
                 rawEntry.setLeagueId(leagueId);
                 rawEntry.setAccountName(stash.accountName);
+                rawEntry.setPrice(item.getPrice());
 
+                // Add it to the db queue
                 entrySet.add(rawEntry);
             }
 

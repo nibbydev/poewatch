@@ -1,48 +1,70 @@
 package watch.poe;
 
+import watch.poe.pricer.RawEntry;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Extends the JSON mapper Item, adding methods that parse, match and calculate Item-related data
  */
-public class Item extends Mappers.BaseItem {
+public class Item {
     //------------------------------------------------------------------------------------------------------------
-    // Class variables
+    // Base item variables
+    //------------------------------------------------------------------------------------------------------------
+
+    private boolean identified;
+    private int w, h, x, y, ilvl, frameType;
+    private Boolean corrupted, shaper, elder;
+    private String icon, league, id, name, typeLine, note;
+    private Map<String, List<String>> category; // TODO: create an object for this monstrosity
+    private List<Mappers.Property> properties;
+    private List<Mappers.Socket> sockets;
+    private List<String> explicitMods;
+    private List<String> enchantMods;
+
+    //------------------------------------------------------------------------------------------------------------
+    // User-defined variables
     //------------------------------------------------------------------------------------------------------------
 
     private volatile boolean discard = false;
-    private String priceType, parentCategory, childCategory, variation;
-    private String key;
-    private double price;
+    private boolean doNotIndex, enchanted;
+    private String priceType, parentCategory, childCategory, variation, key;
     private String links, level, quality, tier;
-    private boolean doNotIndex;
+    private double price;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * "Main" controller, calls other methods
+     * Controller method, checks whether to keep item. If yes, preps item for db insertion
      */
     public void parseItem() {
         // Do a few checks on the league, note and etc
         basicChecks();
         if (discard) return;
 
-        // Get price as boolean and currency type as index
+        // Fix problematic data from the API
+        fixData();
+
+        // Extract price and currency type from item if present
         parseNote();
         if (discard) return;
 
         // Find out the item category (eg armour/belt/weapon etc)
         parseCategory();
 
-        // Make database key and find item type
+        // Manually categorize some item types as the solution offered by GGG is not that great
         formatNameAndItemType();
         if (discard) return;
 
-        // Filter based on frametypes
+        // Call methods based on item's frametype
         switch (frameType) {
-            case 0: // Normal
-            case 1: // Magic
-            case 2: // Rare
+            case 0:
+            case 1:
+            case 2:
                 if (enchanted) {
                     checkEnchant();
                     break;
@@ -95,12 +117,8 @@ public class Item extends Mappers.BaseItem {
         buildKey();
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Child methods
-    //------------------------------------------------------------------------------------------------------------
-
     /**
-     * Format the item's database key
+     * Form the unique database key
      */
     private void buildKey() {
         StringBuilder key = new StringBuilder();
@@ -144,31 +162,95 @@ public class Item extends Mappers.BaseItem {
     }
 
     /**
+     * Uses provided currencyMap to covert Item's price to chaos
+     *
+     * @param currencyMap Map of currency name - chaos value relations
+     */
+    public void convertPrice(Map<String, Double> currencyMap) {
+        // If the Item's price is not in chaos, it needs to be converted to chaos using the currency map
+        if (!priceType.equals("Chaos Orb")) {
+            // Precaution
+            if (currencyMap == null) {
+                discard = true;
+                return;
+            }
+
+            Double chaosValue = currencyMap.get(priceType);
+
+            if (chaosValue == null) {
+                discard = true;
+                return;
+            }
+
+            price = Math.round(price * chaosValue * Config.item_pricePrecision) / Config.item_pricePrecision;
+            priceType = "Chaos Orb";
+        }
+
+        // User has specified a retarded price
+        if (price < 0.0001 || price > 120000) {
+            discard = true;
+            return;
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Child methods
+    //------------------------------------------------------------------------------------------------------------
+
+    /**
      * Does a few basic checks on items
      */
     private void basicChecks() {
+        // No price set on item
         if (note == null || note.equals("")) {
             discard = true;
-        } else if (enchanted) {
-            // For pricing items based on their enchants
+            return;
+        }
+
+        // If item is enchanted, set its frame to 0 as we only care about the enchantment
+        if (enchantMods != null) {
+            enchanted = true;
             frameType = 0;
-        } else if (frameType == 1 || frameType == 2 || frameType == 7) {
-            // Filter out unpriceable items
+        }
+
+        // Filter out magic/rare/quest items
+        if (frameType == 1 || frameType == 2 || frameType == 7) {
             discard = true;
-        } else if (!identified) {
-            // Filter out unidentified items
+            return;
+        }
+
+        // Filter out unidentified items
+        if (!identified) {
             discard = true;
-        } else if (league.contains("SSF")) {
-            // Filter out SSF leagues as trading there is disabled
+            return;
+        }
+
+        // Filter out items posted on the SSF leagues
+        if (league.contains("SSF")) {
             discard = true;
-        } else if (league.equals("false")) {
-            // This is a bug in the API
+            return;
+        }
+
+        // Filter out a specific bug in the API
+        if (league.equals("false")) {
             discard = true;
+            return;
         }
     }
 
     /**
-     * Check and format item note (user-inputted text field that usually contain item price)
+     * Fix problematic data from the API
+     */
+    private void fixData() {
+        // Don't need the whole 64bit ID, half will do
+        id = id.substring(0, 32);
+
+        // Most items come with a "<<set:MS>><<set:M>><<set:S>>" or similar prefix
+        name = name.substring(name.lastIndexOf(">") + 1);
+    }
+
+    /**
+     *  Extract price and currency type from item if present
      */
     private void parseNote() {
         String[] noteList = note.split(" ");
@@ -212,6 +294,17 @@ public class Item extends Mappers.BaseItem {
         } else {
             this.price = Math.round(price * Config.item_pricePrecision) / Config.item_pricePrecision;
             priceType = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
+        }
+    }
+
+    /**
+     * Gets text-value(s) from category object
+     */
+    private void parseCategory() {
+        parentCategory = category.keySet().toArray()[0].toString();
+
+        if (category.get(parentCategory).size() > 0) {
+            childCategory = category.get(parentCategory).get(0).toLowerCase();
         }
     }
 
@@ -573,17 +666,6 @@ public class Item extends Mappers.BaseItem {
     }
 
     /**
-     * Gets text-value(s) from category object
-     */
-    private void parseCategory() {
-        parentCategory = category.keySet().toArray()[0].toString();
-
-        if (category.get(parentCategory).size() > 0) {
-            childCategory = category.get(parentCategory).get(0).toLowerCase();
-        }
-    }
-
-    /**
      * Contains some basic rules for currency
      */
     private void checkCurrency() {
@@ -623,10 +705,6 @@ public class Item extends Mappers.BaseItem {
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
-
-    public String getPriceType() {
-        return priceType;
-    }
 
     public double getPrice() {
         return price;
