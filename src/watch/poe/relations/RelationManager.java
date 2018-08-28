@@ -1,6 +1,6 @@
 package watch.poe.relations;
 
-import watch.poe.Item;
+import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.league.LeagueEntry;
 
@@ -78,7 +78,7 @@ public class RelationManager {
     // Indexing methods
     //------------------------------------------------------------------------------------------------------------
 
-    public Integer indexItem(Item item, Integer leagueId) {
+    public Integer indexItem(Item item, Integer leagueId, boolean doNotIndex) {
         String uniqueKey = item.getKey();
         Integer itemId = keyToId.get(uniqueKey);
 
@@ -89,11 +89,14 @@ public class RelationManager {
         }
 
         // If the item was marked not to be indexed
-        if (item.isDoNotIndex()) return null;
+        if (item.isDoNotIndex() || doNotIndex) {
+            return null;
+        }
 
         // If the same item is currently being processed in the same method in another thread
-        if (currentlyIndexingChildKeys.contains(uniqueKey)) return null;
-        else currentlyIndexingChildKeys.add(uniqueKey);
+        if (currentlyIndexingChildKeys.contains(uniqueKey)) {
+            return null;
+        } else currentlyIndexingChildKeys.add(uniqueKey);
 
         indexCategory(item);
 

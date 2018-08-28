@@ -1,7 +1,7 @@
 package watch.poe.database;
 
 import watch.poe.Config;
-import watch.poe.Item;
+import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.Misc;
 import watch.poe.account.AccountRelation;
@@ -664,14 +664,29 @@ public class Database {
                 else statement.setInt(2, childCategoryId);
 
                 statement.setString(3, item.getName());
-                statement.setString(4, item.getType());
-                statement.setInt(5, item.getFrame());
+                statement.setString(4, item.getTypeLine());
+                statement.setInt(5, item.getFrameType());
 
-                statement.setString(6, item.getTier());
-                statement.setString(7, item.getLevel());
-                statement.setString(8, item.getQuality());
-                statement.setString(9, item.isCorrupted());
-                statement.setString(10, item.getLinks());
+                if (item.getTier() == null) {
+                    statement.setNull(6, 0);
+                } else statement.setInt(6, item.getTier());
+
+                if (item.getLevel() == null) {
+                    statement.setNull(7, 0);
+                } else statement.setInt(7, item.getLevel());
+
+                if (item.getQuality() == null) {
+                    statement.setNull(8, 0);
+                } else statement.setInt(8, item.getQuality());
+
+                if (item.getCorrupted() == null) {
+                    statement.setNull(9, 0);
+                } else statement.setInt(9, item.getCorrupted());
+
+                if (item.getLinks() == null) {
+                    statement.setNull(10, 0);
+                } else statement.setInt(10, item.getLinks());
+
                 statement.setString(11, item.getVariation());
                 statement.setString(12, item.getKey());
                 statement.setString(13, Misc.formatIconURL(item.getIcon()));

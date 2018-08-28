@@ -3,7 +3,7 @@ package watch.poe.worker;
 import com.google.gson.Gson;
 import watch.poe.Config;
 import watch.poe.Main;
-import watch.poe.Mappers;
+import watch.poe.item.Mappers;
 
 import java.io.InputStream;
 import java.net.URL;
