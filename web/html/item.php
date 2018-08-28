@@ -43,7 +43,8 @@
                     <!-- Large ico col -->
                     <div class="d-flex">
                       <div class="img-container img-container-xl mr-3">
-                        <img id="item-icon">
+                        <img class="position-absolute" id="item-influence">
+                        <img class="position-absolute" id="item-icon">
                       </div>
                     </div>
                     <!--/Large ico col/-->

@@ -350,6 +350,21 @@ function formatHistory(leaguePayload) {
       }
     }
   } else {
+    let oldestDate = new Date();
+    oldestDate.setDate(oldestDate.getDate() - 120);
+    let oldDate = new Date(Object.keys(leaguePayload.history)[0]);
+
+    let timeDiff = Math.abs(oldDate.getTime() - oldestDate.getTime());
+    let diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+
+    // For development
+    if (diffDays > 120) diffDays = 120;
+
+    for (let i = 0; i < diffDays; i++) {
+      keys.push(null);
+      vals.push(null);
+    }
+
     // Grab values
     for (var key in leaguePayload.history) {
       if (leaguePayload.history.hasOwnProperty(key)) {
