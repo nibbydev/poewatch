@@ -19,11 +19,11 @@ function get_league_data($pdo, $id) {
     GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
     GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
     GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
-  FROM      league_history_daily_rolling AS h
-  JOIN      data_leagues    AS l  ON h.id_l  = l.id
-  LEFT JOIN league_items    AS i  ON i.id_l  = l.id AND i.id_d = h.id_d
-  WHERE     h.id_d = ?
-  GROUP BY  h.id_l, h.id_d
+  FROM      league_items                 AS i
+  JOIN      data_leagues                 AS l ON i.id_l = l.id
+  LEFT JOIN league_history_daily_rolling AS h ON h.id_l = l.id AND h.id_d = i.id_d
+  WHERE     i.id_d = ?
+  GROUP BY  i.id_l, i.id_d
   ORDER BY  l.id DESC";
 
   $stmt = $pdo->prepare($query);

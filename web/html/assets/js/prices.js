@@ -407,13 +407,13 @@ function formatWeek(leaguePayload) {
   }
 
   // Add today's values
-  means.push(leaguePayload.mean);
-  quants.push(leaguePayload.quantity);
+  /*means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);*/
 
   // Return generated data
   return {
-    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
-    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
     'means': means,
     'quants': quants
   }

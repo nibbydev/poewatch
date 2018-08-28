@@ -253,6 +253,10 @@ function buildNameField() {
   if (ITEM.tier) {
     builder += " <span class='badge custom-badge-gray ml-1'>Tier " + ITEM.tier + "</span>";
   } 
+
+  if (ITEM.ilvl) {
+    builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + ITEM.ilvl + "</span>";
+  } 
   
   if (ITEM.links) {
     builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.links + " Link</span>";
@@ -387,13 +391,13 @@ function formatHistory(leaguePayload) {
   }
 
   // Add current values
-  switch (HISTORY_DATASET) {
+  /*switch (HISTORY_DATASET) {
     case 1: vals.push(leaguePayload.mean);     keys.push("Right now");      break;
     case 2: vals.push(leaguePayload.median);   keys.push("Right now");      break;
     case 3: vals.push(leaguePayload.mode);     keys.push("Right now");      break;
     case 4: vals.push(leaguePayload.quantity); keys.push("Last 24 hours");  break;
     default:                                                                break;
-  }
+  }*/
 
   // Return generated data
   return {
@@ -429,13 +433,13 @@ function formatWeek(leaguePayload) {
   }
 
   // Add today's values
-  means.push(leaguePayload.mean);
-  quants.push(leaguePayload.quantity);
+  /*means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);*/
 
   // Return generated data
   return {
-    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
-    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
     'means': means,
     'quants': quants
   }
