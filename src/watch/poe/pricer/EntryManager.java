@@ -431,7 +431,7 @@ public class EntryManager extends Thread {
 
         if (status.isSixtyBool()) {
             a = System.currentTimeMillis();
-            Main.DATABASE.calcQuantity();
+            Main.DATABASE.addHourly();
             a22 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
@@ -439,7 +439,7 @@ public class EntryManager extends Thread {
             a23 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
-            Main.DATABASE.addHourly();
+            Main.DATABASE.calcQuantity();
             a24 += System.currentTimeMillis() - a;
         }
 

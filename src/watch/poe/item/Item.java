@@ -684,7 +684,7 @@ public class Item {
 
         // Set influence
         if (shaper != null) {
-            variation = "shaper";
+            variation = "shaped";
         } else if (elder != null) {
             variation = "elder";
         }
