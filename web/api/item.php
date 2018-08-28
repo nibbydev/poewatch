@@ -36,7 +36,7 @@ function get_item_data($pdo, $id) {
   $query = "SELECT 
     d.name, d.type, d.frame, d.icon,
     d.tier, d.lvl, d.quality, d.corrupted, 
-    d.links, d.var AS variation,
+    d.links, d.ilvl, d.var AS variation,
     cp.name AS categoryParent, cc.name AS categoryChild
   FROM      data_itemData   AS d
   JOIN      category_parent AS cp ON d.id_cp = cp.id 

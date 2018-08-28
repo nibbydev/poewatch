@@ -180,6 +180,14 @@ function fillData() {
   $("#details-table-count")   .html(  formatNum(leaguePayload.count)     );
   $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
   $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
+
+  if (ITEM.categoryParent === "bases") {
+    if (ITEM.variation === "shaped") {
+      $("#item-influence").attr('src', "https://www.pathofexile.com/image/inventory/ShaperBackground.png?w=2&h=3&x=0&y=0");
+    } else if (ITEM.variation === "elder") {
+      $("#item-influence").attr('src', "https://www.pathofexile.com/image/inventory/ElderBackground.png?w=2&h=3");
+    }
+  }
   
   $("#item-icon").attr('src', fixIcon(ITEM.icon) );
   $("#item-name").html( buildNameField(ITEM.name) );
