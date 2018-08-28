@@ -60,11 +60,6 @@ function GenNavbar() {
 function GenCatMenuHTML() {
   $data = array(
     array(
-      "href"  => "prices?category=enchantments",
-      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1",
-      "name"  => "Enchantments"
-    ),
-    array(
       "href"  => "prices?category=accessories",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Amulets/EyeOfInnocence.png?scale=1&w=1&h=1",
       "name"  => "Accessories"
@@ -75,6 +70,11 @@ function GenCatMenuHTML() {
       "name"  => "Armour"
     ),
     array(
+      "href"  => "prices?category=bases",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Armours/BodyArmours/BodyStr3C.png?scale=1&w=1&h=1",
+      "name"  => "Bases"
+    ),
+    array(
       "href"  => "prices?category=currency",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1",
       "name"  => "Currency"
@@ -83,6 +83,11 @@ function GenCatMenuHTML() {
       "href"  => "prices?category=cards",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Divination/InventoryIcon.png?scale=1&w=1&h=1",
       "name"  => "Div cards"
+    ),
+    array(
+      "href"  => "prices?category=enchantments",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1",
+      "name"  => "Enchantments"
     ),
     array(
       "href"  => "prices?category=essence",

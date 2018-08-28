@@ -143,6 +143,25 @@ public class Item {
         if (base.getEnchantMods() != null) {
             parentCategory = "enchantments";
         }
+
+        // Override for item bases
+        if (branch.equals("base")) {
+            switch (parentCategory) {
+                case "accessories": break;
+                case "armour":      break;
+                case "jewels":      break;
+                case "weapons":     break;
+                default:
+                    discard = true;
+                    return;
+            }
+
+            if (parentCategory.equals("jewels")) {
+                childCategory = "jewels";
+            }
+
+            parentCategory = "bases";
+        }
     }
 
     /**
@@ -163,6 +182,12 @@ public class Item {
         // Add item's frametype to database key
         key.append('|');
         key.append(frameType);
+
+        // If the item has an ilvl
+        if (ilvl != null) {
+            key.append("|ilvl:");
+            key.append(ilvl);
+        }
 
         // If the item has a 5- or 6-link
         if (links != null) {
@@ -207,6 +232,8 @@ public class Item {
             discard = true;
             return;
         }
+
+        ilvl = null;
 
         switch (parentCategory) {
             case "maps":        parseMaps();                break;
@@ -568,6 +595,7 @@ public class Item {
         }
 
         // Override some values
+        ilvl = null;
         icon = Config.enchantment_icon;
         typeLine = null;
         frameType = 0;
@@ -631,7 +659,122 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     private void parseBase() {
-        discard = true;
+        // Only check normal and magic items
+        if (frameType > 1) {
+            discard = true;
+            return;
+        }
+
+        // "Superior Item" = "Item"
+        if (name.startsWith("Superior ")) {
+            name = name.replace("Superior ", "");
+        }
+
+        // If the item is magic, extract its name
+        extractBaseName();
+        if (discard) {
+            return;
+        }
+
+        // Set frame to base value
+        frameType = 0;
+
+        // Flatten ilvl rolls based on child category
+        flattenItemLevel();
+
+        // Set influence
+        if (shaper != null) {
+            variation = "shaper";
+        } else if (elder != null) {
+            variation = "elder";
+        }
+    }
+
+    /**
+     * Extracts item's base name, functions as a whitelist for bases
+     */
+    private void extractBaseName() {
+        // Precaution / shouldn't run
+        if (childCategory == null) {
+            discard = true;
+            return;
+        }
+
+        switch (childCategory) {
+            case "amulet":
+                if      (name.contains("Blue Pearl Amulet"))    name = "Blue Pearl Amulet";
+                else if (name.contains("Marble Amulet"))        name = "Marble Amulet";
+                else if (name.contains("Paua Amulet"))          name = "Paua Amulet";
+                else if (name.contains("Citrine Amulet"))       name = "Citrine Amulet";
+                else if (name.contains("Coral Amulet"))         name = "Coral Amulet";
+                else if (name.contains("Amber Amulet"))         name = "Amber Amulet";
+                else if (name.contains("Jade Amulet"))          name = "Jade Amulet";
+                else if (name.contains("Lapis Amulet"))         name = "Lapis Amulet";
+                else if (name.contains("Gold Amulet"))          name = "Gold Amulet";
+                else if (name.contains("Onyx Amulet"))          name = "Onyx Amulet";
+                else if (name.contains("Turquoise Amulet"))     name = "Turquoise Amulet";
+                else if (name.contains("Agate Amulet"))         name = "Agate Amulet";
+                else                                            discard = true;
+            break;
+
+            case "ring":
+                if      (name.contains("Iron Ring"))            name = "Iron Ring";
+                else if (name.contains("Coral Ring"))           name = "Coral Ring";
+                else if (name.contains("Paua Ring"))            name = "Paua Ring";
+                else if (name.contains("Sapphire Ring"))        name = "Sapphire Ring";
+                else if (name.contains("Topaz Ring"))           name = "Topaz Ring";
+                else if (name.contains("Ruby Ring"))            name = "Ruby Ring";
+                else if (name.contains("Gold Ring"))            name = "Gold Ring";
+                else if (name.contains("Two-Stone Ring"))       name = "Two-Stone Ring";
+                else if (name.contains("Diamond Ring"))         name = "Diamond Ring";
+                else if (name.contains("Amethyst Ring"))        name = "Amethyst Ring";
+                else if (name.contains("Unset Ring"))           name = "Unset Ring";
+                else if (name.contains("Opal Ring"))            name = "Opal Ring";
+                else if (name.contains("Steel Ring"))           name = "Steel Ring";
+                else                                            discard = true;
+                break;
+
+            case "belt":
+                if      (name.contains("Stygian Vise"))         name = "Stygian Vise";
+                else if (name.contains("Rustic Sash"))          name = "Rustic Sash";
+                else if (name.contains("Chain Belt"))           name = "Chain Belt";
+                else if (name.contains("Heavy Belt"))           name = "Heavy Belt";
+                else if (name.contains("Leather Belt"))         name = "Leather Belt";
+                else if (name.contains("Cloth Belt"))           name = "Cloth Belt";
+                else if (name.contains("Studded Belt"))         name = "Studded Belt";
+                else if (name.contains("Vanguard Belt"))        name = "Vanguard Belt";
+                else if (name.contains("Crystal Belt"))         name = "Crystal Belt";
+                else                                            discard = true;
+                break;
+
+
+            default:
+                discard = true;
+                break;
+
+            case "XXXXXXXXXXXX":
+                if      (name.contains("YYYYYYYYYYYY"))    name = "YYYYYYYYYYYY";
+                else if (name.contains("XXXXXXXXXXXX"))    name = "XXXXXXXXXXXX";
+                else                                            discard = true;
+                break;
+        }
+    }
+
+    /**
+     * Flatten ilvl rolls
+     */
+    private void flattenItemLevel() {
+        if (shaper == null && elder == null) {
+            if         (ilvl  < 74) discard = true;
+            else if    (ilvl  < 83) ilvl = 75;
+            else                    ilvl = 84;
+        } else {
+            if         (ilvl  < 68) discard = true;
+            else if    (ilvl  < 74) ilvl = 68;
+            else if    (ilvl  < 83) ilvl = 75;
+            else if    (ilvl == 84) ilvl = 84;
+            else                    ilvl = 85;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------

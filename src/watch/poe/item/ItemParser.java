@@ -157,10 +157,8 @@ public class ItemParser {
         }
 
         // Branch if item is a crafting base
-        if (base.getFrameType() < 2 || base.getIlvl() >= 68) {
-            if (base.getCorrupted() != null) {
-                items.add(new Item("base"));
-            }
+        if (base.getFrameType() < 3 || base.getIlvl() >= 68) {
+            items.add(new Item("base"));
         }
 
         // Branch default

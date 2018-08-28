@@ -650,8 +650,8 @@ public class Database {
     public Integer indexItemData(Item item, Integer parentCategoryId, Integer childCategoryId) {
         String query1 = "INSERT INTO data_itemData (" +
                         "  id_cp, id_cc, name, type, frame, tier, lvl, " +
-                        "  quality, corrupted, links, var, `key`, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+                        "  quality, corrupted, links, ilvl, var, `key`, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
         String query2 = "SELECT LAST_INSERT_ID(); ";
 
         try {
@@ -687,9 +687,13 @@ public class Database {
                     statement.setNull(10, 0);
                 } else statement.setInt(10, item.getLinks());
 
-                statement.setString(11, item.getVariation());
-                statement.setString(12, item.getKey());
-                statement.setString(13, Misc.formatIconURL(item.getIcon()));
+                if (item.getIlvl() == null) {
+                    statement.setNull(11, 0);
+                } else statement.setInt(11, item.getIlvl());
+
+                statement.setString(12, item.getVariation());
+                statement.setString(13, item.getKey());
+                statement.setString(14, Misc.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
             }
@@ -1223,7 +1227,7 @@ public class Database {
                         "    did.id , " +
                         "    did.name, did.type, did.frame, " +
                         "    did.tier, did.lvl, did.quality, did.corrupted, " +
-                        "    did.links, did.var, did.key, did.icon, " +
+                        "    did.links, did.ilvl, did.var, did.key, did.icon, " +
                         "    cp.name AS cpName, cc.name AS ccName " +
                         "FROM data_itemData AS did " +
                         "LEFT JOIN category_parent AS cp ON cp.id = did.id_cp " +
@@ -1262,7 +1266,7 @@ public class Database {
                         "  hdr.history AS history, " +
                         "  did.name, did.type, did.frame, " +
                         "  did.tier, did.lvl, did.quality, did.corrupted, " +
-                        "  did.links, did.var, did.icon, " +
+                        "  did.links, did.ilvl, did.var, did.icon, " +
                         "  cc.name AS ccName " +
                         "FROM      league_items   AS i " +
                         "JOIN      data_itemData  AS did ON i.id_d    = did.id " +

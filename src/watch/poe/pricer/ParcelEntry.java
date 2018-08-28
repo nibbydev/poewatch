@@ -12,7 +12,7 @@ public class ParcelEntry {
     private int quantity;
     private String child, name, type;
     private int frame;
-    private Integer tier, lvl, quality, corrupted, links;
+    private Integer tier, lvl, quality, corrupted, links, ilvl;
     private String var, icon;
     private HistoryData history = new HistoryData();
 
@@ -61,6 +61,10 @@ public class ParcelEntry {
         }
         try {
             links = Integer.parseUnsignedInt(resultSet.getString("links"));
+        } catch (NumberFormatException ex) {
+        }
+        try {
+            ilvl = Integer.parseUnsignedInt(resultSet.getString("ilvl"));
         } catch (NumberFormatException ex) {
         }
 

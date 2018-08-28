@@ -137,6 +137,7 @@ CREATE TABLE data_itemData (
     quality    TINYINT(1)    UNSIGNED DEFAULT NULL,
     corrupted  TINYINT(1)    UNSIGNED DEFAULT NULL,
     links      TINYINT(1)    UNSIGNED DEFAULT NULL,
+    ilvl       TINYINT(1)    UNSIGNED DEFAULT NULL,
     var        VARCHAR(32)   DEFAULT NULL,
     `key`      VARCHAR(128)  NOT NULL,
     icon       VARCHAR(256)  NOT NULL,

@@ -71,6 +71,8 @@ function AddTableHeaders($category) {
     echo "<th scope='col'>Lvl</th>";
     echo "<th scope='col'>Qual</th>";
     echo "<th scope='col'>Corr</th>";
+  } else if ( $category === "bases" ) {
+    echo "<th scope='col'>iLvl</th>";
   }
   
   echo "<th scope='col'>Chaos</th>";

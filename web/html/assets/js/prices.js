@@ -776,6 +776,9 @@ function parseItem(item) {
 
   // Format gem fields
   let gemFields = buildGemFields(item);
+
+  // Format base fields
+  let baseFields = buildBaseFields(item);
   
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
@@ -787,13 +790,14 @@ function parseItem(item) {
   let quantField = buildQuantField(item);
 
   let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>
+    <tr value={{id}}>{{name}}{{gem}}{{base}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
   item.tableData = template
     .replace("{{id}}",      item.id)
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
+    .replace("{{base}}",    baseFields)
     .replace("{{price}}",   priceFields)
     .replace("{{change}}",  changeField)
     .replace("{{quant}}",   quantField);
@@ -879,6 +883,19 @@ function buildGemFields(item) {
     template = template.replace("{{color}}",  "green");
     template = template.replace("{{corr}}",   "✕");
   }
+
+  return template;
+}
+
+function buildBaseFields(item) {
+  // Don't run if item is not a gem
+  if (FILTER.category !== "bases") return "";
+
+  let template = `
+  <td>{{ilvl}}</td>
+  `.trim();
+
+  template = template.replace("{{ilvl}}", item.ilvl);
 
   return template;
 }
