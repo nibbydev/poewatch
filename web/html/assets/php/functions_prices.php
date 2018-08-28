@@ -50,8 +50,11 @@ function AddSubCategorySelectors($categories) {
   echo "<option value='all'>All</option>";
 
   foreach ($categories as $entry) {
+    $value = $entry[0];
+    $display = $entry[1] ? $entry[1] : "(( {$entry[0]} ))";
+
     echo "
-    <option value='{$entry[0]}'>{$entry[1]}</option>";
+    <option value='$value'>$display</option>";
   }
 }
 
