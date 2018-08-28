@@ -277,8 +277,12 @@ function makeHistoryRequest(id) {
   });
 
   request.done(function(payload) {
-    // Get rid of any filler rows
-    if (ROW_filler) {
+    if (!payload.leagues.length) {
+      $(".filler-row div.d-flex").append("<div class='m-2'>No data</div>");
+      $(".buffering").remove();
+      console.log("No data");
+      return;
+    } else if (ROW_filler) {
       $(".filler-row").remove();
       ROW_filler = null;
     }
@@ -408,6 +412,10 @@ function formatWeek(leaguePayload) {
 function buildExpandedRow(id) {
   // Get list of past leagues available for the item
   let leagues = getItemHistoryLeagues(id);
+
+  if (leagues.length < 1) {
+    return;
+  }
 
   // Get league-specific data pack
   let leaguePayload = HISTORY_DATA[id][FILTER.league];
