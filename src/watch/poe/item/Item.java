@@ -747,6 +747,42 @@ public class Item {
                 else                                            discard = true;
                 break;
 
+            case "chest":
+                if      (name.contains("Glorious Plate"))       name = "Glorious Plate";
+                else if (name.contains("Vaal Regalia"))         name = "Vaal Regalia";
+                else if (name.contains("Assassin's Garb"))      name = "Assassin's Garb";
+                else if (name.contains("Gladiator Plate"))      name = "Gladiator Plate";
+                else if (name.contains("Zodiac Leather"))       name = "Zodiac Leather";
+                else if (name.contains("Astral Plate"))         name = "Astral Plate";
+                else if (name.contains("Crypt Armour"))         name = "Crypt Armour";
+                else                                            discard = true;
+                break;
+
+            case "boots":
+                if (name.contains("Slink Boots"))               name = "Slink Boots";
+                else if (name.contains("Titan Greaves"))        name = "Titan Greaves";
+                else if (name.contains("Sorcerer Boots"))       name = "Sorcerer Boots";
+                else if (name.contains("Two-Toned Boots"))      name = "Two-Toned Boots";
+                else                                            discard = true;
+                break;
+
+            case "gloves":
+                if      (name.contains("Slink Gloves"))         name = "Slink Gloves";
+                else if (name.contains("Spiked Gloves"))        name = "Spiked Gloves";
+                else if (name.contains("Fingerless Silk Gloves"))   name = "Fingerless Silk Gloves";
+                else if (name.contains("Gripped Gloves"))       name = "Gripped Gloves";
+                else if (name.contains("Titan Gauntlets"))      name = "Titan Gauntlets";
+                else if (name.contains("Sorcerer Gloves"))      name = "Sorcerer Gloves";
+                else                                            discard = true;
+                break;
+
+            case "helmet":
+                if      (name.contains("Bone Helmet"))          name = "Bone Helmet";
+                else if (name.contains("Lion Pelt"))            name = "Lion Pelt";
+                else if (name.contains("Eternal Burgonet"))     name = "Eternal Burgonet";
+                else if (name.contains("Hubris Circlet"))       name = "Hubris Circlet";
+                else                                            discard = true;
+                break;
 
             default:
                 discard = true;
