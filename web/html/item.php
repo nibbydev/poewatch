@@ -32,7 +32,7 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
           <div class="card custom-card">
-            <div class="card-header p-0">
+            <div class="card-header slim-card-edge">
 
               <div class="content d-none">
             

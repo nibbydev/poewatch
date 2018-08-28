@@ -25,15 +25,7 @@ function makeHistoryRequest(id) {
   });
 
   request.done(function(payload) {
-    if (!payload.leagues.length) {
-      $(".card-body .content").before("<div class='align-self-center'>No data</div>");
-      $(".buffering").remove();
-      console.log("No data");
-      return;
-    } else if (ROW_filler) {
-      $(".filler-row").remove();
-      ROW_filler = null;
-    }
+    $(".card-header.slim-card-edge > div.content").parent().addClass("p-0");
 
     // Create deep clone of the payload
     let tmp = $.extend(true, {}, payload);
