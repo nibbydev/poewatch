@@ -1249,17 +1249,22 @@ public class Database {
                         "  did.tier, did.lvl, did.quality, did.corrupted, " +
                         "  did.links, did.var, did.icon, " +
                         "  cc.name AS ccName " +
-                        "FROM league_items AS i " +
-                        "JOIN data_itemData AS did ON i.id_d = did.id " +
-                        "LEFT JOIN category_child AS cc ON did.id_cc = cc.id " +
-                        "LEFT JOIN (" +
+                        "FROM      league_items   AS i " +
+                        "JOIN      data_itemData  AS did ON i.id_d    = did.id " +
+                        "JOIN      data_leagues   AS l   ON l.id      = i.id_l " +
+                        "LEFT JOIN category_child AS cc  ON did.id_cc = cc.id " +
+                        "LEFT JOIN ( " +
                         "  SELECT    id_l, id_d," +
-                        "            SUBSTRING_INDEX(GROUP_CONCAT(mean ORDER BY time DESC SEPARATOR ','), ',', 7) AS history" +
-                        "  FROM      league_history_daily_rolling" +
-                        "  GROUP BY  id_l, id_d" +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(mean ORDER BY time DESC SEPARATOR ','), ',', 7) AS history " +
+                        "  FROM      league_history_daily_rolling " +
+                        "  GROUP BY  id_l, id_d " +
                         ") AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
-                        "GROUP BY i.id_l, i.id_d " +
-                        "ORDER BY i.id_l DESC, did.id_cp DESC, i.mean DESC";
+                        "WHERE     l.active = 1 " +
+                        "GROUP BY  i.id_l, " +
+                        "          i.id_d " +
+                        "ORDER BY  i.id_l    DESC, " +
+                        "          did.id_cp DESC, " +
+                        "          i.mean    DESC ";
 
         try {
             if (connection.isClosed()) return false;
