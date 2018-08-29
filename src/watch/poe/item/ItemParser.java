@@ -62,6 +62,12 @@ public class ItemParser {
             discard = true;
             return;
         }
+
+        // Race rewards usually cost tens of times more than the average for their sweet, succulent altArt
+        if (base.getRaceReward() != null) {
+            discard = true;
+            return;
+        }
     }
 
     /**

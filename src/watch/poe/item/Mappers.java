@@ -1,5 +1,6 @@
 package watch.poe.item;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.*;
 
 /**
@@ -71,6 +72,9 @@ public class Mappers {
         private int w, h, x, y, ilvl, frameType;
         private Boolean corrupted, shaper, elder;
         private String icon, league, id, name, typeLine, note;
+
+        @SerializedName(value = "raceReward", alternate = {"seaRaceReward", "cisRaceReward", "thRaceReward", "RaceReward"})
+        private Object raceReward;
 
         //------------------------------------------------------------------------------------------------------------
         // Base item objects
@@ -147,7 +151,7 @@ public class Mappers {
         }
 
         public String getId() {
-            return id.substring(0, 32);
+            return id;
         }
 
         public String getLeague() {
@@ -166,7 +170,6 @@ public class Mappers {
             return typeLine;
         }
 
-
         /**
          * Special variable override for when item is chaos
          */
@@ -176,6 +179,10 @@ public class Mappers {
 
         public boolean isIdentified() {
             return identified;
+        }
+
+        public Boolean getRaceReward() {
+            return raceReward == null ? null : true;
         }
     }
 }
