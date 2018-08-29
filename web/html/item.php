@@ -88,23 +88,9 @@
               </div>
 
             </div>
-            <div class="card-body d-flex flex-column">
+            <div class="card-body d-flex flex-column pb-0">
               <div class="buffering align-self-center"></div>
               <div class="content d-none">
-                <!-- Small chart row -->
-                <div class='row m-1'>
-                  <div class='col-md'>
-                    <h4>Chaos value</h4>
-                    <div class='chart-small'><canvas id="chart-price"></canvas></div>
-                  </div>
-                  <div class='col-md'>
-                    <h4>Listed per 24h</h4>
-                    <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
-                  </div>
-                </div>
-                <!--/Small chart row/-->
-
-                <hr>
 
                 <!-- Details table row -->
                 <div class='row m-1 mt-2'>
@@ -176,7 +162,6 @@
                 <!-- Past data row -->
                 <div class='row m-1 mb-3'>
                   <div class='col-sm'>
-                    <h4>Past data</h4>
                     <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
                       <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
                       <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
