@@ -109,6 +109,19 @@ a:hover {color: #bbb}
   max-width: 26px;
 }
 
+/* Influence containers */
+
+.influence {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.influence-shaper-1x1 {background-image: url("https://web.poecdn.com/image/inventory/ShaperBackground.png?w=1&h=1&x=0&y=0")}
+.influence-elder-1x1  {background-image: url("https://web.poecdn.com/image/inventory/ElderBackground.png?w=1&h=1")}
+.influence-shaper-2x3 {background-image: url("https://web.poecdn.com/image/inventory/ShaperBackground.png?w=2&h=3&x=0&y=0")}
+.influence-elder-2x3  {background-image: url("https://web.poecdn.com/image/inventory/ElderBackground.png?w=2&h=3")}
+
 /*------------------------------------------------------------------------------------------------------------
 // Card styling
 //----------------------------------------------------------------------------------------------------------*/

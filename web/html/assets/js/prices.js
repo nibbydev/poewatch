@@ -825,7 +825,7 @@ function buildNameField(item) {
   let template = `
   <td>
     <div class='d-flex align-items-center'>
-      <span class='img-container img-container-sm text-center mr-1'>{{influence}}<img class='position-absolute' src='{{icon}}'></span>
+      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
       <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var_or_tier}}
     </div>
   </td>
@@ -849,9 +849,9 @@ function buildNameField(item) {
 
   if (FILTER.category === "bases") {
     if (item.var === "shaped") {
-      template = template.replace("{{influence}}", "<img class='position-absolute' src='https://www.pathofexile.com/image/inventory/ShaperBackground.png?w=1&h=1&x=0&y=0'>");
+      template = template.replace("{{influence}}", "influence influence-shaper-1x1");
     } else if (item.var === "elder") {
-      template = template.replace("{{influence}}", "<img class='position-absolute' src='https://www.pathofexile.com/image/inventory/ElderBackground.png?w=1&h=1'>");
+      template = template.replace("{{influence}}", "influence influence-elder-1x1");
     } else {
       template = template.replace("{{influence}}", "");
     }

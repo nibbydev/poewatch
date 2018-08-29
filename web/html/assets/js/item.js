@@ -183,9 +183,9 @@ function fillData() {
 
   if (ITEM.categoryParent === "bases") {
     if (ITEM.variation === "shaped") {
-      $("#item-influence").attr('src', "https://www.pathofexile.com/image/inventory/ShaperBackground.png?w=2&h=3&x=0&y=0");
+      $("#item-icon").parent().addClass("influence influence-shaper-2x3");
     } else if (ITEM.variation === "elder") {
-      $("#item-influence").attr('src', "https://www.pathofexile.com/image/inventory/ElderBackground.png?w=2&h=3");
+      $("#item-icon").parent().addClass("influence influence-elder-2x3");
     }
   }
   
