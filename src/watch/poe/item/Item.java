@@ -759,7 +759,7 @@ public class Item {
                 break;
 
             case "boots":
-                if (name.contains("Slink Boots"))               name = "Slink Boots";
+                if      (name.contains("Slink Boots"))          name = "Slink Boots";
                 else if (name.contains("Titan Greaves"))        name = "Titan Greaves";
                 else if (name.contains("Sorcerer Boots"))       name = "Sorcerer Boots";
                 else if (name.contains("Two-Toned Boots"))      name = "Two-Toned Boots";
@@ -801,15 +801,15 @@ public class Item {
      */
     private void flattenItemLevel() {
         if (shaper == null && elder == null) {
-            if         (ilvl  < 74) discard = true;
-            else if    (ilvl  < 83) ilvl = 75;
-            else                    ilvl = 84;
+            if         (ilvl  < 74) discard = true;     //  1 -  73 = none
+            else if    (ilvl  < 83) ilvl = 75;          // 74 -  82 =   75
+            else                    ilvl = 84;          // 83 - 100 =   84
         } else {
-            if         (ilvl  < 68) discard = true;
-            else if    (ilvl  < 74) ilvl = 68;
-            else if    (ilvl  < 83) ilvl = 75;
-            else if    (ilvl == 84) ilvl = 84;
-            else                    ilvl = 85;
+            if         (ilvl  < 68) discard = true;     //  1 -  67 = none
+            else if    (ilvl  < 74) ilvl = 68;          // 68 -  73 =   68
+            else if    (ilvl  < 83) ilvl = 75;          // 74 -  82 =   75
+            else if    (ilvl  < 85) ilvl = 84;          // 83 -  84 =   84
+            else                    ilvl = 85;          // 85 - 100 =   85
         }
     }
 
