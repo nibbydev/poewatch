@@ -39,7 +39,8 @@ function makeHistoryRequest(id) {
       
       leagues.push({
         name: leagueData.leagueName,
-        display: leagueData.leagueDisplay
+        display: leagueData.leagueDisplay,
+        active: leagueData.leagueActive
       });
     }
     ITEM = tmp;
@@ -129,7 +130,7 @@ function fillData() {
   CHART_HISTORY.data.labels = formattedHistory.keys;
   CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
   CHART_HISTORY.update();
-  
+
   // Set data in details table
   $("#details-table-mean")    .html(  formatNum(leaguePayload.mean)      );
   $("#details-table-median")  .html(  formatNum(leaguePayload.median)    );
@@ -160,7 +161,7 @@ function createSelectorFields(leagues) {
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
       .replace("{{selected}}",  (LEAGUE === leagues[i].name ? "selected" : ""))
       .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      leagues[i].display);
+      .replace("{{name}}",      leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )");
   }
 
   $("#history-league-selector").append(buffer);
@@ -370,7 +371,9 @@ function formatNum(num) {
     return parts.join(".");
   }
 
-  return numberWithCommas(Math.round(num * 100) / 100);
+  if (num === null) {
+    return 'Unavailable';
+  } else return numberWithCommas(Math.round(num * 100) / 100);
 }
 
 function formatDate(date) {

@@ -497,7 +497,7 @@ function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague)
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
       .replace("{{selected}}",  (selectedLeague === leagues[i].name ? "selected" : ""))
       .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      leagues[i].display);
+      .replace("{{name}}",      leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )");
   }
 
   $("#history-league-selector", expandedRow).append(buffer);
@@ -609,7 +609,8 @@ function getItemHistoryLeagues(id) {
     if (HISTORY_DATA[id].hasOwnProperty(key)) {
       leagues.push({
         name: key,
-        display: HISTORY_DATA[id][key].leagueDisplay
+        display: HISTORY_DATA[id][key].leagueDisplay,
+        active: HISTORY_DATA[id][key].leagueActive
       });
     }
   }
@@ -943,7 +944,9 @@ function formatNum(num) {
     return parts.join(".");
   }
 
-  return numberWithCommas(num);
+  if (num === null) {
+    return 'Unavailable';
+  } else return numberWithCommas(Math.round(num * 100) / 100);
 }
 
 function roundPrice(price) {
