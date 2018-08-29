@@ -19,11 +19,11 @@ function get_league_data($pdo, $id) {
     GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
     GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
     GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
-  FROM      league_history_daily_rolling AS h
-  JOIN      data_leagues    AS l  ON h.id_l  = l.id
-  JOIN      league_items    AS i  ON i.id_l  = l.id AND i.id_d = h.id_d
-  WHERE     h.id_d = ?
-  GROUP BY  h.id_l, h.id_d
+  FROM      league_items                 AS i
+  JOIN      data_leagues                 AS l ON i.id_l = l.id
+  LEFT JOIN league_history_daily_rolling AS h ON h.id_l = l.id AND h.id_d = i.id_d
+  WHERE     i.id_d = ?
+  GROUP BY  i.id_l, i.id_d
   ORDER BY  l.id DESC";
 
   $stmt = $pdo->prepare($query);
@@ -36,7 +36,7 @@ function get_item_data($pdo, $id) {
   $query = "SELECT 
     d.name, d.type, d.frame, d.icon,
     d.tier, d.lvl, d.quality, d.corrupted, 
-    d.links, d.var AS variation,
+    d.links, d.ilvl, d.var AS variation,
     cp.name AS categoryParent, cc.name AS categoryChild
   FROM      data_itemData   AS d
   JOIN      category_parent AS cp ON d.id_cp = cp.id 
@@ -79,49 +79,35 @@ function parse_history_data($stmt) {
       'history'       =>          array()
     );
 
-    // Add null values to counter missing entries from league start
-    // Don't run for Hardcore (id 1) nor Standard (id 2)
-    if ($tmp['leagueId'] > 2) {
-      // Get the two dates as Unix timestamps (ie number of seconds 
-      // since January 1 1970 00:00:00 UTC)
-      $startDate = strtotime($tmp['leagueStart']);
-      $firstDate = strtotime($times[0]);
+    if (!is_null($row['mean_list'])) {
+      // Add null values to counter missing entries from league start
+      // Don't run for Hardcore (id 1) nor Standard (id 2)
+      if ($tmp['leagueId'] > 2) {
+        // Get the two dates as Unix timestamps (ie number of seconds 
+        // since January 1 1970 00:00:00 UTC)
+        $startDate = strtotime($tmp['leagueStart']);
+        $firstDate = strtotime($times[0]);
 
-      // Find the number of days of difference between the two dates
-      $dateDiff = ceil( ($firstDate - $startDate) / 60 / 60 / 24);
+        // Find the number of days of difference between the two dates
+        $dateDiff = ceil( ($firstDate - $startDate) / 60 / 60 / 24);
 
-      // Fill tmp array with null values for the amount of missing days
-      for ($i = 0; $i < $dateDiff; $i++) { 
-        $stamp = date('Y-m-d', $startDate + $i * 86400);
-        $tmp['history'][ $stamp ] = null;
+        // Fill tmp array with null values for the amount of missing days
+        for ($i = 0; $i < $dateDiff; $i++) { 
+          $stamp = date('Y-m-d', $startDate + $i * 86400);
+          $tmp['history'][ $stamp ] = null;
+        }
       }
-    } else {
-      // Get the two dates as Unix timestamps (ie number of seconds 
-      // since January 1 1970 00:00:00 UTC)
-      $lastDate = strtotime(end($times));
-      $firstDate = strtotime($times[0]);
-      // startDate points to 120 days before the newest timestamp
-      $startDate = $lastDate - 60 * 60 * 24 * 120;
-      
-      // Find the number of days of difference between the two dates
-      $dateDiff = ceil( ($firstDate - $startDate) / 60 / 60 / 24);
 
-      // Fill tmp array with null values for the amount of missing days
-      for ($i = 0; $i < $dateDiff; $i++) { 
-        $stamp = date('Y-m-d', $startDate + $i * 86400);
-        $tmp['history'][ $stamp ] = null;
+      for ($i = 0; $i < sizeof($means); $i++) { 
+        $tmp['history'][ $times[$i] ] = array(
+          'mean'     => (float) $means[$i],
+          'median'   => (float) $medians[$i],
+          'mode'     => (float) $modes[$i],
+          'quantity' => (int)   $quants[$i],
+        );
       }
     }
 
-    for ($i = 0; $i < sizeof($means); $i++) { 
-      $tmp['history'][ $times[$i] ] = array(
-        'mean'     => (float) $means[$i],
-        'median'   => (float) $medians[$i],
-        'mode'     => (float) $modes[$i],
-        'quantity' => (int)   $quants[$i],
-      );
-    }
-    
   /*
     // Add null values to counter missing entries after latest entry
     // Don't run for Hardcore (id 1) nor Standard (id 2)

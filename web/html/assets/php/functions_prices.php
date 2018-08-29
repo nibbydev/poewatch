@@ -50,8 +50,11 @@ function AddSubCategorySelectors($categories) {
   echo "<option value='all'>All</option>";
 
   foreach ($categories as $entry) {
+    $value = $entry[0];
+    $display = $entry[1] ? $entry[1] : "(( {$entry[0]} ))";
+
     echo "
-    <option value='{$entry[0]}'>{$entry[1]}</option>";
+    <option value='$value'>$display</option>";
   }
 }
 
@@ -71,6 +74,8 @@ function AddTableHeaders($category) {
     echo "<th scope='col'>Lvl</th>";
     echo "<th scope='col'>Qual</th>";
     echo "<th scope='col'>Corr</th>";
+  } else if ( $category === "bases" ) {
+    echo "<th scope='col'>iLvl</th>";
   }
   
   echo "<th scope='col'>Chaos</th>";
@@ -79,7 +84,8 @@ function AddTableHeaders($category) {
   echo "<th scope='col' class='fixedSizeCol'>Count</th>";
 }
 
-// Adds a message to the MotD box
+// Adds a message to the MotD box 
+/*
 function AddMotdMessage($category) {
   echo "<p class='mb-0 text-center subtext-1'>";
 
@@ -90,4 +96,5 @@ function AddMotdMessage($category) {
   }
 
   echo "</p>";
-}
+} 
+*/

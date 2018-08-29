@@ -277,7 +277,6 @@ function makeHistoryRequest(id) {
   });
 
   request.done(function(payload) {
-    // Get rid of any filler rows
     if (ROW_filler) {
       $(".filler-row").remove();
       ROW_filler = null;
@@ -338,6 +337,21 @@ function formatHistory(leaguePayload) {
       }
     }
   } else {
+    let oldestDate = new Date();
+    oldestDate.setDate(oldestDate.getDate() - 120);
+    let oldDate = new Date(Object.keys(leaguePayload.history)[0]);
+
+    let timeDiff = Math.abs(oldDate.getTime() - oldestDate.getTime());
+    let diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+
+    // For development
+    if (diffDays > 120) diffDays = 120;
+
+    for (let i = 0; i < diffDays; i++) {
+      keys.push(null);
+      vals.push(null);
+    }
+
     // Grab values
     for (var key in leaguePayload.history) {
       if (leaguePayload.history.hasOwnProperty(key)) {
@@ -393,13 +407,13 @@ function formatWeek(leaguePayload) {
   }
 
   // Add today's values
-  means.push(leaguePayload.mean);
-  quants.push(leaguePayload.quantity);
+  /*means.push(leaguePayload.mean);
+  quants.push(leaguePayload.quantity);*/
 
   // Return generated data
   return {
-    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Right now"],
-    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago", "Last 24 hours"],
+    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
+    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
     'means': means,
     'quants': quants
   }
@@ -408,6 +422,10 @@ function formatWeek(leaguePayload) {
 function buildExpandedRow(id) {
   // Get list of past leagues available for the item
   let leagues = getItemHistoryLeagues(id);
+
+  if (leagues.length < 1) {
+    return;
+  }
 
   // Get league-specific data pack
   let leaguePayload = HISTORY_DATA[id][FILTER.league];
@@ -776,6 +794,9 @@ function parseItem(item) {
 
   // Format gem fields
   let gemFields = buildGemFields(item);
+
+  // Format base fields
+  let baseFields = buildBaseFields(item);
   
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
@@ -787,13 +808,14 @@ function parseItem(item) {
   let quantField = buildQuantField(item);
 
   let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{price}}{{change}}{{quant}}</tr>
+    <tr value={{id}}>{{name}}{{gem}}{{base}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
   item.tableData = template
     .replace("{{id}}",      item.id)
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
+    .replace("{{base}}",    baseFields)
     .replace("{{price}}",   priceFields)
     .replace("{{change}}",  changeField)
     .replace("{{quant}}",   quantField);
@@ -803,7 +825,7 @@ function buildNameField(item) {
   let template = `
   <td>
     <div class='d-flex align-items-center'>
-      <span class='img-container img-container-sm text-center mr-1'><img src='{{icon}}'></span>
+      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
       <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var_or_tier}}
     </div>
   </td>
@@ -823,6 +845,18 @@ function buildNameField(item) {
     template = template.replace("{{foil}}", "class='item-foil'");
   } else {
     template = template.replace("{{foil}}", "");
+  }
+
+  if (FILTER.category === "bases") {
+    if (item.var === "shaped") {
+      template = template.replace("{{influence}}", "influence influence-shaper-1x1");
+    } else if (item.var === "elder") {
+      template = template.replace("{{influence}}", "influence influence-elder-1x1");
+    } else {
+      template = template.replace("{{influence}}", "");
+    }
+  } else {
+    template = template.replace("{{influence}}", "");
   }
 
   if (FILTER.category === "enchantments") {
@@ -879,6 +913,19 @@ function buildGemFields(item) {
     template = template.replace("{{color}}",  "green");
     template = template.replace("{{corr}}",   "✕");
   }
+
+  return template;
+}
+
+function buildBaseFields(item) {
+  // Don't run if item is not a gem
+  if (FILTER.category !== "bases") return "";
+
+  let template = `
+  <td>{{ilvl}}</td>
+  `.trim();
+
+  template = template.replace("{{ilvl}}", item.ilvl);
 
   return template;
 }

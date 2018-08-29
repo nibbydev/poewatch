@@ -6,7 +6,7 @@ import java.sql.SQLException;
 public class ItemdataEntry {
     private int id, frame;
     private String name, type, key, parentCategory, childCategory, var, icon;
-    private Integer tier, lvl, quality, links;
+    private Integer tier, lvl, quality, links, ilvl;
     private Boolean corrupted;
 
     public void load(ResultSet resultSet) throws SQLException {
@@ -34,6 +34,9 @@ public class ItemdataEntry {
 
         links = resultSet.getInt("links");
         if (resultSet.wasNull()) links = null;
+
+        ilvl = resultSet.getInt("ilvl");
+        if (resultSet.wasNull()) ilvl = null;
     }
 
     public String getId() {

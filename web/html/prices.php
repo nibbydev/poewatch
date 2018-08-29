@@ -65,19 +65,7 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'>
           <!-- MotD -->
-          <div class="row d-block mb-3">
-            <div class="col"> 
-              <div class="card custom-card">
-                <div class="card-header slim-card-edge"></div>
-                <div class="card-body p-1">
-
-                  <?php AddMotdMessage($SERVICE_category); ?>
-
-                </div>
-                <div class="card-footer slim-card-edge"></div>
-              </div>
-            </div>
-          </div>
+          <?php GenMotDBox(); ?>
           <!--/MotD/-->
 
           <?php if ($SERVICE_category === "gems"): ?>
@@ -248,6 +236,47 @@
             </div>
           </div>
           <!--/Map tier + generic field row/-->
+
+          <?php elseif ($SERVICE_category === "bases"): ?>
+
+          <!-- Base + generic field row -->
+          <div class="row mb-3">
+            <div class="col-6 col-md-3 mb-2">
+              <h4 class='nowrap'>Low count</h4>
+              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+                <label class="btn btn-outline-dark active">
+                  <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                </label>
+                <label class="btn btn-outline-dark">
+                  <input type="radio" name="confidence" value="1"><a>Show</a>
+                </label>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2 link-fields">
+              <h4>Ilvl</h4>
+              <div class="form-group">
+                <select class="form-control" id="select-tier">
+                  <option value="all" selected>All</option>
+                  <option value="1">75</option>
+                  <option value="2">84</option>
+                  <option value="3">85</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+              <h4>Category</h4>
+              <select class="form-control custom-select" id="search-sub">
+
+                <?php AddSubCategorySelectors($SERVICE_categories); ?>
+
+              </select>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+              <h4>Search</h4>
+              <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+            </div>
+          </div>
+          <!--/Base + generic field row/-->
 
           <?php else: ?>
 

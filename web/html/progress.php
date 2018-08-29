@@ -34,6 +34,10 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
+          <!-- MotD -->
+          <?php GenMotDBox(); ?>
+          <!--/MotD/-->
+
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
             <div class="card-body pb-0">

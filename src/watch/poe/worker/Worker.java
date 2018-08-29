@@ -2,7 +2,7 @@ package watch.poe.worker;
 
 import watch.poe.Config;
 import watch.poe.Main;
-import watch.poe.Mappers;
+import watch.poe.item.Mappers;
 import com.google.gson.Gson;
 
 import java.io.IOException;

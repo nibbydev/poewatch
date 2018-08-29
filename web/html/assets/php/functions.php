@@ -26,10 +26,6 @@ function GenNavbar() {
       'href'    => '/characters'
     ),
     array(
-      'display' => 'EasyBuyout',
-      'href'    => '/easybuyout'
-    ),
-    array(
       'display' => 'About',
       'href'    => '/about'
     )
@@ -64,11 +60,6 @@ function GenNavbar() {
 function GenCatMenuHTML() {
   $data = array(
     array(
-      "href"  => "prices?category=enchantments",
-      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1",
-      "name"  => "Enchantments"
-    ),
-    array(
       "href"  => "prices?category=accessories",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Amulets/EyeOfInnocence.png?scale=1&w=1&h=1",
       "name"  => "Accessories"
@@ -79,6 +70,11 @@ function GenCatMenuHTML() {
       "name"  => "Armour"
     ),
     array(
+      "href"  => "prices?category=bases",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Armours/BodyArmours/BodyStr3C.png?scale=1&w=1&h=1",
+      "name"  => "Bases"
+    ),
+    array(
       "href"  => "prices?category=currency",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1",
       "name"  => "Currency"
@@ -87,6 +83,11 @@ function GenCatMenuHTML() {
       "href"  => "prices?category=cards",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Divination/InventoryIcon.png?scale=1&w=1&h=1",
       "name"  => "Div cards"
+    ),
+    array(
+      "href"  => "prices?category=enchantments",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1",
+      "name"  => "Enchantments"
     ),
     array(
       "href"  => "prices?category=essence",
@@ -152,6 +153,23 @@ function GenCatMenuHTML() {
 
   echo "  </div>
         <div class='card-footer slim-card-edge'>
+      </div>
+    </div>
+  </div>";
+}
+
+function GenMotDBox() {
+  echo "
+  <div class='row d-block mb-3'>
+    <div class='col'> 
+      <div class='card custom-card'>
+        <div class='card-header slim-card-edge'></div>
+        <div class='card-body p-1'>
+          <p class='mb-0 text-center subtext-1'>
+            [ allan please add advertisement ]
+          </p>
+        </div>
+        <div class='card-footer slim-card-edge'></div>
       </div>
     </div>
   </div>";

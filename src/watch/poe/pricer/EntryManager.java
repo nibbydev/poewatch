@@ -2,6 +2,9 @@ package watch.poe.pricer;
 
 import com.google.gson.Gson;
 import watch.poe.*;
+import watch.poe.item.Item;
+import watch.poe.item.ItemParser;
+import watch.poe.item.Mappers;
 import watch.poe.pricer.itemdata.ItemdataEntry;
 
 import java.io.File;
@@ -15,7 +18,7 @@ public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     private Set<AccountEntry> accountSet = new HashSet<>();
-    private Set<RawMaps.RawEntry> entrySet = new HashSet<>();
+    private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
     private Gson gson;
@@ -119,7 +122,7 @@ public class EntryManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     private void uploadRawEntries() {
-        Set<RawMaps.RawEntry> entrySet = this.entrySet;
+        Set<RawEntry> entrySet = this.entrySet;
         this.entrySet = new HashSet<>();
 
         Main.DATABASE.uploadRaw(entrySet);
@@ -428,7 +431,7 @@ public class EntryManager extends Thread {
 
         if (status.isSixtyBool()) {
             a = System.currentTimeMillis();
-            Main.DATABASE.calcQuantity();
+            Main.DATABASE.addHourly();
             a22 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
@@ -436,7 +439,7 @@ public class EntryManager extends Thread {
             a23 += System.currentTimeMillis() - a;
 
             a = System.currentTimeMillis();
-            Main.DATABASE.addHourly();
+            Main.DATABASE.calcQuantity();
             a24 += System.currentTimeMillis() - a;
         }
 
@@ -466,32 +469,51 @@ public class EntryManager extends Thread {
         for (Mappers.Stash stash : reply.stashes) {
             Integer leagueId = null;
 
-            for (Item item : stash.items) {
-                if (!Main.WORKER_MANAGER.isFlag_Run()) return;
-
-                if (leagueId == null) {
-                    leagueId = Main.LEAGUE_MANAGER.getLeagueId(item.getLeague());
-                    if (leagueId == null) break;
+            for (Mappers.BaseItem baseItem : stash.items) {
+                if (!Main.WORKER_MANAGER.isFlag_Run()) {
+                    return;
                 }
 
-                item.fix();
-                item.parseItem();
-                if (item.isDiscard()) continue;
+                if (leagueId == null) {
+                    String league = baseItem.getLeague();
+                    leagueId = Main.LEAGUE_MANAGER.getLeagueId(league);
 
-                RawMaps.RawEntry rawEntry = new RawMaps.RawEntry();
-                rawEntry.load(item);
+                    if (leagueId == null) {
+                        break;
+                    }
+                }
 
-                boolean discard = rawEntry.convertPrice(currencyLeagueMap.get(leagueId));
-                if (discard) continue; // Couldn't convert the listed currency to chaos
+                // Create ItemParser instance for the item
+                ItemParser itemParser = new ItemParser(baseItem, currencyLeagueMap.get(leagueId));
 
-                Integer itemId = Main.RELATIONS.indexItem(item, leagueId);
-                if (itemId == null) continue;
+                // All  branched items should be discarded
+                if (itemParser.isDiscard()) {
+                    continue;
+                }
 
-                rawEntry.setItemId(itemId);
-                rawEntry.setLeagueId(leagueId);
-                rawEntry.setAccountName(stash.accountName);
+                // Parse branched items
+                ArrayList<Item> items = itemParser.parseItems(baseItem);
 
-                entrySet.add(rawEntry);
+                for (Item item : items) {
+                    // This specific branched item should be discarded
+                    if (item.isDiscard()) {
+                        continue;
+                    }
+
+                    // Get item ID (if missing, index it)
+                    Integer itemId = Main.RELATIONS.indexItem(item, leagueId, itemParser.isDoNotIndex());
+                    if (itemId == null) continue;
+
+                    // Create a RawEntry
+                    RawEntry rawEntry = new RawEntry();
+                    rawEntry.setItemId(itemId);
+                    rawEntry.setLeagueId(leagueId);
+                    rawEntry.setAccountName(stash.accountName);
+                    rawEntry.setPrice(itemParser.getPrice());
+
+                    // Add it to the db queue
+                    entrySet.add(rawEntry);
+                }
             }
 
             if (stash.accountName != null && stash.lastCharacterName != null && leagueId != null) {

@@ -137,6 +137,7 @@ CREATE TABLE data_itemData (
     quality    TINYINT(1)    UNSIGNED DEFAULT NULL,
     corrupted  TINYINT(1)    UNSIGNED DEFAULT NULL,
     links      TINYINT(1)    UNSIGNED DEFAULT NULL,
+    ilvl       TINYINT(1)    UNSIGNED DEFAULT NULL,
     var        VARCHAR(32)   DEFAULT NULL,
     `key`      VARCHAR(128)  NOT NULL,
     icon       VARCHAR(256)  NOT NULL,
@@ -225,7 +226,7 @@ CREATE TABLE league_history_daily_inactive (
     quantity  INT(8)         UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE RESTRICT
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -247,7 +248,7 @@ CREATE TABLE league_history_daily_rolling (
     quantity   INT(8)         UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
 
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -271,7 +272,7 @@ CREATE TABLE league_history_hourly_rolling (
     quantity  INT(8)         UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
 
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

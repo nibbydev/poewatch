@@ -1,16 +1,16 @@
 package watch.poe.database;
 
 import watch.poe.Config;
-import watch.poe.Item;
+import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.Misc;
 import watch.poe.account.AccountRelation;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.FileEntry;
+import watch.poe.pricer.RawEntry;
 import watch.poe.pricer.itemdata.ItemdataEntry;
 import watch.poe.pricer.ParcelEntry;
-import watch.poe.pricer.RawMaps.*;
 import watch.poe.relations.CategoryEntry;
 
 import java.sql.*;
@@ -650,8 +650,8 @@ public class Database {
     public Integer indexItemData(Item item, Integer parentCategoryId, Integer childCategoryId) {
         String query1 = "INSERT INTO data_itemData (" +
                         "  id_cp, id_cc, name, type, frame, tier, lvl, " +
-                        "  quality, corrupted, links, var, `key`, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+                        "  quality, corrupted, links, ilvl, var, `key`, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
         String query2 = "SELECT LAST_INSERT_ID(); ";
 
         try {
@@ -664,17 +664,36 @@ public class Database {
                 else statement.setInt(2, childCategoryId);
 
                 statement.setString(3, item.getName());
-                statement.setString(4, item.getType());
-                statement.setInt(5, item.getFrame());
+                statement.setString(4, item.getTypeLine());
+                statement.setInt(5, item.getFrameType());
 
-                statement.setString(6, item.getTier());
-                statement.setString(7, item.getLevel());
-                statement.setString(8, item.getQuality());
-                statement.setString(9, item.isCorrupted());
-                statement.setString(10, item.getLinks());
-                statement.setString(11, item.getVariation());
-                statement.setString(12, item.getKey());
-                statement.setString(13, Misc.formatIconURL(item.getIcon()));
+                if (item.getTier() == null) {
+                    statement.setNull(6, 0);
+                } else statement.setInt(6, item.getTier());
+
+                if (item.getLevel() == null) {
+                    statement.setNull(7, 0);
+                } else statement.setInt(7, item.getLevel());
+
+                if (item.getQuality() == null) {
+                    statement.setNull(8, 0);
+                } else statement.setInt(8, item.getQuality());
+
+                if (item.getCorrupted() == null) {
+                    statement.setNull(9, 0);
+                } else statement.setInt(9, item.getCorrupted());
+
+                if (item.getLinks() == null) {
+                    statement.setNull(10, 0);
+                } else statement.setInt(10, item.getLinks());
+
+                if (item.getIlvl() == null) {
+                    statement.setNull(11, 0);
+                } else statement.setInt(11, item.getIlvl());
+
+                statement.setString(12, item.getVariation());
+                statement.setString(13, item.getKey());
+                statement.setString(14, Misc.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
             }
@@ -1208,7 +1227,7 @@ public class Database {
                         "    did.id , " +
                         "    did.name, did.type, did.frame, " +
                         "    did.tier, did.lvl, did.quality, did.corrupted, " +
-                        "    did.links, did.var, did.key, did.icon, " +
+                        "    did.links, did.ilvl, did.var, did.key, did.icon, " +
                         "    cp.name AS cpName, cc.name AS ccName " +
                         "FROM data_itemData AS did " +
                         "LEFT JOIN category_parent AS cp ON cp.id = did.id_cp " +
@@ -1247,19 +1266,24 @@ public class Database {
                         "  hdr.history AS history, " +
                         "  did.name, did.type, did.frame, " +
                         "  did.tier, did.lvl, did.quality, did.corrupted, " +
-                        "  did.links, did.var, did.icon, " +
+                        "  did.links, did.ilvl, did.var, did.icon, " +
                         "  cc.name AS ccName " +
-                        "FROM league_items AS i " +
-                        "JOIN data_itemData AS did ON i.id_d = did.id " +
-                        "LEFT JOIN category_child AS cc ON did.id_cc = cc.id " +
-                        "LEFT JOIN (" +
+                        "FROM      league_items   AS i " +
+                        "JOIN      data_itemData  AS did ON i.id_d    = did.id " +
+                        "JOIN      data_leagues   AS l   ON l.id      = i.id_l " +
+                        "LEFT JOIN category_child AS cc  ON did.id_cc = cc.id " +
+                        "LEFT JOIN ( " +
                         "  SELECT    id_l, id_d," +
-                        "            SUBSTRING_INDEX(GROUP_CONCAT(mean ORDER BY time DESC SEPARATOR ','), ',', 7) AS history" +
-                        "  FROM      league_history_daily_rolling" +
-                        "  GROUP BY  id_l, id_d" +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(mean ORDER BY time DESC SEPARATOR ','), ',', 7) AS history " +
+                        "  FROM      league_history_daily_rolling " +
+                        "  GROUP BY  id_l, id_d " +
                         ") AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
-                        "GROUP BY i.id_l, i.id_d " +
-                        "ORDER BY i.id_l DESC, did.id_cp DESC, i.mean DESC";
+                        "WHERE     l.active = 1 " +
+                        "GROUP BY  i.id_l, " +
+                        "          i.id_d " +
+                        "ORDER BY  i.id_l    DESC, " +
+                        "          did.id_cp DESC, " +
+                        "          i.mean    DESC ";
 
         try {
             if (connection.isClosed()) return false;
