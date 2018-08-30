@@ -801,13 +801,12 @@ public class Item {
      */
     private void flattenItemLevel() {
         if (shaper == null && elder == null) {
-            if         (ilvl  < 74) discard = true;     //  1 -  73 = none
-            else if    (ilvl  < 83) ilvl = 75;          // 74 -  82 =   75
+            if         (ilvl  < 83) discard = true;     //  1 -  74 = none
             else                    ilvl = 84;          // 83 - 100 =   84
         } else {
             if         (ilvl  < 68) discard = true;     //  1 -  67 = none
-            else if    (ilvl  < 74) ilvl = 68;          // 68 -  73 =   68
-            else if    (ilvl  < 83) ilvl = 75;          // 74 -  82 =   75
+            else if    (ilvl  < 75) ilvl = 68;          // 68 -  74 =   68
+            else if    (ilvl  < 83) ilvl = 75;          // 75 -  82 =   75
             else if    (ilvl  < 85) ilvl = 84;          // 83 -  84 =   84
             else                    ilvl = 85;          // 85 - 100 =   85
         }
