@@ -15,6 +15,9 @@ var FILTER = {
   gemLvl: null,
   gemQuality: null,
   gemCorrupted: null,
+  baseIlvlMin: null,
+  baseIlvlMax: null,
+  baseInfluence: null,
   parseAmount: 100
 };
 
@@ -164,6 +167,36 @@ function defineListeners() {
     updateQueryString("corrupted", FILTER.gemCorrupted);
     sortResults(ITEMS);
   });
+
+  // Base iLvl
+  $("#select-ilvl").on("change", function(){
+    let ilvlRange = $(":selected", this).val();
+    console.log("Base iLvl filter: " + ilvlRange);
+    if (ilvlRange === "all") {
+      FILTER.baseIlvlMin = null;
+      FILTER.baseIlvlMax = null;
+      updateQueryString("ilvl", null);
+    } else {
+      let splitRange = ilvlRange.split("-");
+      FILTER.baseIlvlMin = parseInt(splitRange[0]);
+      FILTER.baseIlvlMax = parseInt(splitRange[1]);
+      updateQueryString("ilvl", ilvlRange);
+    }
+    
+    sortResults(ITEMS);
+  });
+
+  // Base influence
+  $("#select-influence").on("change", function(){
+    FILTER.baseInfluence = $(":selected", this).val();
+    console.log("Base influence filter: " + FILTER.baseInfluence);
+    if (FILTER.baseInfluence === "all") {
+      FILTER.baseInfluence = null;
+    }
+    updateQueryString("influence", FILTER.baseInfluence);
+    sortResults(ITEMS);
+  });
+
 
   // Expand row
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
@@ -1125,6 +1158,22 @@ function checkHideItem(item) {
     }
   } else if (FILTER.category === "maps") {
     if (FILTER.tier != null && item.tier !== FILTER.tier) return true;
+  } else if (FILTER.category === "bases") {
+    // Check base influence
+    if (FILTER.baseInfluence !== null) {
+      if (FILTER.baseInfluence === "none") {
+        if (item.var !== null) return true;
+      } else if (item.var !== FILTER.baseInfluence) {
+        return true;
+      }
+    }
+
+    // Check base ilvl
+    if (item.ilvl !== null && FILTER.baseIlvlMin !== null && FILTER.baseIlvlMax !== null) {
+      if (item.ilvl < FILTER.baseIlvlMin || item.ilvl > FILTER.baseIlvlMax) {
+        return true;
+      }
+    }
   }
 
   return false;
