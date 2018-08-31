@@ -71,7 +71,7 @@ function GenCatMenuHTML() {
     ),
     array(
       "href"  => "prices?category=bases",
-      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Armours/BodyArmours/BodyStr3C.png?scale=1&w=1&h=1",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Rings/OpalRing.png?scale=1&w=1&h=1",
       "name"  => "Bases"
     ),
     array(
@@ -173,4 +173,21 @@ function GenMotDBox() {
       </div>
     </div>
   </div>";
+}
+
+function GenHeaderMetaTags($title, $description) {
+  echo "
+  <title>$title</title>
+  <meta charset='utf-8'>
+  <meta property='og:site_name' content='Poe Watch'>
+  <meta property='og:locale' content='en_US'>
+  <meta property='og:title' content='$title'>
+  <meta property='og:type' content='website'>
+  <meta property='og:image' content='https://poe.watch/assets/img/ico/96.png'>
+  <meta property='og:description' content='$description'>
+  <link rel='icon' type='image/png' href='assets/img/ico/192.png' sizes='192x192'>
+  <link rel='icon' type='image/png' href='assets/img/ico/96.png' sizes='96x96'>
+  <link rel='icon' type='image/png' href='assets/img/ico/32.png' sizes='32x32'>
+  <link rel='icon' type='image/png' href='assets/img/ico/16.png' sizes='16x16'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>";
 }

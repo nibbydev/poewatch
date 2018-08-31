@@ -51,7 +51,7 @@ function AddSubCategorySelectors($categories) {
 
   foreach ($categories as $entry) {
     $value = $entry[0];
-    $display = $entry[1] ? $entry[1] : "(( {$entry[0]} ))";
+    $display = $entry[1] ? $entry[1] : ucwords($entry[0]);
 
     echo "
     <option value='$value'>$display</option>";

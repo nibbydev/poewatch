@@ -10,13 +10,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Prices - PoeWatch</title>
-  <meta charset="utf-8">
-  <link rel="icon" type="image/png" href="assets/img/ico/192.png" sizes="192x192">
-  <link rel="icon" type="image/png" href="assets/img/ico/96.png" sizes="96x96">
-  <link rel="icon" type="image/png" href="assets/img/ico/32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="assets/img/ico/16.png" sizes="16x16">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <?php GenHeaderMetaTags("Prices - PoeWatch", "Discover the average price of almost any item") ?>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/prices.css">
@@ -269,6 +263,7 @@
               <select class="form-control custom-select" id="select-influence">
                 <option value="all" selected>All</option>
                 <option value="none">None</option>
+                <option value="either">Either</option>
                 <option value="shaped">Shaper</option>
                 <option value="elder">Elder</option>
               </select>

@@ -1279,6 +1279,7 @@ public class Database {
                         "  GROUP BY  id_l, id_d " +
                         ") AS hdr ON i.id_l = hdr.id_l AND i.id_d = hdr.id_d " +
                         "WHERE     l.active = 1 " +
+                        "  AND     i.count > 1 " +
                         "GROUP BY  i.id_l, " +
                         "          i.id_d " +
                         "ORDER BY  i.id_l    DESC, " +

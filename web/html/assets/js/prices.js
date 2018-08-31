@@ -1163,6 +1163,8 @@ function checkHideItem(item) {
     if (FILTER.baseInfluence !== null) {
       if (FILTER.baseInfluence === "none") {
         if (item.var !== null) return true;
+      } else if (FILTER.baseInfluence === "either") {
+        if (item.var === null) return true;
       } else if (item.var !== FILTER.baseInfluence) {
         return true;
       }
