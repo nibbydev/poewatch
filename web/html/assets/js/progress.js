@@ -1,43 +1,15 @@
 $(document).ready(function() {
-  var main = $("#main");
-
-  $.each(SERVICE_leagues, function(index, element) {
-    if (["Standard", "Hardcore"].includes(element["name"])) return;
-
-    var start = new Date(element["start"]);
-    var end = new Date(element["end"]);
-    var now = new Date();
-
-    let tmp = "Time until " + (start < now ? "end:" : "start:");
-
-    let template = `
-    <div class="col-md-6 mb-4">
-      <h4>{{title}}</h4>
-      <div class="mb-1">{{start}}</div>
-      <div class="mb-1">{{end}}</div>
-      <div class="mt-3 mb-0">{{desc}}</div>
-      <div id="counter-{{id}}" class="mb-1"></div>
-      <div class="progress" style="height: 20px;">
-        <div class="progress-bar" role="progressbar" id="bar-{{id}}"></div>
-      </div>
-    </div>
-    `.trim()
-      .replace("{{title}}",   element["display"] == null ? element["name"] : element["display"])
-      .replace("{{start}}",   "Start: " + formatDate(start))
-      .replace("{{end}}",     "End: "   + formatDate(end))
-      .replace("{{id}}",      index)
-      .replace("{{id}}",      index)
-      .replace("{{desc}}",    tmp);
-
-    main.append(template);
-
-    addCountDownTimer(start, end, index);
+  $(".league-element").each(function(index) {
+    addCountDownTimer(this);
   });
 });
 
-function addCountDownTimer(start, end, index) {
-  var idE = $("#counter-" + index);
-  var pbE = $("#bar-" + index);
+function addCountDownTimer(element) {
+  let start = new Date($(".league-start", element).attr("value"));
+  let end   = new Date($(".league-end",   element).attr("value"));
+
+  var idE = $(".league-description", element);
+  var pbE = $(".progressbar-bar", element);
 
   var _second = 1000;
   var _minute = _second * 60;
@@ -60,9 +32,9 @@ function addCountDownTimer(start, end, index) {
       clearInterval(timer);
       
       if (start < now) {
-        idE.html("<span class='badge badge-danger'>Ended</span>");
+        idE.html("<span class='badge badge-danger mb-2'>Ended</span>");
       } else {
-        idE.html("<span class='badge badge-danger'>Started</span>");
+        idE.html("<span class='badge badge-danger mb-2'>Started</span>");
       }
 
       return;
@@ -135,7 +107,6 @@ function addCountDownTimer(start, end, index) {
       secondString = seconds + " seconds";
     }
 
-
     let formatString = "";
     if (dayString) formatString += dayString;
     if (hourString) formatString += hourString;
@@ -148,19 +119,4 @@ function addCountDownTimer(start, end, index) {
 
   showRemaining();
   timer = setInterval(showRemaining, 1000);
-}
-
-function formatDate(date) {
-  var monthNames = [
-    "Jan", "Feb", "Mar",
-    "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep",
-    "Oct", "Nov", "Dec"
-  ];
-
-  var day = date.getDate();
-  var monthIndex = date.getMonth();
-  var year = date.getFullYear();
-
-  return day + " " + monthNames[monthIndex] + " " + year;
 }
