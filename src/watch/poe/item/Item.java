@@ -502,6 +502,7 @@ public class Item {
             case "Shroud of the Lightless":
             case "Bubonic Trail":
             case "Tombfist":
+            case "Command of the Pit":
                 if (base.getExplicitMods().get(0).equals("Has 1 Abyssal Socket"))
                     variation = "1 socket";
                 else if (base.getExplicitMods().get(0).equals("Has 2 Abyssal Sockets"))
@@ -517,6 +518,22 @@ public class Item {
                                 variation = property.values.get(0).get(0);
                             }
                         }
+                    }
+                }
+                break;
+
+            case "Doryani's Delusion":
+                // Attempt to match preset mod with item mod
+                for (String explicitMod : base.getExplicitMods()) {
+                    if (explicitMod.contains("Purity of Fire")) {
+                        variation = "fire";
+                        break;
+                    } else if (explicitMod.contains("Purity of Ice")) {
+                        variation = "cold";
+                        break;
+                    } else if (explicitMod.contains("Purity of Lightning")) {
+                        variation = "lightning";
+                        break;
                     }
                 }
                 break;
