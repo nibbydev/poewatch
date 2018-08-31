@@ -15,6 +15,9 @@ var FILTER = {
   gemLvl: null,
   gemQuality: null,
   gemCorrupted: null,
+  baseIlvlMin: null,
+  baseIlvlMax: null,
+  baseInfluence: null,
   parseAmount: 100
 };
 
@@ -22,8 +25,6 @@ var ITEMS = {};
 var LEAGUES = null;
 var HISTORY_DATA = {};
 var CHART_HISTORY = null;
-var CHART_MEAN = null;
-var CHART_QUANT = null;
 var HISTORY_LEAGUE = null;
 var HISTORY_DATASET = 1;
 var INTERVAL;
@@ -166,6 +167,36 @@ function defineListeners() {
     updateQueryString("corrupted", FILTER.gemCorrupted);
     sortResults(ITEMS);
   });
+
+  // Base iLvl
+  $("#select-ilvl").on("change", function(){
+    let ilvlRange = $(":selected", this).val();
+    console.log("Base iLvl filter: " + ilvlRange);
+    if (ilvlRange === "all") {
+      FILTER.baseIlvlMin = null;
+      FILTER.baseIlvlMax = null;
+      updateQueryString("ilvl", null);
+    } else {
+      let splitRange = ilvlRange.split("-");
+      FILTER.baseIlvlMin = parseInt(splitRange[0]);
+      FILTER.baseIlvlMax = parseInt(splitRange[1]);
+      updateQueryString("ilvl", ilvlRange);
+    }
+    
+    sortResults(ITEMS);
+  });
+
+  // Base influence
+  $("#select-influence").on("change", function(){
+    FILTER.baseInfluence = $(":selected", this).val();
+    console.log("Base influence filter: " + FILTER.baseInfluence);
+    if (FILTER.baseInfluence === "all") {
+      FILTER.baseInfluence = null;
+    }
+    updateQueryString("influence", FILTER.baseInfluence);
+    sortResults(ITEMS);
+  });
+
 
   // Expand row
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
@@ -380,45 +411,6 @@ function formatHistory(leaguePayload) {
   }
 }
 
-function formatWeek(leaguePayload) {
-  // Because javascript is "special"
-  let size = Object.keys(leaguePayload.history).length;
-  let means = [], quants = [], count = 0;
-
-  // If less than 7 entries, need to bloat
-  for (let i = 0; i < 7 - size; i++) {
-    means.push(null);
-    quants.push(null);
-  }
-
-  // Grab latest 7 values
-  for (var key in leaguePayload.history) {
-    if (leaguePayload.history.hasOwnProperty(key)) {
-      if (size - count++ <= 7) {
-        if (leaguePayload.history[key] === null) {
-          means.push(null);
-          quants.push(null);
-        } else {
-          means.push(leaguePayload.history[key].mean);
-          quants.push(leaguePayload.history[key].quantity);
-        }
-      }
-    }
-  }
-
-  // Add today's values
-  /*means.push(leaguePayload.mean);
-  quants.push(leaguePayload.quantity);*/
-
-  // Return generated data
-  return {
-    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
-    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
-    'means': means,
-    'quants': quants
-  }
-}
-
 function buildExpandedRow(id) {
   // Get list of past leagues available for the item
   let leagues = getItemHistoryLeagues(id);
@@ -454,14 +446,14 @@ function setDetailsTableValues(expandedRow, leaguePayload) {
 }
 
 function createCharts(expandedRow) {
-  let ctx = $("#chart-price", expandedRow)[0].getContext('2d');
+  let ctx = $("#chart-past", expandedRow)[0].getContext('2d');
   let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
 
   gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
   gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
   gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
 
-  let baseSettings = {
+  let settings = {
     type: "line",
     data: {
       labels: [],
@@ -484,7 +476,15 @@ function createCharts(expandedRow) {
       tooltips: {
         intersect: false,
         mode: "index",
-        callbacks: {},
+        callbacks: {
+          title: function(tooltipItem, data) {
+            let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+            return price ? price : "No data";
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']];
+          }
+        },
         backgroundColor: '#fff',
         titleFontSize: 16,
         titleFontColor: '#222',
@@ -494,60 +494,20 @@ function createCharts(expandedRow) {
         borderWidth: 1,
         borderColor: '#aaa'
       },
-      scales: {}
+      scales: {
+        yAxes: [{ticks: {beginAtZero:true}}],
+        xAxes: [{
+          ticks: {
+            callback: function(value, index, values) {
+              return (value ? value : '');
+            }
+          }
+        }]
+      }
     }
   }
 
-  // Create deep clones of the base settings
-  let priceSettings   = $.extend(true, {}, baseSettings);
-  let quantSettings   = $.extend(true, {}, baseSettings);
-  let historySettings = $.extend(true, {}, baseSettings);
-
-  // Set price chart unique options
-  priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
-  priceSettings.options.tooltips.callbacks = {
-    title: function(tooltipItem, data) {
-      return "Price: " + tooltipItem[0]['yLabel'];
-    },
-    label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']];
-    }
-  };
-
-  // Set quantity chart unique options
-  quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
-  quantSettings.options.tooltips.callbacks = {
-    title: function(tooltipItem, data) {
-      return "Amount: " + tooltipItem[0]['yLabel'];
-    },
-    label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']];
-    }
-  };
-
-  // Set history chart unique options 
-  historySettings.options.scales.yAxes = [{ticks: {beginAtZero:true}}];
-  historySettings.options.scales.xAxes = [{
-    ticks: {
-      callback: function(value, index, values) {
-        return (value ? value : '');
-      }
-    }
-  }];
-  historySettings.options.tooltips.callbacks = {
-    title: function(tooltipItem, data) {
-      let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-      return price ? price : "No data";
-    },
-    label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']];
-    }
-  };
-
-  // Create charts
-  CHART_MEAN    = new Chart($("#chart-price",    expandedRow), priceSettings);
-  CHART_QUANT   = new Chart($("#chart-quantity", expandedRow), quantSettings);
-  CHART_HISTORY = new Chart($("#chart-past",     expandedRow), historySettings);
+  CHART_HISTORY = new Chart($("#chart-past", expandedRow), settings);
 }
 
 function fillChartData(leaguePayload) {
@@ -558,17 +518,6 @@ function fillChartData(leaguePayload) {
   CHART_HISTORY.data.labels = formattedHistory.keys;
   CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
   CHART_HISTORY.update();
-
-  // Get a fixed size of 7 latest history entries
-  let formattedWeek = formatWeek(leaguePayload);
-
-  CHART_MEAN.data.labels = formattedWeek.meanKeys;
-  CHART_MEAN.data.datasets[0].data = formattedWeek.means;
-  CHART_MEAN.update();
-
-  CHART_QUANT.data.labels = formattedWeek.quantKeys;
-  CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
-  CHART_QUANT.update();
   
   // Set data in details table
   setDetailsTableValues(ROW_expanded, leaguePayload);
@@ -581,7 +530,7 @@ function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague)
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
       .replace("{{selected}}",  (selectedLeague === leagues[i].name ? "selected" : ""))
       .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      leagues[i].display);
+      .replace("{{name}}",      leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )");
   }
 
   $("#history-league-selector", expandedRow).append(buffer);
@@ -592,20 +541,9 @@ function createExpandedRow() {
   let template = `
   <tr class='selected-row'><td colspan='100'>
     <div class='row m-1'>
-      <div class='col-sm'>
-        <h4>League</h4>
+      <div class='col-sm d-flex mt-2'>
+        <h4 class='m-0 mr-2'>League</h4>
         <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1'>
-      <div class='col-md'>
-        <h4>Chaos value</h4>
-        <div class='chart-small'><canvas id="chart-price"></canvas></div>
-      </div>
-      <div class='col-md'>
-        <h4>Listed per 24h</h4>
-        <div class='chart-small'><canvas id="chart-quantity"></canvas></div>
       </div>
     </div>
     <hr>
@@ -704,7 +642,8 @@ function getItemHistoryLeagues(id) {
     if (HISTORY_DATA[id].hasOwnProperty(key)) {
       leagues.push({
         name: key,
-        display: HISTORY_DATA[id][key].leagueDisplay
+        display: HISTORY_DATA[id][key].leagueDisplay,
+        active: HISTORY_DATA[id][key].leagueActive
       });
     }
   }
@@ -1038,7 +977,9 @@ function formatNum(num) {
     return parts.join(".");
   }
 
-  return numberWithCommas(num);
+  if (num === null) {
+    return 'Unavailable';
+  } else return numberWithCommas(Math.round(num * 100) / 100);
 }
 
 function roundPrice(price) {
@@ -1217,6 +1158,24 @@ function checkHideItem(item) {
     }
   } else if (FILTER.category === "maps") {
     if (FILTER.tier != null && item.tier !== FILTER.tier) return true;
+  } else if (FILTER.category === "bases") {
+    // Check base influence
+    if (FILTER.baseInfluence !== null) {
+      if (FILTER.baseInfluence === "none") {
+        if (item.var !== null) return true;
+      } else if (FILTER.baseInfluence === "either") {
+        if (item.var === null) return true;
+      } else if (item.var !== FILTER.baseInfluence) {
+        return true;
+      }
+    }
+
+    // Check base ilvl
+    if (item.ilvl !== null && FILTER.baseIlvlMin !== null && FILTER.baseIlvlMax !== null) {
+      if (item.ilvl < FILTER.baseIlvlMin || item.ilvl > FILTER.baseIlvlMax) {
+        return true;
+      }
+    }
   }
 
   return false;

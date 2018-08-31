@@ -5,29 +5,58 @@ function error($code, $msg) {
 }
 
 function get_league_data($pdo, $id) {
-  $query = "SELECT 
-    l.id      AS leagueId, 
-    l.name    AS leagueName, 
-    l.display AS leagueDisplay, 
-    l.active  AS leagueActive, 
-    l.event   AS leagueEvent, 
-    DATE_FORMAT(l.start,  '%Y-%m-%d') AS leagueStart,
-    DATE_FORMAT(l.end,    '%Y-%m-%d') AS leagueEnd,
-    i.mean, i.median, i.mode, i.exalted, i.count, i.quantity,
-    GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
-    GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
-    GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
-    GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
-    GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
-  FROM      league_items                 AS i
-  JOIN      data_leagues                 AS l ON i.id_l = l.id
-  LEFT JOIN league_history_daily_rolling AS h ON h.id_l = l.id AND h.id_d = i.id_d
-  WHERE     i.id_d = ?
-  GROUP BY  i.id_l, i.id_d
-  ORDER BY  l.id DESC";
+  $query = "SELECT * FROM (
+    SELECT 
+      l.id      AS leagueId, 
+      l.name    AS leagueName, 
+      l.display AS leagueDisplay, 
+      l.active  AS leagueActive, 
+      l.event   AS leagueEvent, 
+      NULL      AS mean,
+      NULL      AS median,
+      NULL      AS mode,
+      NULL      AS exalted,
+      NULL      AS count,
+      NULL      AS quantity,
+      DATE_FORMAT(l.start,  '%Y-%m-%d')             AS leagueStart,
+      DATE_FORMAT(l.end,    '%Y-%m-%d')             AS leagueEnd,
+      GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
+      GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
+      GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
+      GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
+      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
+    FROM      league_history_daily_inactive AS h
+    JOIN      data_leagues                  AS l
+      ON      h.id_l  = l.id
+    WHERE     h.id_d = ?
+    GROUP BY  h.id_l, h.id_d
+  
+    UNION ALL 
+  
+    SELECT 
+      l.id      AS leagueId, 
+      l.name    AS leagueName, 
+      l.display AS leagueDisplay, 
+      l.active  AS leagueActive, 
+      l.event   AS leagueEvent, 
+      i.mean, i.median, i.mode, i.exalted, i.count, i.quantity,
+      DATE_FORMAT(l.start,  '%Y-%m-%d')             AS leagueStart,
+      DATE_FORMAT(l.end,    '%Y-%m-%d')             AS leagueEnd,
+      GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
+      GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
+      GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
+      GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
+      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
+    FROM      league_items                 AS i
+    JOIN      data_leagues                 AS l ON i.id_l = l.id
+    LEFT JOIN league_history_daily_rolling AS h ON h.id_l = l.id AND h.id_d = i.id_d
+    WHERE     i.id_d = ?
+    GROUP BY  i.id_l, i.id_d
+  ) AS un
+  ORDER BY un.leagueId DESC";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$id]);
+  $stmt->execute([$id, $id]);
 
   return $stmt;
 }
@@ -70,12 +99,12 @@ function parse_history_data($stmt) {
       'leagueEvent'   => (bool)   $row['leagueEvent'],
       'leagueStart'   =>          $row['leagueStart'],
       'leagueEnd'     =>          $row['leagueEnd'],
-      'mean'          => (float)  $row['mean'],
-      'median'        => (float)  $row['median'],
-      'mode'          => (float)  $row['mode'],
-      'exalted'       => (float)  $row['exalted'],
-      'count'         => (int)    $row['count'],
-      'quantity'      => (int)    $row['quantity'],
+      'mean'          =>          $row['mean']      === NULL ? null : (float) $row['mean'],
+      'median'        =>          $row['median']    === NULL ? null : (float) $row['median'],
+      'mode'          =>          $row['mode']      === NULL ? null : (float) $row['mode'],
+      'exalted'       =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
+      'count'         =>          $row['count']     === NULL ? null :   (int) $row['count'],
+      'quantity'      =>          $row['quantity']  === NULL ? null :   (int) $row['quantity'],
       'history'       =>          array()
     );
 
@@ -107,26 +136,6 @@ function parse_history_data($stmt) {
         );
       }
     }
-
-  /*
-    // Add null values to counter missing entries after latest entry
-    // Don't run for Hardcore (id 1) nor Standard (id 2)
-    if ($tmp['leagueId'] > 2) {
-      // Get the two dates as Unix timestamps (ie number of seconds 
-      // since January 1 1970 00:00:00 UTC)
-      $endDate = strtotime($tmp['leagueEnd']);
-      $lastDate = strtotime(end($times));
-
-      // Find the number of days of difference between the two dates
-      $dateDiff = ceil( ($endDate - $lastDate) / 60 / 60 / 24);
-
-      // Fill tmp array with null values for the amount of missing days
-      for ($i = 0; $i <= $dateDiff; $i++) { 
-        $stamp = date('Y-m-d', $lastDate + $i * 86400);
-        $tmp['history'][ $stamp ] = null;
-      }
-    }
-  */
 
     $payload[] = $tmp;
   }

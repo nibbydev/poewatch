@@ -235,9 +235,11 @@ footer {
 // Progress bars
 //----------------------------------------------------------------------------------------------------------*/
 
-#leagueProgressBar {width: 0%}
-.progress {background-color: #444}
-.progress-bar {background-color: #888}
+.progressbar-box {
+  height: 20px;
+  background-color: #444;
+}
+.progressbar-bar {background-color: #888}
 
 /*------------------------------------------------------------------------------------------------------------
 // Misc
@@ -245,6 +247,7 @@ footer {
 
 /* Styling for item types */
 .subtext-1 {color: #888}
+.subtext-2 {color: #666}
 
 /*------------------------------------------------------------------------------------------------------------
 // Colors

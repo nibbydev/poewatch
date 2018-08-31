@@ -4,7 +4,7 @@
 */
 
 var ITEM = {};
-var CHART_HISTORY = null, CHART_MEAN = null, CHART_QUANT = null;
+var CHART_HISTORY = null;
 var HISTORY_DATASET = 1;
 
 $(document).ready(function() {
@@ -39,7 +39,8 @@ function makeHistoryRequest(id) {
       
       leagues.push({
         name: leagueData.leagueName,
-        display: leagueData.leagueDisplay
+        display: leagueData.leagueDisplay,
+        active: leagueData.leagueActive
       });
     }
     ITEM = tmp;
@@ -55,14 +56,14 @@ function makeHistoryRequest(id) {
 }
 
 function createCharts() {
-  let ctx = $("#chart-price")[0].getContext('2d');
+  let ctx = $("#chart-past")[0].getContext('2d');
   let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
 
   gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
   gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
   gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
 
-  let baseSettings = {
+  let settings = {
     type: "line",
     data: {
       labels: [],
@@ -85,7 +86,15 @@ function createCharts() {
       tooltips: {
         intersect: false,
         mode: "index",
-        callbacks: {},
+        callbacks: {
+          title: function(tooltipItem, data) {
+            let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+            return price ? price : "No data";
+          },
+          label: function(tooltipItem, data) {
+            return data['labels'][tooltipItem['index']];
+          }
+        },
         backgroundColor: '#fff',
         titleFontSize: 16,
         titleFontColor: '#222',
@@ -95,60 +104,20 @@ function createCharts() {
         borderWidth: 1,
         borderColor: '#aaa'
       },
-      scales: {}
+      scales: {
+        yAxes: [{ticks: {beginAtZero:true}}],
+        xAxes: [{
+          ticks: {
+            callback: function(value, index, values) {
+              return (value ? value : '');
+            }
+          }
+        }]
+      }
     }
   }
 
-  // Create deep clones of the base settings
-  let priceSettings   = $.extend(true, {}, baseSettings);
-  let quantSettings   = $.extend(true, {}, baseSettings);
-  let historySettings = $.extend(true, {}, baseSettings);
-
-  // Set price chart unique options
-  priceSettings.options.scales.xAxes = [{ticks: {display: false}}];
-  priceSettings.options.tooltips.callbacks = {
-    title: function(tooltipItem, data) {
-      return "Price: " + tooltipItem[0]['yLabel'];
-    },
-    label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']];
-    }
-  };
-
-  // Set quantity chart unique options
-  quantSettings.options.scales.xAxes = [{ticks: {display: false}}];
-  quantSettings.options.tooltips.callbacks = {
-    title: function(tooltipItem, data) {
-      return "Amount: " + tooltipItem[0]['yLabel'];
-    },
-    label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']];
-    }
-  };
-
-  // Set history chart unique options 
-  historySettings.options.scales.yAxes = [{ticks: {beginAtZero:true}}];
-  historySettings.options.scales.xAxes = [{
-    ticks: {
-      callback: function(value, index, values) {
-        return (value ? value : '');
-      }
-    }
-  }];
-  historySettings.options.tooltips.callbacks = {
-    title: function(tooltipItem, data) {
-      let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-      return price ? price : "No data";
-    },
-    label: function(tooltipItem, data) {
-      return data['labels'][tooltipItem['index']];
-    }
-  };
-
-  // Create charts
-  CHART_MEAN    = new Chart($("#chart-price"),    priceSettings);
-  CHART_QUANT   = new Chart($("#chart-quantity"), quantSettings);
-  CHART_HISTORY = new Chart($("#chart-past"),     historySettings);
+  CHART_HISTORY = new Chart($("#chart-past"), settings);
 }
 
 function fillData() {
@@ -162,17 +131,6 @@ function fillData() {
   CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
   CHART_HISTORY.update();
 
-  // Get a fixed size of 7 latest history entries
-  let formattedWeek = formatWeek(leaguePayload);
-
-  CHART_MEAN.data.labels = formattedWeek.meanKeys;
-  CHART_MEAN.data.datasets[0].data = formattedWeek.means;
-  CHART_MEAN.update();
-
-  CHART_QUANT.data.labels = formattedWeek.quantKeys;
-  CHART_QUANT.data.datasets[0].data = formattedWeek.quants;
-  CHART_QUANT.update();
-  
   // Set data in details table
   $("#details-table-mean")    .html(  formatNum(leaguePayload.mean)      );
   $("#details-table-median")  .html(  formatNum(leaguePayload.median)    );
@@ -203,7 +161,7 @@ function createSelectorFields(leagues) {
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
       .replace("{{selected}}",  (LEAGUE === leagues[i].name ? "selected" : ""))
       .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      leagues[i].display);
+      .replace("{{name}}",      leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )");
   }
 
   $("#history-league-selector").append(buffer);
@@ -406,45 +364,6 @@ function formatHistory(leaguePayload) {
   }
 }
 
-function formatWeek(leaguePayload) {
-  // Because javascript is "special"
-  let size = Object.keys(leaguePayload.history).length;
-  let means = [], quants = [], count = 0;
-
-  // If less than 7 entries, need to bloat
-  for (let i = 0; i < 7 - size; i++) {
-    means.push(null);
-    quants.push(null);
-  }
-
-  // Grab latest 7 values
-  for (var key in leaguePayload.history) {
-    if (leaguePayload.history.hasOwnProperty(key)) {
-      if (size - count++ <= 7) {
-        if (leaguePayload.history[key] === null) {
-          means.push(null);
-          quants.push(null);
-        } else {
-          means.push(leaguePayload.history[key].mean);
-          quants.push(leaguePayload.history[key].quantity);
-        }
-      }
-    }
-  }
-
-  // Add today's values
-  /*means.push(leaguePayload.mean);
-  quants.push(leaguePayload.quantity);*/
-
-  // Return generated data
-  return {
-    'meanKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
-    'quantKeys':  ["7 days ago", "6 days ago", "5 days ago", "4 days ago", "3 days ago", "2 days ago", "1 day ago"],
-    'means': means,
-    'quants': quants
-  }
-}
-
 function formatNum(num) {
   const numberWithCommas = (x) => {
     var parts = x.toString().split(".");
@@ -452,7 +371,9 @@ function formatNum(num) {
     return parts.join(".");
   }
 
-  return numberWithCommas(Math.round(num * 100) / 100);
+  if (num === null) {
+    return 'Unavailable';
+  } else return numberWithCommas(Math.round(num * 100) / 100);
 }
 
 function formatDate(date) {
