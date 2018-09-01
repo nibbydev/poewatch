@@ -158,10 +158,18 @@ function createSelectorFields(leagues) {
   let buffer = "";
 
   for (let i = 0; i < leagues.length; i++) {
+    let display;
+
+    if (leagues[i].display) {
+      display = leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )";
+    } else {
+      display = leagues[i].active ? leagues[i].name : "( " + leagues[i].name + " )";
+    }
+
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
       .replace("{{selected}}",  (LEAGUE === leagues[i].name ? "selected" : ""))
       .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )");
+      .replace("{{name}}",      display);
   }
 
   $("#history-league-selector").append(buffer);
