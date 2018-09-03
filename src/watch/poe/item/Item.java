@@ -521,22 +521,6 @@ public class Item {
                     }
                 }
                 break;
-
-            case "Doryani's Delusion":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : base.getExplicitMods()) {
-                    if (explicitMod.contains("Purity of Fire")) {
-                        variation = "fire";
-                        break;
-                    } else if (explicitMod.contains("Purity of Ice")) {
-                        variation = "cold";
-                        break;
-                    } else if (explicitMod.contains("Purity of Lightning")) {
-                        variation = "lightning";
-                        break;
-                    }
-                }
-                break;
         }
     }
 
