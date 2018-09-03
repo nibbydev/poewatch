@@ -161,9 +161,9 @@ function createSelectorFields(leagues) {
     let display;
 
     if (leagues[i].display) {
-      display = leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )";
+      display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
     } else {
-      display = leagues[i].active ? leagues[i].name : "( " + leagues[i].name + " )";
+      display = leagues[i].active ? leagues[i].name : "● " + leagues[i].name;
     }
 
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
