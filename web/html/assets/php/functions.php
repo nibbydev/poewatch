@@ -18,8 +18,8 @@ function GenNavbar() {
       'href'    => '/api'
     ),
     array(
-      'display' => 'Progress',
-      'href'    => '/progress'
+      'display' => 'Leagues',
+      'href'    => '/leagues'
     ),
     array(
       'display' => 'Characters',
