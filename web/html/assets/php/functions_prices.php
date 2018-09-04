@@ -30,7 +30,7 @@ function GetCategories($pdo, $category) {
 
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT name, display 
+  $query = "SELECT name, display
   FROM data_leagues 
   WHERE active = 1
   ORDER BY id DESC";

@@ -19,16 +19,18 @@ function buildElement(tag, attrs) {
 }
 
 function scaleValues(values) {
-  let firstVal = null;
+  //let firstVal = null;
   let min = 0;
 
   for (let i = 0; i < values.length; i++) {
     if (values[i] !== null) {
+      /*
       if (firstVal === null) {
         firstVal = values[i];
       }
 
       values[i] = values[i] / firstVal * 100 - 100;
+      */
 
       if (values[i] < min) {
         min = values[i];

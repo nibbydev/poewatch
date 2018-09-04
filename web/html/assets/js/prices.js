@@ -907,7 +907,7 @@ function buildPriceFields(item) {
 }
 
 function buildSparkLine(item) {
-  let svgColorClass = item.history.change > 0 ? "sparkline-green" : "sparkline-orange";
+  let svgColorClass = item.change > 0 ? "sparkline-green" : "sparkline-orange";
   let svg = document.createElement("svg");
   
   svg.setAttribute("class", "sparkline " + svgColorClass);
@@ -915,7 +915,7 @@ function buildSparkLine(item) {
   svg.setAttribute("height", 30);
   svg.setAttribute("stroke-width", 3);
 
-  sparkline(svg, item.history.values);
+  sparkline(svg, item.spark);
 
   return svg.outerHTML;
 }
@@ -931,12 +931,12 @@ function buildChangeField(item) {
 
   let change = 0;
 
-  if (item.history.change > 999) {
+  if (item.change > 999) {
     change = 999;
-  } else if (item.history.change < -999) {
+  } else if (item.change < -999) {
     change = -999;
   } else {
-    change = Math.round(item.history.change); 
+    change = Math.round(item.change); 
   }
 
   if (change > 100) {
