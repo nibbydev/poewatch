@@ -853,7 +853,7 @@ function buildGemFields(item) {
   template = template.replace("{{lvl}}",      item.lvl);
   template = template.replace("{{quality}}",  item.quality);
   
-  if (item.corrupted === 1) {
+  if (item.corrupted) {
     template = template.replace("{{color}}",  "red");
     template = template.replace("{{corr}}",   "✓");
   } else {
