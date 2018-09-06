@@ -128,7 +128,7 @@ function parse_history_data($stmt) {
       if ($tmp['leagueId'] > 2) {
         // Get the two dates as Unix timestamps (ie number of seconds 
         // since January 1 1970 00:00:00 UTC)
-        $startDate = strtotime($tmp['leagueStart']);
+        $startDate = strtotime($tmp['leagueStart']) + 60 * 60 * 24;
         $firstDate = strtotime($times[0]);
 
         // Find the number of days of difference between the two dates
