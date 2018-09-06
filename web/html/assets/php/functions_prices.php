@@ -66,11 +66,6 @@ function AddSubCategorySelectors($categories) {
 function AddLeagueSelects($leagues) {
   // Loop through all available leagues
   foreach ($leagues as $leagueEntry) {
-    // If display is null use name
-    if ($leagueEntry['display'] === null) {
-      $leagueEntry[1] = $leagueEntry[0];
-    }
-
     $value = $leagueEntry['name'];
 
     $display = $leagueEntry['active'] ? "" : "● ";
