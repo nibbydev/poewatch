@@ -39,7 +39,7 @@ function get_data($pdo, $league, $category) {
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     cc.name AS category,
-    SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time ASC SEPARATOR ','), ',', 7) AS history
+    SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history
   FROM      league_items                  AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
@@ -122,7 +122,7 @@ function parse_data($stmt) {
     // If there were history entries
     if ( !is_null($row['history']) ) {
       // Convert CSV to array
-      $history = explode(',', $row['history']);
+      $history = array_reverse(explode(',', $row['history']));
 
       // Find total change
       $lastVal = $history[sizeof($history) - 1];
