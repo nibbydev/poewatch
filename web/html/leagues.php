@@ -1,12 +1,12 @@
 <?php 
   include_once ( "assets/php/details/pdo.php" );
-  include_once ( "assets/php/functions_progress.php" ); 
+  include_once ( "assets/php/functions_leagues.php" ); 
   include_once ( "assets/php/functions.php" );
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <?php GenHeaderMetaTags("Progress - PoeWatch", "Countdowns for active and upcoming leagues") ?>
+  <?php GenHeaderMetaTags("Leagues - PoeWatch", "Countdowns for active and upcoming leagues") ?>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
@@ -57,6 +57,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
-<script type="text/javascript" src="assets/js/progress.js"></script>
+<script type="text/javascript" src="assets/js/leagues.js"></script>
 </body>
 </html>

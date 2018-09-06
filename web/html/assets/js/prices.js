@@ -43,7 +43,7 @@ var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-ce
 $(document).ready(function() {
   if (!SERVICE_category) return;
 
-  FILTER.league = SERVICE_leagues[0][0];
+  FILTER.league = SERVICE_leagues[0].name;
   FILTER.category = SERVICE_category;
 
   readLeagueFromCookies(FILTER, SERVICE_leagues);
@@ -65,7 +65,7 @@ function readLeagueFromCookies(FILTER, leagues) {
     for (let i = 0; i < leagues.length; i++) {
       const entry = leagues[i];
       
-      if (league === entry[0]) {
+      if (league === entry.name) {
         FILTER.league = league;
         // Point league dropdown to that league
         $("#search-league").val(league);
@@ -527,10 +527,18 @@ function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague)
   let buffer = "";
 
   for (let i = 0; i < leagues.length; i++) {
+    let display;
+
+    if (leagues[i].display) {
+      display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
+    } else {
+      display = leagues[i].active ? leagues[i].name : "● " + leagues[i].name;
+    }
+
     buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
       .replace("{{selected}}",  (selectedLeague === leagues[i].name ? "selected" : ""))
       .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      leagues[i].active ? leagues[i].display : "( " + leagues[i].display + " )");
+      .replace("{{name}}",      display);
   }
 
   $("#history-league-selector", expandedRow).append(buffer);
@@ -659,6 +667,7 @@ function makeGetRequest(league, category) {
   $("#searchResults tbody").empty();
   $(".buffering").show();
   $(".loadall").hide();
+  $(".buffering-msg").remove();
 
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
@@ -674,6 +683,7 @@ function makeGetRequest(league, category) {
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
     $(".buffering").hide();
+    $(".buffering-msg").remove();
 
     let items = parseRequest(json);
     sortResults(items);
@@ -685,6 +695,14 @@ function makeGetRequest(league, category) {
       $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
       loadAllDiv.show();
     }
+  });
+
+  request.fail(function(response) {
+    $(".buffering-msg").remove();
+
+    let buffering = $(".buffering");
+    buffering.hide();
+    buffering.after("<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>");
   });
 }
 
@@ -845,7 +863,7 @@ function buildGemFields(item) {
   template = template.replace("{{lvl}}",      item.lvl);
   template = template.replace("{{quality}}",  item.quality);
   
-  if (item.corrupted === 1) {
+  if (item.corrupted) {
     template = template.replace("{{color}}",  "red");
     template = template.replace("{{corr}}",   "✓");
   } else {
@@ -899,7 +917,9 @@ function buildPriceFields(item) {
 }
 
 function buildSparkLine(item) {
-  let svgColorClass = item.history.change > 0 ? "sparkline-green" : "sparkline-orange";
+  if (!item.spark) return "";
+
+  let svgColorClass = item.change > 0 ? "sparkline-green" : "sparkline-orange";
   let svg = document.createElement("svg");
   
   svg.setAttribute("class", "sparkline " + svgColorClass);
@@ -907,8 +927,8 @@ function buildSparkLine(item) {
   svg.setAttribute("height", 30);
   svg.setAttribute("stroke-width", 3);
 
-  sparkline(svg, item.history.values);
-
+  sparkline(svg, item.spark);
+  
   return svg.outerHTML;
 }
 
@@ -923,12 +943,12 @@ function buildChangeField(item) {
 
   let change = 0;
 
-  if (item.history.change > 999) {
+  if (item.change > 999) {
     change = 999;
-  } else if (item.history.change < -999) {
+  } else if (item.change < -999) {
     change = -999;
   } else {
-    change = Math.round(item.history.change); 
+    change = Math.round(item.change); 
   }
 
   if (change > 100) {
@@ -1140,7 +1160,9 @@ function checkHideItem(item) {
   }
 
   // Hide sub-categories
-  if (FILTER.sub !== "all" && FILTER.sub !== item.child) return true;
+  if (FILTER.sub !== "all" && FILTER.sub !== item.category) {
+    return true;
+  }
 
   // Hide items with different links
   if (item.links != FILTER.links) return true;
@@ -1149,7 +1171,7 @@ function checkHideItem(item) {
   if (FILTER.category === "gems") {
     if (FILTER.gemLvl !== null && item.lvl != FILTER.gemLvl) return true;
     if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
-    if (FILTER.gemCorrupted !== null && item.corrupted !== FILTER.gemCorrupted) return true;
+    if (FILTER.gemCorrupted !== null && item.corrupted != FILTER.gemCorrupted) return true;
 
   } else if (FILTER.category === "currency") {
     if (item.frame === 3 && FILTER.sub === "all") {

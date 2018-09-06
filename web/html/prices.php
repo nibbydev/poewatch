@@ -89,7 +89,6 @@
                   <option value="2">2</option>
                   <option value="3">3</option>
                   <option value="4">4</option>
-                  <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="21">21</option>
                 </select>
@@ -101,7 +100,6 @@
                 <select class="form-control" id="select-quality">
                   <option value="all" selected>All</option>
                   <option value="0">0</option>
-                  <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="23">23</option>
                 </select>

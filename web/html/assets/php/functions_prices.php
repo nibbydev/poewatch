@@ -30,16 +30,20 @@ function GetCategories($pdo, $category) {
 
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT name, display 
-  FROM data_leagues 
-  WHERE active = 1
-  ORDER BY id DESC";
+  $query = "SELECT l.id, l.name, l.display, l.active, l.upcoming, l.event 
+  FROM data_leagues AS l 
+  JOIN ( 
+    SELECT DISTINCT id_l FROM league_history_daily_rolling 
+    UNION  DISTINCT 
+    SELECT DISTINCT id_l FROM league_history_daily_inactive 
+  ) AS leagues ON l.id = leagues.id_l 
+  ORDER BY active DESC, id DESC";
 
   $stmt = $pdo->query($query);
   $payload = array();
   
   while ($row = $stmt->fetch()) {
-    $payload[] = array($row["name"], $row["display"]);
+    $payload[] = $row;
   }
 
   return $payload;
@@ -60,9 +64,14 @@ function AddSubCategorySelectors($categories) {
 
 // Add league select fields to second navbar
 function AddLeagueSelects($leagues) {
-  foreach ($leagues as $entry) {
-    if ($entry[1] === null) $entry[1] = $entry[0];
-    echo "<option value='{$entry[0]}'>{$entry[1]}</option>";
+  // Loop through all available leagues
+  foreach ($leagues as $leagueEntry) {
+    $value = $leagueEntry['name'];
+
+    $display = $leagueEntry['active'] ? "" : "● ";
+    $display .= $leagueEntry['display'] === null ? $leagueEntry['name'] : $leagueEntry['display'];
+
+    echo "<option value='$value'>$display</option>";
   }
 }
 

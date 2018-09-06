@@ -324,7 +324,7 @@ public class EntryManager extends Thread {
 
         // Build JSON
         long time_json = System.currentTimeMillis();
-        generateOutputFiles();
+        //generateOutputFiles();
         time_json = System.currentTimeMillis() - time_json;
 
         // Build itemdata
