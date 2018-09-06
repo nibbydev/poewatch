@@ -157,7 +157,7 @@ header("Content-Type: application/json");
 check_errors();
 
 // Connect to database
-include_once ( "details/pdo.php" );
+include_once ( "../details/pdo.php" );
 
 // Get league id and active state
 $state = check_league($pdo, $_GET["league"]);

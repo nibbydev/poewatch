@@ -1,6 +1,6 @@
 <?php
 header("Content-Type: application/json");
-include_once ( "details/pdo.php" );
+include_once ( "../details/pdo.php" );
 
 $query = <<<EOT
 SELECT 

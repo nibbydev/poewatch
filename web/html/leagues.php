@@ -1,5 +1,5 @@
 <?php 
-  include_once ( "assets/php/details/pdo.php" );
+  include_once ( "../details/pdo.php" );
   include_once ( "assets/php/functions_leagues.php" ); 
   include_once ( "assets/php/functions.php" );
 ?>

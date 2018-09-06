@@ -22,7 +22,7 @@ if ( !isset($_GET["league"]) )    error(400, "Invalid league param");
 if ( !isset($_GET["category"]) )  error(400, "Invalid category param");
 
 // Connect to database
-include_once ( "details/pdo.php" );
+include_once ( "../details/pdo.php" );
 
 // Get file path from table using provided parameters
 $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);

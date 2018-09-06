@@ -1,6 +1,6 @@
 <?php
 $host = "";
-$db   = "ps5";
+$db   = "";
 $user = "";
 $pass = "";
 $charset = "utf8";
@@ -12,5 +12,3 @@ $opt = [
   PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 $pdo = new PDO($dsn, $user, $pass, $opt);
-
-unset($host, $db, $user, $pass, $charset, $dsn, $opt);
