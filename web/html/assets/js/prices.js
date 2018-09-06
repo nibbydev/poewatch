@@ -43,7 +43,7 @@ var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-ce
 $(document).ready(function() {
   if (!SERVICE_category) return;
 
-  FILTER.league = SERVICE_leagues[0][0];
+  FILTER.league = SERVICE_leagues[0].name;
   FILTER.category = SERVICE_category;
 
   readLeagueFromCookies(FILTER, SERVICE_leagues);
@@ -65,7 +65,7 @@ function readLeagueFromCookies(FILTER, leagues) {
     for (let i = 0; i < leagues.length; i++) {
       const entry = leagues[i];
       
-      if (league === entry[0]) {
+      if (league === entry.name) {
         FILTER.league = league;
         // Point league dropdown to that league
         $("#search-league").val(league);
@@ -907,6 +907,8 @@ function buildPriceFields(item) {
 }
 
 function buildSparkLine(item) {
+  if (!item.spark) return "";
+
   let svgColorClass = item.change > 0 ? "sparkline-green" : "sparkline-orange";
   let svg = document.createElement("svg");
   
@@ -916,7 +918,7 @@ function buildSparkLine(item) {
   svg.setAttribute("stroke-width", 3);
 
   sparkline(svg, item.spark);
-
+  
   return svg.outerHTML;
 }
 
