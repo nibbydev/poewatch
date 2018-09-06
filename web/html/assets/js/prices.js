@@ -667,6 +667,7 @@ function makeGetRequest(league, category) {
   $("#searchResults tbody").empty();
   $(".buffering").show();
   $(".loadall").hide();
+  $(".buffering-msg").remove();
 
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
@@ -682,6 +683,7 @@ function makeGetRequest(league, category) {
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
     $(".buffering").hide();
+    $(".buffering-msg").remove();
 
     let items = parseRequest(json);
     sortResults(items);
@@ -693,6 +695,14 @@ function makeGetRequest(league, category) {
       $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
       loadAllDiv.show();
     }
+  });
+
+  request.fail(function(response) {
+    $(".buffering-msg").remove();
+
+    let buffering = $(".buffering");
+    buffering.hide();
+    buffering.after("<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>");
   });
 }
 
