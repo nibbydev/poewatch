@@ -125,13 +125,18 @@ function parse_data($stmt) {
       $history = explode(',', $row['history']);
 
       // Find total change
-      $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
-
+      $lastVal = $history[sizeof($history) - 1];
+      if ($lastVal > 0) {
+        $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
+      }
+      
       $firstPrice = $history[0];
 
       // Calculate each entry's change %-relation to current price
       for ($i = 0; $i < sizeof($history); $i++) { 
-        $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
+        if ($history[$i] > 0) {
+          $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
+        }
       }
 
       // Pad missing fields with null
