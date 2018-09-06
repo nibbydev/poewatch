@@ -1148,7 +1148,9 @@ function checkHideItem(item) {
   }
 
   // Hide sub-categories
-  if (FILTER.sub !== "all" && FILTER.sub !== item.child) return true;
+  if (FILTER.sub !== "all" && FILTER.sub !== item.category) {
+    return true;
+  }
 
   // Hide items with different links
   if (item.links != FILTER.links) return true;

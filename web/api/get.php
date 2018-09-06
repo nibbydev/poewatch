@@ -21,7 +21,7 @@ function get_data($pdo, $league, $category) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    cc.name AS ccName,
+    cc.name AS category,
     SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time ASC SEPARATOR ','), ',', 7) AS history
   FROM      league_items                  AS i 
   JOIN      data_itemData                 AS did 
@@ -57,6 +57,7 @@ function parse_data($stmt) {
       'id'            => (int)  $row['id_d'],
       'name'          =>        $row['name'],
       'type'          =>        $row['type'],
+      'category'      =>        $row['category'],
       'frame'         => (int)  $row['frame'],
 
       'mean'          =>        $row['mean']      === NULL ?  0.0 : (float) $row['mean'],
