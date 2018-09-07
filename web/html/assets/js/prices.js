@@ -18,7 +18,7 @@ var FILTER = {
   baseIlvlMin: null,
   baseIlvlMax: null,
   baseInfluence: null,
-  parseAmount: 100
+  parseAmount: 150
 };
 
 var ITEMS = {};
@@ -95,8 +95,8 @@ function defineListeners() {
   });
 
   // Load all button
-  $(".loadall button").on("click", function(){
-    console.log("Button press: loadall");
+  $("#button-showAll").on("click", function(){
+    console.log("Button press: show all");
     $(this).hide();
     FILTER.parseAmount = -1;
     sortResults(ITEMS);
@@ -666,7 +666,7 @@ function getItemHistoryLeagues(id) {
 function makeGetRequest(league, category) {
   $("#searchResults tbody").empty();
   $(".buffering").show();
-  $(".loadall").hide();
+  $("#button-showAll").hide();
   $(".buffering-msg").remove();
 
   let request = $.ajax({
@@ -691,9 +691,9 @@ function makeGetRequest(league, category) {
     
     // Enable "show more" button
     if (json.length > FILTER.parseAmount) {
-      let loadAllDiv = $(".loadall");
-      $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
-      loadAllDiv.show();
+      let loadAllBtn = $("#button-showAll");
+      loadAllBtn.text("Show all (" + json.length + " items)");
+      loadAllBtn.show();
     }
   });
 
@@ -738,6 +738,11 @@ function timedRequestCallback() {
     let items = parseRequest(json);
     sortResults(items);
     ITEMS = items;
+  });
+
+  request.fail(function(response) {
+    $("#searchResults tbody").empty();
+    buffering.after("<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>");
   });
 }
 

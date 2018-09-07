@@ -328,9 +328,7 @@
                 <tbody></tbody>
               </table>
               <div class="buffering align-self-center mb-2"></div>
-              <div class="loadall mt-2">
-                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
-              </div>
+              <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
             </div>
             <div class="card-footer slim-card-edge"></div>
           </div>
