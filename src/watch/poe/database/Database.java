@@ -765,8 +765,7 @@ public class Database {
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
         String query1 = "INSERT INTO data_leagues (" +
-                        "  name, display, " +
-                        "  active, event) " +
+                        "  name, event) " +
                         "SELECT ?, ?, ?, ? " +
                         "FROM   DUAL " +
                         "WHERE  NOT EXISTS ( " +
@@ -778,7 +777,8 @@ public class Database {
         String query2 = "UPDATE data_leagues " +
                         "SET    start    = ?, " +
                         "       end      = ?, " +
-                        "       upcoming = 0 " +
+                        "       upcoming = 0," +
+                        "       active   = 1 " +
                         "WHERE  name     = ? " +
                         "LIMIT  1; ";
 
@@ -788,8 +788,6 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getName());
-                    statement.setString(2, leagueEntry.getDisplay());
-                    statement.setInt(3, leagueEntry.isEvent() ? 0 : 1);
                     statement.setInt(4, leagueEntry.isEvent() ? 1 : 0);
                     statement.setString(5, leagueEntry.getName());
                     statement.addBatch();
