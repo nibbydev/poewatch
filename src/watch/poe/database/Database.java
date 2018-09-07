@@ -5,6 +5,7 @@ import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.Misc;
 import watch.poe.account.AccountRelation;
+import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.FileEntry;
@@ -418,15 +419,19 @@ public class Database {
      * @param keyToId Empty map that will contain item key - item ID relations
      * @return True on success
      */
-    public boolean getItemIds(Map<Integer, List<Integer>> leagueToIds, Map<String, Integer> keyToId) {
-        String query =  "SELECT   i.id_l, did.id AS id_d, did.key " +
-                        "FROM     league_items  AS i " +
-                        "JOIN     data_itemData AS did " +
-                        "  ON     i.id_d = did.id " +
-                        "ORDER BY i.id_l, did.id ASC";
+    public boolean getItemIds(Map<Integer, List<Integer>> leagueToIds, Map<Key, Integer> keyToId) {
+        String query =  "SELECT  i.id_l, did.id, did.name, did.type, " +
+                        "        did.frame, did.tier, did.lvl, " +
+                        "        did.quality, did.corrupted, " +
+                        "        did.links, did.ilvl, did.var " +
+                        "FROM    league_items AS i " +
+                        "JOIN    data_itemData AS did " +
+                        "  ON    i.id_d = did.id ";
 
         try {
-            if (connection.isClosed()) return false;
+            if (connection.isClosed()) {
+                return false;
+            }
 
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
@@ -434,13 +439,12 @@ public class Database {
                 while (resultSet.next()) {
                     Integer leagueId = resultSet.getInt("id_l");
                     Integer dataId = resultSet.getInt("id_d");
-                    String key = resultSet.getString("key");
 
                     List<Integer> idList = leagueToIds.getOrDefault(leagueId, new ArrayList<>());
                     idList.add(dataId);
                     leagueToIds.putIfAbsent(leagueId, idList);
 
-                    keyToId.putIfAbsent(key, dataId);
+                    keyToId.put(new Key(resultSet), dataId);
                 }
             }
 
@@ -650,8 +654,8 @@ public class Database {
     public Integer indexItemData(Item item, Integer parentCategoryId, Integer childCategoryId) {
         String query1 = "INSERT INTO data_itemData (" +
                         "  id_cp, id_cc, name, type, frame, tier, lvl, " +
-                        "  quality, corrupted, links, ilvl, var, `key`, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+                        "  quality, corrupted, links, ilvl, var, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
         String query2 = "SELECT LAST_INSERT_ID(); ";
 
         try {
@@ -692,8 +696,7 @@ public class Database {
                 } else statement.setInt(11, item.getIlvl());
 
                 statement.setString(12, item.getVariation());
-                statement.setString(13, item.getKey());
-                statement.setString(14, Misc.formatIconURL(item.getIcon()));
+                statement.setString(13, Misc.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
             }

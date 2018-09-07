@@ -2,6 +2,7 @@ package watch.poe.relations;
 
 import watch.poe.item.Item;
 import watch.poe.Main;
+import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
 
 import java.util.*;
@@ -15,13 +16,12 @@ public class RelationManager {
     //------------------------------------------------------------------------------------------------------------
 
     private Map<Integer, List<Integer>> leagueToIds = new HashMap<>();
-    private Map<String, Integer> keyToId = new HashMap<>();
+    private Map<Key, Integer> keyToId = new HashMap<>();
 
 
     private Map<String, String> currencyAliasToName = new HashMap<>();
-    //private IndexRelations indexRelations = new IndexRelations();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
-    private List<String> currentlyIndexingChildKeys = new ArrayList<>();
+    private List<Key> currentlyIndexingChildKeys = new ArrayList<>();
     private volatile boolean newIndexedItem = false;
 
     //------------------------------------------------------------------------------------------------------------
@@ -79,8 +79,8 @@ public class RelationManager {
     //------------------------------------------------------------------------------------------------------------
 
     public Integer indexItem(Item item, Integer leagueId, boolean doNotIndex) {
-        String uniqueKey = item.getKey();
-        Integer itemId = keyToId.get(uniqueKey);
+        Key itemKey = item.getKey();
+        Integer itemId = keyToId.get(itemKey);
 
         // If the item is indexed and the league contains that item, return item's id
         if (itemId != null) {
@@ -94,9 +94,9 @@ public class RelationManager {
         }
 
         // If the same item is currently being processed in the same method in another thread
-        if (currentlyIndexingChildKeys.contains(uniqueKey)) {
+        if (currentlyIndexingChildKeys.contains(itemKey)) {
             return null;
-        } else currentlyIndexingChildKeys.add(uniqueKey);
+        } else currentlyIndexingChildKeys.add(itemKey);
 
         indexCategory(item);
 
@@ -112,7 +112,7 @@ public class RelationManager {
 
             // Add item data to the database and get its id
             itemId = Main.DATABASE.indexItemData(item, parentCategoryId, childCategoryId);
-            if (itemId != null) keyToId.put(uniqueKey, itemId);
+            if (itemId != null) keyToId.put(itemKey, itemId);
         }
 
         // Check if the item's id is present under the league
@@ -125,7 +125,7 @@ public class RelationManager {
         }
 
         // Remove unique key from the list
-        currentlyIndexingChildKeys.remove(uniqueKey);
+        currentlyIndexingChildKeys.remove(itemKey);
 
         return itemId;
     }
