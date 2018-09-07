@@ -46,7 +46,7 @@ public class Key {
         tier = resultSet.getInt("tier");
         if (resultSet.wasNull()) tier = null;
 
-        level = resultSet.getInt("level");
+        level = resultSet.getInt("lvl");
         if (resultSet.wasNull()) level = null;
 
         quality = resultSet.getInt("quality");

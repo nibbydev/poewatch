@@ -438,7 +438,7 @@ public class Database {
 
                 while (resultSet.next()) {
                     Integer leagueId = resultSet.getInt("id_l");
-                    Integer dataId = resultSet.getInt("id_d");
+                    Integer dataId = resultSet.getInt("id");
 
                     List<Integer> idList = leagueToIds.getOrDefault(leagueId, new ArrayList<>());
                     idList.add(dataId);
@@ -769,7 +769,7 @@ public class Database {
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
         String query1 = "INSERT INTO data_leagues (" +
                         "  name, event) " +
-                        "SELECT ?, ?, ?, ? " +
+                        "SELECT ?, ? " +
                         "FROM   DUAL " +
                         "WHERE  NOT EXISTS ( " +
                         "  SELECT 1 " +
@@ -791,8 +791,8 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getName());
-                    statement.setInt(4, leagueEntry.isEvent() ? 1 : 0);
-                    statement.setString(5, leagueEntry.getName());
+                    statement.setInt(2, leagueEntry.isEvent() ? 1 : 0);
+                    statement.setString(3, leagueEntry.getName());
                     statement.addBatch();
                 }
 
