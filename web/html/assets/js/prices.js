@@ -883,13 +883,20 @@ function buildBaseFields(item) {
   // Don't run if item is not a gem
   if (FILTER.category !== "bases") return "";
 
-  let template = `
-  <td>{{ilvl}}</td>
-  `.trim();
+  let displayLvl;
 
-  template = template.replace("{{ilvl}}", item.ilvl);
+  if (item.var === "elder" || item.var === "shaped") {
+    switch (item.ilvl) {
+      case 68: displayLvl = "68 - 74"; break;
+      case 75: displayLvl = "75 - 82"; break;
+      case 84: displayLvl = "83 - 84"; break;
+      case 85: displayLvl = "85 - 100";     break;
+    }
+  } else {
+    displayLvl = "84";
+  }
 
-  return template;
+  return "<td class='nowrap'>" + displayLvl + "</td>";
 }
 
 function buildPriceFields(item) {
