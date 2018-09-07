@@ -434,7 +434,7 @@ VALUES
     (8,     'supportgem', 'Support Gems'),
     (8,     'vaalgem',    'Vaal Gems'),
     (10,    'fragment',   'Fragments'),
-    (10,    'map',        'Maps'),
+    (10,    'map',        'Regular Maps'),
     (10,    'unique',     'Unique Maps'),
     (12,    'bow',        'Bows'),
     (12,    'claw',       'Claws'),

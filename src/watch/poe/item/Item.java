@@ -128,7 +128,7 @@ public class Item {
 
             case "maps":
                 // Filter all unique maps under "unique" subcategory
-                if (frameType == 3) {
+                if (frameType == 3 || frameType == 9) {
                     childCategory = "unique";
                 } else if (iconCategory.equals("breach")) {
                     childCategory = "fragment";
@@ -458,19 +458,6 @@ public class Item {
                     variation = "1 socket";
                 else if (base.getExplicitMods().get(0).equals("Has 2 Abyssal Sockets"))
                     variation = "2 sockets";
-                break;
-
-            case "The Beachhead":
-                // Attempt to find map tier
-                for (Mappers.Property property : base.getProperties()) {
-                    if (property.name.equals("Map Tier")) {
-                        if (!property.values.isEmpty()) {
-                            if (!property.values.get(0).isEmpty()) {
-                                variation = property.values.get(0).get(0);
-                            }
-                        }
-                    }
-                }
                 break;
         }
     }

@@ -132,9 +132,10 @@ function defineListeners() {
   $("#select-tier").on("change", function(){
     FILTER.tier = $(":selected", this).val();
     console.log("Map tier filter: " + FILTER.tier);
-    if (FILTER.tier === "all") FILTER.tier = null;
-    else FILTER.tier = parseInt(FILTER.tier);
     updateQueryString("tier", FILTER.tier);
+    if (FILTER.tier === "all") FILTER.tier = null;
+    else if (FILTER.tier === "none") FILTER.tier = 0;
+    else FILTER.tier = parseInt(FILTER.tier);
     sortResults(ITEMS);
   });
 
@@ -759,6 +760,9 @@ function parseItem(item) {
 
   // Format base fields
   let baseFields = buildBaseFields(item);
+
+  // Format map fields
+  let mapFields = buildMapFields(item);
   
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
@@ -770,7 +774,7 @@ function parseItem(item) {
   let quantField = buildQuantField(item);
 
   let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{base}}{{price}}{{change}}{{quant}}</tr>
+    <tr value={{id}}>{{name}}{{gem}}{{base}}{{map}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
   item.tableData = template
@@ -778,6 +782,7 @@ function parseItem(item) {
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
     .replace("{{base}}",    baseFields)
+    .replace("{{map}}",     mapFields)
     .replace("{{price}}",   priceFields)
     .replace("{{change}}",  changeField)
     .replace("{{quant}}",   quantField);
@@ -788,7 +793,7 @@ function buildNameField(item) {
   <td>
     <div class='d-flex align-items-center'>
       <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
-      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var_or_tier}}
+      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}
     </div>
   </td>
   `.trim();
@@ -844,12 +849,9 @@ function buildNameField(item) {
 
   if (item.var && FILTER.category !== "enchantments") {
     let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
-  } else if (item.tier) {
-    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.tier + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
+    template = template.replace("{{var}}", tmp);
   } else {
-    template = template.replace("{{var_or_tier}}", "");
+    template = template.replace("{{var}}", "");
   }
 
   return template;
@@ -897,6 +899,15 @@ function buildBaseFields(item) {
   }
 
   return "<td class='nowrap'>" + displayLvl + "</td>";
+}
+
+function buildMapFields(item) {
+  // Don't run if item is not a map
+  if (FILTER.category !== "maps") {
+    return "";
+  }
+
+  return "<td class='nowrap'>" + (item.tier ? item.tier : "-") + "</td>";
 }
 
 function buildPriceFields(item) {
@@ -1191,7 +1202,12 @@ function checkHideItem(item) {
       return true;
     }
   } else if (FILTER.category === "maps") {
-    if (FILTER.tier != null && item.tier !== FILTER.tier) return true;
+    if (FILTER.tier !== null) {
+      if (FILTER.tier === 0) {
+        if (item.tier !== null) return true;
+      } else if (item.tier !== FILTER.tier) return true;
+    }
+
   } else if (FILTER.category === "bases") {
     // Check base influence
     if (FILTER.baseInfluence !== null) {
