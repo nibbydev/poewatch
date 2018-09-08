@@ -689,13 +689,6 @@ function makeGetRequest(league, category) {
     let items = parseRequest(json);
     sortResults(items);
     ITEMS = items;
-    
-    // Enable "show more" button
-    if (json.length > FILTER.parseAmount) {
-      let loadAllBtn = $("#button-showAll");
-      loadAllBtn.text("Show all (" + json.length + " items)");
-      loadAllBtn.show();
-    }
   });
 
   request.fail(function(response) {
@@ -833,12 +826,9 @@ function buildNameField(item) {
         item.name = item.name.replace("#", splitVar[num]);
       }
     }
-
-    template = template.replace("{{name}}", item.name);
-    item.name = null;
-  } else {
-    template = template.replace("{{name}}", item.name);
   }
+  
+  template = template.replace("{{name}}", item.name);
 
   if (item.type) {
     let tmp = "<span class='subtext-1'>, " + item.type + "</span>";;
@@ -1132,33 +1122,41 @@ function sortResults(items) {
   let table = $("#searchResults");
   $("tbody", table).empty();
 
-  let count = 0;
+  let count = 0, matches = 0;
   let buffer = "";
 
   // Loop through every item provided
   for (var key in items) {
     if (items.hasOwnProperty(key)) {
-      // Stop if specified item limit has been reached
-      if ( FILTER.parseAmount > 0 && count > FILTER.parseAmount ) {
-        break;
-      }
-
       // Skip parsing if item should be hidden according to filters
       if ( checkHideItem(items[key]) ) {
         continue;
       }
 
-      // If item has not been parsed, parse it 
-      if ( !('tableData' in items[key]) ) {
-        parseItem(items[key]);
-      }
+      matches++;
 
-      // Append generated table data to buffer
-      buffer += items[key].tableData;
-      count++;
+      // Stop if specified item limit has been reached
+      if ( FILTER.parseAmount < 0 || count < FILTER.parseAmount ) {
+        // If item has not been parsed, parse it 
+        if ( !('tableData' in items[key]) ) {
+          parseItem(items[key]);
+        }
+
+        // Append generated table data to buffer
+        buffer += items[key].tableData;
+        count++;
+      }
     }
   }
 
+  let loadAllBtn = $("#button-showAll");
+  if (FILTER.parseAmount > 0 && matches > FILTER.parseAmount) {
+    loadAllBtn.text("Show all (" + (matches - FILTER.parseAmount) + " items)");
+    loadAllBtn.show();
+  } else {
+    loadAllBtn.hide();
+  }
+  
   // Add the generated HTML table data to the table
   table.append(buffer);
 }
