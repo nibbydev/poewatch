@@ -839,7 +839,7 @@ function buildNameField(item) {
   let template = `
   <td>
     <div class='d-flex align-items-center'>
-      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
+      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src="{{icon}}"></span>
       <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}{{link}}
     </div>
   </td>
