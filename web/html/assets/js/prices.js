@@ -913,8 +913,8 @@ function buildGemFields(item) {
   if (item.frame !== 4) return "";
 
   let template = `
-  <td>{{lvl}}</td>
-  <td>{{quality}}</td>
+  <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
+  <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
   <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
   `.trim();
 
@@ -949,7 +949,7 @@ function buildBaseFields(item) {
     displayLvl = "84";
   }
 
-  return "<td class='nowrap'>" + displayLvl + "</td>";
+  return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
 }
 
 function buildMapFields(item) {
@@ -958,7 +958,7 @@ function buildMapFields(item) {
     return "";
   }
 
-  return "<td class='nowrap'>" + (item.tier ? item.tier : "-") + "</td>";
+  return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + (item.tier ? item.tier : "-") + "</span></td>";
 }
 
 function buildPriceFields(item) {
