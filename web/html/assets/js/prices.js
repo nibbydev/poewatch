@@ -118,13 +118,15 @@ function defineListeners() {
     updateQueryString("confidence", option);
     sortResults(ITEMS);
   });
-
-  // Item links/sockets
-  $("#radio-links").on("change", function(){
-    FILTER.links = $("input[name=links]:checked", this).val();
+  
+  // Item links
+  $("#select-links").on("change", function(){
+    FILTER.links = $(":selected", this).val();
     console.log("Link filter: " + FILTER.links);
-    if (FILTER.links === "none") FILTER.links = null;
     updateQueryString("links", FILTER.links);
+    if (FILTER.links ===  "all") FILTER.links = null;
+    else if (FILTER.links === "none") FILTER.links = 0;
+    else FILTER.links = parseInt(FILTER.links);
     sortResults(ITEMS);
   });
 
@@ -808,7 +810,7 @@ function parseItem(item) {
 
   // Format map fields
   let mapFields = buildMapFields(item);
-  
+
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
 
@@ -838,7 +840,7 @@ function buildNameField(item) {
   <td>
     <div class='d-flex align-items-center'>
       <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
-      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}
+      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}{{link}}
     </div>
   </td>
   `.trim();
@@ -887,6 +889,13 @@ function buildNameField(item) {
     template = template.replace("{{type}}", tmp);
   } else {
     template = template.replace("{{type}}", "");
+  }
+
+  if (item.links) {
+    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.links + " link</span>";
+    template = template.replace("{{link}}", tmp);
+  } else {
+    template = template.replace("{{link}}", "");
   }
 
   if (item.var && FILTER.category !== "enchantments") {
@@ -1238,7 +1247,15 @@ function checkHideItem(item) {
   }
 
   // Hide items with different links
-  if (item.links != FILTER.links) return true;
+  if (FILTER.links !== null) {
+    if (FILTER.links > 0) {
+      if (item.links !== FILTER.links) {
+        return true;
+      }
+    } else if (item.links) {
+      return true;
+    }
+  }
 
   // Sort gems, I guess
   if (FILTER.category === "gems") {

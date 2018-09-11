@@ -94,18 +94,3 @@ function AddTableHeaders($category) {
   echo "<th scope='col' class='fixedSizeCol'>Change</th>";
   echo "<th scope='col' class='fixedSizeCol'>Count</th>";
 }
-
-// Adds a message to the MotD box 
-/*
-function AddMotdMessage($category) {
-  echo "<p class='mb-0 text-center subtext-1'>";
-
-  if ($category === "enchantments") {
-    echo "[ Enchantment prices <i>might</i> be inaccurate at this point in time ]";
-  } else {
-    echo "[ allan please add advertisement ]";
-  }
-
-  echo "</p>";
-} 
-*/

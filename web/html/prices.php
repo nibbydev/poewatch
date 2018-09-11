@@ -148,17 +148,12 @@
             </div>
             <div class="col-6 col-md-3 mb-2 link-fields">
               <h4>Links</h4>
-              <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-links">
-                <label class="btn btn-outline-dark active">
-                  <input type="radio" name="links" value="none" checked>None
-                </label>
-                <label class="btn btn-outline-dark">
-                  <input type="radio" name="links" value="5">5L
-                </label>
-                <label class="btn btn-outline-dark">
-                  <input type="radio" name="links" value="6">6L
-                </label>
-              </div>
+              <select class="form-control custom-select" id="select-links">
+                <option value="all" selected>All</option>
+                <option value="none">None</option>
+                <option value="5">5 Links</option>
+                <option value="6">6 Links</option>
+              </select>
             </div>
             <div class="col-6 col-md-3 mb-2">
               <h4>Category</h4>
