@@ -250,14 +250,4 @@ public class LeagueManager {
     public Integer getLeagueId(String league) {
         return leagueIds.get(league);
     }
-
-    public String getLeagueName(Integer id) {
-        for (Map.Entry<String, Integer> entry : leagueIds.entrySet()) {
-            if (entry.getValue().equals(id)) {
-                return entry.getKey();
-            }
-        }
-
-        return null;
-    }
 }

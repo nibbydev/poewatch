@@ -18,7 +18,7 @@ var FILTER = {
   baseIlvlMin: null,
   baseIlvlMax: null,
   baseInfluence: null,
-  parseAmount: 100
+  parseAmount: 150
 };
 
 var ITEMS = {};
@@ -95,8 +95,8 @@ function defineListeners() {
   });
 
   // Load all button
-  $(".loadall button").on("click", function(){
-    console.log("Button press: loadall");
+  $("#button-showAll").on("click", function(){
+    console.log("Button press: show all");
     $(this).hide();
     FILTER.parseAmount = -1;
     sortResults(ITEMS);
@@ -132,9 +132,10 @@ function defineListeners() {
   $("#select-tier").on("change", function(){
     FILTER.tier = $(":selected", this).val();
     console.log("Map tier filter: " + FILTER.tier);
-    if (FILTER.tier === "all") FILTER.tier = null;
-    else FILTER.tier = parseInt(FILTER.tier);
     updateQueryString("tier", FILTER.tier);
+    if (FILTER.tier === "all") FILTER.tier = null;
+    else if (FILTER.tier === "none") FILTER.tier = 0;
+    else FILTER.tier = parseInt(FILTER.tier);
     sortResults(ITEMS);
   });
 
@@ -328,7 +329,13 @@ function makeHistoryRequest(id) {
 }
 
 function formatHistory(leaguePayload) {
-  let vals = [], keys = [];
+  let keys = [];
+  let vals = {
+    mean:     [],
+    median:   [],
+    mode:     [],
+    quantity: []
+  };
 
   // Skip Hardcore (id 1) and Standard (id 2)
   if (leaguePayload.leagueId > 2) {
@@ -345,7 +352,11 @@ function formatHistory(leaguePayload) {
     
     // Bloat if less entries than league duration
     for (let i = 0; i < dateDiff - size; i++) {
-      vals.push(null);
+      vals.mean     .push(null);
+      vals.median   .push(null);
+      vals.mode     .push(null);
+      vals.quantity .push(null);
+
       keys.push(null);
     }
 
@@ -355,15 +366,15 @@ function formatHistory(leaguePayload) {
         keys.push(formatDate(key));
 
         if (leaguePayload.history[key] === null) {
-          vals.push(0);
+          vals.mean     .push(0);
+          vals.median   .push(0);
+          vals.mode     .push(0);
+          vals.quantity .push(0);
         } else {
-          switch (HISTORY_DATASET) {
-            case 1: vals.push(leaguePayload.history[key].mean);     break;
-            case 2: vals.push(leaguePayload.history[key].median);   break;
-            case 3: vals.push(leaguePayload.history[key].mode);     break;
-            case 4: vals.push(leaguePayload.history[key].quantity); break;
-            default:                                                break;
-          }
+          vals.mean     .push(leaguePayload.history[key].mean     );
+          vals.median   .push(leaguePayload.history[key].median   );
+          vals.mode     .push(leaguePayload.history[key].mode     );
+          vals.quantity .push(leaguePayload.history[key].quantity );
         }
       }
     }
@@ -379,26 +390,31 @@ function formatHistory(leaguePayload) {
     if (diffDays > 120) diffDays = 120;
 
     for (let i = 0; i < diffDays; i++) {
+      vals.mean     .push(null);
+      vals.median   .push(null);
+      vals.mode     .push(null);
+      vals.quantity .push(null);
+
       keys.push(null);
-      vals.push(null);
     }
 
     // Grab values
     for (var key in leaguePayload.history) {
       if (leaguePayload.history.hasOwnProperty(key)) {
         if (leaguePayload.history[key] === null) {
-          keys.push(null);
-          vals.push(null);
-        } else {
-          keys.push(formatDate(key));
+          vals.mean     .push(null);
+          vals.median   .push(null);
+          vals.mode     .push(null);
+          vals.quantity .push(null);
 
-          switch (HISTORY_DATASET) {
-            case 1: vals.push(leaguePayload.history[key].mean);     break;
-            case 2: vals.push(leaguePayload.history[key].median);   break;
-            case 3: vals.push(leaguePayload.history[key].mode);     break;
-            case 4: vals.push(leaguePayload.history[key].quantity); break;
-            default:                                                break;
-          }
+          keys.push(null);
+        } else {
+          vals.mean     .push(leaguePayload.history[key].mean     );
+          vals.median   .push(leaguePayload.history[key].median   );
+          vals.mode     .push(leaguePayload.history[key].mode     );
+          vals.quantity .push(leaguePayload.history[key].quantity );
+          
+          keys.push(formatDate(key));
         }
       }
     }
@@ -446,27 +462,58 @@ function setDetailsTableValues(expandedRow, leaguePayload) {
 }
 
 function createCharts(expandedRow) {
-  let ctx = $("#chart-past", expandedRow)[0].getContext('2d');
-  let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+  var dataPlugin = {
+    beforeUpdate: function(chart) {
+      // Don't run if data has not yet been initialized
+      if (chart.data.data.length < 1) return;
 
-  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
-  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
-  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
+      var keys = chart.data.data.keys;
+      var vals = chart.data.data.vals;
+
+      chart.data.labels = keys;
+
+      switch (HISTORY_DATASET) {
+        case 1: chart.data.datasets[0].data = vals.mean;      break;
+        case 2: chart.data.datasets[0].data = vals.median;    break;
+        case 3: chart.data.datasets[0].data = vals.mode;      break;
+        case 4: chart.data.datasets[0].data = vals.quantity;  break;
+      }
+    }
+  };
+
+  var gradientLinePlugin = {
+    beforeDatasetUpdate: function(chart) {
+      if (!chart.width) return;
+
+      // Create the linear gradient  chart.scales['x-axis-0'].width
+      var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
+
+      gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
+      gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
+
+      // Assign the gradient to the dataset's border color.
+      chart.data.datasets[0].borderColor = gradient;
+    }
+  };
 
   let settings = {
+    plugins: [dataPlugin, gradientLinePlugin],
     type: "line",
     data: {
+      data: [],
       labels: [],
       datasets: [{
         data: [],
         backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: gradient,
+        borderColor: "rgba(255, 255, 255, 0.5)",
         borderWidth: 3,
-        lineTension: 0.2,
+        lineTension: 0.4,
         pointRadius: 0
       }]
     },
     options: {
+      title: {display: false},
+      layout: {padding: 0},
       legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
@@ -495,12 +542,19 @@ function createCharts(expandedRow) {
         borderColor: '#aaa'
       },
       scales: {
-        yAxes: [{ticks: {beginAtZero:true}}],
+        yAxes: [{
+          ticks: {
+            beginAtZero: true,
+            padding: 0
+          }
+        }],
         xAxes: [{
           ticks: {
             callback: function(value, index, values) {
               return (value ? value : '');
-            }
+            },
+            maxRotation: 0,
+            padding: 0
           }
         }]
       }
@@ -511,13 +565,12 @@ function createCharts(expandedRow) {
 }
 
 function fillChartData(leaguePayload) {
-  // Pad history with leading nulls
-  let formattedHistory = formatHistory(leaguePayload);
+   // Pad history with leading nulls
+   let formattedHistory = formatHistory(leaguePayload);
 
-  // Assign history chart datasets
-  CHART_HISTORY.data.labels = formattedHistory.keys;
-  CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
-  CHART_HISTORY.update();
+   // Assign history chart datasets
+   CHART_HISTORY.data.data = formattedHistory;
+   CHART_HISTORY.update();
   
   // Set data in details table
   setDetailsTableValues(ROW_expanded, leaguePayload);
@@ -666,7 +719,7 @@ function getItemHistoryLeagues(id) {
 function makeGetRequest(league, category) {
   $("#searchResults tbody").empty();
   $(".buffering").show();
-  $(".loadall").hide();
+  $("#button-showAll").hide();
   $(".buffering-msg").remove();
 
   let request = $.ajax({
@@ -688,13 +741,6 @@ function makeGetRequest(league, category) {
     let items = parseRequest(json);
     sortResults(items);
     ITEMS = items;
-    
-    // Enable "show more" button
-    if (json.length > FILTER.parseAmount) {
-      let loadAllDiv = $(".loadall");
-      $("button", loadAllDiv).text("Load more (" + (json.length - FILTER.parseAmount) + ")");
-      loadAllDiv.show();
-    }
   });
 
   request.fail(function(response) {
@@ -739,6 +785,11 @@ function timedRequestCallback() {
     sortResults(items);
     ITEMS = items;
   });
+
+  request.fail(function(response) {
+    $("#searchResults tbody").empty();
+    buffering.after("<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>");
+  });
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -754,6 +805,9 @@ function parseItem(item) {
 
   // Format base fields
   let baseFields = buildBaseFields(item);
+
+  // Format map fields
+  let mapFields = buildMapFields(item);
   
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
@@ -765,7 +819,7 @@ function parseItem(item) {
   let quantField = buildQuantField(item);
 
   let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{base}}{{price}}{{change}}{{quant}}</tr>
+    <tr value={{id}}>{{name}}{{gem}}{{base}}{{map}}{{price}}{{change}}{{quant}}</tr>
   `.trim();
 
   item.tableData = template
@@ -773,6 +827,7 @@ function parseItem(item) {
     .replace("{{name}}",    nameField)
     .replace("{{gem}}",     gemFields)
     .replace("{{base}}",    baseFields)
+    .replace("{{map}}",     mapFields)
     .replace("{{price}}",   priceFields)
     .replace("{{change}}",  changeField)
     .replace("{{quant}}",   quantField);
@@ -783,7 +838,7 @@ function buildNameField(item) {
   <td>
     <div class='d-flex align-items-center'>
       <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
-      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var_or_tier}}
+      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}
     </div>
   </td>
   `.trim();
@@ -823,12 +878,9 @@ function buildNameField(item) {
         item.name = item.name.replace("#", splitVar[num]);
       }
     }
-
-    template = template.replace("{{name}}", item.name);
-    item.name = null;
-  } else {
-    template = template.replace("{{name}}", item.name);
   }
+  
+  template = template.replace("{{name}}", item.name);
 
   if (item.type) {
     let tmp = "<span class='subtext-1'>, " + item.type + "</span>";;
@@ -839,12 +891,9 @@ function buildNameField(item) {
 
   if (item.var && FILTER.category !== "enchantments") {
     let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
-  } else if (item.tier) {
-    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.tier + "</span>";
-    template = template.replace("{{var_or_tier}}", tmp);
+    template = template.replace("{{var}}", tmp);
   } else {
-    template = template.replace("{{var_or_tier}}", "");
+    template = template.replace("{{var}}", "");
   }
 
   return template;
@@ -878,13 +927,29 @@ function buildBaseFields(item) {
   // Don't run if item is not a gem
   if (FILTER.category !== "bases") return "";
 
-  let template = `
-  <td>{{ilvl}}</td>
-  `.trim();
+  let displayLvl;
 
-  template = template.replace("{{ilvl}}", item.ilvl);
+  if (item.var === "elder" || item.var === "shaped") {
+    switch (item.ilvl) {
+      case 68: displayLvl = "68 - 74"; break;
+      case 75: displayLvl = "75 - 82"; break;
+      case 84: displayLvl = "83 - 84"; break;
+      case 85: displayLvl = "85 - 100";     break;
+    }
+  } else {
+    displayLvl = "84";
+  }
 
-  return template;
+  return "<td class='nowrap'>" + displayLvl + "</td>";
+}
+
+function buildMapFields(item) {
+  // Don't run if item is not a map
+  if (FILTER.category !== "maps") {
+    return "";
+  }
+
+  return "<td class='nowrap'>" + (item.tier ? item.tier : "-") + "</td>";
 }
 
 function buildPriceFields(item) {
@@ -1109,33 +1174,41 @@ function sortResults(items) {
   let table = $("#searchResults");
   $("tbody", table).empty();
 
-  let count = 0;
+  let count = 0, matches = 0;
   let buffer = "";
 
   // Loop through every item provided
   for (var key in items) {
     if (items.hasOwnProperty(key)) {
-      // Stop if specified item limit has been reached
-      if ( FILTER.parseAmount > 0 && count > FILTER.parseAmount ) {
-        break;
-      }
-
       // Skip parsing if item should be hidden according to filters
       if ( checkHideItem(items[key]) ) {
         continue;
       }
 
-      // If item has not been parsed, parse it 
-      if ( !('tableData' in items[key]) ) {
-        parseItem(items[key]);
-      }
+      matches++;
 
-      // Append generated table data to buffer
-      buffer += items[key].tableData;
-      count++;
+      // Stop if specified item limit has been reached
+      if ( FILTER.parseAmount < 0 || count < FILTER.parseAmount ) {
+        // If item has not been parsed, parse it 
+        if ( !('tableData' in items[key]) ) {
+          parseItem(items[key]);
+        }
+
+        // Append generated table data to buffer
+        buffer += items[key].tableData;
+        count++;
+      }
     }
   }
 
+  let loadAllBtn = $("#button-showAll");
+  if (FILTER.parseAmount > 0 && matches > FILTER.parseAmount) {
+    loadAllBtn.text("Show all (" + (matches - FILTER.parseAmount) + " items)");
+    loadAllBtn.show();
+  } else {
+    loadAllBtn.hide();
+  }
+  
   // Add the generated HTML table data to the table
   table.append(buffer);
 }
@@ -1179,7 +1252,12 @@ function checkHideItem(item) {
       return true;
     }
   } else if (FILTER.category === "maps") {
-    if (FILTER.tier != null && item.tier !== FILTER.tier) return true;
+    if (FILTER.tier !== null) {
+      if (FILTER.tier === 0) {
+        if (item.tier !== null) return true;
+      } else if (item.tier !== FILTER.tier) return true;
+    }
+
   } else if (FILTER.category === "bases") {
     // Check base influence
     if (FILTER.baseInfluence !== null) {

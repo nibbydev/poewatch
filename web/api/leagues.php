@@ -24,7 +24,7 @@ function parse_data($stmt) {
 header('Content-Type: application/json');
 
 // Connect to database
-include_once ( 'details/pdo.php' );
+include_once ( '../details/pdo.php' );
 
 // Get data from database
 $stmt = get_data($pdo);

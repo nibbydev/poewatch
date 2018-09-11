@@ -12,7 +12,7 @@ function get_data($pdo) {
 header('Content-Type: application/json');
 
 // Connect to database
-include_once ( 'details/pdo.php' );
+include_once ( '../details/pdo.php' );
 
 // Get data from database
 $payload = get_data($pdo);

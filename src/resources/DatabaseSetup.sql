@@ -82,19 +82,6 @@ CREATE TABLE data_changeId (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure data_outputFiles
---
-
-CREATE TABLE data_outputFiles (
-    league     VARCHAR(64)   NOT NULL,
-    category   VARCHAR(32)   NOT NULL,
-    path       VARCHAR(128)  NOT NULL,
-    time       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT pk PRIMARY KEY (league, category)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
 -- Table structure data_currencyItems
 --
 
@@ -139,13 +126,11 @@ CREATE TABLE data_itemData (
     links      TINYINT(1)    UNSIGNED DEFAULT NULL,
     ilvl       TINYINT(1)    UNSIGNED DEFAULT NULL,
     var        VARCHAR(32)   DEFAULT NULL,
-    `key`      VARCHAR(128)  NOT NULL,
     icon       VARCHAR(256)  NOT NULL,
 
     FOREIGN KEY (id_cp) REFERENCES category_parent (id) ON DELETE CASCADE,
     FOREIGN KEY (id_cc) REFERENCES category_child  (id) ON DELETE CASCADE,
 
-    INDEX `key`  (`key`),
     INDEX frame  (frame),
     INDEX name   (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -168,7 +153,7 @@ CREATE TABLE league_items (
     median      DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
     mode        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
     exalted     DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    count     INT(16)        UNSIGNED NOT NULL DEFAULT 0,
+    count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc         INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     `dec`       INT(8)         UNSIGNED NOT NULL DEFAULT 0,
@@ -226,7 +211,9 @@ CREATE TABLE league_history_daily_inactive (
     quantity  INT(8)         UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+
+    INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -418,7 +405,8 @@ VALUES
     (9,   'jewels',         'Jewels'),
     (10,  'maps',           'Maps'),
     (11,  'prophecy',       'Prophecy'),
-    (12,  'weapons',        'Weapons');
+    (12,  'weapons',        'Weapons'),
+    (13,  'bases',          'Crafting Bases');
 
 --
 -- Base values for category_child
@@ -431,12 +419,14 @@ VALUES
     (1,     'belt',       'Belts'),
     (1,     'ring',       'Rings'),
     (2,     'boots',      'Boots'),
-    (2,     'chest',      'Body Armour'),
+    (2,     'chest',      'Body Armours'),
     (2,     'gloves',     'Gloves'),
     (2,     'helmet',     'Helmets'),
     (2,     'quiver',     'Quivers'),
     (2,     'shield',     'Shields'),
     (4,     'piece',      'Pieces'),
+    (4,     'fossil',     'Fossils'),
+    (4,     'resonator',  'Resonators'),
     (5,     'boots',      'Boots'),
     (5,     'gloves',     'Gloves'),
     (5,     'helmet',     'Helmets'),
@@ -444,7 +434,7 @@ VALUES
     (8,     'supportgem', 'Support Gems'),
     (8,     'vaalgem',    'Vaal Gems'),
     (10,    'fragment',   'Fragments'),
-    (10,    'map',        'Maps'),
+    (10,    'map',        'Regular Maps'),
     (10,    'unique',     'Unique Maps'),
     (12,    'bow',        'Bows'),
     (12,    'claw',       'Claws'),
@@ -458,7 +448,14 @@ VALUES
     (12,    'twoaxe',     '2H Axes'),
     (12,    'twomace',    '2H Maces'),
     (12,    'twosword',   '2H Swords'),
-    (12,    'wand',       'Wands');
+    (12,    'wand',       'Wands'),
+    (13,    'ring',       'Rings'),
+    (13,    'belt',       'Belts'),
+    (13,    'amulete',    'Amulets'),
+    (13,    'helmet',     'Helmets'),
+    (13,    'chest',      'Body Armour'),
+    (13,    'gloves',     'Gloves'),
+    (13,    'boots',      'Boots');
 
 --
 -- Base values for data_currencyItems

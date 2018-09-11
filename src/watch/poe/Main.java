@@ -147,7 +147,6 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    counter - counter commands\n"
-                + "    gen - generate files manually\n"
                 + "    acc - account manager commands\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
@@ -178,9 +177,6 @@ public class Main {
                         break;
                     case "counter":
                         commandCounter(userInput);
-                        break;
-                    case "gen":
-                        commandGen(userInput);
                         break;
                     case "acc":
                         commandAcc(userInput);
@@ -402,23 +398,6 @@ public class Main {
         }
 
         System.out.println("Value of '"+userInput[1]+"' changed ("+oldValue+") -> ("+newValue+") [change: "+(newValue-oldValue)+"]");
-    }
-
-    private static void commandGen(String[] userInput) {
-        switch (userInput[1]) {
-            case "itemdata":
-                ENTRY_MANAGER.generateItemDataFile();
-                break;
-            case "get":
-                long startTime = System.currentTimeMillis();
-                ENTRY_MANAGER.generateOutputFiles();
-                System.out.printf("done (%5d ms)\n", System.currentTimeMillis() - startTime);
-                break;
-
-            default:
-                System.out.println("Unknown gen");
-                break;
-        }
     }
 
     private static void commandAcc(String[] userInput) {

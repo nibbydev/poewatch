@@ -9,9 +9,10 @@ public class Item {
 
     private Mappers.BaseItem base;
     private String branch;
+    private Key key;
 
     private boolean discard, doNotIndex;
-    private String parentCategory, childCategory, variation, key;
+    private String parentCategory, childCategory, variation;
     private Integer links, level, quality, tier;
 
     // Overrides
@@ -60,7 +61,7 @@ public class Item {
         }
 
         // Form the unique database key
-        buildKey();
+        key = new Key(this);
     }
 
     /**
@@ -127,7 +128,7 @@ public class Item {
 
             case "maps":
                 // Filter all unique maps under "unique" subcategory
-                if (frameType == 3) {
+                if (frameType == 3 || frameType == 9) {
                     childCategory = "unique";
                 } else if (iconCategory.equals("breach")) {
                     childCategory = "fragment";
@@ -162,56 +163,6 @@ public class Item {
 
             parentCategory = "bases";
         }
-    }
-
-    /**
-     * Form the unique database key
-     */
-    private void buildKey() {
-        StringBuilder key = new StringBuilder();
-
-        // Add item's id
-        key.append(name);
-
-        // If present, add typeline to database key
-        if (typeLine != null) {
-            key.append(':');
-            key.append(typeLine);
-        }
-
-        // Add item's frametype to database key
-        key.append('|');
-        key.append(frameType);
-
-        // If the item has an ilvl
-        if (ilvl != null) {
-            key.append("|ilvl:");
-            key.append(ilvl);
-        }
-
-        // If the item has a 5- or 6-link
-        if (links != null) {
-            key.append("|links:");
-            key.append(links);
-        }
-
-        // If the item has a variation
-        if (variation != null) {
-            key.append("|var:");
-            key.append(variation);
-        }
-
-        // If the item was a gem, add gem info
-        if (parentCategory.equals("gems")) {
-            key.append("|l:");
-            key.append(level);
-            key.append("|q:");
-            key.append(quality);
-            key.append("|c:");
-            key.append(corrupted ? 1 : 0);
-        }
-
-        this.key = key.toString();
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -507,19 +458,6 @@ public class Item {
                     variation = "1 socket";
                 else if (base.getExplicitMods().get(0).equals("Has 2 Abyssal Sockets"))
                     variation = "2 sockets";
-                break;
-
-            case "The Beachhead":
-                // Attempt to find map tier
-                for (Mappers.Property property : base.getProperties()) {
-                    if (property.name.equals("Map Tier")) {
-                        if (!property.values.isEmpty()) {
-                            if (!property.values.get(0).isEmpty()) {
-                                variation = property.values.get(0).get(0);
-                            }
-                        }
-                    }
-                }
                 break;
         }
     }
@@ -841,7 +779,7 @@ public class Item {
         return variation;
     }
 
-    public String getKey() {
+    public Key getKey() {
         return key;
     }
 

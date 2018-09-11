@@ -43,7 +43,7 @@
                     <!--/Large ico col/-->
 
                     <!-- Name+league col -->
-                    <div class="d-flex flex-column justify-content-around mr-5">
+                    <div class="d-flex flex-column justify-content-around mh-item-largeCol mr-5">
                       <div>
                         <h4 id="item-name"></h4>
                       </div>
@@ -55,7 +55,7 @@
                     <!--/Name+league col/-->
 
                     <!-- Large price col -->
-                    <div class="d-flex flex-column justify-content-around">
+                    <div class="d-flex flex-column justify-content-around mr-3">
                       <div class="d-flex">
                         <div class="img-container img-container-md mr-1">
                           <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
@@ -191,7 +191,6 @@
 <!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-<script type="text/javascript" src="assets/js/sparkline.js"></script>
 <script type="text/javascript" src="assets/js/item.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 </body>

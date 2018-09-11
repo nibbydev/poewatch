@@ -177,7 +177,7 @@ header("Content-Type: application/json");
 if (!isset($_GET["id"])) error(400, "Missing id parameter");
 
 // Connect to database
-include_once ( "details/pdo.php" );
+include_once ( "../details/pdo.php" );
 
 // Get item's name, frame, icon, etc.
 $stmt = get_item_data($pdo, $_GET["id"]);

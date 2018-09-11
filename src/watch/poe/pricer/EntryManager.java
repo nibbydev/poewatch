@@ -136,152 +136,6 @@ public class EntryManager extends Thread {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // File generation
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Creates JSON files for the Get API
-     */
-    public void generateOutputFiles() {
-        List<String> oldFiles = new ArrayList<>();
-        List<FileEntry> newFiles = new ArrayList<>();
-
-        Main.DATABASE.getOutputFiles(oldFiles);
-        Config.folder_output_get.mkdirs();
-
-        // Process database data and write it to file as JSON
-        Main.DATABASE.getOutputData(newFiles);
-
-        // Update database file pointers
-        Main.DATABASE.addNewFilePaths(newFiles);
-
-        // Delete old unused files
-        deleteGetFiles(oldFiles, newFiles);
-    }
-
-    /**
-     * Encodes provided parcelEntryList as a JSON file
-     *
-     * @param parcelEntryList List of ParcelEntry objects, each defining one item
-     * @param league Exact string name of league
-     * @param category Exact string name of category
-     * @return Canonical path of file that was written to or null on error
-     */
-    public String writeGetFile(List<ParcelEntry> parcelEntryList, String league, String category) {
-        // Replace spaces in league name
-        league = league.replace(' ', '-');
-
-        String fileName = String.format("%s_%s_%d.json", league, category, System.currentTimeMillis());
-        File outputFile = new File(Config.folder_output_get, fileName);
-
-        try (Writer writer = Misc.defineWriter(outputFile)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(parcelEntryList, writer);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-            Main.ADMIN.log_("Couldn't write output JSON to file", 3);
-        }
-
-        try {
-            return outputFile.getCanonicalPath();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Couldn't get file's actual path", 3);
-        }
-
-        return null;
-    }
-
-    /**
-     * Deletes old Get API files from the output directory, keeping the previous set
-     *
-     * @param oldFiles List of files that were present before generation
-     * @param newFiles List of new files that were generated
-     */
-    private void deleteGetFiles(List<String> oldFiles, List<FileEntry> newFiles) {
-        File[] currentFiles = Config.folder_output_get.listFiles();
-        if (currentFiles == null) return;
-
-        try {
-            for (File currentFile : currentFiles) {
-                String currentCanonicalPath = currentFile.getCanonicalPath();
-
-                if (oldFiles.contains(currentCanonicalPath)) continue;
-
-                for (FileEntry newFileEntry : newFiles) {
-                    if (newFileEntry.path.equals(currentCanonicalPath)) {
-                        currentCanonicalPath = null;
-                        break;
-                    }
-                }
-
-                // Check if previous loop wants this one to skip
-                if (currentCanonicalPath == null) continue;
-
-                // Delete the file
-                if (!currentFile.delete()) {
-                    Main.ADMIN.log_("Could not delete old output file", 3);
-                }
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not delete old output files", 3);
-        }
-    }
-
-    /**
-     * Recreates the itemdata files when a new item has been found
-     */
-    public void generateItemDataFile() {
-        long startTime = System.currentTimeMillis();
-
-        List<String> oldItemdataFiles = new ArrayList<>();
-        Main.DATABASE.getOutputFiles(oldItemdataFiles);
-
-        Config.folder_output_itemdata.mkdirs();
-
-        List<ItemdataEntry> parcel = new ArrayList<>();
-        Main.DATABASE.getItemdata(parcel);
-
-        String fileName = "itemdata_" + System.currentTimeMillis() + ".json";
-        File itemdataFile = new File(Config.folder_output_itemdata, fileName);
-
-        try (Writer writer = Misc.defineWriter(itemdataFile)) {
-            if (writer == null) throw new IOException();
-            gson.toJson(parcel, writer);
-        } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
-            Main.ADMIN.log_("Couldn't write itemdata to file", 3);
-        }
-
-        try {
-            String path = itemdataFile.getCanonicalPath();
-            Main.DATABASE.addOutputFile("itemdata", "itemdata", path);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Couldn't get file's actual path", 3);
-        }
-
-        File[] itemdataFiles = Config.folder_output_itemdata.listFiles();
-        if (itemdataFiles == null) return;
-
-        try {
-            for (File file : itemdataFiles) {
-                if (oldItemdataFiles.contains(file.getCanonicalPath())) continue;
-                else if (itemdataFile.getCanonicalPath().equals(file.getCanonicalPath())) continue;
-
-                boolean success = file.delete();
-                if (!success) Main.ADMIN.log_("Could not delete old itemdata file", 3);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not delete old itemdata files", 3);
-        }
-
-        Main.ADMIN.log_(String.format("Itemdata rebuilt (%4d ms)", System.currentTimeMillis() - startTime), 0);
-    }
-
-    //------------------------------------------------------------------------------------------------------------
     // Cycle
     //------------------------------------------------------------------------------------------------------------
 
@@ -322,23 +176,13 @@ public class EntryManager extends Thread {
         currencyLeagueMap = Main.DATABASE.getCurrencyMap();
         time_prices = System.currentTimeMillis() - time_prices;
 
-        // Build JSON
-        long time_json = System.currentTimeMillis();
-        //generateOutputFiles();
-        time_json = System.currentTimeMillis() - time_json;
-
-        // Build itemdata
-        if (Main.RELATIONS.isNewIndexedItem()) {
-            generateItemDataFile();
-        }
-
         // Prepare cycle message
-        String cycleMsg = String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / j:%5d / p:%2d / u:%4d / a:%4d",
+        String cycleMsg = String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
                 System.currentTimeMillis() - status.lastRunTime,
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
                 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
                 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000,
-                time_cycle, time_json, time_prices,
+                time_cycle, time_prices,
                 time_upload, time_account);
         Main.ADMIN.log_(cycleMsg, -1);
 

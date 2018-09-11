@@ -1,5 +1,5 @@
 <?php 
-  include_once ( "assets/php/details/pdo.php" );
+  include_once ( "../details/pdo.php" );
   include_once ( "assets/php/functions_prices.php" ); 
   include_once ( "assets/php/functions.php" );
 
@@ -195,10 +195,11 @@
               <div class="form-group">
                 <select class="form-control" id="select-tier">
                   <option value="all" selected>All</option>
+                  <option value="none">None</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
-                  <option value="4">3</option>
+                  <option value="4">4</option>
                   <option value="5">5</option>
                   <option value="6">6</option>
                   <option value="7">7</option>
@@ -328,9 +329,7 @@
                 <tbody></tbody>
               </table>
               <div class="buffering align-self-center mb-2"></div>
-              <div class="loadall mt-2">
-                <button type="button" class="btn btn-block btn-outline-dark" id="button-loadall">Load more</button>
-              </div>
+              <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
             </div>
             <div class="card-footer slim-card-edge"></div>
           </div>
