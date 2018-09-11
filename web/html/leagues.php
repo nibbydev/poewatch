@@ -33,7 +33,7 @@
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
             <div class="card-body pb-0">
-              <p class="mb-0">A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end. All dates displayed are in your local timezone.</p>
+              <p class="mb-0">A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end.</p>
               <hr>
               <div class="row" id="main">
               
