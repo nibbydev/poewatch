@@ -79,17 +79,11 @@ function createCharts() {
     beforeDatasetUpdate: function(chart) {
       if (!chart.width) return;
 
-      console.log(chart)
-
       // Create the linear gradient  chart.scales['x-axis-0'].width
-      //var gradient = chart.ctx.createLinearGradient(chart.chartArea.left, 0, chart.chartArea.right, 0);
       var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
 
       gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
       gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
-
-      //gradient.addColorStop(0.0, '#FF416C');
-      //gradient.addColorStop(1.0, '#FF4B2B');
 
       /*
       for (let i = 0; i < chart.data.data.keys.length; i++) {

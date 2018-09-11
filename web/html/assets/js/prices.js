@@ -329,7 +329,13 @@ function makeHistoryRequest(id) {
 }
 
 function formatHistory(leaguePayload) {
-  let vals = [], keys = [];
+  let keys = [];
+  let vals = {
+    mean:     [],
+    median:   [],
+    mode:     [],
+    quantity: []
+  };
 
   // Skip Hardcore (id 1) and Standard (id 2)
   if (leaguePayload.leagueId > 2) {
@@ -346,7 +352,11 @@ function formatHistory(leaguePayload) {
     
     // Bloat if less entries than league duration
     for (let i = 0; i < dateDiff - size; i++) {
-      vals.push(null);
+      vals.mean     .push(null);
+      vals.median   .push(null);
+      vals.mode     .push(null);
+      vals.quantity .push(null);
+
       keys.push(null);
     }
 
@@ -356,15 +366,15 @@ function formatHistory(leaguePayload) {
         keys.push(formatDate(key));
 
         if (leaguePayload.history[key] === null) {
-          vals.push(0);
+          vals.mean     .push(0);
+          vals.median   .push(0);
+          vals.mode     .push(0);
+          vals.quantity .push(0);
         } else {
-          switch (HISTORY_DATASET) {
-            case 1: vals.push(leaguePayload.history[key].mean);     break;
-            case 2: vals.push(leaguePayload.history[key].median);   break;
-            case 3: vals.push(leaguePayload.history[key].mode);     break;
-            case 4: vals.push(leaguePayload.history[key].quantity); break;
-            default:                                                break;
-          }
+          vals.mean     .push(leaguePayload.history[key].mean     );
+          vals.median   .push(leaguePayload.history[key].median   );
+          vals.mode     .push(leaguePayload.history[key].mode     );
+          vals.quantity .push(leaguePayload.history[key].quantity );
         }
       }
     }
@@ -380,26 +390,31 @@ function formatHistory(leaguePayload) {
     if (diffDays > 120) diffDays = 120;
 
     for (let i = 0; i < diffDays; i++) {
+      vals.mean     .push(null);
+      vals.median   .push(null);
+      vals.mode     .push(null);
+      vals.quantity .push(null);
+
       keys.push(null);
-      vals.push(null);
     }
 
     // Grab values
     for (var key in leaguePayload.history) {
       if (leaguePayload.history.hasOwnProperty(key)) {
         if (leaguePayload.history[key] === null) {
-          keys.push(null);
-          vals.push(null);
-        } else {
-          keys.push(formatDate(key));
+          vals.mean     .push(null);
+          vals.median   .push(null);
+          vals.mode     .push(null);
+          vals.quantity .push(null);
 
-          switch (HISTORY_DATASET) {
-            case 1: vals.push(leaguePayload.history[key].mean);     break;
-            case 2: vals.push(leaguePayload.history[key].median);   break;
-            case 3: vals.push(leaguePayload.history[key].mode);     break;
-            case 4: vals.push(leaguePayload.history[key].quantity); break;
-            default:                                                break;
-          }
+          keys.push(null);
+        } else {
+          vals.mean     .push(leaguePayload.history[key].mean     );
+          vals.median   .push(leaguePayload.history[key].median   );
+          vals.mode     .push(leaguePayload.history[key].mode     );
+          vals.quantity .push(leaguePayload.history[key].quantity );
+          
+          keys.push(formatDate(key));
         }
       }
     }
@@ -447,27 +462,58 @@ function setDetailsTableValues(expandedRow, leaguePayload) {
 }
 
 function createCharts(expandedRow) {
-  let ctx = $("#chart-past", expandedRow)[0].getContext('2d');
-  let gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+  var dataPlugin = {
+    beforeUpdate: function(chart) {
+      // Don't run if data has not yet been initialized
+      if (chart.data.data.length < 1) return;
 
-  gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
-  gradient.addColorStop(0.3, 'rgba(244, 188, 172, 1)');
-  gradient.addColorStop(0.7, 'rgba(244, 149, 179, 1)');
+      var keys = chart.data.data.keys;
+      var vals = chart.data.data.vals;
+
+      chart.data.labels = keys;
+
+      switch (HISTORY_DATASET) {
+        case 1: chart.data.datasets[0].data = vals.mean;      break;
+        case 2: chart.data.datasets[0].data = vals.median;    break;
+        case 3: chart.data.datasets[0].data = vals.mode;      break;
+        case 4: chart.data.datasets[0].data = vals.quantity;  break;
+      }
+    }
+  };
+
+  var gradientLinePlugin = {
+    beforeDatasetUpdate: function(chart) {
+      if (!chart.width) return;
+
+      // Create the linear gradient  chart.scales['x-axis-0'].width
+      var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
+
+      gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
+      gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
+
+      // Assign the gradient to the dataset's border color.
+      chart.data.datasets[0].borderColor = gradient;
+    }
+  };
 
   let settings = {
+    plugins: [dataPlugin, gradientLinePlugin],
     type: "line",
     data: {
+      data: [],
       labels: [],
       datasets: [{
         data: [],
         backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: gradient,
+        borderColor: "rgba(255, 255, 255, 0.5)",
         borderWidth: 3,
-        lineTension: 0.2,
+        lineTension: 0.4,
         pointRadius: 0
       }]
     },
     options: {
+      title: {display: false},
+      layout: {padding: 0},
       legend: {display: false},
       responsive: true,
       maintainAspectRatio: false,
@@ -496,12 +542,19 @@ function createCharts(expandedRow) {
         borderColor: '#aaa'
       },
       scales: {
-        yAxes: [{ticks: {beginAtZero:true}}],
+        yAxes: [{
+          ticks: {
+            beginAtZero: true,
+            padding: 0
+          }
+        }],
         xAxes: [{
           ticks: {
             callback: function(value, index, values) {
               return (value ? value : '');
-            }
+            },
+            maxRotation: 0,
+            padding: 0
           }
         }]
       }
@@ -512,13 +565,12 @@ function createCharts(expandedRow) {
 }
 
 function fillChartData(leaguePayload) {
-  // Pad history with leading nulls
-  let formattedHistory = formatHistory(leaguePayload);
+   // Pad history with leading nulls
+   let formattedHistory = formatHistory(leaguePayload);
 
-  // Assign history chart datasets
-  CHART_HISTORY.data.labels = formattedHistory.keys;
-  CHART_HISTORY.data.datasets[0].data = formattedHistory.vals;
-  CHART_HISTORY.update();
+   // Assign history chart datasets
+   CHART_HISTORY.data.data = formattedHistory;
+   CHART_HISTORY.update();
   
   // Set data in details table
   setDetailsTableValues(ROW_expanded, leaguePayload);
