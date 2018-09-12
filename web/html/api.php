@@ -24,10 +24,6 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
-          <!-- MotD -->
-          <?php GenMotDBox(); ?>
-          <!--/MotD/-->
-
           <!-- API: id -->
           <div class="row mb-4">
             <div class="col-lg">

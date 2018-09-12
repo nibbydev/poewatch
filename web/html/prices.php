@@ -58,9 +58,6 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'>
-          <!-- MotD -->
-          <?php GenMotDBox(); ?>
-          <!--/MotD/-->
 
           <?php if ($SERVICE_category === "gems"): ?>
           
