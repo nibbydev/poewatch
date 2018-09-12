@@ -1,10 +1,21 @@
 <?php
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT name, display, start, end, active, upcoming, event
+  $query = "(
+    SELECT name, display, start, end, active, upcoming, event
     FROM      data_leagues 
     WHERE     id > 2
-    ORDER BY  id DESC";
+      AND     active = 1
+      OR      upcoming = 1
+    ORDER BY  id DESC
+  ) UNION (
+    SELECT name, display, start, end, active, upcoming, event
+    FROM      data_leagues 
+    WHERE     id > 2
+      AND     active = 0
+    ORDER BY  id DESC
+    LIMIT     4
+  )";
   $stmt = $pdo->query($query);
   
   $rows = array();
