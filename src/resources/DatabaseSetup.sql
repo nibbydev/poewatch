@@ -41,16 +41,6 @@ CREATE TABLE category_child (
     INDEX name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Table structure category_history
---
-
-CREATE TABLE category_history (
-    id    INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    name  VARCHAR(32)  NOT NULL UNIQUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 -- --------------------------------------------------------------------------------------------------------------------
 -- Data tables
 -- --------------------------------------------------------------------------------------------------------------------
@@ -374,18 +364,6 @@ INSERT INTO data_changeId
     (changeId)
 VALUES
     ('0-0-0-0-0');
-
---
--- Base values for category_history
---
-
-INSERT INTO category_history
-    (id, name)
-VALUES
-    (1, 'minutely'),
-    (2, 'hourly'),                                -- Notice: id 2 dependency
-    (3, 'daily'),
-    (4, 'weekly');
 
 --
 -- Base values for category_parent
