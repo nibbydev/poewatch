@@ -611,38 +611,37 @@ function createExpandedRow() {
     </div>
     <hr>
     <div class='row m-1 mt-2'>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
+      <div class='col d-flex'>
+        <table class="table table-sm details-table mw-item-dTable mr-4">
           <tbody>
             <tr>
-              <td>Mean</td>
-              <td>{{chaosContainter}}<span id='details-table-mean'></span></td>
+              <td class='nowrap w-100'>Mean</td>
+              <td class='nowrap'>{{chaosContainter}}<span id='details-table-mean'></span></td>
             </tr>
             <tr>
-              <td>Median</td>
-              <td>{{chaosContainter}}<span id='details-table-median'></span></td>
+              <td class='nowrap w-100'>Median</td>
+              <td class='nowrap'>{{chaosContainter}}<span id='details-table-median'></span></td>
             </tr>
             <tr>
-              <td>Mode</td>
-              <td>{{chaosContainter}}<span id='details-table-mode'></span></td>
+              <td class='nowrap w-100'>Mode</td>
+              <td class='nowrap'>{{chaosContainter}}<span id='details-table-mode'></span></td>
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
+
+        <table class="table table-sm details-table mw-item-dTable">
           <tbody>
             <tr>
-              <td>Total amount listed</td>
-              <td><span id='details-table-count'></span></td>
+              <td class='nowra pw-100'>Total amount listed</td>
+              <td class='nowrap'><span id='details-table-count'></span></td>
             </tr>
             <tr>
-              <td>Listed every 24h</td>
-              <td><span id='details-table-1d'></span></td>
+              <td class='nowrap w-100'>Listed every 24h</td>
+              <td class='nowrap'><span id='details-table-1d'></span></td>
             </tr>
             <tr>
-              <td>Price in exalted</td>
-              <td>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
+              <td class='nowrap w-100'>Price in exalted</td>
+              <td class='nowrap'>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
             </tr>
           </tbody>
         </table>
