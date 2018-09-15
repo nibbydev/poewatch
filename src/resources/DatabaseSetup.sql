@@ -159,6 +159,25 @@ CREATE TABLE league_items_rolling (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
+-- Table structure for table league_items_inactive
+--
+
+CREATE TABLE league_items_inactive (
+    id_l        SMALLINT       UNSIGNED NOT NULL,
+    id_d        INT            UNSIGNED NOT NULL,
+    time        TIMESTAMP      NOT NULL,
+    mean        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    median      DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mode        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    exalted     DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
+
+    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
 -- Table structure league_entries
 --
 

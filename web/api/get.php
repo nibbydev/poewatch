@@ -31,7 +31,7 @@ function check_league($pdo, $league) {
   return $stmt->rowCount() === 0 ? null : $stmt->fetch();
 }
 
-function get_data($pdo, $league, $category) {
+function get_data_rolling($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.exalted, 
     i.quantity + i.inc AS quantity, 
@@ -65,28 +65,32 @@ function get_data($pdo, $league, $category) {
   return $stmt;
 }
 
-function get_data2($pdo, $league, $category) {
+function get_data_inactive($pdo, $league, $category) {
   $query = "SELECT 
-    lhdi.id_d, lhdi.mean, lhdi.exalted, lhdi.count AS quantity, 
+    i.id_d, i.mean, i.exalted, 
+    i.count AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     cc.name AS category,
     NULL AS history
-  FROM league_history_daily_inactive AS lhdi
-  JOIN data_itemData AS did ON lhdi.id_d = did.id 
-  LEFT JOIN category_child AS cc ON did.id_cc = cc.id 
-  WHERE lhdi.id_l = (SELECT id FROM data_leagues WHERE name = ?)
-  AND did.id_cp = (SELECT id FROM category_parent WHERE name = ?)
-  AND lhdi.time = (
-    SELECT time FROM league_history_daily_inactive
-    WHERE id_l = (SELECT id FROM data_leagues WHERE name = ?)
-    ORDER BY time DESC
-    LIMIT 1) 
-  ORDER BY lhdi.mean DESC";
+  FROM      league_items_inactive         AS i 
+  JOIN      data_itemData                 AS did 
+    ON      i.id_d = did.id 
+  JOIN      data_leagues                  AS l 
+    ON      l.id = i.id_l 
+  JOIN      category_parent               AS cp 
+    ON      did.id_cp = cp.id 
+  LEFT JOIN category_child                AS cc 
+    ON      did.id_cc = cc.id 
+  WHERE     l.name   = ?
+    AND     cp.name  = ?
+    AND     i.count  > 1 
+  GROUP BY  i.id_d, i.mean, i.exalted, i.count
+  ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$league, $category, $league]);
+  $stmt->execute([$league, $category]);
 
   return $stmt;
 }
@@ -167,9 +171,9 @@ if ($state === null) {
 
 // Get database entries based on league state
 if ($state["active"]) {
-  $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
+  $stmt = get_data_rolling($pdo, $_GET["league"], $_GET["category"]);
 } else {
-  $stmt = get_data2($pdo, $_GET["league"], $_GET["category"]);
+  $stmt = get_data_inactive($pdo, $_GET["league"], $_GET["category"]);
 }
 
 // If no results with provided id

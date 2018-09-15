@@ -7,43 +7,24 @@ function error($code, $msg) {
 function get_league_data($pdo, $id) {
   $query = "SELECT * FROM (
     SELECT 
-      foo.*,
-      bar.mean,
-      bar.median,
-      bar.mode,
-      bar.exalted,
-      bar.count,
-      bar.quantity
-    FROM (
-      SELECT 
-        l.id      AS leagueId, 
-        l.name    AS leagueName, 
-        l.display AS leagueDisplay, 
-        l.active  AS leagueActive, 
-        l.event   AS leagueEvent, 
-        DATE_FORMAT(l.start,  '%Y-%m-%d')             AS leagueStart,
-        DATE_FORMAT(l.end,    '%Y-%m-%d')             AS leagueEnd,
-        GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
-        GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
-        GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
-        GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
-        GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list
-      FROM      league_history_daily_inactive AS h
-      JOIN      data_leagues                  AS l
-        ON      h.id_l  = l.id
-      WHERE     h.id_d = ?
-      GROUP BY  h.id_l, h.id_d
-    ) AS foo
-    JOIN (
-      SELECT id_l, mean, median, mode, exalted, count, quantity
-      FROM league_history_daily_inactive
-      WHERE id_d = ? AND time = (
-        SELECT MAX(time)
-        FROM league_history_daily_inactive
-        WHERE id_d = ?
-      )
-    ) AS bar
-      ON foo.leagueId = bar.id_l
+      l.id      AS leagueId, 
+      l.name    AS leagueName, 
+      l.display AS leagueDisplay, 
+      l.active  AS leagueActive, 
+      l.event   AS leagueEvent, 
+      DATE_FORMAT(l.start,  '%Y-%m-%d')             AS leagueStart,
+      DATE_FORMAT(l.end,    '%Y-%m-%d')             AS leagueEnd,
+      GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
+      GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
+      GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
+      GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
+      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list,
+      i.mean, i.median, i.mode, i.exalted, i.count, NULL AS quantity
+    FROM      league_items_inactive         AS i
+    JOIN      data_leagues                  AS l ON i.id_l = l.id
+    LEFT JOIN league_history_daily_inactive AS h ON h.id_l = l.id AND h.id_d = i.id_d
+    WHERE     i.id_d = ?
+    GROUP BY  i.id_l, i.id_d
   
     UNION ALL 
   
@@ -70,7 +51,7 @@ function get_league_data($pdo, $id) {
   ORDER BY un.leagueActive DESC, un.leagueId DESC";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$id, $id, $id, $id]);
+  $stmt->execute([$id, $id]);
 
   return $stmt;
 }
