@@ -6,11 +6,11 @@ function error($code, $msg) {
 
 function check_errors() {
   if ( !isset($_GET["league"]) )    {
-    error(400, "Missing league param");
+    error(400, "Missing league");
   }
 
   if ( !isset($_GET["category"]) )  {
-    error(400, "Missing category param");
+    error(400, "Missing category");
   }
 }
 
@@ -180,4 +180,4 @@ if ($stmt->rowCount() === 0) {
 $data = parse_data($stmt);
 
 // Display generated data
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);

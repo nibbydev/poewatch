@@ -155,7 +155,7 @@ function form_payload($itemData, $historyData) {
 header("Content-Type: application/json");
 
 // Get parameters
-if (!isset($_GET["id"])) error(400, "Missing id parameter");
+if (!isset($_GET["id"])) error(400, "Missing id");
 
 // Connect to database
 include_once ( "../details/pdo.php" );
@@ -163,7 +163,7 @@ include_once ( "../details/pdo.php" );
 // Get item's name, frame, icon, etc.
 $stmt = get_item_data($pdo, $_GET["id"]);
 // If no results with provided id
-if ($stmt->rowCount() === 0) error(400, "Invalid id parameter");
+if ($stmt->rowCount() === 0) error(400, "Invalid id");
 // Get the one row of item data
 $itemData = $stmt->fetch();
 
@@ -176,4 +176,4 @@ $historyData = parse_history_data($stmt);
 $payload = form_payload($itemData, $historyData);
 
 // Display generated data
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);

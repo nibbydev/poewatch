@@ -57,8 +57,7 @@ function AddSubCategorySelectors($categories) {
     $value = $entry[0];
     $display = $entry[1] ? $entry[1] : ucwords($entry[0]);
 
-    echo "
-    <option value='$value'>$display</option>";
+    echo "<option value='$value'>$display</option>";
   }
 }
 
@@ -79,13 +78,13 @@ function AddLeagueSelects($leagues) {
 function AddTableHeaders($category) {
   echo "<th class='w-100' scope='col'>Item</th>";
 
-  if ( $category === "gems" ) {
+  if ( $category === "gem" ) {
     echo "<th scope='col'>Lvl</th>";
     echo "<th scope='col'>Qual</th>";
     echo "<th scope='col'>Corr</th>";
-  } else if ( $category === "bases" ) {
+  } else if ( $category === "base" ) {
     echo "<th scope='col'>iLvl</th>";
-  } else if ( $category === "maps" ) {
+  } else if ( $category === "map" ) {
     echo "<th scope='col'>Tier</th>";
   }
   

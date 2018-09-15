@@ -59,7 +59,7 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'>
 
-          <?php if ($SERVICE_category === "gems"): ?>
+          <?php if ($SERVICE_category === "gem"): ?>
           
           <!-- Gem field row -->
           <div class="row mb-3 gem-fields">
@@ -128,7 +128,7 @@
           </div>
           <!--/Gem field row/-->
 
-          <?php elseif ($SERVICE_category === "armour" || $SERVICE_category === "weapons"): ?>
+          <?php elseif ($SERVICE_category === "armour" || $SERVICE_category === "weapon"): ?>
 
           <!-- Link + generic field row -->
           <div class="row mb-3">
@@ -167,7 +167,7 @@
           </div>
           <!--/Link + generic field row/-->
 
-          <?php elseif ($SERVICE_category === "maps"): ?>
+          <?php elseif ($SERVICE_category === "map"): ?>
 
           <!-- Map tier + generic field row -->
           <div class="row mb-3">
@@ -222,7 +222,7 @@
           </div>
           <!--/Map tier + generic field row/-->
 
-          <?php elseif ($SERVICE_category === "bases"): ?>
+          <?php elseif ($SERVICE_category === "base"): ?>
 
           <!-- Base + generic field row -->
           <div class="row mb-3">

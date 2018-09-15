@@ -860,7 +860,7 @@ function buildNameField(item) {
     template = template.replace("{{foil}}", "");
   }
 
-  if (FILTER.category === "bases") {
+  if (FILTER.category === "base") {
     if (item.var === "shaped") {
       template = template.replace("{{influence}}", "influence influence-shaper-1x1");
     } else if (item.var === "elder") {
@@ -872,7 +872,7 @@ function buildNameField(item) {
     template = template.replace("{{influence}}", "");
   }
 
-  if (FILTER.category === "enchantments") {
+  if (FILTER.category === "enchantment") {
     if (item.var !== null) {
       let splitVar = item.var.split('-');
       for (var num in splitVar) {
@@ -897,7 +897,7 @@ function buildNameField(item) {
     template = template.replace("{{link}}", "");
   }
 
-  if (item.var && FILTER.category !== "enchantments") {
+  if (item.var && FILTER.category !== "enchantment") {
     let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
     template = template.replace("{{var}}", tmp);
   } else {
@@ -933,7 +933,7 @@ function buildGemFields(item) {
 
 function buildBaseFields(item) {
   // Don't run if item is not a gem
-  if (FILTER.category !== "bases") return "";
+  if (FILTER.category !== "base") return "";
 
   let displayLvl;
 
@@ -953,7 +953,7 @@ function buildBaseFields(item) {
 
 function buildMapFields(item) {
   // Don't run if item is not a map
-  if (FILTER.category !== "maps") {
+  if (FILTER.category !== "map") {
     return "";
   }
 
@@ -1257,7 +1257,7 @@ function checkHideItem(item) {
   }
 
   // Sort gems, I guess
-  if (FILTER.category === "gems") {
+  if (FILTER.category === "gem") {
     if (FILTER.gemLvl !== null && item.lvl != FILTER.gemLvl) return true;
     if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
     if (FILTER.gemCorrupted !== null && item.corrupted != FILTER.gemCorrupted) return true;
@@ -1267,14 +1267,14 @@ function checkHideItem(item) {
       // Hide harbinger pieces under category 'all'
       return true;
     }
-  } else if (FILTER.category === "maps") {
+  } else if (FILTER.category === "map") {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {
         if (item.tier !== null) return true;
       } else if (item.tier !== FILTER.tier) return true;
     }
 
-  } else if (FILTER.category === "bases") {
+  } else if (FILTER.category === "base") {
     // Check base influence
     if (FILTER.baseInfluence !== null) {
       if (FILTER.baseInfluence === "none") {
