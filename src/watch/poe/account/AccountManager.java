@@ -38,7 +38,6 @@ public class AccountManager extends Thread {
                     processed = new ArrayList<>();
 
                     Main.DATABASE.createAccountRelation(tmp);
-                    Main.DATABASE.routeAccountData(tmp);
                 }
 
                 continue;
