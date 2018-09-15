@@ -130,10 +130,10 @@ CREATE TABLE data_itemData (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure for table league_items
+-- Table structure for table league_items_rolling
 --
 
-CREATE TABLE league_items (
+CREATE TABLE league_items_rolling (
     id_l        SMALLINT       UNSIGNED NOT NULL,
     id_d        INT            UNSIGNED NOT NULL,
     time        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -155,7 +155,7 @@ CREATE TABLE league_items (
     INDEX volatile   (volatile),
     INDEX multiplier (multiplier),
     INDEX mean       (mean),
-    INDEX imedian    (median)
+    INDEX median     (median)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -170,8 +170,8 @@ CREATE TABLE league_entries (
     price      DECIMAL(10,4)  UNSIGNED NOT NULL,
     account    VARCHAR(32)    NOT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES  data_leagues   (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
+    FOREIGN KEY (id_l) REFERENCES  data_leagues         (id)   ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
     INDEX time     (time),

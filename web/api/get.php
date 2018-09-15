@@ -40,7 +40,7 @@ function get_data($pdo, $league, $category) {
     did.links, did.ilvl, did.var, did.icon, 
     cc.name AS category,
     SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history
-  FROM      league_items                  AS i 
+  FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues                  AS l 

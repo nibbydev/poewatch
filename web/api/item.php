@@ -61,7 +61,7 @@ function get_league_data($pdo, $id) {
       GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
       GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list,
       i.mean, i.median, i.mode, i.exalted, i.count, i.quantity
-    FROM      league_items                 AS i
+    FROM      league_items_rolling         AS i
     JOIN      data_leagues                 AS l ON i.id_l = l.id
     LEFT JOIN league_history_daily_rolling AS h ON h.id_l = l.id AND h.id_d = i.id_d
     WHERE     i.id_d = ?
