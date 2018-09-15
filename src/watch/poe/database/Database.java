@@ -762,7 +762,7 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Calculates mean price for items in table `league_item` based on approved entries in `league_entries`
+     * Calculates mean price for items in table `league_items_rolling` based on approved entries in `league_entries`
      *
      * @return True on success
      */
@@ -793,7 +793,7 @@ public class Database {
     }
 
     /**
-     * Calculates median price for items in table `league_item` based on approved entries in `league_entries`
+     * Calculates median price for items in table `league_items_rolling` based on approved entries in `league_entries`
      *
      * @return True on success
      */
@@ -824,7 +824,7 @@ public class Database {
     }
 
     /**
-     * Calculates median price for items in table `league_item` based on any entries in `league_entries`
+     * Calculates median price for items in table `league_items_rolling` based on any entries in `league_entries`
      *
      * @return True on success
      */
@@ -855,7 +855,7 @@ public class Database {
     }
 
     /**
-     * Calculates mode price for items in table `league_item` based on approved entries in `league_entries`
+     * Calculates mode price for items in table `league_items_rolling` based on approved entries in `league_entries`
      *
      * @return True on success
      */
@@ -886,7 +886,7 @@ public class Database {
     }
 
     /**
-     * Calculates exalted price for items in table `league_item` based on exalted prices in same table
+     * Calculates exalted price for items in table `league_items_rolling` based on exalted prices in same table
      *
      * @return True on success
      */
@@ -916,9 +916,8 @@ public class Database {
         }
     }
 
-
     /**
-     * Calculates quantity for items in table `league_item` based on history entries from table `league_history`
+     * Calculates quantity for items in table `league_items_rolling` based on history entries from table `league_history`
      *
      * @return True on success
      */
@@ -944,6 +943,44 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not calculate quantity", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Calculates spark data for items in table `league_items_rolling` based on history entries
+     *
+     * @return True on success
+     */
+    public boolean calcSpark() {
+        String query =  "UPDATE league_items_rolling AS i " +
+                        "JOIN ( " +
+                        "  SELECT    i.id_l, i.id_d, " +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history " +
+                        "  FROM      league_items_rolling          AS i " +
+                        "  JOIN      data_leagues                  AS l " +
+                        "    ON      l.id = i.id_l " +
+                        "  JOIN      league_history_daily_rolling  AS lhdr " +
+                        "    ON      lhdr.id_d = i.id_d " +
+                        "      AND   lhdr.id_l = l.id " +
+                        "  WHERE     l.active = 1 " +
+                        "    AND     i.count  > 1 " +
+                        "  GROUP BY  i.id_l, i.id_d " +
+                        ") AS tmp ON i.id_l = tmp.id_l AND i.id_d = tmp.id_d " +
+                        "SET i.spark = tmp.history ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate spark", 3);
             return false;
         }
     }

@@ -147,6 +147,7 @@ CREATE TABLE league_items_rolling (
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc         INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     `dec`       INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    spark       VARCHAR(128)   DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,

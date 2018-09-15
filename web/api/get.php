@@ -39,7 +39,7 @@ function get_data_rolling($pdo, $league, $category) {
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     cc.name AS category,
-    SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history
+    i.spark AS history
   FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
@@ -47,16 +47,12 @@ function get_data_rolling($pdo, $league, $category) {
     ON      l.id = i.id_l 
   JOIN      category_parent               AS cp 
     ON      did.id_cp = cp.id 
-  JOIN      league_history_daily_rolling  AS lhdr 
-    ON      lhdr.id_d = i.id_d 
-      AND   lhdr.id_l = l.id
   LEFT JOIN category_child                AS cc 
     ON      did.id_cc = cc.id 
   WHERE     l.name   = ?
     AND     cp.name  = ?
     AND     l.active = 1 
     AND     i.count  > 1 
-  GROUP BY  i.id_d, i.mean, i.exalted, i.quantity, i.inc
   ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
