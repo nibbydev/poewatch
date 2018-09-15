@@ -1269,4 +1269,46 @@ public class Database {
             return false;
         }
     }
+
+    /**
+     * Moves rows from table `league_items_rolling` to table `league_items_inactive` based on league active status
+     *
+     * @return True on success
+     */
+    public boolean moveInactiveItemEntries() {
+        String query1 = "INSERT INTO league_items_inactive ( " +
+                        "              id_l, id_d, time, " +
+                        "              mean, median, mode, " +
+                        "              exalted, count " +
+                        "            )" +
+                        "SELECT      id_l, id_d, time, " +
+                        "            mean, median, mode, " +
+                        "            exalted, count " +
+                        "FROM        league_items_rolling AS i " +
+                        "JOIN        data_leagues         AS l " +
+                        "  ON        l.id = i.id_l " +
+                        "WHERE       l.active = 0 ";
+
+        String query2 = "DELETE i " +
+                        "FROM   league_items_rolling AS i " +
+                        "JOIN   data_leagues         AS l " +
+                        "  ON   l.id = i.id_l " +
+                        "WHERE  l.active = 0 ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not move inactive item entries", 3);
+            return false;
+        }
+    }
 }

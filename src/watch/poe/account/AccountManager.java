@@ -83,15 +83,14 @@ public class AccountManager extends Thread {
         }
 
         queue.addAll(accountRelations);
-        System.out.printf("Found %d new account relations: \n", queue.size());
+        Main.ADMIN.log_(String.format("Found %3d new character matches: \n", queue.size()), 1);
 
         for (AccountRelation accountRelation : accountRelations) {
-            System.out.printf("  %s (%d) -> %s (%d) (%d matches)\n", accountRelation.oldAccountName,
-                                                                     accountRelation.oldAccountId,
-                                                                     accountRelation.newAccountName,
-                                                                     accountRelation.newAccountId,
-                                                                     accountRelation.matches
-            );
+            Main.ADMIN.log_(String.format("  %32s (%8d) -> %s (%32d) (%2d matches)\n", accountRelation.oldAccountName,
+                                                                                       accountRelation.oldAccountId,
+                                                                                       accountRelation.newAccountName,
+                                                                                       accountRelation.newAccountId,
+                                                                                       accountRelation.matches), 1);
         }
     }
 
@@ -109,7 +108,7 @@ public class AccountManager extends Thread {
                 break;
         }
 
-        System.out.printf("Account %s had status: %d\n", accountRelation.oldAccountName, accountRelation.statusCode);
+        Main.ADMIN.log_(String.format("Account %32s had status: %3d\n", accountRelation.oldAccountName, accountRelation.statusCode), 1);
 
         processed.add(accountRelation);
     }
