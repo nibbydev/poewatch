@@ -162,6 +162,10 @@ public class Item {
             case "weapons":
                 parentCategory = "weapon";
                 break;
+
+            case "accessories":
+                parentCategory = "accessory";
+                break;
         }
 
         // Override for enchantments
@@ -172,10 +176,10 @@ public class Item {
         // Override for item bases
         if (branch.equals("base")) {
             switch (parentCategory) {
-                case "accessories": break;
-                case "armour":      break;
-                case "jewels":      break;
-                case "weapons":     break;
+                case "accessory": break;
+                case "armour":    break;
+                case "jewel":     break;
+                case "weapon":    break;
                 default:
                     discard = true;
                     return;
