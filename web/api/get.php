@@ -166,7 +166,7 @@ include_once ( "../details/pdo.php" );
 // Get league id and active state
 $state = check_league($pdo, $_GET["league"]);
 if ($state === null) {
-  error(400, "Invalid league param");
+  error(400, "Invalid league");
 }
 
 // Get database entries based on league state
