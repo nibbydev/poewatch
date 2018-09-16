@@ -10,6 +10,7 @@ var FILTER = {
   sub: "all",
   showLowConfidence: false,
   links: null,
+  rarity: null,
   tier: null,
   search: null,
   gemLvl: null,
@@ -116,6 +117,16 @@ function defineListeners() {
     console.log("Show low count: " + option);
     FILTER.showLowConfidence = option;
     updateQueryString("confidence", option);
+    sortResults(ITEMS);
+  });
+
+  // Rarity
+  $("#radio-rarity").on("change", function(){
+    FILTER.rarity = $(":checked", this).val();
+    console.log("Rarity filter: " + FILTER.rarity);
+    updateQueryString("rarity", FILTER.rarity);
+    if (FILTER.rarity === "all") FILTER.rarity = null;
+    else FILTER.rarity = parseInt(FILTER.rarity);
     sortResults(ITEMS);
   });
   
@@ -1243,6 +1254,13 @@ function checkHideItem(item) {
   // Hide sub-categories
   if (FILTER.sub !== "all" && FILTER.sub !== item.category) {
     return true;
+  }
+
+  // Hide mismatching rarities
+  if (FILTER.rarity) {
+    if (FILTER.rarity !== item.frame) {
+      return true;
+    }
   }
 
   // Hide items with different links
