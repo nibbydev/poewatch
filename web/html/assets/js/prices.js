@@ -327,17 +327,8 @@ function makeHistoryRequest(id) {
       $(".filler-row").remove();
       ROW_filler = null;
     }
-    
-    let tmp = {};
 
-    // Make league data accessible through league name
-    for (let i = 0; i < payload.leagues.length; i++) {
-      let leagueData = payload.leagues[i];
-      tmp[leagueData.leagueName] = leagueData;
-    }
-
-    HISTORY_DATA[id] = tmp;
-
+    HISTORY_DATA[id] = payload;
     buildExpandedRow(id);
   });
 }
@@ -351,87 +342,62 @@ function formatHistory(leaguePayload) {
     quantity: []
   };
 
+  // Convert date strings into objects
+  let oldestDate = new Date(leaguePayload.history[0].date);
+  let startDate  = new Date(leaguePayload.league.start);
+  let endDate    = new Date(leaguePayload.league.end);
+
+  // Increment startdate by a couple of hours due to timezone differences
+  startDate.setTime(startDate.getTime() + 4 * 60 * 60 * 1000);
+
+  // Nr of days league data is missing since league start until first entry
+  let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
+  let daysMissing     = Math.ceil(timeDiffMissing / (1000 * 60 * 60 * 24));
+
+  // Nr of days in a league
+  let timeDiffLeague = Math.abs(endDate.getTime() - startDate.getTime());
+  let daysLeague     = Math.ceil(timeDiffLeague / (1000 * 60 * 60 * 24));
+
+  // Hardcore (id 1) and Standard (id 2) don't have an end date
+  if (leaguePayload.league.id <= 2) {
+    daysLeague = 120;
+    daysMissing = 0;
+  }
+
+  // Bloat using 'null's the amount of days that should not have a tooltip
+  for (let i = 0; i < daysLeague - daysMissing - leaguePayload.history.length; i++) {
+    vals.mean     .push(null);
+    vals.median   .push(null);
+    vals.mode     .push(null);
+    vals.quantity .push(null);
+    keys          .push(null);
+  }
+
+  // Bloat using '0's the amount of days that should show "no data"
   // Skip Hardcore (id 1) and Standard (id 2)
-  if (leaguePayload.leagueId > 2) {
-    // Because javascript is "special"
-    let size = Object.keys(leaguePayload.history).length;
+  if (leaguePayload.league.id > 2) {
+    let tmpDate = new Date(startDate);
 
-    // Convert date strings into dates
-    let endDate = new Date(leaguePayload.leagueEnd);
-    let startDate = new Date(leaguePayload.leagueStart);
+    for (let i = 0; i < daysMissing; i++) {
+      vals.mean     .push(0);
+      vals.median   .push(0);
+      vals.mode     .push(0);
+      vals.quantity .push(0);
 
-    // Get difference in days between the two dates
-    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
-    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    
-    // Bloat if less entries than league duration
-    for (let i = 0; i < dateDiff - size; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-
-      keys.push(null);
+      keys.push(formatDate(tmpDate));
+      tmpDate.setDate(tmpDate.getDate() + 1);
     }
+  }
 
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        keys.push(formatDate(key));
+  // Grab values
+  for (let i = 0; i < leaguePayload.history.length; i++) {
+    let element = leaguePayload.history[i];
+    vals.mean     .push(element.mean     );
+    vals.median   .push(element.median   );
+    vals.mode     .push(element.mode     );
+    vals.quantity .push(element.quantity );
 
-        if (leaguePayload.history[key] === null) {
-          vals.mean     .push(0);
-          vals.median   .push(0);
-          vals.mode     .push(0);
-          vals.quantity .push(0);
-        } else {
-          vals.mean     .push(leaguePayload.history[key].mean     );
-          vals.median   .push(leaguePayload.history[key].median   );
-          vals.mode     .push(leaguePayload.history[key].mode     );
-          vals.quantity .push(leaguePayload.history[key].quantity );
-        }
-      }
-    }
-  } else {
-    let oldestDate = new Date();
-    oldestDate.setDate(oldestDate.getDate() - 120);
-    let oldDate = new Date(Object.keys(leaguePayload.history)[0]);
-
-    let timeDiff = Math.abs(oldDate.getTime() - oldestDate.getTime());
-    let diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
-
-    // For development
-    if (diffDays > 120) diffDays = 120;
-
-    for (let i = 0; i < diffDays; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-
-      keys.push(null);
-    }
-
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        if (leaguePayload.history[key] === null) {
-          vals.mean     .push(null);
-          vals.median   .push(null);
-          vals.mode     .push(null);
-          vals.quantity .push(null);
-
-          keys.push(null);
-        } else {
-          vals.mean     .push(leaguePayload.history[key].mean     );
-          vals.median   .push(leaguePayload.history[key].median   );
-          vals.mode     .push(leaguePayload.history[key].mode     );
-          vals.quantity .push(leaguePayload.history[key].quantity );
-          
-          keys.push(formatDate(key));
-        }
-      }
-    }
+    keys.push(formatDate(element.date));
   }
 
   // Return generated data
@@ -439,6 +405,16 @@ function formatHistory(leaguePayload) {
     'keys': keys,
     'vals': vals
   }
+}
+
+function getLeaguePayload(id, league) {
+  for (let i = 0; i < HISTORY_DATA[id].data.length; i++) {
+    if (HISTORY_DATA[id].data[i].league.name === league) {
+      return HISTORY_DATA[id].data[i];
+    }
+  }
+
+  return null;
 }
 
 function buildExpandedRow(id) {
@@ -450,8 +426,8 @@ function buildExpandedRow(id) {
   }
 
   // Get league-specific data pack
-  let leaguePayload = HISTORY_DATA[id][FILTER.league];
   HISTORY_LEAGUE = FILTER.league;
+  let leaguePayload = getLeaguePayload(id, HISTORY_LEAGUE);
 
   // Create jQuery object based on data from request and set gvar
   ROW_expanded = createExpandedRow();
@@ -695,7 +671,7 @@ function createExpandedRowListeners(id, expandedRow) {
     HISTORY_LEAGUE = $(":selected", this).val();
 
     // Get the payload associated with the selected league
-    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
+    let leaguePayload = getLeaguePayload(id, HISTORY_LEAGUE);
     fillChartData(leaguePayload);
   });
 
@@ -703,7 +679,7 @@ function createExpandedRowListeners(id, expandedRow) {
     HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
 
     // Get the payload associated with the selected league
-    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
+    let leaguePayload = getLeaguePayload(id, HISTORY_LEAGUE);
     fillChartData(leaguePayload);
   });
 }
@@ -712,14 +688,12 @@ function getItemHistoryLeagues(id) {
   // Get list of past leagues available for the item
   let leagues = [];
 
-  for (var key in HISTORY_DATA[id]) {
-    if (HISTORY_DATA[id].hasOwnProperty(key)) {
-      leagues.push({
-        name: key,
-        display: HISTORY_DATA[id][key].leagueDisplay,
-        active: HISTORY_DATA[id][key].leagueActive
-      });
-    }
+  for (let i = 0; i < HISTORY_DATA[id].data.length; i++) {
+    leagues.push({
+      name:    HISTORY_DATA[id].data[i].league.name,
+      display: HISTORY_DATA[id].data[i].league.display,
+      active:  HISTORY_DATA[id].data[i].league.active
+    });
   }
 
   return leagues;

@@ -61,7 +61,8 @@ function get_item_data($pdo, $id) {
     d.name, d.type, d.frame, d.icon,
     d.tier, d.lvl, d.quality, d.corrupted, 
     d.links, d.ilvl, d.var AS variation,
-    cp.name AS categoryParent, cc.name AS categoryChild
+    cp.name AS cpName, cp.id AS cpId, cp.display AS cpDisplay, 
+    cc.name AS ccName, cc.id AS ccId, cc.display AS ccDisplay 
   FROM      data_itemData   AS d
   JOIN      category_parent AS cp ON d.id_cp = cp.id 
   LEFT JOIN category_child  AS cc ON d.id_cc = cc.id 
@@ -78,52 +79,37 @@ function parse_history_data($stmt) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
-    // Convert CSVs to arrays
-    $means    = explode(',', $row['mean_list']);
-    $medians  = explode(',', $row['median_list']);
-    $modes    = explode(',', $row['mode_list']);
-    $quants   = explode(',', $row['quantity_list']);
-    $times    = explode(',', $row['time_list']);
-
     // Form a temporary entry array
     $tmp = array(
-      'leagueId'      => (int)    $row['leagueId'],
-      'leagueName'    =>          $row['leagueName'],
-      'leagueDisplay' =>          $row['leagueDisplay'],
-      'leagueActive'  => (bool)   $row['leagueActive'],
-      'leagueEvent'   => (bool)   $row['leagueEvent'],
-      'leagueStart'   =>          $row['leagueStart'],
-      'leagueEnd'     =>          $row['leagueEnd'],
-      'mean'          =>          $row['mean']      === NULL ? null : (float) $row['mean'],
-      'median'        =>          $row['median']    === NULL ? null : (float) $row['median'],
-      'mode'          =>          $row['mode']      === NULL ? null : (float) $row['mode'],
-      'exalted'       =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
-      'count'         =>          $row['count']     === NULL ? null :   (int) $row['count'],
-      'quantity'      =>          $row['quantity']  === NULL ? null :   (int) $row['quantity'],
-      'history'       =>          array()
+      'league'      => array(
+        'id'        => (int)  $row['leagueId'],
+        'name'      =>        $row['leagueName'],
+        'display'   =>        $row['leagueDisplay'],
+        'active'    => (bool) $row['leagueActive'],
+        'event'     => (bool) $row['leagueEvent'],
+        'start'     =>        $row['leagueStart'],
+        'end'       =>        $row['leagueEnd']
+      ),
+      'mean'      =>          $row['mean']      === NULL ? null : (float) $row['mean'],
+      'median'    =>          $row['median']    === NULL ? null : (float) $row['median'],
+      'mode'      =>          $row['mode']      === NULL ? null : (float) $row['mode'],
+      'exalted'   =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
+      'count'     =>          $row['count']     === NULL ? null :   (int) $row['count'],
+      'quantity'  =>          $row['quantity']  === NULL ?    0 :   (int) $row['quantity'],
+      'history'   => array()
     );
 
     if (!is_null($row['mean_list'])) {
-      // Add null values to counter missing entries from league start
-      // Don't run for Hardcore (id 1) nor Standard (id 2)
-      if ($tmp['leagueId'] > 2) {
-        // Get the two dates as Unix timestamps (ie number of seconds 
-        // since January 1 1970 00:00:00 UTC)
-        $startDate = strtotime($tmp['leagueStart']) + 60 * 60 * 24;
-        $firstDate = strtotime($times[0]);
-
-        // Find the number of days of difference between the two dates
-        $dateDiff = ceil( ($firstDate - $startDate) / 60 / 60 / 24);
-
-        // Fill tmp array with null values for the amount of missing days
-        for ($i = 0; $i < $dateDiff; $i++) { 
-          $stamp = date('Y-m-d', $startDate + $i * 86400);
-          $tmp['history'][ $stamp ] = null;
-        }
-      }
+      // Convert CSVs to arrays
+      $means    = explode(',', $row['mean_list']);
+      $medians  = explode(',', $row['median_list']);
+      $modes    = explode(',', $row['mode_list']);
+      $quants   = explode(',', $row['quantity_list']);
+      $times    = explode(',', $row['time_list']);
 
       for ($i = 0; $i < sizeof($means); $i++) { 
-        $tmp['history'][ $times[$i] ] = array(
+        $tmp['history'][] = array(
+          'date'     =>         $times[$i],
           'mean'     => (float) $means[$i],
           'median'   => (float) $medians[$i],
           'mode'     => (float) $modes[$i],
@@ -139,15 +125,33 @@ function parse_history_data($stmt) {
 }
 
 function form_payload($itemData, $historyData) {
-  $payload = $itemData;
+  $payload = array(
+    'name'      => $itemData['name'],
+    'type'      => $itemData['type'],
+    'frame'     => $itemData['frame'],
+    'icon'      => $itemData['icon'],
+    'tier'      => $itemData['tier']      === NULL ? null :  (int) $itemData['tier'],
+    'lvl'       => $itemData['lvl']       === NULL ? null :  (int) $itemData['lvl'],
+    'quality'   => $itemData['quality']   === NULL ? null :  (int) $itemData['quality'],
+    'corrupted' => $itemData['corrupted'] === NULL ? null : (bool) $itemData['corrupted'],
+    'links'     => $itemData['links']     === NULL ? null :  (int) $itemData['links'],
+    'ilvl'      => $itemData['ilvl'],
+    'variation' => $itemData['variation'],
+    'category'  => array(
+      'parent'  => array(
+        'id'      => $itemData['cpId'],
+        'name'    => $itemData['cpName'],
+        'display' => $itemData['cpDisplay'],
+      ),
+      'child'   => array(
+        'id'      => $itemData['ccId'],
+        'name'    => $itemData['ccName'],
+        'display' => $itemData['ccDisplay'],
+      )
+    ),
+    'data' => $historyData
+  );
 
-  if ($payload['tier']      !== null) $payload['tier']      = (int)   $payload['tier'];
-  if ($payload['lvl']       !== null) $payload['lvl']       = (int)   $payload['lvl'];
-  if ($payload['quality']   !== null) $payload['quality']   = (int)   $payload['quality'];
-  if ($payload['corrupted'] !== null) $payload['corrupted'] = (bool)  $payload['corrupted'];
-  if ($payload['links']     !== null) $payload['links']     = (int)   $payload['links'];
-
-  $payload["leagues"] = $historyData;
   return $payload;
 }
 

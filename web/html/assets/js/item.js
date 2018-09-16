@@ -27,23 +27,16 @@ function makeHistoryRequest(id) {
   request.done(function(payload) {
     $(".card-header.slim-card-edge > div.content").parent().addClass("p-0");
 
-    // Create deep clone of the payload
-    let tmp = $.extend(true, {}, payload);
     let leagues = [];
-
-    // Make league data accessible through league name
-    tmp.leagues = {};
-    for (let i = 0; i < payload.leagues.length; i++) {
-      let leagueData = payload.leagues[i];
-      tmp.leagues[leagueData.leagueName] = leagueData;
-      
+    for (let i = 0; i < payload.data.length; i++) {
       leagues.push({
-        name: leagueData.leagueName,
-        display: leagueData.leagueDisplay,
-        active: leagueData.leagueActive
+        name:    payload.data[i].league.name,
+        display: payload.data[i].league.display,
+        active:  payload.data[i].league.active
       });
     }
-    ITEM = tmp;
+
+    ITEM = payload;
 
     createCharts();
     fillData();
@@ -84,13 +77,6 @@ function createCharts() {
 
       gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
       gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
-
-      /*
-      for (let i = 0; i < chart.data.data.keys.length; i++) {
-        let dynColor = dynamicColor(chart.data.data.vals.quantity[i]);
-        gradient.addColorStop(1.0 / chart.data.data.keys.length * i, dynColor);
-      }
-      */
 
       // Assign the gradient to the dataset's border color.
       chart.data.datasets[0].borderColor = gradient;
@@ -196,7 +182,13 @@ function dynamicColor(multi) {
 }
 
 function fillData() {
-  let leaguePayload = ITEM.leagues[LEAGUE];
+  let leaguePayload;
+  for (let i = 0; i < ITEM.data.length; i++) {
+    if (ITEM.data[i].league.name === LEAGUE) {
+      leaguePayload = ITEM.data[i];
+      break;
+    }
+  }
 
   // Pad history with leading nulls
   let formattedHistory = formatHistory(leaguePayload);
@@ -213,7 +205,7 @@ function fillData() {
   $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
   $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
 
-  if (ITEM.categoryParent === "base") {
+  if (ITEM.category.parent.name === "base") {
     if (ITEM.variation === "shaper") {
       $("#item-icon").parent().addClass("influence influence-shaper-2x3");
     } else if (ITEM.variation === "elder") {
@@ -252,12 +244,12 @@ function createSelectorFields(leagues) {
 function createListeners() {
   $("#history-league-selector").change(function(){
     LEAGUE = $(":selected", this).val();
-    fillData( ITEM.leagues[LEAGUE] );
+    fillData();
   });
 
   $("#history-dataset-radio").change(function(){
     HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
-    fillData( ITEM.leagues[LEAGUE] );
+    fillData();
   });
 }
 
@@ -267,7 +259,7 @@ function createListeners() {
 
 function buildNameField() {
   // Fix name if item is enchantment
-  if (ITEM.categoryParent === "enchantment" && ITEM.variation !== null) {
+  if (ITEM.category.parent.name === "enchantment" && ITEM.variation !== null) {
     let splitVar = ITEM.variation.split('-');
     
     for (var num in splitVar) {
@@ -286,7 +278,7 @@ function buildNameField() {
     builder = "<span class='item-foil'>" + builder + "</span>";
   }
 
-  if (ITEM.variation && ITEM.categoryParent !== "enchantment") {
+  if (ITEM.variation && ITEM.category.parent.name !== "enchantment") {
     builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
   } 
   
@@ -376,87 +368,62 @@ function formatHistory(leaguePayload) {
     quantity: []
   };
 
+  // Convert date strings into objects
+  let oldestDate = new Date(leaguePayload.history[0].date);
+  let startDate  = new Date(leaguePayload.league.start);
+  let endDate    = new Date(leaguePayload.league.end);
+
+  // Increment startdate by a couple of hours due to timezone differences
+  startDate.setTime(startDate.getTime() + 4 * 60 * 60 * 1000);
+
+  // Nr of days league data is missing since league start until first entry
+  let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
+  let daysMissing     = Math.ceil(timeDiffMissing / (1000 * 60 * 60 * 24));
+
+  // Nr of days in a league
+  let timeDiffLeague = Math.abs(endDate.getTime() - startDate.getTime());
+  let daysLeague     = Math.ceil(timeDiffLeague / (1000 * 60 * 60 * 24));
+
+  // Hardcore (id 1) and Standard (id 2) don't have an end date
+  if (leaguePayload.league.id <= 2) {
+    daysLeague = 120;
+    daysMissing = 0;
+  }
+
+  // Bloat using 'null's the amount of days that should not have a tooltip
+  for (let i = 0; i < daysLeague - daysMissing - leaguePayload.history.length; i++) {
+    vals.mean     .push(null);
+    vals.median   .push(null);
+    vals.mode     .push(null);
+    vals.quantity .push(null);
+    keys          .push(null);
+  }
+
+  // Bloat using '0's the amount of days that should show "no data"
   // Skip Hardcore (id 1) and Standard (id 2)
-  if (leaguePayload.leagueId > 2) {
-    // Because javascript is "special"
-    let size = Object.keys(leaguePayload.history).length;
+  if (leaguePayload.league.id > 2) {
+    let tmpDate = new Date(startDate);
 
-    // Convert date strings into dates
-    let endDate = new Date(leaguePayload.leagueEnd);
-    let startDate = new Date(leaguePayload.leagueStart);
+    for (let i = 0; i < daysMissing; i++) {
+      vals.mean     .push(0);
+      vals.median   .push(0);
+      vals.mode     .push(0);
+      vals.quantity .push(0);
 
-    // Get difference in days between the two dates
-    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
-    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    
-    // Bloat if less entries than league duration
-    for (let i = 0; i < dateDiff - size; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-
-      keys.push(null);
+      keys.push(formatDate(tmpDate));
+      tmpDate.setDate(tmpDate.getDate() + 1);
     }
+  }
 
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        keys.push(formatDate(key));
+  // Grab values
+  for (let i = 0; i < leaguePayload.history.length; i++) {
+    let element = leaguePayload.history[i];
+    vals.mean     .push(element.mean     );
+    vals.median   .push(element.median   );
+    vals.mode     .push(element.mode     );
+    vals.quantity .push(element.quantity );
 
-        if (leaguePayload.history[key] === null) {
-          vals.mean     .push(0);
-          vals.median   .push(0);
-          vals.mode     .push(0);
-          vals.quantity .push(0);
-        } else {
-          vals.mean     .push(leaguePayload.history[key].mean     );
-          vals.median   .push(leaguePayload.history[key].median   );
-          vals.mode     .push(leaguePayload.history[key].mode     );
-          vals.quantity .push(leaguePayload.history[key].quantity );
-        }
-      }
-    }
-  } else {
-    let oldestDate = new Date();
-    oldestDate.setDate(oldestDate.getDate() - 120);
-    let oldDate = new Date(Object.keys(leaguePayload.history)[0]);
-
-    let timeDiff = Math.abs(oldDate.getTime() - oldestDate.getTime());
-    let diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
-
-    // For development
-    if (diffDays > 120) diffDays = 120;
-
-    for (let i = 0; i < diffDays; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-
-      keys.push(null);
-    }
-
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        if (leaguePayload.history[key] === null) {
-          vals.mean     .push(null);
-          vals.median   .push(null);
-          vals.mode     .push(null);
-          vals.quantity .push(null);
-
-          keys.push(null);
-        } else {
-          vals.mean     .push(leaguePayload.history[key].mean     );
-          vals.median   .push(leaguePayload.history[key].median   );
-          vals.mode     .push(leaguePayload.history[key].mode     );
-          vals.quantity .push(leaguePayload.history[key].quantity );
-          
-          keys.push(formatDate(key));
-        }
-      }
-    }
+    keys.push(formatDate(element.date));
   }
 
   // Return generated data
