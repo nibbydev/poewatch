@@ -18,7 +18,7 @@ function get_league_data($pdo, $id) {
       GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
       GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
-      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list,
+      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%dT%H:00:00Z') ORDER BY h.time ASC) AS time_list,
       i.mean, i.median, i.mode, i.exalted, i.count, NULL AS quantity
     FROM      league_items_inactive         AS i
     JOIN      data_leagues                  AS l ON i.id_l = l.id
@@ -40,7 +40,7 @@ function get_league_data($pdo, $id) {
       GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
       GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
-      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%d') ORDER BY h.time ASC) AS time_list,
+      GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%dT%H:00:00Z') ORDER BY h.time ASC) AS time_list,
       i.mean, i.median, i.mode, i.exalted, i.count, i.quantity
     FROM      league_items_rolling         AS i
     JOIN      data_leagues                 AS l ON i.id_l = l.id
@@ -109,7 +109,7 @@ function parse_history_data($stmt) {
 
       for ($i = 0; $i < sizeof($means); $i++) { 
         $tmp['history'][] = array(
-          'date'     =>         $times[$i],
+          'time'     =>         $times[$i],
           'mean'     => (float) $means[$i],
           'median'   => (float) $medians[$i],
           'mode'     => (float) $modes[$i],

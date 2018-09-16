@@ -343,12 +343,12 @@ function formatHistory(leaguePayload) {
   };
 
   // Convert date strings into objects
-  let oldestDate = new Date(leaguePayload.history[0].date);
+  let oldestDate = new Date(leaguePayload.history[0].time);
   let startDate  = new Date(leaguePayload.league.start);
   let endDate    = new Date(leaguePayload.league.end);
 
-  // Increment startdate by a couple of hours due to timezone differences
-  startDate.setTime(startDate.getTime() + 4 * 60 * 60 * 1000);
+  // Increment startdate to balance timezone differences
+  startDate.setTime(startDate.getTime() + 24 * 60 * 60 * 1000);
 
   // Nr of days league data is missing since league start until first entry
   let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
@@ -397,7 +397,7 @@ function formatHistory(leaguePayload) {
     vals.mode     .push(element.mode     );
     vals.quantity .push(element.quantity );
 
-    keys.push(formatDate(element.date));
+    keys.push(formatDate(element.time));
   }
 
   // Return generated data

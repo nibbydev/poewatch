@@ -204,8 +204,10 @@ function GetLeagues($pdo) {
 
 // Add category-specific selector fields to sub-category selector
 function AddSubCategorySelectors($categories) {
-  echo "<option value='all'>All</option>";
-
+  if (sizeof($categories) > 1) {
+    echo "<option value='all'>All</option>";
+  }
+  
   foreach ($categories as $entry) {
     $value = $entry[0];
     $display = $entry[1] ? $entry[1] : ucwords($entry[0]);
