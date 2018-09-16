@@ -91,7 +91,7 @@ function get_data_inactive($pdo, $league, $category) {
   return $stmt;
 }
 
-function parse_data($stmt) {
+function parse_data($stmt, $active) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
@@ -119,28 +119,32 @@ function parse_data($stmt) {
       'icon'          =>        $row['icon']
     );
 
-    // If there were history entries
-    if ( !is_null($row['history']) ) {
-      // Convert CSV to array
-      $history = array_reverse(explode(',', $row['history']));
+    if ($active) {
+      // If there were history entries
+      if ( is_null($row['history']) ) {
+        $tmp['spark'] = array(null, null, null, null, null, null, null);
+      } else {
+        // Convert CSV to array
+        $history = array_reverse(explode(',', $row['history']));
 
-      // Find total change
-      $lastVal = $history[sizeof($history) - 1];
-      if ($lastVal > 0) {
-        $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
-      }
-      
-      $firstPrice = $history[0];
-
-      // Calculate each entry's change %-relation to current price
-      for ($i = 0; $i < sizeof($history); $i++) { 
-        if ($history[$i] > 0) {
-          $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
+        // Find total change
+        $lastVal = $history[sizeof($history) - 1];
+        if ($lastVal > 0) {
+          $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
         }
-      }
 
-      // Pad missing fields with null
-      $tmp['spark'] = array_pad($history, -7, null);
+        $firstPrice = $history[0];
+
+        // Calculate each entry's change %-relation to current price
+        for ($i = 0; $i < sizeof($history); $i++) { 
+          if ($history[$i] > 0) {
+            $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
+          }
+        }
+
+        // Pad missing fields with null
+        $tmp['spark'] = array_pad($history, -7, null);
+      }
     }
 
     // Append row to payload
@@ -177,7 +181,7 @@ if ($stmt->rowCount() === 0) {
   error(400, "No results");
 }
 
-$data = parse_data($stmt);
+$data = parse_data($stmt, $state["active"]);
 
 // Display generated data
 echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);
