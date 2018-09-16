@@ -61,8 +61,9 @@
 
           <div class="row mb-3">
             <div class='col d-flex flex-column'>
-              <?php GenSpecificSearchForm($SERVICE_category) ?>
 
+              <?php FormGen::GenForm($SERVICE_category) ?>
+              
               <div class='d-flex flex-wrap'>
                 <div class='mr-3'>
                   <h4 class='nowrap'>Low count</h4>
