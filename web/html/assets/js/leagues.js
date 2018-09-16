@@ -8,8 +8,8 @@ function addCountDownTimer(element) {
   let start = new Date($(".league-start", element).attr("value"));
   let end   = new Date($(".league-end",   element).attr("value"));
 
-  var idE = $(".league-description", element);
-  var pbE = $(".progressbar-bar", element);
+  var cdText = $(".league-description", element);
+  var cdBar = $(".progressbar-bar", element);
 
   var _second = 1000;
   var _minute = _second * 60;
@@ -32,9 +32,11 @@ function addCountDownTimer(element) {
       clearInterval(timer);
       
       if (start < now) {
-        idE.html("<span class='badge badge-danger mb-2'>Ended</span>");
+        cdText.hide();
+        cdBar.hide();
+
       } else {
-        idE.html("<span class='badge badge-danger mb-2'>Started</span>");
+        cdText.html("<span class='badge badge-danger mb-2'>Started</span>");
       }
 
       return;
@@ -113,8 +115,8 @@ function addCountDownTimer(element) {
     if (minuteString) formatString += minuteString;
     if (secondString) formatString += secondString;
 
-    idE.html(formatString);
-    pbE.css("width", percentage+"%");
+    cdText.html(formatString);
+    cdBar.css("width", percentage+"%");
   }
 
   showRemaining();

@@ -10,6 +10,7 @@ var FILTER = {
   sub: "all",
   showLowConfidence: false,
   links: null,
+  rarity: null,
   tier: null,
   search: null,
   gemLvl: null,
@@ -119,12 +120,24 @@ function defineListeners() {
     sortResults(ITEMS);
   });
 
-  // Item links/sockets
-  $("#radio-links").on("change", function(){
-    FILTER.links = $("input[name=links]:checked", this).val();
+  // Rarity
+  $("#radio-rarity").on("change", function(){
+    FILTER.rarity = $(":checked", this).val();
+    console.log("Rarity filter: " + FILTER.rarity);
+    updateQueryString("rarity", FILTER.rarity);
+    if (FILTER.rarity === "all") FILTER.rarity = null;
+    else FILTER.rarity = parseInt(FILTER.rarity);
+    sortResults(ITEMS);
+  });
+  
+  // Item links
+  $("#select-links").on("change", function(){
+    FILTER.links = $(":selected", this).val();
     console.log("Link filter: " + FILTER.links);
-    if (FILTER.links === "none") FILTER.links = null;
     updateQueryString("links", FILTER.links);
+    if (FILTER.links ===  "all") FILTER.links = null;
+    else if (FILTER.links === "none") FILTER.links = 0;
+    else FILTER.links = parseInt(FILTER.links);
     sortResults(ITEMS);
   });
 
@@ -609,38 +622,37 @@ function createExpandedRow() {
     </div>
     <hr>
     <div class='row m-1 mt-2'>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
+      <div class='col d-flex'>
+        <table class="table table-sm details-table mw-item-dTable mr-4">
           <tbody>
             <tr>
-              <td>Mean</td>
-              <td>{{chaosContainter}}<span id='details-table-mean'></span></td>
+              <td class='nowrap w-100'>Mean</td>
+              <td class='nowrap'>{{chaosContainter}}<span id='details-table-mean'></span></td>
             </tr>
             <tr>
-              <td>Median</td>
-              <td>{{chaosContainter}}<span id='details-table-median'></span></td>
+              <td class='nowrap w-100'>Median</td>
+              <td class='nowrap'>{{chaosContainter}}<span id='details-table-median'></span></td>
             </tr>
             <tr>
-              <td>Mode</td>
-              <td>{{chaosContainter}}<span id='details-table-mode'></span></td>
+              <td class='nowrap w-100'>Mode</td>
+              <td class='nowrap'>{{chaosContainter}}<span id='details-table-mode'></span></td>
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class='col-md'>
-        <table class="table table-sm details-table">
+
+        <table class="table table-sm details-table mw-item-dTable">
           <tbody>
             <tr>
-              <td>Total amount listed</td>
-              <td><span id='details-table-count'></span></td>
+              <td class='nowra pw-100'>Total amount listed</td>
+              <td class='nowrap'><span id='details-table-count'></span></td>
             </tr>
             <tr>
-              <td>Listed every 24h</td>
-              <td><span id='details-table-1d'></span></td>
+              <td class='nowrap w-100'>Listed every 24h</td>
+              <td class='nowrap'><span id='details-table-1d'></span></td>
             </tr>
             <tr>
-              <td>Price in exalted</td>
-              <td>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
+              <td class='nowrap w-100'>Price in exalted</td>
+              <td class='nowrap'>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
             </tr>
           </tbody>
         </table>
@@ -808,7 +820,7 @@ function parseItem(item) {
 
   // Format map fields
   let mapFields = buildMapFields(item);
-  
+
   // Format price and sparkline field
   let priceFields = buildPriceFields(item);
 
@@ -837,8 +849,8 @@ function buildNameField(item) {
   let template = `
   <td>
     <div class='d-flex align-items-center'>
-      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src='{{icon}}'></span>
-      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}
+      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src="{{icon}}"></span>
+      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}{{link}}
     </div>
   </td>
   `.trim();
@@ -859,7 +871,7 @@ function buildNameField(item) {
     template = template.replace("{{foil}}", "");
   }
 
-  if (FILTER.category === "bases") {
+  if (FILTER.category === "base") {
     if (item.var === "shaped") {
       template = template.replace("{{influence}}", "influence influence-shaper-1x1");
     } else if (item.var === "elder") {
@@ -871,7 +883,7 @@ function buildNameField(item) {
     template = template.replace("{{influence}}", "");
   }
 
-  if (FILTER.category === "enchantments") {
+  if (FILTER.category === "enchantment") {
     if (item.var !== null) {
       let splitVar = item.var.split('-');
       for (var num in splitVar) {
@@ -889,7 +901,14 @@ function buildNameField(item) {
     template = template.replace("{{type}}", "");
   }
 
-  if (item.var && FILTER.category !== "enchantments") {
+  if (item.links) {
+    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.links + " link</span>";
+    template = template.replace("{{link}}", tmp);
+  } else {
+    template = template.replace("{{link}}", "");
+  }
+
+  if (item.var && FILTER.category !== "enchantment") {
     let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
     template = template.replace("{{var}}", tmp);
   } else {
@@ -904,8 +923,8 @@ function buildGemFields(item) {
   if (item.frame !== 4) return "";
 
   let template = `
-  <td>{{lvl}}</td>
-  <td>{{quality}}</td>
+  <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
+  <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
   <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
   `.trim();
 
@@ -925,7 +944,7 @@ function buildGemFields(item) {
 
 function buildBaseFields(item) {
   // Don't run if item is not a gem
-  if (FILTER.category !== "bases") return "";
+  if (FILTER.category !== "base") return "";
 
   let displayLvl;
 
@@ -940,16 +959,16 @@ function buildBaseFields(item) {
     displayLvl = "84";
   }
 
-  return "<td class='nowrap'>" + displayLvl + "</td>";
+  return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
 }
 
 function buildMapFields(item) {
   // Don't run if item is not a map
-  if (FILTER.category !== "maps") {
+  if (FILTER.category !== "map") {
     return "";
   }
 
-  return "<td class='nowrap'>" + (item.tier ? item.tier : "-") + "</td>";
+  return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + (item.tier ? item.tier : "-") + "</span></td>";
 }
 
 function buildPriceFields(item) {
@@ -1237,11 +1256,26 @@ function checkHideItem(item) {
     return true;
   }
 
+  // Hide mismatching rarities
+  if (FILTER.rarity) {
+    if (FILTER.rarity !== item.frame) {
+      return true;
+    }
+  }
+
   // Hide items with different links
-  if (item.links != FILTER.links) return true;
+  if (FILTER.links !== null) {
+    if (FILTER.links > 0) {
+      if (item.links !== FILTER.links) {
+        return true;
+      }
+    } else if (item.links) {
+      return true;
+    }
+  }
 
   // Sort gems, I guess
-  if (FILTER.category === "gems") {
+  if (FILTER.category === "gem") {
     if (FILTER.gemLvl !== null && item.lvl != FILTER.gemLvl) return true;
     if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
     if (FILTER.gemCorrupted !== null && item.corrupted != FILTER.gemCorrupted) return true;
@@ -1251,14 +1285,14 @@ function checkHideItem(item) {
       // Hide harbinger pieces under category 'all'
       return true;
     }
-  } else if (FILTER.category === "maps") {
+  } else if (FILTER.category === "map") {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {
         if (item.tier !== null) return true;
       } else if (item.tier !== FILTER.tier) return true;
     }
 
-  } else if (FILTER.category === "bases") {
+  } else if (FILTER.category === "base") {
     // Check base influence
     if (FILTER.baseInfluence !== null) {
       if (FILTER.baseInfluence === "none") {

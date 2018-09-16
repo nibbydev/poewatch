@@ -41,16 +41,6 @@ CREATE TABLE category_child (
     INDEX name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Table structure category_history
---
-
-CREATE TABLE category_history (
-    id    INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    name  VARCHAR(32)  NOT NULL UNIQUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 -- --------------------------------------------------------------------------------------------------------------------
 -- Data tables
 -- --------------------------------------------------------------------------------------------------------------------
@@ -140,10 +130,10 @@ CREATE TABLE data_itemData (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure for table league_items
+-- Table structure for table league_items_rolling
 --
 
-CREATE TABLE league_items (
+CREATE TABLE league_items_rolling (
     id_l        SMALLINT       UNSIGNED NOT NULL,
     id_d        INT            UNSIGNED NOT NULL,
     time        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -157,6 +147,7 @@ CREATE TABLE league_items (
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc         INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     `dec`       INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    spark       VARCHAR(128)   DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
@@ -165,7 +156,26 @@ CREATE TABLE league_items (
     INDEX volatile   (volatile),
     INDEX multiplier (multiplier),
     INDEX mean       (mean),
-    INDEX imedian    (median)
+    INDEX median     (median)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table league_items_inactive
+--
+
+CREATE TABLE league_items_inactive (
+    id_l        SMALLINT       UNSIGNED NOT NULL,
+    id_d        INT            UNSIGNED NOT NULL,
+    time        TIMESTAMP      NOT NULL,
+    mean        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    median      DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mode        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    exalted     DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
+
+    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -180,12 +190,13 @@ CREATE TABLE league_entries (
     price      DECIMAL(10,4)  UNSIGNED NOT NULL,
     account    VARCHAR(32)    NOT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES  data_leagues   (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
+    FOREIGN KEY (id_l) REFERENCES  data_leagues         (id)   ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
     INDEX time     (time),
-    INDEX approved (approved)
+    INDEX approved (approved),
+    INDEX compound_id (id_l, id_d)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -376,86 +387,80 @@ VALUES
     ('0-0-0-0-0');
 
 --
--- Base values for category_history
---
-
-INSERT INTO category_history
-    (id, name)
-VALUES
-    (1, 'minutely'),
-    (2, 'hourly'),                                -- Notice: id 2 dependency
-    (3, 'daily'),
-    (4, 'weekly');
-
---
 -- Base values for category_parent
 --
 
 INSERT INTO category_parent
     (id, name, display)
 VALUES
-    (1,   'accessories',    'Accessories'),
+    (1,   'accessory',      'Accessories'),
     (2,   'armour',         'Armour'),
-    (3,   'cards',          'Divination cards'),
-    (4,   'currency',       'Currency'),          -- Notice: id 4 dependency
-    (5,   'enchantments',   'Enchants'),
-    (6,   'essence',        'Essences'),
-    (7,   'flasks',         'Flasks'),
-    (8,   'gems',           'Gems'),
-    (9,   'jewels',         'Jewels'),
-    (10,  'maps',           'Maps'),
-    (11,  'prophecy',       'Prophecy'),
-    (12,  'weapons',        'Weapons'),
-    (13,  'bases',          'Crafting Bases');
+    (3,   'card',           'Divination cards'),
+    (4,   'currency',       'Currency'),
+    (5,   'enchantment',    'Enchants'),
+    (6,   'flask',          'Flasks'),
+    (7,   'gem',            'Gems'),
+    (8,   'jewel',          'Jewels'),
+    (9,   'map',            'Maps'),
+    (10,  'prophecy',       'Prophecy'),
+    (11,  'weapon',         'Weapons'),
+    (12,  'base',           'Crafting Bases');
 
 --
 -- Base values for category_child
 --
 
 INSERT INTO category_child
-    (id_cp, name, display)
+    (id, id_cp, name, display)
 VALUES
-    (1,     'amulet',     'Amulets'),
-    (1,     'belt',       'Belts'),
-    (1,     'ring',       'Rings'),
-    (2,     'boots',      'Boots'),
-    (2,     'chest',      'Body Armours'),
-    (2,     'gloves',     'Gloves'),
-    (2,     'helmet',     'Helmets'),
-    (2,     'quiver',     'Quivers'),
-    (2,     'shield',     'Shields'),
-    (4,     'piece',      'Pieces'),
-    (4,     'fossil',     'Fossils'),
-    (4,     'resonator',  'Resonators'),
-    (5,     'boots',      'Boots'),
-    (5,     'gloves',     'Gloves'),
-    (5,     'helmet',     'Helmets'),
-    (8,     'activegem',  'Skill Gems'),
-    (8,     'supportgem', 'Support Gems'),
-    (8,     'vaalgem',    'Vaal Gems'),
-    (10,    'fragment',   'Fragments'),
-    (10,    'map',        'Regular Maps'),
-    (10,    'unique',     'Unique Maps'),
-    (12,    'bow',        'Bows'),
-    (12,    'claw',       'Claws'),
-    (12,    'dagger',     'Daggers'),
-    (12,    'oneaxe',     '1H Axes'),
-    (12,    'onemace',    '1H Maces'),
-    (12,    'onesword',   '1H Swords'),
-    (12,    'rod',        'Rods'),
-    (12,    'sceptre',    'Sceptres'),
-    (12,    'staff',      'Staves'),
-    (12,    'twoaxe',     '2H Axes'),
-    (12,    'twomace',    '2H Maces'),
-    (12,    'twosword',   '2H Swords'),
-    (12,    'wand',       'Wands'),
-    (13,    'ring',       'Rings'),
-    (13,    'belt',       'Belts'),
-    (13,    'amulete',    'Amulets'),
-    (13,    'helmet',     'Helmets'),
-    (13,    'chest',      'Body Armour'),
-    (13,    'gloves',     'Gloves'),
-    (13,    'boots',      'Boots');
+    (1,   1,     'amulet',     'Amulets'),
+    (2,   1,     'belt',       'Belts'),
+    (3,   1,     'ring',       'Rings'),
+    (4,   2,     'boots',      'Boots'),
+    (5,   2,     'chest',      'Body Armours'),
+    (6,   2,     'gloves',     'Gloves'),
+    (7,   2,     'helmet',     'Helmets'),
+    (8,   2,     'quiver',     'Quivers'),
+    (9,   2,     'shield',     'Shields'),
+    (10,  3,     'card',       'Divination cards'),
+    (11,  4,     'currency',   'Currency'),
+    (12,  4,     'essence',    'Essences'),
+    (13,  4,     'piece',      'Harbinger pieces'),
+    (14,  4,     'fossil',     'Fossils'),
+    (15,  4,     'essence',    'Essences'),
+    (16,  4,     'resonator',  'Resonators'),
+    (17,  5,     'boots',      'Boots'),
+    (18,  5,     'gloves',     'Gloves'),
+    (19,  5,     'helmet',     'Helmets'),
+    (20,  6,     'flask',      'Flasks'),
+    (21,  7,     'skill',      'Skill Gems'),
+    (22,  7,     'support',    'Support Gems'),
+    (23,  7,     'vaal',       'Vaal Gems'),
+    (24,  8,     'jewel',      'Jewels'),
+    (25,  9,     'map',        'Regular Maps'),
+    (26,  9,     'fragment',   'Fragments'),
+    (27,  9,     'unique',     'Unique Maps'),
+    (28,  10,    'prophecy',   'Prophecies'),
+    (29,  11,    'bow',        'Bows'),
+    (30,  11,    'claw',       'Claws'),
+    (31,  11,    'dagger',     'Daggers'),
+    (32,  11,    'oneaxe',     '1H Axes'),
+    (33,  11,    'onemace',    '1H Maces'),
+    (34,  11,    'onesword',   '1H Swords'),
+    (35,  11,    'rod',        'Rods'),
+    (36,  11,    'sceptre',    'Sceptres'),
+    (37,  11,    'staff',      'Staves'),
+    (38,  11,    'twoaxe',     '2H Axes'),
+    (39,  11,    'twomace',    '2H Maces'),
+    (40,  11,    'twosword',   '2H Swords'),
+    (41,  11,    'wand',       'Wands'),
+    (42,  12,    'ring',       'Rings'),
+    (43,  12,    'belt',       'Belts'),
+    (44,  12,    'amulet',     'Amulets'),
+    (45,  12,    'helmet',     'Helmets'),
+    (46,  12,    'chest',      'Body Armour'),
+    (47,  12,    'gloves',     'Gloves'),
+    (48,  12,    'boots',      'Boots');
 
 --
 -- Base values for data_currencyItems

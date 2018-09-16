@@ -105,29 +105,37 @@ public class Item {
         // Divide into specific subcategories
         switch (parentCategory) {
             case "currency":
-                // Prophecy items have the same icon category as currency
                 if (frameType == 8) {
                     parentCategory = "prophecy";
+                    childCategory = "prophecy";
                 } else if (iconCategory.equals("essence")) {
-                    parentCategory = "essence";
+                    childCategory = "essence";
                 } else if (iconCategory.equals("piece")) {
-                    parentCategory = "piece";
+                    childCategory = "piece";
                 }
                 break;
 
             case "gems":
-                if (childCategory.equals("activegem") && iconCategory.equals("vaalgems")) {
-                    childCategory = "vaalgem";
+                parentCategory = "gem";
+
+                if (childCategory.equals("activegem")) {
+                    if (iconCategory.equals("vaalgems")) {
+                        childCategory = "vaal";
+                    } else {
+                        childCategory = "skill";
+                    }
+                } else {
+                    childCategory = "support";
                 }
                 break;
 
             case "monsters":
-                // Completely ignore monsters
                 discard = true;
                 break;
 
             case "maps":
-                // Filter all unique maps under "unique" subcategory
+                parentCategory = "map";
+
                 if (frameType == 3 || frameType == 9) {
                     childCategory = "unique";
                 } else if (iconCategory.equals("breach")) {
@@ -138,11 +146,27 @@ public class Item {
                     childCategory = "map";
                 }
                 break;
+
+            case "cards":
+                parentCategory = "card";
+                break;
+
+            case "flasks":
+                parentCategory = "flask";
+                break;
+
+            case "jewels":
+                parentCategory = "jewel";
+                break;
+
+            case "weapons":
+                parentCategory = "weapon";
+                break;
         }
 
         // Override for enchantments
         if (base.getEnchantMods() != null) {
-            parentCategory = "enchantments";
+            parentCategory = "enchantment";
         }
 
         // Override for item bases
@@ -158,10 +182,10 @@ public class Item {
             }
 
             if (parentCategory.equals("jewels")) {
-                childCategory = "jewels";
+                childCategory = "jewel";
             }
 
-            parentCategory = "bases";
+            parentCategory = "base";
         }
     }
 
@@ -187,8 +211,8 @@ public class Item {
         ilvl = null;
 
         switch (parentCategory) {
-            case "maps":        parseMaps();                break;
-            case "gems":        extractGemData();           break;
+            case "map":         parseMaps();                break;
+            case "gem":         extractGemData();           break;
             case "currency":    checkCurrencyBlacklist();   break;
             default:
                 if (frameType < 3) {
@@ -272,7 +296,7 @@ public class Item {
      */
     private void extractItemLinks() {
         // Precaution
-        if (!parentCategory.equals("weapons") && !parentCategory.equals("armour")) {
+        if (!parentCategory.equals("weapon") && !parentCategory.equals("armour")) {
             return;
         } else if (childCategory == null) {
             return;
@@ -623,7 +647,7 @@ public class Item {
 
         // Set influence
         if (shaper != null) {
-            variation = "shaped";
+            variation = "shaper";
         } else if (elder != null) {
             variation = "elder";
         }

@@ -55,7 +55,7 @@
                     <!--/Name+league col/-->
 
                     <!-- Large price col -->
-                    <div class="d-flex flex-column justify-content-around mr-3">
+                    <div class="d-flex flex-column justify-content-around mr-4">
                       <div class="d-flex">
                         <div class="img-container img-container-md mr-1">
                           <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
@@ -82,18 +82,18 @@
               </div>
 
             </div>
-            <div class="card-body d-flex flex-column pb-0">
+            <div class="card-body d-flex flex-column py-2">
               <div class="buffering align-self-center"></div>
               <div class="content d-none">
 
                 <!-- Details table row -->
                 <div class='row m-1 mt-2'>
-                  <div class='col-md'>
-                    <table class="table table-sm details-table table-striped table-hover">
+                  <div class='col d-flex'>
+                    <table class="table table-sm details-table table-striped table-hover mw-item-dTable mr-4">
                       <tbody>
                         <tr>
-                          <td>Mean</td>
-                          <td>
+                          <td class='nowrap w-100'>Mean</td>
+                          <td class='nowrap'>
                             <span class="img-container img-container-xs mr-1">
                               <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
                             </span>
@@ -101,8 +101,8 @@
                           </td>
                         </tr>
                         <tr>
-                          <td>Median</td>
-                          <td>
+                          <td class='nowrap w-100'>Median</td>
+                          <td class='nowrap'>
                             <span class="img-container img-container-xs mr-1">
                               <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
                             </span>
@@ -110,8 +110,8 @@
                           </td>
                         </tr>
                         <tr>
-                          <td>Mode</td>
-                          <td>
+                          <td class='nowrap w-100'>Mode</td>
+                          <td class='nowrap'>
                             <span class="img-container img-container-xs mr-1">
                               <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
                             </span>
@@ -120,25 +120,24 @@
                         </tr>
                       </tbody>
                     </table>
-                  </div>
-                  <div class='col-md'>
-                    <table class="table table-sm details-table table-striped table-hover">
+
+                    <table class="table table-sm details-table table-striped table-hover mw-item-dTable">
                       <tbody>
                         <tr>
-                          <td>Total amount listed</td>
-                          <td>
+                          <td class='nowrap w-100'>Total amount listed</td>
+                          <td class='nowrap'>
                             <span id='details-table-count'></span>
                           </td>
                         </tr>
                         <tr>
-                          <td>Listed every 24h</td>
-                          <td>
+                          <td class='nowrap w-100'>Listed every 24h</td>
+                          <td class='nowrap'>
                             <span id='details-table-1d'></span>
                           </td>
                         </tr>
                         <tr>
-                          <td>Price in exalted</td>
-                          <td>
+                          <td class='nowrap w-100'>Price in exalted</td>
+                          <td class='nowrap'>
                             <span class="img-container img-container-xs mr-1">
                               <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
                             </span>

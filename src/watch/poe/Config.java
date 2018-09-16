@@ -22,12 +22,9 @@ public class Config {
     // File and folder locations
     //------------------------------------------------------------------------------------------------------------
 
-    public static final File folder_root            = new File(".");
-    public static final File folder_output          = new File(folder_root.getPath(), "output");
-    public static final File folder_output_get      = new File(folder_output.getPath(), "get");
-    public static final File folder_output_itemdata = new File(folder_output.getPath(), "itemdata");
-    public static final File file_config            = new File(folder_root.getPath(),"config.cfg");
-    public static final URL  resource_config        = Main.class.getResource("/resources/" + file_config.getName());
+    public static final File folder_root     = new File(".");
+    public static final File file_config     = new File(folder_root.getPath(),"config.cfg");
+    public static final URL  resource_config = Main.class.getResource("/resources/" + file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
@@ -62,7 +59,6 @@ public class Config {
     public static final int entryController_tenMS           = 10 * 60 * 1000;
     public static final int entryController_sixtyMS         = 60 * 60 * 1000;
     public static final int entryController_twentyFourMS    = 24 * 60 * 60 * 1000;
-
     public static final long entryController_counterOffset  = 5 * 60 * 60 * 1000;
 
     //------------------------------------------------------------------------------------------------------------
@@ -81,7 +77,6 @@ public class Config {
     //------------------------------------------------------------------------------------------------------------
 
     public static final double item_pricePrecision = 10000.0;
-    public static final int item_pricePrecision2 = 4;
     public static final int monitorTimeoutMS = 500;
     public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 }

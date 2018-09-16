@@ -26,13 +26,10 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
-          <!-- MotD -->
-          <?php GenMotDBox(); ?>
-          <!--/MotD/-->
 
           <div class="card custom-card">
             <div class="card-header">
-              <h2 class="text-white">Characters</h3>
+              <h2 class="text-white">Characters</h2>
               <div>
                 <?php DisplayMotD($DATA); ?>
               </div>
@@ -45,6 +42,7 @@
                 <!-- Mode -->
                 <div class="row">
                   <div class="col">
+
                     <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
                       <?php CreateModeRadios($DATA); ?>
                     </div>

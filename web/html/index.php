@@ -26,7 +26,7 @@
         <div class='body-boundaries w-100'> 
           <div class="card custom-card">
             <div class="card-header">
-              <h2 class="text-center">PoeWatch</h2>
+              <h2 class="text-white">PoeWatch</h2>
             </div>
             <div class="card-body">
               <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">

@@ -148,6 +148,7 @@ public class Main {
                 + "    id - add a start changeID\n"
                 + "    counter - counter commands\n"
                 + "    acc - account manager commands\n"
+                + "    moveitem - move inactive item entries to separate table\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -181,8 +182,12 @@ public class Main {
                     case "acc":
                         commandAcc(userInput);
                         break;
+
+                    case "moveitem":
+                        commandMoveItem(userInput);
+
                     default:
-                        System.out.println("[ERROR] Unknown command: \"" + userInput[0] + "\". Use \"help\" for help");
+                        ADMIN.log_(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]), 3);
                         break;
                 }
             } catch (IOException ex) {
@@ -319,9 +324,9 @@ public class Main {
      * Prints about page
      */
     private static void commandAbout() {
-        String about = "Project id: PoE stash API JSON statistics generator\n"
+        String about = "PoeWatch (http://poe.watch)\n"
                 + "Made by: Siegrest\n"
-                + "Licenced under MIT licence, 2018\n";
+                + "Licenced under AGPL-3.0, 2018\n";
         System.out.println(about);
     }
 
@@ -403,13 +408,21 @@ public class Main {
     private static void commandAcc(String[] userInput) {
         switch (userInput[1]) {
             case "run":
+                ADMIN.log_("Starting account matching", 1);
                 ACCOUNT_MANAGER.checkAccountNameChanges();
+                ADMIN.log_("Account matching finished", 1);
                 break;
 
             default:
-                System.out.println("Unknown account cmd");
+                ADMIN.log_(String.format("Unknown command: '%s'. Use 'help'.", userInput[1]), 3);
                 break;
         }
+    }
+
+    private static void commandMoveItem(String[] userInput) {
+        ADMIN.log_("Moving inactive item entries to separate table...", 1);
+        DATABASE.moveInactiveItemEntries();
+        ADMIN.log_("Moving finished", 1);
     }
 
     //------------------------------------------------------------------------------------------------------------

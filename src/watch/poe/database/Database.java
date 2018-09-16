@@ -241,94 +241,6 @@ public class Database {
         }
     }
 
-    /**
-     * Routes all data from old account entries to new entry, does so in 4 steps:
-     *   1. Deletes duplicate character names shared between the two accounts
-     *   2. Routes history entries from old account to new account
-     *   3. Routes relations from old account to new account
-     *   4. Routes account data from old account to new account
-     *
-     * @param accountRelations List of AccountRelation to be routed
-     * @return True on success
-     */
-    public boolean routeAccountData(List<AccountRelation> accountRelations) {
-        String query1 = "DELETE del  " +
-                        "FROM account_relations AS del " +
-                        "JOIN ( " +
-                        "  SELECT r2.id  " +
-                        "  FROM account_relations AS r1 " +
-                        "  JOIN ( " +
-                        "    SELECT *  " +
-                        "    FROM account_relations  " +
-                        "    WHERE id_a = ? " +
-                        "  ) AS r2 ON r1.id_c = r2.id_c " +
-                        "  WHERE r1.id_a = ? " +
-                        ") AS r ON del.id = r.id";
-
-        String query2 = "UPDATE account_history   SET id_new = ? WHERE id_new = ?; ";
-        String query3 = "UPDATE account_relations SET id_a   = ? WHERE id_a   = ?; ";
-        String query4 = "UPDATE account_data      SET id     = ? WHERE id     = ?; ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (PreparedStatement statement = connection.prepareStatement(query1)) {
-                for (AccountRelation accountRelation : accountRelations) {
-                    if (accountRelation.moved == 0) continue;
-
-                    statement.setLong(1, accountRelation.newAccountId);
-                    statement.setLong(2, accountRelation.oldAccountId);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query2)) {
-                for (AccountRelation accountRelation : accountRelations) {
-                    if (accountRelation.moved == 0) continue;
-
-                    statement.setLong(1, accountRelation.newAccountId);
-                    statement.setLong(2, accountRelation.oldAccountId);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query3)) {
-                for (AccountRelation accountRelation : accountRelations) {
-                    if (accountRelation.moved == 0) continue;
-
-                    statement.setLong(1, accountRelation.newAccountId);
-                    statement.setLong(2, accountRelation.oldAccountId);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = connection.prepareStatement(query4)) {
-                for (AccountRelation accountRelation : accountRelations) {
-                    if (accountRelation.moved == 0) continue;
-
-                    statement.setLong(1, accountRelation.newAccountId);
-                    statement.setLong(2, accountRelation.oldAccountId);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not route account data", 3);
-            return false;
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Data retrieval upon initialization
     //------------------------------------------------------------------------------------------------------------
@@ -424,7 +336,7 @@ public class Database {
                         "        did.frame, did.tier, did.lvl, " +
                         "        did.quality, did.corrupted, " +
                         "        did.links, did.ilvl, did.var " +
-                        "FROM    league_items AS i " +
+                        "FROM    league_items_rolling AS i " +
                         "JOIN    data_itemData AS did " +
                         "  ON    i.id_d = did.id ";
 
@@ -466,7 +378,7 @@ public class Database {
         Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
 
         String query =  "SELECT   i.id_l, did.name, i.median " +
-                        "FROM     league_items  AS i " +
+                        "FROM     league_items_rolling  AS i " +
                         "JOIN     data_itemData AS did " +
                         "  ON     i.id_d = did.id " +
                         "WHERE    did.id_cp = 4 " +
@@ -616,14 +528,14 @@ public class Database {
     }
 
     /**
-     * Creates an item entry in table `league_items`
+     * Creates an item entry in table `league_items_rolling`
      *
      * @param leagueId ID of item's league
      * @param dataId ID of item
      * @return True on success
      */
     public boolean createLeagueItem(Integer leagueId, Integer dataId) {
-        String query  = "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) " +
+        String query  = "INSERT INTO league_items_rolling (id_l, id_d) VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (connection.isClosed()) return false;
@@ -850,12 +762,12 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Calculates mean price for items in table `league_item` based on approved entries in `league_entries`
+     * Calculates mean price for items in table `league_items_rolling` based on approved entries in `league_entries`
      *
      * @return True on success
      */
     public boolean calculateMean() {
-        String query =  "UPDATE league_items AS i " +
+        String query =  "UPDATE league_items_rolling AS i " +
                         "    JOIN (" +
                         "        SELECT id_l, id_d, TRUNCATE(IFNULL(AVG(price), 0.0), 4) AS avg " +
                         "        FROM league_entries " +
@@ -881,12 +793,12 @@ public class Database {
     }
 
     /**
-     * Calculates median price for items in table `league_item` based on approved entries in `league_entries`
+     * Calculates median price for items in table `league_items_rolling` based on approved entries in `league_entries`
      *
      * @return True on success
      */
     public boolean calculateMedian() {
-        String query =  "UPDATE league_items AS i " +
+        String query =  "UPDATE league_items_rolling AS i " +
                         "JOIN ( " +
                         "    SELECT id_l, id_d, MEDIAN(price) AS median " +
                         "    FROM league_entries " +
@@ -912,12 +824,12 @@ public class Database {
     }
 
     /**
-     * Calculates median price for items in table `league_item` based on any entries in `league_entries`
+     * Calculates median price for items in table `league_items_rolling` based on any entries in `league_entries`
      *
      * @return True on success
      */
     public boolean calculateVolatileMedian() {
-        String query =  "UPDATE league_items AS i " +
+        String query =  "UPDATE league_items_rolling AS i " +
                         "JOIN ( " +
                         "    SELECT id_l, id_d, MEDIAN(price) AS median " +
                         "    FROM league_entries " +
@@ -943,12 +855,12 @@ public class Database {
     }
 
     /**
-     * Calculates mode price for items in table `league_item` based on approved entries in `league_entries`
+     * Calculates mode price for items in table `league_items_rolling` based on approved entries in `league_entries`
      *
      * @return True on success
      */
     public boolean calculateMode() {
-        String query =  "UPDATE league_items AS i " +
+        String query =  "UPDATE league_items_rolling AS i " +
                         "JOIN ( " +
                         "    SELECT id_l, id_d, stats_mode(price) AS mode " +
                         "    FROM league_entries " +
@@ -974,14 +886,14 @@ public class Database {
     }
 
     /**
-     * Calculates exalted price for items in table `league_item` based on exalted prices in same table
+     * Calculates exalted price for items in table `league_items_rolling` based on exalted prices in same table
      *
      * @return True on success
      */
     public boolean calculateExalted() {
-        String query =  "UPDATE league_items AS i1 " +
+        String query =  "UPDATE league_items_rolling AS i1 " +
                         "JOIN ( " +
-                        "    SELECT i2.id_l, i2.mean FROM league_items AS i2 " +
+                        "    SELECT i2.id_l, i2.mean FROM league_items_rolling AS i2 " +
                         "    JOIN data_itemData AS did ON i2.id_d = did.id " +
                         "    WHERE did.frame = 5 AND did.name = 'Exalted Orb' " +
                         ") AS exPrice ON i1.id_l = exPrice.id_l " +
@@ -1004,14 +916,13 @@ public class Database {
         }
     }
 
-
     /**
-     * Calculates quantity for items in table `league_item` based on history entries from table `league_history`
+     * Calculates quantity for items in table `league_items_rolling` based on history entries from table `league_history`
      *
      * @return True on success
      */
     public boolean calcQuantity() {
-        String query =  "UPDATE league_items AS i  " +
+        String query =  "UPDATE league_items_rolling AS i  " +
                         "JOIN ( " +
                         "    SELECT id_l, id_d, IFNULL(SUM(inc), 0) AS quantity " +
                         "    FROM league_history_hourly_rolling " +
@@ -1036,21 +947,59 @@ public class Database {
         }
     }
 
+    /**
+     * Calculates spark data for items in table `league_items_rolling` based on history entries
+     *
+     * @return True on success
+     */
+    public boolean calcSpark() {
+        String query =  "UPDATE league_items_rolling AS i " +
+                        "JOIN ( " +
+                        "  SELECT    i.id_l, i.id_d, " +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history " +
+                        "  FROM      league_items_rolling          AS i " +
+                        "  JOIN      data_leagues                  AS l " +
+                        "    ON      l.id = i.id_l " +
+                        "  JOIN      league_history_daily_rolling  AS lhdr " +
+                        "    ON      lhdr.id_d = i.id_d " +
+                        "      AND   lhdr.id_l = l.id " +
+                        "  WHERE     l.active = 1 " +
+                        "    AND     i.count  > 1 " +
+                        "  GROUP BY  i.id_l, i.id_d " +
+                        ") AS tmp ON i.id_l = tmp.id_l AND i.id_d = tmp.id_d " +
+                        "SET i.spark = tmp.history ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate spark", 3);
+            return false;
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Flag updates
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Updates volatile state for entries in table `league_items`
+     * Updates volatile state for entries in table `league_items_rolling`
      *
      * @return True on success
      */
     public boolean updateVolatile() {
-        String query1 = "UPDATE league_items " +
+        String query1 = "UPDATE league_items_rolling " +
                         "SET volatile = IF(`dec` > 0 && inc > 0 && `dec` / inc > ?, 1, 0);";
 
         String query2 = "UPDATE league_entries AS e " +
-                        "JOIN   league_items AS i " +
+                        "JOIN   league_items_rolling AS i " +
                         "  ON   e.id_d = i.id_d " +
                         "SET    e.approved = 0 " +
                         "WHERE  i.volatile = 1 " +
@@ -1078,13 +1027,13 @@ public class Database {
     }
 
     /**
-     * Updates approved state for entries in table `league_items`
+     * Updates approved state for entries in table `league_items_rolling`
      *
      * @return True on success
      */
     public boolean updateApproved(){
         String query =  "UPDATE league_entries AS e " +
-                        "JOIN league_items AS i ON i.id_l = e.id_l AND i.id_d = e.id_d " +
+                        "JOIN league_items_rolling AS i ON i.id_l = e.id_l AND i.id_d = e.id_d " +
                         "SET e.approved = 1 " +
                         "WHERE e.approved = 0 " +
                         "    AND (" +
@@ -1109,12 +1058,12 @@ public class Database {
     }
 
     /**
-     * Updates multipliers for entries in table `league_items`
+     * Updates multipliers for entries in table `league_items_rolling`
      *
      * @return True on success
      */
     public boolean updateMultipliers(){
-        String query =  "UPDATE league_items " +
+        String query =  "UPDATE league_items_rolling " +
                         "SET multiplier = IF(? - quantity / ? < ?, ?, ? - quantity / ?)";
 
         try {
@@ -1141,12 +1090,12 @@ public class Database {
     }
 
     /**
-     * Updates counters for entries in table `league_items`
+     * Updates counters for entries in table `league_items_rolling`
      *
      * @return True on success
      */
     public boolean updateCounters(){
-        String query1 = "UPDATE league_items AS i " +
+        String query1 = "UPDATE league_items_rolling AS i " +
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
@@ -1158,7 +1107,7 @@ public class Database {
                         "    i.count = i.count + e.count, " +
                         "    i.inc = i.inc + e.count ";
 
-        String query2 = "UPDATE league_items AS i " +
+        String query2 = "UPDATE league_items_rolling AS i " +
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
@@ -1190,12 +1139,12 @@ public class Database {
     }
 
     /**
-     * Resets counters for entries in table `league_items`
+     * Resets counters for entries in table `league_items_rolling`
      *
      * @return True on success
      */
     public boolean resetCounters() {
-        String query =  "UPDATE league_items SET inc = 0, `dec` = 0 ";
+        String query =  "UPDATE league_items_rolling SET inc = 0, `dec` = 0 ";
 
         try {
             if (connection.isClosed()) return false;
@@ -1218,7 +1167,7 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Copies data from table `league_items` to table `league_history_hourly_rolling` every hour
+     * Copies data from table `league_items_rolling` to table `league_history_hourly_rolling` every hour
      * on a rolling basis with a history of 24 hours
      *
      * @return True on success
@@ -1229,7 +1178,7 @@ public class Database {
                         "  exalted, count, quantity, inc, `dec`) " +
                         "SELECT id_l, id_d, volatile, mean, median, mode, " +
                         "       exalted, count, quantity, inc, `dec` " +
-                        "FROM   league_items AS i " +
+                        "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
                         "WHERE  l.active = 1 ";
@@ -1262,7 +1211,7 @@ public class Database {
                         "  exalted, count, quantity, inc, `dec`) " +
                         "SELECT id_l, id_d, volatile, mean, median, mode, " +
                         "       exalted, count, quantity, inc, `dec` " +
-                        "FROM   league_items AS i " +
+                        "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
                         "WHERE  l.active = 1 ";
@@ -1317,6 +1266,48 @@ public class Database {
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Could not remove old item entries", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Moves rows from table `league_items_rolling` to table `league_items_inactive` based on league active status
+     *
+     * @return True on success
+     */
+    public boolean moveInactiveItemEntries() {
+        String query1 = "INSERT INTO league_items_inactive ( " +
+                        "              id_l, id_d, time, " +
+                        "              mean, median, mode, " +
+                        "              exalted, count " +
+                        "            )" +
+                        "SELECT      id_l, id_d, time, " +
+                        "            mean, median, mode, " +
+                        "            exalted, count " +
+                        "FROM        league_items_rolling AS i " +
+                        "JOIN        data_leagues         AS l " +
+                        "  ON        l.id = i.id_l " +
+                        "WHERE       l.active = 0 ";
+
+        String query2 = "DELETE i " +
+                        "FROM   league_items_rolling AS i " +
+                        "JOIN   data_leagues         AS l " +
+                        "  ON   l.id = i.id_l " +
+                        "WHERE  l.active = 0 ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not move inactive item entries", 3);
             return false;
         }
     }

@@ -26,15 +26,14 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
-          <!-- MotD -->
-          <?php GenMotDBox(); ?>
-          <!--/MotD/-->
-
           <div class="card custom-card">
-            <div class="card-header slim-card-edge"></div>
+
+            <div class="card-header">
+              <h2 class="text-white">Leagues</h2>
+              <div>A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end.</div>
+            </div>
+
             <div class="card-body pb-0">
-              <p class="mb-0">A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end. All dates displayed are in your local timezone.</p>
-              <hr>
               <div class="row" id="main">
               
               <?php GenLeagueEntries($pdo) ?>

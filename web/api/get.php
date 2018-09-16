@@ -6,11 +6,11 @@ function error($code, $msg) {
 
 function check_errors() {
   if ( !isset($_GET["league"]) )    {
-    error(400, "Missing league param");
+    error(400, "Missing league");
   }
 
   if ( !isset($_GET["category"]) )  {
-    error(400, "Missing category param");
+    error(400, "Missing category");
   }
 }
 
@@ -31,7 +31,7 @@ function check_league($pdo, $league) {
   return $stmt->rowCount() === 0 ? null : $stmt->fetch();
 }
 
-function get_data($pdo, $league, $category) {
+function get_data_rolling($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.exalted, 
     i.quantity + i.inc AS quantity, 
@@ -39,24 +39,20 @@ function get_data($pdo, $league, $category) {
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     cc.name AS category,
-    SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history
-  FROM      league_items                  AS i 
+    i.spark AS history
+  FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues                  AS l 
     ON      l.id = i.id_l 
   JOIN      category_parent               AS cp 
     ON      did.id_cp = cp.id 
-  JOIN      league_history_daily_rolling  AS lhdr 
-    ON      lhdr.id_d = i.id_d 
-      AND   lhdr.id_l = l.id
   LEFT JOIN category_child                AS cc 
     ON      did.id_cc = cc.id 
   WHERE     l.name   = ?
     AND     cp.name  = ?
     AND     l.active = 1 
     AND     i.count  > 1 
-  GROUP BY  i.id_d, i.mean, i.exalted, i.quantity, i.inc
   ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
@@ -65,33 +61,37 @@ function get_data($pdo, $league, $category) {
   return $stmt;
 }
 
-function get_data2($pdo, $league, $category) {
+function get_data_inactive($pdo, $league, $category) {
   $query = "SELECT 
-    lhdi.id_d, lhdi.mean, lhdi.exalted, lhdi.count AS quantity, 
+    i.id_d, i.mean, i.exalted, 
+    i.count AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     cc.name AS category,
     NULL AS history
-  FROM league_history_daily_inactive AS lhdi
-  JOIN data_itemData AS did ON lhdi.id_d = did.id 
-  LEFT JOIN category_child AS cc ON did.id_cc = cc.id 
-  WHERE lhdi.id_l = (SELECT id FROM data_leagues WHERE name = ?)
-  AND did.id_cp = (SELECT id FROM category_parent WHERE name = ?)
-  AND lhdi.time = (
-    SELECT time FROM league_history_daily_inactive
-    WHERE id_l = (SELECT id FROM data_leagues WHERE name = ?)
-    ORDER BY time DESC
-    LIMIT 1) 
-  ORDER BY lhdi.mean DESC";
+  FROM      league_items_inactive         AS i 
+  JOIN      data_itemData                 AS did 
+    ON      i.id_d = did.id 
+  JOIN      data_leagues                  AS l 
+    ON      l.id = i.id_l 
+  JOIN      category_parent               AS cp 
+    ON      did.id_cp = cp.id 
+  LEFT JOIN category_child                AS cc 
+    ON      did.id_cc = cc.id 
+  WHERE     l.name   = ?
+    AND     cp.name  = ?
+    AND     i.count  > 1 
+  GROUP BY  i.id_d, i.mean, i.exalted, i.count
+  ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$league, $category, $league]);
+  $stmt->execute([$league, $category]);
 
   return $stmt;
 }
 
-function parse_data($stmt) {
+function parse_data($stmt, $active) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
@@ -119,28 +119,32 @@ function parse_data($stmt) {
       'icon'          =>        $row['icon']
     );
 
-    // If there were history entries
-    if ( !is_null($row['history']) ) {
-      // Convert CSV to array
-      $history = array_reverse(explode(',', $row['history']));
+    if ($active) {
+      // If there were history entries
+      if ( is_null($row['history']) ) {
+        $tmp['spark'] = array(null, null, null, null, null, null, null);
+      } else {
+        // Convert CSV to array
+        $history = array_reverse(explode(',', $row['history']));
 
-      // Find total change
-      $lastVal = $history[sizeof($history) - 1];
-      if ($lastVal > 0) {
-        $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
-      }
-      
-      $firstPrice = $history[0];
-
-      // Calculate each entry's change %-relation to current price
-      for ($i = 0; $i < sizeof($history); $i++) { 
-        if ($history[$i] > 0) {
-          $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
+        // Find total change
+        $lastVal = $history[sizeof($history) - 1];
+        if ($lastVal > 0) {
+          $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
         }
-      }
 
-      // Pad missing fields with null
-      $tmp['spark'] = array_pad($history, -7, null);
+        $firstPrice = $history[0];
+
+        // Calculate each entry's change %-relation to current price
+        for ($i = 0; $i < sizeof($history); $i++) { 
+          if ($history[$i] > 0) {
+            $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
+          }
+        }
+
+        // Pad missing fields with null
+        $tmp['spark'] = array_pad($history, -7, null);
+      }
     }
 
     // Append row to payload
@@ -167,9 +171,9 @@ if ($state === null) {
 
 // Get database entries based on league state
 if ($state["active"]) {
-  $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
+  $stmt = get_data_rolling($pdo, $_GET["league"], $_GET["category"]);
 } else {
-  $stmt = get_data2($pdo, $_GET["league"], $_GET["category"]);
+  $stmt = get_data_inactive($pdo, $_GET["league"], $_GET["category"]);
 }
 
 // If no results with provided id
@@ -177,7 +181,7 @@ if ($stmt->rowCount() === 0) {
   error(400, "No results");
 }
 
-$data = parse_data($stmt);
+$data = parse_data($stmt, $state["active"]);
 
 // Display generated data
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);

@@ -60,7 +60,7 @@ function GenNavbar() {
 function GenCatMenuHTML() {
   $data = array(
     array(
-      "href"  => "prices?category=accessories",
+      "href"  => "prices?category=accessory",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Amulets/EyeOfInnocence.png?scale=1&w=1&h=1",
       "name"  => "Accessories"
     ),
@@ -70,7 +70,7 @@ function GenCatMenuHTML() {
       "name"  => "Armour"
     ),
     array(
-      "href"  => "prices?category=bases",
+      "href"  => "prices?category=base",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Rings/OpalRing.png?scale=1&w=1&h=1",
       "name"  => "Bases"
     ),
@@ -80,37 +80,32 @@ function GenCatMenuHTML() {
       "name"  => "Currency"
     ),
     array(
-      "href"  => "prices?category=cards",
+      "href"  => "prices?category=card",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Divination/InventoryIcon.png?scale=1&w=1&h=1",
       "name"  => "Div cards"
     ),
     array(
-      "href"  => "prices?category=enchantments",
+      "href"  => "prices?category=enchantment",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1",
       "name"  => "Enchantments"
     ),
     array(
-      "href"  => "prices?category=essence",
-      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/Essence/Misery7.png?scale=1&w=1&h=1",
-      "name"  => "Essences"
-    ),
-    array(
-      "href"  => "prices?category=flasks",
+      "href"  => "prices?category=flask",
       "icon"  => "https://web.poecdn.com/gen/image/YTo3OntzOjEwOiJsZWFn/dWVOYW1lIjtzOjg6IkJl/c3RpYXJ5IjtzOjk6ImFj/Y291bnRJZCI7TzoxODoi/R3JpbmRiXERhdGFiYXNl/XElkIjoxOntzOjI6Imlk/IjtpOjA7fXM6MTA6InNp/bXBsaWZpZWQiO2I6MTtz/OjEzOiJpbnZlbnRvcnlU/eXBlIjtpOjE7aToyO2E6/Mzp7czoxOiJmIjtzOjMx/OiJBcnQvMkRJdGVtcy9G/bGFza3MvU2hhcGVyc0Zs/YXNrIjtzOjI6InNwIjtk/OjAuNjA4NTE5MjY5Nzc2/ODc2MztzOjU6ImxldmVs/IjtpOjA7fWk6MTtpOjQ7/aTowO2k6OTt9/635b9a3208/Item.png?scale=1&w=1&h=1",
       "name"  => "Flasks"
     ),
     array(
-      "href"  => "prices?category=gems",
+      "href"  => "prices?category=gem",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Gems/VaalGems/VaalBreachPortal.png?scale=1&w=1&h=1",
       "name"  => "Gems"
     ),
     array(
-      "href"  => "prices?category=jewels",
+      "href"  => "prices?category=jewel",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Jewels/GolemInfernal.png?scale=1&w=1&h=1",
       "name"  => "Jewels"
     ),
     array(
-      "href"  => "prices?category=maps",
+      "href"  => "prices?category=map",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/Chimera.png?scale=1&w=1&h=1",
       "name"  => "Maps"
     ),
@@ -120,7 +115,7 @@ function GenCatMenuHTML() {
       "name"  => "Prophecy"
     ),
     array(
-      "href"  => "prices?category=weapons",
+      "href"  => "prices?category=weapon",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/Claws/TouchOfAnguish.png?scale=1&w=1&h=1",
       "name"  => "Weapons"
     ),
