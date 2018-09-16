@@ -94,28 +94,23 @@ function AddTableHeaders($category) {
   echo "<th scope='col' class='fixedSizeCol'>Count</th>";
 }
 
-function GenSearchForms($category) {
-  $path;
-
+function GenSpecificSearchForm($category) {
   switch ($category) {
     case "gem": 
-      $path = "assets/php/form_templates/gem.php";
+      include_once ("assets/php/form_templates/gem.php");
       break;
     case "armour":
     case "weapon":
-      $path = "assets/php/form_templates/armour_weapon.php";
+      include_once ("assets/php/form_templates/armour_weapon.php");
       break;
     case "map":
-      $path = "assets/php/form_templates/map.php";
+      include_once ("assets/php/form_templates/map.php");
       break;
     case "base":
-      $path = "assets/php/form_templates/base.php";
+      include_once ("assets/php/form_templates/base.php");
       break;
     default:
-      $path = "assets/php/form_templates/default.php";
       break;
   }
-
-  include_once ($path);
 }
 

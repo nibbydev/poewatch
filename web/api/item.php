@@ -12,8 +12,8 @@ function get_league_data($pdo, $id) {
       l.display AS leagueDisplay, 
       l.active  AS leagueActive, 
       l.event   AS leagueEvent, 
-      DATE_FORMAT(l.start,  '%Y-%m-%d')             AS leagueStart,
-      DATE_FORMAT(l.end,    '%Y-%m-%d')             AS leagueEnd,
+      DATE_FORMAT(l.start,  '%Y-%m-%dT%TZ')         AS leagueStart,
+      DATE_FORMAT(l.end,    '%Y-%m-%dT%TZ')         AS leagueEnd,
       GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
       GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
@@ -34,8 +34,8 @@ function get_league_data($pdo, $id) {
       l.display AS leagueDisplay, 
       l.active  AS leagueActive, 
       l.event   AS leagueEvent, 
-      DATE_FORMAT(l.start,  '%Y-%m-%d')             AS leagueStart,
-      DATE_FORMAT(l.end,    '%Y-%m-%d')             AS leagueEnd,
+      DATE_FORMAT(l.start,  '%Y-%m-%dT%TZ')         AS leagueStart,
+      DATE_FORMAT(l.end,    '%Y-%m-%dT%TZ')         AS leagueEnd,
       GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
       GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
@@ -176,4 +176,4 @@ $historyData = parse_history_data($stmt);
 $payload = form_payload($itemData, $historyData);
 
 // Display generated data
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);

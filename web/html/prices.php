@@ -59,7 +59,40 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'>
 
-          <?php GenSearchForms($SERVICE_category) ?>
+          <div class="row mb-3">
+            <div class='col d-flex flex-column'>
+              <?php GenSpecificSearchForm($SERVICE_category) ?>
+
+              <div class='d-flex flex-wrap'>
+                <div class='mr-3'>
+                  <h4 class='nowrap'>Low count</h4>
+                  <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+                    <label class="btn btn-outline-dark active">
+                      <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                    </label>
+                    <label class="btn btn-outline-dark">
+                      <input type="radio" name="confidence" value="1"><a>Show</a>
+                    </label>
+                  </div>
+                </div>
+
+                <div class='ml-auto mr-3'>
+                  <h4>Category</h4>
+                  <select class="form-control custom-select" id="search-sub">
+                  
+                    <?php AddSubCategorySelectors($SERVICE_categories); ?>
+
+                  </select>
+                </div>
+
+                <div>
+                  <h4>Search</h4>
+                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+                </div>
+              </div>
+            </div>
+          </div>
+
 
           <!-- Main table -->
           <div class="card custom-card">

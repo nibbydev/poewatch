@@ -195,7 +195,8 @@ CREATE TABLE league_entries (
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
     INDEX time     (time),
-    INDEX approved (approved)
+    INDEX approved (approved),
+    INDEX compound_id (id_l, id_d)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
