@@ -295,7 +295,21 @@ function buildNameField() {
   } 
 
   if (ITEM.ilvl) {
-    builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + ITEM.ilvl + "</span>";
+    let displayLvl;
+
+    if (ITEM.variation === "elder" || ITEM.variation === "shaper") {
+      switch (ITEM.ilvl) {
+        case 68: displayLvl = "68 - 74";  break;
+        case 75: displayLvl = "75 - 82";  break;
+        case 84: displayLvl = "83 - 84";  break;
+        case 85: displayLvl = "85 - 100"; break;
+      }
+    } else {
+      displayLvl = "84";
+    }
+
+
+    builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + displayLvl + "</span>";
   } 
   
   if (ITEM.links) {
