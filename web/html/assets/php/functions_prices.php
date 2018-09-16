@@ -5,19 +5,17 @@ class FormGen {
     <div class='d-flex flex-wrap'>
       <div class='mr-3'>
         <h4>Ilvl</h4>
-        <div class='form-group'>
-          <select class='form-control' id='select-ilvl'>
-            <option value='all' selected>All</option>
-            <option value='68-74'>68 - 74</option>
-            <option value='75-82'>75 - 82</option>
-            <option value='83-84'>83 - 84</option>
-            <option value='85-100'>85 - 100</option>
-          </select>
-        </div>
+        <select class='form-control mb-2' id='select-ilvl'>
+          <option value='all' selected>All</option>
+          <option value='68-74'>68 - 74</option>
+          <option value='75-82'>75 - 82</option>
+          <option value='83-84'>83 - 84</option>
+          <option value='85-100'>85 - 100</option>
+        </select>
       </div>
       <div class='mr-3'>
         <h4>Influence</h4>
-        <select class='form-control custom-select' id='select-influence'>
+        <select class='form-control mb-2' id='select-influence'>
           <option value='all' selected>All</option>
           <option value='none'>None</option>
           <option value='either'>Either</option>
@@ -48,29 +46,25 @@ class FormGen {
   
       <div class='mr-3'>
         <h4>Level</h4>
-        <div class='form-group'>
-          <select class='form-control' id='select-level'>
-            <option value='all' selected>All</option>
-            <option value='1'>1</option>
-            <option value='2'>2</option>
-            <option value='3'>3</option>
-            <option value='4'>4</option>
-            <option value='20'>20</option>
-            <option value='21'>21</option>
-          </select>
-        </div>
+        <select class='form-control mb-2' id='select-level'>
+          <option value='all' selected>All</option>
+          <option value='1'>1</option>
+          <option value='2'>2</option>
+          <option value='3'>3</option>
+          <option value='4'>4</option>
+          <option value='20'>20</option>
+          <option value='21'>21</option>
+        </select>
       </div>
   
       <div class='mr-3'>
         <h4>Quality</h4>
-        <div class='form-group'>
-          <select class='form-control' id='select-quality'>
-            <option value='all' selected>All</option>
-            <option value='0'>0</option>
-            <option value='20'>20</option>
-            <option value='23'>23</option>
-          </select>
-        </div>
+        <select class='form-control mb-2' id='select-quality'>
+          <option value='all' selected>All</option>
+          <option value='0'>0</option>
+          <option value='20'>20</option>
+          <option value='23'>23</option>
+        </select>
       </div>
     </div>";
   }
@@ -80,28 +74,26 @@ class FormGen {
     <div class='d-flex flex-wrap'>
       <div class='mr-3'>
         <h4>Tier</h4>
-        <div class='form-group'>
-          <select class='form-control' id='select-tier'>
-            <option value='all' selected>All</option>
-            <option value='none'>None</option>
-            <option value='1'>1</option>
-            <option value='2'>2</option>
-            <option value='3'>3</option>
-            <option value='4'>4</option>
-            <option value='5'>5</option>
-            <option value='6'>6</option>
-            <option value='7'>7</option>
-            <option value='8'>8</option>
-            <option value='9'>9</option>
-            <option value='10'>10</option>
-            <option value='11'>11</option>
-            <option value='12'>12</option>
-            <option value='13'>13</option>
-            <option value='14'>14</option>
-            <option value='15'>15</option>
-            <option value='16'>16</option>
-          </select>
-        </div>
+        <select class='form-control mb-2' id='select-tier'>
+          <option value='all' selected>All</option>
+          <option value='none'>None</option>
+          <option value='1'>1</option>
+          <option value='2'>2</option>
+          <option value='3'>3</option>
+          <option value='4'>4</option>
+          <option value='5'>5</option>
+          <option value='6'>6</option>
+          <option value='7'>7</option>
+          <option value='8'>8</option>
+          <option value='9'>9</option>
+          <option value='10'>10</option>
+          <option value='11'>11</option>
+          <option value='12'>12</option>
+          <option value='13'>13</option>
+          <option value='14'>14</option>
+          <option value='15'>15</option>
+          <option value='16'>16</option>
+        </select>
       </div>
     </div>";
   }
@@ -111,7 +103,7 @@ class FormGen {
     <div class='d-flex flex-wrap'>
       <div class='mr-3'>
         <h4>Links</h4>
-        <select class='form-control custom-select' id='select-links'>
+        <select class='form-control mb-2' id='select-links'>
           <option value='all' selected>All</option>
           <option value='none'>None</option>
           <option value='5'>5 Links</option>
