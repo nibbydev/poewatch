@@ -873,7 +873,7 @@ function buildNameField(item) {
   }
 
   if (FILTER.category === "base") {
-    if (item.var === "shaped") {
+    if (item.var === "shaper") {
       template = template.replace("{{influence}}", "influence influence-shaper-1x1");
     } else if (item.var === "elder") {
       template = template.replace("{{influence}}", "influence influence-elder-1x1");
@@ -949,7 +949,7 @@ function buildBaseFields(item) {
 
   let displayLvl;
 
-  if (item.var === "elder" || item.var === "shaped") {
+  if (item.var === "elder" || item.var === "shaper") {
     switch (item.ilvl) {
       case 68: displayLvl = "68 - 74"; break;
       case 75: displayLvl = "75 - 82"; break;

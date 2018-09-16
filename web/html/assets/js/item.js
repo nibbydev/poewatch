@@ -213,8 +213,8 @@ function fillData() {
   $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
   $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
 
-  if (ITEM.categoryParent === "bases") {
-    if (ITEM.variation === "shaped") {
+  if (ITEM.categoryParent === "base") {
+    if (ITEM.variation === "shaper") {
       $("#item-icon").parent().addClass("influence influence-shaper-2x3");
     } else if (ITEM.variation === "elder") {
       $("#item-icon").parent().addClass("influence influence-elder-2x3");
@@ -267,7 +267,7 @@ function createListeners() {
 
 function buildNameField() {
   // Fix name if item is enchantment
-  if (ITEM.categoryParent === "enchantments" && ITEM.variation !== null) {
+  if (ITEM.categoryParent === "enchantment" && ITEM.variation !== null) {
     let splitVar = ITEM.variation.split('-');
     
     for (var num in splitVar) {
@@ -286,7 +286,7 @@ function buildNameField() {
     builder = "<span class='item-foil'>" + builder + "</span>";
   }
 
-  if (ITEM.variation && ITEM.categoryParent !== "enchantments") {
+  if (ITEM.variation && ITEM.categoryParent !== "enchantment") {
     builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
   } 
   
