@@ -109,10 +109,10 @@ class FormGen {
         <input type='radio' name='rarity' value='all'>Both
       </label>
       <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='3'>Unique
+        <input type='radio' name='rarity' value='unique'>Unique
       </label>
       <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='9' checked>Relic
+        <input type='radio' name='rarity' value='relic' checked>Relic
       </label>
     </div>
   </div>";

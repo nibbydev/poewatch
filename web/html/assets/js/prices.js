@@ -124,9 +124,10 @@ function defineListeners() {
   $("#radio-rarity").on("change", function(){
     FILTER.rarity = $(":checked", this).val();
     console.log("Rarity filter: " + FILTER.rarity);
-    updateQueryString("rarity", FILTER.rarity);
     if (FILTER.rarity === "all") FILTER.rarity = null;
-    else FILTER.rarity = parseInt(FILTER.rarity);
+    updateQueryString("rarity", FILTER.rarity);
+    if      (FILTER.rarity === "unique") FILTER.rarity =    3;
+    else if (FILTER.rarity ===  "relic") FILTER.rarity =    9;
     sortResults(ITEMS);
   });
   
@@ -1280,11 +1281,6 @@ function checkHideItem(item) {
     if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
     if (FILTER.gemCorrupted !== null && item.corrupted != FILTER.gemCorrupted) return true;
 
-  } else if (FILTER.category === "currency") {
-    if (item.frame === 3 && FILTER.sub === "all") {
-      // Hide harbinger pieces under category 'all'
-      return true;
-    }
   } else if (FILTER.category === "map") {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {

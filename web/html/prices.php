@@ -78,7 +78,7 @@
                 </div>
 
                 <div class='ml-auto mr-3'>
-                  <h4>Category</h4>
+                  <h4>Sort</h4>
                   <select class="form-control custom-select" id="search-sub">
                   
                     <?php AddSubCategorySelectors($SERVICE_categories); ?>
