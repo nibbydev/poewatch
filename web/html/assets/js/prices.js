@@ -845,10 +845,12 @@ function defineListeners() {
   $("#radio-rarity").on("change", function(){
     FILTER.rarity = $(":checked", this).val();
     console.log("Rarity filter: " + FILTER.rarity);
-    if (FILTER.rarity === "all") FILTER.rarity = null;
     updateQueryString("rarity", FILTER.rarity);
-    if      (FILTER.rarity === "unique") FILTER.rarity =    3;
+
+    if      (FILTER.rarity ===    "all") FILTER.rarity = null;
+    else if (FILTER.rarity === "unique") FILTER.rarity =    3;
     else if (FILTER.rarity ===  "relic") FILTER.rarity =    9;
+    
     sortResults(ITEMS);
   });
   
@@ -1117,6 +1119,7 @@ function updateQueryString(key, value) {
   switch (key) {
     case "confidence": value = value === false  ? null : value;   break;
     case "search":     value = value === ""     ? null : value;   break;
+    case "rarity":     value = value === "all"  ? null : value;   break;
     case "sub":        value = value === "all"  ? null : value;   break;
     default:           break;
   }
