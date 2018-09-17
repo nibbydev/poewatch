@@ -170,12 +170,12 @@ class ItemRow {
     let sparkLine       = this.buildSparkLine(this.item);
   
     template = template.replace("{{sparkline}}",    sparkLine);
-    template = template.replace("{{chaos_price}}",  roundPrice(this.item.mean));
+    template = template.replace("{{chaos_price}}",  ItemRow.roundPrice(this.item.mean));
     template = template.replace("{{chaos_icon}}",   chaosContainer);
   
     if (this.item.exalted >= 1) {
       template = template.replace("{{ex_icon}}",    exContainer);
-      template = template.replace("{{ex_price}}",   roundPrice(this.item.exalted));
+      template = template.replace("{{ex_price}}",   ItemRow.roundPrice(this.item.exalted));
     } else {
       template = template.replace("{{ex_icon}}",    "");
       template = template.replace("{{ex_price}}",   "");
@@ -252,6 +252,16 @@ class ItemRow {
     }
   
     return template.replace("{{quant}}", this.item.quantity);
+  }
+
+  static roundPrice(price) {
+    const numberWithCommas = (x) => {
+      var parts = x.toString().split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return parts.join(".");
+    }
+  
+    return numberWithCommas(Math.round(price * 100) / 100);
   }
 }
 
@@ -706,7 +716,7 @@ class ExpandedRow {
         vals.mode     .push(0);
         vals.quantity .push(0);
   
-        keys.push(formatDate(tmpDate));
+        keys.push(ExpandedRow.formatDate(tmpDate));
         tmpDate.setDate(tmpDate.getDate() + 1);
       }
     }
@@ -719,7 +729,7 @@ class ExpandedRow {
       vals.mode     .push(element.mode     );
       vals.quantity .push(element.quantity );
   
-      keys.push(formatDate(element.time));
+      keys.push(ExpandedRow.formatDate(element.time));
     }
   
     // Return generated data
@@ -727,6 +737,16 @@ class ExpandedRow {
       'keys': keys,
       'vals': vals
     }
+  }
+
+  static formatDate(date) {
+    const MONTH_NAMES = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+  
+    let s = new Date(date);
+    return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
   }
 }
 
@@ -1053,42 +1073,6 @@ function formatNum(num) {
   } else return numberWithCommas(Math.round(num * 100) / 100);
 }
 
-function roundPrice(price) {
-  const numberWithCommas = (x) => {
-    var parts = x.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join(".");
-  }
-
-  return numberWithCommas(Math.round(price * 100) / 100);
-}
-
-function formatDate(date) {
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-
-  let s = new Date(date);
-  return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
-}
-
-function getAllDays(length) {
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-  var a = [];
-  
-  for (let index = length; index > 1; index--) {
-    var s = new Date();
-    var n = new Date(s.setDate(s.getDate() - index))
-    a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
-  }
-  
-  a.push("Atm");
-
-  return a;
-}
-
 function getCookie(cname) {
   var name = cname + "=";
   var decodedCookie = decodeURIComponent(document.cookie);
@@ -1107,12 +1091,6 @@ function getCookie(cname) {
   }
 
   return "";
-}
-
-function toTitleCase(str) {
-  return str.replace(/\w\S*/g, function(txt){
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-  });
 }
 
 function updateQueryString(key, value) {
