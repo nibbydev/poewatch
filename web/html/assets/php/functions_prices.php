@@ -144,9 +144,6 @@ class FormGen {
       case "jewel":
         echo FormGen::$form_rarity;
         break;
-      case "relic":
-        echo FormGen::$form_links;
-        break;
       default:
         break;
     }

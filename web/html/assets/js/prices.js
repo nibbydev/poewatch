@@ -1113,6 +1113,7 @@ function updateQueryString(key, value) {
     case "confidence": value = value === false  ? null : value;   break;
     case "search":     value = value === ""     ? null : value;   break;
     case "rarity":     value = value === "all"  ? null : value;   break;
+    case "links":      value = value === "all"  ? null : value;   break;
     case "sub":        value = value === "all"  ? null : value;   break;
     default:           break;
   }
@@ -1181,11 +1182,11 @@ function sortResults(items) {
     }
   }
 
+  $(".buffering-msg").remove();
+
   if (count < 1) {
     let msg = "<div class='buffering-msg align-self-center mb-2'>No results</div>";
     $(".buffering").after(msg);
-  } else {
-    $(".buffering-msg").remove();
   }
 
   let loadAllBtn = $("#button-showAll");

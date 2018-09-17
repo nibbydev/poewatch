@@ -89,7 +89,6 @@
             </div>
           </div>
 
-
           <!-- Main table -->
           <div class="card custom-card">
             <div class="card-header slim-card-edge"></div>
