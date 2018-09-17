@@ -1195,6 +1195,13 @@ function sortResults(items) {
     }
   }
 
+  if (count < 1) {
+    let msg = "<div class='buffering-msg align-self-center mb-2'>No results</div>";
+    $(".buffering").after(msg);
+  } else {
+    $(".buffering-msg").remove();
+  }
+
   let loadAllBtn = $("#button-showAll");
   if (FILTER.parseAmount > 0 && matches > FILTER.parseAmount) {
     loadAllBtn.text("Show all (" + (matches - FILTER.parseAmount) + " items)");
