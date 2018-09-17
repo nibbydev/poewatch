@@ -91,6 +91,68 @@ function get_data_inactive($pdo, $league, $category) {
   return $stmt;
 }
 
+function get_data_rolling_relic($pdo, $league) {
+  $query = "SELECT 
+    i.id_d, i.mean, i.exalted, 
+    i.quantity + i.inc AS quantity, 
+    did.name, did.type, did.frame, 
+    did.tier, did.lvl, did.quality, did.corrupted, 
+    did.links, did.ilvl, did.var, did.icon, 
+    cp.name AS category,
+    i.spark AS history
+  FROM      league_items_rolling          AS i 
+  JOIN      data_itemData                 AS did 
+    ON      i.id_d = did.id 
+  JOIN      data_leagues                  AS l 
+    ON      l.id = i.id_l 
+  JOIN      category_parent               AS cp 
+    ON      did.id_cp = cp.id 
+  LEFT JOIN category_child                AS cc 
+    ON      did.id_cc = cc.id 
+  WHERE     l.name   = ?
+    AND     did.frame = 9
+    AND     did.links IS NULL
+    AND     l.active = 1 
+    AND     i.count  > 1 
+  ORDER BY  i.mean DESC";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$league]);
+
+  return $stmt;
+}
+
+function get_data_inactive_relic($pdo, $league) {
+  $query = "SELECT 
+    i.id_d, i.mean, i.exalted, 
+    i.count AS quantity, 
+    did.name, did.type, did.frame, 
+    did.tier, did.lvl, did.quality, did.corrupted, 
+    did.links, did.ilvl, did.var, did.icon, 
+    cp.name AS category,
+    NULL AS history
+  FROM      league_items_inactive         AS i 
+  JOIN      data_itemData                 AS did 
+    ON      i.id_d = did.id 
+  JOIN      data_leagues                  AS l 
+    ON      l.id = i.id_l 
+  JOIN      category_parent               AS cp 
+    ON      did.id_cp = cp.id 
+  LEFT JOIN category_child                AS cc 
+    ON      did.id_cc = cc.id 
+  WHERE     l.name   = ?
+    AND     did.frame = 9
+    AND     did.links IS NULL
+    AND     i.count  > 1 
+  GROUP BY  i.id_d, i.mean, i.exalted, i.count
+  ORDER BY  i.mean DESC";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$league]);
+
+  return $stmt;
+}
+
 function parse_data($stmt, $active) {
   $payload = array();
 
@@ -171,9 +233,17 @@ if ($state === null) {
 
 // Get database entries based on league state
 if ($state["active"]) {
-  $stmt = get_data_rolling($pdo, $_GET["league"], $_GET["category"]);
+  if ($_GET["category"] === "relic") {
+    $stmt = get_data_rolling_relic($pdo, $_GET["league"]);
+  } else {
+    $stmt = get_data_rolling($pdo, $_GET["league"], $_GET["category"]);
+  }
 } else {
-  $stmt = get_data_inactive($pdo, $_GET["league"], $_GET["category"]);
+  if ($_GET["category"] === "relic") {
+    $stmt = get_data_inactive_relic($pdo, $_GET["league"]);
+  } else {
+    $stmt = get_data_inactive($pdo, $_GET["league"], $_GET["category"]);
+  }
 }
 
 // If no results with provided id
@@ -184,4 +254,4 @@ if ($stmt->rowCount() === 0) {
 $data = parse_data($stmt, $state["active"]);
 
 // Display generated data
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);
+echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);

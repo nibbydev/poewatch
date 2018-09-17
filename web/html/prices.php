@@ -4,7 +4,6 @@
   include_once ( "assets/php/functions.php" );
 
   $SERVICE_category = CheckAndGetCategoryParam();
-  $SERVICE_categories = GetCategories($pdo, $SERVICE_category);
   $SERVICE_leagues = GetLeagues($pdo);
 ?>
 <!DOCTYPE html>
@@ -79,11 +78,7 @@
 
                 <div class='ml-auto mr-3'>
                   <h4>Sort</h4>
-                  <select class="form-control custom-select" id="search-sub">
-                  
-                    <?php AddSubCategorySelectors($SERVICE_categories); ?>
-
-                  </select>
+                  <select class="form-control custom-select" id="search-sub"></select>
                 </div>
 
                 <div>
@@ -130,7 +125,6 @@
 <!-- Service script -->
 <script>
   var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
-  var SERVICE_categories = <?php echo json_encode($SERVICE_categories); ?>;
   var SERVICE_category = <?php echo "\"" . $SERVICE_category . "\"" ?>;
 </script>
 <!--/Service script/-->

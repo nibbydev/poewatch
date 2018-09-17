@@ -1019,12 +1019,27 @@ function makeGetRequest(league, category) {
 
 function parseRequest(json) {
   let items = new Map();
+  let categories = [];
 
   // Loop though array, creating an associative array based on IDs
   for (let i = 0; i < json.length; i++) {
     const item = json[i];
     items['_' + item.id] = item;
+
+    // Get all unique categories
+    if (categories.indexOf(item.category) === -1) {
+      categories.push(item.category);
+    }
   }
+
+  let builder = categories.length > 1 ? "<option value='all'>All</option>" : "";
+
+  for (let i = 0; i < categories.length; i++) {
+    builder += "<option value='{{value}}'>{{name}}</option>"
+      .replace("{{value}}", categories[i])
+      .replace("{{name}}",  categories[i]);
+  }
+  $("#search-sub").append(builder);
 
   return items;
 }

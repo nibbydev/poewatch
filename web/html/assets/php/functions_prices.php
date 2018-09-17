@@ -144,6 +144,9 @@ class FormGen {
       case "jewel":
         echo FormGen::$form_rarity;
         break;
+      case "relic":
+        echo FormGen::$form_links;
+        break;
       default:
         break;
     }
@@ -159,26 +162,6 @@ function CheckAndGetCategoryParam() {
   }
   
   return $_GET["category"];
-}
-
-// Get list of child categories and their display names from DB
-function GetCategories($pdo, $category) {
-  $query = "SELECT cc.name, cc.display
-    FROM category_child AS cc
-    JOIN category_parent AS cp
-    ON cp.id = cc.id_cp
-    WHERE cp.name = ?";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$category]);
-
-  $payload = array();
-
-  while ($row = $stmt->fetch()) {
-    $payload[] = array($row["name"], $row["display"]);
-  }
-
-  return $payload;
 }
 
 // Get list of leagues and their display names from DB
@@ -200,20 +183,6 @@ function GetLeagues($pdo) {
   }
 
   return $payload;
-}
-
-// Add category-specific selector fields to sub-category selector
-function AddSubCategorySelectors($categories) {
-  if (sizeof($categories) > 1) {
-    echo "<option value='all'>All</option>";
-  }
-  
-  foreach ($categories as $entry) {
-    $value = $entry[0];
-    $display = $entry[1] ? $entry[1] : ucwords($entry[0]);
-
-    echo "<option value='$value'>$display</option>";
-  }
 }
 
 // Add league select fields to second navbar

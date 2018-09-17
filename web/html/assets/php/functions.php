@@ -115,6 +115,11 @@ function GenCatMenuHTML() {
       "name"  => "Prophecy"
     ),
     array(
+      "href"  => "prices?category=relic",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Belts/Headhunter.png?scale=1&w=2&h=1&relic=1",
+      "name"  => "All relics"
+    ),
+    array(
       "href"  => "prices?category=weapon",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/Claws/TouchOfAnguish.png?scale=1&w=1&h=1",
       "name"  => "Weapons"
