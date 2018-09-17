@@ -29,8 +29,7 @@ function check_league($pdo, $league) {
 
 function get_data_rolling($pdo, $league) {
   $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.exalted, 
-    i.quantity + i.inc AS quantity
+    i.id_d, i.mean, i.quantity + i.inc AS quantity
   FROM      league_items_rolling AS i 
   JOIN      data_leagues  AS l 
     ON      l.id = i.id_l 
@@ -47,8 +46,7 @@ function get_data_rolling($pdo, $league) {
 
 function get_data_inactive($pdo, $league) {
   $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.exalted, 
-    0 AS quantity
+    i.id_d, i.mean, 0 AS quantity
   FROM      league_items_inactive AS i 
   JOIN      data_leagues  AS l 
     ON      l.id = i.id_l 
@@ -70,11 +68,7 @@ function parse_data($stmt, $active) {
     // Form a temporary row array
     $tmp = array(
       'id'            => (int)  $row['id_d'],
-
       'mean'          =>        $row['mean']      === NULL ?  0.0 : (float) $row['mean'],
-      'mean'          =>        $row['median']    === NULL ?  0.0 : (float) $row['median'],
-      'mean'          =>        $row['mode']      === NULL ?  0.0 : (float) $row['mode'],
-      'exalted'       =>        $row['exalted']   === NULL ?  0.0 : (float) $row['exalted'],
       'quantity'      =>        $row['quantity']  === NULL ?    0 :   (int) $row['quantity']
     );
 

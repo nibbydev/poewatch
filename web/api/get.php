@@ -33,8 +33,8 @@ function check_league($pdo, $league) {
 
 function get_data_rolling($pdo, $league, $category) {
   $query = "SELECT 
-    i.id_d, i.mean, i.exalted, 
-    i.quantity + i.inc AS quantity, 
+    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.count, i.quantity + i.inc AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -63,8 +63,8 @@ function get_data_rolling($pdo, $league, $category) {
 
 function get_data_inactive($pdo, $league, $category) {
   $query = "SELECT 
-    i.id_d, i.mean, i.exalted, 
-    i.count AS quantity, 
+    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.count, 0 AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -82,7 +82,6 @@ function get_data_inactive($pdo, $league, $category) {
   WHERE     l.name   = ?
     AND     cp.name  = ?
     AND     i.count  > 1 
-  GROUP BY  i.id_d, i.mean, i.exalted, i.count
   ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
@@ -93,8 +92,8 @@ function get_data_inactive($pdo, $league, $category) {
 
 function get_data_rolling_relic($pdo, $league) {
   $query = "SELECT 
-    i.id_d, i.mean, i.exalted, 
-    i.quantity + i.inc AS quantity, 
+    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.count, i.quantity + i.inc AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -124,8 +123,8 @@ function get_data_rolling_relic($pdo, $league) {
 
 function get_data_inactive_relic($pdo, $league) {
   $query = "SELECT 
-    i.id_d, i.mean, i.exalted, 
-    i.count AS quantity, 
+    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.count, 0 AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -144,7 +143,6 @@ function get_data_inactive_relic($pdo, $league) {
     AND     did.frame = 9
     AND     did.links IS NULL
     AND     i.count  > 1 
-  GROUP BY  i.id_d, i.mean, i.exalted, i.count
   ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
@@ -166,7 +164,11 @@ function parse_data($stmt, $active) {
       'frame'         => (int)  $row['frame'],
 
       'mean'          =>        $row['mean']      === NULL ?  0.0 : (float) $row['mean'],
+      'median'        =>        $row['median']    === NULL ?  0.0 : (float) $row['median'],
+      'mode'          =>        $row['mode']      === NULL ?  0.0 : (float) $row['mode'],
       'exalted'       =>        $row['exalted']   === NULL ?  0.0 : (float) $row['exalted'],
+      
+      'count'         =>        $row['count']     === NULL ?    0 :   (int) $row['count'],
       'quantity'      =>        $row['quantity']  === NULL ?    0 :   (int) $row['quantity'],
       'spark'         =>        null,
       'change'        =>        0.0,

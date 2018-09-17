@@ -111,34 +111,6 @@
                   </div>
                   <!--/Request fields/-->
 
-                  <hr>
-
-                  <h3><a href='https://api.poe.watch/compact?league=Standard' target='_blank'>compact</a></h3>
-                  <p class="card-text">Lightweight API that returns only the mean, median, mode, id and quantity for the specified league. IDs can be found in itemdata API described above.</p>
-
-                  <!-- Request fields -->
-                  <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1">
-                    <table class="table table-sm">
-                      <thead>
-                        <tr>
-                          <th>Param</th>
-                          <th>Required</th>
-                          <th class="w-100">Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>league</td>
-                          <td><span class='badge badge-success'>✓</span></td>
-                          <td>Full name of a league</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <!--/Request fields/-->
-
-
                 </div>
                 <div class="card-footer slim-card-edge"></div>
               </div>
