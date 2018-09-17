@@ -4,6 +4,7 @@
   include_once ( "assets/php/functions.php" );
 
   $SERVICE_category = CheckAndGetCategoryParam();
+  $SERVICE_categories = GetCategoryTranslations($pdo);
   $SERVICE_leagues = GetLeagues($pdo);
 ?>
 <!DOCTYPE html>
@@ -124,6 +125,7 @@
 <!-- Service script -->
 <script>
   var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
+  var SERVICE_categories = <?php echo json_encode($SERVICE_categories); ?>;
   var SERVICE_category = <?php echo "\"" . $SERVICE_category . "\"" ?>;
 </script>
 <!--/Service script/-->

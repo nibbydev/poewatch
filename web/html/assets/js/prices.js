@@ -1037,7 +1037,7 @@ function parseRequest(json) {
   for (let i = 0; i < categories.length; i++) {
     builder += "<option value='{{value}}'>{{name}}</option>"
       .replace("{{value}}", categories[i])
-      .replace("{{name}}",  categories[i]);
+      .replace("{{name}}",  SERVICE_categories[ categories[i] ]);
   }
   $("#search-sub").append(builder);
 

@@ -161,6 +161,24 @@ function CheckAndGetCategoryParam() {
   return $_GET["category"];
 }
 
+// Get all available category relations
+function GetCategoryTranslations($pdo) {
+  $query = "SELECT name, display FROM category_child
+  UNION
+  SELECT name, display FROM category_parent";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute();
+
+  $payload = array();
+
+  while ($row = $stmt->fetch()) {
+    $payload[ $row['name'] ] = $row['display'];
+  }
+
+  return $payload;
+}
+
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
   $query = "SELECT l.id, l.name, l.display, l.active, l.upcoming, l.event 
