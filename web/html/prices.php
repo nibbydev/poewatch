@@ -4,7 +4,7 @@
   include_once ( "assets/php/functions.php" );
 
   $SERVICE_category = CheckAndGetCategoryParam();
-  $SERVICE_categories = GetCategories($pdo, $SERVICE_category);
+  $SERVICE_categories = GetCategoryTranslations($pdo);
   $SERVICE_leagues = GetLeagues($pdo);
 ?>
 <!DOCTYPE html>
@@ -78,12 +78,8 @@
                 </div>
 
                 <div class='ml-auto mr-3'>
-                  <h4>Category</h4>
-                  <select class="form-control custom-select" id="search-sub">
-                  
-                    <?php AddSubCategorySelectors($SERVICE_categories); ?>
-
-                  </select>
+                  <h4>Sort</h4>
+                  <select class="form-control custom-select" id="search-sub"></select>
                 </div>
 
                 <div>
@@ -93,7 +89,6 @@
               </div>
             </div>
           </div>
-
 
           <!-- Main table -->
           <div class="card custom-card">

@@ -3,6 +3,753 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
+class ItemRow {
+  constructor (item) {
+    this.item = item;
+    this.row = "<tr value={{id}}>{{fill}}</tr>";
+
+    let rowBuilder = "";
+
+    rowBuilder += this.buildNameField();
+    rowBuilder += this.buildGemFields();
+    rowBuilder += this.buildBaseFields();
+    rowBuilder += this.buildMapFields();
+    rowBuilder += this.buildPriceFields();
+    rowBuilder += this.buildChangeField();
+    rowBuilder += this.buildQuantField();
+
+    this.row = this.row
+      .replace("{{id}}",    item.id)
+      .replace("{{fill}}",  rowBuilder);
+  }
+
+  buildNameField() {
+    let template = `
+    <td>
+      <div class='d-flex align-items-center'>
+        <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src="{{icon}}"></span>
+        <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}{{link}}
+      </div>
+    </td>
+    `.trim();
+  
+    template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + this.item.id);
+  
+    if (this.item.icon) {
+      // Use SSL for icons for that sweet, sweet secure site badge
+      this.item.icon = this.item.icon.replace("http://", "https://");
+      template = template.replace("{{icon}}", this.item.icon);
+    } else {
+      template = template.replace("{{icon}}", ICON_MISSING);
+    }
+  
+    if (this.item.frame === 9) {
+      template = template.replace("{{foil}}", "class='item-foil'");
+    } else {
+      template = template.replace("{{foil}}", "");
+    }
+  
+    if (FILTER.category === "base") {
+      if (this.item.var === "shaper") {
+        template = template.replace("{{influence}}", "influence influence-shaper-1x1");
+      } else if (this.item.var === "elder") {
+        template = template.replace("{{influence}}", "influence influence-elder-1x1");
+      } else {
+        template = template.replace("{{influence}}", "");
+      }
+    } else {
+      template = template.replace("{{influence}}", "");
+    }
+  
+    if (FILTER.category === "enchantment") {
+      if (this.item.var !== null) {
+        let splitVar = this.item.var.split('-');
+        for (var num in splitVar) {
+          this.item.name = this.item.name.replace("#", splitVar[num]);
+        }
+      }
+    }
+    
+    template = template.replace("{{name}}", this.item.name);
+  
+    if (this.item.type) {
+      let tmp = "<span class='subtext-1'>, " + this.item.type + "</span>";;
+      template = template.replace("{{type}}", tmp);
+    } else {
+      template = template.replace("{{type}}", "");
+    }
+  
+    if (this.item.links) {
+      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.links + " link</span>";
+      template = template.replace("{{link}}", tmp);
+    } else {
+      template = template.replace("{{link}}", "");
+    }
+  
+    if (this.item.var && FILTER.category !== "enchantment") {
+      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.var + "</span>";
+      template = template.replace("{{var}}", tmp);
+    } else {
+      template = template.replace("{{var}}", "");
+    }
+  
+    return template;
+  }
+  
+  buildGemFields() {
+    // Don't run if item is not a gem
+    if (this.item.frame !== 4) return "";
+  
+    let template = `
+    <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
+    <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
+    <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
+    `.trim();
+  
+    template = template.replace("{{lvl}}",      this.item.lvl);
+    template = template.replace("{{quality}}",  this.item.quality);
+    
+    if (this.item.corrupted) {
+      template = template.replace("{{color}}",  "red");
+      template = template.replace("{{corr}}",   "✓");
+    } else {
+      template = template.replace("{{color}}",  "green");
+      template = template.replace("{{corr}}",   "✕");
+    }
+  
+    return template;
+  }
+  
+  buildBaseFields() {
+    // Don't run if item is not a gem
+    if (FILTER.category !== "base") return "";
+  
+    let displayLvl;
+  
+    if (this.item.var === "elder" || this.item.var === "shaper") {
+      switch (this.item.ilvl) {
+        case 68: displayLvl = "68 - 74";  break;
+        case 75: displayLvl = "75 - 82";  break;
+        case 84: displayLvl = "83 - 84";  break;
+        case 85: displayLvl = "85 - 100"; break;
+      }
+    } else {
+      displayLvl = "84";
+    }
+  
+    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
+  }
+  
+  buildMapFields() {
+    // Don't run if item is not a map
+    if (FILTER.category !== "map") {
+      return "";
+    }
+
+    let template = `
+    <td class='nowrap'>
+      <span class='badge custom-badge-block custom-badge-gray'>{{tier}}</span>
+    </td>
+    `.trim();
+
+    return template.replace("{{tier}}", this.item.tier ? this.item.tier : "-");
+  }
+  
+  buildPriceFields() {
+    let template = `
+    <td>
+      <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
+    </td>
+    <td>
+      <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
+    </td>
+    `.trim();
+
+    let chaosContainer  = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
+    let exContainer     = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
+    let sparkLine       = this.buildSparkLine(this.item);
+  
+    template = template.replace("{{sparkline}}",    sparkLine);
+    template = template.replace("{{chaos_price}}",  ItemRow.roundPrice(this.item.mean));
+    template = template.replace("{{chaos_icon}}",   chaosContainer);
+  
+    if (this.item.exalted >= 1) {
+      template = template.replace("{{ex_icon}}",    exContainer);
+      template = template.replace("{{ex_price}}",   ItemRow.roundPrice(this.item.exalted));
+    } else {
+      template = template.replace("{{ex_icon}}",    "");
+      template = template.replace("{{ex_price}}",   "");
+    }
+    
+    return template;
+  }
+  
+  buildSparkLine() {
+    if (!this.item.spark) return "";
+  
+    let svgColorClass = this.item.change > 0 ? "sparkline-green" : "sparkline-orange";
+    let svg = document.createElement("svg");
+    
+    svg.setAttribute("class", "sparkline " + svgColorClass);
+    svg.setAttribute("width", 60);
+    svg.setAttribute("height", 30);
+    svg.setAttribute("stroke-width", 3);
+  
+    sparkline(svg, this.item.spark);
+    
+    return svg.outerHTML;
+  }
+  
+  buildChangeField() {
+    let template = `
+    <td>
+      <span class='badge custom-badge-block custom-badge-{{color}}'>
+        {{percent}}%
+      </span>
+    </td>
+    `.trim();
+  
+    let change = 0;
+  
+    if (this.item.change > 999) {
+      change = 999;
+    } else if (this.item.change < -999) {
+      change = -999;
+    } else {
+      change = Math.round(this.item.change); 
+    }
+  
+    if (change > 100) {
+      template = template.replace("{{color}}", "green");
+    } else if (change < -100) {
+      template = template.replace("{{color}}", "orange");
+    } else if (change > 50) {
+      template = template.replace("{{color}}", "green-lo");
+    } else if (change < -50) {
+      template = template.replace("{{color}}", "orange-lo");
+    } else {
+      template = template.replace("{{color}}", "gray");
+    }
+  
+    return template.replace("{{percent}}", change);
+  }
+  
+  buildQuantField() {
+    let template = `
+    <td>
+      <span class='badge custom-badge-block custom-badge-{{color}}'>
+        {{quant}}
+      </span>
+    </td>
+    `.trim();
+  
+    if (this.item.quantity >= 10) {
+      template = template.replace("{{color}}", "gray");
+    } else if (this.item.quantity >= 5) {
+      template = template.replace("{{color}}", "orange");
+    } else {
+      template = template.replace("{{color}}", "red");
+    }
+  
+    return template.replace("{{quant}}", this.item.quantity);
+  }
+
+  static roundPrice(price) {
+    const numberWithCommas = (x) => {
+      var parts = x.toString().split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return parts.join(".");
+    }
+  
+    return numberWithCommas(Math.round(price * 100) / 100);
+  }
+}
+
+class ExpandedRow {
+  constructor() {
+    this.dataSets     = {};
+
+    this.rowExpanded  = null;
+    this.rowParent    = null;
+    this.rowFiller    = null;
+
+    this.id           = null;
+    this.league       = null;
+    this.chart        = null;
+    this.dataset      = 1;
+
+    // A bit more "static" variables
+    this.template_exaltedContainer = null;
+    this.template_chaosContainer = null;
+    this.template_expandedRow = null;
+    this.chart_settings = null;
+
+    this.setStaticData();
+  }
+
+  // Set some more or less static data
+  setStaticData() {
+    this.template_exaltedContainer = `
+    <span class='img-container img-container-xs text-center mr-1'>
+      <img src='https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1'>
+    </span>
+    `.trim();
+
+    this.template_chaosContainer = `
+    <span class='img-container img-container-xs text-center mr-1'>
+      <img src='https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1'>
+    </span>
+    `.trim();
+
+    this.template_expandedRow = `
+    <tr class='selected-row'><td colspan='100'>
+      <div class='row m-1'>
+        <div class='col-sm d-flex mt-2'>
+          <h4 class='m-0 mr-2'>League</h4>
+          <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
+        </div>
+      </div>
+      <hr>
+      <div class='row m-1 mt-2'>
+        <div class='col d-flex'>
+          <table class="table table-sm details-table mw-item-dTable mr-4">
+            <tbody>
+              <tr>
+                <td class='nowrap w-100'>Mean</td>
+                <td class='nowrap'>{{chaosContainter}}<span id='details-table-mean'></span></td>
+              </tr>
+              <tr>
+                <td class='nowrap w-100'>Median</td>
+                <td class='nowrap'>{{chaosContainter}}<span id='details-table-median'></span></td>
+              </tr>
+              <tr>
+                <td class='nowrap w-100'>Mode</td>
+                <td class='nowrap'>{{chaosContainter}}<span id='details-table-mode'></span></td>
+              </tr>
+            </tbody>
+          </table>
+  
+          <table class="table table-sm details-table mw-item-dTable">
+            <tbody>
+              <tr>
+                <td class='nowra pw-100'>Total amount listed</td>
+                <td class='nowrap'><span id='details-table-count'></span></td>
+              </tr>
+              <tr>
+                <td class='nowrap w-100'>Listed every 24h</td>
+                <td class='nowrap'><span id='details-table-quantity'></span></td>
+              </tr>
+              <tr>
+                <td class='nowrap w-100'>Price in exalted</td>
+                <td class='nowrap'>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <hr>
+      <div class='row m-1 mb-3'>
+        <div class='col-sm'>
+          <h4>Past data</h4>
+          <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
+            <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
+            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
+            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
+            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+          </div>
+          <div class='chart-large'><canvas id="chart"></canvas></div>
+        </div>
+      </div>
+    </td></tr>
+    `.trim();
+  
+    let gradientPlugin = {
+      beforeDatasetUpdate: function(chart) {
+        if (!chart.width) return;
+  
+        // Create the linear gradient  chart.scales['x-axis-0'].width
+        var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
+  
+        gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
+        gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
+  
+        // Assign the gradient to the dataset's border color.
+        chart.data.datasets[0].borderColor = gradient;
+      }
+    };
+
+    let dataPlugin = {
+      beforeUpdate: function(chart) {
+        // Don't run if data has not yet been initialized
+        if (chart.data.data.length < 1) return;
+  
+        var keys = chart.data.data.keys;
+        var vals = chart.data.data.vals;
+  
+        chart.data.labels = keys;
+  
+        switch (EXPROW.dataset) {
+          case 1: chart.data.datasets[0].data = vals.mean;      break;
+          case 2: chart.data.datasets[0].data = vals.median;    break;
+          case 3: chart.data.datasets[0].data = vals.mode;      break;
+          case 4: chart.data.datasets[0].data = vals.quantity;  break;
+        }
+      }
+    };
+  
+    this.chart_settings = {
+      plugins: [dataPlugin, gradientPlugin],
+      type: "line",
+      data: {
+        data: [],
+        labels: [],
+        datasets: [{
+          data: [],
+          backgroundColor: "rgba(0, 0, 0, 0.2)",
+          borderColor: "rgba(255, 255, 255, 0.5)",
+          borderWidth: 3,
+          lineTension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        title: {display: false},
+        layout: {padding: 0},
+        legend: {display: false},
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {duration: 0},
+        hover: {animationDuration: 0},
+        responsiveAnimationDuration: 0,
+        tooltips: {
+          intersect: false,
+          mode: "index",
+          callbacks: {
+            title: function(tooltipItem, data) {
+              let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
+              return price ? price : "No data";
+            },
+            label: function(tooltipItem, data) {
+              return data['labels'][tooltipItem['index']];
+            }
+          },
+          backgroundColor: '#fff',
+          titleFontSize: 16,
+          titleFontColor: '#222',
+          bodyFontColor: '#444',
+          bodyFontSize: 14,
+          displayColors: false,
+          borderWidth: 1,
+          borderColor: '#aaa'
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: true,
+              padding: 0
+            }
+          }],
+          xAxes: [{
+            ticks: {
+              callback: function(value, index, values) {
+                return (value ? value : '');
+              },
+              maxRotation: 0,
+              padding: 0
+            }
+          }]
+        }
+      }
+    }
+  }
+
+  onRowClick(event) {
+    let target = $(event.currentTarget);
+    let id = parseInt(target.attr('value'));
+  
+    // If user clicked on a table that does not contain an id
+    if (isNaN(id)) return;
+    // If user clicked on item name
+    if (event.target.href) return;
+    // If user clicked on item type
+    if (event.target.parentElement.href) return;
+  
+    // Get rid of any filler rows
+    this.removeFillerRow();
+  
+    // User clicked on open parent-row
+    if (target.is(this.rowParent)) {
+      console.log("Closed open row");
+  
+      $(".parent-row").removeAttr("class");
+      this.rowParent = null;
+  
+      $(".selected-row").remove();
+      this.rowExpanded = null;
+      return;
+    }
+  
+    // There's an open row somewhere
+    if (this.rowParent !== null || this.rowExpanded !== null) {
+      $(".selected-row").remove();
+      $(".parent-row").removeAttr("class");
+  
+      console.log("Closed row: " + this.id);
+  
+      this.rowParent = null;
+      this.rowExpanded = null;
+    }
+  
+    console.log("Clicked on row id: " + id);
+  
+    // Define current row as parent target row
+    target.addClass("parent-row");
+    this.rowParent = target;
+    this.league = FILTER.league;
+    this.id = id;
+  
+    // Load history data
+    if (id in this.dataSets) {
+      console.log("History source: local");
+      this.buildExpandedRow();
+    } else {
+      console.log("History source: remote");
+      this.displayFillerRow();
+      this.makeHistoryRequest();
+    }
+  }
+
+  displayFillerRow() {
+    let template = `
+    <tr class='filler-row'><td colspan='100'>
+      <div class="d-flex justify-content-center">
+        <div class="buffering m-2"></div>
+      </div>
+    </td></tr>
+    `.trim();
+  
+    this.rowFiller = $(template);
+    this.rowParent.after(this.rowFiller);
+  }
+
+  makeHistoryRequest() {
+    let request = $.ajax({
+      url: "https://api.poe.watch/item.php",
+      data: {id: this.id},
+      type: "GET",
+      async: true,
+      dataTypes: "json"
+    });
+  
+    request.done(function(payload) {
+      // Get rid of any filler rows
+      EXPROW.removeFillerRow();
+            
+      EXPROW.dataSets[EXPROW.id] = payload;
+      EXPROW.buildExpandedRow();
+    });
+  }
+
+  // Removes all fillers rows
+  removeFillerRow() {
+    if (this.rowFiller) {
+      $(".filler-row").remove();
+      this.rowFiller = null;
+    }
+  }
+
+  buildExpandedRow() {
+    // Get list of past leagues available for the row
+    let leagues = ExpandedRow.getItemHistoryLeagues(this.dataSets, this.id);
+  
+    // Stop if no leagues available
+    if (leagues.length < 1) {
+      return;
+    }
+  
+    // Create expandedRow jQuery object
+    let template = this.template_expandedRow
+      .replace("{{chaosContainter}}",   this.template_chaosContainer)
+      .replace("{{chaosContainter}}",   this.template_chaosContainer)
+      .replace("{{chaosContainter}}",   this.template_chaosContainer)
+      .replace("{{exaltedContainter}}", this.template_exaltedContainer);
+    this.rowExpanded = $(template);
+
+    // Instantiate chart
+    let chartCanvas = $("#chart", this.rowExpanded);
+    this.chart = new Chart(chartCanvas, this.chart_settings);
+
+    // Format and display data
+    this.fillData();
+    // Create league selectors
+    this.createSelectors(leagues);
+  
+    // Place expanded row in table
+    this.rowParent.after(this.rowExpanded);
+  
+    // Create league select event listener
+    $("#history-league-selector", this.rowExpanded).change(function(){
+      EXPROW.league = $(":selected", this).val();
+      EXPROW.fillData();
+    });
+  
+    // Create dataset radio event listener
+    $("#history-dataset-radio", this.rowExpanded).change(function(){
+      EXPROW.dataset = parseInt($("input[name=dataset]:checked", this).val());
+      EXPROW.fillData();
+    });
+  }
+
+  // Format and display data
+  fillData() {
+    // Get league-specific data pack
+    let leaguePayload = ExpandedRow.getLeaguePayload(this.dataSets, this.league, this.id);
+
+    // Format history
+    let formattedHistory = ExpandedRow.formatHistory(leaguePayload);
+
+    // Assign chart datasets
+    this.chart.data.data = formattedHistory;
+    this.chart.update();
+    
+    // Set data in details table
+    $("#details-table-mean",     this.rowExpanded).html( formatNum(leaguePayload.mean)     );
+    $("#details-table-median",   this.rowExpanded).html( formatNum(leaguePayload.median)   );
+    $("#details-table-mode",     this.rowExpanded).html( formatNum(leaguePayload.mode)     );
+    $("#details-table-count",    this.rowExpanded).html( formatNum(leaguePayload.count)    );
+    $("#details-table-quantity", this.rowExpanded).html( formatNum(leaguePayload.quantity) );
+    $("#details-table-exalted",  this.rowExpanded).html( formatNum(leaguePayload.exalted)  );
+  }
+
+  // Create league selectors
+  createSelectors(leagues) {
+    let builder = "";
+  
+    for (let i = 0; i < leagues.length; i++) {
+      let display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
+      let selected = FILTER.league === leagues[i].name ? "selected" : "";
+  
+      builder += "<option value='{{value}}' {{selected}}>{{name}}</option>"
+        .replace("{{selected}}",  selected)
+        .replace("{{value}}",     leagues[i].name)
+        .replace("{{name}}",      display);
+    }
+  
+    $("#history-league-selector", this.rowExpanded).append(builder);
+  }
+
+  // Return the matching payload from dataSets
+  static getLeaguePayload(dataSets, league, id) {
+    for (let i = 0; i < dataSets[id].data.length; i++) {
+      if (dataSets[id].data[i].league.name === league) {
+        return dataSets[id].data[i];
+      }
+    }
+  
+    return null;
+  }
+
+  // Get list of past leagues available for the row
+  static getItemHistoryLeagues(dataSets, id) {
+    let leagues = [];
+  
+    for (let i = 0; i < dataSets[id].data.length; i++) {
+      leagues.push({
+        name:    dataSets[id].data[i].league.name,
+        display: dataSets[id].data[i].league.display,
+        active:  dataSets[id].data[i].league.active
+      });
+    }
+  
+    return leagues;
+  }
+
+  // Format history
+  static formatHistory(leaguePayload) {
+    let keys = [];
+    let vals = {
+      mean:     [],
+      median:   [],
+      mode:     [],
+      quantity: []
+    };
+  
+    // Convert date strings into objects
+    let oldestDate = new Date(leaguePayload.history[0].time);
+    let startDate  = new Date(leaguePayload.league.start);
+    let endDate    = new Date(leaguePayload.league.end);
+  
+    // Increment startdate to balance timezone differences
+    startDate.setTime(startDate.getTime() + 24 * 60 * 60 * 1000);
+  
+    // Nr of days league data is missing since league start until first entry
+    let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
+    let daysMissing     = Math.ceil(timeDiffMissing / (1000 * 60 * 60 * 24));
+  
+    // Nr of days in a league
+    let timeDiffLeague = Math.abs(endDate.getTime() - startDate.getTime());
+    let daysLeague     = Math.ceil(timeDiffLeague / (1000 * 60 * 60 * 24));
+  
+    // Hardcore (id 1) and Standard (id 2) don't have an end date
+    if (leaguePayload.league.id <= 2) {
+      daysLeague = 120;
+      daysMissing = 0;
+    }
+  
+    // Bloat using 'null's the amount of days that should not have a tooltip
+    for (let i = 0; i < daysLeague - daysMissing - leaguePayload.history.length; i++) {
+      vals.mean     .push(null);
+      vals.median   .push(null);
+      vals.mode     .push(null);
+      vals.quantity .push(null);
+      keys          .push(null);
+    }
+  
+    // Bloat using '0's the amount of days that should show "no data"
+    // Skip Hardcore (id 1) and Standard (id 2)
+    if (leaguePayload.league.id > 2) {
+      let tmpDate = new Date(startDate);
+  
+      for (let i = 0; i < daysMissing; i++) {
+        vals.mean     .push(0);
+        vals.median   .push(0);
+        vals.mode     .push(0);
+        vals.quantity .push(0);
+  
+        keys.push(ExpandedRow.formatDate(tmpDate));
+        tmpDate.setDate(tmpDate.getDate() + 1);
+      }
+    }
+  
+    // Grab values
+    for (let i = 0; i < leaguePayload.history.length; i++) {
+      let element = leaguePayload.history[i];
+      vals.mean     .push(element.mean     );
+      vals.median   .push(element.median   );
+      vals.mode     .push(element.mode     );
+      vals.quantity .push(element.quantity );
+  
+      keys.push(ExpandedRow.formatDate(element.time));
+    }
+  
+    // Return generated data
+    return {
+      'keys': keys,
+      'vals': vals
+    }
+  }
+
+  static formatDate(date) {
+    const MONTH_NAMES = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+  
+    let s = new Date(date);
+    return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
+  }
+}
+
 // Default item search filter options
 var FILTER = {
   league: null,
@@ -24,14 +771,8 @@ var FILTER = {
 
 var ITEMS = {};
 var LEAGUES = null;
-var HISTORY_DATA = {};
-var CHART_HISTORY = null;
-var HISTORY_LEAGUE = null;
-var HISTORY_DATASET = 1;
 var INTERVAL;
-
-var ROW_last_id = null;
-var ROW_parent = null, ROW_expanded = null, ROW_filler = null;
+var EXPROW = new ExpandedRow();
 
 // Re-used icon urls
 const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
@@ -125,8 +866,11 @@ function defineListeners() {
     FILTER.rarity = $(":checked", this).val();
     console.log("Rarity filter: " + FILTER.rarity);
     updateQueryString("rarity", FILTER.rarity);
-    if (FILTER.rarity === "all") FILTER.rarity = null;
-    else FILTER.rarity = parseInt(FILTER.rarity);
+
+    if      (FILTER.rarity ===    "all") FILTER.rarity = null;
+    else if (FILTER.rarity === "unique") FILTER.rarity =    3;
+    else if (FILTER.rarity ===  "relic") FILTER.rarity =    9;
+    
     sortResults(ITEMS);
   });
   
@@ -214,7 +958,7 @@ function defineListeners() {
 
   // Expand row
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
-    onRowClick(event);
+    EXPROW.onRowClick(event);
   });
 
   // Live search toggle
@@ -231,497 +975,6 @@ function defineListeners() {
       clearInterval(INTERVAL);
     }
   });
-}
-
-//------------------------------------------------------------------------------------------------------------
-// Expanded row
-//------------------------------------------------------------------------------------------------------------
-
-function onRowClick(event) {
-  let target = $(event.currentTarget);
-  let id = parseInt(target.attr("value"));
-
-  // If user clicked on a table that does not contain an id
-  if (isNaN(id)) {
-    return;
-  } else if (event.target.href) {
-    return;
-  } else if (event.target.parentElement.href) {
-    return;
-  }
-
-  // Get rid of any filler rows
-  if (ROW_filler) {
-    $(".filler-row").remove();
-    ROW_filler = null;
-  }
-
-  // User clicked on open parent-row
-  if (target.is(ROW_parent)) {
-    console.log("Closed open row");
-
-    $(".parent-row").removeAttr("class");
-    ROW_parent = null;
-
-    $(".selected-row").remove();
-    ROW_expanded = null;
-    return;
-  }
-
-  // There's an open row somewhere
-  if (ROW_parent !== null || ROW_expanded !== null) {
-    $(".selected-row").remove();
-    $(".parent-row").removeAttr("class");
-
-    console.log("Closed row: " + ROW_last_id);
-
-    ROW_parent = null;
-    ROW_expanded = null;
-  }
-
-  console.log("Clicked on row id: " + id);
-
-  // Define current row as parent target row
-  target.addClass("parent-row");
-  ROW_parent = target;
-  ROW_last_id = id;
-
-  // Load history data
-  if (id in HISTORY_DATA) {
-    console.log("History source: local");
-    buildExpandedRow(id);
-  } else {
-    console.log("History source: remote");
-
-    // Display a filler row
-    displayFillerRow();
-    makeHistoryRequest(id);
-  }
-}
-
-function displayFillerRow() {
-  let template = `
-  <tr class='filler-row'><td colspan='100'>
-    <div class="d-flex justify-content-center">
-      <div class="buffering m-2"></div>
-    </div>
-  </td></tr>
-  `.trim();
-
-  ROW_filler = $(template);
-  ROW_parent.after(ROW_filler);
-}
-
-function makeHistoryRequest(id) {
-  let request = $.ajax({
-    url: "https://api.poe.watch/item.php",
-    data: {id: id},
-    type: "GET",
-    async: true,
-    dataTypes: "json"
-  });
-
-  request.done(function(payload) {
-    if (ROW_filler) {
-      $(".filler-row").remove();
-      ROW_filler = null;
-    }
-    
-    let tmp = {};
-
-    // Make league data accessible through league name
-    for (let i = 0; i < payload.leagues.length; i++) {
-      let leagueData = payload.leagues[i];
-      tmp[leagueData.leagueName] = leagueData;
-    }
-
-    HISTORY_DATA[id] = tmp;
-
-    buildExpandedRow(id);
-  });
-}
-
-function formatHistory(leaguePayload) {
-  let keys = [];
-  let vals = {
-    mean:     [],
-    median:   [],
-    mode:     [],
-    quantity: []
-  };
-
-  // Skip Hardcore (id 1) and Standard (id 2)
-  if (leaguePayload.leagueId > 2) {
-    // Because javascript is "special"
-    let size = Object.keys(leaguePayload.history).length;
-
-    // Convert date strings into dates
-    let endDate = new Date(leaguePayload.leagueEnd);
-    let startDate = new Date(leaguePayload.leagueStart);
-
-    // Get difference in days between the two dates
-    let timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
-    let dateDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    
-    // Bloat if less entries than league duration
-    for (let i = 0; i < dateDiff - size; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-
-      keys.push(null);
-    }
-
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        keys.push(formatDate(key));
-
-        if (leaguePayload.history[key] === null) {
-          vals.mean     .push(0);
-          vals.median   .push(0);
-          vals.mode     .push(0);
-          vals.quantity .push(0);
-        } else {
-          vals.mean     .push(leaguePayload.history[key].mean     );
-          vals.median   .push(leaguePayload.history[key].median   );
-          vals.mode     .push(leaguePayload.history[key].mode     );
-          vals.quantity .push(leaguePayload.history[key].quantity );
-        }
-      }
-    }
-  } else {
-    let oldestDate = new Date();
-    oldestDate.setDate(oldestDate.getDate() - 120);
-    let oldDate = new Date(Object.keys(leaguePayload.history)[0]);
-
-    let timeDiff = Math.abs(oldDate.getTime() - oldestDate.getTime());
-    let diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
-
-    // For development
-    if (diffDays > 120) diffDays = 120;
-
-    for (let i = 0; i < diffDays; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-
-      keys.push(null);
-    }
-
-    // Grab values
-    for (var key in leaguePayload.history) {
-      if (leaguePayload.history.hasOwnProperty(key)) {
-        if (leaguePayload.history[key] === null) {
-          vals.mean     .push(null);
-          vals.median   .push(null);
-          vals.mode     .push(null);
-          vals.quantity .push(null);
-
-          keys.push(null);
-        } else {
-          vals.mean     .push(leaguePayload.history[key].mean     );
-          vals.median   .push(leaguePayload.history[key].median   );
-          vals.mode     .push(leaguePayload.history[key].mode     );
-          vals.quantity .push(leaguePayload.history[key].quantity );
-          
-          keys.push(formatDate(key));
-        }
-      }
-    }
-  }
-
-  // Return generated data
-  return {
-    'keys': keys,
-    'vals': vals
-  }
-}
-
-function buildExpandedRow(id) {
-  // Get list of past leagues available for the item
-  let leagues = getItemHistoryLeagues(id);
-
-  if (leagues.length < 1) {
-    return;
-  }
-
-  // Get league-specific data pack
-  let leaguePayload = HISTORY_DATA[id][FILTER.league];
-  HISTORY_LEAGUE = FILTER.league;
-
-  // Create jQuery object based on data from request and set gvar
-  ROW_expanded = createExpandedRow();
-  createCharts(ROW_expanded);
-  fillChartData(leaguePayload);
-  createHistoryLeagueSelectorFields(ROW_expanded, leagues, FILTER.league);
-
-  // Place jQuery object in table
-  ROW_parent.after(ROW_expanded);
-
-  // Create event listener for league selector
-  createExpandedRowListeners(id, ROW_expanded);
-}
-
-function setDetailsTableValues(expandedRow, leaguePayload) {
-  $("#details-table-mean",    expandedRow).html(  formatNum(leaguePayload.mean)      );
-  $("#details-table-median",  expandedRow).html(  formatNum(leaguePayload.median)    );
-  $("#details-table-mode",    expandedRow).html(  formatNum(leaguePayload.mode)      );
-  $("#details-table-count",   expandedRow).html(  formatNum(leaguePayload.count)     );
-  $("#details-table-1d",      expandedRow).html(  formatNum(leaguePayload.quantity)  );
-  $("#details-table-exalted", expandedRow).html(  formatNum(leaguePayload.exalted)   );
-}
-
-function createCharts(expandedRow) {
-  var dataPlugin = {
-    beforeUpdate: function(chart) {
-      // Don't run if data has not yet been initialized
-      if (chart.data.data.length < 1) return;
-
-      var keys = chart.data.data.keys;
-      var vals = chart.data.data.vals;
-
-      chart.data.labels = keys;
-
-      switch (HISTORY_DATASET) {
-        case 1: chart.data.datasets[0].data = vals.mean;      break;
-        case 2: chart.data.datasets[0].data = vals.median;    break;
-        case 3: chart.data.datasets[0].data = vals.mode;      break;
-        case 4: chart.data.datasets[0].data = vals.quantity;  break;
-      }
-    }
-  };
-
-  var gradientLinePlugin = {
-    beforeDatasetUpdate: function(chart) {
-      if (!chart.width) return;
-
-      // Create the linear gradient  chart.scales['x-axis-0'].width
-      var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
-
-      gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
-      gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
-
-      // Assign the gradient to the dataset's border color.
-      chart.data.datasets[0].borderColor = gradient;
-    }
-  };
-
-  let settings = {
-    plugins: [dataPlugin, gradientLinePlugin],
-    type: "line",
-    data: {
-      data: [],
-      labels: [],
-      datasets: [{
-        data: [],
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: "rgba(255, 255, 255, 0.5)",
-        borderWidth: 3,
-        lineTension: 0.4,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      title: {display: false},
-      layout: {padding: 0},
-      legend: {display: false},
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {duration: 0},
-      hover: {animationDuration: 0},
-      responsiveAnimationDuration: 0,
-      tooltips: {
-        intersect: false,
-        mode: "index",
-        callbacks: {
-          title: function(tooltipItem, data) {
-            let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-            return price ? price : "No data";
-          },
-          label: function(tooltipItem, data) {
-            return data['labels'][tooltipItem['index']];
-          }
-        },
-        backgroundColor: '#fff',
-        titleFontSize: 16,
-        titleFontColor: '#222',
-        bodyFontColor: '#444',
-        bodyFontSize: 14,
-        displayColors: false,
-        borderWidth: 1,
-        borderColor: '#aaa'
-      },
-      scales: {
-        yAxes: [{
-          ticks: {
-            beginAtZero: true,
-            padding: 0
-          }
-        }],
-        xAxes: [{
-          ticks: {
-            callback: function(value, index, values) {
-              return (value ? value : '');
-            },
-            maxRotation: 0,
-            padding: 0
-          }
-        }]
-      }
-    }
-  }
-
-  CHART_HISTORY = new Chart($("#chart-past", expandedRow), settings);
-}
-
-function fillChartData(leaguePayload) {
-   // Pad history with leading nulls
-   let formattedHistory = formatHistory(leaguePayload);
-
-   // Assign history chart datasets
-   CHART_HISTORY.data.data = formattedHistory;
-   CHART_HISTORY.update();
-  
-  // Set data in details table
-  setDetailsTableValues(ROW_expanded, leaguePayload);
-}
-
-function createHistoryLeagueSelectorFields(expandedRow, leagues, selectedLeague) {
-  let buffer = "";
-
-  for (let i = 0; i < leagues.length; i++) {
-    let display;
-
-    if (leagues[i].display) {
-      display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
-    } else {
-      display = leagues[i].active ? leagues[i].name : "● " + leagues[i].name;
-    }
-
-    buffer += "<option value='{{value}}' {{selected}}>{{name}}</option>"
-      .replace("{{selected}}",  (selectedLeague === leagues[i].name ? "selected" : ""))
-      .replace("{{value}}",     leagues[i].name)
-      .replace("{{name}}",      display);
-  }
-
-  $("#history-league-selector", expandedRow).append(buffer);
-}
-
-function createExpandedRow() {
-  // Define the base template
-  let template = `
-  <tr class='selected-row'><td colspan='100'>
-    <div class='row m-1'>
-      <div class='col-sm d-flex mt-2'>
-        <h4 class='m-0 mr-2'>League</h4>
-        <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mt-2'>
-      <div class='col d-flex'>
-        <table class="table table-sm details-table mw-item-dTable mr-4">
-          <tbody>
-            <tr>
-              <td class='nowrap w-100'>Mean</td>
-              <td class='nowrap'>{{chaosContainter}}<span id='details-table-mean'></span></td>
-            </tr>
-            <tr>
-              <td class='nowrap w-100'>Median</td>
-              <td class='nowrap'>{{chaosContainter}}<span id='details-table-median'></span></td>
-            </tr>
-            <tr>
-              <td class='nowrap w-100'>Mode</td>
-              <td class='nowrap'>{{chaosContainter}}<span id='details-table-mode'></span></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <table class="table table-sm details-table mw-item-dTable">
-          <tbody>
-            <tr>
-              <td class='nowra pw-100'>Total amount listed</td>
-              <td class='nowrap'><span id='details-table-count'></span></td>
-            </tr>
-            <tr>
-              <td class='nowrap w-100'>Listed every 24h</td>
-              <td class='nowrap'><span id='details-table-1d'></span></td>
-            </tr>
-            <tr>
-              <td class='nowrap w-100'>Price in exalted</td>
-              <td class='nowrap'>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <hr>
-    <div class='row m-1 mb-3'>
-      <div class='col-sm'>
-        <h4>Past data</h4>
-        <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-          <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-          <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
-        </div>
-        <div class='chart-large'><canvas id="chart-past"></canvas></div>
-      </div>
-    </div>
-  </td></tr>
-  `.trim();
-
-  let containterTemplate = "<span class='img-container img-container-xs text-center mr-1'><img src={{img}}></span>";
-  let chaosContainer = containterTemplate.replace("{{img}}", ICON_CHAOS);
-  let exaltedContainer = containterTemplate.replace("{{img}}", ICON_EXALTED);
-
-  // :thinking:
-  template = template
-    .replace("{{chaosContainter}}",   chaosContainer)
-    .replace("{{chaosContainter}}",   chaosContainer)
-    .replace("{{chaosContainter}}",   chaosContainer)
-    .replace("{{exaltedContainter}}", exaltedContainer);
-  
-  // Convert into jQuery object and return
-  return $(template);
-}
-
-function createExpandedRowListeners(id, expandedRow) {
-  $("#history-league-selector", expandedRow).change(function(){
-    HISTORY_LEAGUE = $(":selected", this).val();
-
-    // Get the payload associated with the selected league
-    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
-    fillChartData(leaguePayload);
-  });
-
-  $("#history-dataset-radio", expandedRow).change(function(){
-    HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
-
-    // Get the payload associated with the selected league
-    let leaguePayload = HISTORY_DATA[id][HISTORY_LEAGUE];
-    fillChartData(leaguePayload);
-  });
-}
-
-function getItemHistoryLeagues(id) {
-  // Get list of past leagues available for the item
-  let leagues = [];
-
-  for (var key in HISTORY_DATA[id]) {
-    if (HISTORY_DATA[id].hasOwnProperty(key)) {
-      leagues.push({
-        name: key,
-        display: HISTORY_DATA[id][key].leagueDisplay,
-        active: HISTORY_DATA[id][key].leagueActive
-      });
-    }
-  }
-
-  return leagues;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -766,12 +1019,27 @@ function makeGetRequest(league, category) {
 
 function parseRequest(json) {
   let items = new Map();
+  let categories = [];
 
   // Loop though array, creating an associative array based on IDs
   for (let i = 0; i < json.length; i++) {
     const item = json[i];
     items['_' + item.id] = item;
+
+    // Get all unique categories
+    if (categories.indexOf(item.category) === -1) {
+      categories.push(item.category);
+    }
   }
+
+  let builder = categories.length > 1 ? "<option value='all'>All</option>" : "";
+
+  for (let i = 0; i < categories.length; i++) {
+    builder += "<option value='{{value}}'>{{name}}</option>"
+      .replace("{{value}}", categories[i])
+      .replace("{{name}}",  SERVICE_categories[ categories[i] ]);
+  }
+  $("#search-sub").append(builder);
 
   return items;
 }
@@ -805,272 +1073,6 @@ function timedRequestCallback() {
 }
 
 //------------------------------------------------------------------------------------------------------------
-// Item parsing and table HTML generation
-//------------------------------------------------------------------------------------------------------------
-
-function parseItem(item) {
-  // Format name and variant/links badge
-  let nameField = buildNameField(item);
-
-  // Format gem fields
-  let gemFields = buildGemFields(item);
-
-  // Format base fields
-  let baseFields = buildBaseFields(item);
-
-  // Format map fields
-  let mapFields = buildMapFields(item);
-
-  // Format price and sparkline field
-  let priceFields = buildPriceFields(item);
-
-  // Format change field
-  let changeField = buildChangeField(item);
-
-  // Format count badge
-  let quantField = buildQuantField(item);
-
-  let template = `
-    <tr value={{id}}>{{name}}{{gem}}{{base}}{{map}}{{price}}{{change}}{{quant}}</tr>
-  `.trim();
-
-  item.tableData = template
-    .replace("{{id}}",      item.id)
-    .replace("{{name}}",    nameField)
-    .replace("{{gem}}",     gemFields)
-    .replace("{{base}}",    baseFields)
-    .replace("{{map}}",     mapFields)
-    .replace("{{price}}",   priceFields)
-    .replace("{{change}}",  changeField)
-    .replace("{{quant}}",   quantField);
-}
-
-function buildNameField(item) {
-  let template = `
-  <td>
-    <div class='d-flex align-items-center'>
-      <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src="{{icon}}"></span>
-      <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}{{link}}
-    </div>
-  </td>
-  `.trim();
-
-  template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + item.id);
-
-  if (item.icon) {
-    // Use SSL for icons for that sweet, sweet secure site badge
-    item.icon = item.icon.replace("http://", "https://");
-    template = template.replace("{{icon}}", item.icon);
-  } else {
-    template = template.replace("{{icon}}", ICON_MISSING);
-  }
-
-  if (item.frame === 9) {
-    template = template.replace("{{foil}}", "class='item-foil'");
-  } else {
-    template = template.replace("{{foil}}", "");
-  }
-
-  if (FILTER.category === "base") {
-    if (item.var === "shaped") {
-      template = template.replace("{{influence}}", "influence influence-shaper-1x1");
-    } else if (item.var === "elder") {
-      template = template.replace("{{influence}}", "influence influence-elder-1x1");
-    } else {
-      template = template.replace("{{influence}}", "");
-    }
-  } else {
-    template = template.replace("{{influence}}", "");
-  }
-
-  if (FILTER.category === "enchantment") {
-    if (item.var !== null) {
-      let splitVar = item.var.split('-');
-      for (var num in splitVar) {
-        item.name = item.name.replace("#", splitVar[num]);
-      }
-    }
-  }
-  
-  template = template.replace("{{name}}", item.name);
-
-  if (item.type) {
-    let tmp = "<span class='subtext-1'>, " + item.type + "</span>";;
-    template = template.replace("{{type}}", tmp);
-  } else {
-    template = template.replace("{{type}}", "");
-  }
-
-  if (item.links) {
-    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.links + " link</span>";
-    template = template.replace("{{link}}", tmp);
-  } else {
-    template = template.replace("{{link}}", "");
-  }
-
-  if (item.var && FILTER.category !== "enchantment") {
-    let tmp = " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
-    template = template.replace("{{var}}", tmp);
-  } else {
-    template = template.replace("{{var}}", "");
-  }
-
-  return template;
-}
-
-function buildGemFields(item) {
-  // Don't run if item is not a gem
-  if (item.frame !== 4) return "";
-
-  let template = `
-  <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
-  <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
-  <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
-  `.trim();
-
-  template = template.replace("{{lvl}}",      item.lvl);
-  template = template.replace("{{quality}}",  item.quality);
-  
-  if (item.corrupted) {
-    template = template.replace("{{color}}",  "red");
-    template = template.replace("{{corr}}",   "✓");
-  } else {
-    template = template.replace("{{color}}",  "green");
-    template = template.replace("{{corr}}",   "✕");
-  }
-
-  return template;
-}
-
-function buildBaseFields(item) {
-  // Don't run if item is not a gem
-  if (FILTER.category !== "base") return "";
-
-  let displayLvl;
-
-  if (item.var === "elder" || item.var === "shaped") {
-    switch (item.ilvl) {
-      case 68: displayLvl = "68 - 74"; break;
-      case 75: displayLvl = "75 - 82"; break;
-      case 84: displayLvl = "83 - 84"; break;
-      case 85: displayLvl = "85 - 100";     break;
-    }
-  } else {
-    displayLvl = "84";
-  }
-
-  return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
-}
-
-function buildMapFields(item) {
-  // Don't run if item is not a map
-  if (FILTER.category !== "map") {
-    return "";
-  }
-
-  return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + (item.tier ? item.tier : "-") + "</span></td>";
-}
-
-function buildPriceFields(item) {
-  let template = `
-  <td>
-    <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
-  </td>
-  <td>
-    <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
-  </td>
-  `.trim();
-
-  let chaosContainer  = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
-  let exContainer     = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
-  let sparkLine       = buildSparkLine(item);
-
-  template = template.replace("{{sparkline}}",    sparkLine);
-  template = template.replace("{{chaos_price}}",  roundPrice(item.mean));
-  template = template.replace("{{chaos_icon}}",   chaosContainer);
-
-  if (item.exalted >= 1) {
-    template = template.replace("{{ex_icon}}",    exContainer);
-    template = template.replace("{{ex_price}}",   roundPrice(item.exalted));
-  } else {
-    template = template.replace("{{ex_icon}}",    "");
-    template = template.replace("{{ex_price}}",   "");
-  }
-  
-  return template;
-}
-
-function buildSparkLine(item) {
-  if (!item.spark) return "";
-
-  let svgColorClass = item.change > 0 ? "sparkline-green" : "sparkline-orange";
-  let svg = document.createElement("svg");
-  
-  svg.setAttribute("class", "sparkline " + svgColorClass);
-  svg.setAttribute("width", 60);
-  svg.setAttribute("height", 30);
-  svg.setAttribute("stroke-width", 3);
-
-  sparkline(svg, item.spark);
-  
-  return svg.outerHTML;
-}
-
-function buildChangeField(item) {
-  let template = `
-  <td>
-    <span class='badge custom-badge-block custom-badge-{{color}}'>
-      {{percent}}%
-    </span>
-  </td>
-  `.trim();
-
-  let change = 0;
-
-  if (item.change > 999) {
-    change = 999;
-  } else if (item.change < -999) {
-    change = -999;
-  } else {
-    change = Math.round(item.change); 
-  }
-
-  if (change > 100) {
-    template = template.replace("{{color}}", "green");
-  } else if (change < -100) {
-    template = template.replace("{{color}}", "orange");
-  } else if (change > 50) {
-    template = template.replace("{{color}}", "green-lo");
-  } else if (change < -50) {
-    template = template.replace("{{color}}", "orange-lo");
-  } else {
-    template = template.replace("{{color}}", "gray");
-  }
-
-  return template.replace("{{percent}}", change);
-}
-
-function buildQuantField(item) {
-  let template = `
-  <td>
-    <span class='badge custom-badge-block custom-badge-{{color}}'>
-      {{quant}}
-    </span>
-  </td>
-  `.trim();
-
-  if (item.quantity >= 10) {
-    template = template.replace("{{color}}", "gray");
-  } else if (item.quantity >= 5) {
-    template = template.replace("{{color}}", "orange");
-  } else {
-    template = template.replace("{{color}}", "red");
-  }
-
-  return template.replace("{{quant}}", item.quantity);
-}
-
-//------------------------------------------------------------------------------------------------------------
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
 
@@ -1084,42 +1086,6 @@ function formatNum(num) {
   if (num === null) {
     return 'Unavailable';
   } else return numberWithCommas(Math.round(num * 100) / 100);
-}
-
-function roundPrice(price) {
-  const numberWithCommas = (x) => {
-    var parts = x.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join(".");
-  }
-
-  return numberWithCommas(Math.round(price * 100) / 100);
-}
-
-function formatDate(date) {
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-
-  let s = new Date(date);
-  return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
-}
-
-function getAllDays(length) {
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-  var a = [];
-  
-  for (let index = length; index > 1; index--) {
-    var s = new Date();
-    var n = new Date(s.setDate(s.getDate() - index))
-    a.push(s.getDate() + " " + MONTH_NAMES[s.getMonth()]);
-  }
-  
-  a.push("Atm");
-
-  return a;
 }
 
 function getCookie(cname) {
@@ -1142,16 +1108,12 @@ function getCookie(cname) {
   return "";
 }
 
-function toTitleCase(str) {
-  return str.replace(/\w\S*/g, function(txt){
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-  });
-}
-
 function updateQueryString(key, value) {
   switch (key) {
     case "confidence": value = value === false  ? null : value;   break;
     case "search":     value = value === ""     ? null : value;   break;
+    case "rarity":     value = value === "all"  ? null : value;   break;
+    case "links":      value = value === "all"  ? null : value;   break;
     case "sub":        value = value === "all"  ? null : value;   break;
     default:           break;
   }
@@ -1210,14 +1172,21 @@ function sortResults(items) {
       if ( FILTER.parseAmount < 0 || count < FILTER.parseAmount ) {
         // If item has not been parsed, parse it 
         if ( !('tableData' in items[key]) ) {
-          parseItem(items[key]);
+          items[key].tableData = new ItemRow(items[key]);
         }
 
         // Append generated table data to buffer
-        buffer += items[key].tableData;
+        buffer += items[key].tableData.row;
         count++;
       }
     }
+  }
+
+  $(".buffering-msg").remove();
+
+  if (count < 1) {
+    let msg = "<div class='buffering-msg align-self-center mb-2'>No results</div>";
+    $(".buffering").after(msg);
   }
 
   let loadAllBtn = $("#button-showAll");
@@ -1280,11 +1249,6 @@ function checkHideItem(item) {
     if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
     if (FILTER.gemCorrupted !== null && item.corrupted != FILTER.gemCorrupted) return true;
 
-  } else if (FILTER.category === "currency") {
-    if (item.frame === 3 && FILTER.sub === "all") {
-      // Hide harbinger pieces under category 'all'
-      return true;
-    }
   } else if (FILTER.category === "map") {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {

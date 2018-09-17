@@ -109,10 +109,10 @@ class FormGen {
         <input type='radio' name='rarity' value='all'>Both
       </label>
       <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='3'>Unique
+        <input type='radio' name='rarity' value='unique'>Unique
       </label>
       <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='9' checked>Relic
+        <input type='radio' name='rarity' value='relic' checked>Relic
       </label>
     </div>
   </div>";
@@ -161,21 +161,19 @@ function CheckAndGetCategoryParam() {
   return $_GET["category"];
 }
 
-// Get list of child categories and their display names from DB
-function GetCategories($pdo, $category) {
-  $query = "SELECT cc.name, cc.display
-    FROM category_child AS cc
-    JOIN category_parent AS cp
-    ON cp.id = cc.id_cp
-    WHERE cp.name = ?";
+// Get all available category relations
+function GetCategoryTranslations($pdo) {
+  $query = "SELECT name, display FROM category_child
+  UNION
+  SELECT name, display FROM category_parent";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$category]);
+  $stmt->execute();
 
   $payload = array();
 
   while ($row = $stmt->fetch()) {
-    $payload[] = array($row["name"], $row["display"]);
+    $payload[ $row['name'] ] = $row['display'];
   }
 
   return $payload;
@@ -200,18 +198,6 @@ function GetLeagues($pdo) {
   }
 
   return $payload;
-}
-
-// Add category-specific selector fields to sub-category selector
-function AddSubCategorySelectors($categories) {
-  echo "<option value='all'>All</option>";
-
-  foreach ($categories as $entry) {
-    $value = $entry[0];
-    $display = $entry[1] ? $entry[1] : ucwords($entry[0]);
-
-    echo "<option value='$value'>$display</option>";
-  }
 }
 
 // Add league select fields to second navbar
