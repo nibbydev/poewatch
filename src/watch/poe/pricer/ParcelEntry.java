@@ -1,5 +1,7 @@
 package watch.poe.pricer;
 
+import watch.poe.Config;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -40,7 +42,7 @@ public class ParcelEntry {
         var = resultSet.getString("var");
         icon = resultSet.getString("icon");
 
-        exalted = Math.round(exalted * 1000.0) / 1000.0;
+        exalted = Math.round(exalted * Config.pricePrecision) / Config.pricePrecision;
 
         // Get data that might be null
         try {

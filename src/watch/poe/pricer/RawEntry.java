@@ -1,5 +1,7 @@
 package watch.poe.pricer;
 
+import watch.poe.Config;
+
 /**
  * The default format that new entries are stored as before uploading to database
  */
@@ -58,8 +60,9 @@ public class RawEntry {
     // Getters and Setters
     //------------------------------------------------------------------------------------------------------------
 
-    public String getPriceAsRoundedString() {
-        return String.format("%.4f", price);
+
+    public String getPrice() {
+        return Config.decimalFormat.format(price);
     }
 
     public void setAccountName(String accountName) {

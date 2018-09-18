@@ -111,12 +111,12 @@ public class ItemParser {
             base.setTypeLine(typeLineOverride);
 
             priceType = "Chaos Orb";
-            price = (Math.round((1 / tmpPrice) * Config.item_pricePrecision) / Config.item_pricePrecision);
+            price = (Math.round((1 / tmpPrice) * Config.pricePrecision) / Config.pricePrecision);
 
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
-            price = Math.round(tmpPrice * Config.item_pricePrecision) / Config.item_pricePrecision;
+            price = Math.round(tmpPrice * Config.pricePrecision) / Config.pricePrecision;
             priceType = Main.RELATIONS.getCurrencyAliasToName().get(noteList[2]);
         }
     }
@@ -142,7 +142,7 @@ public class ItemParser {
                 return;
             }
 
-            price = Math.round(price * chaosValue * Config.item_pricePrecision) / Config.item_pricePrecision;
+            price = Math.round(price * chaosValue * Config.pricePrecision) / Config.pricePrecision;
             priceType = "Chaos Orb";
         }
 

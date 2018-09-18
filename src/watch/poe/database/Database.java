@@ -653,7 +653,7 @@ public class Database {
                 for (RawEntry rawEntry : entrySet) {
                     statement.setInt(1, rawEntry.getLeagueId());
                     statement.setInt(2, rawEntry.getItemId());
-                    statement.setString(3, rawEntry.getPriceAsRoundedString());
+                    statement.setString(3, rawEntry.getPrice());
                     statement.setString(4, rawEntry.getAccountName());
                     statement.addBatch();
 
@@ -769,7 +769,7 @@ public class Database {
     public boolean calculateMean() {
         String query =  "UPDATE league_items_rolling AS i " +
                         "    JOIN (" +
-                        "        SELECT id_l, id_d, TRUNCATE(IFNULL(AVG(price), 0.0), 4) AS avg " +
+                        "        SELECT id_l, id_d, TRUNCATE(IFNULL(AVG(price), 0.0), ?) AS avg " +
                         "        FROM league_entries " +
                         "        WHERE approved = 1 " +
                         "        GROUP BY id_l, id_d " +
@@ -779,8 +779,9 @@ public class Database {
         try {
             if (connection.isClosed()) return false;
 
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, Config.precision);
+                statement.executeUpdate();
             }
 
             connection.commit();
@@ -897,14 +898,15 @@ public class Database {
                         "    JOIN data_itemData AS did ON i2.id_d = did.id " +
                         "    WHERE did.frame = 5 AND did.name = 'Exalted Orb' " +
                         ") AS exPrice ON i1.id_l = exPrice.id_l " +
-                        "SET i1.exalted = TRUNCATE(i1.mean / exPrice.mean, 4) " +
+                        "SET i1.exalted = TRUNCATE(i1.mean / exPrice.mean, ?) " +
                         "WHERE i1.mean > 0; ";
 
         try {
             if (connection.isClosed()) return false;
 
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, Config.precision);
+                statement.executeUpdate();
             }
 
             connection.commit();
