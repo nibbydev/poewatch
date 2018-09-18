@@ -1035,13 +1035,17 @@ function parseRequest(json) {
   }
 
   let builder = categories.length > 1 ? "<option value='all'>All</option>" : "";
-
+  categories.sort();
+  
   for (let i = 0; i < categories.length; i++) {
     builder += "<option value='{{value}}'>{{name}}</option>"
       .replace("{{value}}", categories[i])
       .replace("{{name}}",  SERVICE_categories[ categories[i] ]);
   }
-  $("#search-sub").append(builder);
+
+  let selector = $("#search-sub");
+  selector.children().remove();
+  selector.append(builder);
 
   return items;
 }
