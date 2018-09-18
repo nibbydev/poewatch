@@ -1009,6 +1009,8 @@ function makeGetRequest(league, category) {
   });
 
   request.fail(function(response) {
+    ITEMS = {};
+
     $(".buffering-msg").remove();
 
     let buffering = $(".buffering");

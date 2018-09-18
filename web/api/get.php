@@ -64,7 +64,7 @@ function get_data_rolling($pdo, $league, $category) {
 function get_data_inactive($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.exalted, 
-    i.count, 0 AS quantity, 
+    i.count, i.quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -124,7 +124,7 @@ function get_data_rolling_relic($pdo, $league) {
 function get_data_inactive_relic($pdo, $league) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.exalted, 
-    i.count, 0 AS quantity, 
+    i.count, i.quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 

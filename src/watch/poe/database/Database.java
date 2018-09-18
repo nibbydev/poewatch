@@ -1295,12 +1295,26 @@ public class Database {
                         "  ON   l.id = i.id_l " +
                         "WHERE  l.active = 0 ";
 
+        String query3 = "UPDATE league_items_inactive AS i " +
+                        "JOIN ( " +
+                        "  SELECT  id, TIMESTAMPDIFF( " +
+                        "                DAY, " +
+                        "                STR_TO_DATE(start, '%Y-%m-%dT%H:%i:%sZ'), " +
+                        "                STR_TO_DATE(end,   '%Y-%m-%dT%H:%i:%sZ') " +
+                        "              ) AS diff " +
+                        "  FROM    data_leagues " +
+                        "  WHERE   active = 0 " +
+                        "  HAVING  diff IS NOT NULL " +
+                        ") AS l ON i.id_l = l.id " +
+                        "SET i.quantity = FLOOR(i.count / l.diff) ";
+
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
                 statement.executeUpdate(query1);
                 statement.executeUpdate(query2);
+                statement.executeUpdate(query3);
             }
 
             connection.commit();

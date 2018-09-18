@@ -65,6 +65,11 @@ function GenCatMenuHTML() {
       "name"  => "Accessories"
     ),
     array(
+      "href"  => "prices?category=relic",
+      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Rings/MoonstoneRingUnique.png?scale=1&w=1&h=1&relic=1",
+      "name"  => "All relics"
+    ),
+    array(
       "href"  => "prices?category=armour",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Armours/Gloves/AtzirisAcuity.png?scale=1&w=1&h=1",
       "name"  => "Armour"
@@ -113,11 +118,6 @@ function GenCatMenuHTML() {
       "href"  => "prices?category=prophecy",
       "icon"  => "https://web.poecdn.com/image/Art/2DItems/Currency/ProphecyOrbRed.png?scale=1&w=1&h=1",
       "name"  => "Prophecy"
-    ),
-    array(
-      "href"  => "prices?category=relic",
-      "icon"  => "https://web.poecdn.com/image/Art/2DItems/Belts/Headhunter.png?scale=1&w=2&h=1&relic=1",
-      "name"  => "All relics"
     ),
     array(
       "href"  => "prices?category=weapon",
