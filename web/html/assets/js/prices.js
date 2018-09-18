@@ -874,12 +874,25 @@ function defineListeners() {
     sortResults(ITEMS);
   });
   
+  /*
   // Item links
   $("#select-links").on("change", function(){
     FILTER.links = $(":selected", this).val();
     console.log("Link filter: " + FILTER.links);
     updateQueryString("links", FILTER.links);
-    if (FILTER.links ===  "all") FILTER.links = null;
+    if      (FILTER.links ===  "all") FILTER.links = null;
+    else if (FILTER.links === "none") FILTER.links = 0;
+    else FILTER.links = parseInt(FILTER.links);
+    sortResults(ITEMS);
+  });
+  */
+
+  // Item links
+  $("#radio-links").on("change", function(){
+    FILTER.links = $(":checked", this).val();
+    console.log("Link filter: " + FILTER.links);
+    updateQueryString("links", FILTER.links);
+    if      (FILTER.links ===  "all") FILTER.links = null;
     else if (FILTER.links === "none") FILTER.links = 0;
     else FILTER.links = parseInt(FILTER.links);
     sortResults(ITEMS);

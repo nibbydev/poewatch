@@ -90,6 +90,7 @@ class FormGen {
     </select>
   </div>";
 
+  /*
   private static $form_links = "
   <div class='mr-3 mb-2'>
     <h4>Links</h4>
@@ -100,19 +101,39 @@ class FormGen {
       <option value='6'>6 Links</option>
     </select>
   </div>";
+  */
+
+  private static $form_links = "
+  <div class='mr-3 mb-2'>
+    <h4>Links</h4>
+    <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-links'>
+      <label class='btn btn-outline-dark active'>
+        <input type='radio' name='links' value='all' checked>All
+      </label>
+      <label class='btn btn-outline-dark'>
+        <input type='radio' name='links' value='none'>None
+      </label>
+      <label class='btn btn-outline-dark'>
+        <input type='radio' name='links' value='5'>5L
+      </label>
+      <label class='btn btn-outline-dark'>
+        <input type='radio' name='links' value='6'>6L
+      </label>
+    </div>
+  </div>";
 
   private static $form_rarity = "
   <div class='mr-3 mb-2'>
     <h4>Rarity</h4>
     <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-rarity'>
       <label class='btn btn-outline-dark active'>
-        <input type='radio' name='rarity' value='all'>Both
+        <input type='radio' name='rarity' value='all' checked>Both
       </label>
       <label class='btn btn-outline-dark'>
         <input type='radio' name='rarity' value='unique'>Unique
       </label>
       <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='relic' checked>Relic
+        <input type='radio' name='rarity' value='relic'>Relic
       </label>
     </div>
   </div>";
