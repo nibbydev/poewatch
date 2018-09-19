@@ -18,9 +18,9 @@ function check_league($pdo, $league) {
   $query = "SELECT l.id, l.active
   FROM data_leagues AS l
   JOIN (
-    SELECT DISTINCT id_l FROM league_history_daily_rolling
+    SELECT DISTINCT id_l FROM league_items_rolling
     UNION  DISTINCT
-    SELECT DISTINCT id_l FROM league_history_daily_inactive
+    SELECT DISTINCT id_l FROM league_items_inactive
   ) AS leagues ON l.id = leagues.id_l
   WHERE l.name = ?
   LIMIT 1";
