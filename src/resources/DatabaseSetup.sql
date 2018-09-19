@@ -2,15 +2,15 @@
 -- Initial configuration
 -- --------------------------------------------------------------------------------------------------------------------
 
-SET time_zone = "+02:00";
+SET time_zone = "+00:00";
 
 --
--- Database: ps5
+-- Database: pw
 --
-DROP DATABASE IF EXISTS ps5;
-CREATE DATABASE IF NOT EXISTS ps5 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+DROP DATABASE IF EXISTS pw;
+CREATE DATABASE IF NOT EXISTS pw DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE ps5;
+USE pw;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables

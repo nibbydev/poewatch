@@ -12,5 +12,5 @@ ErrorDocument 404 /html/error.php
 
 AuthType Basic
 AuthName "Password Protected Area"
-AuthUserFile /home/ps/http/html/.htpasswd
+AuthUserFile /home/pw/http/html/.htpasswd
 Require valid-user

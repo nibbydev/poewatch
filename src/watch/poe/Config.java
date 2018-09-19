@@ -14,7 +14,7 @@ public class Config {
     public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true&useUnicode=true&character_set_server=utf8mb4";
     public static final String db_username = "root";
     private static final String db_password = "";
-    public static final String db_database = "ps5";
+    public static final String db_database = "pw";
 
     public static String getDb_password() {
         return db_password;
