@@ -1,22 +1,53 @@
 <?php
-header("Content-Type: application/json");
-include_once ( "../details/pdo.php" );
+function get_data($pdo) {
+  $query = "SELECT 
+    did.id, did.name, did.type, did.frame, 
+    did.tier, did.lvl, did.quality, did.corrupted, 
+    did.links, did.var, did.icon, 
+    cc.id AS category
+  FROM data_itemData AS did 
+  LEFT JOIN category_child AS cc ON cc.id = did.id_cc";
 
-$query = "SELECT 
-  did.id, did.name, did.type, did.frame, 
-  did.tier, did.lvl, did.quality, did.corrupted, 
-  did.links, did.var, did.icon, 
-  cp.name AS cp, cc.name AS cc 
-FROM data_itemData AS did 
-LEFT JOIN category_parent AS cp ON cp.id = did.id_cp 
-LEFT JOIN category_child AS cc ON cc.id = did.id_cc";
+  $stmt = $pdo->prepare($query);
+  $stmt->execute();
 
-$stmt = $pdo->query($query);
-
-$payload = array();
-
-while ($row = $stmt->fetch()) {
-  $payload[] = $row;
+  return $stmt;
 }
 
-echo json_encode($payload);
+function parse_data($stmt) {
+  $payload = array();
+
+  while ($row = $stmt->fetch()) {
+    $tmp = array(
+      'id'        => $row['id'],
+      'name'      => $row['name'],
+      'type'      => $row['type'],
+      'frame'     => $row['frame'],
+      'tier'      => $row['tier'],
+      'lvl'       => $row['lvl'],
+      'quality'   => $row['quality'],
+      'corrupted' => $row['corrupted'],
+      'links'     => $row['links'],
+      'var'       => $row['var'],
+      'icon'      => $row['icon'],
+      'category'  => $row['category'],
+    );
+    
+    $payload[] = $tmp;
+  }
+
+  return $payload;
+}
+
+// Define content type
+header("Content-Type: application/json");
+
+// Connect to database
+include_once ( "../details/pdo.php" );
+
+// Get database entries
+$stmt = get_data($pdo);
+$data = parse_data($stmt);
+
+// Display generated data
+echo json_encode($data, JSON_PRETTY_PRINT);

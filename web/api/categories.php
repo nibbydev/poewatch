@@ -21,7 +21,6 @@ function parse_data($stmt) {
 
   while ($row = $stmt->fetch()) {
     $tmp = array(
-      'id'      => $row['parentId'],
       'name'    => $row['parentName'],
       'display' => $row['parentDisplay'],
       'members'       => array()
