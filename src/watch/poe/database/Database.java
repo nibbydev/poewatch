@@ -925,13 +925,13 @@ public class Database {
      */
     public boolean calcQuantity() {
         String query =  "UPDATE league_items_rolling AS i  " +
-                        "JOIN ( " +
-                        "    SELECT id_l, id_d, IFNULL(SUM(inc), 0) AS quantity " +
-                        "    FROM league_history_hourly_rolling " +
+                        "LEFT JOIN ( " +
+                        "    SELECT id_l, id_d, SUM(inc) AS quantity " +
+                        "    FROM league_history_hourly_quantity " +
                         "    WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "    GROUP BY id_l, id_d " +
                         ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "SET i.quantity = h.quantity ";
+                        "SET i.quantity = IFNULL(h.quantity, 0) ";
 
         try {
             if (connection.isClosed()) return false;
@@ -1169,21 +1169,21 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Copies data from table `league_items_rolling` to table `league_history_hourly_rolling` every hour
+     * Copies data from table `league_items_rolling` to table `league_history_hourly_quantity` every hour
      * on a rolling basis with a history of 24 hours
      *
      * @return True on success
      */
     public boolean addHourly() {
-        String query =  "INSERT INTO league_history_hourly_rolling ( " +
-                        "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  exalted, count, quantity, inc, `dec`) " +
-                        "SELECT id_l, id_d, volatile, mean, median, mode, " +
-                        "       exalted, count, quantity, inc, `dec` " +
+        String query =  "INSERT " +
+                        "INTO   league_history_hourly_quantity (" +
+                        "       id_l, id_d, inc) " +
+                        "SELECT id_l, id_d, inc " +
                         "FROM   league_items_rolling AS i " +
-                        "JOIN   data_leagues AS l " +
+                        "JOIN   data_leagues         AS l " +
                         "  ON   i.id_l = l.id " +
-                        "WHERE  l.active = 1 ";
+                        "WHERE  l.active = 1 " +
+                        "  AND  i.inc > 0 ";
 
         try {
             if (connection.isClosed()) return false;

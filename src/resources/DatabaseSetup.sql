@@ -253,26 +253,19 @@ CREATE TABLE league_history_daily_rolling (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure league_history_hourly_rolling
+-- Table structure league_history_hourly_quantity
 --
 
-CREATE TABLE league_history_hourly_rolling (
-    id_l      SMALLINT       UNSIGNED NOT NULL,
-    id_d      INT            UNSIGNED NOT NULL,
-    time      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    volatile  TINYINT(1)     UNSIGNED DEFAULT NULL,
-    mean      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    median    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    mode      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    exalted   DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    inc       INT(8)         UNSIGNED DEFAULT NULL,
-    `dec`     INT(8)         UNSIGNED DEFAULT NULL,
-    count     INT(16)        UNSIGNED DEFAULT NULL,
-    quantity  INT(8)         UNSIGNED DEFAULT NULL,
+CREATE TABLE league_history_hourly_quantity (
+    id_l  SMALLINT   UNSIGNED NOT NULL,
+    id_d  INT        UNSIGNED NOT NULL,
+    time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    inc   INT(8)     UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
 
+    INDEX ids  (id_l, id_d),
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -592,8 +585,8 @@ CREATE EVENT remove24
   STARTS '2018-01-01 08:00:03'
   COMMENT 'Clears out entries older than 1 day'
   DO
-    DELETE FROM league_history_hourly_rolling
-    WHERE       time < ADDDATE(NOW(), INTERVAL -24 HOUR);
+    DELETE FROM league_history_hourly_quantity
+    WHERE       time < ADDDATE(NOW(), INTERVAL -25 HOUR);
 
 --
 -- Event configuration remove120
