@@ -1202,8 +1202,8 @@ public class Database {
     }
 
     /**
-     * Copies data from table `league_history_hourly_rolling` to table `league_history_daily_rolling` every day
-     * on a rolling basis with a history of 120 days
+     * Copies data from table `league_items_rolling` to table `league_history_daily_rolling` every 24h
+     * on a rolling basis with a history of 120 days for standard and hardcore
      *
      * @return True on success
      */

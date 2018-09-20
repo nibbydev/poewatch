@@ -606,10 +606,7 @@ CREATE EVENT remove120
   STARTS '2018-01-01 08:00:06'
   COMMENT 'Clears out entries older than 120 days'
   DO
-    DELETE h
-    FROM   league_history_daily_rolling AS h
-    JOIN   data_leagues AS l
-      ON   h.id_l = l.id
-    WHERE  l.id > 2
+    DELETE FROM league_history_daily_rolling
+    WHERE  id_l <= 2
       AND  time < ADDDATE(NOW(), INTERVAL -120 DAY);
 
