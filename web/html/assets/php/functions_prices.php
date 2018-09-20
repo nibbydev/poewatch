@@ -90,34 +90,21 @@ class FormGen {
     </select>
   </div>";
 
-  /*
-  private static $form_links = "
-  <div class='mr-3 mb-2'>
-    <h4>Links</h4>
-    <select class='form-control' id='select-links'>
-      <option value='all' selected>All</option>
-      <option value='none'>None</option>
-      <option value='5'>5 Links</option>
-      <option value='6'>6 Links</option>
-    </select>
-  </div>";
-  */
-
   private static $form_links = "
   <div class='mr-3 mb-2'>
     <h4>Links</h4>
     <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-links'>
       <label class='btn btn-outline-dark active'>
-        <input type='radio' name='links' value='all' checked>All
-      </label>
-      <label class='btn btn-outline-dark'>
-        <input type='radio' name='links' value='none'>None
+        <input type='radio' name='links' value='none' checked>None
       </label>
       <label class='btn btn-outline-dark'>
         <input type='radio' name='links' value='5'>5L
       </label>
       <label class='btn btn-outline-dark'>
         <input type='radio' name='links' value='6'>6L
+      </label>
+      <label class='btn btn-outline-dark'>
+        <input type='radio' name='links' value='all'>All
       </label>
     </div>
   </div>";

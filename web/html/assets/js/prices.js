@@ -880,26 +880,13 @@ function defineListeners() {
     sortResults(ITEMS);
   });
   
-  /*
-  // Item links
-  $("#select-links").on("change", function(){
-    FILTER.links = $(":selected", this).val();
-    console.log("Link filter: " + FILTER.links);
-    updateQueryString("links", FILTER.links);
-    if      (FILTER.links ===  "all") FILTER.links = null;
-    else if (FILTER.links === "none") FILTER.links = 0;
-    else FILTER.links = parseInt(FILTER.links);
-    sortResults(ITEMS);
-  });
-  */
-
   // Item links
   $("#radio-links").on("change", function(){
     FILTER.links = $(":checked", this).val();
     console.log("Link filter: " + FILTER.links);
     updateQueryString("links", FILTER.links);
-    if      (FILTER.links ===  "all") FILTER.links = null;
-    else if (FILTER.links === "none") FILTER.links = 0;
+    if      (FILTER.links === "none") FILTER.links = null;
+    else if (FILTER.links ===  "all") FILTER.links = -1;
     else FILTER.links = parseInt(FILTER.links);
     sortResults(ITEMS);
   });
@@ -1138,7 +1125,7 @@ function updateQueryString(key, value) {
     case "confidence": value = value === false  ? null : value;   break;
     case "search":     value = value === ""     ? null : value;   break;
     case "rarity":     value = value === "all"  ? null : value;   break;
-    case "links":      value = value === "all"  ? null : value;   break;
+    case "links":      value = value === "none" ? null : value;   break;
     case "sub":        value = value === "all"  ? null : value;   break;
     default:           break;
   }
@@ -1258,12 +1245,12 @@ function checkHideItem(item) {
   }
 
   // Hide items with different links
-  if (FILTER.links !== null) {
-    if (FILTER.links > 0) {
-      if (item.links !== FILTER.links) {
-        return true;
-      }
-    } else if (item.links) {
+  if (FILTER.links === null) {
+    if (item.links !== null) {
+      return true;
+    }
+  } else if (FILTER.links > 0) {
+    if (item.links !== FILTER.links) {
       return true;
     }
   }
