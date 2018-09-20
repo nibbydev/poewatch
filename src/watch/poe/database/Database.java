@@ -762,19 +762,64 @@ public class Database {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Calculates mean price for items in table `league_items_rolling` based on approved entries in `league_entries`
+     * Calculates mean, median and mode price for items in table `league_items_rolling` based on approved entries in
+     * `league_entries`
      *
      * @return True on success
      */
-    public boolean calculateMean() {
+    public boolean calculatePrices() {
         String query =  "UPDATE league_items_rolling AS i " +
-                        "    JOIN (" +
-                        "        SELECT id_l, id_d, TRUNCATE(IFNULL(AVG(price), 0.0), ?) AS avg " +
-                        "        FROM league_entries " +
-                        "        WHERE approved = 1 " +
-                        "        GROUP BY id_l, id_d " +
-                        "    ) AS tmp ON tmp.id_l = i.id_l AND tmp.id_d = i.id_d " +
-                        "SET i.mean = tmp.avg ";
+                        "JOIN ( " +
+                        "  SELECT   id_l, id_d, " +
+                        "           AVG(price)        AS mean, " +
+                        "           MEDIAN(price)     AS median, " +
+                        "           stats_mode(price) AS mode " +
+                        "  FROM     league_entries " +
+                        "  WHERE    approved = 1 " +
+                        "  GROUP BY id_l, id_d " +
+                        ") AS    e " +
+                        "  ON    i.id_l = e.id_l " +
+                        "    AND i.id_d = e.id_d " +
+                        "SET     i.mean   = TRUNCATE(e.mean,   ?), " +
+                        "        i.median = TRUNCATE(e.median, ?), " +
+                        "        i.mode   = TRUNCATE(e.mode,   ?); ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, Config.precision);
+                statement.setInt(2, Config.precision);
+                statement.setInt(3, Config.precision);
+                statement.executeUpdate();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            Main.ADMIN.log_("Could not calculate prices", 3);
+            return false;
+        }
+    }
+
+    /**
+     * Calculates median price for items in table `league_items_rolling` based on any entries in `league_entries`
+     *
+     * @return True on success
+     */
+    public boolean calculateVolatileMedian() {
+        String query =  "UPDATE league_items_rolling AS i " +
+                        "JOIN ( " +
+                        "    SELECT   id_l, id_d, " +
+                        "             MEDIAN(price) AS median " +
+                        "    FROM     league_entries " +
+                        "    GROUP BY id_l, id_d " +
+                        ") AS    e " +
+                        "  ON    i.id_l = e.id_l " +
+                        "    AND i.id_d = e.id_d " +
+                        "SET     i.median = TRUNCATE(e.median, ?) " +
+                        "WHERE   volatile = 1 ";
 
         try {
             if (connection.isClosed()) return false;
@@ -788,100 +833,7 @@ public class Database {
             return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate mean", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Calculates median price for items in table `league_items_rolling` based on approved entries in `league_entries`
-     *
-     * @return True on success
-     */
-    public boolean calculateMedian() {
-        String query =  "UPDATE league_items_rolling AS i " +
-                        "JOIN ( " +
-                        "    SELECT id_l, id_d, MEDIAN(price) AS median " +
-                        "    FROM league_entries " +
-                        "    WHERE approved = 1 " +
-                        "    GROUP BY id_l, id_d " +
-                        ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
-                        "SET i.median = e.median ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate median", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Calculates median price for items in table `league_items_rolling` based on any entries in `league_entries`
-     *
-     * @return True on success
-     */
-    public boolean calculateVolatileMedian() {
-        String query =  "UPDATE league_items_rolling AS i " +
-                        "JOIN ( " +
-                        "    SELECT id_l, id_d, MEDIAN(price) AS median " +
-                        "    FROM league_entries " +
-                        "    GROUP BY id_l, id_d " +
-                        ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
-                        "SET i.median = e.median " +
-                        "WHERE volatile = 1 ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate median", 3);
-            return false;
-        }
-    }
-
-    /**
-     * Calculates mode price for items in table `league_items_rolling` based on approved entries in `league_entries`
-     *
-     * @return True on success
-     */
-    public boolean calculateMode() {
-        String query =  "UPDATE league_items_rolling AS i " +
-                        "JOIN ( " +
-                        "    SELECT id_l, id_d, stats_mode(price) AS mode " +
-                        "    FROM league_entries " +
-                        "    WHERE approved = 1 " +
-                        "    GROUP BY id_l, id_d " +
-                        ") AS e ON i.id_l = e.id_l AND i.id_d = e.id_d " +
-                        "SET i.mode = e.mode ";
-
-        try {
-            if (connection.isClosed()) return false;
-
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate mode", 3);
+            Main.ADMIN.log_("Could not calculate volatile median", 3);
             return false;
         }
     }
@@ -892,14 +844,19 @@ public class Database {
      * @return True on success
      */
     public boolean calculateExalted() {
-        String query =  "UPDATE league_items_rolling AS i1 " +
+        String query =  "UPDATE    league_items_rolling AS i " +
                         "JOIN ( " +
-                        "    SELECT i2.id_l, i2.mean FROM league_items_rolling AS i2 " +
-                        "    JOIN data_itemData AS did ON i2.id_d = did.id " +
-                        "    WHERE did.frame = 5 AND did.name = 'Exalted Orb' " +
-                        ") AS exPrice ON i1.id_l = exPrice.id_l " +
-                        "SET i1.exalted = TRUNCATE(i1.mean / exPrice.mean, ?) " +
-                        "WHERE i1.mean > 0; ";
+                        "  SELECT  i.id_l, i.mean " +
+                        "  FROM    league_items_rolling AS i " +
+                        "  JOIN    data_itemData        AS did " +
+                        "    ON    i.id_d = did.id " +
+                        "  WHERE   did.frame = 5 " +
+                        "    AND   did.name = 'Exalted Orb' " +
+                        ") AS      ex " +
+                        "  ON      i.id_l = ex.id_l " +
+                        "SET       i.exalted = TRUNCATE(i.mean / ex.mean, ?) " +
+                        "WHERE     ex.mean > 0 " +
+                        "  AND     i.mean  > 0; ";
 
         try {
             if (connection.isClosed()) return false;
@@ -926,12 +883,14 @@ public class Database {
     public boolean calcQuantity() {
         String query =  "UPDATE league_items_rolling AS i  " +
                         "LEFT JOIN ( " +
-                        "    SELECT id_l, id_d, SUM(inc) AS quantity " +
-                        "    FROM league_history_hourly_quantity " +
-                        "    WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
+                        "    SELECT   id_l, id_d, SUM(inc) AS quantity " +
+                        "    FROM     league_history_hourly_quantity " +
+                        "    WHERE    time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "    GROUP BY id_l, id_d " +
-                        ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "SET i.quantity = IFNULL(h.quantity, 0) ";
+                        ") AS    h " +
+                        "  ON    h.id_l = i.id_l " +
+                        "    AND h.id_d = i.id_d " +
+                        "SET     i.quantity = IFNULL(h.quantity, 0) ";
 
         try {
             if (connection.isClosed()) return false;
@@ -968,8 +927,10 @@ public class Database {
                         "  WHERE     l.active = 1 " +
                         "    AND     i.count  > 1 " +
                         "  GROUP BY  i.id_l, i.id_d " +
-                        ") AS tmp ON i.id_l = tmp.id_l AND i.id_d = tmp.id_d " +
-                        "SET i.spark = tmp.history ";
+                        ") AS    tmp " +
+                        "  ON    i.id_l = tmp.id_l " +
+                        "    AND i.id_d = tmp.id_d " +
+                        "SET     i.spark = tmp.history ";
 
         try {
             if (connection.isClosed()) return false;
@@ -1034,14 +995,16 @@ public class Database {
      * @return True on success
      */
     public boolean updateApproved(){
-        String query =  "UPDATE league_entries AS e " +
-                        "JOIN league_items_rolling AS i ON i.id_l = e.id_l AND i.id_d = e.id_d " +
-                        "SET e.approved = 1 " +
-                        "WHERE e.approved = 0 " +
-                        "    AND (" +
-                        "        i.median = 0 " +
-                        "        OR e.price BETWEEN i.median / i.multiplier AND i.median * i.multiplier " +
-                        "    )";
+        String query =  "UPDATE  league_entries       AS e " +
+                        "JOIN    league_items_rolling AS i " +
+                        "  ON    i.id_l = e.id_l " +
+                        "    AND i.id_d = e.id_d " +
+                        "SET     e.approved = 1 " +
+                        "WHERE   e.approved = 0 " +
+                        "  AND (" +
+                        "    i.median = 0 " +
+                        "    OR e.price BETWEEN i.median / i.multiplier AND i.median * i.multiplier " +
+                        "  )";
 
         try {
             if (connection.isClosed()) return false;
@@ -1240,20 +1203,24 @@ public class Database {
      * @return True on success
      */
     public boolean removeOldItemEntries() {
-        String query =  "DELETE del FROM league_entries AS del " +
-                        "JOIN (" +
-                        "    SELECT id_l, id_d, (" +
-                        "        SELECT e.time" +
-                        "        FROM league_entries AS e" +
-                        "        WHERE e.id_l = d.id_l AND e.id_d = d.id_d" +
-                        "        ORDER BY e.time DESC" +
-                        "        LIMIT 1 OFFSET ?" +
-                        "   ) AS time" +
-                        "    FROM league_entries AS d" +
-                        "    GROUP BY id_l, id_d" +
-                        "    HAVING time IS NOT NULL" +
-                        ") AS tmp " +
-                        "ON del.id_l = tmp.id_l AND del.id_d = tmp.id_d AND del.time <= tmp.time";
+        String query =  "DELETE    del " +
+                        "FROM      league_entries AS del " +
+                        "JOIN ( " +
+                        "  SELECT   id_l, id_d, ( " +
+                        "    SELECT   e.time " +
+                        "    FROM     league_entries AS e " +
+                        "    WHERE    e.id_l = d.id_l " +
+                        "      AND    e.id_d = d.id_d " +
+                        "    ORDER BY e.time DESC " +
+                        "    LIMIT    ?, 1 " +
+                        "  ) AS     time " +
+                        "  FROM     league_entries AS d " +
+                        "  GROUP BY id_l, id_d " +
+                        "  HAVING time IS NOT NULL " +
+                        ") AS      tmp " +
+                        "  ON      del.id_l = tmp.id_l " +
+                        "    AND   del.id_d = tmp.id_d " +
+                        "      AND del.time <= tmp.time; ";
 
         try {
             if (connection.isClosed()) return false;
@@ -1281,8 +1248,7 @@ public class Database {
         String query1 = "INSERT INTO league_items_inactive ( " +
                         "              id_l, id_d, time, " +
                         "              mean, median, mode, " +
-                        "              exalted, count " +
-                        "            )" +
+                        "              exalted, count)" +
                         "SELECT      id_l, id_d, time, " +
                         "            mean, median, mode, " +
                         "            exalted, count " +
