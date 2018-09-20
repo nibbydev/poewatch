@@ -83,7 +83,6 @@ function createCharts() {
     }
   };
 
-  
   let settings = {
     plugins: [dataPlugin, gradientLinePlugin],
     type: "line",
@@ -418,18 +417,19 @@ function formatHistory(leaguePayload) {
   // Grab values
   for (let i = 0; i < leaguePayload.history.length; i++) {
     let element = leaguePayload.history[i];
-    vals.mean     .push(element.mean     );
-    vals.median   .push(element.median   );
-    vals.mode     .push(element.mode     );
-    vals.quantity .push(element.quantity );
+    vals.mean    .push(Math.round(element.mean   * 100) / 100);
+    vals.median  .push(Math.round(element.median * 100) / 100);
+    vals.mode    .push(Math.round(element.mode   * 100) / 100);
+    vals.quantity.push(element.quantity);
 
     keys.push(formatDate(element.time));
   }
 
   // Add current values
-  vals.mean     .push(leaguePayload.mean     );
-  vals.median   .push(leaguePayload.median   );
-  vals.mode     .push(leaguePayload.mode     );
+  vals.mean    .push(Math.round(leaguePayload.mean   * 100) / 100);
+  vals.median  .push(Math.round(leaguePayload.median * 100) / 100);
+  vals.mode    .push(Math.round(leaguePayload.mode   * 100) / 100);
+  vals.quantity.push(leaguePayload.quantity);
   keys.push("Now");
 
   // Return generated data
