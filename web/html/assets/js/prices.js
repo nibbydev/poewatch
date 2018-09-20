@@ -673,7 +673,7 @@ class ExpandedRow {
       mode:     [],
       quantity: []
     };
-  
+
     // Convert date strings into objects
     let oldestDate = new Date(leaguePayload.history[0].time);
     let startDate  = new Date(leaguePayload.league.start);
@@ -731,6 +731,12 @@ class ExpandedRow {
   
       keys.push(ExpandedRow.formatDate(element.time));
     }
+
+    // Add current values
+    vals.mean     .push(leaguePayload.mean     );
+    vals.median   .push(leaguePayload.median   );
+    vals.mode     .push(leaguePayload.mode     );
+    keys.push("Now");
   
     // Return generated data
     return {

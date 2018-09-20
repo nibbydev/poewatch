@@ -917,7 +917,7 @@ public class Database {
         String query =  "UPDATE league_items_rolling AS i " +
                         "JOIN ( " +
                         "  SELECT    i.id_l, i.id_d, " +
-                        "            SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 7) AS history " +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 6) AS history " +
                         "  FROM      league_items_rolling          AS i " +
                         "  JOIN      data_leagues                  AS l " +
                         "    ON      l.id = i.id_l " +

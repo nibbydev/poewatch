@@ -186,10 +186,11 @@ function parse_data($stmt, $active) {
     if ($active) {
       // If there were history entries
       if ( is_null($row['history']) ) {
-        $tmp['spark'] = array(null, null, null, null, null, null, null);
+        $tmp['spark'] = array(null, null, null, null, null, null, $tmp['mean']);
       } else {
         // Convert CSV to array
         $history = array_reverse(explode(',', $row['history']));
+        array_push($history, $tmp['mean']);
 
         // Find total change
         $lastVal = $history[sizeof($history) - 1];

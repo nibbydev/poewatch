@@ -426,6 +426,12 @@ function formatHistory(leaguePayload) {
     keys.push(formatDate(element.time));
   }
 
+  // Add current values
+  vals.mean     .push(leaguePayload.mean     );
+  vals.median   .push(leaguePayload.median   );
+  vals.mode     .push(leaguePayload.mode     );
+  keys.push("Now");
+
   // Return generated data
   return {
     'keys': keys,
