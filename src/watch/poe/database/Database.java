@@ -1066,8 +1066,8 @@ public class Database {
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
-                        "        WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND)" +
-                        "           AND approved = 1" +
+                        "        WHERE approved = 1 " +
+                        "           AND time > ADDDATE(NOW(), INTERVAL -60 SECOND)" +
                         "        GROUP BY id_l, id_d" +
                         "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
                         "SET " +
@@ -1078,8 +1078,8 @@ public class Database {
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
-                        "        WHERE time > ADDDATE(NOW(), INTERVAL -60 SECOND) " +
-                        "           AND approved = 0" +
+                        "        WHERE approved = 0 " +
+                        "           AND time > ADDDATE(NOW(), INTERVAL -60 SECOND) " +
                         "        GROUP BY id_l, id_d" +
                         "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
                         "SET " +
