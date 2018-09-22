@@ -1,9 +1,13 @@
 <?php 
-  include_once ( "../details/pdo.php" );
-  include_once ( "assets/php/functions_prices.php" ); 
-  include_once ( "assets/php/functions.php" );
+  if ( !isset($_GET["category"]) ) {
+    header('Location: prices?category=currency');
+  }
 
-  $SERVICE_category = CheckAndGetCategoryParam();
+  include_once ( "../details/pdo.php" );
+  include_once ( "assets/php/functions.php" );
+  include_once ( "assets/php/functions_prices.php" ); 
+
+  $SERVICE_category = $_GET["category"];
   $SERVICE_categories = GetCategoryTranslations($pdo);
   $SERVICE_leagues = GetLeagues($pdo);
 ?>
@@ -78,8 +82,8 @@
                 </div>
 
                 <div class='ml-auto mr-3'>
-                  <h4>Sort</h4>
-                  <select class="form-control custom-select" id="search-sub"></select>
+                  <h4>Group</h4>
+                  <select class="form-control custom-select" id="search-group"></select>
                 </div>
 
                 <div>

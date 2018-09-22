@@ -20,7 +20,7 @@ function GenNavbar($pdo) {
         <ul class='navbar-nav mr-auto'>";
 
   while ($row = $stmt->fetch()) {
-    $active = explode('?', $_SERVER['REQUEST_URI'])[0] === "/{$row['href']}" ? 'active' : '';
+    $active = explode('?', $_SERVER['REQUEST_URI'])[0] === $row['href'] ? 'active' : '';
     echo "<li class='nav-item'><a class='nav-link $active' href='{$row['href']}'>{$row['display']}</a></li>";
   }
 

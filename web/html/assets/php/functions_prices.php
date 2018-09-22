@@ -160,15 +160,6 @@ class FormGen {
   }
 }
 
-// Checks whether a category param was passed on to the request
-function CheckAndGetCategoryParam() {
-  if ( !isset($_GET["category"]) ) {
-    $_GET["category"] = "currency";
-  }
-  
-  return $_GET["category"];
-}
-
 // Get all available category relations
 function GetCategoryTranslations($pdo) {
   $query = "SELECT name, display FROM category_child

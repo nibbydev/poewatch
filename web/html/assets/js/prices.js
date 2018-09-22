@@ -761,7 +761,7 @@ class ExpandedRow {
 var FILTER = {
   league: null,
   category: null,
-  sub: "all",
+  group: "all",
   showLowConfidence: false,
   links: null,
   rarity: null,
@@ -836,10 +836,10 @@ function defineListeners() {
   });
 
   // Subcategory
-  $("#search-sub").change(function(){
-    FILTER.sub = $(this).find(":selected").val();
-    console.log("Selected sub-category: " + FILTER.sub);
-    updateQueryString("sub", FILTER.sub);
+  $("#search-group").change(function(){
+    FILTER.group = $(this).find(":selected").val();
+    console.log("Selected group: " + FILTER.group);
+    updateQueryString("group", FILTER.group);
     sortResults(ITEMS);
   });
 
@@ -1050,7 +1050,7 @@ function parseRequest(json) {
       .replace("{{name}}",  SERVICE_categories[ categories[i] ]);
   }
 
-  let selector = $("#search-sub");
+  let selector = $("#search-group");
   selector.children().remove();
   selector.append(builder);
 
@@ -1127,7 +1127,7 @@ function updateQueryString(key, value) {
     case "search":     value = value === ""     ? null : value;   break;
     case "rarity":     value = value === "all"  ? null : value;   break;
     case "links":      value = value === "none" ? null : value;   break;
-    case "sub":        value = value === "all"  ? null : value;   break;
+    case "group":      value = value === "all"  ? null : value;   break;
     default:           break;
   }
 
@@ -1233,8 +1233,8 @@ function checkHideItem(item) {
     }
   }
 
-  // Hide sub-categories
-  if (FILTER.sub !== "all" && FILTER.sub !== item.category) {
+  // Hide groups
+  if (FILTER.group !== "all" && FILTER.group !== item.category) {
     return true;
   }
 
