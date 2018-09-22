@@ -804,22 +804,23 @@ public class Database {
     }
 
     /**
-     * Calculates median price for items in table `league_items_rolling` based on any entries in `league_entries`
+     * Calculates median price for volatile items in table `league_items_rolling` based on any entries in
+     * `league_entries`
      *
      * @return True on success
      */
     public boolean calculateVolatileMedian() {
         String query =  "UPDATE league_items_rolling AS i " +
                         "JOIN ( " +
-                        "    SELECT   id_l, id_d, " +
-                        "             MEDIAN(price) AS median " +
-                        "    FROM     league_entries " +
-                        "    GROUP BY id_l, id_d " +
+                        "  SELECT   id_l, id_d, " +
+                        "           MEDIAN(price) AS median " +
+                        "  FROM     league_entries " +
+                        "  GROUP BY id_l, id_d " +
                         ") AS    e " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +
                         "SET     i.median = TRUNCATE(e.median, ?) " +
-                        "WHERE   volatile = 1 ";
+                        "WHERE   i.volatile = 1;";
 
         try {
             if (connection.isClosed()) return false;
@@ -959,14 +960,15 @@ public class Database {
      */
     public boolean updateVolatile() {
         String query1 = "UPDATE league_items_rolling " +
-                        "SET volatile = IF(`dec` > 0 && inc > 0 && `dec` / inc > ?, 1, 0);";
+                        "SET volatile = IF(`dec` > 0 && `dec` >= inc * ?, 1, 0);";
 
-        String query2 = "UPDATE league_entries AS e " +
-                        "JOIN   league_items_rolling AS i " +
-                        "  ON   e.id_d = i.id_d " +
-                        "SET    e.approved = 0 " +
-                        "WHERE  i.volatile = 1 " +
-                        "  AND  e.approved = 1; ";
+        String query2 = "UPDATE  league_entries       AS e " +
+                        "JOIN    league_items_rolling AS i " +
+                        "  ON    e.id_d = i.id_d " +
+                        "    AND e.id_l = i.id_l " +
+                        "SET     e.approved = 0 " +
+                        "WHERE   i.volatile = 1 " +
+                        "  AND   e.approved = 1;";
 
         try {
             if (connection.isClosed()) return false;
