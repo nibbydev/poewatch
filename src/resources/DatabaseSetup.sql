@@ -334,17 +334,6 @@ CREATE TABLE account_history (
     CONSTRAINT `unique` UNIQUE (id_old, id_new)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Table structure account_data
---
-
-CREATE TABLE account_data (
-    id        BIGINT          UNSIGNED PRIMARY KEY,
-    private   TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
-
-    FOREIGN KEY (id) REFERENCES account_accounts (id) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 -- --------------------------------------------------------------------------------------------------------------------
 -- Base values
 -- --------------------------------------------------------------------------------------------------------------------
@@ -603,3 +592,14 @@ CREATE EVENT remove120
     WHERE  id_l <= 2
       AND  time < ADDDATE(NOW(), INTERVAL -120 DAY);
 
+-- --------------------------------------------------------------------------------------------------------------------
+-- User accounts
+-- --------------------------------------------------------------------------------------------------------------------
+
+CREATE USER 'pw_app'@'localhost' IDENTIFIED BY 'password goes here';
+GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
+
+CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
+GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
+
+FLUSH PRIVILEGES;
