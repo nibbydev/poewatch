@@ -1,6 +1,7 @@
 <?php 
   if ( !isset($_GET["category"]) ) {
     header('Location: prices?category=currency');
+    return;
   }
 
   include_once ( "../details/pdo.php" );
@@ -72,23 +73,27 @@
                 <div class='mr-3'>
                   <h4 class='nowrap'>Low count</h4>
                   <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-                    <label class="btn btn-outline-dark active">
-                      <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                    <label class="btn btn-outline-dark <?php if (!isset($_GET["confidence"])) echo "active"; ?>">
+                      <input type="radio" name="confidence" value="false" <?php if (!isset($_GET["confidence"])) echo "checked"; ?>><a>Hide</a>
                     </label>
-                    <label class="btn btn-outline-dark">
-                      <input type="radio" name="confidence" value="1"><a>Show</a>
+                    <label class="btn btn-outline-dark <?php if (isset($_GET["confidence"])) echo "active"; ?>">
+                      <input type="radio" name="confidence" value="true" <?php if (isset($_GET["confidence"])) echo "checked"; ?>><a>Show</a>
                     </label>
                   </div>
                 </div>
 
                 <div class='ml-auto mr-3'>
                   <h4>Group</h4>
-                  <select class="form-control custom-select" id="search-group"></select>
+                  <select class="form-control custom-select" id="search-group">
+                  
+                    <?php GenGroupSelectFields($pdo, $SERVICE_category) ?>
+
+                  </select>
                 </div>
 
                 <div>
                   <h4>Search</h4>
-                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
                 </div>
               </div>
             </div>
