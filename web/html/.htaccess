@@ -1,8 +1,8 @@
 Options -Indexes
 
-ErrorDocument 400 /html/error.php
-ErrorDocument 403 /html/error.php
-ErrorDocument 404 /html/error.php
+ErrorDocument 400 /error.php
+ErrorDocument 403 /error.php
+ErrorDocument 404 /error.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
