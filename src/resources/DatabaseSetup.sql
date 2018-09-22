@@ -2,15 +2,46 @@
 -- Initial configuration
 -- --------------------------------------------------------------------------------------------------------------------
 
-SET time_zone = "+02:00";
+SET time_zone = "+00:00";
 
 --
--- Database: ps5
+-- Database: pw
 --
-DROP DATABASE IF EXISTS ps5;
-CREATE DATABASE IF NOT EXISTS ps5 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+DROP DATABASE IF EXISTS pw;
+CREATE DATABASE IF NOT EXISTS pw DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE ps5;
+USE pw;
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Web tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Table structure web_menu_items
+--
+
+CREATE TABLE web_menu_items (
+    `order`  SMALLINT     UNSIGNED PRIMARY KEY,
+    enabled  TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    display  VARCHAR(64)  DEFAULT NULL,
+    href     VARCHAR(128) NOT NULL,
+    icon     VARCHAR(256) NOT NULL,
+
+    INDEX enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure web_navbar_items
+--
+
+CREATE TABLE web_navbar_items (
+    `order`  SMALLINT     UNSIGNED PRIMARY KEY,
+    enabled  TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    display  VARCHAR(64)  DEFAULT NULL,
+    href     VARCHAR(128) NOT NULL,
+
+    INDEX enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
@@ -139,10 +170,10 @@ CREATE TABLE league_items_rolling (
     time        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     volatile    TINYINT(1)     UNSIGNED NOT NULL DEFAULT 0,
     multiplier  DECIMAL(6,4)   UNSIGNED NOT NULL DEFAULT 2.0,
-    mean        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    median      DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    mode        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted     DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    exalted     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc         INT(8)         UNSIGNED NOT NULL DEFAULT 0,
@@ -167,11 +198,12 @@ CREATE TABLE league_items_inactive (
     id_l        SMALLINT       UNSIGNED NOT NULL,
     id_d        INT            UNSIGNED NOT NULL,
     time        TIMESTAMP      NOT NULL,
-    mean        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    median      DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    mode        DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted     DECIMAL(10,4)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    exalted     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
+    quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
@@ -187,16 +219,14 @@ CREATE TABLE league_entries (
     id_d       INT            UNSIGNED NOT NULL,
     time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     approved   TINYINT(1)     UNSIGNED NOT NULL DEFAULT 0,
-    price      DECIMAL(10,4)  UNSIGNED NOT NULL,
+    price      DECIMAL(14,8)  UNSIGNED NOT NULL,
     account    VARCHAR(32)    NOT NULL,
 
     FOREIGN KEY (id_l) REFERENCES  data_leagues         (id)   ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
-    INDEX time     (time),
-    INDEX approved (approved),
-    INDEX compound_id (id_l, id_d)
+    INDEX approved_time (approved, time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -212,10 +242,10 @@ CREATE TABLE league_history_daily_inactive (
     id_d      INT            UNSIGNED NOT NULL,
     time      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     volatile  TINYINT(1)     UNSIGNED DEFAULT NULL,
-    mean      DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    median    DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    mode      DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    exalted   DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
+    mean      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    median    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    mode      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    exalted   DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     inc       INT(8)         UNSIGNED DEFAULT NULL,
     `dec`     INT(8)         UNSIGNED DEFAULT NULL,
     count     INT(16)        UNSIGNED DEFAULT NULL,
@@ -236,10 +266,10 @@ CREATE TABLE league_history_daily_rolling (
     id_d       INT            UNSIGNED NOT NULL,
     time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     volatile   TINYINT(1)     UNSIGNED DEFAULT NULL,
-    mean       DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    median     DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    mode       DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    exalted    DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
+    mean       DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    median     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    mode       DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    exalted    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     inc        INT(8)         UNSIGNED DEFAULT NULL,
     `dec`      INT(8)         UNSIGNED DEFAULT NULL,
     count      INT(16)        UNSIGNED DEFAULT NULL,
@@ -252,26 +282,19 @@ CREATE TABLE league_history_daily_rolling (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure league_history_hourly_rolling
+-- Table structure league_history_hourly_quantity
 --
 
-CREATE TABLE league_history_hourly_rolling (
-    id_l      SMALLINT       UNSIGNED NOT NULL,
-    id_d      INT            UNSIGNED NOT NULL,
-    time      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    volatile  TINYINT(1)     UNSIGNED DEFAULT NULL,
-    mean      DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    median    DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    mode      DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    exalted   DECIMAL(10,4)  UNSIGNED DEFAULT NULL,
-    inc       INT(8)         UNSIGNED DEFAULT NULL,
-    `dec`     INT(8)         UNSIGNED DEFAULT NULL,
-    count     INT(16)        UNSIGNED DEFAULT NULL,
-    quantity  INT(8)         UNSIGNED DEFAULT NULL,
+CREATE TABLE league_history_hourly_quantity (
+    id_l  SMALLINT   UNSIGNED NOT NULL,
+    id_d  INT        UNSIGNED NOT NULL,
+    time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    inc   INT(8)     UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
 
+    INDEX ids  (id_l, id_d),
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -338,17 +361,6 @@ CREATE TABLE account_history (
     FOREIGN KEY (id_old) REFERENCES account_accounts (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_new) REFERENCES account_accounts (id) ON DELETE RESTRICT,
     CONSTRAINT `unique` UNIQUE (id_old, id_new)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure account_data
---
-
-CREATE TABLE account_data (
-    id        BIGINT          UNSIGNED PRIMARY KEY,
-    private   TINYINT(1)      UNSIGNED NOT NULL DEFAULT 0,
-
-    FOREIGN KEY (id) REFERENCES account_accounts (id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -576,6 +588,41 @@ VALUES
     (29,  'master-sextant'),
     (29,  'master');
 
+--
+-- Base values for web_menu_items
+--
+
+INSERT INTO web_menu_items
+    (`order`, enabled, display, href, icon)
+VALUES
+    (1,   1, 'Accessories',   'prices?category=accessory',    'https://web.poecdn.com/image/Art/2DItems/Amulets/EyeOfInnocence.png?scale=1&w=1&h=1'),
+    (2,   1, 'All relics',    'prices?category=relic',        'https://web.poecdn.com/image/Art/2DItems/Rings/MoonstoneRingUnique.png?scale=1&w=1&h=1&relic=1'),
+    (3,   1, 'Armour',        'prices?category=armour',       'https://web.poecdn.com/image/Art/2DItems/Armours/Gloves/AtzirisAcuity.png?scale=1&w=1&h=1'),
+    (4,   1, 'Bases',         'prices?category=base',         'https://web.poecdn.com/image/Art/2DItems/Rings/OpalRing.png?scale=1&w=1&h=1'),
+    (5,   1, 'Currency',      'prices?category=currency',     'https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1'),
+    (6,   1, 'Div cards',     'prices?category=card',         'https://web.poecdn.com/image/Art/2DItems/Divination/InventoryIcon.png?scale=1&w=1&h=1'),
+    (7,   1, 'Enchantments',  'prices?category=enchantment',  'https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1'),
+    (8,   1, 'Flasks',        'prices?category=flask',        'https://web.poecdn.com/gen/image/WzksNCx7ImYiOiJBcnRcLzJESXRlbXNcL0ZsYXNrc1wvU2hhcGVyc0ZsYXNrIiwic3AiOjAuNjA4NSwibGV2ZWwiOjB9XQ/4369b8fcb9/Item.png?scale=1&w=1&h=1'),
+    (9,   1, 'Gems',          'prices?category=gem',          'https://web.poecdn.com/image/Art/2DItems/Gems/VaalGems/VaalBreachPortal.png?scale=1&w=1&h=1'),
+    (10,  1, 'Jewels',        'prices?category=jewel',        'https://web.poecdn.com/image/Art/2DItems/Jewels/GolemInfernal.png?scale=1&w=1&h=1'),
+    (11,  1, 'Maps',          'prices?category=map',          'https://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/Chimera.png?scale=1&w=1&h=1'),
+    (12,  1, 'Prophecy',      'prices?category=prophecy',     'https://web.poecdn.com/image/Art/2DItems/Currency/ProphecyOrbRed.png?scale=1&w=1&h=1'),
+    (13,  1, 'Weapons',       'prices?category=weapon',       'https://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/Claws/TouchOfAnguish.png?scale=1&w=1&h=1');
+
+--
+-- Base values for web_navbar_items
+--
+
+INSERT INTO web_navbar_items
+    (`order`, enabled, display, href)
+VALUES
+    (1,   1, 'Front',       '/'),
+    (2,   1, 'Prices',      'prices'),
+    (3,   1, 'API',         'api'),
+    (4,   1, 'Leagues',     'leagues'),
+    (5,   1, 'Characters',  'characters'),
+    (6,   1, 'About',       'about');
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Event setup
 -- --------------------------------------------------------------------------------------------------------------------
@@ -591,8 +638,8 @@ CREATE EVENT remove24
   STARTS '2018-01-01 08:00:03'
   COMMENT 'Clears out entries older than 1 day'
   DO
-    DELETE FROM league_history_hourly_rolling
-    WHERE       time < ADDDATE(NOW(), INTERVAL -24 HOUR);
+    DELETE FROM league_history_hourly_quantity
+    WHERE       time < ADDDATE(NOW(), INTERVAL -25 HOUR);
 
 --
 -- Event configuration remove120
@@ -605,10 +652,18 @@ CREATE EVENT remove120
   STARTS '2018-01-01 08:00:06'
   COMMENT 'Clears out entries older than 120 days'
   DO
-    DELETE h
-    FROM   league_history_daily_rolling AS h
-    JOIN   data_leagues AS l
-      ON   h.id_l = l.id
-    WHERE  l.id > 2
+    DELETE FROM league_history_daily_rolling
+    WHERE  id_l <= 2
       AND  time < ADDDATE(NOW(), INTERVAL -120 DAY);
 
+-- --------------------------------------------------------------------------------------------------------------------
+-- User accounts
+-- --------------------------------------------------------------------------------------------------------------------
+
+CREATE USER 'pw_app'@'localhost' IDENTIFIED BY 'password goes here';
+GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
+
+CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
+GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
+
+FLUSH PRIVILEGES;

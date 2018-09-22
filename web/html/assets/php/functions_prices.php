@@ -19,26 +19,10 @@ class FormGen {
       <option value='all' selected>All</option>
       <option value='none'>None</option>
       <option value='either'>Either</option>
-      <option value='shaped'>Shaper</option>
+      <option value='shaper'>Shaper</option>
       <option value='elder'>Elder</option>
     </select>
   </div>";  
-  
-  private static $form_corrupted = "
-  <div class='mr-3 mb-2'>
-    <h4>Corrupted</h4>
-    <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-corrupted'>
-      <label class='btn btn-outline-dark active'>
-        <input type='radio' name='corrupted' value='all'>Both
-      </label>
-      <label class='btn btn-outline-dark'>
-        <input type='radio' name='corrupted' value='0'>No
-      </label>
-      <label class='btn btn-outline-dark'>
-        <input type='radio' name='corrupted' value='1' checked>Yes
-      </label>
-    </div>
-  </div>";
 
   private static $form_level = "
   <div class='mr-3 mb-2'>
@@ -90,50 +74,99 @@ class FormGen {
     </select>
   </div>";
 
-  private static $form_links = "
-  <div class='mr-3 mb-2'>
-    <h4>Links</h4>
-    <select class='form-control' id='select-links'>
-      <option value='all' selected>All</option>
-      <option value='none'>None</option>
-      <option value='5'>5 Links</option>
-      <option value='6'>6 Links</option>
-    </select>
-  </div>";
+  private static function Corrupted() {
+    $val = isset($_GET["corrupted"]) ? $_GET["corrupted"] : "all";
+    $options = array(
+      "all"   => "Both", 
+      "true"  => "Yes",  
+      "false" => "No"
+    );
 
-  private static $form_rarity = "
-  <div class='mr-3 mb-2'>
+    echo "<div class='mr-3 mb-2'>
+    <h4>Corrupted</h4>
+    <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-corrupted'>";
+
+    foreach ($options as $value => $display) {
+      $active = $val === $value ? "active" : "";
+      $checked = $val === $value ? "checked" : "";
+
+      echo "<label class='btn btn-outline-dark $active'>
+      <input type='radio' name='corrupted' value='$value' $checked>$display
+      </label>";
+    }
+
+    echo "</div>
+    </div>";
+  }
+
+  private static function Links() {
+    $val = isset($_GET["links"]) ? $_GET["links"] : "none";
+    $options = array(
+      "none"  => "None", 
+      "5"     => "5L",  
+      "6"     => "6L",
+      "all"   => "All"
+    );
+
+    echo "<div class='mr-3 mb-2'>
+    <h4>Links</h4>
+    <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-links'>";
+
+    foreach ($options as $value => $display) {
+      $active = $val === (string)$value ? "active" : "";
+      $checked = $val === (string)$value ? "checked" : "";
+
+      echo "<label class='btn btn-outline-dark $active'>
+      <input type='radio' name='links' value='$value' $checked>$display
+      </label>";
+    }
+
+    echo "</div>
+    </div>";
+  }
+
+  private static function Rarity() {
+    $val = isset($_GET["rarity"]) ? $_GET["rarity"] : "all";
+    $options = array(
+      "all"     => "Both", 
+      "unique"  => "Unique",  
+      "relic"   => "Relic"
+    );
+
+    echo "<div class='mr-3 mb-2'>
     <h4>Rarity</h4>
-    <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-rarity'>
-      <label class='btn btn-outline-dark active'>
-        <input type='radio' name='rarity' value='all'>Both
-      </label>
-      <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='unique'>Unique
-      </label>
-      <label class='btn btn-outline-dark'>
-        <input type='radio' name='rarity' value='relic' checked>Relic
-      </label>
-    </div>
-  </div>";
+    <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-rarity'>";
+
+    foreach ($options as $value => $display) {
+      $active = $val === $value ? "active" : "";
+      $checked = $val === $value ? "checked" : "";
+
+      echo "<label class='btn btn-outline-dark $active'>
+      <input type='radio' name='rarity' value='$value' $checked>$display
+      </label>";
+    }
+
+    echo "</div>
+    </div>";
+  }
 
   public static function GenForm($category) {
     echo "<div class='d-flex flex-wrap'>";
 
     switch ($category) {
       case "gem":
-        echo FormGen::$form_corrupted;
+        echo FormGen::Corrupted();
         echo FormGen::$form_level;
         echo FormGen::$form_quality;
         break;
       case "armour":
       case "weapon":
-        echo FormGen::$form_links;
-        echo FormGen::$form_rarity;
+        echo FormGen::Links();
+        echo FormGen::Rarity();
         break;
       case "map":
         echo FormGen::$form_tier;
-        echo FormGen::$form_rarity;
+        echo FormGen::Rarity();
         break;
       case "base":
         echo FormGen::$form_iLvl;
@@ -142,7 +175,7 @@ class FormGen {
       case "flask":
       case "accessory":
       case "jewel":
-        echo FormGen::$form_rarity;
+        echo FormGen::Rarity();
         break;
       default:
         break;
@@ -152,13 +185,48 @@ class FormGen {
   }
 }
 
-// Checks whether a category param was passed on to the request
-function CheckAndGetCategoryParam() {
-  if ( !isset($_GET["category"]) ) {
-    $_GET["category"] = "currency";
+function GenGroupSelectFields($pdo, $category) {
+  if ($category === "relic") {
+    $query = "SELECT
+      1 AS tmpId,
+      GROUP_CONCAT(   name ORDER BY name ASC) AS    names, 
+      GROUP_CONCAT(display ORDER BY name ASC) AS displays
+    FROM     category_parent
+    JOIN (
+      SELECT DISTINCT id_cp 
+      FROM            data_itemData
+      WHERE           frame = 9
+    ) AS     tmp 
+      ON     tmp.id_cp = id
+    GROUP BY tmpId";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+  } else {
+    $query = "SELECT 
+      GROUP_CONCAT(   name ORDER BY name ASC) AS    names, 
+      GROUP_CONCAT(display ORDER BY name ASC) AS displays
+    FROM category_child
+    WHERE id_cp = (SELECT id FROM category_parent WHERE name = ? LIMIT 1)
+    GROUP BY id_cp";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$category]);
   }
-  
-  return $_GET["category"];
+
+  if ($stmt->rowCount()) {
+    $row      = $stmt->fetch();
+    $names    = explode(',',    $row['names']);
+    $displays = explode(',', $row['displays']);
+
+    if (sizeof($names) > 1) {
+      echo "<option value='all'>All</option>";
+    }
+
+    for ($i = 0; $i < sizeof($names); $i++) { 
+      echo "<option value='{$names[$i]}'>{$displays[$i]}</option>";
+    }
+  }
 }
 
 // Get all available category relations
@@ -184,9 +252,9 @@ function GetLeagues($pdo) {
   $query = "SELECT l.id, l.name, l.display, l.active, l.upcoming, l.event 
   FROM data_leagues AS l 
   JOIN ( 
-    SELECT DISTINCT id_l FROM league_history_daily_rolling 
+    SELECT DISTINCT id_l FROM league_items_rolling 
     UNION  DISTINCT 
-    SELECT DISTINCT id_l FROM league_history_daily_inactive 
+    SELECT DISTINCT id_l FROM league_items_inactive 
   ) AS leagues ON l.id = leagues.id_l 
   ORDER BY active DESC, id DESC";
 

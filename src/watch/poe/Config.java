@@ -1,7 +1,9 @@
 package watch.poe;
 
 import java.io.File;
+import java.math.RoundingMode;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.regex.Pattern;
 
 public class Config {
@@ -12,7 +14,7 @@ public class Config {
     public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true&useUnicode=true&character_set_server=utf8mb4";
     public static final String db_username = "root";
     private static final String db_password = "";
-    public static final String db_database = "ps5";
+    public static final String db_database = "pw";
 
     public static String getDb_password() {
         return db_password;
@@ -73,10 +75,19 @@ public class Config {
     public static final int league_millisecondsInDay = 24 * 60 * 60 * 1000;
 
     //------------------------------------------------------------------------------------------------------------
+    // Price precision
+    //------------------------------------------------------------------------------------------------------------
+
+    public static final int precision = 8;
+    public static final double pricePrecision = Math.pow(10, precision);
+
+    private static final String formatPattern = "#." + new String(new char[Config.precision]).replace("\0", "#");
+    public static final DecimalFormat decimalFormat = new DecimalFormat(formatPattern);
+
+    //------------------------------------------------------------------------------------------------------------
     // Other?
     //------------------------------------------------------------------------------------------------------------
 
-    public static final double item_pricePrecision = 10000.0;
     public static final int monitorTimeoutMS = 500;
     public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 }

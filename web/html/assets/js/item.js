@@ -83,7 +83,6 @@ function createCharts() {
     }
   };
 
-  
   let settings = {
     plugins: [dataPlugin, gradientLinePlugin],
     type: "line",
@@ -205,7 +204,7 @@ function fillData() {
   $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
   $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
 
-  if (ITEM.category.parent.name === "base") {
+  if (ITEM.category >= 16 && ITEM.category <= 18) {
     if (ITEM.variation === "shaper") {
       $("#item-icon").parent().addClass("influence influence-shaper-2x3");
     } else if (ITEM.variation === "elder") {
@@ -259,7 +258,7 @@ function createListeners() {
 
 function buildNameField() {
   // Fix name if item is enchantment
-  if (ITEM.category.parent.name === "enchantment" && ITEM.variation !== null) {
+  if (ITEM.category >= 16 && ITEM.category <= 18 && ITEM.variation !== null) {
     let splitVar = ITEM.variation.split('-');
     
     for (var num in splitVar) {
@@ -278,7 +277,7 @@ function buildNameField() {
     builder = "<span class='item-foil'>" + builder + "</span>";
   }
 
-  if (ITEM.variation && ITEM.category.parent.name !== "enchantment") {
+  if (ITEM.variation && ITEM.category < 16 && ITEM.category > 18) {
     builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
   } 
   
@@ -418,13 +417,20 @@ function formatHistory(leaguePayload) {
   // Grab values
   for (let i = 0; i < leaguePayload.history.length; i++) {
     let element = leaguePayload.history[i];
-    vals.mean     .push(element.mean     );
-    vals.median   .push(element.median   );
-    vals.mode     .push(element.mode     );
-    vals.quantity .push(element.quantity );
+    vals.mean    .push(Math.round(element.mean   * 100) / 100);
+    vals.median  .push(Math.round(element.median * 100) / 100);
+    vals.mode    .push(Math.round(element.mode   * 100) / 100);
+    vals.quantity.push(element.quantity);
 
     keys.push(formatDate(element.time));
   }
+
+  // Add current values
+  vals.mean    .push(Math.round(leaguePayload.mean   * 100) / 100);
+  vals.median  .push(Math.round(leaguePayload.median * 100) / 100);
+  vals.mode    .push(Math.round(leaguePayload.mode   * 100) / 100);
+  vals.quantity.push(leaguePayload.quantity);
+  keys.push("Now");
 
   // Return generated data
   return {

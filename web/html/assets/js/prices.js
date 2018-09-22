@@ -673,7 +673,7 @@ class ExpandedRow {
       mode:     [],
       quantity: []
     };
-  
+
     // Convert date strings into objects
     let oldestDate = new Date(leaguePayload.history[0].time);
     let startDate  = new Date(leaguePayload.league.start);
@@ -720,17 +720,24 @@ class ExpandedRow {
         tmpDate.setDate(tmpDate.getDate() + 1);
       }
     }
-  
+
     // Grab values
     for (let i = 0; i < leaguePayload.history.length; i++) {
       let element = leaguePayload.history[i];
-      vals.mean     .push(element.mean     );
-      vals.median   .push(element.median   );
-      vals.mode     .push(element.mode     );
-      vals.quantity .push(element.quantity );
-  
+      vals.mean    .push(Math.round(element.mean   * 100) / 100);
+      vals.median  .push(Math.round(element.median * 100) / 100);
+      vals.mode    .push(Math.round(element.mode   * 100) / 100);
+      vals.quantity.push(element.quantity);
+
       keys.push(ExpandedRow.formatDate(element.time));
     }
+
+    // Add current values
+    vals.mean    .push(Math.round(leaguePayload.mean   * 100) / 100);
+    vals.median  .push(Math.round(leaguePayload.median * 100) / 100);
+    vals.mode    .push(Math.round(leaguePayload.mode   * 100) / 100);
+    vals.quantity.push(leaguePayload.quantity);
+    keys.push("Now");
   
     // Return generated data
     return {
@@ -754,7 +761,7 @@ class ExpandedRow {
 var FILTER = {
   league: null,
   category: null,
-  sub: "all",
+  group: "all",
   showLowConfidence: false,
   links: null,
   rarity: null,
@@ -789,6 +796,7 @@ $(document).ready(function() {
   FILTER.category = SERVICE_category;
 
   readLeagueFromCookies(FILTER, SERVICE_leagues);
+  parseQueryParams();
   makeGetRequest(FILTER.league, FILTER.category);
   defineListeners();
 }); 
@@ -819,6 +827,62 @@ function readLeagueFromCookies(FILTER, leagues) {
   }
 }
 
+function parseQueryParams() {
+  let tmp;
+
+  if (tmp = parseQueryParam('group')) {
+    FILTER.group = tmp;
+    $('#search-group').val(tmp);
+  }
+
+  if (tmp = parseQueryParam('search')) FILTER.search = tmp;
+  if (tmp = parseQueryParam('confidence')) FILTER.showLowConfidence = true;
+
+  if (tmp = parseQueryParam('rarity')) {
+    if      (tmp === "unique") FILTER.rarity =    3;
+    else if (tmp ===  "relic") FILTER.rarity =    9;
+  }
+
+  if (tmp = parseQueryParam('links')) {
+    if (tmp ===  "all") FILTER.links = -1;
+    else FILTER.links = parseInt(tmp);
+  }
+
+  if (tmp = parseQueryParam('tier')) {
+    $('#select-tier').val(tmp);
+
+    if (tmp === "none") FILTER.tier = 0;
+    else FILTER.tier = parseInt(tmp);
+  }
+
+  if (tmp = parseQueryParam('corrupted')) {
+    FILTER.gemCorrupted = tmp === "true";
+  }
+
+  if (tmp = parseQueryParam('lvl')) {
+    $('#select-level').val(tmp);
+    FILTER.gemLvl = parseInt(tmp);
+  }
+
+  if (tmp = parseQueryParam('quality')) {
+    $('#select-quality').val(tmp);
+    FILTER.gemQuality = parseInt(tmp);
+  }
+
+  if (tmp = parseQueryParam('ilvl')) {
+    $('#select-ilvl').val(tmp);
+
+    let splitRange = tmp.split("-");
+    FILTER.baseIlvlMin = parseInt(splitRange[0]);
+    FILTER.baseIlvlMax = parseInt(splitRange[1]);
+  }
+
+  if (tmp = parseQueryParam('influence')) {
+    $('#select-influence').val(tmp);
+    FILTER.influence = tmp;
+  }
+}
+
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
@@ -829,10 +893,10 @@ function defineListeners() {
   });
 
   // Subcategory
-  $("#search-sub").change(function(){
-    FILTER.sub = $(this).find(":selected").val();
-    console.log("Selected sub-category: " + FILTER.sub);
-    updateQueryString("sub", FILTER.sub);
+  $("#search-group").change(function(){
+    FILTER.group = $(this).find(":selected").val();
+    console.log("Selected group: " + FILTER.group);
+    updateQueryParam("group", FILTER.group);
     sortResults(ITEMS);
   });
 
@@ -848,16 +912,16 @@ function defineListeners() {
   $("#search-searchbar").on("input", function(){
     FILTER.search = $(this).val().toLowerCase().trim();
     console.log("Search: " + FILTER.search);
-    updateQueryString("search", FILTER.search);
+    updateQueryParam("search", FILTER.search);
     sortResults(ITEMS);
   });
 
   // Low confidence
   $("#radio-confidence").on("change", function(){
-    let option = $("input:checked", this).val() === "1";
+    let option = $("input:checked", this).val() === "true";
     console.log("Show low count: " + option);
     FILTER.showLowConfidence = option;
-    updateQueryString("confidence", option);
+    updateQueryParam("confidence", option);
     sortResults(ITEMS);
   });
 
@@ -865,7 +929,7 @@ function defineListeners() {
   $("#radio-rarity").on("change", function(){
     FILTER.rarity = $(":checked", this).val();
     console.log("Rarity filter: " + FILTER.rarity);
-    updateQueryString("rarity", FILTER.rarity);
+    updateQueryParam("rarity", FILTER.rarity);
 
     if      (FILTER.rarity ===    "all") FILTER.rarity = null;
     else if (FILTER.rarity === "unique") FILTER.rarity =    3;
@@ -875,12 +939,12 @@ function defineListeners() {
   });
   
   // Item links
-  $("#select-links").on("change", function(){
-    FILTER.links = $(":selected", this).val();
+  $("#radio-links").on("change", function(){
+    FILTER.links = $(":checked", this).val();
     console.log("Link filter: " + FILTER.links);
-    updateQueryString("links", FILTER.links);
-    if (FILTER.links ===  "all") FILTER.links = null;
-    else if (FILTER.links === "none") FILTER.links = 0;
+    updateQueryParam("links", FILTER.links);
+    if      (FILTER.links === "none") FILTER.links = null;
+    else if (FILTER.links ===  "all") FILTER.links = -1;
     else FILTER.links = parseInt(FILTER.links);
     sortResults(ITEMS);
   });
@@ -889,7 +953,7 @@ function defineListeners() {
   $("#select-tier").on("change", function(){
     FILTER.tier = $(":selected", this).val();
     console.log("Map tier filter: " + FILTER.tier);
-    updateQueryString("tier", FILTER.tier);
+    updateQueryParam("tier", FILTER.tier);
     if (FILTER.tier === "all") FILTER.tier = null;
     else if (FILTER.tier === "none") FILTER.tier = 0;
     else FILTER.tier = parseInt(FILTER.tier);
@@ -902,7 +966,7 @@ function defineListeners() {
     console.log("Gem lvl filter: " + FILTER.gemLvl);
     if (FILTER.gemLvl === "all") FILTER.gemLvl = null;
     else FILTER.gemLvl = parseInt(FILTER.gemLvl);
-    updateQueryString("lvl", FILTER.gemLvl);
+    updateQueryParam("lvl", FILTER.gemLvl);
     sortResults(ITEMS);
   });
 
@@ -912,7 +976,7 @@ function defineListeners() {
     console.log("Gem quality filter: " + FILTER.gemQuality);
     if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
     else FILTER.gemQuality = parseInt(FILTER.gemQuality);
-    updateQueryString("quality", FILTER.gemQuality);
+    updateQueryParam("quality", FILTER.gemQuality);
     sortResults(ITEMS);
   });
 
@@ -921,8 +985,8 @@ function defineListeners() {
     FILTER.gemCorrupted = $(":checked", this).val();
     console.log("Gem corruption filter: " + FILTER.gemCorrupted);
     if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
-    else FILTER.gemCorrupted = parseInt(FILTER.gemCorrupted);
-    updateQueryString("corrupted", FILTER.gemCorrupted);
+    else FILTER.gemCorrupted = FILTER.gemCorrupted === "true";
+    updateQueryParam("corrupted", FILTER.gemCorrupted);
     sortResults(ITEMS);
   });
 
@@ -933,12 +997,12 @@ function defineListeners() {
     if (ilvlRange === "all") {
       FILTER.baseIlvlMin = null;
       FILTER.baseIlvlMax = null;
-      updateQueryString("ilvl", null);
+      updateQueryParam("ilvl", null);
     } else {
       let splitRange = ilvlRange.split("-");
       FILTER.baseIlvlMin = parseInt(splitRange[0]);
       FILTER.baseIlvlMax = parseInt(splitRange[1]);
-      updateQueryString("ilvl", ilvlRange);
+      updateQueryParam("ilvl", ilvlRange);
     }
     
     sortResults(ITEMS);
@@ -951,7 +1015,7 @@ function defineListeners() {
     if (FILTER.baseInfluence === "all") {
       FILTER.baseInfluence = null;
     }
-    updateQueryString("influence", FILTER.baseInfluence);
+    updateQueryParam("influence", FILTER.baseInfluence);
     sortResults(ITEMS);
   });
 
@@ -1009,6 +1073,8 @@ function makeGetRequest(league, category) {
   });
 
   request.fail(function(response) {
+    ITEMS = {};
+
     $(".buffering-msg").remove();
 
     let buffering = $(".buffering");
@@ -1019,27 +1085,12 @@ function makeGetRequest(league, category) {
 
 function parseRequest(json) {
   let items = new Map();
-  let categories = [];
 
   // Loop though array, creating an associative array based on IDs
   for (let i = 0; i < json.length; i++) {
     const item = json[i];
     items['_' + item.id] = item;
-
-    // Get all unique categories
-    if (categories.indexOf(item.category) === -1) {
-      categories.push(item.category);
-    }
   }
-
-  let builder = categories.length > 1 ? "<option value='all'>All</option>" : "";
-
-  for (let i = 0; i < categories.length; i++) {
-    builder += "<option value='{{value}}'>{{name}}</option>"
-      .replace("{{value}}", categories[i])
-      .replace("{{name}}",  SERVICE_categories[ categories[i] ]);
-  }
-  $("#search-sub").append(builder);
 
   return items;
 }
@@ -1108,13 +1159,17 @@ function getCookie(cname) {
   return "";
 }
 
-function updateQueryString(key, value) {
+function updateQueryParam(key, value) {
   switch (key) {
     case "confidence": value = value === false  ? null : value;   break;
     case "search":     value = value === ""     ? null : value;   break;
     case "rarity":     value = value === "all"  ? null : value;   break;
-    case "links":      value = value === "all"  ? null : value;   break;
-    case "sub":        value = value === "all"  ? null : value;   break;
+    case "corrupted":  value = value === "all"  ? null : value;   break;
+    case "quality":    value = value === "all"  ? null : value;   break;
+    case "lvl":        value = value === "all"  ? null : value;   break;
+    case "links":      value = value === "none" ? null : value;   break;
+    case "group":      value = value === "all"  ? null : value;   break;
+    case "tier":       value = value === "all"  ? null : value;   break;
     default:           break;
   }
 
@@ -1144,6 +1199,19 @@ function updateQueryString(key, value) {
   }
 
   history.replaceState({}, "foo", url);
+}
+
+function parseQueryParam(key) {
+  let url = window.location.href;
+  key = key.replace(/[\[\]]/g, '\\$&');
+  
+  var regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+      
+  if (!results   ) return null;
+  if (!results[2]) return   '';
+
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -1220,8 +1288,8 @@ function checkHideItem(item) {
     }
   }
 
-  // Hide sub-categories
-  if (FILTER.sub !== "all" && FILTER.sub !== item.category) {
+  // Hide groups
+  if (FILTER.group !== "all" && FILTER.group !== item.category) {
     return true;
   }
 
@@ -1233,12 +1301,12 @@ function checkHideItem(item) {
   }
 
   // Hide items with different links
-  if (FILTER.links !== null) {
-    if (FILTER.links > 0) {
-      if (item.links !== FILTER.links) {
-        return true;
-      }
-    } else if (item.links) {
+  if (FILTER.links === null) {
+    if (item.links !== null) {
+      return true;
+    }
+  } else if (FILTER.links > 0) {
+    if (item.links !== FILTER.links) {
       return true;
     }
   }

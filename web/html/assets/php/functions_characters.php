@@ -45,7 +45,7 @@ function DisplayMotD($DATA) {
   $relDisplay = "<span class='custom-text-green'>$relDisplay</span>";
   $timeDisplay = "<span class='custom-text-green'>" . FormatTimestamp("2018-07-14 00:00:00") . "</span>";
 
-  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations collected from the stash API since $timeDisplay.";
+  echo "Explore $accDisplay account names, $charDisplay character names and $relDisplay relations collected from the stash API since $timeDisplay. <br>Only characters that have listed something through the public stash API will appear here.";
 }
 
 // Display notification
@@ -121,9 +121,20 @@ function CreateTable($DATA) {
   $table .= "<thead>";
   // Pick table header based on mode
   if ($DATA["mode"] === "transfer") {
-    $table .= "<tr><th>Account</th><th>Was account</th><th>Changed</th></tr>";
+    $table .= "
+    <tr>
+      <th>Account</th>
+      <th>Was account</th>
+      <th>Changed</th>
+    </tr>";
   } else {
-    $table .= "<tr><th>Account</th><th>Has character</th><th>In league</th><th>Last seen</th></tr>";
+    $table .= "
+    <tr>
+      <th>Account</th>
+      <th>Has character</th>
+      <th>In league</th>
+      <th>Last seen</th>
+    </tr>";
   }
   // Close table header
   $table .= "</thead>";
@@ -164,7 +175,7 @@ function MakeSearch($pdo, $DATA) {
 function GetTotalCounts($pdo, $DATA) {
   $query = "SELECT  TABLE_NAME, TABLE_ROWS 
   FROM    information_schema.TABLES 
-  WHERE   table_schema = 'ps5'
+  WHERE   table_schema = 'pw'
     AND ( table_name = 'account_characters'
     OR    table_name = 'account_accounts'
     OR    table_name = 'account_relations')";
@@ -190,6 +201,7 @@ function CharacterSearch($pdo, $DATA) {
     a.name AS account,
     c.name AS `character`,
     l.display AS league,
+    l.active AS active,
     r.seen
   FROM (
     SELECT *
@@ -214,11 +226,12 @@ function CharacterSearch($pdo, $DATA) {
     $displayChar = FormSearchHyperlink("character", $row["character"], $row["character"]);
     $displayAcc = HighLightMatch($DATA["search"], $row["account"]);
     $displayAcc = FormSearchHyperlink("account", $row["account"], $displayAcc);
+    $displayLeague = $row["active"] ? $row["league"] : "Standard  ({$row["league"]})";
 
     $DATA["resultRows"][] = "<tr>
     <td>$displayAcc</td>
     <td>$displayChar</td>
-    <td>{$row["league"]}</td>
+    <td>$displayLeague</td>
     <td>$displayStamp</td>
     </tr>";
   }
@@ -234,6 +247,7 @@ function AccountSearch($pdo, $DATA) {
     a.name AS account,
     c.name AS `character`,
     l.display AS league,
+    l.active AS active,
     r.seen
   FROM (
     SELECT *
@@ -256,11 +270,12 @@ function AccountSearch($pdo, $DATA) {
     $displayChar = HighLightMatch($DATA["search"], $row["character"]);
     $displayChar = FormSearchHyperlink("character", $row["character"], $displayChar);
     $displayAcc = FormSearchHyperlink("account", $row["account"], $row["account"]);
+    $displayLeague = $row["active"] ? $row["league"] : "Standard  ({$row["league"]})";
 
     $DATA["resultRows"][] = "<tr>
       <td>$displayAcc</td>
       <td>$displayChar</td>
-      <td>{$row["league"]}</td>
+      <td>$displayLeague</td>
       <td>$displayStamp</td>
     </tr>";
   }

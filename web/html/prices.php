@@ -1,9 +1,14 @@
 <?php 
-  include_once ( "../details/pdo.php" );
-  include_once ( "assets/php/functions_prices.php" ); 
-  include_once ( "assets/php/functions.php" );
+  if ( !isset($_GET["category"]) ) {
+    header('Location: prices?category=currency');
+    return;
+  }
 
-  $SERVICE_category = CheckAndGetCategoryParam();
+  include_once ( "../details/pdo.php" );
+  include_once ( "assets/php/functions.php" );
+  include_once ( "assets/php/functions_prices.php" ); 
+
+  $SERVICE_category = $_GET["category"];
   $SERVICE_categories = GetCategoryTranslations($pdo);
   $SERVICE_leagues = GetLeagues($pdo);
 ?>
@@ -17,7 +22,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<?php GenNavbar() ?>
+<?php GenNavbar($pdo) ?>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
 <div class="container-fluid second-navbar d-flex justify-content-end align-items-center m-0 py-1 px-2"> 
@@ -52,7 +57,7 @@
     <div class="col d-flex my-3">
 
       <!-- Menu -->
-      <?php GenCatMenuHTML() ?>
+      <?php GenCatMenuHTML($pdo) ?>
       <!--/Menu/-->
 
       <!-- Main content -->
@@ -68,23 +73,27 @@
                 <div class='mr-3'>
                   <h4 class='nowrap'>Low count</h4>
                   <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-                    <label class="btn btn-outline-dark active">
-                      <input type="radio" name="confidence" value="0" checked><a>Hide</a>
+                    <label class="btn btn-outline-dark <?php if (!isset($_GET["confidence"])) echo "active"; ?>">
+                      <input type="radio" name="confidence" value="false" <?php if (!isset($_GET["confidence"])) echo "checked"; ?>><a>Hide</a>
                     </label>
-                    <label class="btn btn-outline-dark">
-                      <input type="radio" name="confidence" value="1"><a>Show</a>
+                    <label class="btn btn-outline-dark <?php if (isset($_GET["confidence"])) echo "active"; ?>">
+                      <input type="radio" name="confidence" value="true" <?php if (isset($_GET["confidence"])) echo "checked"; ?>><a>Show</a>
                     </label>
                   </div>
                 </div>
 
                 <div class='ml-auto mr-3'>
-                  <h4>Sort</h4>
-                  <select class="form-control custom-select" id="search-sub"></select>
+                  <h4>Group</h4>
+                  <select class="form-control custom-select" id="search-group">
+                  
+                    <?php GenGroupSelectFields($pdo, $SERVICE_category) ?>
+
+                  </select>
                 </div>
 
                 <div>
                   <h4>Search</h4>
-                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
                 </div>
               </div>
             </div>
