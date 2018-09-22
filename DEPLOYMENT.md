@@ -2,18 +2,21 @@
 
 ### 1. Server set up
 
-##### 1.1. Install perquisites
+##### 1.1. Set timezone
+```sudo timedatectl set-timezone UTC```
+
+##### 1.2. Install perquisites
 ```sudo apt install apache2 php libapache2-mod-php openjdk-11-jre-headless mysql-server```
 
-##### 1.2. Prepare sub-domains
+##### 1.3. Prepare sub-domains
 ```sudo nano /etc/apache2/sites-available/poe.watch.conf```
 ```
 <VirtualHost *:80>
     ServerName poe.watch
     ServerAlias www.poe.watch
-    DocumentRoot /home/ps/http/html
+    DocumentRoot /home/pw/http/html
 
-    <Directory /home/ps/http/html>
+    <Directory /home/pw/http/html>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
@@ -28,9 +31,9 @@
 ```
 <VirtualHost *:80>
     ServerName api.poe.watch
-    DocumentRoot /home/ps/http/api
+    DocumentRoot /home/pw/http/api
 
-    <Directory /home/ps/http/api>
+    <Directory /home/pw/http/api>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
@@ -46,9 +49,9 @@
 ```
 <VirtualHost *:80>
     ServerName management.poe.watch
-    DocumentRoot /home/ps/http/management
+    DocumentRoot /home/pw/http/management
 
-    <Directory /home/ps/http/management>
+    <Directory /home/pw/http/management>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
@@ -59,7 +62,7 @@
 </VirtualHost>
 ```
 
-##### 1.3. Final touches to web server
+##### 1.4. Final touches to web server
 ```
 sudo a2enmod rewrite
 sudo a2enmod headers
@@ -70,10 +73,13 @@ sudo a2ensite management.poe.watch.conf
 sudo systemctl reload apache2.service
 ```
 
-##### 1.4. Setup MySQL
-```sudo mysql_secure_installation```
-
-##### 1.5. Run database configuration script from `/src/resources/DatabbaseSetup.sql`
+##### 1.5. Setup MySQL
+```
+sudo mysql_secure_installation
+sudo apt install phpmyadmin
+```
+Create PhpMyAdmin symlink `ln -s /usr/share/phpmyadmin /home/pw/http/management/sql`
+Run database configuration script from `/src/resources/DatabbaseSetup.sql`
 
 ## 2. Firewall (assuming CloudFlare is set up and working)
 
