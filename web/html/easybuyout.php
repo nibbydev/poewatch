@@ -1,4 +1,5 @@
 <?php 
+  include_once ( "../details/pdo.php" );
   include_once ( "assets/php/functions.php" );
 ?>
 <!DOCTYPE html>
@@ -16,7 +17,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<?php GenNavbar() ?>
+<?php GenNavbar($pdo) ?>
 <!--/Primary navbar/-->
 <!-- Page body -->
 <div class="container-fluid">
@@ -24,7 +25,7 @@
     <div class="col d-flex my-3">
 
       <!-- Menu -->
-      <?php GenCatMenuHTML() ?>
+      <?php GenCatMenuHTML($pdo) ?>
       <!--/Menu/-->
 
       <!-- Main content -->

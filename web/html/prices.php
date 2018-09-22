@@ -17,7 +17,7 @@
 </head>
 <body>
 <!-- Primary navbar -->
-<?php GenNavbar() ?>
+<?php GenNavbar($pdo) ?>
 <!--/Primary navbar/-->
 <!-- Secondary navbar -->
 <div class="container-fluid second-navbar d-flex justify-content-end align-items-center m-0 py-1 px-2"> 
@@ -52,7 +52,7 @@
     <div class="col d-flex my-3">
 
       <!-- Menu -->
-      <?php GenCatMenuHTML() ?>
+      <?php GenCatMenuHTML($pdo) ?>
       <!--/Menu/-->
 
       <!-- Main content -->

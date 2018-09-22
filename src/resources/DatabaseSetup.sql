@@ -13,6 +13,37 @@ CREATE DATABASE IF NOT EXISTS pw DEFAULT CHARACTER SET utf8 COLLATE utf8_general
 USE pw;
 
 -- --------------------------------------------------------------------------------------------------------------------
+-- Web tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Table structure web_menu_items
+--
+
+CREATE TABLE web_menu_items (
+    `order`  SMALLINT     UNSIGNED PRIMARY KEY,
+    enabled  TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    display  VARCHAR(64)  DEFAULT NULL,
+    href     VARCHAR(128) NOT NULL,
+    icon     VARCHAR(256) NOT NULL,
+
+    INDEX enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure web_navbar_items
+--
+
+CREATE TABLE web_navbar_items (
+    `order`  SMALLINT     UNSIGNED PRIMARY KEY,
+    enabled  TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    display  VARCHAR(64)  DEFAULT NULL,
+    href     VARCHAR(128) NOT NULL,
+
+    INDEX enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
 -- --------------------------------------------------------------------------------------------------------------------
 
@@ -558,6 +589,41 @@ VALUES
     (28,  'journeyman'),
     (29,  'master-sextant'),
     (29,  'master');
+
+--
+-- Base values for web_menu_items
+--
+
+INSERT INTO web_menu_items
+    (`order`, enabled, display, href, icon)
+VALUES
+    (1,   1, 'Accessories',   'prices?category=accessory',    'https://web.poecdn.com/image/Art/2DItems/Amulets/EyeOfInnocence.png?scale=1&w=1&h=1'),
+    (2,   1, 'All relics',    'prices?category=relic',        'https://web.poecdn.com/image/Art/2DItems/Rings/MoonstoneRingUnique.png?scale=1&w=1&h=1&relic=1'),
+    (3,   1, 'Armour',        'prices?category=armour',       'https://web.poecdn.com/image/Art/2DItems/Armours/Gloves/AtzirisAcuity.png?scale=1&w=1&h=1'),
+    (4,   1, 'Bases',         'prices?category=base',         'https://web.poecdn.com/image/Art/2DItems/Rings/OpalRing.png?scale=1&w=1&h=1'),
+    (5,   1, 'Currency',      'prices?category=currency',     'https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1'),
+    (6,   1, 'Div cards',     'prices?category=card',         'https://web.poecdn.com/image/Art/2DItems/Divination/InventoryIcon.png?scale=1&w=1&h=1'),
+    (7,   1, 'Enchantments',  'prices?category=enchantment',  'https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1'),
+    (8,   1, 'Flasks',        'prices?category=flask',        'https://web.poecdn.com/gen/image/WzksNCx7ImYiOiJBcnRcLzJESXRlbXNcL0ZsYXNrc1wvU2hhcGVyc0ZsYXNrIiwic3AiOjAuNjA4NSwibGV2ZWwiOjB9XQ/4369b8fcb9/Item.png?scale=1&w=1&h=1'),
+    (9,   1, 'Gems',          'prices?category=gem',          'https://web.poecdn.com/image/Art/2DItems/Gems/VaalGems/VaalBreachPortal.png?scale=1&w=1&h=1'),
+    (10,  1, 'Jewels',        'prices?category=jewel',        'https://web.poecdn.com/image/Art/2DItems/Jewels/GolemInfernal.png?scale=1&w=1&h=1'),
+    (11,  1, 'Maps',          'prices?category=map',          'https://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/Chimera.png?scale=1&w=1&h=1'),
+    (12,  1, 'Prophecy',      'prices?category=prophecy',     'https://web.poecdn.com/image/Art/2DItems/Currency/ProphecyOrbRed.png?scale=1&w=1&h=1'),
+    (13,  1, 'Weapons',       'prices?category=weapon',       'https://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/Claws/TouchOfAnguish.png?scale=1&w=1&h=1');
+
+--
+-- Base values for web_navbar_items
+--
+
+INSERT INTO web_navbar_items
+    (`order`, enabled, display, href)
+VALUES
+    (1,   1, 'Front',       '/'),
+    (2,   1, 'Prices',      'prices'),
+    (3,   1, 'API',         'api'),
+    (4,   1, 'Leagues',     'leagues'),
+    (5,   1, 'Characters',  'characters'),
+    (6,   1, 'About',       'about');
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Event setup
