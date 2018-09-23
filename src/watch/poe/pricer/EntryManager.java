@@ -2,6 +2,7 @@ package watch.poe.pricer;
 
 import watch.poe.*;
 import watch.poe.Config;
+import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.item.ItemParser;
 import watch.poe.item.Mappers;
@@ -41,7 +42,7 @@ public class EntryManager extends Thread {
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
                 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
                 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000);
-        Main.ADMIN.log_(modtString, -1);
+        Main.ADMIN.log(modtString, Flair.INFO);
 
         // Main thread loop
         while (flagLocalRun) {
@@ -67,7 +68,7 @@ public class EntryManager extends Thread {
      * Stops the threaded controller and saves all ephemeral data
      */
     public void stopController() {
-        Main.ADMIN.log_("Stopping EntryManager", 1);
+        Main.ADMIN.log("Stopping EntryManager", Flair.INFO);
 
         flagLocalRun = false;
 
@@ -82,7 +83,7 @@ public class EntryManager extends Thread {
         uploadRawEntries();
         uploadAccounts();
 
-        Main.ADMIN.log_("EntryManager stopped", 1);
+        Main.ADMIN.log("EntryManager stopped", Flair.INFO);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -138,7 +139,7 @@ public class EntryManager extends Thread {
      * Control method for starting up the minutely cycle
      */
     private void cycle() {
-        Main.ADMIN.log_("Cycle starting", 0);
+        Main.ADMIN.log("Cycle starting", Flair.STATUS);
         checkIntervalFlagStates();
 
         // Check league API every 10 minutes
@@ -179,7 +180,7 @@ public class EntryManager extends Thread {
                 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000,
                 time_cycle, time_prices,
                 time_upload, time_account);
-        Main.ADMIN.log_(cycleMsg, -1);
+        Main.ADMIN.log(cycleMsg, Flair.STATUS);
 
         // Switch off flags
         status.setTwentyFourBool(false);
@@ -197,14 +198,14 @@ public class EntryManager extends Thread {
         if (current - status.tenCounter > Config.entryController_tenMS) {
             status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
             status.setTenBool(true);
-            Main.ADMIN.log_("10 activated", 0);
+            Main.ADMIN.log("10 activated", Flair.STATUS);
         }
 
         // Run once every 60min
         if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
             status.sixtyCounter += (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
             status.setSixtyBool(true);
-            Main.ADMIN.log_("60 activated", 0);
+            Main.ADMIN.log("60 activated", Flair.STATUS);
         }
 
         // Run once every 24h
@@ -215,7 +216,7 @@ public class EntryManager extends Thread {
 
             status.twentyFourCounter += (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
             status.setTwentyFourBool(true);
-            Main.ADMIN.log_("24 activated", 0);
+            Main.ADMIN.log("24 activated", Flair.STATUS);
         }
     }
 

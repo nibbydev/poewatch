@@ -2,6 +2,7 @@ package watch.poe.worker;
 
 import watch.poe.Config;
 import watch.poe.Main;
+import watch.poe.admin.Flair;
 import watch.poe.item.Mappers;
 import com.google.gson.Gson;
 
@@ -156,7 +157,7 @@ public class Worker extends Thread {
             }
 
         } catch (Exception ex) {
-            Main.ADMIN.log_("Caught worker download error: " + ex.getMessage(), 3);
+            Main.ADMIN.log("Caught worker download error: " + ex.getMessage(), Flair.ERROR);
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
@@ -171,7 +172,7 @@ public class Worker extends Thread {
                 if (stream != null)
                     stream.close();
             } catch (IOException ex) {
-                Main.ADMIN._log(ex, 3);
+                Main.ADMIN.logException(ex, Flair.ERROR);
             }
         }
 

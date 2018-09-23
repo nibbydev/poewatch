@@ -1,13 +1,13 @@
 package watch.poe.database;
 
 import watch.poe.Config;
+import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.Misc;
 import watch.poe.account.AccountRelation;
 import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
-import watch.poe.league.derserializer.BaseLeague;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.RawEntry;
 import watch.poe.relations.CategoryEntry;
@@ -39,8 +39,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Failed to connect to databases", 5);
+            Main.ADMIN.logException(ex, Flair.FATAL);
+            Main.ADMIN.log("Failed to connect to databases", Flair.FATAL);
         }
 
         return false;
@@ -53,7 +53,7 @@ public class Database {
         try {
             if (connection != null) connection.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Main.ADMIN.logException(ex, Flair.CRITICAL);
         }
     }
 
@@ -126,8 +126,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not upload account names", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not upload account names", Flair.ERROR);
             return false;
         }
     }
@@ -206,8 +206,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not get account name relations", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not get account name relations", Flair.ERROR);
             return false;
         }
     }
@@ -238,8 +238,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not create account relation", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not create account relation", Flair.ERROR);
             return false;
         }
     }
@@ -273,8 +273,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query database league list", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query database league list", Flair.ERROR);
             return false;
         }
     }
@@ -320,8 +320,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query categories", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query categories", Flair.ERROR);
             return false;
         }
     }
@@ -364,8 +364,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query item ids", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query item ids", Flair.ERROR);
             return false;
         }
     }
@@ -406,8 +406,8 @@ public class Database {
 
             return tmpCurrencyLeagueMap;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query currency rates from database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query currency rates from database", Flair.ERROR);
             return null;
         }
     }
@@ -441,8 +441,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query currency aliases from database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query currency aliases from database", Flair.ERROR);
             return false;
         }
     }
@@ -482,8 +482,8 @@ public class Database {
             }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add parent category to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add parent category to database", Flair.ERROR);
             return null;
         }
     }
@@ -523,8 +523,8 @@ public class Database {
             }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add child category to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add child category to database", Flair.ERROR);
             return null;
         }
     }
@@ -551,8 +551,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (Exception ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not create item in database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not create item in database", Flair.ERROR);
             return false;
         }
     }
@@ -623,8 +623,8 @@ public class Database {
             }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add item data to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add item data to database", Flair.ERROR);
             return null;
         }
     }
@@ -668,8 +668,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add raw values to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add raw values to database", Flair.ERROR);
             return false;
         }
     }
@@ -730,8 +730,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update database league list", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update database league list", Flair.ERROR);
             return false;
         }
     }
@@ -756,8 +756,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update database change id", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update database change id", Flair.ERROR);
             return false;
         }
     }
@@ -802,8 +802,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate prices", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate prices", Flair.ERROR);
             return false;
         }
     }
@@ -838,8 +838,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate volatile median", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate volatile median", Flair.ERROR);
             return false;
         }
     }
@@ -875,8 +875,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate exalted", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate exalted", Flair.ERROR);
             return false;
         }
     }
@@ -908,8 +908,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate quantity", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate quantity", Flair.ERROR);
             return false;
         }
     }
@@ -948,8 +948,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate spark", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate spark", Flair.ERROR);
             return false;
         }
     }
@@ -990,8 +990,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update volatile status", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update volatile status", Flair.ERROR);
             return false;
         }
     }
@@ -1023,8 +1023,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update approved state", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update approved state", Flair.ERROR);
             return false;
         }
     }
@@ -1055,8 +1055,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update multipliers", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update multipliers", Flair.ERROR);
             return false;
         }
     }
@@ -1104,8 +1104,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update counters", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update counters", Flair.ERROR);
             return false;
         }
     }
@@ -1128,8 +1128,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not reset counters", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not reset counters", Flair.ERROR);
             return false;
         }
     }
@@ -1165,8 +1165,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add hourly", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add hourly", Flair.ERROR);
             return false;
         }
     }
@@ -1198,8 +1198,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add daily", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add daily", Flair.ERROR);
             return false;
         }
     }
@@ -1240,8 +1240,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove old item entries", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not remove old item entries", Flair.ERROR);
             return false;
         }
     }
@@ -1295,8 +1295,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not move inactive item entries", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not move inactive item entries", Flair.ERROR);
             return false;
         }
     }

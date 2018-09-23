@@ -2,6 +2,7 @@ package watch.poe;
 
 import watch.poe.account.AccountManager;
 import watch.poe.admin.AdminSuite;
+import watch.poe.admin.Flair;
 import watch.poe.database.Database;
 import watch.poe.league.LeagueManager;
 import watch.poe.pricer.EntryManager;
@@ -181,11 +182,11 @@ public class Main {
                         commandMoveItem(userInput);
 
                     default:
-                        ADMIN.log_(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]), 3);
+                        ADMIN.log(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]), Flair.ERROR);
                         break;
                 }
             } catch (IOException ex) {
-                Main.ADMIN._log(ex, 4);
+                Main.ADMIN.logException(ex, Flair.ERROR);
             }
         }
     }
@@ -221,9 +222,9 @@ public class Main {
                 writer.write(buffer, 0, length);
             }
 
-            Main.ADMIN.log_("Created file: " + output.getCanonicalPath(), 1);
+            Main.ADMIN.log("Created file: " + output.getCanonicalPath(), Flair.INFO);
         } catch (IOException ex) {
-            Main.ADMIN._log(ex, 4);
+            Main.ADMIN.logException(ex, Flair.ERROR);
             return false;
         } finally {
             try {
@@ -235,7 +236,7 @@ public class Main {
                     writer.close();
                 }
             } catch (IOException ex) {
-                Main.ADMIN._log(ex, 4);
+                Main.ADMIN.logException(ex, Flair.ERROR);
             }
         }
 
@@ -402,20 +403,20 @@ public class Main {
     private static void commandAcc(String[] userInput) {
         switch (userInput[1]) {
             case "run":
-                ADMIN.log_("Starting account matching", 1);
+                ADMIN.log("Starting account matching", Flair.INFO);
                 ACCOUNT_MANAGER.checkAccountNameChanges();
-                ADMIN.log_("Account matching finished", 1);
+                ADMIN.log("Account matching finished", Flair.INFO);
                 break;
 
             default:
-                ADMIN.log_(String.format("Unknown command: '%s'. Use 'help'.", userInput[1]), 3);
+                ADMIN.log(String.format("Unknown command: '%s'. Use 'help'.", userInput[1]), Flair.ERROR);
                 break;
         }
     }
 
     private static void commandMoveItem(String[] userInput) {
-        ADMIN.log_("Moving inactive item entries to separate table...", 1);
+        ADMIN.log("Moving inactive item entries to separate table...", Flair.INFO);
         DATABASE.moveInactiveItemEntries();
-        ADMIN.log_("Moving finished", 1);
+        ADMIN.log("Moving finished", Flair.INFO);
     }
 }

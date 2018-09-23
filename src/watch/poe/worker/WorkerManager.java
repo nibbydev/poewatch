@@ -3,6 +3,7 @@ package watch.poe.worker;
 import com.google.gson.Gson;
 import watch.poe.Config;
 import watch.poe.Main;
+import watch.poe.admin.Flair;
 import watch.poe.item.Mappers;
 
 import java.io.InputStream;
@@ -76,12 +77,12 @@ public class WorkerManager extends Thread {
 
         // Loop though every worker and call stop method
         for (Worker worker : workerList) {
-            Main.ADMIN.log_("Stopping worker (" + worker.getIndex() + ")", 1);
+            Main.ADMIN.log("Stopping worker (" + worker.getIndex() + ")", Flair.INFO);
             worker.stopWorker();
-            Main.ADMIN.log_("Worker (" + worker.getIndex() + ") stopped", 1);
+            Main.ADMIN.log("Worker (" + worker.getIndex() + ") stopped", Flair.INFO);
         }
 
-        Main.ADMIN.log_("Stopping controller", 1);
+        Main.ADMIN.log("Stopping controller", Flair.INFO);
 
         // Wait until run() function is ready to exit
         while (!readyToExit) try {
@@ -94,7 +95,7 @@ public class WorkerManager extends Thread {
 
         } catch (InterruptedException ex) { }
 
-        Main.ADMIN.log_("Controller stopped", 1);
+        Main.ADMIN.log("Controller stopped", Flair.INFO);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -105,7 +106,7 @@ public class WorkerManager extends Thread {
      */
     public void printAllWorkers() {
         for (Worker workerObject : workerList) {
-            Main.ADMIN.log_("    " + workerObject.getIndex() + ": " + workerObject.getJob(), 1);
+            Main.ADMIN.log("    " + workerObject.getIndex() + ": " + workerObject.getJob(), Flair.INFO);
         }
     }
 
@@ -144,7 +145,7 @@ public class WorkerManager extends Thread {
 
         // Can't remove what's not there
         if (lastWorkerIndex <= 0 || lastWorkerIndex - workerCount < 0) {
-            Main.ADMIN.log_("Not enough active workers", 3);
+            Main.ADMIN.log("Not enough active workers", Flair.ERROR);
             return;
         }
 
@@ -210,8 +211,8 @@ public class WorkerManager extends Thread {
         try {
             response = gson.fromJson(response, Mappers.ChangeID.class).get();
         } catch (Exception ex) {
-            Main.ADMIN.log_("Could not download ChangeID from: " + url, 3);
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN.log("Could not download ChangeID from: " + url, Flair.ERROR);
+            Main.ADMIN.logException(ex, Flair.ERROR);
         }
 
         return response;

@@ -3,6 +3,7 @@ package watch.poe.league;
 
 import watch.poe.Config;
 import watch.poe.Main;
+import watch.poe.admin.Flair;
 import watch.poe.league.derserializer.BaseLeague;
 import watch.poe.league.derserializer.Rule;
 
@@ -91,7 +92,7 @@ public class LeagueEntry {
         try {
             return format.parse(date);
         } catch (ParseException ex) {
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
         }
 
         return null;

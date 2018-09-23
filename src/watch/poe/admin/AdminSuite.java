@@ -1,32 +1,27 @@
 package watch.poe.admin;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 
 import watch.poe.Config;
 import watch.poe.Main;
-import watch.poe.Misc;
 
 public class AdminSuite {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private final ArrayList<LogMessage> log = new ArrayList<>(Config.admin_logSize);
     private String lastChangeId = null;
 
-    //------------------------------------------------------------------------------------------------------------
-    // Logging methods. All of these have slightly different content and need to be formatted.
-    //------------------------------------------------------------------------------------------------------------
-
     /**
-     * Logs messages to internal array and file
+     * Logs messages
      *
      * @param msg Message to be logged
      * @param flair Flair to be attached
      */
-    public void log_(String msg, int flair) {
+    public void log(String msg, Flair flair) {
         LogMessage logMsg = new LogMessage(msg, flair);
+
         System.out.println(logMsg.toString());
+
         log.add(logMsg);
 
         if (log.size() > Config.admin_logSize) {
@@ -34,13 +29,27 @@ public class AdminSuite {
         }
     }
 
-    public void _log(Exception ex, int flair) {
-        log_(Misc.stackTraceToString(ex), flair);
+    /**
+     * Logs exception
+     *
+     * @param ex Exception to be logged
+     * @param flair Flair to be attached
+     */
+    public void logException(Exception ex, Flair flair) {
+        log(stackTraceToString(ex), flair);
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Statistical methods
-    //------------------------------------------------------------------------------------------------------------
+    /**
+     * Converts exception stack trace to string
+     *
+     * @param ex Exception to convert to string
+     * @return Exception as string
+     */
+    private static String stackTraceToString(Exception ex) {
+        StringWriter stringWriter = new StringWriter();
+        ex.printStackTrace(new PrintWriter(stringWriter));
+        return stringWriter.toString();
+    }
 
     /**
      * Updates the change id entry in the database

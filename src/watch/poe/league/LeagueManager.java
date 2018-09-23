@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import watch.poe.Config;
 import watch.poe.Main;
+import watch.poe.admin.Flair;
 import watch.poe.league.derserializer.BaseLeague;
 import watch.poe.league.derserializer.Rule;
 
@@ -45,10 +46,10 @@ public class LeagueManager {
         success = Main.DATABASE.getLeagues(leagues);
         if (!success) {
             // Download failed AND database doesn't have league data. Shut down the program.
-            Main.ADMIN.log_("Failed to query leagues from API and database", 5);
+            Main.ADMIN.log("Failed to query leagues from API and database", Flair.FATAL);
             return false;
         } else if (leagues.isEmpty()) {
-            Main.ADMIN.log_("Failed to query leagues from API and database did not contain any records", 5);
+            Main.ADMIN.log("Failed to query leagues from API and database did not contain any records", Flair.FATAL);
             return false;
         }
 
@@ -243,10 +244,10 @@ public class LeagueManager {
 
             return true;
         } catch (SocketTimeoutException ex) {
-            Main.ADMIN.log_("Failed to download league list (timeout)", 3);
+            Main.ADMIN.log("Failed to download league list (timeout)", Flair.ERROR);
             return false;
         } catch (Exception ex) {
-            Main.ADMIN.log_("Failed to download league list", 3);
+            Main.ADMIN.log("Failed to download league list", Flair.ERROR);
             ex.printStackTrace();
             return false;
         } finally {
@@ -255,7 +256,7 @@ public class LeagueManager {
                     stream.close();
                 }
             } catch (IOException ex) {
-                Main.ADMIN._log(ex, 3);
+                Main.ADMIN.logException(ex, Flair.ERROR);
             }
         }
     }
