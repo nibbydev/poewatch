@@ -316,9 +316,11 @@ function CheckQueryParams($leagues, $categories) {
 
   // Check if user-provided category param is valid
   if (isset($_GET['league'])) {
-    if (!in_array($_GET['category'], $categories, true)) {
-      header("Location: prices");
-      exit();
+    if ($_GET['category'] !== 'relic') {
+      if (!in_array($_GET['category'], $categories, true)) {
+        header("Location: prices");
+        exit();
+      }
     }
   }
 }
