@@ -65,35 +65,8 @@
           <div class="row mb-3">
             <div class='col d-flex flex-column'>
 
-              <?php FormGen::GenForm($category) ?>
-              
-              <div class='d-flex flex-wrap'>
-                <div class='mr-3'>
-                  <h4 class='nowrap'>Low count</h4>
-                  <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-                    <label class="btn btn-outline-dark <?php if (!isset($_GET["confidence"])) echo "active"; ?>">
-                      <input type="radio" name="confidence" value="false" <?php if (!isset($_GET["confidence"])) echo "checked"; ?>><a>Hide</a>
-                    </label>
-                    <label class="btn btn-outline-dark <?php if (isset($_GET["confidence"])) echo "active"; ?>">
-                      <input type="radio" name="confidence" value="true" <?php if (isset($_GET["confidence"])) echo "checked"; ?>><a>Show</a>
-                    </label>
-                  </div>
-                </div>
+              <?php new FormGen($pdo, $category); ?>
 
-                <div class='ml-auto mr-3'>
-                  <h4>Group</h4>
-                  <select class="form-control custom-select" id="search-group">
-                  
-                    <?php GenGroupSelectFields($pdo, $category) ?>
-
-                  </select>
-                </div>
-
-                <div>
-                  <h4>Search</h4>
-                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
-                </div>
-              </div>
             </div>
           </div>
 

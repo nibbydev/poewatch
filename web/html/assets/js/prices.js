@@ -152,7 +152,7 @@ class ItemRow {
     </td>
     `.trim();
 
-    return template.replace("{{tier}}", this.item.tier ? this.item.tier : "-");
+    return this.item.tier ? template.replace("{{tier}}", this.item.tier) : "<td></td>";
   }
   
   buildPriceFields() {
