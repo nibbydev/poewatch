@@ -1,15 +1,11 @@
 package watch.poe.pricer;
 
-import com.google.gson.Gson;
 import watch.poe.*;
+import watch.poe.Config;
 import watch.poe.item.Item;
 import watch.poe.item.ItemParser;
 import watch.poe.item.Mappers;
-import watch.poe.pricer.itemdata.ItemdataEntry;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.*;
 
 public class EntryManager extends Thread {
@@ -21,7 +17,6 @@ public class EntryManager extends Thread {
     private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
-    private Gson gson;
 
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
@@ -148,7 +143,7 @@ public class EntryManager extends Thread {
 
         // Check league API every 10 minutes
         if (status.isTenBool()) {
-            Main.LEAGUE_MANAGER.download();
+            Main.LEAGUE_MANAGER.cycle();
         }
 
         // Check if there are matching account name changes
@@ -368,9 +363,5 @@ public class EntryManager extends Thread {
 
     public StatusElement getStatus() {
         return status;
-    }
-
-    public void setGson(Gson gson) {
-        this.gson = gson;
     }
 }

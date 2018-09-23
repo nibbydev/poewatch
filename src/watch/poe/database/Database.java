@@ -7,11 +7,9 @@ import watch.poe.Misc;
 import watch.poe.account.AccountRelation;
 import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
+import watch.poe.league.derserializer.BaseLeague;
 import watch.poe.pricer.AccountEntry;
-import watch.poe.pricer.FileEntry;
 import watch.poe.pricer.RawEntry;
-import watch.poe.pricer.itemdata.ItemdataEntry;
-import watch.poe.pricer.ParcelEntry;
 import watch.poe.relations.CategoryEntry;
 
 import java.sql.*;
@@ -30,17 +28,22 @@ public class Database {
 
     /**
      * Initializes connection to the MySQL database
+     *
+     * @return True on success
      */
-    public void connect() {
+    public boolean connect() {
         try {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
+
+            return true;
         } catch (SQLException ex) {
             ex.printStackTrace();
             Main.ADMIN.log_("Failed to connect to databases", 5);
-            System.exit(0);
         }
+
+        return false;
     }
 
     /**
@@ -260,12 +263,11 @@ public class Database {
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
+                // Empty provided list just in case
                 leagueEntries.clear();
 
                 while (resultSet.next()) {
-                    LeagueEntry leagueEntry = new LeagueEntry();
-                    leagueEntry.load(resultSet);
-                    leagueEntries.add(leagueEntry);
+                    leagueEntries.add( new LeagueEntry(resultSet) );
                 }
             }
 
@@ -679,9 +681,9 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query1 = "INSERT INTO data_leagues (" +
-                        "  name, event) " +
-                        "SELECT ?, ? " +
+        String query1 = "INSERT INTO " +
+                        "  data_leagues (name) " +
+                        "SELECT ? " +
                         "FROM   DUAL " +
                         "WHERE  NOT EXISTS ( " +
                         "  SELECT 1 " +
@@ -692,8 +694,10 @@ public class Database {
         String query2 = "UPDATE data_leagues " +
                         "SET    start    = ?, " +
                         "       end      = ?, " +
-                        "       upcoming = 0," +
-                        "       active   = 1 " +
+                        "       upcoming = 0, " +
+                        "       active   = 1, " +
+                        "       event    = ?," +
+                        "       hardcore = ? " +
                         "WHERE  name     = ? " +
                         "LIMIT  1; ";
 
@@ -703,8 +707,7 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getName());
-                    statement.setInt(2, leagueEntry.isEvent() ? 1 : 0);
-                    statement.setString(3, leagueEntry.getName());
+                    statement.setString(2, leagueEntry.getName());
                     statement.addBatch();
                 }
 
@@ -715,7 +718,9 @@ public class Database {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getStartAt());
                     statement.setString(2, leagueEntry.getEndAt());
-                    statement.setString(3, leagueEntry.getName());
+                    statement.setInt(3, leagueEntry.isEvent() ? 1 : 0);
+                    statement.setInt(4, leagueEntry.isHardcore() ? 1 : 0);
+                    statement.setString(5, leagueEntry.getName());
                     statement.addBatch();
                 }
 

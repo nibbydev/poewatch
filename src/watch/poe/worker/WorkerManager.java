@@ -14,7 +14,7 @@ import java.util.ArrayList;
  */
 public class WorkerManager extends Thread {
     private ArrayList<Worker> workerList = new ArrayList<>();
-    private final Gson gson = Main.getGson();
+    private final Gson gson = new Gson();
     private final Object monitor = new Object();
     private volatile boolean flag_Run = true;
     private volatile boolean readyToExit = false;

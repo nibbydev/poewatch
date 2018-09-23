@@ -3,6 +3,8 @@ package watch.poe.league;
 
 import watch.poe.Config;
 import watch.poe.Main;
+import watch.poe.league.derserializer.BaseLeague;
+import watch.poe.league.derserializer.Rule;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,23 +15,30 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class LeagueEntry {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
+    private String name, display, startAt, endAt;
+    private boolean event, active, hardcore;
+    private int id;
 
-    private String id, display, startAt, endAt;
-    private int dbId;
-    private boolean event, active;
+    public LeagueEntry(BaseLeague baseLeague) {
+        name = baseLeague.getName();
+        startAt = baseLeague.getStartAt();
+        endAt = baseLeague.getEndAt();
+        event = baseLeague.isEvent();
 
-    //------------------------------------------------------------------------------------------------------------
-    // Main methods
-    //------------------------------------------------------------------------------------------------------------
+        for (Rule rule : baseLeague.getRules()) {
+            if (rule.getName().equals("Hardcore")) {
+                hardcore = true;
+                break;
+            }
+        }
+    }
 
-    public void load(ResultSet resultSet) throws SQLException {
-        dbId = resultSet.getInt("id");
-        id = resultSet.getString("name");
+    public LeagueEntry(ResultSet resultSet) throws SQLException {
+        id = resultSet.getInt("id");
+        name = resultSet.getString("name");
         active = resultSet.getInt("active") == 1;
         event = resultSet.getInt("event") == 1;
+        hardcore = resultSet.getInt("hardcore") == 1;
         display = resultSet.getString("display");
         startAt = resultSet.getString("start");
         endAt = resultSet.getString("end");
@@ -69,10 +78,6 @@ public class LeagueEntry {
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Utility methods
-    //------------------------------------------------------------------------------------------------------------
-
     /**
      * Converts string date found in league api to Date object
      *
@@ -97,7 +102,7 @@ public class LeagueEntry {
     //------------------------------------------------------------------------------------------------------------
 
     public String getName() {
-        return id;
+        return name;
     }
 
     public String getEndAt() {
@@ -113,7 +118,7 @@ public class LeagueEntry {
     }
 
     public Integer getId() {
-        return dbId;
+        return id;
     }
 
     public boolean isActive() {
@@ -122,5 +127,9 @@ public class LeagueEntry {
 
     public boolean isEvent() {
         return event;
+    }
+
+    public boolean isHardcore() {
+        return hardcore;
     }
 }

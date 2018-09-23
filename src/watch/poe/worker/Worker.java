@@ -21,7 +21,7 @@ public class Worker extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     private final Object monitor = new Object();
-    private final Gson gson = Main.getGson();
+    private final Gson gson = new Gson();
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;

@@ -1,7 +1,5 @@
 package watch.poe;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import watch.poe.account.AccountManager;
 import watch.poe.admin.AdminSuite;
 import watch.poe.database.Database;
@@ -20,21 +18,20 @@ public class Main {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private static GsonBuilder gsonBuilder;
+    public static RelationManager RELATIONS;
+    public static AccountManager ACCOUNT_MANAGER;
+    public static LeagueManager LEAGUE_MANAGER;
     public static WorkerManager WORKER_MANAGER;
     public static EntryManager ENTRY_MANAGER;
-    public static RelationManager RELATIONS;
     public static AdminSuite ADMIN;
-    public static LeagueManager LEAGUE_MANAGER;
     public static Database DATABASE;
-    public static AccountManager ACCOUNT_MANAGER;
 
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * The main class. Run this to run the program
+     * App entry point
      *
      * @param args CLI args
      */
@@ -42,22 +39,20 @@ public class Main {
         boolean success;
 
         try {
-            gsonBuilder = new GsonBuilder();
-            gsonBuilder.disableHtmlEscaping();
-            gsonBuilder.serializeNulls();
-
             // Init admin suite
             ADMIN = new AdminSuite();
 
-            // Make sure basic folder structure exists
+            // Generate config, if missing
             saveResource(Config.resource_config, Config.file_config);
 
+            // Initialize database connector
             DATABASE = new Database();
-            DATABASE.connect();
+            success = DATABASE.connect();
+            if (!success) return;
 
             // Init league manager
             LEAGUE_MANAGER = new LeagueManager();
-            success = LEAGUE_MANAGER.loadLeaguesOnStartup();
+            success = LEAGUE_MANAGER.cycle();
             if (!success) return;
 
             // Get category, item and currency data
@@ -68,7 +63,6 @@ public class Main {
             ACCOUNT_MANAGER = new AccountManager();
             WORKER_MANAGER = new WorkerManager();
             ENTRY_MANAGER = new EntryManager();
-            ENTRY_MANAGER.setGson(gsonBuilder.create());
 
             // Parse CLI parameters
             parseCommandParameters(args);
@@ -201,7 +195,7 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
 
     /**
-     * Reads files from the .jar and writes them to filepath
+     * Reads resource files from the .jar and writes them to filepath
      *
      * @param input URL object to resource
      * @param output File object to output file
@@ -423,18 +417,5 @@ public class Main {
         ADMIN.log_("Moving inactive item entries to separate table...", 1);
         DATABASE.moveInactiveItemEntries();
         ADMIN.log_("Moving finished", 1);
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Creates an instance of Gson
-     *
-     * @return Gson instance
-     */
-    public static Gson getGson() {
-        return gsonBuilder.create();
     }
 }

@@ -85,6 +85,7 @@ CREATE TABLE data_leagues (
     active   TINYINT(1)   UNSIGNED NOT NULL DEFAULT 1,
     upcoming TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
     event    TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    hardcore TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
     name     VARCHAR(64)  NOT NULL UNIQUE,
     display  VARCHAR(64)  DEFAULT NULL,
     start    VARCHAR(32)  DEFAULT NULL,
@@ -372,22 +373,26 @@ CREATE TABLE account_history (
 --
 
 INSERT INTO data_leagues
-    (id, active, name, display)
+    (id, active, hardcore, name, display)
 VALUES
-    (1,  1, 'Hardcore',            'Hardcore'     ),
-    (2,  1, 'Standard',            'Standard'     ),
-    (3,  0, 'Hardcore Breach',     'HC Breach'    ),
-    (4,  0, 'Breach',              'Breach'       ),
-    (5,  0, 'Hardcore Legacy',     'HC Legacy'    ),
-    (6,  0, 'Legacy',              'Legacy'       ),
-    (7,  0, 'Hardcore Harbinger',  'HC Harbinger' ),
-    (8,  0, 'Harbinger',           'Harbinger'    ),
-    (9,  0, 'Hardcore Abyss',      'HC Abyss'     ),
-    (10, 0, 'Abyss',               'Abyss'        ),
-    (11, 0, 'Hardcore Bestiary',   'HC Bestiary'  ),
-    (12, 0, 'Bestiary',            'Bestiary'     ),
-    (13, 0, 'Hardcore Incursion',  'HC Incursion' ),
-    (14, 0, 'Incursion',           'Incursion'    );
+    (1,  1, 1, 'Hardcore',                      'Hardcore'          ),
+    (2,  1, 0, 'Standard',                      'Standard'          ),
+    (3,  0, 1, 'Hardcore Breach',               'HC Breach'         ),
+    (4,  0, 0, 'Breach',                        'Breach'            ),
+    (5,  0, 1, 'Hardcore Legacy',               'HC Legacy'         ),
+    (6,  0, 0, 'Legacy',                        'Legacy'            ),
+    (7,  0, 1, 'Hardcore Harbinger',            'HC Harbinger'      ),
+    (8,  0, 0, 'Harbinger',                     'Harbinger'         ),
+    (9,  0, 1, 'Hardcore Abyss',                'HC Abyss'          ),
+    (10, 0, 0, 'Abyss',                         'Abyss'             ),
+    (11, 0, 1, 'Hardcore Bestiary',             'HC Bestiary'       ),
+    (12, 0, 0, 'Bestiary',                      'Bestiary'          ),
+    (13, 0, 1, 'Hardcore Incursion',            'HC Incursion'      ),
+    (14, 0, 0, 'Incursion',                     'Incursion'         ),
+    (15, 0, 1, 'Incursion Event HC (IRE002)',   'HC Incursion Event'),
+    (16, 0, 0, 'Incursion Event (IRE001)',      'Incursion Event'   ),
+    (17, 0, 1, 'Hardcore Delve',                'HC Delve'          ),
+    (18, 0, 0, 'Delve',                         'Delve'             );
 
 --
 -- Base value for data_changeId
