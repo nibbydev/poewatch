@@ -248,7 +248,7 @@ public class LeagueManager {
             return false;
         } catch (Exception ex) {
             Main.ADMIN.log("Failed to download league list", Flair.ERROR);
-            ex.printStackTrace();
+            Main.ADMIN.logException(ex, Flair.ERROR);
             return false;
         } finally {
             try {

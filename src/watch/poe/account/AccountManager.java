@@ -124,7 +124,7 @@ public class AccountManager extends Thread {
 
             return connection.getResponseCode();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Main.ADMIN.logException(ex, Flair.ERROR);
         }
 
         return 0;
