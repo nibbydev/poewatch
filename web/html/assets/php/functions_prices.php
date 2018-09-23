@@ -229,27 +229,9 @@ function GenGroupSelectFields($pdo, $category) {
   }
 }
 
-// Get all available category relations
-function GetCategoryTranslations($pdo) {
-  $query = "SELECT name, display FROM category_child
-  UNION
-  SELECT name, display FROM category_parent";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute();
-
-  $payload = array();
-
-  while ($row = $stmt->fetch()) {
-    $payload[ $row['name'] ] = $row['display'];
-  }
-
-  return $payload;
-}
-
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT l.id, l.name, l.display, l.active, l.upcoming, l.event 
+  $query = "SELECT l.name, l.display, l.active
   FROM data_leagues AS l 
   JOIN ( 
     SELECT DISTINCT id_l FROM league_items_rolling 
@@ -263,6 +245,18 @@ function GetLeagues($pdo) {
   
   while ($row = $stmt->fetch()) {
     $payload[] = $row;
+  }
+
+  return $payload;
+}
+
+// Get all available category relations
+function GetCategories($pdo) {
+  $stmt = $pdo->query("SELECT name FROM category_parent");
+  
+  $payload = array();
+  while ($row = $stmt->fetch()) {
+    $payload[] = $row['name'];
   }
 
   return $payload;
@@ -299,4 +293,32 @@ function AddTableHeaders($category) {
   echo "<th scope='col'>Exalted</th>";
   echo "<th scope='col' class='fixedSizeCol'>Change</th>";
   echo "<th scope='col' class='fixedSizeCol'>Count</th>";
+}
+
+// Redirects user to url with necessary query parameters, if missing
+function CheckQueryParams($leagues, $categories) {
+  // Check if user-provided league param is valid
+  if (isset($_GET['league'])) {
+    $found = false;
+    
+    foreach ($leagues as $lEntry) {
+      if ($lEntry['name'] === $_GET['league']) {
+        $found = true;
+        break;
+      }
+    }
+
+    if (!$found) {
+      header("Location: prices");
+      exit();
+    }
+  }
+
+  // Check if user-provided category param is valid
+  if (isset($_GET['league'])) {
+    if (!in_array($_GET['category'], $categories, true)) {
+      header("Location: prices");
+      exit();
+    }
+  }
 }

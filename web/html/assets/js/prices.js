@@ -790,14 +790,10 @@ const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
-  if (!SERVICE_category) return;
-
-  FILTER.league = SERVICE_leagues[0].name;
-  FILTER.category = SERVICE_category;
-
-  readLeagueFromCookies(FILTER, SERVICE_leagues);
   parseQueryParams();
-  makeGetRequest(FILTER.league, FILTER.category);
+
+  readLeagueFromCookies();
+  makeGetRequest();
   defineListeners();
 }); 
 
@@ -805,38 +801,36 @@ $(document).ready(function() {
 // Data prep
 //------------------------------------------------------------------------------------------------------------
 
-function readLeagueFromCookies(FILTER, leagues) {
-  let league = getCookie("league");
-
-  if (league) {
-    console.log("Got league from cookie: " + league);
-
-    // Check if league from cookie is still active
-    for (let i = 0; i < leagues.length; i++) {
-      const entry = leagues[i];
-      
-      if (league === entry.name) {
-        FILTER.league = league;
-        // Point league dropdown to that league
-        $("#search-league").val(league);
-        return;
-      }
-    }
-
-    console.log("League cookie did not match any active leagues");
-  }
-}
-
 function parseQueryParams() {
   let tmp;
+
+  if (tmp = parseQueryParam('league')) {
+    $("#search-league").val(tmp);
+    FILTER.league = tmp;
+  } else {
+    FILTER.league = SERVICE_leagues[0].name;
+    updateQueryParam("league", FILTER.league);
+  }
+
+  if (tmp = parseQueryParam('category')) {
+    FILTER.category = tmp;
+  } else {
+    FILTER.category = "currency";
+    updateQueryParam("category", FILTER.category);
+  }
 
   if (tmp = parseQueryParam('group')) {
     FILTER.group = tmp;
     $('#search-group').val(tmp);
   }
 
-  if (tmp = parseQueryParam('search')) FILTER.search = tmp;
-  if (tmp = parseQueryParam('confidence')) FILTER.showLowConfidence = true;
+  if (tmp = parseQueryParam('search')) {
+    FILTER.search = tmp;
+  }
+
+  if (tmp = parseQueryParam('confidence')) {
+    FILTER.showLowConfidence = true;
+  }
 
   if (tmp = parseQueryParam('rarity')) {
     if      (tmp === "unique") FILTER.rarity =    3;
@@ -850,7 +844,6 @@ function parseQueryParams() {
 
   if (tmp = parseQueryParam('tier')) {
     $('#select-tier').val(tmp);
-
     if (tmp === "none") FILTER.tier = 0;
     else FILTER.tier = parseInt(tmp);
   }
@@ -871,7 +864,6 @@ function parseQueryParams() {
 
   if (tmp = parseQueryParam('ilvl')) {
     $('#select-ilvl').val(tmp);
-
     let splitRange = tmp.split("-");
     FILTER.baseIlvlMin = parseInt(splitRange[0]);
     FILTER.baseIlvlMax = parseInt(splitRange[1]);
@@ -883,13 +875,37 @@ function parseQueryParams() {
   }
 }
 
+function readLeagueFromCookies() {
+  let league = getCookie("league");
+
+  if (league) {
+    console.log("Got league from cookie: " + league);
+
+    // Check if league from cookie is still active
+    for (let i = 0; i < SERVICE_leagues.length; i++) {
+      const entry = SERVICE_leagues[i];
+      
+      if (league === entry.name) {
+        FILTER.league = league;
+        // Point league dropdown to that league
+        updateQueryParam("league", FILTER.league);
+        $("#search-league").val(FILTER.league);
+        return;
+      }
+    }
+
+    console.log("League cookie did not match any active leagues");
+  }
+}
+
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
     FILTER.league = $(":selected", this).val();
     console.log("Selected league: " + FILTER.league);
     document.cookie = "league="+FILTER.league;
-    makeGetRequest(FILTER.league, FILTER.category);
+    updateQueryParam("league", FILTER.league);
+    makeGetRequest();
   });
 
   // Subcategory
@@ -1045,7 +1061,7 @@ function defineListeners() {
 // Requests
 //------------------------------------------------------------------------------------------------------------
 
-function makeGetRequest(league, category) {
+function makeGetRequest() {
   $("#searchResults tbody").empty();
   $(".buffering").show();
   $("#button-showAll").hide();
@@ -1054,8 +1070,8 @@ function makeGetRequest(league, category) {
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
-      league: league, 
-      category: category
+      league: FILTER.league, 
+      category: FILTER.category
     },
     type: "GET",
     async: true,
