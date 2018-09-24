@@ -239,7 +239,10 @@ footer {
   height: 20px;
   background-color: #444;
 }
-.progressbar-bar {background-color: #888}
+.progressbar-bar {
+  width: 0px;
+  background-color: #888;
+}
 
 /*------------------------------------------------------------------------------------------------------------
 // Misc
