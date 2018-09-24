@@ -60,4 +60,4 @@ $stmt = get_data($pdo);
 $payload = parse_data($stmt);
 
 // Display generated data
-echo json_encode($payload, JSON_PRETTY_PRINT);
+echo json_encode($payload);

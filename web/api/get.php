@@ -257,4 +257,4 @@ if ($stmt->rowCount() === 0) {
 $data = parse_data($stmt, $state["active"]);
 
 // Display generated data
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);

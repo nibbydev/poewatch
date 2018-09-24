@@ -167,4 +167,4 @@ $historyData = parse_history_data($stmt);
 $payload = form_payload($itemData, $historyData);
 
 // Display generated data
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
