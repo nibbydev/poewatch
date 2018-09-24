@@ -18,6 +18,7 @@ public class EntryManager extends Thread {
     private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
+    private Timer timer = new Timer();
 
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
@@ -38,11 +39,10 @@ public class EntryManager extends Thread {
         fixCounters();
 
         // Display counters
-        String modtString = String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
+        Main.ADMIN.log(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
                 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
-                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000);
-        Main.ADMIN.log(modtString, Flair.INFO);
+                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000), Flair.INFO);
 
         // Main thread loop
         while (flagLocalRun) {
@@ -153,34 +153,35 @@ public class EntryManager extends Thread {
         }
 
         // Upload gathered prices
-        long time_upload = System.currentTimeMillis();
+        timer.start("upload");
         uploadRawEntries();
-        time_upload = System.currentTimeMillis() - time_upload;
+        timer.clk("upload");
 
         // Upload account names
-        long time_account = System.currentTimeMillis();
+        timer.start("account");
         uploadAccounts();
-        time_account = System.currentTimeMillis() - time_account;
+        timer.clk("account");
 
         // Recalculate prices in database
-        long time_cycle = System.currentTimeMillis();
+        timer.start("cycle");
         cycleDatabase();
-        time_cycle = System.currentTimeMillis() - time_cycle;
+        timer.clk("cycle");
 
         // Get latest currency rates
-        long time_prices = System.currentTimeMillis();
+        timer.start("prices");
         currencyLeagueMap = Main.DATABASE.getCurrencyMap();
-        time_prices = System.currentTimeMillis() - time_prices;
+        timer.clk("prices");
 
         // Prepare cycle message
-        String cycleMsg = String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
+        Main.ADMIN.log(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
                 System.currentTimeMillis() - status.lastRunTime,
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
                 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
                 1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000,
-                time_cycle, time_prices,
-                time_upload, time_account);
-        Main.ADMIN.log(cycleMsg, Flair.STATUS);
+                timer.getLatestMS("cycle"),
+                timer.getLatestMS("prices"),
+                timer.getLatestMS("upload"),
+                timer.getLatestMS("account")), Flair.STATUS);
 
         // Switch off flags
         status.setTwentyFourBool(false);
@@ -224,75 +225,83 @@ public class EntryManager extends Thread {
      * Recalculates database data
      */
     private void cycleDatabase() {
-        long a;
-        long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0;
-        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
-        long a30 = 0, a31 = 0;
-
         if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a20");
             Main.DATABASE.updateVolatile();
-            a20 += System.currentTimeMillis() - a;
+            timer.clk("a20");
 
-            a = System.currentTimeMillis();
+            timer.start("a21");
             Main.DATABASE.calculateVolatileMedian();
-            a21 += System.currentTimeMillis() - a;
+            timer.clk("a21");
         }
 
-        a = System.currentTimeMillis();
+        timer.start("a10");
         Main.DATABASE.updateApproved();
-        a10 += System.currentTimeMillis() - a;
+        timer.clk("a10");
 
-        a = System.currentTimeMillis();
+        timer.start("a11");
         Main.DATABASE.updateCounters();
-        a11 += System.currentTimeMillis() - a;
+        timer.clk("a11");
 
-        a = System.currentTimeMillis();
+        timer.start("a12");
         Main.DATABASE.calculatePrices();
-        a12 += System.currentTimeMillis() - a;
+        timer.clk("a12");
 
-        a = System.currentTimeMillis();
+        timer.start("a13");
         Main.DATABASE.calculateExalted();
-        a13 += System.currentTimeMillis() - a;
+        timer.clk("a13");
 
-        a = System.currentTimeMillis();
+        timer.start("a14");
         Main.DATABASE.removeOldItemEntries();
-        a14 += System.currentTimeMillis() - a;
+        timer.clk("a14");
 
-        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d]\n", a10, a11, a12, a13, a14);
+        Main.ADMIN.log(String.format("[10%5d][11%5d][12%5d][13%5d][14%5d]",
+                timer.getLatestMS("a10"),
+                timer.getLatestMS("a11"),
+                timer.getLatestMS("a12"),
+                timer.getLatestMS("a13"),
+                timer.getLatestMS("a14")), Flair.STATUS);
 
         if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a22");
             Main.DATABASE.addHourly();
-            a22 += System.currentTimeMillis() - a;
+            timer.clk("a22");
 
-            a = System.currentTimeMillis();
+            timer.start("a23");
             Main.DATABASE.updateMultipliers();
-            a23 += System.currentTimeMillis() - a;
+            timer.clk("a23");
 
-            a = System.currentTimeMillis();
+            timer.start("a24");
             Main.DATABASE.calcQuantity();
-            a24 += System.currentTimeMillis() - a;
+            timer.clk("a24");
         }
 
         if (status.isTwentyFourBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a30");
             Main.DATABASE.addDaily();
-            a30 += System.currentTimeMillis() - a;
+            timer.clk("a30");
 
-            a = System.currentTimeMillis();
+            timer.start("a31");
             Main.DATABASE.calcSpark();
-            a31 += System.currentTimeMillis() - a;
+            timer.clk("a31");
 
-            System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
+            Main.ADMIN.log(String.format("[30%5d][31%5d]",
+                    timer.getLatestMS("a30"),
+                    timer.getLatestMS("a31")), Flair.STATUS);
         }
 
         if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a25");
             Main.DATABASE.resetCounters();
-            a25 += System.currentTimeMillis() - a;
+            timer.clk("a25");
 
-            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
+            Main.ADMIN.log(String.format("[20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]",
+                    timer.getLatestMS("a20"),
+                    timer.getLatestMS("a21"),
+                    timer.getLatestMS("a22"),
+                    timer.getLatestMS("a23"),
+                    timer.getLatestMS("a24"),
+                    timer.getLatestMS("a25")), Flair.STATUS);
         }
     }
 

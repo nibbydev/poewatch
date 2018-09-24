@@ -16,10 +16,6 @@ import java.sql.*;
 import java.util.*;
 
 public class Database {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private Connection connection;
 
     //------------------------------------------------------------------------------------------------------------
@@ -659,7 +655,7 @@ public class Database {
                     statement.setString(4, rawEntry.getAccountName());
                     statement.addBatch();
 
-                    if (++count % 100 == 0) statement.executeBatch();
+                    if (++count % 500 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -1002,22 +998,29 @@ public class Database {
      * @return True on success
      */
     public boolean updateApproved(){
-        String query =  "UPDATE  league_entries       AS e " +
+        String query1 = "UPDATE  league_entries       AS e " +
                         "JOIN    league_items_rolling AS i " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +
                         "SET     e.approved = 1 " +
                         "WHERE   e.approved = 0 " +
-                        "  AND (" +
-                        "    i.median = 0 " +
-                        "    OR e.price BETWEEN i.median / i.multiplier AND i.median * i.multiplier " +
-                        "  )";
+                        "  AND   i.median   = 0 ";
+
+        String query2 = "UPDATE  league_entries       AS e " +
+                        "JOIN    league_items_rolling AS i " +
+                        "  ON    i.id_l = e.id_l " +
+                        "    AND i.id_d = e.id_d " +
+                        "SET     e.approved = 1 " +
+                        "WHERE   e.approved = 0 " +
+                        "  AND   e.price > i.median / i.multiplier " +
+                        "  AND   e.price < i.median * i.multiplier ";
 
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
             }
 
             connection.commit();
@@ -1067,6 +1070,24 @@ public class Database {
      * @return True on success
      */
     public boolean updateCounters(){
+        /*
+        Possible as a single query, but led to some interesting and non-consistent changes.
+        Needs further testing.
+
+            UPDATE  league_items_rolling AS i
+            JOIN (
+              SELECT   approved, id_l, id_d, COUNT(*) AS count
+              FROM     league_entries
+              WHERE    time > ADDDATE(NOW(), INTERVAL -60 SECOND)
+              GROUP BY approved, id_l, id_d
+            ) AS    tmp
+              ON    tmp.id_l = i.id_l
+                AND tmp.id_d = i.id_d
+            SET     i.count = i.count + tmp.count,
+                    i.inc   = i.inc   + tmp.count,
+                    i.dec   = IF(tmp.approved, i.dec, i.dec + tmp.count)
+         */
+
         String query1 = "UPDATE league_items_rolling AS i " +
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
@@ -1181,8 +1202,9 @@ public class Database {
         String query =  "INSERT INTO league_history_daily_rolling ( " +
                         "  id_l, id_d, volatile, mean, median, mode, " +
                         "  exalted, count, quantity, inc, `dec`) " +
-                        "SELECT id_l, id_d, volatile, mean, median, mode, " +
-                        "       exalted, count, quantity, inc, `dec` " +
+                        "SELECT " +
+                        "  id_l, id_d, volatile, mean, median, mode, " +
+                        "  exalted, count, quantity, inc, `dec` " +
                         "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +

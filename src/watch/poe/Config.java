@@ -86,6 +86,7 @@ public class Config {
     // Other?
     //------------------------------------------------------------------------------------------------------------
 
+    public static final int timerLogHistoryLength = 5;
     public static final int monitorTimeoutMS = 500;
     public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 }
