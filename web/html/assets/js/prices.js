@@ -1095,7 +1095,15 @@ function makeGetRequest() {
 
     let buffering = $(".buffering");
     buffering.hide();
-    buffering.after("<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>");
+
+    let msg;
+    if (response.status) {
+      msg = "<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>";
+    } else {
+      msg = "<div class='buffering-msg align-self-center mb-2'>Too many requests, please wait 60 seconds.</div>";
+    }
+
+    buffering.after(msg);
   });
 }
 
