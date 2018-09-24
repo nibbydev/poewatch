@@ -185,10 +185,10 @@ CREATE TABLE league_items_rolling (
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
-    INDEX volatile   (volatile),
-    INDEX multiplier (multiplier),
-    INDEX mean       (mean),
-    INDEX median     (median)
+    INDEX volatile (volatile),
+    INDEX `count`  (`count`),
+    INDEX median   (median),
+    INDEX inc      (inc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -227,7 +227,9 @@ CREATE TABLE league_entries (
     FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
-    INDEX approved_time (approved, time)
+    INDEX approved_time (approved, time),
+    INDEX approved      (approved),
+    INDEX time          (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
