@@ -1,6 +1,7 @@
 package watch.poe.account;
 
 import watch.poe.Main;
+import watch.poe.admin.Flair;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -55,7 +56,7 @@ public class AccountManager extends Thread {
     }
 
     public void stopController() {
-        Main.ADMIN.log_("Stopping AccountManager", 1);
+        Main.ADMIN.log("Stopping AccountManager", Flair.INFO);
 
         flagLocalRun = false;
 
@@ -67,7 +68,7 @@ public class AccountManager extends Thread {
             Thread.sleep(50);
         } catch (InterruptedException ex) { }
 
-        Main.ADMIN.log_("AccountManager stopped", 1);
+        Main.ADMIN.log("AccountManager stopped", Flair.INFO);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -83,14 +84,14 @@ public class AccountManager extends Thread {
         }
 
         queue.addAll(accountRelations);
-        Main.ADMIN.log_(String.format("Found %3d new character matches: \n", queue.size()), 1);
+        Main.ADMIN.log(String.format("Found %3d new character matches: ", queue.size()), Flair.INFO);
 
         for (AccountRelation accountRelation : accountRelations) {
-            Main.ADMIN.log_(String.format("  %32s (%8d) -> %s (%32d) (%2d matches)\n", accountRelation.oldAccountName,
-                                                                                       accountRelation.oldAccountId,
-                                                                                       accountRelation.newAccountName,
-                                                                                       accountRelation.newAccountId,
-                                                                                       accountRelation.matches), 1);
+            Main.ADMIN.log(String.format("  %20s (%8d) -> %s (%20d) (%2d matches)", accountRelation.oldAccountName,
+                                                                                    accountRelation.oldAccountId,
+                                                                                    accountRelation.newAccountName,
+                                                                                    accountRelation.newAccountId,
+                                                                                    accountRelation.matches), Flair.INFO);
         }
     }
 
@@ -108,7 +109,7 @@ public class AccountManager extends Thread {
                 break;
         }
 
-        Main.ADMIN.log_(String.format("Account %32s had status: %3d\n", accountRelation.oldAccountName, accountRelation.statusCode), 1);
+        Main.ADMIN.log(String.format("Account %32s had status: %3d", accountRelation.oldAccountName, accountRelation.statusCode), Flair.INFO);
 
         processed.add(accountRelation);
     }
@@ -123,7 +124,7 @@ public class AccountManager extends Thread {
 
             return connection.getResponseCode();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Main.ADMIN.logException(ex, Flair.ERROR);
         }
 
         return 0;

@@ -1,7 +1,8 @@
 package watch.poe;
 
+import watch.poe.admin.Flair;
+
 import java.io.*;
-import java.util.Calendar;
 import java.util.List;
 
 public class Misc {
@@ -21,7 +22,7 @@ public class Misc {
         try {
             return new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
         } catch (IOException ex) {
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
             return null;
         }
     }
@@ -37,7 +38,7 @@ public class Misc {
         try {
             return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8"));
         } catch (IOException ex) {
-            Main.ADMIN._log(ex, 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
             return null;
         }
     }
@@ -91,17 +92,7 @@ public class Misc {
         return fullIcon;
     }
 
-    /**
-     * Allows converting exception stack traces to strings
-     *
-     * @param ex Exception to convert to string
-     * @return Exception as string
-     */
-    public static String stackTraceToString(Exception ex) {
-        StringWriter stringWriter = new StringWriter();
-        ex.printStackTrace(new PrintWriter(stringWriter));
-        return stringWriter.toString();
-    }
+
 
     //------------------------------------------------------------------------------------------------------------
     // Primitive array manipulation
@@ -144,48 +135,6 @@ public class Misc {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Timestamps
-    //------------------------------------------------------------------------------------------------------------
-
-    public static String timeStamp() {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        // Refresh calendar
-        Calendar calendar = Calendar.getInstance();
-
-        // Form [HH:MM:SS]
-        stringBuilder.append("[");
-        stringBuilder.append(String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY)));
-        stringBuilder.append(".");
-        stringBuilder.append(String.format("%02d", calendar.get(Calendar.MINUTE)));
-        stringBuilder.append(".");
-        stringBuilder.append(String.format("%02d", calendar.get(Calendar.SECOND)));
-        stringBuilder.append("]");
-
-        // Return [HH:MM:SS]
-        return stringBuilder.toString();
-    }
-
-    public static String dateStamp() {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        // Refresh calendar
-        Calendar calendar = Calendar.getInstance();
-
-        // Form [DD.MM.YYYY]
-        stringBuilder.append("[");
-        stringBuilder.append(String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH)));
-        stringBuilder.append(".");
-        stringBuilder.append(String.format("%02d", calendar.get(Calendar.MONTH)));
-        stringBuilder.append(".");
-        stringBuilder.append(String.format("%04d", calendar.get(Calendar.YEAR)));
-        stringBuilder.append("]");
-
-        // Return [DD.MM.YYYY]
-        return stringBuilder.toString();
-    }
-
-    //------------------------------------------------------------------------------------------------------------
     // Mics
     //------------------------------------------------------------------------------------------------------------
 
@@ -208,5 +157,4 @@ public class Misc {
             }
         }
     }
-
 }

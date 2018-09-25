@@ -1,16 +1,14 @@
 <?php 
-  if ( !isset($_GET["category"]) ) {
-    header('Location: prices?category=currency');
-    return;
-  }
-
   include_once ( "../details/pdo.php" );
   include_once ( "assets/php/functions.php" );
   include_once ( "assets/php/functions_prices.php" ); 
 
-  $SERVICE_category = $_GET["category"];
-  $SERVICE_categories = GetCategoryTranslations($pdo);
-  $SERVICE_leagues = GetLeagues($pdo);
+  $leagues = GetLeagues($pdo);
+  $categories = GetCategories($pdo);
+
+  CheckQueryParams($leagues, $categories);
+
+  $category = isset($_GET['category']) ? $_GET['category'] : 'currency';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +37,7 @@
   </div>
   <select class="form-control form-control-sm w-auto d-flex float-right" id="search-league">
 
-    <?php AddLeagueSelects($SERVICE_leagues); ?>
+    <?php AddLeagueSelects($leagues); ?>
 
   </select>
 </div>
@@ -67,35 +65,8 @@
           <div class="row mb-3">
             <div class='col d-flex flex-column'>
 
-              <?php FormGen::GenForm($SERVICE_category) ?>
-              
-              <div class='d-flex flex-wrap'>
-                <div class='mr-3'>
-                  <h4 class='nowrap'>Low count</h4>
-                  <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-                    <label class="btn btn-outline-dark <?php if (!isset($_GET["confidence"])) echo "active"; ?>">
-                      <input type="radio" name="confidence" value="false" <?php if (!isset($_GET["confidence"])) echo "checked"; ?>><a>Hide</a>
-                    </label>
-                    <label class="btn btn-outline-dark <?php if (isset($_GET["confidence"])) echo "active"; ?>">
-                      <input type="radio" name="confidence" value="true" <?php if (isset($_GET["confidence"])) echo "checked"; ?>><a>Show</a>
-                    </label>
-                  </div>
-                </div>
+              <?php new FormGen($pdo, $category); ?>
 
-                <div class='ml-auto mr-3'>
-                  <h4>Group</h4>
-                  <select class="form-control custom-select" id="search-group">
-                  
-                    <?php GenGroupSelectFields($pdo, $SERVICE_category) ?>
-
-                  </select>
-                </div>
-
-                <div>
-                  <h4>Search</h4>
-                  <input type="text" class="form-control" id="search-searchbar" placeholder="Search" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
-                </div>
-              </div>
             </div>
           </div>
 
@@ -107,7 +78,7 @@
                 <thead>
                   <tr>
                 
-                    <?php AddTableHeaders($SERVICE_category); ?>
+                    <?php AddTableHeaders($category); ?>
                 
                   </tr>
                 </thead>
@@ -133,9 +104,7 @@
 <!--/Footer/-->
 <!-- Service script -->
 <script>
-  var SERVICE_leagues = <?php echo json_encode($SERVICE_leagues); ?>;
-  var SERVICE_categories = <?php echo json_encode($SERVICE_categories); ?>;
-  var SERVICE_category = <?php echo "\"" . $SERVICE_category . "\"" ?>;
+  var SERVICE_leagues = <?php echo json_encode($leagues); ?>;
 </script>
 <!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>

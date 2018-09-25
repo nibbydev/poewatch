@@ -31,7 +31,7 @@
               <div class="card custom-card">
                 <div class="card-header">
                   <h2>API</h2>
-                  <div>Get data from this site to use in your applications</div>
+                  <div>Get data from this site to use in your applications. Rate limiting is 5 requests per 1 second, 1 minute timeout.</div>
                 </div>
                 <div class="card-body">
 
@@ -46,12 +46,12 @@
                   <hr>
 
                   <h3><a href='https://api.poe.watch/categories' target='_blank'>categories</a></h3>
-                  <p class="card-text">List of parent and child catetgories currently in use.</p>
+                  <p class="card-text">List of categories currently in use.</p>
 
                   <hr>
 
                   <h3><a href='https://api.poe.watch/itemdata' target='_blank'>itemdata</a></h3>
-                  <p class="card-text">All items found in the stash API and their defining properties.</p>
+                  <p class="card-text">All items found in the stash API and their defining properties. Category IDs can be found in category API.</p>
 
                   <hr>
 

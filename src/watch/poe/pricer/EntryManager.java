@@ -1,15 +1,13 @@
 package watch.poe.pricer;
 
-import com.google.gson.Gson;
 import watch.poe.*;
+import watch.poe.Config;
+import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.item.ItemParser;
 import watch.poe.item.Mappers;
-import watch.poe.pricer.itemdata.ItemdataEntry;
+import watch.poe.pricer.timer.Timer;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.*;
 
 public class EntryManager extends Thread {
@@ -21,7 +19,7 @@ public class EntryManager extends Thread {
     private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
-    private Gson gson;
+    private watch.poe.pricer.timer.Timer timer = new Timer();
 
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
@@ -36,17 +34,19 @@ public class EntryManager extends Thread {
      */
     public void run() {
         // Loads in currency rates on program start
-        currencyLeagueMap = Main.DATABASE.getCurrencyMap();
+        getCurrency();
 
         // Round counters
-        fixCounters();
+        status.fixCounters();
+
+        // Get delays
+        timer.getDelays();
 
         // Display counters
-        String modtString = String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
+        Main.ADMIN.log(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
                 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
-                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000);
-        Main.ADMIN.log_(modtString, -1);
+                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000), Flair.INFO);
 
         // Main thread loop
         while (flagLocalRun) {
@@ -72,9 +72,13 @@ public class EntryManager extends Thread {
      * Stops the threaded controller and saves all ephemeral data
      */
     public void stopController() {
-        Main.ADMIN.log_("Stopping EntryManager", 1);
+        Main.ADMIN.log("Stopping EntryManager", Flair.INFO);
 
         flagLocalRun = false;
+
+        Main.ADMIN.log("Removing timers", Flair.INFO);
+        timer.stop();
+        Main.ADMIN.log("Timers removed", Flair.INFO);
 
         while (!readyToExit) try {
             synchronized (monitor) {
@@ -87,38 +91,11 @@ public class EntryManager extends Thread {
         uploadRawEntries();
         uploadAccounts();
 
-        Main.ADMIN.log_("EntryManager stopped", 1);
+        Main.ADMIN.log("EntryManager stopped", Flair.INFO);
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Upon initialization
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Rounds counters on program start
-     */
-    private void fixCounters() {
-        long current = System.currentTimeMillis();
-
-        if (current - status.tenCounter > Config.entryController_tenMS) {
-            long gap = (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            status.tenCounter += gap;
-        }
-
-        if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
-            long gap = (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            status.sixtyCounter += gap;
-        }
-
-        if (current - status.twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (status.twentyFourCounter == 0) status.twentyFourCounter -= Config.entryController_counterOffset;
-            long gap = (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
-            status.twentyFourCounter += gap;
-        }
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Data saving
+    // Database access
     //------------------------------------------------------------------------------------------------------------
 
     private void uploadRawEntries() {
@@ -135,6 +112,16 @@ public class EntryManager extends Thread {
         Main.DATABASE.uploadAccountNames(accountSet);
     }
 
+    private void getCurrency() {
+        Map<Integer, Map<String, Double>> currencyLeagueMap = Main.DATABASE.getCurrencyMap();
+
+        if (currencyLeagueMap == null) {
+            return;
+        }
+
+        this.currencyLeagueMap = currencyLeagueMap;
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Cycle
     //------------------------------------------------------------------------------------------------------------
@@ -143,160 +130,144 @@ public class EntryManager extends Thread {
      * Control method for starting up the minutely cycle
      */
     private void cycle() {
-        Main.ADMIN.log_("Cycle starting", 0);
-        checkIntervalFlagStates();
+        status.checkFlagStates();
+        timer.computeCycleDelays(status);
 
-        // Check league API every 10 minutes
+        // Upload gathered prices
+        timer.start("upload");
+        uploadRawEntries();
+        timer.clk("upload");
+
+        // Upload account names
+        timer.start("account");
+        uploadAccounts();
+        timer.clk("account");
+
+        // Recalculate prices in database
+        timer.start("cycle", Timer.TimerType.NONE);
+        cycleDatabase();
+        timer.clk("cycle");
+
+        // Get latest currency rates
+        timer.start("prices");
+        getCurrency();
+        timer.clk("prices");
+
+        // Check league API
         if (status.isTenBool()) {
-            Main.LEAGUE_MANAGER.download();
+            timer.start("leagues", Timer.TimerType.TEN);
+            Main.LEAGUE_MANAGER.cycle();
+            timer.clk("leagues");
         }
 
         // Check if there are matching account name changes
         if (status.isTwentyFourBool()) {
+            timer.start("accountChanges", Timer.TimerType.TWENTY);
             Main.ACCOUNT_MANAGER.checkAccountNameChanges();
+            timer.clk("accountChanges");
         }
 
-        // Upload gathered prices
-        long time_upload = System.currentTimeMillis();
-        uploadRawEntries();
-        time_upload = System.currentTimeMillis() - time_upload;
-
-        // Upload account names
-        long time_account = System.currentTimeMillis();
-        uploadAccounts();
-        time_account = System.currentTimeMillis() - time_account;
-
-        // Recalculate prices in database
-        long time_cycle = System.currentTimeMillis();
-        cycleDatabase();
-        time_cycle = System.currentTimeMillis() - time_cycle;
-
-        // Get latest currency rates
-        long time_prices = System.currentTimeMillis();
-        currencyLeagueMap = Main.DATABASE.getCurrencyMap();
-        time_prices = System.currentTimeMillis() - time_prices;
-
         // Prepare cycle message
-        String cycleMsg = String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
+        Main.ADMIN.log(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
                 System.currentTimeMillis() - status.lastRunTime,
-                10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
-                60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
-                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000,
-                time_cycle, time_prices,
-                time_upload, time_account);
-        Main.ADMIN.log_(cycleMsg, -1);
+                status.getTenRemainMin(),
+                status.getSixtyRemainMin(),
+                status.getTwentyFourRemainMin(),
+                timer.getLatest("cycle"),
+                timer.getLatest("prices"),
+                timer.getLatest("upload"),
+                timer.getLatest("account")), Flair.STATUS);
 
-        // Switch off flags
+        Main.ADMIN.log(String.format("[10%5d][11%5d][12%5d][13%5d][14%5d]",
+                timer.getLatest("a10"),
+                timer.getLatest("a11"),
+                timer.getLatest("a12"),
+                timer.getLatest("a13"),
+                timer.getLatest("a14")), Flair.STATUS);
+
+        if (status.isSixtyBool()) Main.ADMIN.log(String.format("[20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]",
+                timer.getLatest("a20"),
+                timer.getLatest("a21"),
+                timer.getLatest("a22"),
+                timer.getLatest("a23"),
+                timer.getLatest("a24"),
+                timer.getLatest("a25")), Flair.STATUS);
+
+        if (status.isTwentyFourBool()) Main.ADMIN.log(String.format("[30%5d][31%5d]",
+                timer.getLatest("a30"),
+                timer.getLatest("a31")), Flair.STATUS);
+
+        // Reset flags
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
-    }
 
-    /**
-     * Raises certain flags after certain intervals
-     */
-    private void checkIntervalFlagStates() {
-        long current = System.currentTimeMillis();
-
-        // Run once every 10min
-        if (current - status.tenCounter > Config.entryController_tenMS) {
-            status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            status.setTenBool(true);
-            Main.ADMIN.log_("10 activated", 0);
-        }
-
-        // Run once every 60min
-        if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
-            status.sixtyCounter += (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            status.setSixtyBool(true);
-            Main.ADMIN.log_("60 activated", 0);
-        }
-
-        // Run once every 24h
-        if (current - status.twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (status.twentyFourCounter == 0) {
-                status.twentyFourCounter -= Config.entryController_counterOffset;
-            }
-
-            status.twentyFourCounter += (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
-            status.setTwentyFourBool(true);
-            Main.ADMIN.log_("24 activated", 0);
-        }
+        // Add new delays to database
+        timer.uploadDelays();
     }
 
     /**
      * Recalculates database data
      */
     private void cycleDatabase() {
-        long a;
-        long a10 = 0, a11 = 0, a12 = 0, a13 = 0, a14 = 0;
-        long a20 = 0, a21 = 0, a22 = 0, a23 = 0, a24 = 0, a25 = 0;
-        long a30 = 0, a31 = 0;
-
         if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a20", Timer.TimerType.SIXTY);
             Main.DATABASE.updateVolatile();
-            a20 += System.currentTimeMillis() - a;
+            timer.clk("a20");
 
-            a = System.currentTimeMillis();
+            timer.start("a21", Timer.TimerType.SIXTY);
             Main.DATABASE.calculateVolatileMedian();
-            a21 += System.currentTimeMillis() - a;
+            timer.clk("a21");
         }
 
-        a = System.currentTimeMillis();
+        timer.start("a10");
         Main.DATABASE.updateApproved();
-        a10 += System.currentTimeMillis() - a;
+        timer.clk("a10");
 
-        a = System.currentTimeMillis();
+        timer.start("a11");
         Main.DATABASE.updateCounters();
-        a11 += System.currentTimeMillis() - a;
+        timer.clk("a11");
 
-        a = System.currentTimeMillis();
+        timer.start("a12");
         Main.DATABASE.calculatePrices();
-        a12 += System.currentTimeMillis() - a;
+        timer.clk("a12");
 
-        a = System.currentTimeMillis();
+        timer.start("a13");
         Main.DATABASE.calculateExalted();
-        a13 += System.currentTimeMillis() - a;
+        timer.clk("a13");
 
-        a = System.currentTimeMillis();
+        timer.start("a14");
         Main.DATABASE.removeOldItemEntries();
-        a14 += System.currentTimeMillis() - a;
-
-        System.out.printf("{1X series} > [10%5d][11%5d][12%5d][13%5d][14%5d]\n", a10, a11, a12, a13, a14);
+        timer.clk("a14");
 
         if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a22", Timer.TimerType.SIXTY);
             Main.DATABASE.addHourly();
-            a22 += System.currentTimeMillis() - a;
+            timer.clk("a22");
 
-            a = System.currentTimeMillis();
+            timer.start("a23", Timer.TimerType.SIXTY);
             Main.DATABASE.updateMultipliers();
-            a23 += System.currentTimeMillis() - a;
+            timer.clk("a23");
 
-            a = System.currentTimeMillis();
+            timer.start("a24", Timer.TimerType.SIXTY);
             Main.DATABASE.calcQuantity();
-            a24 += System.currentTimeMillis() - a;
+            timer.clk("a24");
         }
 
         if (status.isTwentyFourBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a30", Timer.TimerType.TWENTY);
             Main.DATABASE.addDaily();
-            a30 += System.currentTimeMillis() - a;
+            timer.clk("a30");
 
-            a = System.currentTimeMillis();
+            timer.start("a31", Timer.TimerType.TWENTY);
             Main.DATABASE.calcSpark();
-            a31 += System.currentTimeMillis() - a;
-
-            System.out.printf("{3X series} > [30%5d][31%5d]\n", a30, a31);
+            timer.clk("a31");
         }
 
         if (status.isSixtyBool()) {
-            a = System.currentTimeMillis();
+            timer.start("a25", Timer.TimerType.SIXTY);
             Main.DATABASE.resetCounters();
-            a25 += System.currentTimeMillis() - a;
-
-            System.out.printf("{2X series} > [20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]\n", a20, a21, a22, a23, a24, a25);
+            timer.clk("a25");
         }
     }
 
@@ -360,17 +331,5 @@ public class EntryManager extends Thread {
                 accountSet.add(new AccountEntry(stash.accountName, stash.lastCharacterName, leagueId));
             }
         }
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
-    //------------------------------------------------------------------------------------------------------------
-
-    public StatusElement getStatus() {
-        return status;
-    }
-
-    public void setGson(Gson gson) {
-        this.gson = gson;
     }
 }

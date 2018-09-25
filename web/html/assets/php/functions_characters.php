@@ -54,7 +54,10 @@ function DisplayNotification($DATA) {
     echo "<span class='custom-text-red'>Error: {$DATA["errorMsg"]}</span>"; 
   } else if ($DATA["count"] !== null && $DATA["search"] !== null) {
     $countDisplay = "<span class='custom-text-green'>{$DATA["count"]}</span>";
-    $nameDisplay = "<span class='custom-text-orange'>{$DATA["search"]}</span>";
+
+    $nameDisplay = htmlentities($DATA["search"]);
+    $nameDisplay = "<span class='custom-text-orange'>$nameDisplay</span>";
+
     $results = $DATA["count"] === 1 ? "result" : "results";
   
     echo "$countDisplay $results for {$DATA["mode"]} names matching '$nameDisplay'";

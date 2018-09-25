@@ -1,5 +1,6 @@
 package watch.poe.relations;
 
+import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.item.Key;
@@ -36,27 +37,27 @@ public class RelationManager {
 
         success = Main.DATABASE.getCurrencyAliases(currencyAliasToName);
         if (!success) {
-            Main.ADMIN.log_("Failed to query currency aliases from database. Shutting down...", 5);
+            Main.ADMIN.log("Failed to query currency aliases from database. Shutting down...", Flair.FATAL);
             return false;
         } else if (currencyAliasToName.isEmpty()) {
-            Main.ADMIN.log_("Database did not contain any currency aliases. Shutting down...", 5);
+            Main.ADMIN.log("Database did not contain any currency aliases. Shutting down...", Flair.FATAL);
             return false;
         }
 
         success = Main.DATABASE.getCategories(categoryRelations);
         if (!success) {
-            Main.ADMIN.log_("Failed to query categories from database. Shutting down...", 5);
+            Main.ADMIN.log("Failed to query categories from database. Shutting down...", Flair.FATAL);
             return false;
         } else if (categoryRelations.isEmpty()) {
-            Main.ADMIN.log_("Database did not contain any category information", 2);
+            Main.ADMIN.log("Database did not contain any category information", Flair.WARN);
         }
 
         success = Main.DATABASE.getItemIds(leagueToIds, keyToId);
         if (!success) {
-            Main.ADMIN.log_("Failed to query item ids from database. Shutting down...", 5);
+            Main.ADMIN.log("Failed to query item ids from database. Shutting down...", Flair.FATAL);
             return false;
         } else if (keyToId.isEmpty()) {
-            Main.ADMIN.log_("Database did not contain any item id information", 2);
+            Main.ADMIN.log("Database did not contain any item id information", Flair.WARN);
         }
 
         if (leagueToIds.isEmpty()) {

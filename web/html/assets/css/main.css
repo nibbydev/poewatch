@@ -239,7 +239,10 @@ footer {
   height: 20px;
   background-color: #444;
 }
-.progressbar-bar {background-color: #888}
+.progressbar-bar {
+  width: 0px;
+  background-color: #888;
+}
 
 /*------------------------------------------------------------------------------------------------------------
 // Misc
@@ -297,6 +300,8 @@ footer {
 .custom-text-gray       {color: rgb(161, 161, 161)}
 .custom-text-dark       {color: rgb(88, 88, 88)}
 .paragraph-text         {color: #bbb}
+
+footer>div>a {color: rgb(249, 108, 84)}
 
 /*------------------------------------------------------------------------------------------------------------
 // Other

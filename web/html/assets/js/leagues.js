@@ -30,15 +30,7 @@ function addCountDownTimer(element) {
 
     if (distance < 1000) {
       clearInterval(timer);
-      
-      if (start < now) {
-        cdText.hide();
-        cdBar.hide();
-
-      } else {
-        cdText.html("<span class='badge badge-danger mb-2'>Started</span>");
-      }
-
+      cdText.html(start < now ? " " : "<span class='badge badge-danger mb-2'>Started</span>");
       return;
     }
 
@@ -68,9 +60,7 @@ function addCountDownTimer(element) {
         hourString = "<span class='custom-text-orange'>" + hours + " hours, </span>";
       }
     } else {
-      if (hours === 0) {
-        hourString = "<span class='custom-text-dark'>" + hours + " hours, </span>";
-      } else if (hours === 1) {
+      if (hours === 1) {
         hourString = hours + " hour, ";
       } else {
         hourString = hours + " hours, ";
@@ -89,9 +79,7 @@ function addCountDownTimer(element) {
         minuteString = "<span class='custom-text-orange'>" + minutes + " minutes, </span>";
       }
     } else {
-      if (minutes === 0) {
-        minuteString = "<span class='custom-text-dark'>" + minutes + " minutes, </span>";
-      } else if (minutes === 1) {
+      if (minutes === 1) {
         minuteString = minutes + " minute, ";
       } else {
         minuteString = minutes + " minutes, ";
@@ -106,7 +94,11 @@ function addCountDownTimer(element) {
         secondString = "<span class='custom-text-red'>" + seconds + " seconds</span>";
       }
     } else {
-      secondString = seconds + " seconds";
+      if (seconds === 1) {
+        secondString = seconds + " second";
+      } else {
+        secondString = seconds + " seconds";
+      }
     }
 
     let formatString = "";

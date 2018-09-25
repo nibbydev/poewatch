@@ -1,6 +1,7 @@
 package watch.poe.database;
 
 import watch.poe.Config;
+import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.Misc;
@@ -8,20 +9,15 @@ import watch.poe.account.AccountRelation;
 import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
-import watch.poe.pricer.FileEntry;
 import watch.poe.pricer.RawEntry;
-import watch.poe.pricer.itemdata.ItemdataEntry;
-import watch.poe.pricer.ParcelEntry;
+import watch.poe.pricer.timer.Timer;
+import watch.poe.pricer.timer.TimerList;
 import watch.poe.relations.CategoryEntry;
 
 import java.sql.*;
 import java.util.*;
 
 public class Database {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private Connection connection;
 
     //------------------------------------------------------------------------------------------------------------
@@ -30,17 +26,22 @@ public class Database {
 
     /**
      * Initializes connection to the MySQL database
+     *
+     * @return True on success
      */
-    public void connect() {
+    public boolean connect() {
         try {
             connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
             connection.setCatalog(Config.db_database);
             connection.setAutoCommit(false);
+
+            return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Failed to connect to databases", 5);
-            System.exit(0);
+            Main.ADMIN.logException(ex, Flair.FATAL);
+            Main.ADMIN.log("Failed to connect to databases", Flair.FATAL);
         }
+
+        return false;
     }
 
     /**
@@ -50,7 +51,7 @@ public class Database {
         try {
             if (connection != null) connection.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Main.ADMIN.logException(ex, Flair.CRITICAL);
         }
     }
 
@@ -123,8 +124,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not upload account names", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not upload account names", Flair.ERROR);
             return false;
         }
     }
@@ -203,8 +204,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not get account name relations", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not get account name relations", Flair.ERROR);
             return false;
         }
     }
@@ -235,8 +236,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not create account relation", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not create account relation", Flair.ERROR);
             return false;
         }
     }
@@ -260,19 +261,18 @@ public class Database {
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
+                // Empty provided list just in case
                 leagueEntries.clear();
 
                 while (resultSet.next()) {
-                    LeagueEntry leagueEntry = new LeagueEntry();
-                    leagueEntry.load(resultSet);
-                    leagueEntries.add(leagueEntry);
+                    leagueEntries.add( new LeagueEntry(resultSet) );
                 }
             }
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query database league list", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query database league list", Flair.ERROR);
             return false;
         }
     }
@@ -318,8 +318,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query categories", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query categories", Flair.ERROR);
             return false;
         }
     }
@@ -362,8 +362,8 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query item ids", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query item ids", Flair.ERROR);
             return false;
         }
     }
@@ -381,8 +381,7 @@ public class Database {
                         "FROM     league_items_rolling  AS i " +
                         "JOIN     data_itemData AS did " +
                         "  ON     i.id_d = did.id " +
-                        "WHERE    did.id_cp = 4 " +
-                        "  AND    did.frame = 5 " +
+                        "WHERE    did.id_cc = 11 " +
                         "ORDER BY i.id_l; ";
 
         try {
@@ -404,8 +403,8 @@ public class Database {
 
             return tmpCurrencyLeagueMap;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query currency rates from database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query currency rates from database", Flair.ERROR);
             return null;
         }
     }
@@ -439,8 +438,55 @@ public class Database {
 
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not query currency aliases from database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query currency aliases from database", Flair.ERROR);
+            return false;
+        }
+    }
+
+    /**
+     * Loads provided Map with timer delay entries from database
+     *
+     * @param timeLog Empty map that will be filled with key - TimerList relations
+     * @return True on success
+     */
+    public boolean getTimers(Map<String, TimerList> timeLog) {
+        String query =  "SELECT `key`, delay, type FROM data_timers ORDER BY time ASC;";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+                int counter = 0;
+
+                while (resultSet.next()) {
+                    String key = resultSet.getString("key");
+                    long delay = resultSet.getLong("delay");
+                    Integer type = resultSet.getInt("type");
+
+                    if (resultSet.wasNull()) type = null;
+                    Timer.TimerType timerType = Timer.translate(type);
+
+                    TimerList timerList = timeLog.getOrDefault(key, new TimerList(timerType));
+
+                    // Truncate list if entry count exceeds limit
+                    if (timerList.list.size() >= Config.timerLogHistoryLength) {
+                        timerList.list.remove(0);
+                    }
+
+                    counter++;
+                    timerList.list.add(delay);
+                    timeLog.putIfAbsent(key, timerList);
+                }
+
+                Main.ADMIN.log(String.format("Loaded %3d timer delays", counter), Flair.INFO);
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query timer delays", Flair.ERROR);
             return false;
         }
     }
@@ -480,8 +526,8 @@ public class Database {
             }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add parent category to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add parent category to database", Flair.ERROR);
             return null;
         }
     }
@@ -521,8 +567,8 @@ public class Database {
             }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add child category to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add child category to database", Flair.ERROR);
             return null;
         }
     }
@@ -549,8 +595,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (Exception ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not create item in database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not create item in database", Flair.ERROR);
             return false;
         }
     }
@@ -621,8 +667,8 @@ public class Database {
             }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add item data to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add item data to database", Flair.ERROR);
             return null;
         }
     }
@@ -657,7 +703,7 @@ public class Database {
                     statement.setString(4, rawEntry.getAccountName());
                     statement.addBatch();
 
-                    if (++count % 100 == 0) statement.executeBatch();
+                    if (++count % 500 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -666,8 +712,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add raw values to database", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add raw values to database", Flair.ERROR);
             return false;
         }
     }
@@ -679,9 +725,9 @@ public class Database {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query1 = "INSERT INTO data_leagues (" +
-                        "  name, event) " +
-                        "SELECT ?, ? " +
+        String query1 = "INSERT INTO " +
+                        "  data_leagues (name) " +
+                        "SELECT ? " +
                         "FROM   DUAL " +
                         "WHERE  NOT EXISTS ( " +
                         "  SELECT 1 " +
@@ -692,8 +738,10 @@ public class Database {
         String query2 = "UPDATE data_leagues " +
                         "SET    start    = ?, " +
                         "       end      = ?, " +
-                        "       upcoming = 0," +
-                        "       active   = 1 " +
+                        "       upcoming = 0, " +
+                        "       active   = 1, " +
+                        "       event    = ?," +
+                        "       hardcore = ? " +
                         "WHERE  name     = ? " +
                         "LIMIT  1; ";
 
@@ -703,8 +751,7 @@ public class Database {
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getName());
-                    statement.setInt(2, leagueEntry.isEvent() ? 1 : 0);
-                    statement.setString(3, leagueEntry.getName());
+                    statement.setString(2, leagueEntry.getName());
                     statement.addBatch();
                 }
 
@@ -715,7 +762,9 @@ public class Database {
                 for (LeagueEntry leagueEntry : leagueEntries) {
                     statement.setString(1, leagueEntry.getStartAt());
                     statement.setString(2, leagueEntry.getEndAt());
-                    statement.setString(3, leagueEntry.getName());
+                    statement.setInt(3, leagueEntry.isEvent() ? 1 : 0);
+                    statement.setInt(4, leagueEntry.isHardcore() ? 1 : 0);
+                    statement.setString(5, leagueEntry.getName());
                     statement.addBatch();
                 }
 
@@ -725,8 +774,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update database league list", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update database league list", Flair.ERROR);
             return false;
         }
     }
@@ -751,8 +800,74 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update database change id", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update database change id", Flair.ERROR);
+            return false;
+        }
+    }
+
+    /**
+     * Uploads all latest timer delays to database
+     *
+     * @param timeLog Valid map of key - TimerList relations
+     * @return True on success
+     */
+    public boolean uploadTimers(Map<String, TimerList> timeLog) {
+        String query1 = "DELETE  del " +
+                        "FROM    data_timers AS del " +
+                        "JOIN ( " +
+                        "  SELECT   `key`, ( " +
+                        "    SELECT   t.time " +
+                        "    FROM     data_timers AS t " +
+                        "    WHERE    t.`key` = d.`key` " +
+                        "    ORDER BY t.time DESC " +
+                        "    LIMIT    4, 1 " +
+                        "  ) AS     time " +
+                        "  FROM     data_timers AS d " +
+                        "  GROUP BY d.`key` " +
+                        "  HAVING   time IS NOT NULL " +
+                        ") AS    tmp " +
+                        "  ON    del.`key` = tmp.`key` " +
+                        "    AND del.time <= tmp.time; ";
+
+        String query =  "INSERT INTO data_timers (`key`, type, delay) " +
+                        "VALUES (?, ?, ?)  ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query1);
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (String key : timeLog.keySet()) {
+                    TimerList timerList = timeLog.get(key);
+
+                    if (timerList.type.equals(Timer.TimerType.NONE)) {
+                        continue;
+                    } else if (timerList.list.isEmpty()) {
+                        continue;
+                    }
+
+                    Integer type = Timer.translate(timerList.type);
+
+                    statement.setString(1, key);
+                    if (type == null) statement.setNull(2, 0);
+                    else statement.setInt(2, type);
+                    statement.setLong(3, timerList.list.get(timerList.list.size() - 1));
+
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not upload timers", Flair.ERROR);
             return false;
         }
     }
@@ -797,8 +912,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate prices", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate prices", Flair.ERROR);
             return false;
         }
     }
@@ -833,8 +948,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate volatile median", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate volatile median", Flair.ERROR);
             return false;
         }
     }
@@ -870,8 +985,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate exalted", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate exalted", Flair.ERROR);
             return false;
         }
     }
@@ -903,8 +1018,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate quantity", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate quantity", Flair.ERROR);
             return false;
         }
     }
@@ -943,8 +1058,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not calculate spark", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not calculate spark", Flair.ERROR);
             return false;
         }
     }
@@ -985,8 +1100,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update volatile status", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update volatile status", Flair.ERROR);
             return false;
         }
     }
@@ -997,29 +1112,36 @@ public class Database {
      * @return True on success
      */
     public boolean updateApproved(){
-        String query =  "UPDATE  league_entries       AS e " +
+        String query1 = "UPDATE  league_entries       AS e " +
                         "JOIN    league_items_rolling AS i " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +
                         "SET     e.approved = 1 " +
                         "WHERE   e.approved = 0 " +
-                        "  AND (" +
-                        "    i.median = 0 " +
-                        "    OR e.price BETWEEN i.median / i.multiplier AND i.median * i.multiplier " +
-                        "  )";
+                        "  AND   i.median   = 0 ";
+
+        String query2 = "UPDATE  league_entries       AS e " +
+                        "JOIN    league_items_rolling AS i " +
+                        "  ON    i.id_l = e.id_l " +
+                        "    AND i.id_d = e.id_d " +
+                        "SET     e.approved = 1 " +
+                        "WHERE   e.approved = 0 " +
+                        "  AND   e.price > i.median / i.multiplier " +
+                        "  AND   e.price < i.median * i.multiplier ";
 
         try {
             if (connection.isClosed()) return false;
 
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(query);
+                statement.executeUpdate(query1);
+                statement.executeUpdate(query2);
             }
 
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update approved state", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update approved state", Flair.ERROR);
             return false;
         }
     }
@@ -1050,8 +1172,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update multipliers", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update multipliers", Flair.ERROR);
             return false;
         }
     }
@@ -1062,6 +1184,24 @@ public class Database {
      * @return True on success
      */
     public boolean updateCounters(){
+        /*
+        Possible as a single query, but led to some interesting and non-consistent changes.
+        Needs further testing.
+
+            UPDATE  league_items_rolling AS i
+            JOIN (
+              SELECT   approved, id_l, id_d, COUNT(*) AS count
+              FROM     league_entries
+              WHERE    time > ADDDATE(NOW(), INTERVAL -60 SECOND)
+              GROUP BY approved, id_l, id_d
+            ) AS    tmp
+              ON    tmp.id_l = i.id_l
+                AND tmp.id_d = i.id_d
+            SET     i.count = i.count + tmp.count,
+                    i.inc   = i.inc   + tmp.count,
+                    i.dec   = IF(tmp.approved, i.dec, i.dec + tmp.count)
+         */
+
         String query1 = "UPDATE league_items_rolling AS i " +
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
@@ -1099,8 +1239,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not update counters", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not update counters", Flair.ERROR);
             return false;
         }
     }
@@ -1123,8 +1263,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not reset counters", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not reset counters", Flair.ERROR);
             return false;
         }
     }
@@ -1160,8 +1300,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add hourly", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add hourly", Flair.ERROR);
             return false;
         }
     }
@@ -1176,8 +1316,9 @@ public class Database {
         String query =  "INSERT INTO league_history_daily_rolling ( " +
                         "  id_l, id_d, volatile, mean, median, mode, " +
                         "  exalted, count, quantity, inc, `dec`) " +
-                        "SELECT id_l, id_d, volatile, mean, median, mode, " +
-                        "       exalted, count, quantity, inc, `dec` " +
+                        "SELECT " +
+                        "  id_l, id_d, volatile, mean, median, mode, " +
+                        "  exalted, count, quantity, inc, `dec` " +
                         "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
@@ -1193,8 +1334,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not add daily", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not add daily", Flair.ERROR);
             return false;
         }
     }
@@ -1235,8 +1376,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not remove old item entries", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not remove old item entries", Flair.ERROR);
             return false;
         }
     }
@@ -1290,8 +1431,8 @@ public class Database {
             connection.commit();
             return true;
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            Main.ADMIN.log_("Could not move inactive item entries", 3);
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not move inactive item entries", Flair.ERROR);
             return false;
         }
     }

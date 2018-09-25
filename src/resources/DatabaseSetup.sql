@@ -85,6 +85,7 @@ CREATE TABLE data_leagues (
     active   TINYINT(1)   UNSIGNED NOT NULL DEFAULT 1,
     upcoming TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
     event    TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
+    hardcore TINYINT(1)   UNSIGNED NOT NULL DEFAULT 0,
     name     VARCHAR(64)  NOT NULL UNIQUE,
     display  VARCHAR(64)  DEFAULT NULL,
     start    VARCHAR(32)  DEFAULT NULL,
@@ -123,6 +124,22 @@ CREATE TABLE data_currencyAliases (
     name   VARCHAR(32)  NOT NULL,
 
     FOREIGN KEY (id_ci) REFERENCES data_currencyItems (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure data_timers
+--
+
+CREATE TABLE data_timers (
+    `key`   VARCHAR(32)  NOT NULL,
+    type    TINYINT(1)   UNSIGNED DEFAULT NULL,
+    time    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    delay   BIGINT       UNSIGNED NOT NULL,
+
+    CONSTRAINT pk PRIMARY KEY (`key`, time),
+
+    INDEX `key` (`key`),
+    INDEX time  (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -184,10 +201,10 @@ CREATE TABLE league_items_rolling (
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
-    INDEX volatile   (volatile),
-    INDEX multiplier (multiplier),
-    INDEX mean       (mean),
-    INDEX median     (median)
+    INDEX volatile (volatile),
+    INDEX `count`  (`count`),
+    INDEX median   (median),
+    INDEX inc      (inc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -226,7 +243,9 @@ CREATE TABLE league_entries (
     FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
-    INDEX approved_time (approved, time)
+    INDEX approved_time (approved, time),
+    INDEX approved      (approved),
+    INDEX time          (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -372,22 +391,26 @@ CREATE TABLE account_history (
 --
 
 INSERT INTO data_leagues
-    (id, active, name, display)
+    (id, active, hardcore, name, display)
 VALUES
-    (1,  1, 'Hardcore',            'Hardcore'     ),
-    (2,  1, 'Standard',            'Standard'     ),
-    (3,  0, 'Hardcore Breach',     'HC Breach'    ),
-    (4,  0, 'Breach',              'Breach'       ),
-    (5,  0, 'Hardcore Legacy',     'HC Legacy'    ),
-    (6,  0, 'Legacy',              'Legacy'       ),
-    (7,  0, 'Hardcore Harbinger',  'HC Harbinger' ),
-    (8,  0, 'Harbinger',           'Harbinger'    ),
-    (9,  0, 'Hardcore Abyss',      'HC Abyss'     ),
-    (10, 0, 'Abyss',               'Abyss'        ),
-    (11, 0, 'Hardcore Bestiary',   'HC Bestiary'  ),
-    (12, 0, 'Bestiary',            'Bestiary'     ),
-    (13, 0, 'Hardcore Incursion',  'HC Incursion' ),
-    (14, 0, 'Incursion',           'Incursion'    );
+    (1,  1, 1, 'Hardcore',                      'Hardcore'          ),
+    (2,  1, 0, 'Standard',                      'Standard'          ),
+    (3,  0, 1, 'Hardcore Breach',               'HC Breach'         ),
+    (4,  0, 0, 'Breach',                        'Breach'            ),
+    (5,  0, 1, 'Hardcore Legacy',               'HC Legacy'         ),
+    (6,  0, 0, 'Legacy',                        'Legacy'            ),
+    (7,  0, 1, 'Hardcore Harbinger',            'HC Harbinger'      ),
+    (8,  0, 0, 'Harbinger',                     'Harbinger'         ),
+    (9,  0, 1, 'Hardcore Abyss',                'HC Abyss'          ),
+    (10, 0, 0, 'Abyss',                         'Abyss'             ),
+    (11, 0, 1, 'Hardcore Bestiary',             'HC Bestiary'       ),
+    (12, 0, 0, 'Bestiary',                      'Bestiary'          ),
+    (13, 0, 1, 'Hardcore Incursion',            'HC Incursion'      ),
+    (14, 0, 0, 'Incursion',                     'Incursion'         ),
+    (15, 0, 1, 'Incursion Event HC (IRE002)',   'HC Incursion Event'),
+    (16, 0, 0, 'Incursion Event (IRE001)',      'Incursion Event'   ),
+    (17, 0, 1, 'Hardcore Delve',                'HC Delve'          ),
+    (18, 0, 0, 'Delve',                         'Delve'             );
 
 --
 -- Base value for data_changeId

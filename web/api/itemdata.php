@@ -8,10 +8,7 @@ function get_data($pdo) {
   FROM data_itemData AS did 
   LEFT JOIN category_child AS cc ON cc.id = did.id_cc";
 
-  $stmt = $pdo->prepare($query);
-  $stmt->execute();
-
-  return $stmt;
+  return $pdo->query($query);
 }
 
 function parse_data($stmt) {
@@ -45,9 +42,9 @@ header("Content-Type: application/json");
 // Connect to database
 include_once ( "../details/pdo.php" );
 
-// Get database entries
+// Get item entries
 $stmt = get_data($pdo);
-$data = parse_data($stmt);
+$payload = parse_data($stmt);
 
 // Display generated data
-echo json_encode($data, JSON_PRETTY_PRINT);
+echo json_encode($payload);

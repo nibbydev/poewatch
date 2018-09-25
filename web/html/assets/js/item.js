@@ -8,12 +8,23 @@ var CHART_HISTORY = null;
 var HISTORY_DATASET = 1;
 
 $(document).ready(function() {
+  parseQueryParams();
   if (ID && LEAGUE) makeHistoryRequest(ID);
 }); 
 
 //------------------------------------------------------------------------------------------------------------
 // Expanded row
 //------------------------------------------------------------------------------------------------------------
+
+function parseQueryParams() {
+  let tmp;
+  if (tmp = parseQueryParam('dataset')) {
+    if      (tmp ===      'mean') HISTORY_DATASET = 1;
+    else if (tmp ===    'median') HISTORY_DATASET = 2;
+    else if (tmp ===      'mode') HISTORY_DATASET = 3;
+    else if (tmp ===  'quantity') HISTORY_DATASET = 4;
+  }
+}
 
 function makeHistoryRequest(id) {
   let request = $.ajax({
@@ -243,11 +254,19 @@ function createSelectorFields(leagues) {
 function createListeners() {
   $("#history-league-selector").change(function(){
     LEAGUE = $(":selected", this).val();
+    updateQueryParam('league', LEAGUE);
     fillData();
   });
 
   $("#history-dataset-radio").change(function(){
-    HISTORY_DATASET = parseInt($("input[name=dataset]:checked", this).val());
+    let val = $("input[name=dataset]:checked", this).val();
+    updateQueryParam('dataset', val);
+
+    if      (val ===      'mean') HISTORY_DATASET = 1;
+    else if (val ===    'median') HISTORY_DATASET = 2;
+    else if (val ===      'mode') HISTORY_DATASET = 3;
+    else if (val ===  'quantity') HISTORY_DATASET = 4;
+
     fillData();
   });
 }
@@ -358,6 +377,16 @@ function fixIcon(icon) {
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
 
+function convertDateToUTC(date) {
+  return new Date(
+    date.getUTCFullYear(), 
+    date.getUTCMonth(), 
+    date.getUTCDate(), 
+    date.getUTCHours(), 
+    date.getUTCMinutes(), 
+    date.getUTCSeconds());
+}
+
 function formatHistory(leaguePayload) {
   let keys = [];
   let vals = {
@@ -368,12 +397,9 @@ function formatHistory(leaguePayload) {
   };
 
   // Convert date strings into objects
-  let oldestDate = new Date(leaguePayload.history[0].time);
-  let startDate  = new Date(leaguePayload.league.start);
-  let endDate    = new Date(leaguePayload.league.end);
-
-  // Increment startdate to balance timezone differences
-  startDate.setTime(startDate.getTime() + 24 * 60 * 60 * 1000);
+  let oldestDate = convertDateToUTC(new Date(leaguePayload.history[0].time));
+  let startDate  = convertDateToUTC(new Date(leaguePayload.league.start));
+  let endDate    = convertDateToUTC(new Date(leaguePayload.league.end));
 
   // Nr of days league data is missing since league start until first entry
   let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
@@ -458,4 +484,59 @@ function formatDate(date) {
 
   let s = new Date(date);
   return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
+}
+
+function updateQueryParam(key, value) {
+  switch (key) {
+    case "confidence": value = value === false  ? null : value;   break;
+    case "search":     value = value === ""     ? null : value;   break;
+    case "rarity":     value = value === "all"  ? null : value;   break;
+    case "corrupted":  value = value === "all"  ? null : value;   break;
+    case "quality":    value = value === "all"  ? null : value;   break;
+    case "lvl":        value = value === "all"  ? null : value;   break;
+    case "links":      value = value === "none" ? null : value;   break;
+    case "group":      value = value === "all"  ? null : value;   break;
+    case "tier":       value = value === "all"  ? null : value;   break;
+    default:           break;
+  }
+
+  var url = document.location.href;
+  var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
+  var hash;
+
+  if (re.test(url)) {
+    if (typeof value !== 'undefined' && value !== null) {
+      url = url.replace(re, '$1' + key + "=" + value + '$2$3');
+    } else {
+      hash = url.split('#');
+      url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+      
+      if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+        url += '#' + hash[1];
+      }
+    }
+  } else if (typeof value !== 'undefined' && value !== null) {
+    var separator = url.indexOf('?') !== -1 ? '&' : '?';
+    hash = url.split('#');
+    url = hash[0] + separator + key + '=' + value;
+
+    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+      url += '#' + hash[1];
+    }
+  }
+
+  history.replaceState({}, "foo", url);
+}
+
+function parseQueryParam(key) {
+  let url = window.location.href;
+  key = key.replace(/[\[\]]/g, '\\$&');
+  
+  var regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+      
+  if (!results   ) return null;
+  if (!results[2]) return   '';
+
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }

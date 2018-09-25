@@ -1,6 +1,11 @@
 <?php
 function GenFooter() {
-  echo "<footer class='container-fluid text-center'><p>PoeWatch © " . date('Y') . "</p></footer>";
+  echo "<footer class='container-fluid d-flex flex-column justify-content-center align-items-center p-0'>
+    <div>PoeWatch © " . date('Y') . "</div>
+    <div>
+      <a href='https://www.patreon.com/bePatron?u=13738203'>Become a Patron!</a>
+    </div>
+  </footer>";
 }
 
 function GenNavbar($pdo) {
