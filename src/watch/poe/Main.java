@@ -141,7 +141,6 @@ public class Main {
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
-                + "    counter - counter commands\n"
                 + "    acc - account manager commands\n"
                 + "    moveitem - move inactive item entries to separate table\n"
                 + "    about - show about page\n";
@@ -171,16 +170,12 @@ public class Main {
                     case "about":
                         commandAbout();
                         break;
-                    case "counter":
-                        commandCounter(userInput);
-                        break;
                     case "acc":
                         commandAcc(userInput);
                         break;
-
                     case "moveitem":
                         commandMoveItem(userInput);
-
+                        break;
                     default:
                         ADMIN.log(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]), Flair.ERROR);
                         break;
@@ -323,81 +318,6 @@ public class Main {
                 + "Made by: Siegrest\n"
                 + "Licenced under AGPL-3.0, 2018\n";
         System.out.println(about);
-    }
-
-    /**
-     * Holds commands that control time counters
-     *
-     * @param userInput Input string
-     */
-    private static void commandCounter(String[] userInput) {
-        String helpString = "[INFO] Available counter commands:\n";
-        helpString += "    'counter <type> + <amount>' - Add <amount> MS to <type> counter\n";
-        helpString += "    'counter <type> - <amount>' - Remove <amount> MS from <type> counter\n";
-        helpString += "    'counter <type> = <amount>' - Set <type> counter to <amount> MS\n";
-
-        if (userInput.length < 4) {
-            System.out.println(helpString);
-            return;
-        }
-
-        long value, oldValue, newValue;
-        try {
-            value = Long.parseLong(userInput[3]);
-        } catch (Exception ex) {
-            System.out.println("Invalid value");
-            return;
-        }
-
-        switch (userInput[1]) {
-            case "24":
-                oldValue = ENTRY_MANAGER.getStatus().twentyFourCounter;
-
-                switch (userInput[2]) {
-                    case "+": newValue = oldValue + value; break;
-                    case "-": newValue = oldValue - value; break;
-                    case "=": newValue = value;            break;
-                    default:
-                        System.out.println("Unknown sign");
-                        return;
-                }
-
-                ENTRY_MANAGER.getStatus().twentyFourCounter = newValue;
-                break;
-            case "60":
-                oldValue = ENTRY_MANAGER.getStatus().sixtyCounter;
-
-                switch (userInput[2]) {
-                    case "+": newValue = oldValue + value; break;
-                    case "-": newValue = oldValue - value; break;
-                    case "=": newValue = value;            break;
-                    default:
-                        System.out.println("Unknown sign");
-                        return;
-                }
-
-                ENTRY_MANAGER.getStatus().sixtyCounter = newValue;
-                break;
-            case "10":
-                oldValue = ENTRY_MANAGER.getStatus().tenCounter;
-
-                switch (userInput[2]) {
-                    case "+": newValue = oldValue + value; break;
-                    case "-": newValue = oldValue - value; break;
-                    case "=": newValue = value;            break;
-                    default:
-                        System.out.println("Unknown sign");
-                        return;
-                }
-
-                ENTRY_MANAGER.getStatus().tenCounter = newValue;
-                break;
-            default:
-                System.out.println("Unknown type");
-                return;
-        }
-
-        System.out.println("Value of '"+userInput[1]+"' changed ("+oldValue+") -> ("+newValue+") [change: "+(newValue-oldValue)+"]");
     }
 
     private static void commandAcc(String[] userInput) {
