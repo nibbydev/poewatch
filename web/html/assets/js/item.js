@@ -377,6 +377,16 @@ function fixIcon(icon) {
 // Utility functions
 //------------------------------------------------------------------------------------------------------------
 
+function convertDateToUTC(date) {
+  return new Date(
+    date.getUTCFullYear(), 
+    date.getUTCMonth(), 
+    date.getUTCDate(), 
+    date.getUTCHours(), 
+    date.getUTCMinutes(), 
+    date.getUTCSeconds());
+}
+
 function formatHistory(leaguePayload) {
   let keys = [];
   let vals = {
@@ -387,12 +397,9 @@ function formatHistory(leaguePayload) {
   };
 
   // Convert date strings into objects
-  let oldestDate = new Date(leaguePayload.history[0].time);
-  let startDate  = new Date(leaguePayload.league.start);
-  let endDate    = new Date(leaguePayload.league.end);
-
-  // Increment startdate to balance timezone differences
-  startDate.setTime(startDate.getTime() + 24 * 60 * 60 * 1000);
+  let oldestDate = convertDateToUTC(new Date(leaguePayload.history[0].time));
+  let startDate  = convertDateToUTC(new Date(leaguePayload.league.start));
+  let endDate    = convertDateToUTC(new Date(leaguePayload.league.end));
 
   // Nr of days league data is missing since league start until first entry
   let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
