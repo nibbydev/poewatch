@@ -379,8 +379,7 @@ public class Database {
                         "FROM     league_items_rolling  AS i " +
                         "JOIN     data_itemData AS did " +
                         "  ON     i.id_d = did.id " +
-                        "WHERE    did.id_cp = 4 " +
-                        "  AND    did.frame = 5 " +
+                        "WHERE    did.id_cc = 11 " +
                         "ORDER BY i.id_l; ";
 
         try {

@@ -33,10 +33,10 @@ public class EntryManager extends Thread {
      */
     public void run() {
         // Loads in currency rates on program start
-        currencyLeagueMap = Main.DATABASE.getCurrencyMap();
+        getCurrency();
 
         // Round counters
-        fixCounters();
+        status.fixCounters();
 
         // Display counters
         Main.ADMIN.log(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
@@ -87,34 +87,7 @@ public class EntryManager extends Thread {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Upon initialization
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Rounds counters on program start
-     */
-    private void fixCounters() {
-        long current = System.currentTimeMillis();
-
-        if (current - status.tenCounter > Config.entryController_tenMS) {
-            long gap = (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            status.tenCounter += gap;
-        }
-
-        if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
-            long gap = (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            status.sixtyCounter += gap;
-        }
-
-        if (current - status.twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (status.twentyFourCounter == 0) status.twentyFourCounter -= Config.entryController_counterOffset;
-            long gap = (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
-            status.twentyFourCounter += gap;
-        }
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Data saving
+    // Database access
     //------------------------------------------------------------------------------------------------------------
 
     private void uploadRawEntries() {
@@ -131,6 +104,16 @@ public class EntryManager extends Thread {
         Main.DATABASE.uploadAccountNames(accountSet);
     }
 
+    private void getCurrency() {
+        Map<Integer, Map<String, Double>> currencyLeagueMap = Main.DATABASE.getCurrencyMap();
+
+        if (currencyLeagueMap == null) {
+            return;
+        }
+
+        this.currencyLeagueMap = currencyLeagueMap;
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Cycle
     //------------------------------------------------------------------------------------------------------------
@@ -139,18 +122,7 @@ public class EntryManager extends Thread {
      * Control method for starting up the minutely cycle
      */
     private void cycle() {
-        Main.ADMIN.log("Cycle starting", Flair.STATUS);
-        checkIntervalFlagStates();
-
-        // Check league API every 10 minutes
-        if (status.isTenBool()) {
-            Main.LEAGUE_MANAGER.cycle();
-        }
-
-        // Check if there are matching account name changes
-        if (status.isTwentyFourBool()) {
-            Main.ACCOUNT_MANAGER.checkAccountNameChanges();
-        }
+        status.checkFlagStates();
 
         // Upload gathered prices
         timer.start("upload");
@@ -169,56 +141,38 @@ public class EntryManager extends Thread {
 
         // Get latest currency rates
         timer.start("prices");
-        currencyLeagueMap = Main.DATABASE.getCurrencyMap();
+        getCurrency();
         timer.clk("prices");
+
+        // Check league API
+        if (status.isTenBool()) {
+            timer.start("leagues");
+            Main.LEAGUE_MANAGER.cycle();
+            timer.clk("leagues");
+        }
+
+        // Check if there are matching account name changes
+        if (status.isTwentyFourBool()) {
+            timer.start("accountChanges");
+            Main.ACCOUNT_MANAGER.checkAccountNameChanges();
+            timer.clk("accountChanges");
+        }
 
         // Prepare cycle message
         Main.ADMIN.log(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
                 System.currentTimeMillis() - status.lastRunTime,
-                10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
-                60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
-                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000,
+                status.getTenRemainMin(),
+                status.getSixtyRemainMin(),
+                status.getTwentyFourRemainMin(),
                 timer.getLatestMS("cycle"),
                 timer.getLatestMS("prices"),
                 timer.getLatestMS("upload"),
                 timer.getLatestMS("account")), Flair.STATUS);
 
-        // Switch off flags
+        // Reset flags
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
-    }
-
-    /**
-     * Raises certain flags after certain intervals
-     */
-    private void checkIntervalFlagStates() {
-        long current = System.currentTimeMillis();
-
-        // Run once every 10min
-        if (current - status.tenCounter > Config.entryController_tenMS) {
-            status.tenCounter += (current - status.tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            status.setTenBool(true);
-            Main.ADMIN.log("10 activated", Flair.STATUS);
-        }
-
-        // Run once every 60min
-        if (current - status.sixtyCounter > Config.entryController_sixtyMS) {
-            status.sixtyCounter += (current - status.sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            status.setSixtyBool(true);
-            Main.ADMIN.log("60 activated", Flair.STATUS);
-        }
-
-        // Run once every 24h
-        if (current - status.twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (status.twentyFourCounter == 0) {
-                status.twentyFourCounter -= Config.entryController_counterOffset;
-            }
-
-            status.twentyFourCounter += (current - status.twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS ;
-            status.setTwentyFourBool(true);
-            Main.ADMIN.log("24 activated", Flair.STATUS);
-        }
     }
 
     /**

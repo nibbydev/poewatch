@@ -84,14 +84,14 @@ public class AccountManager extends Thread {
         }
 
         queue.addAll(accountRelations);
-        Main.ADMIN.log(String.format("Found %3d new character matches: \n", queue.size()), Flair.INFO);
+        Main.ADMIN.log(String.format("Found %3d new character matches: ", queue.size()), Flair.INFO);
 
         for (AccountRelation accountRelation : accountRelations) {
-            Main.ADMIN.log(String.format("  %20s (%8d) -> %s (%20d) (%2d matches)\n", accountRelation.oldAccountName,
-                                                                                       accountRelation.oldAccountId,
-                                                                                       accountRelation.newAccountName,
-                                                                                       accountRelation.newAccountId,
-                                                                                       accountRelation.matches), Flair.INFO);
+            Main.ADMIN.log(String.format("  %20s (%8d) -> %s (%20d) (%2d matches)", accountRelation.oldAccountName,
+                                                                                    accountRelation.oldAccountId,
+                                                                                    accountRelation.newAccountName,
+                                                                                    accountRelation.newAccountId,
+                                                                                    accountRelation.matches), Flair.INFO);
         }
     }
 
@@ -109,7 +109,7 @@ public class AccountManager extends Thread {
                 break;
         }
 
-        Main.ADMIN.log(String.format("Account %32s had status: %3d\n", accountRelation.oldAccountName, accountRelation.statusCode), Flair.INFO);
+        Main.ADMIN.log(String.format("Account %32s had status: %3d", accountRelation.oldAccountName, accountRelation.statusCode), Flair.INFO);
 
         processed.add(accountRelation);
     }
