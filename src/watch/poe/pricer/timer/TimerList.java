@@ -3,7 +3,7 @@ package watch.poe.pricer.timer;
 import java.util.ArrayList;
 import java.util.List;
 
-class TimerList {
+public class TimerList {
     public List<Long> list = new ArrayList<>();
     public Timer.TimerType type;
 

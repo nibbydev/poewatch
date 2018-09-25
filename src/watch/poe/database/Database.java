@@ -10,6 +10,8 @@ import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.RawEntry;
+import watch.poe.pricer.timer.Timer;
+import watch.poe.pricer.timer.TimerList;
 import watch.poe.relations.CategoryEntry;
 
 import java.sql.*;
@@ -442,6 +444,53 @@ public class Database {
         }
     }
 
+    /**
+     * Loads provided Map with timer delay entries from database
+     *
+     * @param timeLog Empty map that will be filled with key - TimerList relations
+     * @return True on success
+     */
+    public boolean getTimers(Map<String, TimerList> timeLog) {
+        String query =  "SELECT `key`, delay, type FROM data_timers ORDER BY time ASC;";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+                int counter = 0;
+
+                while (resultSet.next()) {
+                    String key = resultSet.getString("key");
+                    long delay = resultSet.getLong("delay");
+                    Integer type = resultSet.getInt("type");
+
+                    if (resultSet.wasNull()) type = null;
+                    Timer.TimerType timerType = Timer.translate(type);
+
+                    TimerList timerList = timeLog.getOrDefault(key, new TimerList(timerType));
+
+                    // Truncate list if entry count exceeds limit
+                    if (timerList.list.size() >= Config.timerLogHistoryLength) {
+                        timerList.list.remove(0);
+                    }
+
+                    counter++;
+                    timerList.list.add(delay);
+                    timeLog.putIfAbsent(key, timerList);
+                }
+
+                Main.ADMIN.log(String.format("Loaded %3d timer delays", counter), Flair.INFO);
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query timer delays", Flair.ERROR);
+            return false;
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Item data indexing
     //------------------------------------------------------------------------------------------------------------
@@ -753,6 +802,72 @@ public class Database {
         } catch (SQLException ex) {
             Main.ADMIN.logException(ex, Flair.ERROR);
             Main.ADMIN.log("Could not update database change id", Flair.ERROR);
+            return false;
+        }
+    }
+
+    /**
+     * Uploads all latest timer delays to database
+     *
+     * @param timeLog Valid map of key - TimerList relations
+     * @return True on success
+     */
+    public boolean uploadTimers(Map<String, TimerList> timeLog) {
+        String query1 = "DELETE  del " +
+                        "FROM    data_timers AS del " +
+                        "JOIN ( " +
+                        "  SELECT   `key`, ( " +
+                        "    SELECT   t.time " +
+                        "    FROM     data_timers AS t " +
+                        "    WHERE    t.`key` = d.`key` " +
+                        "    ORDER BY t.time DESC " +
+                        "    LIMIT    4, 1 " +
+                        "  ) AS     time " +
+                        "  FROM     data_timers AS d " +
+                        "  GROUP BY d.`key` " +
+                        "  HAVING   time IS NOT NULL " +
+                        ") AS    tmp " +
+                        "  ON    del.`key` = tmp.`key` " +
+                        "    AND del.time <= tmp.time; ";
+
+        String query =  "INSERT INTO data_timers (`key`, type, delay) " +
+                        "VALUES (?, ?, ?)  ";
+
+        try {
+            if (connection.isClosed()) return false;
+
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate(query1);
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                for (String key : timeLog.keySet()) {
+                    TimerList timerList = timeLog.get(key);
+
+                    if (timerList.type.equals(Timer.TimerType.NONE)) {
+                        continue;
+                    } else if (timerList.list.isEmpty()) {
+                        continue;
+                    }
+
+                    Integer type = Timer.translate(timerList.type);
+
+                    statement.setString(1, key);
+                    if (type == null) statement.setNull(2, 0);
+                    else statement.setInt(2, type);
+                    statement.setLong(3, timerList.list.get(timerList.list.size() - 1));
+
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not upload timers", Flair.ERROR);
             return false;
         }
     }

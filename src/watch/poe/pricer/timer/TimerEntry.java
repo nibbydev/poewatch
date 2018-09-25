@@ -1,6 +1,6 @@
 package watch.poe.pricer.timer;
 
-class TimerEntry {
+public class TimerEntry {
     public Long time;
     public Timer.TimerType type;
 

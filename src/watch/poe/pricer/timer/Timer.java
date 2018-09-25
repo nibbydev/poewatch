@@ -30,7 +30,7 @@ public class Timer {
         Map<String, Long> delays = new HashMap<>();
         long total = 0;
 
-        TimerType type = statusTranslator(statusElement);
+        TimerType type = translate(statusElement);
 
         for (String key : timeLog.keySet()) {
             TimerList timerList = timeLog.get(key);
@@ -69,14 +69,7 @@ public class Timer {
 
             // Compute delays for each valid entry
             for (String key : averages.keySet()) {
-                long bloated = averages.get(key) * multiplier;
-
-                Main.ADMIN.log(String.format("Created bloated delay %5d for key %8s (actual %5d)",
-                        bloated,
-                        key,
-                        getLatest(key)), Flair.STATUS);
-
-                delays.put(key, bloated);
+                delays.put(key, averages.get(key) * multiplier);
             }
 
             // Assign delays map
@@ -85,21 +78,49 @@ public class Timer {
     }
 
     /**
-     * Converts StatusElement status state to TimerType enum member.
+     * Converts StatusElement status type to TimerType enum member.
      *
      * @param statusElement A valid StatusElement instance
      * @return The matching TimerType if state is active or TimerType.DEFAULT if not.
      */
-    private TimerType statusTranslator(StatusElement statusElement) {
-        if (statusElement.isTwentyFourBool()) {
-            return TimerType.TWENTY;
-        } else if (statusElement.isSixtyBool()) {
-            return TimerType.SIXTY;
-        } else if (statusElement.isTenBool()) {
-            return TimerType.TEN;
-        } else {
-            return TimerType.DEFAULT;
+    private TimerType translate(StatusElement statusElement) {
+        if (statusElement.isTwentyFourBool()) return TimerType.TWENTY;
+        if (statusElement.isSixtyBool()) return TimerType.SIXTY;
+        if (statusElement.isTenBool()) return TimerType.TEN;
+
+        return TimerType.DEFAULT;
+    }
+
+    /**
+     * Converts int status type to TimerType enum member.
+     *
+     * @param type A valid integer
+     * @return The matching TimerType if state is active or TimerType.DEFAULT if not.
+     */
+    public static TimerType translate(Integer type) {
+        if (type == null) return TimerType.DEFAULT;
+        if (type == 10) return TimerType.TEN;
+        if (type == 60) return TimerType.SIXTY;
+        if (type == 24) return TimerType.TWENTY;
+
+        return TimerType.DEFAULT;
+    }
+
+    /**
+     * Converts TimerType status type to Integer
+     *
+     * @param type A valid TimerType
+     * @return The matching Integer if state is active or null if not.
+     */
+    public static Integer translate(TimerType type) {
+        switch (type) {
+            case DEFAULT:   return null;
+            case TEN:       return 10;
+            case SIXTY:     return 60;
+            case TWENTY:    return 24;
         }
+
+        return 0;
     }
 
     /**
@@ -135,10 +156,10 @@ public class Timer {
 
         if (!type.equals(TimerType.NONE)) {
             if (delay != null) {
-                Main.ADMIN.log(String.format("Bloated delay %5d found for key %8s (actual %5d)",
+                Main.ADMIN.log(String.format("Delay %5d (actual %5d) found for key %8s",
                         delay,
-                        key,
-                        getLatest(key)), Flair.STATUS);
+                        getLatest(key),
+                        key), Flair.STATUS);
 
                 long startTime = System.currentTimeMillis();
 
@@ -146,7 +167,7 @@ public class Timer {
                 while (!flagStop && System.currentTimeMillis() - startTime < delay) {
                     synchronized (monitor) {
                         try {
-                            monitor.wait(1);
+                            monitor.wait(10);
                         } catch (InterruptedException e) { }
                     }
                 }
@@ -205,5 +226,23 @@ public class Timer {
     public void stop() {
         delays.clear();
         flagStop = true;
+    }
+
+    /**
+     * Uploads all latest timer delays to database
+     */
+    public void uploadDelays() {
+        Main.DATABASE.uploadTimers(timeLog);
+    }
+
+    /**
+     * Gets delays from database on program start
+     */
+    public void getDelays() {
+        Map<String, TimerList> timeLog = new HashMap<>();
+
+        Main.DATABASE.getTimers(timeLog);
+
+        this.timeLog = timeLog;
     }
 }

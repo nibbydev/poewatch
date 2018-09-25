@@ -39,6 +39,9 @@ public class EntryManager extends Thread {
         // Round counters
         status.fixCounters();
 
+        // Get delays
+        timer.getDelays();
+
         // Display counters
         Main.ADMIN.log(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
@@ -198,6 +201,9 @@ public class EntryManager extends Thread {
         status.setTwentyFourBool(false);
         status.setSixtyBool(false);
         status.setTenBool(false);
+
+        // Add new delays to database
+        timer.uploadDelays();
     }
 
     /**

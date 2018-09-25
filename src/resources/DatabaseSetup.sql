@@ -126,6 +126,22 @@ CREATE TABLE data_currencyAliases (
     FOREIGN KEY (id_ci) REFERENCES data_currencyItems (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure data_timers
+--
+
+CREATE TABLE data_timers (
+    `key`   VARCHAR(32)  NOT NULL,
+    type    TINYINT(1)   UNSIGNED DEFAULT NULL,
+    time    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    delay   BIGINT       UNSIGNED NOT NULL,
+
+    CONSTRAINT pk PRIMARY KEY (`key`, time),
+
+    INDEX `key` (`key`),
+    INDEX time  (time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Item data
 -- --------------------------------------------------------------------------------------------------------------------
