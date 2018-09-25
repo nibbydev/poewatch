@@ -6,6 +6,7 @@ import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.item.ItemParser;
 import watch.poe.item.Mappers;
+import watch.poe.pricer.timer.Timer;
 
 import java.util.*;
 
@@ -18,7 +19,7 @@ public class EntryManager extends Thread {
     private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status = new StatusElement();
-    private Timer timer = new Timer();
+    private watch.poe.pricer.timer.Timer timer = new Timer();
 
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
@@ -72,6 +73,10 @@ public class EntryManager extends Thread {
 
         flagLocalRun = false;
 
+        Main.ADMIN.log("Removing timers", Flair.INFO);
+        timer.stop();
+        Main.ADMIN.log("Timers removed", Flair.INFO);
+
         while (!readyToExit) try {
             synchronized (monitor) {
                 monitor.notify();
@@ -123,6 +128,7 @@ public class EntryManager extends Thread {
      */
     private void cycle() {
         status.checkFlagStates();
+        timer.computeCycleDelays(status);
 
         // Upload gathered prices
         timer.start("upload");
@@ -135,7 +141,7 @@ public class EntryManager extends Thread {
         timer.clk("account");
 
         // Recalculate prices in database
-        timer.start("cycle");
+        timer.start("cycle", Timer.TimerType.NONE);
         cycleDatabase();
         timer.clk("cycle");
 
@@ -146,14 +152,14 @@ public class EntryManager extends Thread {
 
         // Check league API
         if (status.isTenBool()) {
-            timer.start("leagues");
+            timer.start("leagues", Timer.TimerType.TEN);
             Main.LEAGUE_MANAGER.cycle();
             timer.clk("leagues");
         }
 
         // Check if there are matching account name changes
         if (status.isTwentyFourBool()) {
-            timer.start("accountChanges");
+            timer.start("accountChanges", Timer.TimerType.TWENTY);
             Main.ACCOUNT_MANAGER.checkAccountNameChanges();
             timer.clk("accountChanges");
         }
@@ -164,10 +170,29 @@ public class EntryManager extends Thread {
                 status.getTenRemainMin(),
                 status.getSixtyRemainMin(),
                 status.getTwentyFourRemainMin(),
-                timer.getLatestMS("cycle"),
-                timer.getLatestMS("prices"),
-                timer.getLatestMS("upload"),
-                timer.getLatestMS("account")), Flair.STATUS);
+                timer.getLatest("cycle"),
+                timer.getLatest("prices"),
+                timer.getLatest("upload"),
+                timer.getLatest("account")), Flair.STATUS);
+
+        Main.ADMIN.log(String.format("[10%5d][11%5d][12%5d][13%5d][14%5d]",
+                timer.getLatest("a10"),
+                timer.getLatest("a11"),
+                timer.getLatest("a12"),
+                timer.getLatest("a13"),
+                timer.getLatest("a14")), Flair.STATUS);
+
+        if (status.isSixtyBool()) Main.ADMIN.log(String.format("[20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]",
+                timer.getLatest("a20"),
+                timer.getLatest("a21"),
+                timer.getLatest("a22"),
+                timer.getLatest("a23"),
+                timer.getLatest("a24"),
+                timer.getLatest("a25")), Flair.STATUS);
+
+        if (status.isTwentyFourBool()) Main.ADMIN.log(String.format("[30%5d][31%5d]",
+                timer.getLatest("a30"),
+                timer.getLatest("a31")), Flair.STATUS);
 
         // Reset flags
         status.setTwentyFourBool(false);
@@ -180,11 +205,11 @@ public class EntryManager extends Thread {
      */
     private void cycleDatabase() {
         if (status.isSixtyBool()) {
-            timer.start("a20");
+            timer.start("a20", Timer.TimerType.SIXTY);
             Main.DATABASE.updateVolatile();
             timer.clk("a20");
 
-            timer.start("a21");
+            timer.start("a21", Timer.TimerType.SIXTY);
             Main.DATABASE.calculateVolatileMedian();
             timer.clk("a21");
         }
@@ -209,53 +234,34 @@ public class EntryManager extends Thread {
         Main.DATABASE.removeOldItemEntries();
         timer.clk("a14");
 
-        Main.ADMIN.log(String.format("[10%5d][11%5d][12%5d][13%5d][14%5d]",
-                timer.getLatestMS("a10"),
-                timer.getLatestMS("a11"),
-                timer.getLatestMS("a12"),
-                timer.getLatestMS("a13"),
-                timer.getLatestMS("a14")), Flair.STATUS);
-
         if (status.isSixtyBool()) {
-            timer.start("a22");
+            timer.start("a22", Timer.TimerType.SIXTY);
             Main.DATABASE.addHourly();
             timer.clk("a22");
 
-            timer.start("a23");
+            timer.start("a23", Timer.TimerType.SIXTY);
             Main.DATABASE.updateMultipliers();
             timer.clk("a23");
 
-            timer.start("a24");
+            timer.start("a24", Timer.TimerType.SIXTY);
             Main.DATABASE.calcQuantity();
             timer.clk("a24");
         }
 
         if (status.isTwentyFourBool()) {
-            timer.start("a30");
+            timer.start("a30", Timer.TimerType.TWENTY);
             Main.DATABASE.addDaily();
             timer.clk("a30");
 
-            timer.start("a31");
+            timer.start("a31", Timer.TimerType.TWENTY);
             Main.DATABASE.calcSpark();
             timer.clk("a31");
-
-            Main.ADMIN.log(String.format("[30%5d][31%5d]",
-                    timer.getLatestMS("a30"),
-                    timer.getLatestMS("a31")), Flair.STATUS);
         }
 
         if (status.isSixtyBool()) {
-            timer.start("a25");
+            timer.start("a25", Timer.TimerType.SIXTY);
             Main.DATABASE.resetCounters();
             timer.clk("a25");
-
-            Main.ADMIN.log(String.format("[20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]",
-                    timer.getLatestMS("a20"),
-                    timer.getLatestMS("a21"),
-                    timer.getLatestMS("a22"),
-                    timer.getLatestMS("a23"),
-                    timer.getLatestMS("a24"),
-                    timer.getLatestMS("a25")), Flair.STATUS);
         }
     }
 
