@@ -40,74 +40,32 @@ function addCountDownTimer(element) {
     var seconds = Math.floor((distance % _minute) / _second);
 
     let dayString;
-    if (days === 0) {
-      dayString = "<span class='custom-text-dark'>" + days + " days, </span>";
-    } else if (days === 1) {
-      dayString = "<span class='custom-text-orange'>" + days + " day, </span>";
-    } else {
-      dayString = days + " days, ";
-    }
-
+    if      (days === 0)  dayString = "<span class='custom-text-dark'>"   + days + " days, </span>";
+    else if (days === 1)  dayString = "<span class='custom-text-orange'>" + days + " day, </span>";
+    else                  dayString = days + " days, ";
+    
     let hourString;
     if (days === 0) {
-      if (hours === 0) {
-        hourString = "<span class='custom-text-dark'>" + hours + " hours, </span>";
-      } else if (hours === 1) {
-        hourString = "<span class='custom-text-red'>" + hours + " hour, </span>";
-      } else if (hours < 5) {
-        hourString = "<span class='custom-text-red'>" + hours + " hours, </span>";
-      } else {
-        hourString = "<span class='custom-text-orange'>" + hours + " hours, </span>";
-      }
-    } else {
-      if (hours === 1) {
-        hourString = hours + " hour, ";
-      } else {
-        hourString = hours + " hours, ";
-      }
-    }
+      if      (hours === 0) hourString = "<span class='custom-text-dark'>"   + hours + " hours, </span>";
+      else if (hours === 1) hourString = "<span class='custom-text-orange'>" + hours + " hour, </span>";
+      else                  hourString = "<span class='custom-text-red'>"    + hours + " hours, </span>";
+    } else hourString = hours + (hours === 1 ?  " hour, " : " hours, ");
 
     let minuteString;
     if (days === 0 && hours === 0) {
-      if (minutes === 0) {
-        minuteString = "<span class='custom-text-dark'>" + minutes + " minutes, </span>";
-      } else if (minutes === 1) {
-        minuteString = "<span class='custom-text-red'>" + minutes + " minute, </span>";
-      } else if (minutes < 30) {
-        minuteString = "<span class='custom-text-red'>" + minutes + " minutes, </span>";
-      } else {
-        minuteString = "<span class='custom-text-orange'>" + minutes + " minutes, </span>";
-      }
-    } else {
-      if (minutes === 1) {
-        minuteString = minutes + " minute, ";
-      } else {
-        minuteString = minutes + " minutes, ";
-      }
-    }
+      if      (minutes ===  0) minuteString = "<span class='custom-text-dark'>"   + minutes + " minutes, </span>";
+      else if (minutes ===  1) minuteString = "<span class='custom-text-orange'>" + minutes + " minute, </span>";
+      else                     minuteString = "<span class='custom-text-red'>"    + minutes + " minutes, </span>";
+    } else minuteString = minutes + (minutes === 1 ?  " minute, " : " minutes, ");
 
     let secondString;
     if (days === 0 && hours === 0 && minutes === 0) {
-      if (seconds === 1) {
-        secondString = "<span class='custom-text-red'>" + seconds + " second</span>";
-      } else {
-        secondString = "<span class='custom-text-red'>" + seconds + " seconds</span>";
-      }
-    } else {
-      if (seconds === 1) {
-        secondString = seconds + " second";
-      } else {
-        secondString = seconds + " seconds";
-      }
-    }
+      if      (seconds ===  0) secondString = "<span class='custom-text-dark'>"   + seconds + " seconds</span>";
+      else if (seconds ===  1) secondString = "<span class='custom-text-orange'>" + seconds + " second</span>";
+      else                     secondString = "<span class='custom-text-red'>"    + seconds + " seconds</span>";
+    } else secondString = seconds + (seconds === 1 ?  " second" : " seconds");
 
-    let formatString = "";
-    if (dayString) formatString += dayString;
-    if (hourString) formatString += hourString;
-    if (minuteString) formatString += minuteString;
-    if (secondString) formatString += secondString;
-
-    cdText.html(formatString);
+    cdText.html(dayString+hourString+minuteString+secondString);
     cdBar.css("width", percentage+"%");
   }
 
