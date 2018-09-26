@@ -10,6 +10,7 @@ import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.RawEntry;
+import watch.poe.pricer.StatusElement;
 import watch.poe.pricer.timer.Timer;
 import watch.poe.pricer.timer.TimerList;
 import watch.poe.relations.CategoryEntry;
@@ -812,7 +813,7 @@ public class Database {
      * @param timeLog Valid map of key - TimerList relations
      * @return True on success
      */
-    public boolean uploadTimers(Map<String, TimerList> timeLog) {
+    public boolean uploadTimers(Map<String, TimerList> timeLog, StatusElement statusElement) {
         String query1 = "DELETE  del " +
                         "FROM    data_timers AS del " +
                         "JOIN ( " +
@@ -848,6 +849,18 @@ public class Database {
                         continue;
                     } else if (timerList.list.isEmpty()) {
                         continue;
+                    }
+
+                    // Very nice
+                    if (!statusElement.isTenBool() || !statusElement.isSixtyBool() || !statusElement.isTwentyFourBool()) {
+                        if (timerList.type.equals(Timer.TimerType.TEN)) continue;
+                        if (timerList.type.equals(Timer.TimerType.SIXTY)) continue;
+                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
+                    } else if (statusElement.isTenBool()) {
+                        if (timerList.type.equals(Timer.TimerType.SIXTY)) continue;
+                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
+                    } else if (statusElement.isSixtyBool()) {
+                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
                     }
 
                     Integer type = Timer.translate(timerList.type);
