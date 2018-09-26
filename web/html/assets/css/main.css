@@ -247,7 +247,7 @@ footer {
 }
 
 .api-data-table .table td {
-  border-top: 1px solid rgba(255,255,255,.05);
+  border-top: 0;
 }
 
 .api-data-table .table thead th {
@@ -325,7 +325,7 @@ footer {
 .custom-text-dark       {color: rgb(88, 88, 88)}
 .paragraph-text         {color: #bbb}
 
-footer>div>a {color: rgb(249, 108, 84)}
+.color-patron {color: rgb(249, 108, 84) !important}
 
 /*------------------------------------------------------------------------------------------------------------
 // Other

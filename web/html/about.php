@@ -37,7 +37,10 @@
                   <button class="nav-link pagination-btn" value='contact'>Contact</button>
                 </li>
                 <li class="nav-item">
-                  <button class="nav-link pagination-btn" value='legal' va>Legal</button>
+                  <button class="nav-link pagination-btn" value='supporters'>Supporters</button>
+                </li>
+                <li class="nav-item">
+                  <button class="nav-link pagination-btn" value='legal'>Legal</button>
                 </li>
               </ul>
             </div>
@@ -55,6 +58,22 @@
               <p>What are the API limitations?<br><span class='custom-text-gray'>Based on fair use. Though it does have a rate limitation of 5 requests per second - 60 second timeout.</span></p>
             </div>
             <div class="card-body pagination-page d-none" id='page-contact'>Currently none</div>
+            <div class="card-body pagination-page d-none" id='page-supporters'>
+              <div class="card api-data-table px-2 pt-1 pb-1">
+                <table class="table table-sm">
+                  <tbody>
+                    <tr>
+                      <td class="pr-4">Siegrest</td>
+                      <td class="pr-4">$2</td>
+                      <td class="w-100">Get a mention and a message here for supporting the site over at <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203'>Patreon</a></td>
+                    </tr>
+
+                    <?php GenPatronRows($pdo) ?>
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
             <div class="card-body pagination-page d-none" id='page-legal'>
               <div>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</div>
             </div>

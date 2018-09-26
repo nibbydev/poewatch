@@ -43,6 +43,20 @@ CREATE TABLE web_navbar_items (
     INDEX enabled (enabled)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure web_patrons
+--
+
+CREATE TABLE web_patrons (
+    id       INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name     VARCHAR(64)  NOT NULL,
+    amount   INT          UNSIGNED DEFAULT NULL,
+    message  VARCHAR(128) DEFAULT NULL,
+
+    INDEX amount (amount)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
 -- --------------------------------------------------------------------------------------------------------------------
