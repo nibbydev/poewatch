@@ -27,10 +27,22 @@
         <div class='body-boundaries w-100'> 
           <div class="card custom-card">
             <div class="card-header">
-              <h2 class="text-white">About</h2>
+              <h2 class="text-white mb-3">About</h2>
+
+              <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                  <button class="nav-link pagination-btn active" value='faq'>FAQ</button>
+                </li>
+                <li class="nav-item">
+                  <button class="nav-link pagination-btn" value='contact'>Contact</button>
+                </li>
+                <li class="nav-item">
+                  <button class="nav-link pagination-btn" value='legal' va>Legal</button>
+                </li>
+              </ul>
             </div>
-            <div class="card-body">
-              <h5>FAQ</h5>
+
+            <div class="card-body pagination-page" id='page-faq'>
               <p>Where do you get the prices?<br><span class='custom-text-gray'>The official stash API over from pathofexile.com. Prices are automatically generated from the items players publicly list for sale.</span></p>
               <p>How up to date are the prices?<br><span class='custom-text-gray'>All prices are recalculated within 60 second intervals. Prices on the website are always the most recent unless stated otherwise.</span></p>
               <p>How do you acquire account and character names?<br><span class='custom-text-gray'>Through the stash API. Meaning that if a player has listed an item in a public stash tab, that character is recorded.</span></p>
@@ -41,10 +53,12 @@
               <p>Can you make feature X on this site less frustrating to use?<br><span class='custom-text-gray'>Do let me know and I'll see how it can be improved.</span></p>
               <p>Why is there no data for day one of new leagues?<br><span class='custom-text-gray'>Timezones. Leagues usually start at 8 PM UTC, which leaves a total of 4 hours for day one. Not really enough to get any useful statistics. Which is why the first day is skipped and the next one includes the whole 24 + 4 hours of data.</span></p>
               <p>What are the API limitations?<br><span class='custom-text-gray'>Based on fair use. Though it does have a rate limitation of 5 requests per second - 60 second timeout.</span></p>
-              <hr>
-              <h5>Legal text</h5>
-              <p>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</p>
             </div>
+            <div class="card-body pagination-page d-none" id='page-contact'>Currently none</div>
+            <div class="card-body pagination-page d-none" id='page-legal'>
+              <div>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</div>
+            </div>
+
             <div class="card-footer slim-card-edge"></div>
           </div>
         </div>
@@ -60,5 +74,13 @@
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script>
+  $("button.pagination-btn").click(function(){
+  $(".pagination-page").addClass("d-none");
+  $(".pagination-btn").removeClass("active");
+  $("#page-" + $(this).val()).removeClass("d-none");
+  $(this).addClass("active")
+});
+</script>
 </body>
 </html>

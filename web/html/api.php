@@ -31,7 +31,7 @@
               <div class="card custom-card">
                 <div class="card-header">
                   <h2>API</h2>
-                  <div>Get data from this site to use in your applications. Rate limiting is 5 requests per 1 second, 1 minute timeout.</div>
+                  <div>Use the data in your applications. Rate limiting is 5 requests per 1 second, 1 minute timeout.</div>
                 </div>
                 <div class="card-body">
 
