@@ -901,7 +901,9 @@ public class Database {
                         "  SELECT   id_l, id_d, " +
                         "           AVG(price)        AS mean, " +
                         "           MEDIAN(price)     AS median, " +
-                        "           stats_mode(price) AS mode " +
+                        "           stats_mode(price) AS mode, " +
+                        "           MIN(price)        AS min, " +
+                        "           MAX(price)        AS max " +
                         "  FROM     league_entries " +
                         "  WHERE    approved = 1 " +
                         "  GROUP BY id_l, id_d " +
@@ -910,7 +912,9 @@ public class Database {
                         "    AND i.id_d = e.id_d " +
                         "SET     i.mean   = TRUNCATE(e.mean,   ?), " +
                         "        i.median = TRUNCATE(e.median, ?), " +
-                        "        i.mode   = TRUNCATE(e.mode,   ?); ";
+                        "        i.mode   = TRUNCATE(e.mode,   ?), " +
+                        "        i.min    = TRUNCATE(e.min,    ?), " +
+                        "        i.max    = TRUNCATE(e.max,    ?); ";
 
         try {
             if (connection.isClosed()) return false;
@@ -919,6 +923,8 @@ public class Database {
                 statement.setInt(1, Config.precision);
                 statement.setInt(2, Config.precision);
                 statement.setInt(3, Config.precision);
+                statement.setInt(4, Config.precision);
+                statement.setInt(5, Config.precision);
                 statement.executeUpdate();
             }
 
@@ -1328,10 +1334,10 @@ public class Database {
     public boolean addDaily() {
         String query =  "INSERT INTO league_history_daily_rolling ( " +
                         "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  exalted, count, quantity, inc, `dec`) " +
+                        "  min, max, exalted, count, quantity, inc, `dec`) " +
                         "SELECT " +
                         "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  exalted, count, quantity, inc, `dec` " +
+                        "  min, max, exalted, count, quantity, inc, `dec` " +
                         "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
@@ -1404,10 +1410,10 @@ public class Database {
         String query1 = "INSERT INTO league_items_inactive ( " +
                         "              id_l, id_d, time, " +
                         "              mean, median, mode, " +
-                        "              exalted, count)" +
+                        "              min, max, exalted, count)" +
                         "SELECT      id_l, id_d, time, " +
                         "            mean, median, mode, " +
-                        "            exalted, count " +
+                        "            min, max, exalted, count " +
                         "FROM        league_items_rolling AS i " +
                         "JOIN        data_leagues         AS l " +
                         "  ON        l.id = i.id_l " +
