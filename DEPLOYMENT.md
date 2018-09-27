@@ -1,14 +1,26 @@
 # Crude set-up instructions
 
+This guide assumes you have ssh root access and plan to install everything on the same machine.
+
 ### 1. Server set up
 
 ##### 1.1. Set timezone
 ```sudo timedatectl set-timezone UTC```
 
-##### 1.2. Install perquisites
-```sudo apt install apache2 php libapache2-mod-php openjdk-11-jre-headless mysql-server```
+##### 1.2. Add user account
+```
+adduser pw
+usermod -aG sudo pw
+su pw
+cd ~
+mkdir .ssh
+nano .ssh/authorized_keys
+```
 
-##### 1.3. Prepare sub-domains
+##### 1.3. Install perquisites
+```sudo apt install apache2 php libapache2-mod-php php7.0-mysql openjdk-11-jre-headless mysql-server```
+
+##### 1.4. Prepare sub-domains
 ```sudo nano /etc/apache2/sites-available/poe.watch.conf```
 ```
 <VirtualHost *:80>
@@ -62,7 +74,7 @@
 </VirtualHost>
 ```
 
-##### 1.4. Final touches to web server
+##### 1.5. Final touches to web server
 ```
 sudo a2enmod rewrite
 sudo a2enmod headers
@@ -73,20 +85,38 @@ sudo a2ensite management.poe.watch.conf
 sudo systemctl reload apache2.service
 ```
 
-##### 1.5. Setup MySQL
-```
-sudo mysql_secure_installation
-sudo apt install phpmyadmin
-```
-Create PhpMyAdmin symlink `ln -s /usr/share/phpmyadmin /home/pw/http/management/sql`
-Run database configuration script from `/src/resources/DatabbaseSetup.sql`
+## 2. Setup MySQL
+```sudo mysql_secure_installation```
+Copy UDFs (`udf_median.so` and `stats_mode.so`) to plugin directory (usually `/usr/lib/mysql/plugin/`, or use `SHOW VARIABLES WHERE Variable_Name LIKE "%dir"` to find out)
 
-## 2. Firewall (assuming CloudFlare is set up and working)
+Enter MySQL prompt `mysql -u root -p`
 
-##### 2.1. Whitelist port 22 so we don't get locked out
+Create functions:
+```
+CREATE AGGREGATE FUNCTION median RETURNS REAL SONAME 'udf_median.so';
+CREATE AGGREGATE FUNCTION stats_mode RETURNS REAL SONAME 'stats_mode.so';
+```
+
+Run database configuration script from `/src/resources/DatabbaseSetup.sql` (Change user account passwords at the very bottom)
+
+##### 2.1. Setup PhpMyAdmin
+Download source files and place under `/html/management/sql`
+Make copy of config `cp /html/management/sql/config.sample.inc.php /html/management/sql/config.inc.php`
+Add the 5 lines to the bottom of file
+```
+$i++;
+$cfg['Servers'][$i]['host']       = ''; // IP and port
+$cfg['Servers'][$i]['user']       = '';
+$cfg['Servers'][$i]['password']   = '';
+$cfg['Servers'][$i]['auth_type']  = 'config';
+```
+
+## 3. Firewall (assuming CloudFlare is set up and working)
+
+##### 3.1. Whitelist port 22 so we don't get locked out
 `ufw allow 22`
 
-##### 2.2. Create batch script for whitelisting CloudFlare IPs
+##### 3.2. Create batch script for whitelisting CloudFlare IPs
 `nano ufw.sh`
 
 ```
@@ -99,13 +129,13 @@ Original script by [raeesbhatti](https://gist.github.com/raeesbhatti/e336ab920ab
 
 Set permissions `chmod 744 ufw.sh` and run the script `./ufw.sh`.
 
-##### 2.3. Deny all other connections
+##### 3.3. Deny all other connections
 `ufw default deny`
 
-## 3. Artifact set up
+## 4. Artifact set up
 
-##### 3.1. Obtain Gson `com.google.code.gson:gson:2.8.5` and MySQL connector `mysql:mysql-connector-java:8.0.12` from Maven
+##### 4.1. Obtain Gson `com.google.code.gson:gson:2.8.5` and MySQL connector `mysql:mysql-connector-java:8.0.12` from Maven
 
-##### 3.2. Compile project and export artifacts
+##### 4.2. Compile project and export artifacts
 
-##### 3.3. Run the program `java -Xmx128M -jar poewatch.jar`
+##### 4.3. Run the program `java -Xmx128M -jar poewatch.jar`
