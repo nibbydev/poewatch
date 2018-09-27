@@ -181,7 +181,7 @@ public class Database {
                         "    AND   h.id_new    = newAcc.id " +
                         "WHERE     h.id_old IS NULL " +
                         "GROUP BY  oldAcc.id, newAcc.id " +
-                        "HAVING    matches > 0 " +
+                        "HAVING    matches > 1 " +
                         "ORDER BY  oldAcc.seen ASC, newAcc.seen ASC; ";
 
         ArrayList<Long> filter = new ArrayList<>();
