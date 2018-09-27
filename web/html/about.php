@@ -58,6 +58,7 @@
               <p>Can you make feature X on this site less frustrating to use?<br><span class='custom-text-gray'>Do let me know and I'll see how it can be improved.</span></p>
               <p>Why is there no data for day one of new leagues?<br><span class='custom-text-gray'>Timezones. Leagues usually start at 8 PM UTC, which leaves a total of 4 hours for day one. Not really enough to get any useful statistics. Which is why the first day is skipped and the next one includes the whole 24 + 4 hours of data.</span></p>
               <p>What are the API limitations?<br><span class='custom-text-gray'>Based on fair use. Though it does have a rate limitation of 5 requests per second - 60 second timeout.</span></p>
+              <p>Some of the pages don't work with Internet Explorer<br><span class='custom-text-gray'>More like Internet Explorer doesn't work with some of the pages. But seriously, it's an outdated browser. You should upgrade to something newer.</span></p>
             </div>
             <div class="card-body pagination-page d-none" id='page-contact'>Currently none</div>
             <div class="card-body pagination-page d-none" id='page-supporters'>
@@ -67,7 +68,7 @@
                     <tr>
                       <td class="pr-4">Siegrest</td>
                       <td class="pr-4">$2</td>
-                      <td class="w-100">Get a mention and a message here for supporting the site over at <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203'>Patreon</a></td>
+                      <td class="w-100">Get a mention and a message here for supporting the site over at <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203' target='_blank'>Patreon</a></td>
                     </tr>
 
                     <?php GenPatronRows($pdo) ?>

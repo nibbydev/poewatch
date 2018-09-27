@@ -3,7 +3,7 @@ function GenFooter() {
   echo "<footer class='container-fluid d-flex flex-column justify-content-center align-items-center p-0'>
     <div>PoeWatch © " . date('Y') . "</div>
     <div>
-      <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203'>Become a Patron!</a>
+      <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203' target='_blank'>Become a Patron!</a>
     </div>
   </footer>";
 }
