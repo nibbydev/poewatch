@@ -507,6 +507,7 @@ class ExpandedRow {
     this.rowParent = target;
     this.league = FILTER.league;
     this.id = id;
+    this.dataset = 1;
   
     // Load history data
     if (id in this.dataSets) {
