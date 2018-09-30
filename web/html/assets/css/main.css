@@ -291,6 +291,14 @@ footer {
   color: #222;
   background-color: rgb(202, 90, 90);
 }
+.custom-badge-red-ex {
+  color: #222;
+  background-color: rgb(255, 0, 0);
+}
+.custom-badge-red-lo {
+  color: #222;
+  background-color: rgb(192, 146, 146);
+}
 .custom-badge-orange {
   color: #222;
   background-color:rgb(202, 163, 90);
@@ -303,13 +311,21 @@ footer {
   color: #222;
   background-color: rgb(112, 202, 90);
 }
+.custom-badge-green-ex {
+  color: #222;
+  background-color: rgb(51, 255, 0);
+}
 .custom-badge-green-lo {
   color: #222;
   background-color: rgb(155, 192, 146);
 }
 .custom-badge-gray {
+  color: #000;
+  background-color: rgb(100, 100, 100);
+}
+.custom-badge-gray-lo {
   color: #222;
-  background-color: rgba(161, 161, 161, 0.603);
+  background-color: rgb(161, 161, 161);
 }
 
 /*
@@ -317,12 +333,13 @@ footer {
 */
 
 .custom-text-red        {color: rgb(202, 90, 90)}
+.custom-text-red-lo     {color: rgb(192, 146, 146)}
 .custom-text-orange     {color: rgb(202, 163, 90)}
 .custom-text-orange-lo  {color: rgb(192, 185, 146)}
 .custom-text-green      {color: rgb(112, 202, 90)}
 .custom-text-green-lo   {color: rgb(155, 192, 146)}
-.custom-text-gray       {color: rgb(161, 161, 161)}
-.custom-text-dark       {color: rgb(88, 88, 88)}
+.custom-text-gray       {color: rgb(100, 100, 100)}
+.custom-text-gray-lo    {color: rgb(161, 161, 161)}
 .paragraph-text         {color: #bbb}
 
 .color-patron {color: rgb(249, 108, 84) !important}

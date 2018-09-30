@@ -357,7 +357,7 @@ function AddTableHeaders($category) {
   echo "<th scope='col'>Chaos</th>";
   echo "<th scope='col'>Exalted</th>";
   echo "<th scope='col' class='fixedSizeCol'>Change</th>";
-  echo "<th scope='col' class='fixedSizeCol'>Count</th>";
+  echo "<th scope='col' class='fixedSizeCol'>Quantity</th>";
 }
 
 // Redirects user to url with necessary query parameters, if missing

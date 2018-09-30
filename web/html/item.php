@@ -185,7 +185,7 @@
 
 <!-- Service script -->
 <script>
-  var ID      = <?php 
+  var ID = <?php 
     if (isset($_GET['id']) && is_numeric($_GET['id'])) {
       echo $_GET['id'];
     } else {

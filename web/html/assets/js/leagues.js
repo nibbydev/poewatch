@@ -40,27 +40,27 @@ function addCountDownTimer(element) {
     var seconds = Math.floor((distance % _minute) / _second);
 
     let dayString;
-    if      (days === 0)  dayString = "<span class='custom-text-dark'>"   + days + " days, </span>";
+    if      (days === 0)  dayString = "<span class='custom-text-gray'>"   + days + " days, </span>";
     else if (days === 1)  dayString = "<span class='custom-text-orange'>" + days + " day, </span>";
     else                  dayString = days + " days, ";
     
     let hourString;
     if (days === 0) {
-      if      (hours === 0) hourString = "<span class='custom-text-dark'>"   + hours + " hours, </span>";
+      if      (hours === 0) hourString = "<span class='custom-text-gray'>"   + hours + " hours, </span>";
       else if (hours === 1) hourString = "<span class='custom-text-orange'>" + hours + " hour, </span>";
       else                  hourString = "<span class='custom-text-red'>"    + hours + " hours, </span>";
     } else hourString = hours + (hours === 1 ?  " hour, " : " hours, ");
 
     let minuteString;
     if (days === 0 && hours === 0) {
-      if      (minutes ===  0) minuteString = "<span class='custom-text-dark'>"   + minutes + " minutes, </span>";
+      if      (minutes ===  0) minuteString = "<span class='custom-text-gray'>"   + minutes + " minutes, </span>";
       else if (minutes ===  1) minuteString = "<span class='custom-text-orange'>" + minutes + " minute, </span>";
       else                     minuteString = "<span class='custom-text-red'>"    + minutes + " minutes, </span>";
     } else minuteString = minutes + (minutes === 1 ?  " minute, " : " minutes, ");
 
     let secondString;
     if (days === 0 && hours === 0 && minutes === 0) {
-      if      (seconds ===  0) secondString = "<span class='custom-text-dark'>"   + seconds + " seconds</span>";
+      if      (seconds ===  0) secondString = "<span class='custom-text-gray'>"   + seconds + " seconds</span>";
       else if (seconds ===  1) secondString = "<span class='custom-text-orange'>" + seconds + " second</span>";
       else                     secondString = "<span class='custom-text-red'>"    + seconds + " seconds</span>";
     } else secondString = seconds + (seconds === 1 ?  " second" : " seconds");
