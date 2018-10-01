@@ -231,8 +231,8 @@ public class Timer {
     /**
      * Uploads all latest timer delays to database
      */
-    public void uploadDelays() {
-        Main.DATABASE.uploadTimers(timeLog);
+    public void uploadDelays(StatusElement statusElement) {
+        Main.DATABASE.uploadTimers(timeLog, statusElement);
     }
 
     /**

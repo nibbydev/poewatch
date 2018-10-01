@@ -3,7 +3,7 @@ function GenFooter() {
   echo "<footer class='container-fluid d-flex flex-column justify-content-center align-items-center p-0'>
     <div>PoeWatch © " . date('Y') . "</div>
     <div>
-      <a href='https://www.patreon.com/bePatron?u=13738203'>Become a Patron!</a>
+      <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203' target='_blank'>Become a Patron!</a>
     </div>
   </footer>";
 }
@@ -104,4 +104,21 @@ function GenHeaderMetaTags($title, $description) {
   <link rel='icon' type='image/png' href='assets/img/ico/32.png' sizes='32x32'>
   <link rel='icon' type='image/png' href='assets/img/ico/16.png' sizes='16x16'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>";
+}
+
+// About page Patreon messages generator
+function GenPatronRows($pdo) {
+  $stmt = $pdo->query("SELECT name, amount, message FROM web_patrons ORDER BY amount DESC");
+
+  while ($row = $stmt->fetch()) {
+    $name = htmlentities($row['name']);
+    $amount = $row['amount'] ? "\${$row['amount']}" : '-';
+    $message = $row['message'] ? htmlentities($row['message']) : '-';
+
+    echo "<tr>
+      <td class='pr-4 nowrap'>$name</td>
+      <td class='pr-4 nowrap'>$amount</td>
+      <td class='w-100'>$message</td>
+    </tr>";
+  }
 }

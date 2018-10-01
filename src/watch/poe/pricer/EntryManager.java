@@ -203,7 +203,7 @@ public class EntryManager extends Thread {
         status.setTenBool(false);
 
         // Add new delays to database
-        timer.uploadDelays();
+        timer.uploadDelays(status);
     }
 
     /**

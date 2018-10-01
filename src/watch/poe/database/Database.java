@@ -10,6 +10,7 @@ import watch.poe.item.Key;
 import watch.poe.league.LeagueEntry;
 import watch.poe.pricer.AccountEntry;
 import watch.poe.pricer.RawEntry;
+import watch.poe.pricer.StatusElement;
 import watch.poe.pricer.timer.Timer;
 import watch.poe.pricer.timer.TimerList;
 import watch.poe.relations.CategoryEntry;
@@ -180,7 +181,7 @@ public class Database {
                         "    AND   h.id_new    = newAcc.id " +
                         "WHERE     h.id_old IS NULL " +
                         "GROUP BY  oldAcc.id, newAcc.id " +
-                        "HAVING    matches > 0 " +
+                        "HAVING    matches > 1 " +
                         "ORDER BY  oldAcc.seen ASC, newAcc.seen ASC; ";
 
         ArrayList<Long> filter = new ArrayList<>();
@@ -812,7 +813,7 @@ public class Database {
      * @param timeLog Valid map of key - TimerList relations
      * @return True on success
      */
-    public boolean uploadTimers(Map<String, TimerList> timeLog) {
+    public boolean uploadTimers(Map<String, TimerList> timeLog, StatusElement statusElement) {
         String query1 = "DELETE  del " +
                         "FROM    data_timers AS del " +
                         "JOIN ( " +
@@ -848,6 +849,18 @@ public class Database {
                         continue;
                     } else if (timerList.list.isEmpty()) {
                         continue;
+                    }
+
+                    // Very nice
+                    if (!statusElement.isTenBool() || !statusElement.isSixtyBool() || !statusElement.isTwentyFourBool()) {
+                        if (timerList.type.equals(Timer.TimerType.TEN)) continue;
+                        if (timerList.type.equals(Timer.TimerType.SIXTY)) continue;
+                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
+                    } else if (statusElement.isTenBool()) {
+                        if (timerList.type.equals(Timer.TimerType.SIXTY)) continue;
+                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
+                    } else if (statusElement.isSixtyBool()) {
+                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
                     }
 
                     Integer type = Timer.translate(timerList.type);
@@ -888,7 +901,9 @@ public class Database {
                         "  SELECT   id_l, id_d, " +
                         "           AVG(price)        AS mean, " +
                         "           MEDIAN(price)     AS median, " +
-                        "           stats_mode(price) AS mode " +
+                        "           stats_mode(price) AS mode, " +
+                        "           MIN(price)        AS min, " +
+                        "           MAX(price)        AS max " +
                         "  FROM     league_entries " +
                         "  WHERE    approved = 1 " +
                         "  GROUP BY id_l, id_d " +
@@ -897,7 +912,9 @@ public class Database {
                         "    AND i.id_d = e.id_d " +
                         "SET     i.mean   = TRUNCATE(e.mean,   ?), " +
                         "        i.median = TRUNCATE(e.median, ?), " +
-                        "        i.mode   = TRUNCATE(e.mode,   ?); ";
+                        "        i.mode   = TRUNCATE(e.mode,   ?), " +
+                        "        i.min    = TRUNCATE(e.min,    ?), " +
+                        "        i.max    = TRUNCATE(e.max,    ?); ";
 
         try {
             if (connection.isClosed()) return false;
@@ -906,6 +923,8 @@ public class Database {
                 statement.setInt(1, Config.precision);
                 statement.setInt(2, Config.precision);
                 statement.setInt(3, Config.precision);
+                statement.setInt(4, Config.precision);
+                statement.setInt(5, Config.precision);
                 statement.executeUpdate();
             }
 
@@ -1315,10 +1334,10 @@ public class Database {
     public boolean addDaily() {
         String query =  "INSERT INTO league_history_daily_rolling ( " +
                         "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  exalted, count, quantity, inc, `dec`) " +
+                        "  min, max, exalted, count, quantity, inc, `dec`) " +
                         "SELECT " +
                         "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  exalted, count, quantity, inc, `dec` " +
+                        "  min, max, exalted, count, quantity, inc, `dec` " +
                         "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
@@ -1391,10 +1410,10 @@ public class Database {
         String query1 = "INSERT INTO league_items_inactive ( " +
                         "              id_l, id_d, time, " +
                         "              mean, median, mode, " +
-                        "              exalted, count)" +
+                        "              min, max, exalted, count)" +
                         "SELECT      id_l, id_d, time, " +
                         "            mean, median, mode, " +
-                        "            exalted, count " +
+                        "            min, max, exalted, count " +
                         "FROM        league_items_rolling AS i " +
                         "JOIN        data_leagues         AS l " +
                         "  ON        l.id = i.id_l " +

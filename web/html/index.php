@@ -30,13 +30,13 @@
               <h2 class="text-white">PoeWatch</h2>
             </div>
             <div class="card-body">
-              <img src="assets/img/img1.png" class="float-right ml-3 img-fluid">
+              <img src="assets/img/img2.png" class="float-right ml-3 img-fluid">
               <h5>Overview</h5>
-              <p>A Path of Exile statistics and price data collection page. This site gathers data over time from various items (uniques, gems, currency, you name it) from the ARPG Path of Exile and calculates their average prices. It also provides users a possibility to compare items' prices against previous leagues. This page is still in development and there has not been any official releases yet.</p>
+              <p>PoeWatch is a Path of Exile statistics and price data collection page that's been in the works since 2017. It gathers data over time for various items (such as uniques, gems, currency, you name it) from public trade listings and finds the average prices. The site is actively in development and welcomes any feedback users may have. </p>
               <h5>The general idea</h5>
-              <p>The general goal is to combine the functionality of <a href="http://poe.ninja">poe.ninja</a> and <a href="http://poe-antiquary.xyz">poe-antiquary</a> with a nice sleek style while being as user friendly as possible.</a></p>
+              <p>The general goal was to make a statistics website with everything in one place. Users can check prices of almost any item type from the current or past leagues and look up character names.</a></p>
               <h5>The API</h5>
-              <p>Of course, all the data displayed here can be accessed through an API. Link's in the navbar up top. It's fairly out of date at the moment but will be updated before the release.</p>
+              <p>Of course, all the data displayed here can be accessed through various APIs. Currently available interfaces can be found under the API page.</p>
             </div>
             <div class="card-footer slim-card-edge"></div>
           </div>

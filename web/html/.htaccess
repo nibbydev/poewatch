@@ -9,8 +9,3 @@ ErrorDocument 404 /error.php
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule !.*\.php$ %{REQUEST_FILENAME}.php [QSA,L]
 </IfModule>
-
-AuthType Basic
-AuthName "Password Protected Area"
-AuthUserFile /home/pw/http/html/.htpasswd
-Require valid-user

@@ -48,7 +48,7 @@
                     </div>
 
                     <div class="btn-group mb-3">
-                      <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo $_GET["search"]; ?>">
+                      <input type="text" class="form-control seamless-input" name="search" placeholder="Name" value="<?php if (isset($_GET["search"])) echo htmlentities($_GET["search"]); ?>">
                       <button type="submit" class="btn btn-outline-dark">Search</button>
                     </div>
                   </div>

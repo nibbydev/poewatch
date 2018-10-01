@@ -43,6 +43,20 @@ CREATE TABLE web_navbar_items (
     INDEX enabled (enabled)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure web_patrons
+--
+
+CREATE TABLE web_patrons (
+    id       INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name     VARCHAR(64)  NOT NULL,
+    amount   INT          UNSIGNED DEFAULT NULL,
+    message  VARCHAR(128) DEFAULT NULL,
+
+    INDEX amount (amount)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Category tables
 -- --------------------------------------------------------------------------------------------------------------------
@@ -190,6 +204,8 @@ CREATE TABLE league_items_rolling (
     mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    min         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    max         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     exalted     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
@@ -218,6 +234,8 @@ CREATE TABLE league_items_inactive (
     mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    min         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    max         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     exalted     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
@@ -264,6 +282,8 @@ CREATE TABLE league_history_daily_inactive (
     mean      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     median    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     mode      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    min       DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    max       DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     exalted   DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     inc       INT(8)         UNSIGNED DEFAULT NULL,
     `dec`     INT(8)         UNSIGNED DEFAULT NULL,
@@ -288,6 +308,8 @@ CREATE TABLE league_history_daily_rolling (
     mean       DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     median     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     mode       DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    min        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    max        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     exalted    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     inc        INT(8)         UNSIGNED DEFAULT NULL,
     `dec`      INT(8)         UNSIGNED DEFAULT NULL,

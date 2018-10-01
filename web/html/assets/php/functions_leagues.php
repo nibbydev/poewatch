@@ -33,7 +33,7 @@ function GenLeagueEntries($pdo) {
     if ($league["upcoming"]) {
       $status = "<span class='badge badge-light ml-1'>Upcoming</span>";
     } else if (!$league["active"]) {
-      $status = "<span class='badge custom-badge-gray ml-1'>Ended</span>";
+      $status = "<span class='badge custom-badge-gray-lo ml-1'>Ended</span>";
     } else {
       $status = "<span class='badge badge-success ml-1'>Ongoing</span>";
     }

@@ -185,8 +185,21 @@
 
 <!-- Service script -->
 <script>
-  var ID      = <?php echo $_GET['id']      ?    $_GET['id']        : 'null'; ?>;
-  var LEAGUE  = <?php echo $_GET['league']  ? "'{$_GET['league']}'" : 'null'; ?>;
+  var ID = <?php 
+    if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+      echo $_GET['id'];
+    } else {
+      echo 'null';
+    }
+  ?>;
+  var LEAGUE  = <?php 
+    if (isset($_GET['league'])) {
+      echo "'" . htmlentities($_GET['league']) . "'";
+    } else {
+      echo 'null'; 
+    }
+
+  ?>;
 </script>
 <!--/Service script/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>

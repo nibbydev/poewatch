@@ -80,14 +80,14 @@ class ItemRow {
     }
   
     if (this.item.links) {
-      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.links + " link</span>";
+      let tmp = " <span class='badge custom-badge-gray-lo ml-1'>" + this.item.links + " link</span>";
       template = template.replace("{{link}}", tmp);
     } else {
       template = template.replace("{{link}}", "");
     }
   
     if (this.item.var && FILTER.category !== "enchantment") {
-      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.var + "</span>";
+      let tmp = " <span class='badge custom-badge-gray-lo ml-1'>" + this.item.var + "</span>";
       template = template.replace("{{var}}", tmp);
     } else {
       template = template.replace("{{var}}", "");
@@ -101,8 +101,8 @@ class ItemRow {
     if (this.item.frame !== 4) return "";
   
     let template = `
-    <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
-    <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
+    <td><span class='badge custom-badge-block custom-badge-gray-lo'>{{lvl}}</span></td>
+    <td><span class='badge custom-badge-block custom-badge-gray-lo'>{{quality}}</span></td>
     <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
     `.trim();
   
@@ -137,7 +137,7 @@ class ItemRow {
       displayLvl = "84";
     }
   
-    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
+    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray-lo'>" + displayLvl + "</span></td>";
   }
   
   buildMapFields() {
@@ -148,7 +148,7 @@ class ItemRow {
 
     let template = `
     <td class='nowrap'>
-      <span class='badge custom-badge-block custom-badge-gray'>{{tier}}</span>
+      <span class='badge custom-badge-block custom-badge-gray-lo'>{{tier}}</span>
     </td>
     `.trim();
 
@@ -218,19 +218,23 @@ class ItemRow {
     } else {
       change = Math.round(this.item.change); 
     }
-  
-    if (change > 100) {
+
+    if (change >= 200) {
+      template = template.replace("{{color}}", "green-ex");
+    } else if (change <= -200) {
+      template = template.replace("{{color}}", "red-ex");
+    } else if (change >= 30) {
       template = template.replace("{{color}}", "green");
-    } else if (change < -100) {
-      template = template.replace("{{color}}", "orange");
-    } else if (change > 50) {
+    } else if (change <= -30) {
+      template = template.replace("{{color}}", "red");
+    } else if (change >= 15) {
       template = template.replace("{{color}}", "green-lo");
-    } else if (change < -50) {
-      template = template.replace("{{color}}", "orange-lo");
+    } else if (change <= -15) {
+      template = template.replace("{{color}}", "red-lo");
     } else {
       template = template.replace("{{color}}", "gray");
     }
-  
+
     return template.replace("{{percent}}", change);
   }
   
@@ -242,12 +246,14 @@ class ItemRow {
       </span>
     </td>
     `.trim();
-  
-    if (this.item.quantity >= 10) {
+
+    if (this.item.quantity >= 20) {
       template = template.replace("{{color}}", "gray");
+    } else if (this.item.quantity >= 10) {
+      template = template.replace("{{color}}", "orange-lo");
     } else if (this.item.quantity >= 5) {
-      template = template.replace("{{color}}", "orange");
-    } else {
+      template = template.replace("{{color}}", "red-lo");
+    } else if (this.item.quantity >= 0) {
       template = template.replace("{{color}}", "red");
     }
   
@@ -507,6 +513,7 @@ class ExpandedRow {
     this.rowParent = target;
     this.league = FILTER.league;
     this.id = id;
+    this.dataset = 1;
   
     // Load history data
     if (id in this.dataSets) {
