@@ -42,12 +42,14 @@ function GenLeagueEntries($pdo) {
     $start  = $league["start"]   ? date('j M Y, H:i (\U\TC)', strtotime($league["start"])) : 'Unavailable';
     $end    = $league["end"]     ? date('j M Y, H:i (\U\TC)', strtotime($league["end"]))   : 'Unavailable';
 
+    $tmpTable = $league["active"] ? "<table><tr><td> </td></tr><tr><td> </td></tr></table>" : "";
+
     echo "
     <div class='league-element col-md-6 mb-4'>
       <h4>$title $status</h4>
       <div class='mb-1'>Start: <span class='subtext-1'>$start</span></div>
       <div class='mb-1'>End: <span class='subtext-1'>$end</span></div>
-      <div class='league-description mt-3 mb-0'> </div>
+      <div class='league-description mt-3 mb-0'>$tmpTable</div>
       <div class='progressbar-box rounded'><div class='progressbar-bar rounded h-100'></div></div>
       <div class='league-start d-none' value='{$league["start"]}'></div>
       <div class='league-end d-none' value='{$league["end"]}'></div>

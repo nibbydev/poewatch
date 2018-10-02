@@ -1,7 +1,5 @@
-$(document).ready(function() {
-  $(".league-element").each(function(index) {
-    addCountDownTimer(this);
-  });
+$(".league-element").each(function(index) {
+  addCountDownTimer(this);
 });
 
 function addCountDownTimer(element) {
@@ -19,50 +17,79 @@ function addCountDownTimer(element) {
 
   function showRemaining() {
     var now = new Date();
+    var rDist = end - now;
+    var eDist = now - start;
+    var percentage = start < now ? (now - start) / (end - start) * 100 : 0;
 
-    if (start < now) {
-      var distance = end - now;
-      var percentage = (now - start) / (end - start) * 100;
-    } else {
-      var distance = start - now;
-      var percentage = 0;
-    }
-
-    if (distance < 1000) {
+    if (rDist < 1000) {
       clearInterval(timer);
-      cdText.html(start < now ? " " : "<span class='badge badge-danger mb-2'>Started</span>");
+      cdText.html(start < now ? "" : "<span class='badge badge-danger mb-2'>Started</span>");
       return;
     }
 
-    var days = Math.floor(distance / _day);
-    var hours = Math.floor((distance % _day) / _hour);
-    var minutes = Math.floor((distance % _hour) / _minute);
-    var seconds = Math.floor((distance % _minute) / _second);
-    var remainString = "Remaining: "; 
+    //
+    // Software gore
+    //
 
-    if      (days === 0)  remainString += "<span class='custom-text-gray'>"   + days + " days, </span>";
-    else if (days === 1)  remainString += "<span class='custom-text-orange'>" + days + " day, </span>";
-    else                  remainString += "<span class='subtext-0'>"          + days + " days, </span>";
+    var eDays     = Math.ceil(eDist / _day);
+    var eHours    = Math.ceil((eDist % _day) / _hour);
+    var eMinutes  = Math.ceil((eDist % _hour) / _minute);
+    var eSeconds  = Math.ceil((eDist % _minute) / _second);
+
+    var rDays     = Math.floor(rDist / _day);
+    var rHours    = Math.floor((rDist % _day) / _hour);
+    var rMinutes  = Math.floor((rDist % _hour) / _minute);
+    var rSeconds  = Math.floor((rDist % _minute) / _second);
+
+    if      (rDays === 0)  rDays = "<span class='custom-text-gray'>"         + rDays    + "d</span>";
+    else if (rDays === 1)  rDays = "<span class='custom-text-orange'>"       + rDays    + "d</span>";
+    else                   rDays = "<span class='subtext-0'>"                + rDays    + "d</span>";
     
-    if (days === 0) {
-      if      (hours === 0) remainString += "<span class='custom-text-gray'>"   + hours + " hours, </span>";
-      else if (hours === 1) remainString += "<span class='custom-text-orange'>" + hours + " hour, </span>";
-      else                  remainString += "<span class='custom-text-red'>"    + hours + " hours, </span>";
-    } else                  remainString += "<span class='subtext-0'>"          + hours + (hours === 1 ?  " hour, " : " hours, ") + "</span>";
+    if (rDays === 0) {
+      if      (rHours === 0) rHours = "<span class='custom-text-gray'>"       + rHours   + "h</span>";
+      else if (rHours === 1) rHours = "<span class='custom-text-orange'>"     + rHours   + "h</span>";
+      else                   rHours = "<span class='custom-text-red'>"        + rHours   + "h</span>";
+    } else                   rHours = "<span class='subtext-0'>"              + rHours   + "h</span>";
 
-    if (days === 0 && hours === 0) {
-      if      (minutes ===  0) remainString += "<span class='custom-text-gray'>"   + minutes + " minutes, </span>";
-      else if (minutes ===  1) remainString += "<span class='custom-text-orange'>" + minutes + " minute, </span>";
-      else                     remainString += "<span class='custom-text-red'>"    + minutes + " minutes, </span>";
-    } else                     remainString += "<span class='subtext-0'>"          + minutes + (minutes === 1 ?  " minute, " : " minutes, ") + "</span>";
+    if (rDays === 0 && rHours === 0) {
+      if      (rMinutes ===  0) rMinutes = "<span class='custom-text-gray'>"    + rMinutes + "m</span>";
+      else if (rMinutes ===  1) rMinutes = "<span class='custom-text-orange'>"  + rMinutes + "m</span>";
+      else                      rMinutes = "<span class='custom-text-red'>"     + rMinutes + "m</span>";
+    } else                      rMinutes = "<span class='subtext-0'>"           + rMinutes + "m</span>";
 
-    if (days === 0 && hours === 0 && minutes === 0) {
-      if      (seconds ===  0) remainString += "<span class='custom-text-gray'>"   + seconds + " seconds</span>";
-      else if (seconds ===  1) remainString += "<span class='custom-text-orange'>" + seconds + " second</span>";
-      else                     remainString += "<span class='custom-text-red'>"    + seconds + " seconds</span>";
-    } else                     remainString += "<span class='subtext-0'>"          + seconds + (seconds === 1 ?  " second" : " seconds") + "</span>";
+    if (rDays === 0 && rHours === 0 && rMinutes === 0) {
+      if      (rSeconds ===  0) rSeconds = "<span class='custom-text-gray'>"    + rSeconds + "s</span>";
+      else if (rSeconds ===  1) rSeconds = "<span class='custom-text-orange'>"  + rSeconds + "s</span>";
+      else                      rSeconds = "<span class='custom-text-red'>"     + rSeconds + "s</span>";
+    } else                      rSeconds = "<span class='subtext-0'>"           + rSeconds + "s</span>";
 
-    cdText.html(remainString);
+    var template = `
+    <table>
+      <tr>
+        <td class='pr-2'>Elapsed:</td>
+        <td class='text-right pr-1 subtext-0'>{{e-d}}d</td>
+        <td class='text-right pr-1 subtext-0'>{{e-h}}h</td>
+        <td class='text-right pr-1 subtext-0'>{{e-m}}m</td>
+        <td class='text-right pr-1 subtext-0'>{{e-s}}s</td>
+      </tr>
+      <tr>
+        <td class='pr-2'>Remaining:</td>
+        <td class='text-right pr-1'>{{r-d}}</td>
+        <td class='text-right pr-1'>{{r-h}}</td>
+        <td class='text-right pr-1'>{{r-m}}</td>
+        <td class='text-right pr-1'>{{r-s}}</td>
+      </tr>
+    </table>
+    `.trim().replace("{{e-d}}", eDays)
+            .replace("{{e-h}}", eHours)
+            .replace("{{e-m}}", eMinutes)
+            .replace("{{e-s}}", eSeconds)
+            .replace("{{r-d}}", rDays)
+            .replace("{{r-h}}", rHours)
+            .replace("{{r-m}}", rMinutes)
+            .replace("{{r-s}}", rSeconds);
+
+    cdText.html(template);
     cdBar.css("width", percentage+"%");
   }
 
