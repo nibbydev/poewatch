@@ -37,9 +37,6 @@
                   <button class="nav-link pagination-btn" value='contact'>Contact</button>
                 </li>
                 <li class="nav-item">
-                  <button class="nav-link pagination-btn" value='supporters'>Supporters</button>
-                </li>
-                <li class="nav-item">
                   <button class="nav-link pagination-btn" value='legal'>Legal</button>
                 </li>
               </ul>
@@ -61,22 +58,6 @@
               <p>Some of the pages don't work with Internet Explorer<br><span class='custom-text-gray-lo'>More like Internet Explorer doesn't work with some of the pages. But seriously, it's an outdated browser. You should upgrade to something newer.</span></p>
             </div>
             <div class="card-body pagination-page d-none" id='page-contact'>Currently none</div>
-            <div class="card-body pagination-page d-none" id='page-supporters'>
-              <div class="card api-data-table px-2 pt-1 pb-1">
-                <table class="table table-sm">
-                  <tbody>
-                    <tr>
-                      <td class="pr-4">Siegrest</td>
-                      <td class="pr-4">$2</td>
-                      <td class="w-100">Get a mention and a message here for supporting the site over at <a class='color-patron' href='https://www.patreon.com/bePatron?u=13738203' target='_blank'>Patreon</a></td>
-                    </tr>
-
-                    <?php GenPatronRows($pdo) ?>
-
-                  </tbody>
-                </table>
-              </div>
-            </div>
             <div class="card-body pagination-page d-none" id='page-legal'>
               <div>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</div>
             </div>
@@ -97,7 +78,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script>
-  $("button.pagination-btn").click(function(){
+$("button.pagination-btn").click(function(){
   $(".pagination-page").addClass("d-none");
   $(".pagination-btn").removeClass("active");
   $("#page-" + $(this).val()).removeClass("d-none");
