@@ -1,4 +1,4 @@
-$(".league-element").each(function(index) {
+$(".league-element").each(function() {
   addCountDownTimer(this);
 });
 
@@ -6,7 +6,7 @@ function addCountDownTimer(element) {
   let start = new Date($(".league-start", element).attr("value"));
   let end   = new Date($(".league-end",   element).attr("value"));
 
-  var cdText = $(".league-description", element);
+  var cdText = $(".league-countdown", element);
   var cdBar = $(".progressbar-bar", element);
 
   var _second = 1000;
@@ -23,9 +23,12 @@ function addCountDownTimer(element) {
 
     if (rDist < 1000) {
       clearInterval(timer);
-      cdText.html(start < now ? "" : "<span class='badge badge-danger mb-2'>Started</span>");
+      cdText.remove();
       return;
     }
+
+    if (isNaN(eDist)) eDist = 0;
+    if (isNaN(rDist)) rDist = 0;
 
     //
     // Software gore
@@ -40,28 +43,29 @@ function addCountDownTimer(element) {
     var rHours    = Math.floor((rDist % _day) / _hour);
     var rMinutes  = Math.floor((rDist % _hour) / _minute);
     var rSeconds  = Math.floor((rDist % _minute) / _second);
+    let rDd, rHd, rMd, rSd;
 
-    if      (rDays === 0)  rDays = "<span class='custom-text-gray'>"         + rDays    + "d</span>";
-    else if (rDays === 1)  rDays = "<span class='custom-text-orange'>"       + rDays    + "d</span>";
-    else                   rDays = "<span class='subtext-0'>"                + rDays    + "d</span>";
+    if      (rDays === 0)  rDd = "<span class='custom-text-gray'>"         + rDays    + "d</span>";
+    else if (rDays === 1)  rDd = "<span class='custom-text-orange'>"       + rDays    + "d</span>";
+    else                   rDd = "<span class='subtext-0'>"                + rDays    + "d</span>";
     
     if (rDays === 0) {
-      if      (rHours === 0) rHours = "<span class='custom-text-gray'>"       + rHours   + "h</span>";
-      else if (rHours === 1) rHours = "<span class='custom-text-orange'>"     + rHours   + "h</span>";
-      else                   rHours = "<span class='custom-text-red'>"        + rHours   + "h</span>";
-    } else                   rHours = "<span class='subtext-0'>"              + rHours   + "h</span>";
+      if      (rHours === 0) rHd = "<span class='custom-text-gray'>"       + rHours   + "h</span>";
+      else if (rHours === 1) rHd = "<span class='custom-text-orange'>"     + rHours   + "h</span>";
+      else                   rHd = "<span class='custom-text-red'>"        + rHours   + "h</span>";
+    } else                   rHd = "<span class='subtext-0'>"              + rHours   + "h</span>";
 
     if (rDays === 0 && rHours === 0) {
-      if      (rMinutes ===  0) rMinutes = "<span class='custom-text-gray'>"    + rMinutes + "m</span>";
-      else if (rMinutes ===  1) rMinutes = "<span class='custom-text-orange'>"  + rMinutes + "m</span>";
-      else                      rMinutes = "<span class='custom-text-red'>"     + rMinutes + "m</span>";
-    } else                      rMinutes = "<span class='subtext-0'>"           + rMinutes + "m</span>";
+      if      (rMinutes ===  0) rMd = "<span class='custom-text-gray'>"    + rMinutes + "m</span>";
+      else if (rMinutes ===  1) rMd = "<span class='custom-text-orange'>"  + rMinutes + "m</span>";
+      else                      rMd = "<span class='custom-text-red'>"     + rMinutes + "m</span>";
+    } else                      rMd = "<span class='subtext-0'>"           + rMinutes + "m</span>";
 
     if (rDays === 0 && rHours === 0 && rMinutes === 0) {
-      if      (rSeconds ===  0) rSeconds = "<span class='custom-text-gray'>"    + rSeconds + "s</span>";
-      else if (rSeconds ===  1) rSeconds = "<span class='custom-text-orange'>"  + rSeconds + "s</span>";
-      else                      rSeconds = "<span class='custom-text-red'>"     + rSeconds + "s</span>";
-    } else                      rSeconds = "<span class='subtext-0'>"           + rSeconds + "s</span>";
+      if      (rSeconds ===  0) rSd = "<span class='custom-text-gray'>"    + rSeconds + "s</span>";
+      else if (rSeconds ===  1) rSd = "<span class='custom-text-orange'>"  + rSeconds + "s</span>";
+      else                      rSd = "<span class='custom-text-red'>"     + rSeconds + "s</span>";
+    } else                      rSd = "<span class='subtext-0'>"           + rSeconds + "s</span>";
 
     var template = `
     <table>
@@ -84,10 +88,10 @@ function addCountDownTimer(element) {
             .replace("{{e-h}}", eHours)
             .replace("{{e-m}}", eMinutes)
             .replace("{{e-s}}", eSeconds)
-            .replace("{{r-d}}", rDays)
-            .replace("{{r-h}}", rHours)
-            .replace("{{r-m}}", rMinutes)
-            .replace("{{r-s}}", rSeconds);
+            .replace("{{r-d}}", rDd)
+            .replace("{{r-h}}", rHd)
+            .replace("{{r-m}}", rMd)
+            .replace("{{r-s}}", rSd);
 
     cdText.html(template);
     cdBar.css("width", percentage+"%");
