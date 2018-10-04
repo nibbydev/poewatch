@@ -33,7 +33,7 @@ function check_league($pdo, $league) {
 
 function get_data_rolling($pdo, $league, $category) {
   $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.count, i.quantity + i.inc AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
@@ -63,7 +63,7 @@ function get_data_rolling($pdo, $league, $category) {
 
 function get_data_inactive($pdo, $league, $category) {
   $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.count, i.quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
@@ -92,7 +92,7 @@ function get_data_inactive($pdo, $league, $category) {
 
 function get_data_rolling_relic($pdo, $league) {
   $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.count, i.quantity + i.inc AS quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
@@ -123,7 +123,7 @@ function get_data_rolling_relic($pdo, $league) {
 
 function get_data_inactive_relic($pdo, $league) {
   $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.exalted, 
+    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.count, i.quantity, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
@@ -166,6 +166,8 @@ function parse_data($stmt, $active) {
       'mean'          =>        $row['mean']      === NULL ?  0.0 : (float) $row['mean'],
       'median'        =>        $row['median']    === NULL ?  0.0 : (float) $row['median'],
       'mode'          =>        $row['mode']      === NULL ?  0.0 : (float) $row['mode'],
+      'min'           =>        $row['min']       === NULL ?  0.0 : (float) $row['min'],
+      'max'           =>        $row['max']       === NULL ?  0.0 : (float) $row['max'],
       'exalted'       =>        $row['exalted']   === NULL ?  0.0 : (float) $row['exalted'],
       
       'count'         =>        $row['count']     === NULL ?    0 :   (int) $row['count'],

@@ -88,7 +88,7 @@
                   <hr>
 
                   <h3><a href='https://api.poe.watch/item?id=259' target='_blank'>item</a></h3>
-                  <p class="card-text">Retreive detailed information about an item, including its entire price history. Requires an ID, which can be found in itemdata API described above.</p>
+                  <p class="card-text">Retreive detailed information about an item, including its entire price history. Requires an ID, which can be found in itemdata API described above. Currently returns data from all past leagues.</p>
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
