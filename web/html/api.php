@@ -112,6 +112,33 @@
                   </div>
                   <!--/Request fields/-->
 
+                  <hr>
+
+                  <h3><a href='https://api.poe.watch/compact?league=Standard' target='_blank'>compact</a> <span class='badge custom-badge-green'>New</span></h3>
+                  <p class="card-text">Return price data (id, mean, median, mode, min, max, count, quantity, exalted) of all items of the provided league. Works only with active leagues. IDs can be found in itemdata API described above.</p>
+
+                  <!-- Request fields -->
+                  <h5 class="card-title">Request fields</h5>
+                  <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Param</th>
+                          <th>Required</th>
+                          <th class="w-100">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>league</td>
+                          <td><span class='badge badge-success'>✓</span></td>
+                          <td>Valid league name</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <!--/Request fields/-->
+
                 </div>
                 <div class="card-footer slim-card-edge"></div>
               </div>
