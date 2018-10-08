@@ -191,6 +191,12 @@ public class Item {
 
             parentCategory = "base";
         }
+
+        // Relic rare jewel bug
+        if (parentCategory.equals("jewel") && base.getFrameType() == 9 && childCategory == null) {
+            discard = true;
+            return;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
