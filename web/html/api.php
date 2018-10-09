@@ -98,12 +98,12 @@
                       <tbody>
                         <tr>
                           <td>league</td>
-                          <td><span class='badge badge-success'>✓</span></td>
+                          <td><span class='badge custom-badge-green'>✓</span></td>
                           <td>Full name of a league</td>
                         </tr>
                         <tr>
                           <td>category</td>
-                          <td><span class='badge badge-success'>✓</span></td>
+                          <td><span class='badge custom-badge-green'>✓</span></td>
                           <td>Parent category (see category API)</td>
                         </tr>
                       </tbody>
@@ -138,7 +138,7 @@
                       <tbody>
                         <tr>
                           <td>id</td>
-                          <td><span class='badge badge-success'>✓</span></td>
+                          <td><span class='badge custom-badge-green'>✓</span></td>
                           <td>Numeric id of an item</td>
                         </tr>
                       </tbody>
@@ -173,8 +173,13 @@
                       <tbody>
                         <tr>
                           <td>league</td>
-                          <td><span class='badge badge-success'>✓</span></td>
+                          <td><span class='badge custom-badge-green'>✓</span></td>
                           <td>Valid league name</td>
+                        </tr>
+                        <tr>
+                          <td>category</td>
+                          <td><span class='badge custom-badge-red'>✕</span></td>
+                          <td>Category name</td>
                         </tr>
                       </tbody>
                     </table>

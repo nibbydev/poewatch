@@ -10,19 +10,41 @@ function check_errors() {
   }
 }
 
-function get_data($pdo, $league) {
-  $query = "SELECT 
-    i.id_d, i.mean, median, mode, min, max, exalted, count, i.quantity + i.inc AS quantity
+function get_data($pdo) {
+  $query1 = "SELECT 
+    i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
+    i.exalted, i.count, i.quantity + i.inc AS quantity
   FROM      league_items_rolling AS i 
-  JOIN      data_leagues  AS l 
+  JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
   WHERE     l.name   = ?
     AND     l.active = 1 
     AND     i.count  > 1 
   ORDER BY  id ASC";
 
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$league]);
+  $query2 = "SELECT 
+    i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
+    i.exalted, i.count, i.quantity + i.inc AS quantity
+  FROM      league_items_rolling AS i 
+  JOIN      data_itemData AS did 
+    ON      i.id_d = did.id 
+  JOIN      data_leagues AS l 
+    ON      l.id = i.id_l 
+  JOIN      category_parent AS cp 
+    ON      did.id_cp = cp.id 
+  WHERE     l.name   = ?
+    AND     cp.name  = ?
+    AND     l.active = 1 
+    AND     i.count  > 1 
+  ORDER BY  i.id_d ASC";
+
+  if (isset($_GET["category"])) {
+    $stmt = $pdo->prepare($query2);
+    $stmt->execute([$_GET["league"], $_GET["category"]]);
+  } else {
+    $stmt = $pdo->prepare($query1);
+    $stmt->execute([$_GET["league"]]);
+  }
 
   return $stmt;
 }
@@ -61,7 +83,7 @@ check_errors();
 include_once ( "../details/pdo.php" );
 
 // Get database entries
-$stmt = get_data($pdo, $_GET["league"]);
+$stmt = get_data($pdo);
 
 // If no results with provided id
 if ($stmt->rowCount() === 0) {
