@@ -136,7 +136,7 @@ function GenCatMenuHTML($pdo) {
     // If category param matches current category, mark it as active
     $active = "";
     if (isset($_GET["category"])) {
-      if ($_GET["category"] === explode('=', $row["href"])[1]) {
+      if ($_GET["category"] === explode('=', $element["href"])[1]) {
         $active = "active";
       }
     }
