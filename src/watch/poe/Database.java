@@ -715,7 +715,7 @@ public class Database {
                 } else statement.setInt(11, key.getiLvl());
 
                 statement.setString(12, key.getVariation());
-                statement.setString(13, Misc.formatIconURL(item.getIcon()));
+                statement.setString(13, Item.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
             }
