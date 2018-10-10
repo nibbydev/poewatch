@@ -1,4 +1,4 @@
-# Crude set-up instructions
+# Crude set-up instructions for PoeWatch development environment
 
 This guide assumes you have ssh root access and plan to install everything on the same machine.
 
@@ -16,6 +16,7 @@ cd ~
 mkdir .ssh
 nano .ssh/authorized_keys
 ```
+Add ssh keys
 
 ##### 1.3. Install perquisites
 ```sudo apt install apache2 php libapache2-mod-php php-mysql zip unzip openjdk-11-jre-headless mysql-server```
@@ -86,23 +87,26 @@ sudo systemctl reload apache2.service
 ```
 
 ## 2. Setup MySQL
-##### 2.1. ```sudo mysql_secure_installation```
 
-##### 2.2. Copy UDFs (`udf_median.so` and `stats_mode.so`) to plugin directory (usually `/usr/lib/mysql/plugin/`, or use `SHOW VARIABLES WHERE Variable_Name LIKE "%dir"` to find out)
+##### 2.1. Basic setup
+`sudo mysql_secure_installation`
 
-##### 2.3. Enter MySQL prompt `mysql -u root -p`
+##### 2.2. Copy UDFs 
+`resources/udf_median/udf_median.so` and `resources/udf_mode/stats_mode.so` to plugin directory (usually `/usr/lib/mysql/plugin/` or use `SHOW VARIABLES WHERE Variable_Name LIKE "%dir"` to find out)
 
-##### 2.4. Enable root login via password `ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'test';`
-
-##### 2.5. Create functions:
+##### 2.3. Create functions:
+`mysql -u root -p`
 ```
 CREATE AGGREGATE FUNCTION median RETURNS REAL SONAME 'udf_median.so';
 CREATE AGGREGATE FUNCTION stats_mode RETURNS REAL SONAME 'stats_mode.so';
 ```
 
-##### 2.6. Run database configuration script from `resources/DatabaseSetup.sql` (Change user account passwords at the very bottom)
+##### 2.4. Run database configuration script 
+`resources/DatabaseSetup.sql` 
+(Change user account passwords at the very bottom)
 
-##### 2.7. Set environment variables `sudo nano /etc/mysql/my.cnf`
+##### 2.5. Set environment variables (depending on hardware)
+`sudo nano /etc/mysql/my.cnf`
 ```
 [client]
 default-character-set = utf8mb4
@@ -131,18 +135,20 @@ innodb_log_file_size=128M
 
 ## 3. Export and import database
 
-##### 3.1. Export from origin server `mysqldump --opt -u root -p pw > pw_backup.sql`
+##### 3.1. Export from origin server 
+`mysqldump --opt -u root -p pw > pw_backup.sql`
 
 (Archiving will reduce file size round 75% `zip pw_backup.zip pw_backup.sql`)
 
-##### 3.2. Import to branch server `mysql -u root -p pw < pw_backup.sql`
-
+##### 3.2. Import to branch server 
+`mysql -u root -p pw < pw_backup.sql`
 
 ## 4. Setup PhpMyAdmin
 
-##### 4.1. Download source files from `https://www.phpmyadmin.net` and place in `/html/management/sql`
+##### 4.1. Download source 
+From `https://www.phpmyadmin.net` and place in `/html/management/sql`
 
-##### 4.2. Create config
+##### 4.2. Config setup
 ```
 cd ~/http/management/sql
 cp config.sample.inc.php config.inc.php
@@ -157,7 +163,7 @@ cp config.sample.inc.php config.inc.php
 `sudo ufw allow 22`
 
 ##### 5.2. Create batch script for whitelisting CloudFlare IPs
-1. Create CloudFlare whitelist script `cd ~ && nano ufw.sh`
+Create CloudFlare whitelist script `cd ~ && nano ufw.sh`
 ```
 #!/bin/bash
 for i in `curl https://www.cloudflare.com/ips-v4`; do ufw allow from $i to any port 80; done
@@ -166,7 +172,7 @@ for i in `curl https://www.cloudflare.com/ips-v6`; do ufw allow from $i to any p
 
 Original script by [raeesbhatti](https://gist.github.com/raeesbhatti/e336ab920ab523335937).
 
-2. Set permissions `chmod 744 ufw.sh` and run the script `sudo ./ufw.sh`.
+Set permissions `chmod 744 ufw.sh` and run the script `sudo ./ufw.sh`.
 
 ##### 5.3. Deny all other connections
 `sudo ufw default deny`
@@ -176,7 +182,9 @@ Original script by [raeesbhatti](https://gist.github.com/raeesbhatti/e336ab920ab
 
 ## 6. Artifact set up
 
-##### 6.1. Obtain Gson `com.google.code.gson:gson:2.8.5` and MySQL connector `mysql:mysql-connector-java:8.0.12` from Maven
+##### 6.1. Obtain Gson and MySQL connector from Maven
+
+`com.google.code.gson:gson:2.8.5` and `mysql:mysql-connector-java:8.0.12` (or compatible newer version)
 
 ##### 6.2. Compile project and export artifacts
 
