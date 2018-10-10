@@ -1,21 +1,11 @@
 <?php
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "(
-    SELECT name, display, start, end, active, upcoming, event
+  $query = "SELECT name, display, start, end, active, upcoming, event
     FROM      data_leagues 
     WHERE     id > 2
-      AND     active = 1
-      OR      upcoming = 1
     ORDER BY  id DESC
-  ) UNION (
-    SELECT name, display, start, end, active, upcoming, event
-    FROM      data_leagues 
-    WHERE     id > 2
-      AND     active = 0
-    ORDER BY  id DESC
-    LIMIT     4
-  )";
+    LIMIT     8";
   $stmt = $pdo->query($query);
   
   $rows = array();
@@ -32,25 +22,52 @@ function GenLeagueEntries($pdo) {
   foreach($leagues as $league) {
     if ($league["upcoming"]) {
       $status = "<span class='badge badge-light ml-1'>Upcoming</span>";
-    } else if (!$league["active"]) {
-      $status = "<span class='badge custom-badge-gray-lo ml-1'>Ended</span>";
+    } else if ($league["active"]) {
+      $status = "<span class='badge custom-badge-green ml-1'>Ongoing</span>";
     } else {
-      $status = "<span class='badge badge-success ml-1'>Ongoing</span>";
+      $status = "<span class='badge custom-badge-gray ml-1'>Ended</span>";
     }
 
     $title  = $league["display"] ? $league["display"] : $league["name"];
     $start  = $league["start"]   ? date('j M Y, H:i (\U\TC)', strtotime($league["start"])) : 'Unavailable';
     $end    = $league["end"]     ? date('j M Y, H:i (\U\TC)', strtotime($league["end"]))   : 'Unavailable';
+    $wrap   = $league["active"] ? "col-md-6 col-12" : "col-xl-4 col-md-6 col-12";
 
     echo "
-    <div class='league-element col-md-6 mb-4'>
-      <h4>$title $status</h4>
-      <div class='mb-1'>Start: <span class='subtext-1'>$start</span></div>
-      <div class='mb-1'>End: <span class='subtext-1'>$end</span></div>
-      <div class='league-description mt-3 mb-0'> </div>
-      <div class='progressbar-box rounded'><div class='progressbar-bar rounded h-100'></div></div>
-      <div class='league-start d-none' value='{$league["start"]}'></div>
-      <div class='league-end d-none' value='{$league["end"]}'></div>
-    </div>";
+    <div class='$wrap'>
+      <div class='card custom-card league-element mb-3'>
+        <div class='card-header h-100'>
+          <h4 class='card-title nowrap mb-0'>$title $status</h4>
+        </div>
+        <div class='card-body px-3 py-2'>
+
+          <div class='row'>
+            <div class='col nowrap'>
+              <table>
+                <tr>
+                  <td class='pr-2'>Start:</td>
+                  <td><span class='subtext-1'>$start</span></td>
+                </tr>
+                <tr>
+                  <td class='pr-2'>End:</td>
+                  <td><span class='subtext-1'>$end</span></td>
+                </tr>
+              </table>
+            </div>
+
+            <div class='col nowrap league-countdown'></div>
+          </div>
+
+          <div class='league-start d-none' value='{$league["start"]}'></div>
+          <div class='league-end d-none' value='{$league["end"]}'></div>
+
+        </div>
+        <div class='card-footer progressbar-box border-0 p-0' style='height: 1.25rem;'>
+
+          <div class='progressbar-bar progress-bar-striped progress-bar-animated custom-badge-green rounded-bottom h-100' style='width: 0px;'></div>
+        
+        </div>
+        </div>
+      </div>";
   }
 }

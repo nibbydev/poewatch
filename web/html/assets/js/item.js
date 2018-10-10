@@ -297,11 +297,11 @@ function buildNameField() {
   }
 
   if (ITEM.variation && ITEM.category < 16 && ITEM.category > 18) {
-    builder += " <span class='badge custom-badge-gray-lo ml-1'>" + ITEM.variation + "</span>";
+    builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
   } 
   
   if (ITEM.tier) {
-    builder += " <span class='badge custom-badge-gray-lo ml-1'>Tier " + ITEM.tier + "</span>";
+    builder += " <span class='badge custom-badge-gray ml-1'>Tier " + ITEM.tier + "</span>";
   } 
 
   if (ITEM.ilvl) {
@@ -319,16 +319,16 @@ function buildNameField() {
     }
 
 
-    builder += " <span class='badge custom-badge-gray-lo ml-1'>iLvl " + displayLvl + "</span>";
+    builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + displayLvl + "</span>";
   } 
   
   if (ITEM.links) {
-    builder += " <span class='badge custom-badge-gray-lo ml-1'>" + ITEM.links + " Link</span>";
+    builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.links + " Link</span>";
   }
 
   if (ITEM.frame === 4) {
-    builder += "<span class='badge custom-badge-gray-lo ml-1'>Lvl " + ITEM.lvl + "</span>";
-    builder += "<span class='badge custom-badge-gray-lo ml-1'>Quality " + ITEM.quality + "</span>";
+    builder += "<span class='badge custom-badge-gray ml-1'>Lvl " + ITEM.lvl + "</span>";
+    builder += "<span class='badge custom-badge-gray ml-1'>Quality " + ITEM.quality + "</span>";
 
     if (ITEM.corrupted) {
       builder += "<span class='badge custom-badge-red ml-1'>Corrupted</span>";

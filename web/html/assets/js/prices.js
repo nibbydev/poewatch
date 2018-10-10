@@ -80,14 +80,14 @@ class ItemRow {
     }
   
     if (this.item.links) {
-      let tmp = " <span class='badge custom-badge-gray-lo ml-1'>" + this.item.links + " link</span>";
+      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.links + " link</span>";
       template = template.replace("{{link}}", tmp);
     } else {
       template = template.replace("{{link}}", "");
     }
   
     if (this.item.var && FILTER.category !== "enchantment") {
-      let tmp = " <span class='badge custom-badge-gray-lo ml-1'>" + this.item.var + "</span>";
+      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.var + "</span>";
       template = template.replace("{{var}}", tmp);
     } else {
       template = template.replace("{{var}}", "");
@@ -101,8 +101,8 @@ class ItemRow {
     if (this.item.frame !== 4) return "";
   
     let template = `
-    <td><span class='badge custom-badge-block custom-badge-gray-lo'>{{lvl}}</span></td>
-    <td><span class='badge custom-badge-block custom-badge-gray-lo'>{{quality}}</span></td>
+    <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
+    <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
     <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
     `.trim();
   
@@ -137,7 +137,7 @@ class ItemRow {
       displayLvl = "84";
     }
   
-    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray-lo'>" + displayLvl + "</span></td>";
+    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
   }
   
   buildMapFields() {
@@ -148,7 +148,7 @@ class ItemRow {
 
     let template = `
     <td class='nowrap'>
-      <span class='badge custom-badge-block custom-badge-gray-lo'>{{tier}}</span>
+      <span class='badge custom-badge-block custom-badge-gray'>{{tier}}</span>
     </td>
     `.trim();
 
@@ -219,9 +219,9 @@ class ItemRow {
       change = Math.round(this.item.change); 
     }
 
-    if (change >= 200) {
+    if (change >= 100) {
       template = template.replace("{{color}}", "green-ex");
-    } else if (change <= -200) {
+    } else if (change <= -100) {
       template = template.replace("{{color}}", "red-ex");
     } else if (change >= 30) {
       template = template.replace("{{color}}", "green");

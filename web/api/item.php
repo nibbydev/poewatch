@@ -19,7 +19,7 @@ function get_league_data($pdo, $id) {
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
       GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
       GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%dT%H:00:00Z') ORDER BY h.time ASC) AS time_list,
-      i.mean, i.median, i.mode, i.exalted, i.count, NULL AS quantity
+      i.mean, i.median, i.mode, i.min, i.max, i.exalted, i.count, NULL AS quantity
     FROM      league_items_inactive         AS i
     JOIN      data_leagues                  AS l ON i.id_l = l.id
     LEFT JOIN league_history_daily_inactive AS h ON h.id_l = l.id AND h.id_d = i.id_d
@@ -41,7 +41,7 @@ function get_league_data($pdo, $id) {
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
       GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
       GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%dT%H:00:00Z') ORDER BY h.time ASC) AS time_list,
-      i.mean, i.median, i.mode, i.exalted, i.count, i.quantity
+      i.mean, i.median, i.mode, i.min, i.max, i.exalted, i.count, i.quantity
     FROM      league_items_rolling         AS i
     JOIN      data_leagues                 AS l ON i.id_l = l.id
     LEFT JOIN league_history_daily_rolling AS h ON h.id_l = l.id AND h.id_d = i.id_d
@@ -91,6 +91,8 @@ function parse_history_data($stmt) {
       'mean'      =>          $row['mean']      === NULL ? null : (float) $row['mean'],
       'median'    =>          $row['median']    === NULL ? null : (float) $row['median'],
       'mode'      =>          $row['mode']      === NULL ? null : (float) $row['mode'],
+      'min'       =>          $row['min']       === NULL ? null : (float) $row['min'],
+      'max'       =>          $row['max']       === NULL ? null : (float) $row['max'],
       'exalted'   =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
       'count'     =>          $row['count']     === NULL ? null :   (int) $row['count'],
       'quantity'  =>          $row['quantity']  === NULL ?    0 :   (int) $row['quantity'],

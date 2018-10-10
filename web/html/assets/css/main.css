@@ -256,23 +256,11 @@ footer {
 }
 
 /*------------------------------------------------------------------------------------------------------------
-// Progress bars
-//----------------------------------------------------------------------------------------------------------*/
-
-.progressbar-box {
-  height: 20px;
-  background-color: #444;
-}
-.progressbar-bar {
-  width: 0px;
-  background-color: #888;
-}
-
-/*------------------------------------------------------------------------------------------------------------
 // Misc
 //----------------------------------------------------------------------------------------------------------*/
 
 /* Styling for item types */
+.subtext-0 {color: #aaa}
 .subtext-1 {color: #888}
 .subtext-2 {color: #666}
 
@@ -293,7 +281,7 @@ footer {
 }
 .custom-badge-red-ex {
   color: #222;
-  background-color: rgb(255, 0, 0);
+  background-color: rgb(202, 55, 55);
 }
 .custom-badge-red-lo {
   color: #222;
@@ -313,14 +301,14 @@ footer {
 }
 .custom-badge-green-ex {
   color: #222;
-  background-color: rgb(51, 255, 0);
+  background-color: rgb(85, 201, 56);
 }
 .custom-badge-green-lo {
   color: #222;
   background-color: rgb(155, 192, 146);
 }
 .custom-badge-gray {
-  color: #000;
+  color: #111;
   background-color: rgb(100, 100, 100);
 }
 .custom-badge-gray-lo {
@@ -344,13 +332,18 @@ footer {
 
 .color-patron {color: rgb(249, 108, 84) !important}
 
+pre {
+  color: inherit;
+  background-color: rgba(255,255,255,.1);
+}
+
 /*------------------------------------------------------------------------------------------------------------
 // Other
 //----------------------------------------------------------------------------------------------------------*/
 
 .custom-badge-block {
   display: block;
-  max-width: 64px;
+  max-width: 54px;
 }
 
 .seamless-input {

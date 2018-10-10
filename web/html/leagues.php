@@ -26,22 +26,12 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
-          <div class="card custom-card">
 
-            <div class="card-header">
-              <h2 class="text-white">Leagues</h2>
-              <div>A list of currently active main leagues, their start and end dates, progressbars and countdowns until their end.</div>
-            </div>
 
-            <div class="card-body pb-0">
-              <div class="row" id="main">
-              
-              <?php GenLeagueEntries($pdo) ?>
-
-              </div>
-            </div>
-            <div class="card-footer slim-card-edge"></div>
+          <div class="row">
+            <?php GenLeagueEntries($pdo) ?>
           </div>
+
         </div>
       </div>
       <!--/Main content/-->
@@ -55,7 +45,6 @@
 <!--/Footer/-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
 <script type="text/javascript" src="assets/js/leagues.js"></script>
 </body>
 </html>
