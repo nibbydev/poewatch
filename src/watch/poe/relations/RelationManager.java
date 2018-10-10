@@ -4,7 +4,6 @@ import watch.poe.admin.Flair;
 import watch.poe.item.Item;
 import watch.poe.Main;
 import watch.poe.item.Key;
-import watch.poe.league.LeagueEntry;
 
 import java.util.*;
 
@@ -12,18 +11,12 @@ import java.util.*;
  * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
-    private Map<Integer, List<Integer>> leagueToIds = new HashMap<>();
     private Map<Key, Integer> keyToId = new HashMap<>();
-
-
     private Map<String, String> currencyAliasToName = new HashMap<>();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
     private List<Key> currentlyIndexingChildKeys = new ArrayList<>();
-    private volatile boolean newIndexedItem = false;
+    // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
+    private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Initialization
@@ -52,24 +45,20 @@ public class RelationManager {
             Main.ADMIN.log("Database did not contain any category information", Flair.WARN);
         }
 
-        success = Main.DATABASE.getItemIds(leagueToIds, keyToId);
+        success = Main.DATABASE.getItemData(keyToId);
         if (!success) {
-            Main.ADMIN.log("Failed to query item ids from database. Shutting down...", Flair.FATAL);
+            Main.ADMIN.log("Failed to query item IDs from database. Shutting down...", Flair.FATAL);
             return false;
         } else if (keyToId.isEmpty()) {
             Main.ADMIN.log("Database did not contain any item id information", Flair.WARN);
         }
 
-        if (leagueToIds.isEmpty()) {
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                leagueToIds.putIfAbsent(leagueEntry.getId(), new ArrayList<>());
-            }
-        } else {
-            for (LeagueEntry leagueEntry : Main.LEAGUE_MANAGER.getLeagues()) {
-                if (!leagueToIds.containsKey(leagueEntry.getId())) {
-                    leagueToIds.put(leagueEntry.getId(), new ArrayList<>());
-                }
-            }
+        success = Main.DATABASE.getLeagueItemIds(leagueIds);
+        if (!success) {
+            Main.ADMIN.log("Failed to query league item IDs from database. Shutting down...", Flair.FATAL);
+            return false;
+        } else if (leagueIds.isEmpty()) {
+            Main.ADMIN.log("Database did not contain any league item id information", Flair.WARN);
         }
 
         return true;
@@ -79,22 +68,19 @@ public class RelationManager {
     // Indexing methods
     //------------------------------------------------------------------------------------------------------------
 
-    public Integer indexItem(Item item, Integer leagueId, boolean doNotIndex) {
+    public Integer indexItem(Item item, Integer leagueId) {
         Key itemKey = item.getKey();
         Integer itemId = keyToId.get(itemKey);
 
-        // If the item is indexed and the league contains that item, return item's id
+        // If the item is indexed and the league contains that item, return item's ID
         if (itemId != null) {
-            List<Integer> idList = leagueToIds.get(leagueId);
-            if (idList != null && idList.contains(itemId)) return itemId;
+            List<Integer> idList = leagueIds.get(leagueId);
+            if (idList != null && idList.contains(itemId)) {
+                return itemId;
+            }
         }
 
-        // If the item was marked not to be indexed
-        if (item.isDoNotIndex() || doNotIndex) {
-            return null;
-        }
-
-        // If the same item is currently being processed in the same method in another thread
+        // If the same item is currently being indexed in another thread
         if (currentlyIndexingChildKeys.contains(itemKey)) {
             return null;
         } else currentlyIndexingChildKeys.add(itemKey);
@@ -103,9 +89,6 @@ public class RelationManager {
 
         // Add itemdata to database
         if (itemId == null) {
-            // Flip flag that will regenerate the itemdata files
-            newIndexedItem = true;
-
             // Get the category ids related to the item
             CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
             Integer parentCategoryId = categoryEntry.getId();
@@ -117,10 +100,10 @@ public class RelationManager {
         }
 
         // Check if the item's id is present under the league
-        List<Integer> idList = leagueToIds.get(leagueId);
-        if (idList != null && !idList.contains(itemId)) {
+        List<Integer> idList = leagueIds.getOrDefault(leagueId, new ArrayList<>());
+        if (!idList.contains(itemId)) {
             idList.add(itemId);
-            leagueToIds.putIfAbsent(leagueId, idList);
+            leagueIds.putIfAbsent(leagueId, idList);
 
             Main.DATABASE.createLeagueItem(leagueId, itemId);
         }
@@ -131,11 +114,6 @@ public class RelationManager {
         return itemId;
     }
 
-    /**
-     * Manage item category list
-     *
-     * @param item
-     */
     private void indexCategory(Item item) {
         CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
 
@@ -165,26 +143,5 @@ public class RelationManager {
 
     public Map<String, String> getCurrencyAliasToName() {
         return currencyAliasToName;
-    }
-
-    public Map<String, CategoryEntry> getCategoryRelations() {
-        return categoryRelations;
-    }
-
-    public boolean isNewIndexedItem() {
-        if (newIndexedItem) {
-            newIndexedItem = false;
-            return true;
-        } else return false;
-    }
-
-    public String getCategoryName(Integer id) {
-        for (Map.Entry<String, CategoryEntry> entry : categoryRelations.entrySet()) {
-            if (entry.getValue().getId() == id) {
-                return entry.getKey();
-            }
-        }
-
-        return  null;
     }
 }

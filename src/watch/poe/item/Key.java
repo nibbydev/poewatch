@@ -56,7 +56,6 @@ public class Key {
         if (resultSet.wasNull()) corrupted = null;
     }
 
-
     //------------------------------------------------------------------------------------------------------------
     // Equality
     //------------------------------------------------------------------------------------------------------------
@@ -124,5 +123,49 @@ public class Key {
         hash = 53 * hash + this.frameType;
 
         return hash;
+    }
+
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and Setters
+    //------------------------------------------------------------------------------------------------------------
+
+    public String getName() {
+        return name;
+    }
+
+    public String getTypeLine() {
+        return typeLine;
+    }
+
+    public Integer getTier() {
+        return tier;
+    }
+
+    public Integer getQuality() {
+        return quality;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public Integer getLinks() {
+        return links;
+    }
+
+    public String getVariation() {
+        return variation;
+    }
+
+    public int getFrameType() {
+        return frameType;
+    }
+
+    public Integer getCorrupted() {
+        return corrupted;
+    }
+
+    public Integer getiLvl() {
+        return iLvl;
     }
 }

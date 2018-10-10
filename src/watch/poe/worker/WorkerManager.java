@@ -173,9 +173,9 @@ public class WorkerManager extends Thread {
         String idThree = downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
 
         // Get current cluster index
-        int sizeOne = Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1, idOne.length()));
-        int sizeTwo = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1, idTwo.length()));
-        int sizeThree = Integer.parseInt(idThree.substring(idThree.lastIndexOf('-') + 1, idThree.length()));
+        int sizeOne = Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1));
+        int sizeTwo = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1));
+        int sizeThree = Integer.parseInt(idThree.substring(idThree.lastIndexOf('-') + 1));
 
         if (sizeOne > 0) return idOne;
 

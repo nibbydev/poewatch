@@ -312,7 +312,7 @@ public class EntryManager extends Thread {
                     }
 
                     // Get item ID (if missing, index it)
-                    Integer itemId = Main.RELATIONS.indexItem(item, leagueId, itemParser.isDoNotIndex());
+                    Integer itemId = Main.RELATIONS.indexItem(item, leagueId);
                     if (itemId == null) continue;
 
                     // Create a RawEntry

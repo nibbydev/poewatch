@@ -288,29 +288,38 @@ public class Database {
         Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
 
         String query =  "SELECT    cp.name AS parentName, " +
-                        "          cc.name AS childName, " +
-                        "          cp.id AS parentId, " +
-                        "          cc.id AS childId " +
+                        "          cp.id   AS parentId, " +
+                        "          GROUP_CONCAT(cc.name) AS childNames, " +
+                        "          GROUP_CONCAT(cc.id) AS childIds " +
                         "FROM      category_parent AS cp " +
-                        "LEFT JOIN category_child  AS cc " +
-                        "  ON      cp.id = cc.id_cp; ";
+                        "JOIN      category_child  AS cc " +
+                        "  ON      cp.id = cc.id_cp " +
+                        "GROUP BY  cp.id; ";
 
         try {
-            if (connection.isClosed()) return false;
+            if (connection.isClosed()) {
+                return false;
+            }
+
+            if (categoryRelations == null) {
+                throw new SQLException("Provided map was null");
+            }
 
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    String parentName = resultSet.getString("parentName");
-                    String childName = resultSet.getString("childName");
-                    Integer parentId = resultSet.getInt("parentId");
-                    Integer childId = resultSet.getInt("childId");
+                    String[] childIds = resultSet.getString("childIds").split(",");
+                    String[] childNames = resultSet.getString("childNames").split(",");
 
-                    CategoryEntry categoryEntry = tmpCategoryRelations.getOrDefault(parentName, new CategoryEntry());
-                    categoryEntry.setId(parentId);
-                    if (childName != null) categoryEntry.addChild(childName, childId);
-                    tmpCategoryRelations.putIfAbsent(parentName, categoryEntry);
+                    CategoryEntry categoryEntry = new CategoryEntry();
+                    categoryEntry.setId(resultSet.getInt("parentId"));
+
+                    for (int i = 0; i < childIds.length; i++) {
+                        categoryEntry.addChild(childNames[i], Integer.parseInt(childIds[i]));
+                    }
+
+                    tmpCategoryRelations.putIfAbsent(resultSet.getString("parentName"), categoryEntry);
                 }
             }
 
@@ -328,38 +337,33 @@ public class Database {
     /**
      * Loads provided Maps with item ID data from database
      *
-     * @param leagueToIds Empty map that will contain league ID - list of item IDs relations
-     * @param keyToId Empty map that will contain item key - item ID relations
+     * @param keyToId Empty map that will contain item Key - item ID relations
      * @return True on success
      */
-    public boolean getItemIds(Map<Integer, List<Integer>> leagueToIds, Map<Key, Integer> keyToId) {
-        String query =  "SELECT  i.id_l, did.id, did.name, did.type, " +
-                        "        did.frame, did.tier, did.lvl, " +
-                        "        did.quality, did.corrupted, " +
-                        "        did.links, did.ilvl, did.var " +
-                        "FROM    league_items_rolling AS i " +
-                        "JOIN    data_itemData AS did " +
-                        "  ON    i.id_d = did.id ";
+    public boolean getItemData(Map<Key, Integer> keyToId) {
+        Map<Key, Integer> tmpKeyToId = new HashMap<>();
+
+        String query =  "SELECT * FROM data_itemData; ";
 
         try {
             if (connection.isClosed()) {
                 return false;
             }
 
+            if (keyToId == null) {
+                throw new SQLException("Provided map was null");
+            }
+
             try (Statement statement = connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    Integer leagueId = resultSet.getInt("id_l");
-                    Integer dataId = resultSet.getInt("id");
-
-                    List<Integer> idList = leagueToIds.getOrDefault(leagueId, new ArrayList<>());
-                    idList.add(dataId);
-                    leagueToIds.putIfAbsent(leagueId, idList);
-
-                    keyToId.put(new Key(resultSet), dataId);
+                    tmpKeyToId.put(new Key(resultSet), resultSet.getInt("id"));
                 }
             }
+
+            keyToId.clear();
+            keyToId.putAll(tmpKeyToId);
 
             return true;
         } catch (SQLException ex) {
@@ -368,6 +372,63 @@ public class Database {
             return false;
         }
     }
+
+
+
+
+    /**
+     * Loads provided Maps with item ID data from database
+     *
+     * @param leagueIds Empty map that will contain league ID - list of item IDs relations
+     * @return True on success
+     */
+    public boolean getLeagueItemIds(Map<Integer, List<Integer>> leagueIds) {
+        Map<Integer, List<Integer>> tmpLeagueIds = new HashMap<>();
+
+        String query =  "SELECT   i.id_l, i.id_d " +
+                        "FROM     league_items_rolling AS i " +
+                        "JOIN     data_leagues AS l " +
+                        "  ON     i.id_l = l.id " +
+                        "WHERE    l.active = 1 " +
+                        "ORDER BY i.id_l ASC; ";
+
+        try {
+            if (connection.isClosed()) {
+                return false;
+            }
+
+            if (leagueIds == null) {
+                throw new SQLException("Provided map was null");
+            }
+
+
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    Integer leagueId = resultSet.getInt("id_l");
+                    Integer itemId = resultSet.getInt("id_d");
+
+                    List<Integer> idList = tmpLeagueIds.getOrDefault(leagueId, new ArrayList<>());
+                    idList.add(itemId);
+                    tmpLeagueIds.putIfAbsent(leagueId, idList);
+                }
+            }
+
+            leagueIds.clear();
+            leagueIds.putAll(tmpLeagueIds);
+
+            return true;
+        } catch (SQLException ex) {
+            Main.ADMIN.logException(ex, Flair.ERROR);
+            Main.ADMIN.log("Could not query league item ids", Flair.ERROR);
+            return false;
+        }
+    }
+
+
+
+
 
     /**
      * Creates a map containing currency price data from database in the format of:
@@ -620,41 +681,43 @@ public class Database {
         try {
             if (connection.isClosed()) return null;
 
+            Key key = item.getKey();
+
             try (PreparedStatement statement = connection.prepareStatement(query1)) {
                 statement.setInt(1, parentCategoryId);
 
                 if (childCategoryId == null) statement.setNull(2, 0);
                 else statement.setInt(2, childCategoryId);
 
-                statement.setString(3, item.getName());
-                statement.setString(4, item.getTypeLine());
-                statement.setInt(5, item.getFrameType());
+                statement.setString(3, key.getName());
+                statement.setString(4, key.getTypeLine());
+                statement.setInt(5, key.getFrameType());
 
-                if (item.getTier() == null) {
+                if (key.getTier() == null) {
                     statement.setNull(6, 0);
-                } else statement.setInt(6, item.getTier());
+                } else statement.setInt(6, key.getTier());
 
-                if (item.getLevel() == null) {
+                if (key.getLevel() == null) {
                     statement.setNull(7, 0);
-                } else statement.setInt(7, item.getLevel());
+                } else statement.setInt(7, key.getLevel());
 
-                if (item.getQuality() == null) {
+                if (key.getQuality() == null) {
                     statement.setNull(8, 0);
-                } else statement.setInt(8, item.getQuality());
+                } else statement.setInt(8, key.getQuality());
 
-                if (item.getCorrupted() == null) {
+                if (key.getCorrupted() == null) {
                     statement.setNull(9, 0);
-                } else statement.setInt(9, item.getCorrupted());
+                } else statement.setInt(9, key.getCorrupted());
 
-                if (item.getLinks() == null) {
+                if (key.getLinks() == null) {
                     statement.setNull(10, 0);
-                } else statement.setInt(10, item.getLinks());
+                } else statement.setInt(10, key.getLinks());
 
-                if (item.getIlvl() == null) {
+                if (key.getiLvl() == null) {
                     statement.setNull(11, 0);
-                } else statement.setInt(11, item.getIlvl());
+                } else statement.setInt(11, key.getiLvl());
 
-                statement.setString(12, item.getVariation());
+                statement.setString(12, key.getVariation());
                 statement.setString(13, Misc.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
