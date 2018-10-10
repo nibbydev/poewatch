@@ -168,25 +168,16 @@ public class WorkerManager extends Thread {
      */
     public String getLatestChangeID() {
         // Get data from API
-        String idOne = downloadChangeID("http://poe.ninja/api/Data/GetStats");
-        String idTwo = downloadChangeID("http://poe-rates.com/actions/getLastChangeId.php");
-        String idThree = downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
+        String idOne = downloadChangeID("http://poe-rates.com/actions/getLastChangeId.php");
+        String idTwo = downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
 
         // Get current cluster index
-        int sizeOne = Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1));
-        int sizeTwo = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1));
-        int sizeThree = Integer.parseInt(idThree.substring(idThree.lastIndexOf('-') + 1));
-
-        if (sizeOne > 0) return idOne;
+        int sizeTwo = Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1));
+        int sizeThree = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1));
 
         // Compare cluster indexes and return latest
-        if (sizeOne < sizeTwo) {
-            if (sizeThree < sizeTwo) return idTwo;
-            else return idThree;
-        } else {
-            if (sizeThree < sizeOne) return idOne;
-            else return idThree;
-        }
+        if (sizeThree < sizeTwo) return idOne;
+        else return idTwo;
     }
 
     /**
