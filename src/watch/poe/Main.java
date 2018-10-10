@@ -1,13 +1,12 @@
 package watch.poe;
 
-import watch.poe.account.AccountManager;
-import watch.poe.admin.AdminSuite;
-import watch.poe.admin.Flair;
-import watch.poe.database.Database;
-import watch.poe.league.LeagueManager;
-import watch.poe.pricer.EntryManager;
-import watch.poe.relations.RelationManager;
-import watch.poe.worker.WorkerManager;
+import watch.poe.manager.account.AccountManager;
+import watch.poe.manager.admin.AdminSuite;
+import watch.poe.manager.admin.Flair;
+import watch.poe.manager.league.LeagueManager;
+import watch.poe.manager.entry.EntryManager;
+import watch.poe.manager.relation.RelationManager;
+import watch.poe.manager.worker.WorkerManager;
 
 import java.io.*;
 import java.net.URL;

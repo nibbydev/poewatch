@@ -1,6 +1,6 @@
 package watch.poe;
 
-import watch.poe.admin.Flair;
+import watch.poe.manager.admin.Flair;
 
 import java.io.*;
 import java.util.List;
