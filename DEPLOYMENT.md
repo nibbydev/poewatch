@@ -100,7 +100,7 @@ CREATE AGGREGATE FUNCTION median RETURNS REAL SONAME 'udf_median.so';
 CREATE AGGREGATE FUNCTION stats_mode RETURNS REAL SONAME 'stats_mode.so';
 ```
 
-##### 2.6. Run database configuration script from `/src/resources/DatabaseSetup.sql` (Change user account passwords at the very bottom)
+##### 2.6. Run database configuration script from `resources/DatabaseSetup.sql` (Change user account passwords at the very bottom)
 
 ##### 2.7. Set environment variables `sudo nano /etc/mysql/my.cnf`
 ```

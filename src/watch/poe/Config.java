@@ -25,7 +25,7 @@ public class Config {
 
     public static final File folder_root     = new File(".");
     public static final File file_config     = new File(folder_root.getPath(),"config.cfg");
-    public static final URL  resource_config = Main.class.getResource("/resources/" + file_config.getName());
+    public static final URL  resource_config = Main.class.getResource("/extract/" + file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
