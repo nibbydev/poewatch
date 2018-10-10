@@ -11,8 +11,8 @@ public class Config {
     //------------------------------------------------------------------------------------------------------------
 
     public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true&useUnicode=true&character_set_server=utf8mb4";
-    public static final String db_username = "";
-    private static final String db_password = "";
+    public static final String db_username = "pw_app";
+    private static final String db_password = "password goes here";
     public static final String db_database = "pw";
 
     public static String getDb_password() {
@@ -25,7 +25,7 @@ public class Config {
 
     public static final File folder_root     = new File(".");
     public static final File file_config     = new File(folder_root.getPath(),"config.cfg");
-    public static final URL  resource_config = Main.class.getResource("/extract/" + file_config.getName());
+    public static final URL  resource_config = Main.class.getResource(file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
