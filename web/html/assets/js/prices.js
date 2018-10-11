@@ -678,7 +678,7 @@ class ExpandedRow {
     };
 
     // Convert date strings into objects
-    let oldestDate = ExpandedRow.convertDateToUTC(new Date(leaguePayload.history[0].time));
+    let oldestDate = ExpandedRow.convertDateToUTC(leaguePayload.history[0] ? new Date(leaguePayload.history[0].time) : new Date());
     let startDate  = ExpandedRow.convertDateToUTC(new Date(leaguePayload.league.start));
     let endDate    = ExpandedRow.convertDateToUTC(new Date(leaguePayload.league.end));
 

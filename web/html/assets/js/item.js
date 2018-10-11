@@ -383,7 +383,7 @@ function formatHistory(leaguePayload) {
   };
 
   // Convert date strings into objects
-  let oldestDate = convertDateToUTC(new Date(leaguePayload.history[0].time));
+  let oldestDate = convertDateToUTC(leaguePayload.history[0] ? new Date(leaguePayload.history[0].time) : new Date());
   let startDate  = convertDateToUTC(new Date(leaguePayload.league.start));
   let endDate    = convertDateToUTC(new Date(leaguePayload.league.end));
 
