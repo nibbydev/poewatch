@@ -1,7 +1,5 @@
 package watch.poe;
 
-import java.io.File;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.regex.Pattern;
 
@@ -18,14 +16,6 @@ public class Config {
     public static String getDb_password() {
         return db_password;
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // File and folder locations
-    //------------------------------------------------------------------------------------------------------------
-
-    public static final File folder_root     = new File(".");
-    public static final File file_config     = new File(folder_root.getPath(),"config.cfg");
-    public static final URL  resource_config = Main.class.getResource(file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
