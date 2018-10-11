@@ -16,7 +16,7 @@ import poe.manager.relation.CategoryEntry;
 
 import java.sql.*;
 import java.util.*;
-
+//todo: split into some helper which offers connection/execution methods and classes that have it as parent or helper class to break it up into smaller chunks.
 public class Database {
     private Connection connection;
     private static Logger logger = LoggerFactory.getLogger(Database.class);
