@@ -10,22 +10,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccountManager extends Thread {
+    private static Logger logger = LoggerFactory.getLogger(AccountManager.class);
+    private final Object monitor = new Object();
     //------------------------------------------------------------------------------------------------------------
     // Class variables
     //------------------------------------------------------------------------------------------------------------
     private Database database;
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
-    private final Object monitor = new Object();
-
     private long lastRunTime;
     private List<AccountRelation> queue = new ArrayList<>();
     private List<AccountRelation> processed = new ArrayList<>();
 
-    private static Logger logger = LoggerFactory.getLogger(AccountManager.class);
-
     public AccountManager(Database database) {
-        this.database=database;
+        this.database = database;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -37,7 +35,8 @@ public class AccountManager extends Thread {
             synchronized (monitor) {
                 try {
                     monitor.wait(100);
-                } catch (InterruptedException ignored) { }
+                } catch (InterruptedException ignored) {
+                }
             }
 
             if (queue.isEmpty()) {
@@ -73,7 +72,8 @@ public class AccountManager extends Thread {
             }
 
             Thread.sleep(50);
-        } catch (InterruptedException ex) { }
+        } catch (InterruptedException ex) {
+        }
 
         logger.info("AccountManager stopped");
     }
@@ -95,10 +95,10 @@ public class AccountManager extends Thread {
 
         for (AccountRelation accountRelation : accountRelations) {
             logger.info(String.format("  %20s (%8d) -> %20s (%8d) (%2d matches)", accountRelation.oldAccountName,
-                                                                                     accountRelation.oldAccountId,
-                                                                                     accountRelation.newAccountName,
-                                                                                     accountRelation.newAccountId,
-                                                                                     accountRelation.matches));
+                    accountRelation.oldAccountId,
+                    accountRelation.newAccountName,
+                    accountRelation.newAccountId,
+                    accountRelation.matches));
         }
     }
 

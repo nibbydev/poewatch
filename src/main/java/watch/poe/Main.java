@@ -61,17 +61,16 @@ public class Main {
             if (!success) return;
 
             accountManager = new AccountManager(database);
-            manager = new WorkerManager(entryManager, manager, adminSuite);
+            manager = new WorkerManager(entryManager, adminSuite);
+            entryManager = new EntryManager(database, manager, leagueManager, accountManager, relations);
 
             // Parse CLI parameters
             parseCommandParameters(args);
 
             // Start controllers
             entryManager.start();
-            manager.start();
             accountManager.start();
-
-            entryManager = new EntryManager(database, manager, leagueManager, accountManager, relations);
+            manager.start();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();

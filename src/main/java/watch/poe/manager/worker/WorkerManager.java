@@ -16,21 +16,18 @@ import java.util.ArrayList;
  * Manages worker objects (eg. distributing jobs, adding/removing workers)
  */
 public class WorkerManager extends Thread {
-    private ArrayList<Worker> workerList = new ArrayList<>();
+    private static Logger logger = LoggerFactory.getLogger(WorkerManager.class);
     private final Gson gson = new Gson();
     private final Object monitor = new Object();
+    private ArrayList<Worker> workerList = new ArrayList<>();
     private volatile boolean flag_Run = true;
     private volatile boolean readyToExit = false;
     private String nextChangeID;
-    private static Logger logger = LoggerFactory.getLogger(WorkerManager.class);
-
     private EntryManager entryManager;
-    private WorkerManager workerManager;
     private AdminSuite adminSuite;
 
-    public WorkerManager(EntryManager entryManager, WorkerManager workerManager, AdminSuite adminSuite) {
+    public WorkerManager(EntryManager entryManager, AdminSuite adminSuite) {
         this.entryManager = entryManager;
-        this.workerManager = workerManager;
         this.adminSuite = adminSuite;
     }
     //------------------------------------------------------------------------------------------------------------
@@ -105,7 +102,8 @@ public class WorkerManager extends Thread {
                 getMonitor().notify();
             }
 
-        } catch (InterruptedException ex) { }
+        } catch (InterruptedException ex) {
+        }
 
         logger.info("Controller stopped");
     }
@@ -113,6 +111,7 @@ public class WorkerManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
     // worker management
     //------------------------------------------------------------------------------------------------------------
+
     /**
      * Prints out all active workers and their active jobs
      */
@@ -133,7 +132,7 @@ public class WorkerManager extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker worker = new Worker(entryManager,workerManager,adminSuite);
+            Worker worker = new Worker(entryManager, this, adminSuite);
 
             // Set some worker PROPERTIES and start
             worker.setIndex(i);
@@ -214,7 +213,7 @@ public class WorkerManager extends Thread {
         try {
             response = gson.fromJson(response, Mappers.ChangeID.class).get();
         } catch (Exception ex) {
-            logger.error("Could not download ChangeID from: " + url,ex);
+            logger.error("Could not download ChangeID from: " + url, ex);
         }
 
         return response;

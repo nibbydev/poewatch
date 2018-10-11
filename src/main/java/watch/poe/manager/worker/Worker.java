@@ -22,15 +22,14 @@ public class Worker extends Thread {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
+    private static long lastPullTime;
+    private static Logger logger = LoggerFactory.getLogger(Worker.class);
     private final Object monitor = new Object();
     private final Gson gson = new Gson();
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;
     private int index;
-    private static long lastPullTime;
-
-    private static Logger logger = LoggerFactory.getLogger(Worker.class);
     private EntryManager entryManager;
     private WorkerManager workerManager;
     private AdminSuite adminSuite;
@@ -43,7 +42,7 @@ public class Worker extends Thread {
     public Worker(EntryManager entryManager, WorkerManager workerManager, AdminSuite adminSuite) {
         this.entryManager = entryManager;
         this.workerManager = workerManager;
-        this.adminSuite=adminSuite;
+        this.adminSuite = adminSuite;
     }
 
     /**
@@ -59,7 +58,7 @@ public class Worker extends Thread {
             waitOnMonitor();
 
             // Check if worker should close after being woken from sleep
-            if(!flagLocalRun) break;
+            if (!flagLocalRun) break;
 
             // In case the notify came from some other source or there was a timeout, make sure the worker doesn't
             // continue with an empty job
@@ -95,7 +94,8 @@ public class Worker extends Thread {
         while (!readyToExit) try {
             Thread.sleep(50);
             wakeLocalMonitor();
-        } catch (InterruptedException ex) { }
+        } catch (InterruptedException ex) {
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -185,7 +185,7 @@ public class Worker extends Thread {
                 if (stream != null)
                     stream.close();
             } catch (IOException ex) {
-                logger.error(ex.getMessage(),ex);
+                logger.error(ex.getMessage(), ex);
             }
         }
 
@@ -235,19 +235,12 @@ public class Worker extends Thread {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public void setJob(String job) {
-        this.job = job;
-
-        // Wake the worker so it can start working on the job
-        wakeLocalMonitor();
+    public int getIndex() {
+        return index;
     }
 
     public void setIndex(int index) {
         this.index = index;
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     public boolean hasJob() {
@@ -256,5 +249,12 @@ public class Worker extends Thread {
 
     public String getJob() {
         return job;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+
+        // Wake the worker so it can start working on the job
+        wakeLocalMonitor();
     }
 }
