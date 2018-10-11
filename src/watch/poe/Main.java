@@ -42,9 +42,6 @@ public class Main {
             // Init admin suite
             ADMIN = new AdminSuite();
 
-            // Generate config, if missing
-            saveResource(Config.resource_config, Config.file_config);
-
             // Initialize database connector
             DATABASE = new Database();
             success = DATABASE.connect();
@@ -183,58 +180,6 @@ public class Main {
                 Main.ADMIN.logException(ex, Flair.ERROR);
             }
         }
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // File structure setup
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Reads resource files from the .jar and writes them to filepath
-     *
-     * @param input URL object to resource
-     * @param output File object to output file
-     * @return True if created resource
-     */
-    private static boolean saveResource(URL input, File output) {
-        if (output.exists()) return false;
-
-        BufferedInputStream reader = null;
-        OutputStream writer = null;
-
-        try {
-            // Assign I/O
-            reader = new BufferedInputStream(input.openStream());
-            writer = new BufferedOutputStream(new FileOutputStream(output));
-
-            // Define I/O helpers
-            byte[] buffer = new byte[1024];
-            int length;
-
-            // Read and write at the same time
-            while ((length = reader.read(buffer, 0, 1024)) > 0) {
-                writer.write(buffer, 0, length);
-            }
-
-            Main.ADMIN.log("Created file: " + output.getCanonicalPath(), Flair.INFO);
-        } catch (IOException ex) {
-            Main.ADMIN.logException(ex, Flair.ERROR);
-            return false;
-        } finally {
-            try {
-                if (reader != null)
-                    reader.close();
-
-                if (writer != null) {
-                    writer.flush();
-                    writer.close();
-                }
-            } catch (IOException ex) {
-                Main.ADMIN.logException(ex, Flair.ERROR);
-            }
-        }
-
-        return true;
     }
 
     //------------------------------------------------------------------------------------------------------------

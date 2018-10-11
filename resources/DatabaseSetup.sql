@@ -68,7 +68,7 @@ CREATE TABLE data_leagues (
 --
 
 CREATE TABLE data_changeId (
-    changeId  VARCHAR(256)  NOT NULL UNIQUE,
+    changeId  VARCHAR(64)  NOT NULL UNIQUE,
     time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -205,6 +205,7 @@ CREATE TABLE league_items_inactive (
 --
 
 CREATE TABLE league_entries (
+    identifier VARCHAR(64)    PRIMARY KEY,
     id_l       SMALLINT       UNSIGNED NOT NULL,
     id_d       INT            UNSIGNED NOT NULL,
     time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -214,11 +215,8 @@ CREATE TABLE league_entries (
 
     FOREIGN KEY (id_l) REFERENCES  data_leagues         (id)   ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
-    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
-    INDEX approved_time (approved, time),
-    INDEX approved      (approved),
-    INDEX time          (time)
+    INDEX approved_time (approved, time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -625,9 +623,11 @@ CREATE EVENT remove120
 -- User accounts
 -- --------------------------------------------------------------------------------------------------------------------
 
+DROP USER IF EXISTS 'pw_app'@'localhost';
 CREATE USER 'pw_app'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
 
+DROP USER IF EXISTS 'pw_web'@'localhost';
 CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
 

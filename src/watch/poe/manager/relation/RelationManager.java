@@ -80,6 +80,11 @@ public class RelationManager {
             }
         }
 
+        // Do not allow empty category definitions
+        if (item.getChildCategory() == null) {
+            return null;
+        }
+
         // If the same item is currently being indexed in another thread
         if (currentlyIndexingChildKeys.contains(itemKey)) {
             return null;

@@ -123,21 +123,7 @@ class ItemRow {
   buildBaseFields() {
     // Don't run if item is not a gem
     if (FILTER.category !== "base") return "";
-  
-    let displayLvl;
-  
-    if (this.item.var === "elder" || this.item.var === "shaper") {
-      switch (this.item.ilvl) {
-        case 68: displayLvl = "68 - 74";  break;
-        case 75: displayLvl = "75 - 82";  break;
-        case 84: displayLvl = "83 - 84";  break;
-        case 85: displayLvl = "85 - 100"; break;
-      }
-    } else {
-      displayLvl = "84";
-    }
-  
-    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + displayLvl + "</span></td>";
+    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + this.item.ilvl + "</span></td>";
   }
   
   buildMapFields() {
@@ -784,8 +770,7 @@ var FILTER = {
   gemLvl: null,
   gemQuality: null,
   gemCorrupted: null,
-  baseIlvlMin: null,
-  baseIlvlMax: null,
+  ilvl: null,
   baseInfluence: null,
   parseAmount: 150
 };
@@ -878,9 +863,7 @@ function parseQueryParams() {
 
   if (tmp = parseQueryParam('ilvl')) {
     $('#select-ilvl').val(tmp);
-    let splitRange = tmp.split("-");
-    FILTER.baseIlvlMin = parseInt(splitRange[0]);
-    FILTER.baseIlvlMax = parseInt(splitRange[1]);
+    FILTER.ilvl = parseInt(tmp);
   }
 
   if (tmp = parseQueryParam('influence')) {
@@ -1022,19 +1005,10 @@ function defineListeners() {
 
   // Base iLvl
   $("#select-ilvl").on("change", function(){
-    let ilvlRange = $(":selected", this).val();
-    console.log("Base iLvl filter: " + ilvlRange);
-    if (ilvlRange === "all") {
-      FILTER.baseIlvlMin = null;
-      FILTER.baseIlvlMax = null;
-      updateQueryParam("ilvl", null);
-    } else {
-      let splitRange = ilvlRange.split("-");
-      FILTER.baseIlvlMin = parseInt(splitRange[0]);
-      FILTER.baseIlvlMax = parseInt(splitRange[1]);
-      updateQueryParam("ilvl", ilvlRange);
-    }
-    
+    let ilvl = $(":selected", this).val();
+    console.log("Base iLvl filter: " + ilvl);
+    FILTER.ilvl = ilvl === "all" ? null : parseInt(ilvl);
+    updateQueryParam("ilvl", ilvl);
     sortResults(ITEMS);
   });
 
@@ -1375,8 +1349,8 @@ function checkHideItem(item) {
     }
 
     // Check base ilvl
-    if (item.ilvl !== null && FILTER.baseIlvlMin !== null && FILTER.baseIlvlMax !== null) {
-      if (item.ilvl < FILTER.baseIlvlMin || item.ilvl > FILTER.baseIlvlMax) {
+    if (item.ilvl !== null && FILTER.ilvl !== null) {
+      if (item.ilvl != FILTER.ilvl) {
         return true;
       }
     }

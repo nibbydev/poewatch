@@ -10,7 +10,7 @@ public class RawEntry {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String accountName;
+    private String accountName, identifier;
     private double price;
     private int id_l, id_d;
 
@@ -91,5 +91,13 @@ public class RawEntry {
 
     public String getAccountName() {
         return accountName;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public String getIdentifier() {
+        return identifier;
     }
 }

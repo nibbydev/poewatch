@@ -1,7 +1,5 @@
 package watch.poe;
 
-import java.io.File;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.regex.Pattern;
 
@@ -11,21 +9,13 @@ public class Config {
     //------------------------------------------------------------------------------------------------------------
 
     public static final String db_address = "jdbc:mysql://localhost:3306?serverTimezone=UTC&useSSL=false&allowMultiQueries=true&useUnicode=true&character_set_server=utf8mb4";
-    public static final String db_username = "";
-    private static final String db_password = "";
+    public static final String db_username = "pw_app";
+    private static final String db_password = "password goes here";
     public static final String db_database = "pw";
 
     public static String getDb_password() {
         return db_password;
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // File and folder locations
-    //------------------------------------------------------------------------------------------------------------
-
-    public static final File folder_root     = new File(".");
-    public static final File file_config     = new File(folder_root.getPath(),"config.cfg");
-    public static final URL  resource_config = Main.class.getResource("/extract/" + file_config.getName());
 
     //------------------------------------------------------------------------------------------------------------
     // Admin
@@ -54,7 +44,7 @@ public class Config {
     public static final double entry_approvedMin = 1.1;
     public static final double entry_approvedMax = 2.0;
     public static final double entry_approvedDiv = 250.0;
-    public static final int entry_maxCount = 96;
+    public static final int entry_maxCount = 128;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;
