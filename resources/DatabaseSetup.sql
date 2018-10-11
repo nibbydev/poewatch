@@ -205,6 +205,7 @@ CREATE TABLE league_items_inactive (
 --
 
 CREATE TABLE league_entries (
+    identifier VARCHAR(64)    PRIMARY KEY,
     id_l       SMALLINT       UNSIGNED NOT NULL,
     id_d       INT            UNSIGNED NOT NULL,
     time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -214,11 +215,8 @@ CREATE TABLE league_entries (
 
     FOREIGN KEY (id_l) REFERENCES  data_leagues         (id)   ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
-    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
 
-    INDEX approved_time (approved, time),
-    INDEX approved      (approved),
-    INDEX time          (time)
+    INDEX approved_time (approved, time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

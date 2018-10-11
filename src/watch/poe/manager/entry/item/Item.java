@@ -81,9 +81,6 @@ public class Item {
 
         // Remove formatting string from name
         name = name.substring(name.lastIndexOf(">") + 1);
-
-        // Shorten ID from 64 characters to 32
-        id = id.substring(0, 32);
     }
 
     /**
