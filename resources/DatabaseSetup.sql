@@ -68,7 +68,7 @@ CREATE TABLE data_leagues (
 --
 
 CREATE TABLE data_changeId (
-    changeId  VARCHAR(256)  NOT NULL UNIQUE,
+    changeId  VARCHAR(64)  NOT NULL UNIQUE,
     time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -625,9 +625,11 @@ CREATE EVENT remove120
 -- User accounts
 -- --------------------------------------------------------------------------------------------------------------------
 
+DROP USER IF EXISTS 'pw_app'@'localhost';
 CREATE USER 'pw_app'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
 
+DROP USER IF EXISTS 'pw_web'@'localhost';
 CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
 

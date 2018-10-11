@@ -1,8 +1,8 @@
 <?php
-$host = "";
-$db   = "";
-$user = "";
-$pass = "";
+$host = "localhost:3306";
+$db   = "pw";
+$user = "pw_web";
+$pass = "password goes here;
 $charset = "utf8";
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

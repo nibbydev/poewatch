@@ -2,6 +2,7 @@
 function GenFooter() {
   echo "<footer class='container-fluid d-flex flex-column justify-content-center align-items-center p-0'>
     <div>PoeWatch © " . date('Y') . "</div>
+    <div><a href='http://github.com/siegrest/poewatch' target='_blank'>Available on Github</a></div>
   </footer>";
 }
 
