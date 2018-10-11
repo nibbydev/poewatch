@@ -76,10 +76,11 @@ class FormGen {
       <h4>Ilvl</h4>
       <select class='form-control' id='select-ilvl'>
         <option value='all' selected>All</option>
-        <option value='68-74'>68 - 74</option>
-        <option value='75-82'>75 - 82</option>
-        <option value='83-84'>83 - 84</option>
-        <option value='85-100'>85 - 100</option>
+        <option value='82'>82</option>
+        <option value='83'>83</option>
+        <option value='84'>84</option>
+        <option value='85'>85</option>
+        <option value='86'>86+</option>
       </select>
     </div>";
   }
