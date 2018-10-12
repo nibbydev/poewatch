@@ -126,18 +126,18 @@ public class EntryManager extends Thread {
         Set<RawEntry> entrySet = this.entrySet;
         this.entrySet = new HashSet<>();
 
-        database.uploadRaw(entrySet);
+        database.upload.uploadRaw(entrySet);
     }
 
     private void uploadAccounts() {
         Set<AccountEntry> accountSet = this.accountSet;
         this.accountSet = new HashSet<>();
 
-        database.uploadAccountNames(accountSet);
+        database.account.uploadAccountNames(accountSet);
     }
 
     private void getCurrency() {
-        Map<Integer, Map<String, Double>> currencyLeagueMap = database.getCurrencyMap();
+        Map<Integer, Map<String, Double>> currencyLeagueMap = database.init.getCurrencyMap();
 
         if (currencyLeagueMap == null) {
             return;
@@ -236,61 +236,61 @@ public class EntryManager extends Thread {
     private void cycleDatabase() {
         if (status.isSixtyBool()) {
             timer.start("a20", Timer.TimerType.SIXTY);
-            database.updateVolatile();
+            database.flag.updateVolatile();
             timer.clk("a20");
 
             timer.start("a21", Timer.TimerType.SIXTY);
-            database.calculateVolatileMedian();
+            database.calc.calculateVolatileMedian();
             timer.clk("a21");
         }
 
         timer.start("a10");
-        database.updateApproved();
+        database.flag.updateApproved();
         timer.clk("a10");
 
         timer.start("a11");
-        database.updateCounters();
+        database.flag.updateCounters();
         timer.clk("a11");
 
         timer.start("a12");
-        database.calculatePrices();
+        database.calc.calculatePrices();
         timer.clk("a12");
 
         timer.start("a13");
-        database.calculateExalted();
+        database.calc.calculateExalted();
         timer.clk("a13");
 
         timer.start("a14");
-        database.removeOldItemEntries();
+        database.history.removeOldItemEntries();
         timer.clk("a14");
 
         if (status.isSixtyBool()) {
             timer.start("a22", Timer.TimerType.SIXTY);
-            database.addHourly();
+            database.history.addHourly();
             timer.clk("a22");
 
             timer.start("a23", Timer.TimerType.SIXTY);
-            database.updateMultipliers();
+            database.flag.updateMultipliers();
             timer.clk("a23");
 
             timer.start("a24", Timer.TimerType.SIXTY);
-            database.calcQuantity();
+            database.calc.calcQuantity();
             timer.clk("a24");
         }
 
         if (status.isTwentyFourBool()) {
             timer.start("a30", Timer.TimerType.TWENTY);
-            database.addDaily();
+            database.history.addDaily();
             timer.clk("a30");
 
             timer.start("a31", Timer.TimerType.TWENTY);
-            database.calcSpark();
+            database.calc.calcSpark();
             timer.clk("a31");
         }
 
         if (status.isSixtyBool()) {
             timer.start("a25", Timer.TimerType.SIXTY);
-            database.resetCounters();
+            database.flag.resetCounters();
             timer.clk("a25");
         }
     }

@@ -245,7 +245,7 @@ public class Timer {
      * Uploads all latest timer delays to database
      */
     public void uploadDelays(StatusElement statusElement) {
-        database.uploadTimers(timeLog, statusElement);
+        database.upload.uploadTimers(timeLog, statusElement);
     }
 
     /**
@@ -254,7 +254,7 @@ public class Timer {
     public void getDelays() {
         Map<String, TimerList> timeLog = new HashMap<>();
 
-        database.getTimers(timeLog);
+        database.init.getTimers(timeLog);
 
         this.timeLog = timeLog;
     }

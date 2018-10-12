@@ -146,7 +146,7 @@ public class Worker extends Thread {
                         workerManager.setNextChangeID(matcher.group());
 
                         // Update db change id entry
-                        database.updateChangeID(matcher.group());
+                        database.upload.updateChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {

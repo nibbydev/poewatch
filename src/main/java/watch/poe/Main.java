@@ -271,7 +271,7 @@ public class Main {
 
     private static void commandMoveItem() {
         logger.info("Moving inactive item entries to separate table...");
-        database.moveInactiveItemEntries();
+        database.history.moveInactiveItemEntries();
         logger.info("Moving finished");
     }
 }

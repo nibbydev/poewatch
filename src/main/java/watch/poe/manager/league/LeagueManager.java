@@ -46,12 +46,12 @@ public class LeagueManager {
         if (success) {
             // If download was successful, parse the downloaded leagues and create/update database entries
             List<LeagueEntry> sortedLeagues = sortLeagues(baseLeagues);
-            database.updateLeagues(sortedLeagues);
+            database.upload.updateLeagues(sortedLeagues);
         }
 
         // Get active league entries from database
         List<LeagueEntry> leagues = new ArrayList<>();
-        success = database.getLeagues(leagues);
+        success = database.init.getLeagues(leagues);
         if (!success) {
             // Download failed AND database doesn't have league data. Shut down the program.
             logger.error("Failed to query leagues from API and database");

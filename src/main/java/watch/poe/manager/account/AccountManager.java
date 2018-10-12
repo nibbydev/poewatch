@@ -44,7 +44,7 @@ public class AccountManager extends Thread {
                     List<AccountRelation> tmp = new ArrayList<>(processed);
                     processed = new ArrayList<>();
 
-                    database.createAccountRelation(tmp);
+                    database.account.createAccountRelation(tmp);
                 }
 
                 continue;
@@ -84,7 +84,7 @@ public class AccountManager extends Thread {
 
     public void checkAccountNameChanges() {
         List<AccountRelation> accountRelations = new ArrayList<>();
-        database.getAccountRelations(accountRelations);
+        database.account.getAccountRelations(accountRelations);
 
         if (accountRelations.isEmpty()) {
             return;

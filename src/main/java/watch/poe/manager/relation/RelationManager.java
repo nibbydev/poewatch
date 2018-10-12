@@ -28,7 +28,7 @@ public class RelationManager {
         this.database = database;
     }
     //------------------------------------------------------------------------------------------------------------
-    // Initialization
+    // Init
     //------------------------------------------------------------------------------------------------------------
 
     /**
@@ -37,7 +37,7 @@ public class RelationManager {
     public boolean init() {
         boolean success;
 
-        success = database.getCurrencyAliases(currencyAliasToName);
+        success = database.init.getCurrencyAliases(currencyAliasToName);
         if (!success) {
             logger.error("Failed to query currency aliases from database. Shutting down...");
             return false;
@@ -46,7 +46,7 @@ public class RelationManager {
             return false;
         }
 
-        success = database.getCategories(categoryRelations);
+        success = database.init.getCategories(categoryRelations);
         if (!success) {
             logger.error("Failed to query categories from database. Shutting down...");
             return false;
@@ -54,7 +54,7 @@ public class RelationManager {
             logger.warn("Database did not contain any category information");
         }
 
-        success = database.getItemData(keyToId);
+        success = database.init.getItemData(keyToId);
         if (!success) {
             logger.error("Failed to query item IDs from database. Shutting down...");
             return false;
@@ -62,7 +62,7 @@ public class RelationManager {
             logger.warn("Database did not contain any item id information");
         }
 
-        success = database.getLeagueItemIds(leagueIds);
+        success = database.init.getLeagueItemIds(leagueIds);
         if (!success) {
             logger.error("Failed to query league item IDs from database. Shutting down...");
             return false;
@@ -74,7 +74,7 @@ public class RelationManager {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Indexing methods
+    // Index methods
     //------------------------------------------------------------------------------------------------------------
 
     public Integer indexItem(Item item, Integer leagueId) {
@@ -109,7 +109,7 @@ public class RelationManager {
             Integer childCategoryId = categoryEntry.getChildCategoryId(item.getChildCategory());
 
             // Add item data to the database and get its id
-            itemId = database.indexItemData(item, parentCategoryId, childCategoryId);
+            itemId = database.index.indexItemData(item, parentCategoryId, childCategoryId);
             if (itemId != null) keyToId.put(itemKey, itemId);
         }
 
@@ -119,7 +119,7 @@ public class RelationManager {
             idList.add(itemId);
             leagueIds.putIfAbsent(leagueId, idList);
 
-            database.createLeagueItem(leagueId, itemId);
+            database.index.createLeagueItem(leagueId, itemId);
         }
 
         // Remove unique key from the list
@@ -132,7 +132,7 @@ public class RelationManager {
         CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
 
         if (categoryEntry == null) {
-            Integer parentId = database.addParentCategory(item.getParentCategory());
+            Integer parentId = database.index.addParentCategory(item.getParentCategory());
             if (parentId == null) return;
 
             categoryEntry = new CategoryEntry();
@@ -144,7 +144,7 @@ public class RelationManager {
         if (item.getChildCategory() != null && !categoryEntry.hasChild(item.getChildCategory())) {
             int parentId = categoryRelations.get(item.getParentCategory()).getId();
 
-            Integer childId = database.addChildCategory(parentId, item.getChildCategory());
+            Integer childId = database.index.addChildCategory(parentId, item.getChildCategory());
             if (childId == null) return;
 
             categoryEntry.addChild(item.getChildCategory(), childId);

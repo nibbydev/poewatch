@@ -18,12 +18,6 @@ public class Config {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Admin
-    //------------------------------------------------------------------------------------------------------------
-
-    public static final int admin_logSize = 2048;
-
-    //------------------------------------------------------------------------------------------------------------
     // Workers
     //------------------------------------------------------------------------------------------------------------
 
@@ -44,13 +38,13 @@ public class Config {
     public static final double entry_approvedMin = 1.1;
     public static final double entry_approvedMax = 2.0;
     public static final double entry_approvedDiv = 250.0;
-    public static final int entry_maxCount = 128;
+    public static final int entry_maxCount = 96;
 
     public static final int entryController_sleepMS         = 60 * 1000;
     public static final int entryController_tenMS           = 10 * 60 * 1000;
     public static final int entryController_sixtyMS         = 60 * 60 * 1000;
     public static final int entryController_twentyFourMS    = 24 * 60 * 60 * 1000;
-    public static final long entryController_counterOffset  = 5 * 60 * 60 * 1000;
+    public static final long entryController_counterOffset  = 12 * 60 * 60 * 1000;
 
     //------------------------------------------------------------------------------------------------------------
     // league manager
