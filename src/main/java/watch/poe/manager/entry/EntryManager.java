@@ -39,11 +39,10 @@ public class EntryManager extends Thread {
 
     private static Logger logger = LoggerFactory.getLogger(EntryManager.class);
 
-    public EntryManager(Database database, WorkerManager workerManager, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager) {
+    public EntryManager(Database database, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager) {
         this.database = database;
         this.timer = new Timer(database);
 
-        this.workerManager = workerManager;
         this.leagueManager = leagueManager;
         this.accountManager = accountManager;
         this.relationManager = relationManager;
@@ -358,5 +357,9 @@ public class EntryManager extends Thread {
                 accountSet.add(new AccountEntry(stash.accountName, stash.lastCharacterName, leagueId));
             }
         }
+    }
+
+    public void setWorkerManager(WorkerManager workerManager) {
+        this.workerManager = workerManager;
     }
 }

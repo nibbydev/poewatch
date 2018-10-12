@@ -17,19 +17,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private static AccountManager accountManager;
-    private static WorkerManager manager;
+    private static WorkerManager workerManager;
     private static EntryManager entryManager;
     private static Database database;
     private static Logger logger = LoggerFactory.getLogger(Main.class);
-
-    //------------------------------------------------------------------------------------------------------------
-    // Main methods
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * App entry point
@@ -45,10 +37,8 @@ public class Main {
             success = database.connect();
             if (!success) return;
 
-
             // Init admin suite
             AdminSuite adminSuite = new AdminSuite(database);
-
 
             // Init league manager
             LeagueManager leagueManager = new LeagueManager(database);
@@ -61,8 +51,10 @@ public class Main {
             if (!success) return;
 
             accountManager = new AccountManager(database);
-            manager = new WorkerManager(entryManager, adminSuite);
-            entryManager = new EntryManager(database, manager, leagueManager, accountManager, relations);
+            entryManager = new EntryManager(database, leagueManager, accountManager, relations);
+            workerManager = new WorkerManager(entryManager, adminSuite);
+
+            entryManager.setWorkerManager(workerManager);
 
             // Parse CLI parameters
             parseCommandParameters(args);
@@ -70,13 +62,13 @@ public class Main {
             // Start controllers
             entryManager.start();
             accountManager.start();
-            manager.start();
+            workerManager.start();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
             if (accountManager != null) accountManager.stopController();
-            if (manager != null) manager.stopController();
+            if (workerManager != null) workerManager.stopController();
             if (entryManager != null) entryManager.stopController();
             if (database != null) database.disconnect();
         }
@@ -91,11 +83,11 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            manager.spawnWorkers(Config.worker_defaultWorkerCount);
+            workerManager.spawnWorkers(Config.worker_defaultWorkerCount);
             System.out.println("[INFO] Spawned 3 workers");
         }
         if (!newArgs.contains("-id")) {
-            manager.setNextChangeID(manager.getLatestChangeID());
+            workerManager.setNextChangeID(workerManager.getLatestChangeID());
             System.out.println("[INFO] New ChangeID added");
         }
 
@@ -105,21 +97,21 @@ public class Main {
 
             switch (arg) {
                 case "-workers":
-                    manager.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
+                    workerManager.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
                     System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
                     break;
                 case "-id":
                     switch (newArgs.get(newArgs.lastIndexOf(arg) + 1)) {
                         case "local":
-                            manager.setNextChangeID(manager.getLocalChangeID());
+                            workerManager.setNextChangeID(workerManager.getLocalChangeID());
                             System.out.println("[INFO] Local ChangeID added");
                             break;
                         case "new":
-                            manager.setNextChangeID(manager.getLatestChangeID());
+                            workerManager.setNextChangeID(workerManager.getLatestChangeID());
                             System.out.println("[INFO] New ChangeID added");
                             break;
                         default:
-                            manager.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
+                            workerManager.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
                             System.out.println("[INFO] Custom ChangeID added");
                             break;
                     }
@@ -173,7 +165,7 @@ public class Main {
                         commandAcc(userInput);
                         break;
                     case "moveitem":
-                        commandMoveItem(userInput);
+                        commandMoveItem();
                         break;
                     default:
                         logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]));
@@ -207,23 +199,23 @@ public class Main {
 
         switch (userInput[1]) {
             case "local":
-                manager.setNextChangeID(manager.getLocalChangeID());
+                workerManager.setNextChangeID(workerManager.getLocalChangeID());
                 System.out.println("[INFO] Local ChangeID added");
                 break;
             case "new":
-                manager.setNextChangeID(manager.getLatestChangeID());
+                workerManager.setNextChangeID(workerManager.getLatestChangeID());
                 System.out.println("[INFO] New ChangeID added");
                 break;
             default:
-                manager.setNextChangeID(userInput[1]);
+                workerManager.setNextChangeID(userInput[1]);
                 System.out.println("[INFO] Custom ChangeID added");
                 break;
 
         }
 
         // Wake worker controller
-        synchronized (manager.getMonitor()) {
-            manager.getMonitor().notifyAll();
+        synchronized (workerManager.getMonitor()) {
+            workerManager.getMonitor().notifyAll();
         }
     }
 
@@ -245,13 +237,13 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            manager.printAllWorkers();
+            workerManager.printAllWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
-            manager.fireWorkers(Integer.parseInt(userInput[2]));
+            workerManager.fireWorkers(Integer.parseInt(userInput[2]));
         } else if (userInput[1].equalsIgnoreCase("add")) {
             System.out.println("[INFO] Adding " + userInput[2] + " worker..");
-            manager.spawnWorkers(Integer.parseInt(userInput[2]));
+            workerManager.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
         }
@@ -281,7 +273,7 @@ public class Main {
         }
     }
 
-    private static void commandMoveItem(String[] userInput) {
+    private static void commandMoveItem() {
         logger.info("Moving inactive item entries to separate table...");
         database.moveInactiveItemEntries();
         logger.info("Moving finished");

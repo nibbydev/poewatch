@@ -34,11 +34,6 @@ public class Worker extends Thread {
     private WorkerManager workerManager;
     private AdminSuite adminSuite;
 
-    //------------------------------------------------------------------------------------------------------------
-    // Main methods
-    //------------------------------------------------------------------------------------------------------------
-
-
     public Worker(EntryManager entryManager, WorkerManager workerManager, AdminSuite adminSuite) {
         this.entryManager = entryManager;
         this.workerManager = workerManager;
