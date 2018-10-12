@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Config;
 import poe.db.Database;
-import poe.manager.admin.Flair;
 import poe.manager.entry.StatusElement;
 
 import java.util.HashMap;
@@ -172,7 +171,7 @@ public class Timer {
                 logger.info(String.format("Delay %5d (actual %5d) found for key %8s",
                         delay,
                         getLatest(key),
-                        key), Flair.STATUS);
+                        key));
 
                 long startTime = System.currentTimeMillis();
 

@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import poe.Config;
 import poe.db.Database;
 import poe.manager.account.AccountManager;
-import poe.manager.admin.Flair;
 import poe.manager.entry.item.Item;
 import poe.manager.entry.item.ItemParser;
 import poe.manager.entry.item.Mappers;
@@ -69,7 +68,7 @@ public class EntryManager extends Thread {
         logger.info(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
                 10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
                 60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
-                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000), Flair.INFO);
+                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000));
 
         // Main thread loop
         while (flagLocalRun) {
@@ -201,14 +200,14 @@ public class EntryManager extends Thread {
                 timer.getLatest("cycle"),
                 timer.getLatest("prices"),
                 timer.getLatest("upload"),
-                timer.getLatest("account")), Flair.STATUS);
+                timer.getLatest("account")));
 
         logger.info(String.format("[10%5d][11%5d][12%5d][13%5d][14%5d]",
                 timer.getLatest("a10"),
                 timer.getLatest("a11"),
                 timer.getLatest("a12"),
                 timer.getLatest("a13"),
-                timer.getLatest("a14")), Flair.STATUS);
+                timer.getLatest("a14")));
 
         if (status.isSixtyBool()) logger.info(String.format("[20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]",
                 timer.getLatest("a20"),
@@ -216,11 +215,11 @@ public class EntryManager extends Thread {
                 timer.getLatest("a22"),
                 timer.getLatest("a23"),
                 timer.getLatest("a24"),
-                timer.getLatest("a25")), Flair.STATUS);
+                timer.getLatest("a25")));
 
         if (status.isTwentyFourBool()) logger.info(String.format("[30%5d][31%5d]",
                 timer.getLatest("a30"),
-                timer.getLatest("a31")), Flair.STATUS);
+                timer.getLatest("a31")));
 
         // Reset flags
         status.setTwentyFourBool(false);

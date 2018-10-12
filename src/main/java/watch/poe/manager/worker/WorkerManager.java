@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Config;
-import poe.manager.admin.AdminSuite;
+import poe.db.Database;
 import poe.manager.entry.EntryManager;
 import poe.manager.entry.item.Mappers;
 
@@ -24,15 +24,12 @@ public class WorkerManager extends Thread {
     private volatile boolean readyToExit = false;
     private String nextChangeID;
     private EntryManager entryManager;
-    private AdminSuite adminSuite;
+    private Database database;
 
-    public WorkerManager(EntryManager entryManager, AdminSuite adminSuite) {
+    public WorkerManager(EntryManager entryManager, Database database) {
         this.entryManager = entryManager;
-        this.adminSuite = adminSuite;
+        this.database = database;
     }
-    //------------------------------------------------------------------------------------------------------------
-    // Main methods
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Contains main loop. Checks for open jobs and assigns them to workers
@@ -108,10 +105,6 @@ public class WorkerManager extends Thread {
         logger.info("Controller stopped");
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // worker management
-    //------------------------------------------------------------------------------------------------------------
-
     /**
      * Prints out all active workers and their active jobs
      */
@@ -132,7 +125,7 @@ public class WorkerManager extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker worker = new Worker(entryManager, this, adminSuite);
+            Worker worker = new Worker(entryManager, this, database);
 
             // Set some worker PROPERTIES and start
             worker.setIndex(i);
@@ -167,10 +160,6 @@ public class WorkerManager extends Thread {
             workerList.remove(lastWorker);
         }
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Getting starting change ID
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Get a changeID that's close to the stack top

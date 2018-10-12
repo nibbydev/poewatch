@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Config;
-import poe.manager.admin.AdminSuite;
+import poe.db.Database;
 import poe.manager.entry.EntryManager;
 import poe.manager.entry.item.Mappers;
 
@@ -18,10 +18,6 @@ import java.util.regex.Matcher;
  * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
  */
 public class Worker extends Thread {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private static long lastPullTime;
     private static Logger logger = LoggerFactory.getLogger(Worker.class);
     private final Object monitor = new Object();
@@ -32,12 +28,12 @@ public class Worker extends Thread {
     private int index;
     private EntryManager entryManager;
     private WorkerManager workerManager;
-    private AdminSuite adminSuite;
+    private Database database;
 
-    public Worker(EntryManager entryManager, WorkerManager workerManager, AdminSuite adminSuite) {
+    public Worker(EntryManager entryManager, WorkerManager workerManager, Database database) {
         this.entryManager = entryManager;
         this.workerManager = workerManager;
-        this.adminSuite = adminSuite;
+        this.database = database;
     }
 
     /**
@@ -92,10 +88,6 @@ public class Worker extends Thread {
         } catch (InterruptedException ex) {
         }
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Download/parse
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Downloads data from the API
@@ -153,8 +145,8 @@ public class Worker extends Thread {
                         // Add new-found job to queue
                         workerManager.setNextChangeID(matcher.group());
 
-                        // Add freshest changeID to statistics
-                        adminSuite.setChangeID(matcher.group());
+                        // Update db change id entry
+                        database.updateChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
@@ -200,10 +192,6 @@ public class Worker extends Thread {
             Thread.currentThread().interrupt();
         }
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Utility
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Sleeps until monitor object is notified

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
 import poe.manager.account.AccountManager;
-import poe.manager.admin.AdminSuite;
 import poe.manager.entry.EntryManager;
 import poe.manager.league.LeagueManager;
 import poe.manager.relation.RelationManager;
@@ -37,9 +36,6 @@ public class Main {
             success = database.connect();
             if (!success) return;
 
-            // Init admin suite
-            AdminSuite adminSuite = new AdminSuite(database);
-
             // Init league manager
             LeagueManager leagueManager = new LeagueManager(database);
             success = leagueManager.cycle();
@@ -52,7 +48,7 @@ public class Main {
 
             accountManager = new AccountManager(database);
             entryManager = new EntryManager(database, leagueManager, accountManager, relations);
-            workerManager = new WorkerManager(entryManager, adminSuite);
+            workerManager = new WorkerManager(entryManager, database);
 
             entryManager.setWorkerManager(workerManager);
 
