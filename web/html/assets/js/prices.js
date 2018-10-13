@@ -684,7 +684,7 @@ class ExpandedRow {
 
     // Nr of days league data is missing since league start until first entry
     let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
-    let daysMissing     = Math.ceil(timeDiffMissing / (1000 * 60 * 60 * 24));
+    let daysMissing     = Math.floor(timeDiffMissing / (1000 * 60 * 60 * 24));
   
     // Nr of days in a league
     let timeDiffLeague = Math.abs(endDate.getTime() - startDate.getTime());
@@ -752,7 +752,7 @@ class ExpandedRow {
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
   
-    let s = new Date(date);
+    let s = ExpandedRow.convertDateToUTC(new Date(date));
     return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
   }
 }

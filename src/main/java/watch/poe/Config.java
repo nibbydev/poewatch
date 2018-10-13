@@ -44,7 +44,7 @@ public class Config {
     public static final int entryController_tenMS           = 10 * 60 * 1000;
     public static final int entryController_sixtyMS         = 60 * 60 * 1000;
     public static final int entryController_twentyFourMS    = 24 * 60 * 60 * 1000;
-    public static final long entryController_counterOffset  = 12 * 60 * 60 * 1000;
+    public static final long entryController_counterOffset  = 5 * 60 * 1000;
 
     //------------------------------------------------------------------------------------------------------------
     // league manager
