@@ -10,9 +10,10 @@ public class RawEntry {
     // Class variables
     //------------------------------------------------------------------------------------------------------------
 
-    private String accountName, identifier;
+    private String accountName;
     private double price;
     private int id_l, id_d;
+    private long id;
 
     //------------------------------------------------------------------------------------------------------------
     // Equality methods to root out duplicates in a Set
@@ -89,11 +90,11 @@ public class RawEntry {
         return accountName;
     }
 
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
+    public void setId(long id) {
+        this.id = id;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    public long getId() {
+        return id;
     }
 }

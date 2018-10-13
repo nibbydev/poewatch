@@ -30,7 +30,7 @@ public class Upload {
      */
     public boolean uploadRaw(Set<RawEntry> entrySet) {
         String query =  "INSERT INTO league_entries ( " +
-                        "  id_l, id_d, price, account, identifier) " +
+                        "  id, id_l, id_d, price, account) " +
                         "VALUES (?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  approved = 0, " +
@@ -45,11 +45,11 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (RawEntry rawEntry : entrySet) {
-                    statement.setInt(1, rawEntry.getLeagueId());
-                    statement.setInt(2, rawEntry.getItemId());
-                    statement.setString(3, rawEntry.getPrice());
-                    statement.setString(4, rawEntry.getAccountName());
-                    statement.setString(5, rawEntry.getIdentifier());
+                    statement.setLong(1, rawEntry.getId());
+                    statement.setInt(2, rawEntry.getLeagueId());
+                    statement.setInt(3, rawEntry.getItemId());
+                    statement.setString(4, rawEntry.getPrice());
+                    statement.setString(5, rawEntry.getAccountName());
                     statement.addBatch();
 
                     if (++count % 500 == 0) statement.executeBatch();

@@ -879,8 +879,8 @@ public class Item {
         return typeLine;
     }
 
-    public String getId() {
-        return id;
+    public long getId() {
+        return Long.parseLong(id.substring(56), 16);
     }
 
     public Integer getFrameType() {

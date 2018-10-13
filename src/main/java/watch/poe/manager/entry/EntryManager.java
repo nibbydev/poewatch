@@ -345,7 +345,7 @@ public class EntryManager extends Thread {
                     rawEntry.setLeagueId(leagueId);
                     rawEntry.setAccountName(stash.accountName);
                     rawEntry.setPrice(itemParser.getPrice());
-                    rawEntry.setIdentifier(item.getId());
+                    rawEntry.setId(item.getId());
 
                     // Add it to the db queue
                     entrySet.add(rawEntry);

@@ -15,6 +15,7 @@ import java.util.Map;
  * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
+    private static Logger logger = LoggerFactory.getLogger(RelationManager.class);
     private Map<Key, Integer> keyToId = new HashMap<>();
     private Map<String, String> currencyAliasToName = new HashMap<>();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
@@ -22,14 +23,10 @@ public class RelationManager {
     // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
     private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
     private Database database;
-    private static Logger logger = LoggerFactory.getLogger(RelationManager.class);
 
     public RelationManager(Database database) {
         this.database = database;
     }
-    //------------------------------------------------------------------------------------------------------------
-    // Init
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Reads currency and item data from file on object prep
@@ -72,10 +69,6 @@ public class RelationManager {
 
         return true;
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Index methods
-    //------------------------------------------------------------------------------------------------------------
 
     public Integer indexItem(Item item, Integer leagueId) {
         Key itemKey = item.getKey();
@@ -150,10 +143,6 @@ public class RelationManager {
             categoryEntry.addChild(item.getChildCategory(), childId);
         }
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
-    //------------------------------------------------------------------------------------------------------------
 
     public Map<String, String> getCurrencyAliasToName() {
         return currencyAliasToName;
