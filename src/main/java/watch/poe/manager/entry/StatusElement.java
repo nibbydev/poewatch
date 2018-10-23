@@ -56,10 +56,7 @@ public class StatusElement {
 
         // Run once every 24h
         if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (twentyFourCounter == 0) {
-                twentyFourCounter -= Config.entryController_counterOffset;
-            }
-
+            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
             twentyFourCounter += (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
             setTwentyFourBool(true);
             logger.info("24 activated");

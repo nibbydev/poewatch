@@ -4,7 +4,9 @@
 
 ## Overview
 
-PoeWatch is a Path of Exile statistics and price data collection page that's been in the works since 2017. It gathers data over time for various items (such as uniques, gems, currency, you name it) from public trade listings and finds the average prices. The site is actively in development and welcomes any feedback users may have.
+PoeWatch is a Path of Exile statistics and price data collection page that's been in the works since 2017. It gathers data over time for various items (such as uniques, gems, currency, you name it) from public trade listings and finds the average prices.
+
+The repository contains the web frontend, PHP backend and the app written in Java. A live version can be seen on [Poe.watch](http://poe.watch).
 
 ## The general idea
 
@@ -12,7 +14,7 @@ The general goal was to make a statistics website with everything in one place. 
 
 ## Setup
 
-Crude set up instructions can be found in `DEPLOYMENT.md`. Do note that at the current moment these are no more than personal notes that contain unnecessary or missing information for first time setup.
+Crude set up instructions can be found in `DEPLOYMENT.md`. 
 
 ## HW requirements
 

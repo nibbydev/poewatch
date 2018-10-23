@@ -126,11 +126,11 @@ public class History {
      */
     public boolean addDaily() {
         String query =  "INSERT INTO league_history_daily_rolling ( " +
-                        "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  min, max, exalted, count, quantity, inc, `dec`) " +
+                        "  id_l, id_d, mean, median, mode, " +
+                        "  min, max, exalted, count, quantity) " +
                         "SELECT " +
-                        "  id_l, id_d, volatile, mean, median, mode, " +
-                        "  min, max, exalted, count, quantity, inc, `dec` " +
+                        "  id_l, id_d, mean, median, mode, " +
+                        "  min, max, exalted, count, quantity " +
                         "FROM   league_items_rolling AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
