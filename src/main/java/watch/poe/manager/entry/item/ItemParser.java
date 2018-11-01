@@ -1,15 +1,13 @@
 package poe.manager.entry.item;
 
-import poe.Config;
+import com.typesafe.config.Config;
 import poe.manager.relation.RelationManager;
 
 import java.util.ArrayList;
 import java.util.Map;
 
 public class ItemParser {
-    //------------------------------------------------------------------------------------------------------------
-    // User-defined variables
-    //------------------------------------------------------------------------------------------------------------
+    private Config config;
 
     private ArrayList<Item> items = new ArrayList<>();
     private boolean discard, doNotIndex;
@@ -21,8 +19,10 @@ public class ItemParser {
     // Constructor
     //------------------------------------------------------------------------------------------------------------
 
-    public ItemParser(RelationManager relationManager, Mappers.BaseItem base, Map<String, Double> currencyMap) {
-        this.relationManager=relationManager;
+    public ItemParser(RelationManager relationManager, Mappers.BaseItem base, Map<String, Double> currencyMap, Config config) {
+        this.relationManager = relationManager;
+        this.config = config;
+
         // Do a few checks on the league, note and etc
         basicChecks(base);
         if (discard) return;
@@ -112,12 +112,12 @@ public class ItemParser {
             base.setTypeLine(typeLineOverride);
 
             priceType = "Chaos Orb";
-            price = (Math.round((1 / tmpPrice) * Config.pricePrecision) / Config.pricePrecision);
+            price = (Math.round((1 / tmpPrice) * config.getDouble("precision.pow")) / config.getDouble("precision.pow"));
 
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
-            price = Math.round(tmpPrice * Config.pricePrecision) / Config.pricePrecision;
+            price = Math.round(tmpPrice * config.getDouble("precision.pow")) / config.getDouble("precision.pow");
             priceType = relationManager.getCurrencyAliasToName().get(noteList[2]);
         }
     }
@@ -143,7 +143,7 @@ public class ItemParser {
                 return;
             }
 
-            price = Math.round(price * chaosValue * Config.pricePrecision) / Config.pricePrecision;
+            price = Math.round(price * chaosValue * config.getDouble("precision.pow")) / config.getDouble("precision.pow");
             priceType = "Chaos Orb";
         }
 

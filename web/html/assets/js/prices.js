@@ -1036,10 +1036,10 @@ function defineListeners() {
     document.cookie = "live="+live;
 
     if (live) {
-      $("#progressbar-live").css("animation-name", "progressbar-live");
+      $("#progressbar-live").css("animation-name", "progressbar-live").show();
       INTERVAL = setInterval(timedRequestCallback, 60 * 1000);
     } else {
-      $("#progressbar-live").css("animation-name", "");
+      $("#progressbar-live").css("animation-name", "").hide();
       clearInterval(INTERVAL);
     }
   });

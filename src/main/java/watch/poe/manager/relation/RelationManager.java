@@ -16,6 +16,7 @@ import java.util.Map;
  */
 public class RelationManager {
     private static Logger logger = LoggerFactory.getLogger(RelationManager.class);
+
     private Map<Key, Integer> keyToId = new HashMap<>();
     private Map<String, String> currencyAliasToName = new HashMap<>();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();

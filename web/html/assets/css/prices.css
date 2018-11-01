@@ -44,14 +44,17 @@
 }
 
 #progressbar-live {
+  display: none;
+  width: 100%;
+  transform-origin: left;
   animation-duration: 60s;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
 
 @keyframes progressbar-live {
-  from {width: 0%}
-  to {width: 100%}
+  from {transform: scaleX(0)}
+  to {transform: scaleX(1)}
 }
 
 /*------------------------------------------------------------------------------------------------------------

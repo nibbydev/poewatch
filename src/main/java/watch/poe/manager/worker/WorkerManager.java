@@ -1,9 +1,9 @@
 package poe.manager.worker;
 
 import com.google.gson.Gson;
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import poe.Config;
+import org.slf4j.LoggerFactory;;
 import poe.db.Database;
 import poe.manager.entry.EntryManager;
 import poe.manager.entry.item.Mappers;
@@ -17,6 +17,8 @@ import java.util.ArrayList;
  */
 public class WorkerManager extends Thread {
     private static Logger logger = LoggerFactory.getLogger(WorkerManager.class);
+    private Config config;
+
     private final Gson gson = new Gson();
     private final Object monitor = new Object();
     private ArrayList<Worker> workerList = new ArrayList<>();
@@ -26,9 +28,10 @@ public class WorkerManager extends Thread {
     private EntryManager entryManager;
     private Database database;
 
-    public WorkerManager(EntryManager entryManager, Database database) {
+    public WorkerManager(EntryManager entryManager, Database database, Config config) {
         this.entryManager = entryManager;
         this.database = database;
+        this.config = config;
     }
 
     /**
@@ -69,7 +72,7 @@ public class WorkerManager extends Thread {
     private void waitOnMonitor() {
         synchronized (monitor) {
             try {
-                monitor.wait(Config.monitorTimeoutMS);
+                monitor.wait(config.getInt("worker.monitorTimeout"));
             } catch (InterruptedException e) {
             }
         }
@@ -125,7 +128,7 @@ public class WorkerManager extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker worker = new Worker(entryManager, this, database);
+            Worker worker = new Worker(entryManager, this, database, config);
 
             // Set some worker PROPERTIES and start
             worker.setIndex(i);

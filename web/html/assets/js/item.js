@@ -3,13 +3,14 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
+var LEAGUE = parseQueryParam('league');
 var ITEM = {};
 var CHART_HISTORY = null;
 var HISTORY_DATASET = 1;
 
 $(document).ready(function() {
   parseQueryParams();
-  if (ID && LEAGUE) makeHistoryRequest(ID);
+  if (LEAGUE) makeHistoryRequest();
 }); 
 
 //------------------------------------------------------------------------------------------------------------
@@ -26,7 +27,9 @@ function parseQueryParams() {
   }
 }
 
-function makeHistoryRequest(id) {
+function makeHistoryRequest() {
+  let id = parseInt(parseQueryParam('id'));
+
   let request = $.ajax({
     url: "https://api.poe.watch/item.php",
     data: {id: id},

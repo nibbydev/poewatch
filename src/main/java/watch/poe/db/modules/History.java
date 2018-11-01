@@ -2,7 +2,6 @@ package poe.db.modules;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 
 import java.sql.*;
@@ -46,7 +45,7 @@ public class History {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, Config.entry_maxCount);
+                statement.setInt(1, database.config.getInt("entry.maxCount"));
                 statement.executeUpdate();
             }
 

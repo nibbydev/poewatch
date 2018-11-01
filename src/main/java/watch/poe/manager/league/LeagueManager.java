@@ -2,9 +2,9 @@ package poe.manager.league;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 import poe.manager.league.derserializer.BaseLeague;
 import poe.manager.league.derserializer.Rule;
@@ -27,9 +27,11 @@ public class LeagueManager {
     private Database database;
 
     private static Logger logger = LoggerFactory.getLogger(LeagueManager.class);
+    private Config config;
 
-    public LeagueManager(Database database) {
-        this.database=database;
+    public LeagueManager(Database database,  Config config) {
+        this.database = database;
+        this.config = config;
     }
 
     /**
@@ -217,24 +219,24 @@ public class LeagueManager {
 
         try {
             // Define the request
-            URL request = new URL(Config.league_APIBaseURL);
+            URL request = new URL(config.getString("league.apiUrl"));
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
-            connection.setReadTimeout(Config.league_readTimeoutMS);
-            connection.setConnectTimeout(Config.league_connectTimeoutMS);
+            connection.setReadTimeout(config.getInt("league.readTimeout"));
+            connection.setConnectTimeout(config.getInt("league.connectTimeout"));
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Define some elements
             StringBuilder stringBuilderBuffer = new StringBuilder();
-            byte[] byteBuffer = new byte[Config.league_downloadBufferSize];
+            byte[] byteBuffer = new byte[config.getInt("league.bufferSize")];
             int byteCount;
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, Config.league_downloadBufferSize)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, config.getInt("league.bufferSize"))) != -1) {
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != Config.league_downloadBufferSize) {
+                if (byteCount != config.getInt("league.bufferSize")) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 

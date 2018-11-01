@@ -1,5 +1,7 @@
 package poe;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
@@ -21,6 +23,7 @@ public class Main {
     private static EntryManager entryManager;
     private static Database database;
     private static Logger logger = LoggerFactory.getLogger(Main.class);
+    private static Config config;
 
     /**
      * App entry point
@@ -31,13 +34,16 @@ public class Main {
         boolean success;
 
         try {
+            // Load config
+            config = ConfigFactory.load("config");
+
             // Initialize database connector
-            database = new Database();
+            database = new Database(config);
             success = database.connect();
             if (!success) return;
 
             // Init league manager
-            LeagueManager leagueManager = new LeagueManager(database);
+            LeagueManager leagueManager = new LeagueManager(database, config);
             success = leagueManager.cycle();
             if (!success) return;
 
@@ -47,8 +53,8 @@ public class Main {
             if (!success) return;
 
             accountManager = new AccountManager(database);
-            entryManager = new EntryManager(database, leagueManager, accountManager, relations);
-            workerManager = new WorkerManager(entryManager, database);
+            entryManager = new EntryManager(database, leagueManager, accountManager, relations, config);
+            workerManager = new WorkerManager(entryManager, database, config);
 
             entryManager.setWorkerManager(workerManager);
 
@@ -79,7 +85,7 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            workerManager.spawnWorkers(Config.worker_defaultWorkerCount);
+            workerManager.spawnWorkers(config.getInt("worker.defaultCount"));
             System.out.println("[INFO] Spawned 3 workers");
         }
         if (!newArgs.contains("-id")) {

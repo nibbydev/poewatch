@@ -1,19 +1,17 @@
 package poe.manager.entry;
 
-import poe.Config;
+import java.text.DecimalFormat;
 
 /**
  * The default format that new entries are stored as before uploading to database
  */
 public class RawEntry {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private String accountName;
     private double price;
     private int id_l, id_d;
     private long id;
+
+    private static DecimalFormat decimalFormat;
 
     //------------------------------------------------------------------------------------------------------------
     // Equality methods to root out duplicates in a Set
@@ -59,7 +57,7 @@ public class RawEntry {
 
 
     public String getPrice() {
-        return Config.decimalFormat.format(price);
+        return decimalFormat.format(price);
     }
 
     public void setAccountName(String accountName) {
@@ -96,5 +94,9 @@ public class RawEntry {
 
     public long getId() {
         return id;
+    }
+
+    public static void setDecimalFormat(String pattern) {
+        decimalFormat = new DecimalFormat(pattern);
     }
 }

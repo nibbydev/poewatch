@@ -1,9 +1,9 @@
 package poe.manager.worker;
 
 import com.google.gson.Gson;
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 import poe.manager.entry.EntryManager;
 import poe.manager.entry.item.Mappers;
@@ -13,13 +13,16 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
  */
 public class Worker extends Thread {
-    private static long lastPullTime;
     private static Logger logger = LoggerFactory.getLogger(Worker.class);
+    private Config config;
+
+    private static long lastPullTime;
     private final Object monitor = new Object();
     private final Gson gson = new Gson();
     private volatile boolean flagLocalRun = true;
@@ -30,10 +33,13 @@ public class Worker extends Thread {
     private WorkerManager workerManager;
     private Database database;
 
-    public Worker(EntryManager entryManager, WorkerManager workerManager, Database database) {
+    private static Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+
+    public Worker(EntryManager entryManager, WorkerManager workerManager, Database database, Config config) {
         this.entryManager = entryManager;
         this.workerManager = workerManager;
         this.database = database;
+        this.config = config;
     }
 
     /**
@@ -96,37 +102,37 @@ public class Worker extends Thread {
      */
     private String downloadData() {
         StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[Config.worker_downloadBufferSize];
+        byte[] byteBuffer = new byte[config.getInt("worker.bufferSize")];
         boolean regexLock = true;
         InputStream stream = null;
         int byteCount;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - Worker.lastPullTime < Config.worker_downloadDelayMS) {
-            sleepX((int) (Config.worker_downloadDelayMS - System.currentTimeMillis() + Worker.lastPullTime));
+        while (System.currentTimeMillis() - Worker.lastPullTime < config.getInt("worker.downloadDelay")) {
+            sleepX((int) (config.getInt("worker.downloadDelay") - System.currentTimeMillis() + Worker.lastPullTime));
         }
 
         Worker.lastPullTime = System.currentTimeMillis();
 
         try {
             // Define the request
-            URL request = new URL(Config.worker_APIBaseURL + this.job);
+            URL request = new URL(config.getString("worker.apiUrl") + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(Config.worker_readTimeoutMS);
-            connection.setConnectTimeout(Config.worker_connectTimeoutMS);
+            connection.setReadTimeout(config.getInt("worker.readTimeout"));
+            connection.setConnectTimeout(config.getInt("worker.connectTimeout"));
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, Config.worker_downloadBufferSize)) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, config.getInt("worker.bufferSize"))) != -1) {
                 // Check if run flag is lowered
                 if (!flagLocalRun) return null;
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != Config.worker_downloadBufferSize) {
+                if (byteCount != config.getInt("worker.bufferSize")) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
@@ -138,7 +144,8 @@ public class Worker extends Thread {
 
                 // Try to find new job number using regex
                 if (regexLock) {
-                    Matcher matcher = Config.worker_changeIDRegexPattern.matcher(stringBuilderBuffer.toString());
+                    Matcher matcher = pattern.matcher(stringBuilderBuffer.toString());
+
                     if (matcher.find()) {
                         regexLock = false;
 
@@ -161,7 +168,7 @@ public class Worker extends Thread {
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
-                sleepX(Config.worker_lockTimeoutMS);
+                sleepX(config.getInt("worker.lockTimeout"));
                 workerManager.setNextChangeID(job);
             }
 
@@ -199,7 +206,7 @@ public class Worker extends Thread {
     private void waitOnMonitor() {
         synchronized (monitor) {
             try {
-                monitor.wait(Config.monitorTimeoutMS);
+                monitor.wait(config.getInt("worker.monitorTimeout"));
             } catch (InterruptedException e) {
             }
         }
