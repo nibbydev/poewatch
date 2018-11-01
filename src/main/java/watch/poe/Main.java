@@ -68,7 +68,6 @@ public class Main {
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
-
         } finally {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();

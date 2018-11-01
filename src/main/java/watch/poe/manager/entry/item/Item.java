@@ -664,18 +664,12 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     private void parseBase() {
-        // Only check normal and magic items
-        if (frameType > 1) {
-            discard = true;
-            return;
-        }
-
         // "Superior Item" = "Item"
         if (name.startsWith("Superior ")) {
             name = name.replace("Superior ", "");
         }
 
-        // If the item is magic, extract its name
+        // Get item's base name
         extractBaseName();
         if (discard) {
             return;
@@ -684,7 +678,7 @@ public class Item {
         // Set frame to base value
         frameType = 0;
 
-        // Flatten ilvl rolls based on child category
+        // Flatten ilvl rolls
         flattenItemLevel();
 
         // Set influence
@@ -705,99 +699,10 @@ public class Item {
             return;
         }
 
-        switch (childCategory) {
-            case "amulet":
-                if      (name.contains("Blue Pearl Amulet"))    name = "Blue Pearl Amulet";
-                else if (name.contains("Marble Amulet"))        name = "Marble Amulet";
-                else if (name.contains("Paua Amulet"))          name = "Paua Amulet";
-                else if (name.contains("Citrine Amulet"))       name = "Citrine Amulet";
-                else if (name.contains("Coral Amulet"))         name = "Coral Amulet";
-                else if (name.contains("Amber Amulet"))         name = "Amber Amulet";
-                else if (name.contains("Jade Amulet"))          name = "Jade Amulet";
-                else if (name.contains("Lapis Amulet"))         name = "Lapis Amulet";
-                else if (name.contains("Gold Amulet"))          name = "Gold Amulet";
-                else if (name.contains("Onyx Amulet"))          name = "Onyx Amulet";
-                else if (name.contains("Turquoise Amulet"))     name = "Turquoise Amulet";
-                else if (name.contains("Agate Amulet"))         name = "Agate Amulet";
-                else                                            discard = true;
-            break;
+        name = BaseNameExtractor.extract(childCategory, name);
 
-            case "ring":
-                if      (name.contains("Iron Ring"))            name = "Iron Ring";
-                else if (name.contains("Coral Ring"))           name = "Coral Ring";
-                else if (name.contains("Paua Ring"))            name = "Paua Ring";
-                else if (name.contains("Sapphire Ring"))        name = "Sapphire Ring";
-                else if (name.contains("Topaz Ring"))           name = "Topaz Ring";
-                else if (name.contains("Ruby Ring"))            name = "Ruby Ring";
-                else if (name.contains("Gold Ring"))            name = "Gold Ring";
-                else if (name.contains("Two-Stone Ring"))       name = "Two-Stone Ring";
-                else if (name.contains("Diamond Ring"))         name = "Diamond Ring";
-                else if (name.contains("Amethyst Ring"))        name = "Amethyst Ring";
-                else if (name.contains("Unset Ring"))           name = "Unset Ring";
-                else if (name.contains("Opal Ring"))            name = "Opal Ring";
-                else if (name.contains("Steel Ring"))           name = "Steel Ring";
-                else                                            discard = true;
-                break;
-
-            case "belt":
-                if      (name.contains("Stygian Vise"))         name = "Stygian Vise";
-                else if (name.contains("Rustic Sash"))          name = "Rustic Sash";
-                else if (name.contains("Chain Belt"))           name = "Chain Belt";
-                else if (name.contains("Heavy Belt"))           name = "Heavy Belt";
-                else if (name.contains("Leather Belt"))         name = "Leather Belt";
-                else if (name.contains("Cloth Belt"))           name = "Cloth Belt";
-                else if (name.contains("Studded Belt"))         name = "Studded Belt";
-                else if (name.contains("Vanguard Belt"))        name = "Vanguard Belt";
-                else if (name.contains("Crystal Belt"))         name = "Crystal Belt";
-                else                                            discard = true;
-                break;
-
-            case "chest":
-                if      (name.contains("Glorious Plate"))       name = "Glorious Plate";
-                else if (name.contains("Vaal Regalia"))         name = "Vaal Regalia";
-                else if (name.contains("Assassin's Garb"))      name = "Assassin's Garb";
-                else if (name.contains("Gladiator Plate"))      name = "Gladiator Plate";
-                else if (name.contains("Zodiac Leather"))       name = "Zodiac Leather";
-                else if (name.contains("Astral Plate"))         name = "Astral Plate";
-                else if (name.contains("Crypt Armour"))         name = "Crypt Armour";
-                else                                            discard = true;
-                break;
-
-            case "boots":
-                if      (name.contains("Slink Boots"))          name = "Slink Boots";
-                else if (name.contains("Titan Greaves"))        name = "Titan Greaves";
-                else if (name.contains("Sorcerer Boots"))       name = "Sorcerer Boots";
-                else if (name.contains("Two-Toned Boots"))      name = "Two-Toned Boots";
-                else                                            discard = true;
-                break;
-
-            case "gloves":
-                if      (name.contains("Slink Gloves"))         name = "Slink Gloves";
-                else if (name.contains("Spiked Gloves"))        name = "Spiked Gloves";
-                else if (name.contains("Fingerless Silk Gloves"))   name = "Fingerless Silk Gloves";
-                else if (name.contains("Gripped Gloves"))       name = "Gripped Gloves";
-                else if (name.contains("Titan Gauntlets"))      name = "Titan Gauntlets";
-                else if (name.contains("Sorcerer Gloves"))      name = "Sorcerer Gloves";
-                else                                            discard = true;
-                break;
-
-            case "helmet":
-                if      (name.contains("Bone Helmet"))          name = "Bone Helmet";
-                else if (name.contains("Lion Pelt"))            name = "Lion Pelt";
-                else if (name.contains("Eternal Burgonet"))     name = "Eternal Burgonet";
-                else if (name.contains("Hubris Circlet"))       name = "Hubris Circlet";
-                else                                            discard = true;
-                break;
-
-            default:
-                discard = true;
-                break;
-
-            case "XXXXXXXXXXXX":
-                if      (name.contains("YYYYYYYYYYYY"))    name = "YYYYYYYYYYYY";
-                else if (name.contains("XXXXXXXXXXXX"))    name = "XXXXXXXXXXXX";
-                else                                            discard = true;
-                break;
+        if (name == null) {
+            discard = true;
         }
     }
 
