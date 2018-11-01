@@ -193,7 +193,7 @@ class FormGen {
     if ($category === "relic") {
       $query = "SELECT
         1 AS tmpId,
-        GROUP_CONCAT(   name ORDER BY name ASC) AS    names, 
+        GROUP_CONCAT(   name ORDER BY name ASC) AS names, 
         GROUP_CONCAT(display ORDER BY name ASC) AS displays
       FROM     category_parent
       JOIN (
@@ -208,8 +208,8 @@ class FormGen {
       $stmt->execute();
     } else {
       $query = "SELECT 
-        GROUP_CONCAT(   name ORDER BY name ASC) AS    names, 
-        GROUP_CONCAT(display ORDER BY name ASC) AS displays
+        GROUP_CONCAT(name ORDER BY name ASC)                  AS names, 
+        GROUP_CONCAT(IFNULL(display, name) ORDER BY name ASC) AS displays
       FROM category_child
       WHERE id_cp = (SELECT id FROM category_parent WHERE name = ? LIMIT 1)
       GROUP BY id_cp";
