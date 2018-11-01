@@ -1,13 +1,15 @@
 package poe.db;
 
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.modules.*;
 import java.sql.*;
+import java.util.List;
 
 public class Database {
     private static Logger logger = LoggerFactory.getLogger(Database.class);
+    public Config config;
 
     public History history = new History(this);
     public Account account = new Account(this);
@@ -18,6 +20,11 @@ public class Database {
     public Calc calc = new Calc(this);
 
     public Connection connection;
+    private String address;
+
+    public Database(Config config) {
+        this.config = config;
+    }
 
     /**
      * Initializes connection to the MySQL database
@@ -25,9 +32,27 @@ public class Database {
      * @return True on success
      */
     public boolean connect() {
+        StringBuilder address = new StringBuilder();
+        address.append(config.getString("database.address"));
+
+        List<String> parameters = config.getStringList("database.args");
+        if (parameters != null && !parameters.isEmpty()) {
+            address.append("?");
+
+            for (String param : parameters) {
+                address.append(param);
+                address.append("&");
+            }
+
+            address.deleteCharAt(address.lastIndexOf("&"));
+        }
+
         try {
-            connection = DriverManager.getConnection(Config.db_address, Config.db_username, Config.getDb_password());
-            connection.setCatalog(Config.db_database);
+            connection = DriverManager.getConnection(
+                    address.toString(),
+                    config.getString("database.username"),
+                    config.getString("database.password"));
+            connection.setCatalog(config.getString("database.database"));
             connection.setAutoCommit(false);
 
             return true;

@@ -3,7 +3,6 @@ package poe.manager.league;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.manager.league.derserializer.BaseLeague;
 import poe.manager.league.derserializer.Rule;
 
@@ -60,7 +59,7 @@ public class LeagueEntry {
             return 0;
         } else {
             long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
-            return (int)(startDifference / Config.league_millisecondsInDay);
+            return (int)(startDifference / 86400000);
         }
     }
 
@@ -77,7 +76,7 @@ public class LeagueEntry {
             return  -1;
         } else {
             long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
-            return (int) (totalDifference / Config.league_millisecondsInDay);
+            return (int) (totalDifference / 86400000);
         }
     }
 
@@ -88,7 +87,7 @@ public class LeagueEntry {
      * @return Created Date object
      */
     private Date parseDate(String date) {
-        SimpleDateFormat format = new SimpleDateFormat(Config.league_timeFormat, Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         try {

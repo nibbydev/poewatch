@@ -1,8 +1,8 @@
 package poe.manager.entry;
 
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 import poe.manager.account.AccountManager;
 import poe.manager.entry.item.Item;
@@ -16,14 +16,13 @@ import poe.manager.worker.WorkerManager;
 import java.util.*;
 
 public class EntryManager extends Thread {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
+    private static Logger logger = LoggerFactory.getLogger(EntryManager.class);
+    private Config config;
 
     private Set<AccountEntry> accountSet = new HashSet<>();
     private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
-    private StatusElement status = new StatusElement();
+    private StatusElement status;
     private Timer timer;
 
     private volatile boolean flagLocalRun = true;
@@ -36,11 +35,15 @@ public class EntryManager extends Thread {
     private RelationManager relationManager;
     private AccountManager accountManager;
 
-    private static Logger logger = LoggerFactory.getLogger(EntryManager.class);
 
-    public EntryManager(Database database, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager) {
+
+    public EntryManager(Database database, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager, Config config) {
         this.database = database;
+        this.config = config;
         this.timer = new Timer(database);
+
+        status = new StatusElement(config);
+        RawEntry.setDecimalFormat(config.getString("precision.formatPattern"));
 
         this.leagueManager = leagueManager;
         this.accountManager = accountManager;
@@ -81,7 +84,7 @@ public class EntryManager extends Thread {
             }
 
             // If monitor was woken, check if correct interval has passed
-            if (System.currentTimeMillis() - status.lastRunTime > Config.entryController_sleepMS) {
+            if (System.currentTimeMillis() - status.lastRunTime > config.getInt("entry.sleepTime")) {
                 status.lastRunTime = System.currentTimeMillis();
                 cycle();
             }
@@ -319,7 +322,7 @@ public class EntryManager extends Thread {
                 }
 
                 // Create ItemParser instance for the item
-                ItemParser itemParser = new ItemParser(relationManager, baseItem, currencyLeagueMap.get(leagueId));
+                ItemParser itemParser = new ItemParser(relationManager, baseItem, currencyLeagueMap.get(leagueId), config);
 
                 // All  branched items should be discarded
                 if (itemParser.isDiscard()) {

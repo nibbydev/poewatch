@@ -2,7 +2,6 @@ package poe.db.modules;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 
 import java.sql.*;
@@ -48,11 +47,11 @@ public class Calc {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, Config.precision);
-                statement.setInt(2, Config.precision);
-                statement.setInt(3, Config.precision);
-                statement.setInt(4, Config.precision);
-                statement.setInt(5, Config.precision);
+                statement.setInt(1, database.config.getInt("precision.precision"));
+                statement.setInt(2, database.config.getInt("precision.precision"));
+                statement.setInt(3, database.config.getInt("precision.precision"));
+                statement.setInt(4, database.config.getInt("precision.precision"));
+                statement.setInt(5, database.config.getInt("precision.precision"));
                 statement.executeUpdate();
             }
 
@@ -89,7 +88,7 @@ public class Calc {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, Config.precision);
+                statement.setInt(1, database.config.getInt("precision.precision"));
                 statement.executeUpdate();
             }
 
@@ -127,7 +126,7 @@ public class Calc {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, Config.precision);
+                statement.setInt(1, database.config.getInt("precision.precision"));
                 statement.executeUpdate();
             }
 

@@ -1,15 +1,20 @@
 package poe.manager.entry;
 
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 
 public class StatusElement {
+    private static Logger logger = LoggerFactory.getLogger(StatusElement.class);
+    private Config config;
+
     public long lastRunTime = System.currentTimeMillis();
     public long twentyFourCounter, sixtyCounter, tenCounter;
     private volatile boolean tenBool, sixtyBool, twentyFourBool;
 
-    private static Logger logger = LoggerFactory.getLogger(StatusElement.class);
+    public StatusElement (Config config) {
+        this.config = config;
+    }
 
     /**
      * Rounds counters on program start
@@ -17,20 +22,17 @@ public class StatusElement {
     public void fixCounters() {
         long current = System.currentTimeMillis();
 
-        if (current - tenCounter > Config.entryController_tenMS) {
-            long gap = (current - tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
-            tenCounter += gap;
+        if (current - tenCounter > 600000) {
+            tenCounter += current - tenCounter;
         }
 
-        if (current - sixtyCounter > Config.entryController_sixtyMS) {
-            long gap = (current - sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
-            sixtyCounter += gap;
+        if (current - sixtyCounter > 3600000) {
+            sixtyCounter += current - sixtyCounter;
         }
 
-        if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
-            long gap = (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
-            twentyFourCounter += gap;
+        if (current - twentyFourCounter > 86400000) {
+            if (twentyFourCounter == 0) twentyFourCounter -= config.getInt("entry.counterOffset");
+            twentyFourCounter += current - twentyFourCounter;
         }
     }
 
@@ -41,23 +43,23 @@ public class StatusElement {
         long current = System.currentTimeMillis();
 
         // Run once every 10min
-        if (current - tenCounter > Config.entryController_tenMS) {
-            tenCounter += (current - tenCounter) / Config.entryController_tenMS * Config.entryController_tenMS;
+        if (current - tenCounter > 600000) {
+            tenCounter += current - tenCounter;
             setTenBool(true);
             logger.info("10 activated");
         }
 
         // Run once every 60min
-        if (current - sixtyCounter > Config.entryController_sixtyMS) {
-            sixtyCounter += (current - sixtyCounter) / Config.entryController_sixtyMS * Config.entryController_sixtyMS;
+        if (current - sixtyCounter > 3600000) {
+            sixtyCounter += current - sixtyCounter;
             setSixtyBool(true);
             logger.info("60 activated");
         }
 
         // Run once every 24h
-        if (current - twentyFourCounter > Config.entryController_twentyFourMS) {
-            if (twentyFourCounter == 0) twentyFourCounter -= Config.entryController_counterOffset;
-            twentyFourCounter += (current - twentyFourCounter) / Config.entryController_twentyFourMS * Config.entryController_twentyFourMS;
+        if (current - twentyFourCounter > 86400000) {
+            if (twentyFourCounter == 0) twentyFourCounter -= config.getInt("entry.counterOffset");
+            twentyFourCounter += current - twentyFourCounter;
             setTwentyFourBool(true);
             logger.info("24 activated");
         }

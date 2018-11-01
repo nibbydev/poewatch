@@ -2,7 +2,6 @@ package poe.manager.entry.timer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 import poe.manager.entry.StatusElement;
 
@@ -208,7 +207,7 @@ public class Timer {
         TimerList timerList = timeLog.getOrDefault(key, new TimerList(timerEntry.type));
 
         // Truncate list if entry count exceeds limit
-        if (timerList.list.size() >= Config.timerLogHistoryLength) {
+        if (timerList.list.size() >= database.config.getInt("misc.timerLogHistoryLength")) {
             timerList.list.remove(0);
         }
 

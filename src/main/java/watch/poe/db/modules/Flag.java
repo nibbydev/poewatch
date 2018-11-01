@@ -2,7 +2,6 @@ package poe.db.modules;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Config;
 import poe.db.Database;
 
 import java.sql.*;
@@ -38,7 +37,7 @@ public class Flag {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setDouble(1, Config.entry_volatileRatio);
+                statement.setDouble(1, database.config.getInt("entry.volatileRatio"));
                 statement.executeUpdate();
             }
 
@@ -110,12 +109,12 @@ public class Flag {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setDouble(1, Config.entry_approvedMax);
-                statement.setDouble(2, Config.entry_approvedDiv);
-                statement.setDouble(3, Config.entry_approvedMin);
-                statement.setDouble(4, Config.entry_approvedMin);
-                statement.setDouble(5, Config.entry_approvedMax);
-                statement.setDouble(6, Config.entry_approvedDiv);
+                statement.setDouble(1, database.config.getInt("entry.approvedMax"));
+                statement.setDouble(2, database.config.getInt("entry.approvedDiv"));
+                statement.setDouble(3, database.config.getInt("entry.approvedMin"));
+                statement.setDouble(4, database.config.getInt("entry.approvedMin"));
+                statement.setDouble(5, database.config.getInt("entry.approvedMax"));
+                statement.setDouble(6, database.config.getInt("entry.approvedDiv"));
 
                 statement.executeUpdate();
             }

@@ -1,13 +1,8 @@
 package poe.manager.entry.item;
 
 
-import poe.Config;
-
 public class Item {
-    //------------------------------------------------------------------------------------------------------------
-    // User-defined variables
-    //------------------------------------------------------------------------------------------------------------
-
+    public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
     private Mappers.BaseItem base;
     private String branch;
     private Key key;
@@ -606,7 +601,7 @@ public class Item {
 
         // Override some values
         ilvl = null;
-        icon = Config.enchantment_icon;
+        icon = enchantment_icon;
         typeLine = null;
         frameType = 0;
 
