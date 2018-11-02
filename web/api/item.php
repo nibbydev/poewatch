@@ -61,8 +61,9 @@ function get_item_data($pdo, $id) {
     d.name, d.type, d.frame, d.icon,
     d.tier, d.lvl, d.quality, d.corrupted, 
     d.links, d.ilvl, d.var AS variation,
-    cc.id AS category
+    cp.name AS category, cc.name AS `group`
   FROM      data_itemData   AS d
+  LEFT JOIN category_parent AS cp ON d.id_cp = cp.id 
   LEFT JOIN category_child  AS cc ON d.id_cc = cc.id 
   WHERE     d.id = ?
   LIMIT     1";
@@ -137,8 +138,9 @@ function form_payload($itemData, $historyData) {
     'links'     => $itemData['links']     === NULL ? null :  (int) $itemData['links'],
     'ilvl'      => $itemData['ilvl'],
     'variation' => $itemData['variation'],
-    'category'  => (int) $itemData['category'],
-    'data' => $historyData
+    'category'  => $itemData['category'],
+    'group'     => $itemData['group'],
+    'data'      => $historyData
   );
 
   return $payload;
