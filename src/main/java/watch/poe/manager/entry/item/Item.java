@@ -1,14 +1,18 @@
 package poe.manager.entry.item;
 
 
+import poe.manager.relation.RelationManager;
+
 public class Item {
-    public static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
+    private RelationManager relationManager;
+
+    private static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
     private Mappers.BaseItem base;
     private String branch;
     private Key key;
 
     private boolean discard, doNotIndex;
-    private String parentCategory, childCategory, variation;
+    private String category, group, variation;
     private Integer links, level, quality, tier;
 
     // Overrides
@@ -22,6 +26,12 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     public Item(String branch) {
+        this.relationManager = null;
+        this.branch = branch;
+    }
+
+    public Item(RelationManager relationManager, String branch) {
+        this.relationManager = relationManager;
         this.branch = branch;
     }
 
@@ -30,6 +40,8 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     public void parse(Mappers.BaseItem base) {
+        this.base = base;
+
         // Get item data from the base
         identified = base.isIdentified();
         ilvl = base.getIlvl();
@@ -45,10 +57,11 @@ public class Item {
         // Fixes some wrongly formatted data
         fixBaseData();
 
-        this.base = base;
-
-        // Find out the item category (eg armour/belt/weapon etc)
+        // Find out the item category and group (eg armour/belt/weapon etc)
         extractCategory();
+        if (discard) {
+            return;
+        }
 
         switch (branch) {
             case "enchantment": parseEnchant(); break;
@@ -65,13 +78,13 @@ public class Item {
      */
     private void fixBaseData() {
         // Use typeLine as name if name missing
-        if (name == null || name.equals("")) {
+        if (name == null || name.equals("") || frameType == 2) {
             name = typeLine;
             typeLine = null;
         }
 
-        // Ignore corrupted state for non-gems
-        if (frameType != 4) {
+        // Ignore corrupted state for non-gems and non-relics
+        if (frameType != 4 && frameType != 9) {
             corrupted = null;
         }
 
@@ -83,12 +96,11 @@ public class Item {
      * Extracts category strings from the object
      */
     private void extractCategory() {
-        // Get parent category
-        parentCategory = base.getCategory().keySet().toArray()[0].toString();
+        category = base.getCategory().keySet().toArray()[0].toString();
 
-        // Get first child category if present
-        if (base.getCategory().get(parentCategory).size() > 0) {
-            childCategory = base.getCategory().get(parentCategory).get(0).toLowerCase();
+        // Get first group if present
+        if (base.getCategory().get(category).size() > 0) {
+            group = base.getCategory().get(category).get(0).toLowerCase();
         }
 
         // Extract item's category from its icon
@@ -96,93 +108,97 @@ public class Item {
         String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
 
         // Divide into specific subcategories
-        switch (parentCategory) {
+        switch (category) {
             case "currency":
                 if (frameType == 8) {
-                    parentCategory = "prophecy";
-                    childCategory = "prophecy";
+                    category = "prophecy";
+                    group = "prophecy";
                 } else if (iconCategory.equals("essence")) {
-                    childCategory = "essence";
+                    group = "essence";
                 } else if (iconCategory.equals("piece")) {
-                    childCategory = "piece";
+                    group = "piece";
                 }
+
+                if (group == null) {
+                    group = category;
+                }
+
                 break;
 
             case "gems":
-                parentCategory = "gem";
+                category = "gem";
 
-                if (childCategory.equals("activegem")) {
+                if (group.equals("activegem")) {
                     if (iconCategory.equals("vaalgems")) {
-                        childCategory = "vaal";
+                        group = "vaal";
                     } else {
-                        childCategory = "skill";
+                        group = "skill";
                     }
                 } else {
-                    childCategory = "support";
+                    group = "support";
                 }
                 break;
 
             case "monsters":
                 discard = true;
-                break;
+                return;
 
             case "maps":
-                parentCategory = "map";
+                category = "map";
 
                 if (frameType == 3 || frameType == 9) {
-                    childCategory = "unique";
+                    group = "unique";
                 } else if (iconCategory.equals("breach")) {
-                    childCategory = "fragment";
+                    group = "fragment";
                 } else if (base.getProperties() == null){
-                    childCategory = "fragment";
+                    group = "fragment";
                 } else {
-                    childCategory = "map";
+                    group = "map";
                 }
                 break;
 
             case "cards":
-                parentCategory = "card";
+                category = "card";
+                group = category;
                 break;
 
             case "flasks":
-                parentCategory = "flask";
+                category = "flask";
+                group = category;
                 break;
 
             case "jewels":
-                parentCategory = "jewel";
+                category = "jewel";
+                group = category;
                 break;
 
             case "weapons":
-                parentCategory = "weapon";
+                category = "weapon";
                 break;
 
             case "accessories":
-                parentCategory = "accessory";
+                category = "accessory";
                 break;
         }
 
         // Override for enchantments
         if (base.getEnchantMods() != null) {
-            parentCategory = "enchantment";
+            category = "enchantment";
         }
 
         // Override for item bases
         if (branch.equals("base")) {
-            switch (parentCategory) {
-                case "accessory": break;
-                case "armour":    break;
-                case "jewel":     break;
-                case "weapon":    break;
-                default:
-                    discard = true;
-                    return;
+            // Only collect bases for these categories
+            if (!category.equals("accessory") &&
+                    !category.equals("armour") &&
+                    !category.equals("jewel") &&
+                    !category.equals("weapon")) {
+                discard = true;
+                return;
             }
 
-            if (parentCategory.equals("jewels")) {
-                childCategory = "jewel";
-            }
-
-            parentCategory = "base";
+            // Override category
+            category = "base";
         }
     }
 
@@ -250,9 +266,19 @@ public class Item {
             return;
         }
 
+        // Some corrupted relics do not turn into rares and retain their relic frametypes
+        if (frameType == 9) {
+            if (corrupted != null && corrupted) {
+                discard = true;
+                return;
+            }
+            
+            corrupted = null;
+        }
+
         ilvl = null;
 
-        switch (parentCategory) {
+        switch (category) {
             case "map":         parseMaps();                break;
             case "gem":         extractGemData();           break;
             case "currency":    checkCurrencyBlacklist();   break;
@@ -338,14 +364,14 @@ public class Item {
      */
     private void extractItemLinks() {
         // Precaution
-        if (!parentCategory.equals("weapon") && !parentCategory.equals("armour")) {
+        if (!category.equals("weapon") && !category.equals("armour")) {
             return;
-        } else if (childCategory == null) {
+        } else if (group == null) {
             return;
         }
 
         // Filter out items that can't have 6 sockets
-        switch (childCategory) {
+        switch (group) {
             case "chest":       break;
             case "staff":       break;
             case "twosword":    break;
@@ -664,18 +690,30 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     private void parseBase() {
+        if (frameType == 2){
+            discard = true;
+            return;
+        }
+
         // "Superior Item" = "Item"
         if (name.startsWith("Superior ")) {
             name = name.replace("Superior ", "");
         }
 
-        // Get item's base name
-        extractBaseName();
-        if (discard) {
+        // Ignore talisman bases
+        if (group.equals("amulet") && name.contains("Talisman")) {
+            discard = true;
             return;
         }
 
-        // Set frame to base value
+        // Attempt to parse item's base name
+        name = relationManager.extractItemBaseName(group, name);
+
+        if (name == null) {
+            discard = true;
+            return;
+        }
+
         frameType = 0;
 
         // Flatten ilvl rolls
@@ -686,23 +724,6 @@ public class Item {
             variation = "shaper";
         } else if (elder != null) {
             variation = "elder";
-        }
-    }
-
-    /**
-     * Extracts item's base name, functions as a whitelist for bases
-     */
-    private void extractBaseName() {
-        // Precaution / shouldn't run
-        if (childCategory == null) {
-            discard = true;
-            return;
-        }
-
-        name = BaseNameExtractor.extract(childCategory, name);
-
-        if (name == null) {
-            discard = true;
         }
     }
 
@@ -735,12 +756,12 @@ public class Item {
         return doNotIndex;
     }
 
-    public String getParentCategory() {
-        return parentCategory;
+    public String getCategory() {
+        return category;
     }
 
-    public String getChildCategory() {
-        return childCategory;
+    public String getGroup() {
+        return group;
     }
 
     public String getVariation() {

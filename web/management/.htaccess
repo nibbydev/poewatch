@@ -1,6 +1,0 @@
-Options -Indexes
-
-AuthType Basic
-AuthName "Password Protected Area"
-AuthUserFile /home/pw/http/management/.htpasswd
-Require valid-user

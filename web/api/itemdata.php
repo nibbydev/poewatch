@@ -4,9 +4,9 @@ function get_data($pdo) {
     did.id, did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    cc.id AS category
+    dg.id AS category
   FROM data_itemData AS did 
-  LEFT JOIN category_child AS cc ON cc.id = did.id_cc";
+  LEFT JOIN data_groups AS dg ON dg.id = did.id_grp";
 
   return $pdo->query($query);
 }

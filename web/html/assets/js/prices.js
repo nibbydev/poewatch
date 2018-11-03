@@ -27,38 +27,32 @@ class ItemRow {
     let template = `
     <td>
       <div class='d-flex align-items-center'>
-        <span class='img-container img-container-sm text-center {{influence}} mr-1'><img src="{{icon}}"></span>
-        <a href='{{url}}' target="_blank" {{foil}}>{{name}}{{type}}</a>{{var}}{{link}}
+        <span class='img-container img-container-sm text-center mr-1'><img src="{{icon}}"></span>
+        <a href='{{url}}' target="_blank" class='{{color}}'>{{name}}{{type}}</a>{{var}}{{link}}
       </div>
     </td>
     `.trim();
   
     template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + this.item.id);
   
-    if (this.item.icon) {
-      // Use SSL for icons for that sweet, sweet secure site badge
-      this.item.icon = this.item.icon.replace("http://", "https://");
-      template = template.replace("{{icon}}", this.item.icon);
-    } else {
-      template = template.replace("{{icon}}", ICON_MISSING);
-    }
-  
-    if (this.item.frame === 9) {
-      template = template.replace("{{foil}}", "class='item-foil'");
-    } else {
-      template = template.replace("{{foil}}", "");
-    }
-  
     if (FILTER.category === "base") {
       if (this.item.var === "shaper") {
-        template = template.replace("{{influence}}", "influence influence-shaper-1x1");
+        this.item.icon += "&shaper=1";
+        template = template.replace("{{color}}", "item-shaper");
       } else if (this.item.var === "elder") {
-        template = template.replace("{{influence}}", "influence influence-elder-1x1");
-      } else {
-        template = template.replace("{{influence}}", "");
+        this.item.icon += "&elder=1";
+        template = template.replace("{{color}}", "item-elder");
       }
+    }
+
+    // Use TLS for icons for that sweet, sweet secure site badge
+    this.item.icon = this.item.icon.replace("http://", "https://");
+    template = template.replace("{{icon}}", this.item.icon);
+
+    if (this.item.frame === 9) {
+      template = template.replace("{{color}}", "item-foil");
     } else {
-      template = template.replace("{{influence}}", "");
+      template = template.replace("{{color}}", "");
     }
   
     if (FILTER.category === "enchantment") {
@@ -771,7 +765,7 @@ var FILTER = {
   gemQuality: null,
   gemCorrupted: null,
   ilvl: null,
-  baseInfluence: null,
+  influence: null,
   parseAmount: 150
 };
 
@@ -784,7 +778,6 @@ var EXPROW = new ExpandedRow();
 const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
 const ICON_EXALTED = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1";
 const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1";
-const ICON_MISSING = "https://poe.watch/assets/img/missing.png";
 
 var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
 
@@ -1014,12 +1007,10 @@ function defineListeners() {
 
   // Base influence
   $("#select-influence").on("change", function(){
-    FILTER.baseInfluence = $(":selected", this).val();
-    console.log("Base influence filter: " + FILTER.baseInfluence);
-    if (FILTER.baseInfluence === "all") {
-      FILTER.baseInfluence = null;
-    }
-    updateQueryParam("influence", FILTER.baseInfluence);
+    FILTER.influence = $(":selected", this).val();
+    console.log("Influence filter: " + FILTER.influence);
+    if (FILTER.influence == "all") FILTER.influence = null; 
+    updateQueryParam("influence", FILTER.influence);
     sortResults(ITEMS);
   });
 
@@ -1182,6 +1173,7 @@ function updateQueryParam(key, value) {
     case "links":      value = value === "none" ? null : value;   break;
     case "group":      value = value === "all"  ? null : value;   break;
     case "tier":       value = value === "all"  ? null : value;   break;
+    case "influence":  value = value === "all"  ? null : value;   break;
     default:           break;
   }
 
@@ -1338,12 +1330,12 @@ function checkHideItem(item) {
 
   } else if (FILTER.category === "base") {
     // Check base influence
-    if (FILTER.baseInfluence !== null) {
-      if (FILTER.baseInfluence === "none") {
+    if (FILTER.influence !== null) {
+      if (FILTER.influence === "none") {
         if (item.var !== null) return true;
-      } else if (FILTER.baseInfluence === "either") {
+      } else if (FILTER.influence === "either") {
         if (item.var === null) return true;
-      } else if (item.var !== FILTER.baseInfluence) {
+      } else if (item.var !== FILTER.influence) {
         return true;
       }
     }

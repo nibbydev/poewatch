@@ -38,19 +38,19 @@ function get_data_rolling($pdo, $league, $category) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    cc.name AS category,
+    dg.name AS category,
     i.spark AS history
   FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues                  AS l 
     ON      l.id = i.id_l 
-  JOIN      category_parent               AS cp 
-    ON      did.id_cp = cp.id 
-  LEFT JOIN category_child                AS cc 
-    ON      did.id_cc = cc.id 
+  JOIN      data_categories               AS dc
+    ON      did.id_cat = dc.id 
+  LEFT JOIN data_groups                   AS dg 
+    ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
-    AND     cp.name  = ?
+    AND     dc.name  = ?
     AND     l.active = 1 
     AND     i.count  > 1 
   ORDER BY  i.mean DESC";
@@ -68,19 +68,19 @@ function get_data_inactive($pdo, $league, $category) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    cc.name AS category,
+    dg.name AS category,
     NULL AS history
   FROM      league_items_inactive         AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues                  AS l 
     ON      l.id = i.id_l 
-  JOIN      category_parent               AS cp 
-    ON      did.id_cp = cp.id 
-  LEFT JOIN category_child                AS cc 
-    ON      did.id_cc = cc.id 
+  JOIN      data_categories               AS dc 
+    ON      did.id_cat = dc.id 
+  LEFT JOIN data_groups                   AS dg 
+    ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
-    AND     cp.name  = ?
+    AND     dc.name  = ?
     AND     i.count  > 1 
   ORDER BY  i.mean DESC";
 
@@ -97,17 +97,17 @@ function get_data_rolling_relic($pdo, $league) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    cp.name AS category,
+    dc.name AS category,
     i.spark AS history
   FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues                  AS l 
     ON      l.id = i.id_l 
-  JOIN      category_parent               AS cp 
-    ON      did.id_cp = cp.id 
-  LEFT JOIN category_child                AS cc 
-    ON      did.id_cc = cc.id 
+  JOIN      data_categories               AS dc 
+    ON      did.id_cat = dc.id 
+  LEFT JOIN data_groups                   AS dg 
+    ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
     AND     did.frame = 9
     AND     did.links IS NULL
@@ -128,17 +128,17 @@ function get_data_inactive_relic($pdo, $league) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    cp.name AS category,
+    dc.name AS category,
     NULL AS history
   FROM      league_items_inactive         AS i 
   JOIN      data_itemData                 AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues                  AS l 
     ON      l.id = i.id_l 
-  JOIN      category_parent               AS cp 
-    ON      did.id_cp = cp.id 
-  LEFT JOIN category_child                AS cc 
-    ON      did.id_cc = cc.id 
+  JOIN      data_categories               AS dc 
+    ON      did.id_cat = dc.id 
+  LEFT JOIN data_groups                   AS dg 
+    ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
     AND     did.frame = 9
     AND     did.links IS NULL

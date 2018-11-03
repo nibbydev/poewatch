@@ -109,19 +109,6 @@ a:hover {color: #bbb}
   max-width: 26px;
 }
 
-/* Influence containers */
-
-.influence {
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center center;
-}
-
-.influence-shaper-1x1 {background-image: url("https://web.poecdn.com/image/inventory/ShaperBackground.png?w=1&h=1&x=0&y=0")}
-.influence-elder-1x1  {background-image: url("https://web.poecdn.com/image/inventory/ElderBackground.png?w=1&h=1")}
-.influence-shaper-2x3 {background-image: url("https://web.poecdn.com/image/inventory/ShaperBackground.png?w=2&h=3&x=0&y=0")}
-.influence-elder-2x3  {background-image: url("https://web.poecdn.com/image/inventory/ElderBackground.png?w=2&h=3")}
-
 /*------------------------------------------------------------------------------------------------------------
 // Card styling
 //----------------------------------------------------------------------------------------------------------*/
@@ -264,8 +251,10 @@ footer {
 .subtext-1 {color: #888}
 .subtext-2 {color: #666}
 
-/* Styling for foil uniques */
+/* Different colors for different items */
 .item-foil {color: #4c9b4c}
+.item-shaper {color:rgb(170, 175, 221)}
+.item-elder {color: rgb(194, 170, 221)}
 
 /*------------------------------------------------------------------------------------------------------------
 // Colors

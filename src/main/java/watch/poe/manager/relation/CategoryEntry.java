@@ -4,40 +4,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryEntry {
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-
     private Integer id;
-    private Map<String, Integer> childCategoryToId = new HashMap<>();
+    private Map<String, Integer> groupNameToId = new HashMap<>();
 
-    //------------------------------------------------------------------------------------------------------------
-    // Methods
-    //------------------------------------------------------------------------------------------------------------
-
-    public void addChild(String childName, Integer childId) {
-        childCategoryToId.put(childName, childId);
+    public void addGroup(String name, Integer id) {
+        groupNameToId.put(name, id);
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Getters
+    // Getters and Setters
     //------------------------------------------------------------------------------------------------------------
 
     public int getId() {
         return id;
     }
 
-    public boolean hasChild(String childName) {
-        return childCategoryToId.containsKey(childName);
+    public boolean hasGroup(String name) {
+        return groupNameToId.containsKey(name);
     }
 
-    public Integer getChildCategoryId(String childName) {
-        return childCategoryToId.get(childName);
+    public Integer getGroupId(String groupName) {
+        return groupNameToId.get(groupName);
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Setters
-    //------------------------------------------------------------------------------------------------------------
 
     public void setId(Integer id) {
         if (this.id == null) this.id = id;

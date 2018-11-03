@@ -218,15 +218,9 @@ function fillData() {
   $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
   $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
 
-  if (ITEM.category >= 16 && ITEM.category <= 18) {
-    if (ITEM.variation === "shaper") {
-      $("#item-icon").parent().addClass("influence influence-shaper-2x3");
-    } else if (ITEM.variation === "elder") {
-      $("#item-icon").parent().addClass("influence influence-elder-2x3");
-    }
-  }
-  
-  $("#item-icon").attr('src', fixIcon(ITEM.icon) );
+  fixIcon(ITEM);
+
+  $("#item-icon").attr('src',  ITEM.icon);
   $("#item-name").html( buildNameField(ITEM.name) );
 
   $("#item-chaos").html(formatNum(leaguePayload.mean));
@@ -280,9 +274,9 @@ function createListeners() {
 
 function buildNameField() {
   // Fix name if item is enchantment
-  if (ITEM.category >= 16 && ITEM.category <= 18 && ITEM.variation !== null) {
+  if (ITEM.category === "enchantment" && ITEM.variation !== null) {
     let splitVar = ITEM.variation.split('-');
-    
+
     for (var num in splitVar) {
       ITEM.name = ITEM.name.replace("#", splitVar[num]);
     }
@@ -297,9 +291,13 @@ function buildNameField() {
 
   if (ITEM.frame === 9) {
     builder = "<span class='item-foil'>" + builder + "</span>";
+  } else if (ITEM.variation === "shaper") {
+    builder = "<span class='item-shaper'>" + builder + "</span>";
+  } else if (ITEM.variation === "elder") {
+    builder = "<span class='item-elder'>" + builder + "</span>";
   }
 
-  if (ITEM.variation && ITEM.category < 16 && ITEM.category > 18) {
+  if (ITEM.category !== "enchantment") { 
     builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
   } 
   
@@ -327,27 +325,22 @@ function buildNameField() {
   return builder;
 }
 
-function fixIcon(icon) {
-  if (!icon) {
-    return "https://poe.watch/assets/img/missing.png";
+function fixIcon(ITEM) {
+  ITEM.icon = ITEM.icon.replace("http://", "https://");
+
+  if (ITEM.variation === "shaper") {
+    ITEM.icon += "&shaper=1";
+  } else if (ITEM.variation === "elder") {
+    ITEM.icon += "&elder=1";
   }
 
-  // Use SSL
-  icon = icon.replace("http://", "https://");
-
-  if (!icon.includes("?")) {
-    return icon;
-  }
-
-  let splitIcon = icon.split("?");
+  let splitIcon = ITEM.icon.split("?");
   let splitParams = splitIcon[1].split("&");
   let newParams = "";
 
   for (let i = 0; i < splitParams.length; i++) {
     switch (splitParams[i].split("=")[0]) {
       case "scale": 
-      case "w":
-      case "h":
         break;
       default:
         newParams += "&" + splitParams[i];
@@ -356,9 +349,9 @@ function fixIcon(icon) {
   }
 
   if (newParams) {
-    return splitIcon[0] + "?" + newParams.substr(1);
+    ITEM.icon = splitIcon[0] + "?" + newParams.substr(1);
   } else {
-    return splitIcon[0];
+    ITEM.icon = splitIcon[0];
   }
 }
 

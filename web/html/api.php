@@ -104,7 +104,7 @@
                         <tr>
                           <td>category</td>
                           <td><span class='badge custom-badge-green'>✓</span></td>
-                          <td>Parent category (see category API)</td>
+                          <td>Category (see category API)</td>
                         </tr>
                       </tbody>
                     </table>

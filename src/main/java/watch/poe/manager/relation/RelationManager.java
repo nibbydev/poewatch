@@ -6,24 +6,22 @@ import poe.db.Database;
 import poe.manager.entry.item.Item;
 import poe.manager.entry.item.Key;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
     private static Logger logger = LoggerFactory.getLogger(RelationManager.class);
+    private Database database;
 
     private Map<Key, Integer> keyToId = new HashMap<>();
     private Map<String, String> currencyAliasToName = new HashMap<>();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
-    private List<Key> currentlyIndexingChildKeys = new ArrayList<>();
+    private List<Key> keysInUse = new ArrayList<>();
     // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
     private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
-    private Database database;
+    private Map<String, Set<String>> baseMap = new HashMap<>();
 
     public RelationManager(Database database) {
         this.database = database;
@@ -68,6 +66,14 @@ public class RelationManager {
             logger.warn("Database did not contain any league item id information");
         }
 
+        success = database.init.getBaseItems(baseMap);
+        if (!success) {
+            logger.error("Failed to query base item names from database. Shutting down...");
+            return false;
+        } else if (baseMap.isEmpty()) {
+            logger.warn("Database did not contain any base item names");
+        }
+
         return true;
     }
 
@@ -84,26 +90,26 @@ public class RelationManager {
         }
 
         // Do not allow empty category definitions
-        if (item.getChildCategory() == null) {
+        if (item.getGroup() == null) {
             return null;
         }
 
         // If the same item is currently being indexed in another thread
-        if (currentlyIndexingChildKeys.contains(itemKey)) {
+        if (keysInUse.contains(itemKey)) {
             return null;
-        } else currentlyIndexingChildKeys.add(itemKey);
+        } else keysInUse.add(itemKey);
 
         indexCategory(item);
 
         // Add itemdata to database
         if (itemId == null) {
             // Get the category ids related to the item
-            CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
-            Integer parentCategoryId = categoryEntry.getId();
-            Integer childCategoryId = categoryEntry.getChildCategoryId(item.getChildCategory());
+            CategoryEntry categoryEntry = categoryRelations.get(item.getCategory());
+            Integer categoryId = categoryEntry.getId();
+            Integer groupId = categoryEntry.getGroupId(item.getGroup());
 
             // Add item data to the database and get its id
-            itemId = database.index.indexItemData(item, parentCategoryId, childCategoryId);
+            itemId = database.index.indexItemData(item, categoryId, groupId);
             if (itemId != null) keyToId.put(itemKey, itemId);
         }
 
@@ -117,32 +123,60 @@ public class RelationManager {
         }
 
         // Remove unique key from the list
-        currentlyIndexingChildKeys.remove(itemKey);
+        keysInUse.remove(itemKey);
 
         return itemId;
     }
 
     private void indexCategory(Item item) {
-        CategoryEntry categoryEntry = categoryRelations.get(item.getParentCategory());
+        CategoryEntry categoryEntry = categoryRelations.get(item.getCategory());
 
         if (categoryEntry == null) {
-            Integer parentId = database.index.addParentCategory(item.getParentCategory());
-            if (parentId == null) return;
+            Integer categoryId = database.index.addCategory(item.getCategory());
+            if (categoryId == null) return;
 
             categoryEntry = new CategoryEntry();
-            categoryEntry.setId(parentId);
+            categoryEntry.setId(categoryId);
 
-            categoryRelations.put(item.getParentCategory(), categoryEntry);
+            categoryRelations.put(item.getCategory(), categoryEntry);
         }
 
-        if (item.getChildCategory() != null && !categoryEntry.hasChild(item.getChildCategory())) {
-            int parentId = categoryRelations.get(item.getParentCategory()).getId();
+        if (item.getGroup() != null && !categoryEntry.hasGroup(item.getGroup())) {
+            int categoryId = categoryRelations.get(item.getCategory()).getId();
 
-            Integer childId = database.index.addChildCategory(parentId, item.getChildCategory());
-            if (childId == null) return;
+            Integer groupId = database.index.addGroup(categoryId, item.getGroup());
+            if (groupId == null) return;
 
-            categoryEntry.addChild(item.getChildCategory(), childId);
+            categoryEntry.addGroup(item.getGroup(), groupId);
         }
+    }
+
+    /**
+     * Extracts item's base class from its name
+     * Eg 'Blasting Corsair Sword of Needling' -> 'Corsair Sword'
+     *
+     * @param group Group the item belongs to
+     * @param name Item name
+     * @return Extracted name or null on failure
+     */
+    public String extractItemBaseName(String group, String name) {
+        if (name == null) {
+            return null;
+        }
+
+        Set<String> baseSet = baseMap.get(group);
+
+        if (baseSet == null) {
+            return null;
+        }
+
+        for (String base : baseSet) {
+            if (name.contains(base)) {
+                return base;
+            }
+        }
+
+        return null;
     }
 
     public Map<String, String> getCurrencyAliasToName() {

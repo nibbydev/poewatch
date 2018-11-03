@@ -23,16 +23,16 @@ public class StatusElement {
         long current = System.currentTimeMillis();
 
         if (current - tenCounter > 600000) {
-            tenCounter += current - tenCounter;
+            tenCounter += (current - tenCounter) / 600000 * 600000;
         }
 
         if (current - sixtyCounter > 3600000) {
-            sixtyCounter += current - sixtyCounter;
+            sixtyCounter += (current - sixtyCounter) / 3600000 * 3600000;
         }
 
         if (current - twentyFourCounter > 86400000) {
             if (twentyFourCounter == 0) twentyFourCounter -= config.getInt("entry.counterOffset");
-            twentyFourCounter += current - twentyFourCounter;
+            twentyFourCounter += (current - twentyFourCounter) / 86400000 * 86400000;
         }
     }
 
@@ -44,14 +44,14 @@ public class StatusElement {
 
         // Run once every 10min
         if (current - tenCounter > 600000) {
-            tenCounter += current - tenCounter;
+            tenCounter += (current - tenCounter) / 600000 * 600000;
             setTenBool(true);
             logger.info("10 activated");
         }
 
         // Run once every 60min
         if (current - sixtyCounter > 3600000) {
-            sixtyCounter += current - sixtyCounter;
+            sixtyCounter += (current - sixtyCounter) / 3600000 * 3600000;
             setSixtyBool(true);
             logger.info("60 activated");
         }
@@ -59,7 +59,7 @@ public class StatusElement {
         // Run once every 24h
         if (current - twentyFourCounter > 86400000) {
             if (twentyFourCounter == 0) twentyFourCounter -= config.getInt("entry.counterOffset");
-            twentyFourCounter += current - twentyFourCounter;
+            twentyFourCounter += (current - twentyFourCounter) / 86400000 * 86400000;
             setTwentyFourBool(true);
             logger.info("24 activated");
         }
