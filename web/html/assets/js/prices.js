@@ -765,7 +765,7 @@ var FILTER = {
   gemQuality: null,
   gemCorrupted: null,
   ilvl: null,
-  baseInfluence: null,
+  influence: null,
   parseAmount: 150
 };
 
@@ -1007,12 +1007,10 @@ function defineListeners() {
 
   // Base influence
   $("#select-influence").on("change", function(){
-    FILTER.baseInfluence = $(":selected", this).val();
-    console.log("Base influence filter: " + FILTER.baseInfluence);
-    if (FILTER.baseInfluence === "all") {
-      FILTER.baseInfluence = null;
-    }
-    updateQueryParam("influence", FILTER.baseInfluence);
+    FILTER.influence = $(":selected", this).val();
+    console.log("Influence filter: " + FILTER.influence);
+    if (FILTER.influence == "all") FILTER.influence = null; 
+    updateQueryParam("influence", FILTER.influence);
     sortResults(ITEMS);
   });
 
@@ -1175,6 +1173,7 @@ function updateQueryParam(key, value) {
     case "links":      value = value === "none" ? null : value;   break;
     case "group":      value = value === "all"  ? null : value;   break;
     case "tier":       value = value === "all"  ? null : value;   break;
+    case "influence":  value = value === "all"  ? null : value;   break;
     default:           break;
   }
 
@@ -1331,12 +1330,12 @@ function checkHideItem(item) {
 
   } else if (FILTER.category === "base") {
     // Check base influence
-    if (FILTER.baseInfluence !== null) {
-      if (FILTER.baseInfluence === "none") {
+    if (FILTER.influence !== null) {
+      if (FILTER.influence === "none") {
         if (item.var !== null) return true;
-      } else if (FILTER.baseInfluence === "either") {
+      } else if (FILTER.influence === "either") {
         if (item.var === null) return true;
-      } else if (item.var !== FILTER.baseInfluence) {
+      } else if (item.var !== FILTER.influence) {
         return true;
       }
     }
