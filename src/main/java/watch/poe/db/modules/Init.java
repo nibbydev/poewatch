@@ -314,4 +314,45 @@ public class Init {
             return false;
         }
     }
+
+    /**
+     * Loads provided Map with item base names from database
+     *
+     * @param baseMap Empty map that will contain category - base name relations
+     * @return True on success
+     */
+    public boolean getBaseItems(Map<String, Set<String>> baseMap) {
+        Map<String, Set<String>> tmpBaseMap = new HashMap<>();
+
+        String query = "SELECT * FROM data_baseNames; ";
+
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
+
+            if (baseMap == null) {
+                throw new SQLException("Provided map was null");
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    String category = resultSet.getString("category");
+                    Set<String> tmpBaseSet = tmpBaseMap.getOrDefault(category, new HashSet<>());
+                    tmpBaseSet.add(resultSet.getString("base"));
+                    tmpBaseMap.putIfAbsent(category, tmpBaseSet);
+                }
+            }
+
+            baseMap.clear();
+            baseMap.putAll(tmpBaseMap);
+
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
 }

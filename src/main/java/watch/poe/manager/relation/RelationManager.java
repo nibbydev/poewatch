@@ -6,16 +6,14 @@ import poe.db.Database;
 import poe.manager.entry.item.Item;
 import poe.manager.entry.item.Key;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
     private static Logger logger = LoggerFactory.getLogger(RelationManager.class);
+    private Database database;
 
     private Map<Key, Integer> keyToId = new HashMap<>();
     private Map<String, String> currencyAliasToName = new HashMap<>();
@@ -23,7 +21,7 @@ public class RelationManager {
     private List<Key> currentlyIndexingChildKeys = new ArrayList<>();
     // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
     private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
-    private Database database;
+    private Map<String, Set<String>> baseMap = new HashMap<>();
 
     public RelationManager(Database database) {
         this.database = database;
@@ -66,6 +64,14 @@ public class RelationManager {
             return false;
         } else if (leagueIds.isEmpty()) {
             logger.warn("Database did not contain any league item id information");
+        }
+
+        success = database.init.getBaseItems(baseMap);
+        if (!success) {
+            logger.error("Failed to query base item names from database. Shutting down...");
+            return false;
+        } else if (baseMap.isEmpty()) {
+            logger.warn("Database did not contain any base item names");
         }
 
         return true;
@@ -143,6 +149,34 @@ public class RelationManager {
 
             categoryEntry.addChild(item.getChildCategory(), childId);
         }
+    }
+
+    /**
+     * Extracts item's base class from its name
+     * Eg 'Blasting Corsair Sword of Needling' -> 'Corsair Sword'
+     *
+     * @param group Group the item belongs to
+     * @param name Item name
+     * @return Extracted name or null on failure
+     */
+    public String extractItemBaseName(String group, String name) {
+        if (name == null) {
+            return null;
+        }
+
+        Set<String> baseSet = baseMap.get(group);
+
+        if (baseSet == null) {
+            return null;
+        }
+
+        for (String base : baseSet) {
+            if (name.contains(base)) {
+                return base;
+            }
+        }
+
+        return null;
     }
 
     public Map<String, String> getCurrencyAliasToName() {
