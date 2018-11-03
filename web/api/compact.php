@@ -30,10 +30,10 @@ function get_data($pdo) {
     ON      i.id_d = did.id 
   JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
-  JOIN      category_parent AS cp 
-    ON      did.id_cp = cp.id 
+  JOIN      data_categories AS dc 
+    ON      did.id_cat = dc.id 
   WHERE     l.name   = ?
-    AND     cp.name  = ?
+    AND     dc.name  = ?
     AND     l.active = 1 
     AND     i.count  > 1 
   ORDER BY  i.id_d ASC";

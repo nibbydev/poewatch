@@ -13,37 +13,33 @@ CREATE DATABASE IF NOT EXISTS pw DEFAULT CHARACTER SET utf8 COLLATE utf8_general
 USE pw;
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Category tables
+-- Data tables
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure category_parent
+-- Table structure data_categories
 --
 
-CREATE TABLE category_parent (
+CREATE TABLE data_categories (
     id       INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name     VARCHAR(32)  NOT NULL UNIQUE,
     display  VARCHAR(32)  DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure category_child
+-- Table structure data_groups
 --
 
-CREATE TABLE category_child (
+CREATE TABLE data_groups (
     id       INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_cp    INT          UNSIGNED NOT NULL,
+    id_cat   INT          UNSIGNED NOT NULL,
     name     VARCHAR(32)  NOT NULL,
     display  VARCHAR(32)  DEFAULT NULL,
 
-    FOREIGN KEY (id_cp) REFERENCES category_parent (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
 
     INDEX name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------------------------------------------------------------------
--- Data tables
--- --------------------------------------------------------------------------------------------------------------------
 
 --
 -- Table structure data_leagues
@@ -69,7 +65,7 @@ CREATE TABLE data_leagues (
 
 CREATE TABLE data_changeId (
     changeId  VARCHAR(64)  NOT NULL UNIQUE,
-    time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+    time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -119,7 +115,7 @@ CREATE TABLE data_baseNames (
     category  VARCHAR(32)  NOT NULL,
     base      VARCHAR(32)  NOT NULL UNIQUE,
 
-    FOREIGN KEY (category) REFERENCES category_child (name) ON DELETE RESTRICT
+    FOREIGN KEY (category) REFERENCES data_groups (name) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -132,8 +128,8 @@ CREATE TABLE data_baseNames (
 
 CREATE TABLE data_itemData (
     id         INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_cp      INT           UNSIGNED NOT NULL,
-    id_cc      INT           UNSIGNED DEFAULT NULL,
+    id_cat     INT           UNSIGNED NOT NULL,
+    id_grp     INT           UNSIGNED DEFAULT NULL,
     name       VARCHAR(128)  NOT NULL,
     type       VARCHAR(64)   DEFAULT NULL,
     frame      TINYINT(1)    NOT NULL,
@@ -146,8 +142,8 @@ CREATE TABLE data_itemData (
     var        VARCHAR(32)   DEFAULT NULL,
     icon       VARCHAR(256)  NOT NULL,
 
-    FOREIGN KEY (id_cp) REFERENCES category_parent (id) ON DELETE CASCADE,
-    FOREIGN KEY (id_cc) REFERENCES category_child  (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_grp) REFERENCES data_groups     (id) ON DELETE CASCADE,
 
     INDEX frame  (frame),
     INDEX name   (name)
@@ -403,10 +399,10 @@ VALUES
     ('0-0-0-0-0');
 
 --
--- Base values for category_parent
+-- Base values for data_categories
 --
 
-INSERT INTO category_parent
+INSERT INTO data_categories
     (id, name, display)
 VALUES
     (1,   'accessory',      'Accessories'),
@@ -423,11 +419,11 @@ VALUES
     (12,  'base',           'Crafting Bases');
 
 --
--- Base values for category_child
+-- Base values for data_groups
 --
 
-INSERT INTO category_child
-    (id, id_cp, name, display)
+INSERT INTO data_groups
+    (id, id_cat, name, display)
 VALUES
     (1,   1,     'amulet',     'Amulets'),
     (2,   1,     'belt',       'Belts'),

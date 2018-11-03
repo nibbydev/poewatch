@@ -1,17 +1,17 @@
 <?php
 function get_data($pdo) {
   $query = "SELECT 
-    cp.id                     AS parentId, 
-    cp.name                   AS parentName, 
-    cp.display                AS parentDisplay,
-    GROUP_CONCAT(cc.id)       AS memberIds,
-    GROUP_CONCAT(cc.name)     AS memberNames,
-    GROUP_CONCAT(cc.display)  AS memberDisplays
-  FROM      category_parent   AS cp
-  LEFT JOIN category_child    AS cc
-    ON      cp.id = cc.id_cp
-  GROUP BY  cp.id
-  ORDER BY  cp.id ASC";
+    dc.id                     AS categoryId, 
+    dc.name                   AS categoryName, 
+    dc.display                AS pcategoryDisplay,
+    GROUP_CONCAT(dg.id)       AS memberIds,
+    GROUP_CONCAT(dg.name)     AS memberNames,
+    GROUP_CONCAT(dg.display)  AS memberDisplays
+  FROM      data_categories   AS dc
+  LEFT JOIN data_groups       AS dg
+    ON      dc.id = dg.id_cat
+  GROUP BY  dc.id
+  ORDER BY  dc.id ASC";
 
   return $pdo->query($query);
 }
@@ -21,8 +21,8 @@ function parse_data($stmt) {
 
   while ($row = $stmt->fetch()) {
     $tmp = array(
-      'name'    => $row['parentName'],
-      'display' => $row['parentDisplay'],
+      'name'    => $row['categoryName'],
+      'display' => $row['categoryDisplay'],
       'members'       => array()
     );
 

@@ -61,10 +61,10 @@ function get_item_data($pdo, $id) {
     d.name, d.type, d.frame, d.icon,
     d.tier, d.lvl, d.quality, d.corrupted, 
     d.links, d.ilvl, d.var AS variation,
-    cp.name AS category, cc.name AS `group`
+    dc.name AS category, dg.name AS `group`
   FROM      data_itemData   AS d
-  LEFT JOIN category_parent AS cp ON d.id_cp = cp.id 
-  LEFT JOIN category_child  AS cc ON d.id_cc = cc.id 
+  LEFT JOIN data_categories AS dc ON d.id_cat = dc.id 
+  LEFT JOIN data_groups     AS dg ON d.id_grp = dg.id 
   WHERE     d.id = ?
   LIMIT     1";
 

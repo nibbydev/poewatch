@@ -17,16 +17,16 @@ public class Index {
     }
 
     /**
-     * Creates a parent category entry in table `category_parent`
+     * Creates a category entry in table `data_categories`
      *
-     * @param parentName Name of parent category
+     * @param categoryName Name of category
      * @return ID of created category on success, null on failure
      */
-    public Integer addParentCategory(String parentName) {
-        String query1 = "INSERT INTO category_parent (name) VALUES (?); ";
+    public Integer addCategory(String categoryName) {
+        String query1 = "INSERT INTO data_categories (name) VALUES (?); ";
 
         String query2 = "SELECT id " +
-                        "FROM   category_parent " +
+                        "FROM   data_categories " +
                         "WHERE  name = ? " +
                         "LIMIT  1;";
 
@@ -36,14 +36,14 @@ public class Index {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setString(1, parentName);
+                statement.setString(1, categoryName);
                 statement.executeUpdate();
             }
 
             database.connection.commit();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                statement.setString(1, parentName);
+                statement.setString(1, categoryName);
                 ResultSet resultSet = statement.executeQuery();
                 return resultSet.next() ? resultSet.getInt(1) : null;
             }
@@ -55,18 +55,18 @@ public class Index {
     }
 
     /**
-     * Creates a child category entry in table `category_child`
+     * Creates a group entry in table `data_groups`
      *
-     * @param parentId  ID of child's parent category
-     * @param childName Name of child category
+     * @param categoryId  ID of group's category
+     * @param groupName Name of group
      * @return ID of created category on success, null on failure
      */
-    public Integer addChildCategory(Integer parentId, String childName) {
-        String query1 = "INSERT INTO category_child (id_cp, name) VALUES (?, ?)";
+    public Integer addGroup(Integer categoryId, String groupName) {
+        String query1 = "INSERT INTO data_groups (id_cat, name) VALUES (?, ?)";
 
         String query2 = "SELECT id " +
-                        "FROM   category_child " +
-                        "WHERE  id_cp = ? " +
+                        "FROM   data_groups " +
+                        "WHERE  id_cat = ? " +
                         "  AND  name = ? " +
                         "LIMIT  1; ";
 
@@ -76,16 +76,16 @@ public class Index {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setInt(1, parentId);
-                statement.setString(2, childName);
+                statement.setInt(1, categoryId);
+                statement.setString(2, groupName);
                 statement.executeUpdate();
             }
 
             database.connection.commit();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                statement.setInt(1, parentId);
-                statement.setString(2, childName);
+                statement.setInt(1, categoryId);
+                statement.setString(2, groupName);
                 ResultSet resultSet = statement.executeQuery();
                 return resultSet.next() ? resultSet.getInt(1) : null;
             }
@@ -128,14 +128,14 @@ public class Index {
     /**
      * Creates an item data entry in table `data_itemData`
      *
-     * @param item             Item object to index
-     * @param parentCategoryId ID of item's parent category
-     * @param childCategoryId  ID of item's child category
+     * @param item Item object to index
+     * @param categoryId ID of item's category
+     * @param groupId  ID of item's group
      * @return ID of created item data entry on success, null on failure
      */
-    public Integer indexItemData(Item item, Integer parentCategoryId, Integer childCategoryId) {
+    public Integer indexItemData(Item item, Integer categoryId, Integer groupId) {
         String query1 = "INSERT INTO data_itemData (" +
-                        "  id_cp, id_cc, name, type, frame, tier, lvl, " +
+                        "  id_cat, id_grp, name, type, frame, tier, lvl, " +
                         "  quality, corrupted, links, ilvl, var, icon) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
         String query2 = "SELECT LAST_INSERT_ID(); ";
@@ -148,10 +148,10 @@ public class Index {
             Key key = item.getKey();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setInt(1, parentCategoryId);
+                statement.setInt(1, categoryId);
 
-                if (childCategoryId == null) statement.setNull(2, 0);
-                else statement.setInt(2, childCategoryId);
+                if (groupId == null) statement.setNull(2, 0);
+                else statement.setInt(2, groupId);
 
                 statement.setString(3, key.getName());
                 statement.setString(4, key.getTypeLine());

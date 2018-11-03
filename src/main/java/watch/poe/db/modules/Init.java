@@ -54,20 +54,20 @@ public class Init {
     /**
      * Loads provided Map with category entries from database
      *
-     * @param categoryRelations Empty map that will contain parentCategory - CategoryEntry relations
+     * @param categoryRelations Empty map that will contain category - CategoryEntry relations
      * @return True on success
      */
     public boolean getCategories(Map<String, CategoryEntry> categoryRelations) {
         Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
 
-        String query =  "SELECT    cp.name AS parentName, " +
-                        "          cp.id   AS parentId, " +
-                        "          GROUP_CONCAT(cc.name) AS childNames, " +
-                        "          GROUP_CONCAT(cc.id) AS childIds " +
-                        "FROM      category_parent AS cp " +
-                        "JOIN      category_child  AS cc " +
-                        "  ON      cp.id = cc.id_cp " +
-                        "GROUP BY  cp.id; ";
+        String query =  "SELECT    dc.name AS categoryName, " +
+                        "          dc.id   AS categoryId, " +
+                        "          GROUP_CONCAT(dg.name) AS groupNames, " +
+                        "          GROUP_CONCAT(dg.id)   AS groupIds " +
+                        "FROM      data_categories AS dc " +
+                        "JOIN      data_groups     AS dg " +
+                        "  ON      dc.id = dg.id_cat " +
+                        "GROUP BY  dc.id; ";
 
         try {
             if (database.connection.isClosed()) {
@@ -82,17 +82,17 @@ public class Init {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    String[] childIds = resultSet.getString("childIds").split(",");
-                    String[] childNames = resultSet.getString("childNames").split(",");
+                    String[] groupIds = resultSet.getString("groupIds").split(",");
+                    String[] groupNames = resultSet.getString("groupNames").split(",");
 
                     CategoryEntry categoryEntry = new CategoryEntry();
-                    categoryEntry.setId(resultSet.getInt("parentId"));
+                    categoryEntry.setId(resultSet.getInt("categoryId"));
 
-                    for (int i = 0; i < childIds.length; i++) {
-                        categoryEntry.addChild(childNames[i], Integer.parseInt(childIds[i]));
+                    for (int i = 0; i < groupIds.length; i++) {
+                        categoryEntry.addGroup(groupNames[i], Integer.parseInt(groupIds[i]));
                     }
 
-                    tmpCategoryRelations.putIfAbsent(resultSet.getString("parentName"), categoryEntry);
+                    tmpCategoryRelations.putIfAbsent(resultSet.getString("categoryName"), categoryEntry);
                 }
             }
 
@@ -206,7 +206,7 @@ public class Init {
                         "FROM     league_items_rolling  AS i " +
                         "JOIN     data_itemData AS did " +
                         "  ON     i.id_d = did.id " +
-                        "WHERE    did.id_cc = 11 " +
+                        "WHERE    did.id_grp = 11 " +
                         "ORDER BY i.id_l; ";
 
         try {

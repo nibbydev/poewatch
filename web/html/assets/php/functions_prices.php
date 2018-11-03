@@ -195,13 +195,13 @@ class FormGen {
         1 AS tmpId,
         GROUP_CONCAT(   name ORDER BY name ASC) AS names, 
         GROUP_CONCAT(display ORDER BY name ASC) AS displays
-      FROM     category_parent
+      FROM     data_categories
       JOIN (
-        SELECT DISTINCT id_cp 
+        SELECT DISTINCT id_cat 
         FROM            data_itemData
         WHERE           frame = 9
       ) AS     tmp 
-        ON     tmp.id_cp = id
+        ON     tmp.id_cat = id
       GROUP BY tmpId";
   
       $stmt = $pdo->prepare($query);
@@ -210,9 +210,9 @@ class FormGen {
       $query = "SELECT 
         GROUP_CONCAT(name ORDER BY name ASC)                  AS names, 
         GROUP_CONCAT(IFNULL(display, name) ORDER BY name ASC) AS displays
-      FROM category_child
-      WHERE id_cp = (SELECT id FROM category_parent WHERE name = ? LIMIT 1)
-      GROUP BY id_cp";
+      FROM data_groups
+      WHERE id_cat = (SELECT id FROM data_categories WHERE name = ? LIMIT 1)
+      GROUP BY id_cat";
   
       $stmt = $pdo->prepare($query);
       $stmt->execute([$category]);
@@ -318,7 +318,7 @@ function GetLeagues($pdo) {
 
 // Get all available category relations
 function GetCategories($pdo) {
-  $stmt = $pdo->query("SELECT name FROM category_parent");
+  $stmt = $pdo->query("SELECT name FROM data_categories");
   
   $payload = array();
   while ($row = $stmt->fetch()) {

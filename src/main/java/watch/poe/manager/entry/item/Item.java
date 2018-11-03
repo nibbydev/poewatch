@@ -12,7 +12,7 @@ public class Item {
     private Key key;
 
     private boolean discard, doNotIndex;
-    private String parentCategory, childCategory, variation;
+    private String category, group, variation;
     private Integer links, level, quality, tier;
 
     // Overrides
@@ -96,11 +96,11 @@ public class Item {
      * Extracts category strings from the object
      */
     private void extractCategory() {
-        parentCategory = base.getCategory().keySet().toArray()[0].toString();
+        category = base.getCategory().keySet().toArray()[0].toString();
 
         // Get first group if present
-        if (base.getCategory().get(parentCategory).size() > 0) {
-            childCategory = base.getCategory().get(parentCategory).get(0).toLowerCase();
+        if (base.getCategory().get(category).size() > 0) {
+            group = base.getCategory().get(category).get(0).toLowerCase();
         }
 
         // Extract item's category from its icon
@@ -108,101 +108,97 @@ public class Item {
         String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
 
         // Divide into specific subcategories
-        switch (parentCategory) {
+        switch (category) {
             case "currency":
                 if (frameType == 8) {
-                    parentCategory = "prophecy";
-                    childCategory = "prophecy";
+                    category = "prophecy";
+                    group = "prophecy";
                 } else if (iconCategory.equals("essence")) {
-                    childCategory = "essence";
+                    group = "essence";
                 } else if (iconCategory.equals("piece")) {
-                    childCategory = "piece";
+                    group = "piece";
                 }
 
-                if (childCategory == null) {
-                    childCategory = parentCategory;
+                if (group == null) {
+                    group = category;
                 }
 
                 break;
 
             case "gems":
-                parentCategory = "gem";
+                category = "gem";
 
-                if (childCategory.equals("activegem")) {
+                if (group.equals("activegem")) {
                     if (iconCategory.equals("vaalgems")) {
-                        childCategory = "vaal";
+                        group = "vaal";
                     } else {
-                        childCategory = "skill";
+                        group = "skill";
                     }
                 } else {
-                    childCategory = "support";
+                    group = "support";
                 }
                 break;
 
             case "monsters":
                 discard = true;
-                break;
+                return;
 
             case "maps":
-                parentCategory = "map";
+                category = "map";
 
                 if (frameType == 3 || frameType == 9) {
-                    childCategory = "unique";
+                    group = "unique";
                 } else if (iconCategory.equals("breach")) {
-                    childCategory = "fragment";
+                    group = "fragment";
                 } else if (base.getProperties() == null){
-                    childCategory = "fragment";
+                    group = "fragment";
                 } else {
-                    childCategory = "map";
+                    group = "map";
                 }
                 break;
 
             case "cards":
-                parentCategory = "card";
-                childCategory = parentCategory;
+                category = "card";
+                group = category;
                 break;
 
             case "flasks":
-                parentCategory = "flask";
-                childCategory = parentCategory;
+                category = "flask";
+                group = category;
                 break;
 
             case "jewels":
-                parentCategory = "jewel";
-                childCategory = parentCategory;
+                category = "jewel";
+                group = category;
                 break;
 
             case "weapons":
-                parentCategory = "weapon";
+                category = "weapon";
                 break;
 
             case "accessories":
-                parentCategory = "accessory";
+                category = "accessory";
                 break;
         }
 
         // Override for enchantments
         if (base.getEnchantMods() != null) {
-            parentCategory = "enchantment";
+            category = "enchantment";
         }
 
         // Override for item bases
         if (branch.equals("base")) {
             // Only collect bases for these categories
-            if (!parentCategory.equals("accessory") &&
-                    !parentCategory.equals("armour") &&
-                    !parentCategory.equals("jewel") &&
-                    !parentCategory.equals("weapon")) {
+            if (!category.equals("accessory") &&
+                    !category.equals("armour") &&
+                    !category.equals("jewel") &&
+                    !category.equals("weapon")) {
                 discard = true;
                 return;
             }
 
             // Override category
-            parentCategory = "base";
-        }
-
-        if (parentCategory == null || childCategory == null) {
-            System.out.printf("null: %s %s %d %s %s\n", name, typeLine, frameType, parentCategory, childCategory);
+            category = "base";
         }
     }
 
@@ -272,7 +268,7 @@ public class Item {
 
         ilvl = null;
 
-        switch (parentCategory) {
+        switch (category) {
             case "map":         parseMaps();                break;
             case "gem":         extractGemData();           break;
             case "currency":    checkCurrencyBlacklist();   break;
@@ -358,14 +354,14 @@ public class Item {
      */
     private void extractItemLinks() {
         // Precaution
-        if (!parentCategory.equals("weapon") && !parentCategory.equals("armour")) {
+        if (!category.equals("weapon") && !category.equals("armour")) {
             return;
-        } else if (childCategory == null) {
+        } else if (group == null) {
             return;
         }
 
         // Filter out items that can't have 6 sockets
-        switch (childCategory) {
+        switch (group) {
             case "chest":       break;
             case "staff":       break;
             case "twosword":    break;
@@ -690,13 +686,13 @@ public class Item {
         }
 
         // Ignore talisman bases
-        if (childCategory.equals("amulet") && name.contains("Talisman")) {
+        if (group.equals("amulet") && name.contains("Talisman")) {
             discard = true;
             return;
         }
 
         // Attempt to parse item's base name
-        name = relationManager.extractItemBaseName(childCategory, name);
+        name = relationManager.extractItemBaseName(group, name);
 
         if (name == null) {
             discard = true;
@@ -745,12 +741,12 @@ public class Item {
         return doNotIndex;
     }
 
-    public String getParentCategory() {
-        return parentCategory;
+    public String getCategory() {
+        return category;
     }
 
-    public String getChildCategory() {
-        return childCategory;
+    public String getGroup() {
+        return group;
     }
 
     public String getVariation() {
