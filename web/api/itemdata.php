@@ -4,9 +4,10 @@ function get_data($pdo) {
     did.id, did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    dg.id AS category
+    dc.name AS category, dg.name AS `group`
   FROM data_itemData AS did 
-  LEFT JOIN data_groups AS dg ON dg.id = did.id_grp";
+  LEFT JOIN data_categories AS dc ON dc.id = did.id_cat
+  LEFT JOIN data_groups     AS dg ON dg.id = did.id_grp";
 
   return $pdo->query($query);
 }
@@ -29,6 +30,7 @@ function parse_data($stmt) {
       'var'       => $row['var'],
       'icon'      => $row['icon'],
       'category'  => $row['category'],
+      'group'     => $row['group'],
     );
     
     $payload[] = $tmp;

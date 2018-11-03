@@ -38,7 +38,7 @@ function get_data_rolling($pdo, $league, $category) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    dg.name AS category,
+    dc.name AS category, dg.name AS `group`,
     i.spark AS history
   FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
@@ -68,7 +68,7 @@ function get_data_inactive($pdo, $league, $category) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    dg.name AS category,
+    dc.name AS category, dg.name AS `group`,
     NULL AS history
   FROM      league_items_inactive         AS i 
   JOIN      data_itemData                 AS did 
@@ -97,7 +97,7 @@ function get_data_rolling_relic($pdo, $league) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    dc.name AS category,
+    dc.name AS category, dg.name AS `group`,
     i.spark AS history
   FROM      league_items_rolling          AS i 
   JOIN      data_itemData                 AS did 
@@ -128,7 +128,7 @@ function get_data_inactive_relic($pdo, $league) {
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
-    dc.name AS category,
+    dc.name AS category, dg.name AS `group`
     NULL AS history
   FROM      league_items_inactive         AS i 
   JOIN      data_itemData                 AS did 
@@ -161,6 +161,7 @@ function parse_data($stmt, $active) {
       'name'          =>        $row['name'],
       'type'          =>        $row['type'],
       'category'      =>        $row['category'],
+      'group'         =>        $row['group'],
       'frame'         => (int)  $row['frame'],
 
       'mean'          =>        $row['mean']      === NULL ?  0.0 : (float) $row['mean'],
