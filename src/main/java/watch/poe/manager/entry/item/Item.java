@@ -83,8 +83,8 @@ public class Item {
             typeLine = null;
         }
 
-        // Ignore corrupted state for non-gems
-        if (frameType != 4) {
+        // Ignore corrupted state for non-gems and non-relics
+        if (frameType != 4 && frameType != 9) {
             corrupted = null;
         }
 
@@ -264,6 +264,16 @@ public class Item {
         if (frameType == 1 || frameType == 2) {
             discard = true;
             return;
+        }
+
+        // Some corrupted relics do not turn into rares and retain their relic frametypes
+        if (frameType == 9) {
+            if (corrupted != null && corrupted) {
+                discard = true;
+                return;
+            }
+            
+            corrupted = null;
         }
 
         ilvl = null;
@@ -680,6 +690,11 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     private void parseBase() {
+        if (frameType == 2){
+            discard = true;
+            return;
+        }
+
         // "Superior Item" = "Item"
         if (name.startsWith("Superior ")) {
             name = name.replace("Superior ", "");
