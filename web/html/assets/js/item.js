@@ -297,7 +297,7 @@ function buildNameField() {
     builder = "<span class='item-elder'>" + builder + "</span>";
   }
 
-  if (ITEM.category !== "enchantment") { 
+  if (ITEM.variation && ITEM.category !== "enchantment") { 
     builder += " <span class='badge custom-badge-gray ml-1'>" + ITEM.variation + "</span>";
   } 
   
