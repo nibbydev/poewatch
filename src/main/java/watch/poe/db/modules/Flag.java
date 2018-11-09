@@ -37,7 +37,7 @@ public class Flag {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setDouble(1, database.config.getInt("entry.volatileRatio"));
+                statement.setDouble(1, database.config.getDouble("entry.volatileRatio"));
                 statement.executeUpdate();
             }
 
@@ -109,12 +109,12 @@ public class Flag {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setDouble(1, database.config.getInt("entry.approvedMax"));
-                statement.setDouble(2, database.config.getInt("entry.approvedDiv"));
-                statement.setDouble(3, database.config.getInt("entry.approvedMin"));
-                statement.setDouble(4, database.config.getInt("entry.approvedMin"));
-                statement.setDouble(5, database.config.getInt("entry.approvedMax"));
-                statement.setDouble(6, database.config.getInt("entry.approvedDiv"));
+                statement.setDouble(1, database.config.getDouble("entry.approvedMax"));
+                statement.setDouble(2, database.config.getDouble("entry.approvedDiv"));
+                statement.setDouble(3, database.config.getDouble("entry.approvedMin"));
+                statement.setDouble(4, database.config.getDouble("entry.approvedMin"));
+                statement.setDouble(5, database.config.getDouble("entry.approvedMax"));
+                statement.setDouble(6, database.config.getDouble("entry.approvedDiv"));
 
                 statement.executeUpdate();
             }
