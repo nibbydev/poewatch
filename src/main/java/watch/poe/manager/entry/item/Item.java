@@ -272,7 +272,7 @@ public class Item {
                 discard = true;
                 return;
             }
-            
+
             corrupted = null;
         }
 

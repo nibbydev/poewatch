@@ -23,7 +23,7 @@ function parse_data($stmt) {
     $tmp = array(
       'name'    => $row['categoryName'],
       'display' => $row['categoryDisplay'],
-      'members'       => array()
+      'groups'  => array()
     );
 
     $explMemberIds      = explode(',', $row['memberIds']);
@@ -33,7 +33,7 @@ function parse_data($stmt) {
 
     if ($count > 0) {
       for ($i = 0; $i < $count; $i++) { 
-        $tmp['members'][] = array(
+        $tmp['groups'][] = array(
           'id'      => (int) $explMemberIds[$i],
           'name'    => $explMemberNames[$i],
           'display' => $explMemberDisplays[$i]

@@ -898,7 +898,7 @@ function defineListeners() {
     makeGetRequest();
   });
 
-  // Subcategory
+  // Group
   $("#search-group").change(function(){
     FILTER.group = $(this).find(":selected").val();
     console.log("Selected group: " + FILTER.group);
@@ -1293,7 +1293,7 @@ function checkHideItem(item) {
   }
 
   // Hide groups
-  if (FILTER.group !== "all" && FILTER.group !== item.category) {
+  if (FILTER.group !== "all" && FILTER.group !== item.group) {
     return true;
   }
 
