@@ -385,10 +385,10 @@ function formatHistory(leaguePayload) {
   };
 
   // Convert date strings into objects
-  let firstDate  = convertDateToUTC(leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null);
-  let lastDate   = convertDateToUTC(leaguePayload.history.length ? new Date(leaguePayload.history[leaguePayload.history.length - 1].time) : null);
-  let startDate  = convertDateToUTC(leaguePayload.league.start ? new Date(leaguePayload.league.start) : null);
-  let endDate    = convertDateToUTC(leaguePayload.league.end ? new Date(leaguePayload.league.end) : null);
+  let firstDate  = leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null;
+  let lastDate   = leaguePayload.history.length ? new Date(leaguePayload.history[leaguePayload.history.length - 1].time) : null;
+  let startDate  = leaguePayload.league.start ? new Date(leaguePayload.league.start) : null;
+  let endDate    = leaguePayload.league.end ? new Date(leaguePayload.league.end) : null;
 
   // Nr of days league data is missing since league start until first entry
   let timeDiffMissing = Math.abs(startDate.getTime() - firstDate.getTime());
@@ -413,10 +413,10 @@ function formatHistory(leaguePayload) {
     keys.push(null);
   }
 
-  // If there are more than 0 history entries
+  // If entries are missing before the first entry
   if (leaguePayload.history.length) {
     // Get the first entry's time
-    let firstDate = convertDateToUTC(new Date(leaguePayload.history[0].time));
+    let firstDate = new Date(leaguePayload.history[0].time);
 
     // Get difference in days between league start and first entry
     let timeDiff = Math.abs(startDate.getTime() - firstDate.getTime());
@@ -452,8 +452,8 @@ function formatHistory(leaguePayload) {
       const nextEntry = leaguePayload.history[i + 1];
 
       // Get dates
-      let currentDate = convertDateToUTC(new Date(entry.time));
-      let nextDate = convertDateToUTC(new Date(nextEntry.time));
+      let currentDate = new Date(entry.time);
+      let nextDate = new Date(nextEntry.time);
 
       // Get difference in days between entries
       let timeDiff = Math.abs(nextDate.getTime() - currentDate.getTime());
