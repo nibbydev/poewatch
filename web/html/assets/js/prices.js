@@ -673,7 +673,6 @@ class ExpandedRow {
   
     // Convert date strings into objects
     let firstDate  = leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null;
-    let lastDate   = leaguePayload.history.length ? new Date(leaguePayload.history[leaguePayload.history.length - 1].time) : null;
     let startDate  = leaguePayload.league.start ? new Date(leaguePayload.league.start) : null;
     let endDate    = leaguePayload.league.end ? new Date(leaguePayload.league.end) : null;
   
@@ -682,7 +681,7 @@ class ExpandedRow {
     let daysMissing     = Math.floor(timeDiffMissing / (1000 * 60 * 60 * 24));
   
     // Nr of days in a league
-    let timeDiffLeague = Math.abs(endDate.getTime() - startDate.getTime());
+    let timeDiffLeague = endDate ? Math.abs(endDate.getTime() - startDate.getTime()) : 0;
     let daysLeague     = Math.ceil(timeDiffLeague / (1000 * 60 * 60 * 24));
   
     // Hardcore (id 1) and Standard (id 2) don't have an end date
@@ -701,7 +700,7 @@ class ExpandedRow {
     }
   
     // If entries are missing before the first entry
-    if (leaguePayload.history.length) {
+    if (leaguePayload.history.length && leaguePayload.league.id > 2) {
       // Get the first entry's time
       let firstDate = new Date(leaguePayload.history[0].time);
   
