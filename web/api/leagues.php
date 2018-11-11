@@ -1,8 +1,9 @@
 <?php
 function get_data($pdo) {
   $query = "SELECT *,
-    TIMESTAMPDIFF(SECOND, start, NOW()) AS elapseDiff,
-    TIMESTAMPDIFF(SECOND, NOW(), end) AS remainDiff
+    TIMESTAMPDIFF(SECOND, start, end)   AS leagueTotal,
+    TIMESTAMPDIFF(SECOND, start, NOW()) AS leagueElapsed,
+    TIMESTAMPDIFF(SECOND, NOW(), end)   AS leagueRemaining
   FROM data_leagues 
   WHERE active = 1";
 
@@ -15,6 +16,10 @@ function parse_data($stmt) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
+    // Make sure time differences stay within logical bounds
+    $durationElapsed = $row['leagueTotal'] ? ($row['leagueElapsed'] > $row['leagueTotal'] ? $row['leagueTotal'] : $row['leagueElapsed']) : $row['leagueElapsed'];
+    $durationRemaining = $row['leagueRemaining'] < 0 ? 0 : $row['leagueRemaining'];
+
     $tmp = array(
       'id'        => (int)  $row['id'],
       'name'      =>        $row['name'],
@@ -26,60 +31,11 @@ function parse_data($stmt) {
       'start'     =>        $row['start'],
       'end'       =>        $row['end'],
       'duration'  => array(
-        'total'  => $row['remainDiff'] + $row['elapseDiff'],
-        'elapse' => $row['elapseDiff'],
-        'remain' => $row['remainDiff']
+        'total'     => $row['leagueTotal'],
+        'elapsed'   => $durationElapsed,
+        'remaining' => $durationRemaining
       )
     );
-
-    $payload[] = $tmp;
-  }
-
-  return $payload;
-}
-
-function parse_history_data($stmt) {
-  $payload = array();
-
-  while ($row = $stmt->fetch()) {
-    // Form a temporary entry array
-    $tmp = array(
-      'league'      => array(
-        'id'        => (int)  $row['leagueId'],
-        'name'      =>        $row['leagueName'],
-        'display'   =>        $row['leagueDisplay'],
-        'active'    => (bool) $row['leagueActive'],
-        'event'     => (bool) $row['leagueEvent'],
-        'start'     =>        $row['leagueStart'],
-        'end'       =>        $row['leagueEnd']
-      ),
-      'mean'      =>          $row['mean']      === NULL ? null : (float) $row['mean'],
-      'median'    =>          $row['median']    === NULL ? null : (float) $row['median'],
-      'mode'      =>          $row['mode']      === NULL ? null : (float) $row['mode'],
-      'exalted'   =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
-      'count'     =>          $row['count']     === NULL ? null :   (int) $row['count'],
-      'quantity'  =>          $row['quantity']  === NULL ?    0 :   (int) $row['quantity'],
-      'history'   => array()
-    );
-
-    if (!is_null($row['mean_list'])) {
-      // Convert CSVs to arrays
-      $means    = explode(',', $row['mean_list']);
-      $medians  = explode(',', $row['median_list']);
-      $modes    = explode(',', $row['mode_list']);
-      $quants   = explode(',', $row['quantity_list']);
-      $times    = explode(',', $row['time_list']);
-
-      for ($i = 0; $i < sizeof($means); $i++) { 
-        $tmp['history'][] = array(
-          'time'     =>         $times[$i],
-          'mean'     => (float) $means[$i],
-          'median'   => (float) $medians[$i],
-          'mode'     => (float) $modes[$i],
-          'quantity' => (int)   $quants[$i],
-        );
-      }
-    }
 
     $payload[] = $tmp;
   }

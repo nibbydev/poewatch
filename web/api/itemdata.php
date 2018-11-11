@@ -1,5 +1,5 @@
 <?php
-function get_data($pdo) {
+function get_all_data($pdo) {
   $query = "SELECT 
     did.id, did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
@@ -10,6 +10,23 @@ function get_data($pdo) {
   LEFT JOIN data_groups     AS dg ON dg.id = did.id_grp";
 
   return $pdo->query($query);
+}
+
+function get_category_data($pdo, $category) {
+  $query = "SELECT 
+    did.id, did.name, did.type, did.frame, 
+    did.tier, did.lvl, did.quality, did.corrupted, 
+    did.links, did.ilvl, did.var, did.icon, 
+    dc.name AS category, dg.name AS `group`
+  FROM data_itemData AS did 
+  LEFT JOIN data_categories AS dc ON dc.id = did.id_cat
+  LEFT JOIN data_groups     AS dg ON dg.id = did.id_grp
+  WHERE dc.name = ?";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$category]);
+
+  return $stmt;
 }
 
 function parse_data($stmt) {
@@ -27,7 +44,7 @@ function parse_data($stmt) {
       'corrupted' => $row['corrupted'],
       'links'     => $row['links'],
       'ilvl'      => $row['ilvl'],
-      'var'       => $row['var'],
+      'variation' => $row['var'],
       'icon'      => $row['icon'],
       'category'  => $row['category'],
       'group'     => $row['group'],
@@ -46,7 +63,12 @@ header("Content-Type: application/json");
 include_once ( "../details/pdo.php" );
 
 // Get item entries
-$stmt = get_data($pdo);
+if (isset($_GET["category"])) {
+  $stmt = get_category_data($pdo, $_GET["category"]);
+} else {
+  $stmt = get_all_data($pdo);
+}
+
 $payload = parse_data($stmt);
 
 // Display generated data

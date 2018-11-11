@@ -7,13 +7,18 @@ function error($code, $msg) {
 function get_league_data($pdo, $id) {
   $query = "SELECT * FROM (
     SELECT 
-      l.id      AS leagueId, 
-      l.name    AS leagueName, 
-      l.display AS leagueDisplay, 
-      l.active  AS leagueActive, 
-      l.event   AS leagueEvent, 
-      DATE_FORMAT(l.start,  '%Y-%m-%dT%TZ')         AS leagueStart,
-      DATE_FORMAT(l.end,    '%Y-%m-%dT%TZ')         AS leagueEnd,
+      l.id        AS leagueId,
+      l.active    AS leagueActive, 
+      l.upcoming  AS leagueUpcoming, 
+      l.event     AS leagueEvent, 
+      l.hardcore  AS leagueHardcore, 
+      l.name      AS leagueName, 
+      l.display   AS leagueDisplay, 
+      l.start     AS leagueStart,
+      l.end       AS leagueEnd,
+      TIMESTAMPDIFF(SECOND, l.start, l.end) AS leagueTotal,
+      TIMESTAMPDIFF(SECOND, l.start, NOW()) AS leagueElapsed,
+      TIMESTAMPDIFF(SECOND, NOW(), l.end)   AS leagueRemaining,
       GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
       GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
@@ -29,13 +34,18 @@ function get_league_data($pdo, $id) {
     UNION ALL 
   
     SELECT 
-      l.id      AS leagueId, 
-      l.name    AS leagueName, 
-      l.display AS leagueDisplay, 
-      l.active  AS leagueActive, 
-      l.event   AS leagueEvent, 
-      DATE_FORMAT(l.start,  '%Y-%m-%dT%TZ')         AS leagueStart,
-      DATE_FORMAT(l.end,    '%Y-%m-%dT%TZ')         AS leagueEnd,
+      l.id        AS leagueId,
+      l.active    AS leagueActive, 
+      l.upcoming  AS leagueUpcoming, 
+      l.event     AS leagueEvent, 
+      l.hardcore  AS leagueHardcore, 
+      l.name      AS leagueName, 
+      l.display   AS leagueDisplay, 
+      l.start     AS leagueStart,
+      l.end       AS leagueEnd,
+      TIMESTAMPDIFF(SECOND, l.start, l.end) AS leagueTotal,
+      TIMESTAMPDIFF(SECOND, l.start, NOW()) AS leagueElapsed,
+      TIMESTAMPDIFF(SECOND, NOW(), l.end)   AS leagueRemaining,
       GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
       GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
       GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
@@ -78,16 +88,27 @@ function parse_history_data($stmt) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
+    // Make sure time differences stay within logical bounds
+    $durationElapsed = $row['leagueTotal'] ? ($row['leagueElapsed'] > $row['leagueTotal'] ? $row['leagueTotal'] : $row['leagueElapsed']) : $row['leagueElapsed'];
+    $durationRemaining = $row['leagueRemaining'] < 0 ? 0 : $row['leagueRemaining'];
+
     // Form a temporary entry array
     $tmp = array(
-      'league'      => array(
-        'id'        => (int)  $row['leagueId'],
-        'name'      =>        $row['leagueName'],
-        'display'   =>        $row['leagueDisplay'],
-        'active'    => (bool) $row['leagueActive'],
-        'event'     => (bool) $row['leagueEvent'],
-        'start'     =>        $row['leagueStart'],
-        'end'       =>        $row['leagueEnd']
+      'league'        => array(
+        'id'          => (int)  $row['leagueId'],
+        'active'      => (bool) $row['leagueActive'],
+        'upcoming'    => (bool) $row['leagueUpcoming'],
+        'event'       => (bool) $row['leagueEvent'],
+        'hardcore'    => (bool) $row['leagueHardcore'],
+        'name'        =>        $row['leagueName'],
+        'display'     =>        $row['leagueDisplay'],
+        'start'       =>        $row['leagueStart'],
+        'end'         =>        $row['leagueEnd'],
+        'duration'    => array(
+          'total'     => $row['leagueTotal'],
+          'elapsed'   => $durationElapsed,
+          'remaining' => $durationRemaining
+        )
       ),
       'mean'      =>          $row['mean']      === NULL ? null : (float) $row['mean'],
       'median'    =>          $row['median']    === NULL ? null : (float) $row['median'],
