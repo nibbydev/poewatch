@@ -1,8 +1,9 @@
 <?php
 function get_data($pdo) {
   $query = "SELECT *,
-    TIMESTAMPDIFF(SECOND, start, NOW()) AS elapseDiff,
-    TIMESTAMPDIFF(SECOND, NOW(), end) AS remainDiff
+    TIMESTAMPDIFF(SECOND, start, end)   AS leagueTotal,
+    TIMESTAMPDIFF(SECOND, start, NOW()) AS leagueElapsed,
+    TIMESTAMPDIFF(SECOND, NOW(), end)   AS leagueRemaining
   FROM data_leagues 
   WHERE active = 1";
 
@@ -15,6 +16,10 @@ function parse_data($stmt) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
+    // Make sure time differences stay within logical bounds
+    $durationElapsed = $row['leagueTotal'] ? ($row['leagueElapsed'] > $row['leagueTotal'] ? $row['leagueTotal'] : $row['leagueElapsed']) : $row['leagueElapsed'];
+    $durationRemaining = $row['leagueRemaining'] < 0 ? 0 : $row['leagueRemaining'];
+
     $tmp = array(
       'id'        => (int)  $row['id'],
       'name'      =>        $row['name'],
@@ -26,9 +31,9 @@ function parse_data($stmt) {
       'start'     =>        $row['start'],
       'end'       =>        $row['end'],
       'duration'  => array(
-        'total'  => $row['remainDiff'] + $row['elapseDiff'],
-        'elapse' => $row['elapseDiff'],
-        'remain' => $row['remainDiff']
+        'total'     => $row['leagueTotal'],
+        'elapsed'   => $durationElapsed,
+        'remaining' => $durationRemaining
       )
     );
 
