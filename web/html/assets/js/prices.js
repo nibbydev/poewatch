@@ -670,14 +670,15 @@ class ExpandedRow {
       mode:     [],
       quantity: []
     };
-
+  
     // Convert date strings into objects
-    let oldestDate = ExpandedRow.convertDateToUTC(leaguePayload.history[0] ? new Date(leaguePayload.history[0].time) : new Date());
-    let startDate  = ExpandedRow.convertDateToUTC(new Date(leaguePayload.league.start));
-    let endDate    = ExpandedRow.convertDateToUTC(new Date(leaguePayload.league.end));
-
+    let firstDate  = ExpandedRow.convertDateToUTC(leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null);
+    let lastDate   = ExpandedRow.convertDateToUTC(leaguePayload.history.length ? new Date(leaguePayload.history[leaguePayload.history.length - 1].time) : null);
+    let startDate  = ExpandedRow.convertDateToUTC(leaguePayload.league.start ? new Date(leaguePayload.league.start) : null);
+    let endDate    = ExpandedRow.convertDateToUTC(leaguePayload.league.end ? new Date(leaguePayload.league.end) : null);
+  
     // Nr of days league data is missing since league start until first entry
-    let timeDiffMissing = Math.abs(startDate.getTime() - oldestDate.getTime());
+    let timeDiffMissing = Math.abs(startDate.getTime() - firstDate.getTime());
     let daysMissing     = Math.floor(timeDiffMissing / (1000 * 60 * 60 * 24));
   
     // Nr of days in a league
@@ -692,44 +693,74 @@ class ExpandedRow {
   
     // Bloat using 'null's the amount of days that should not have a tooltip
     for (let i = 0; i < daysLeague - daysMissing - leaguePayload.history.length; i++) {
-      vals.mean     .push(null);
-      vals.median   .push(null);
-      vals.mode     .push(null);
-      vals.quantity .push(null);
-      keys          .push(null);
+      vals.mean.push(null);
+      vals.median.push(null);
+      vals.mode.push(null);
+      vals.quantity.push(null);
+      keys.push(null);
     }
   
-    // Bloat using '0's the amount of days that should show "no data"
-    // Skip Hardcore (id 1) and Standard (id 2)
-    if (leaguePayload.league.id > 2) {
-      let tmpDate = new Date(startDate);
+    // If there are more than 0 history entries
+    if (leaguePayload.history.length) {
+      // Get the first entry's time
+      let firstDate = ExpandedRow.convertDateToUTC(new Date(leaguePayload.history[0].time));
   
-      for (let i = 0; i < daysMissing; i++) {
-        vals.mean     .push(0);
-        vals.median   .push(0);
-        vals.mode     .push(0);
-        vals.quantity .push(0);
+      // Get difference in days between league start and first entry
+      let timeDiff = Math.abs(startDate.getTime() - firstDate.getTime());
+      let diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)); 
   
+      // Fill missing days with "No data" (if any)
+      for (let i = 0; i < diffDays; i++) {
+        vals.mean.push(0);
+        vals.median.push(0);
+        vals.mode.push(0);
+        vals.quantity.push(0);
+  
+        // Format display date
+        let tmpDate = new Date(startDate);
+        tmpDate.setDate(tmpDate.getDate() + i);
         keys.push(ExpandedRow.formatDate(tmpDate));
-        tmpDate.setDate(tmpDate.getDate() + 1);
       }
     }
-
-    // Grab values
+  
+    // Add actual history data
     for (let i = 0; i < leaguePayload.history.length; i++) {
-      let element = leaguePayload.history[i];
-      vals.mean    .push(Math.round(element.mean   * 100) / 100);
-      vals.median  .push(Math.round(element.median * 100) / 100);
-      vals.mode    .push(Math.round(element.mode   * 100) / 100);
-      vals.quantity.push(element.quantity);
-
-      keys.push(ExpandedRow.formatDate(element.time));
+      const entry = leaguePayload.history[i];
+  
+      // Add current entry values
+      vals.mean.push(Math.round(entry.mean * 100) / 100);
+      vals.median.push(Math.round(entry.median * 100) / 100);
+      vals.mode.push(Math.round(entry.mode * 100) / 100);
+      vals.quantity.push(entry.quantity);
+      keys.push(ExpandedRow.formatDate(entry.time));
+  
+      // Check if there are any missing entries between the current one and the next one
+      if (i + 1 < leaguePayload.history.length) {
+        const nextEntry = leaguePayload.history[i + 1];
+  
+        // Get dates
+        let currentDate = ExpandedRow.convertDateToUTC(new Date(entry.time));
+        let nextDate = ExpandedRow.convertDateToUTC(new Date(nextEntry.time));
+  
+        // Get difference in days between entries
+        let timeDiff = Math.abs(nextDate.getTime() - currentDate.getTime());
+        let diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)) - 1; 
+  
+        // Fill missing days with "No data" (if any)
+        for (let i = 0; i < diffDays; i++) {
+          vals.mean.push(0);
+          vals.median.push(0);
+          vals.mode.push(0);
+          vals.quantity.push(0);
+          keys.push(ExpandedRow.formatDate(currentDate.addDays(i + 1)));
+        }
+      }
     }
-
+  
     // Add current values
-    vals.mean    .push(Math.round(leaguePayload.mean   * 100) / 100);
-    vals.median  .push(Math.round(leaguePayload.median * 100) / 100);
-    vals.mode    .push(Math.round(leaguePayload.mode   * 100) / 100);
+    vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
+    vals.median.push(Math.round(leaguePayload.median * 100) / 100);
+    vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
     vals.quantity.push(leaguePayload.quantity);
     keys.push("Now");
   
@@ -1216,6 +1247,12 @@ function parseQueryParam(key) {
   if (!results[2]) return   '';
 
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+Date.prototype.addDays = function(days) {
+  var date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
 }
 
 //------------------------------------------------------------------------------------------------------------
