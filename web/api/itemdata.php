@@ -44,7 +44,7 @@ function parse_data($stmt) {
       'corrupted' => $row['corrupted'],
       'links'     => $row['links'],
       'ilvl'      => $row['ilvl'],
-      'var'       => $row['var'],
+      'variation' => $row['var'],
       'icon'      => $row['icon'],
       'category'  => $row['category'],
       'group'     => $row['group'],
