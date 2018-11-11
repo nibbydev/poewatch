@@ -3,10 +3,10 @@ function get_data($pdo) {
   $query = "SELECT 
     dc.id                     AS categoryId, 
     dc.name                   AS categoryName, 
-    dc.display                AS pcategoryDisplay,
+    dc.display                AS categoryDisplay,
     GROUP_CONCAT(dg.id)       AS memberIds,
     GROUP_CONCAT(dg.name)     AS memberNames,
-    GROUP_CONCAT(dg.display)  AS memberDisplays
+    GROUP_CONCAT(IFNULL(dg.display, '')) AS memberDisplays
   FROM      data_categories   AS dc
   LEFT JOIN data_groups       AS dg
     ON      dc.id = dg.id_cat
@@ -36,7 +36,7 @@ function parse_data($stmt) {
         $tmp['groups'][] = array(
           'id'      => (int) $explMemberIds[$i],
           'name'    => $explMemberNames[$i],
-          'display' => $explMemberDisplays[$i]
+          'display' => $explMemberDisplays[$i] ? $explMemberDisplays[$i] : null
         );
       }
     }
