@@ -120,10 +120,10 @@ CREATE TABLE data_itemData (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure for table league_items_rolling
+-- Table structure for table league_items
 --
 
-CREATE TABLE league_items_rolling (
+CREATE TABLE league_items (
     id_l        SMALLINT       UNSIGNED NOT NULL,
     id_d        INT            UNSIGNED NOT NULL,
     time        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -152,28 +152,6 @@ CREATE TABLE league_items_rolling (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table league_items_inactive
---
-
-CREATE TABLE league_items_inactive (
-    id_l        SMALLINT       UNSIGNED NOT NULL,
-    id_d        INT            UNSIGNED NOT NULL,
-    time        TIMESTAMP      NOT NULL,
-    mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    min         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    max         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
-    quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
-    CONSTRAINT pk PRIMARY KEY (id_l, id_d)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
 -- Table structure league_entries
 --
 
@@ -186,8 +164,8 @@ CREATE TABLE league_entries (
     price      DECIMAL(14,8)  UNSIGNED NOT NULL,
     account    VARCHAR(32)    NOT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES  data_leagues         (id)   ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES  league_items_rolling (id_d) ON DELETE CASCADE,
+    FOREIGN KEY (id_l) REFERENCES  data_leagues (id)   ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
 
     CONSTRAINT pk PRIMARY KEY (id, account),
     INDEX approved_time (approved, time)
@@ -197,34 +175,7 @@ CREATE TABLE league_entries (
 -- League history tables
 -- --------------------------------------------------------------------------------------------------------------------
 
---
--- Table structure league_history_daily_inactive
---
-
-CREATE TABLE league_history_daily_inactive (
-    id_l      SMALLINT       UNSIGNED NOT NULL,
-    id_d      INT            UNSIGNED NOT NULL,
-    time      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    mean      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    median    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    mode      DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    min       DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    max       DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted   DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    count     INT(16)        UNSIGNED DEFAULT NULL,
-    quantity  INT(8)         UNSIGNED DEFAULT NULL,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
-
-    INDEX time (time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure league_history_daily_rolling
---
-
-CREATE TABLE league_history_daily_rolling (
+CREATE TABLE league_history_daily (
     id_l       SMALLINT       UNSIGNED NOT NULL,
     id_d       INT            UNSIGNED NOT NULL,
     time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -244,10 +195,10 @@ CREATE TABLE league_history_daily_rolling (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure league_history_hourly_quantity
+-- Table structure league_history_hourly
 --
 
-CREATE TABLE league_history_hourly_quantity (
+CREATE TABLE league_history_hourly (
     id_l  SMALLINT   UNSIGNED NOT NULL,
     id_d  INT        UNSIGNED NOT NULL,
     time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -453,25 +404,10 @@ DROP EVENT IF EXISTS remove24;
 CREATE EVENT remove24
   ON SCHEDULE EVERY 1 HOUR
   STARTS '2018-01-01 08:00:03'
-  COMMENT 'Clears out entries older than 1 day'
+  COMMENT 'Clears out entries older than 24h'
   DO
-    DELETE FROM league_history_hourly_quantity
+    DELETE FROM league_history_hourly
     WHERE       time < ADDDATE(NOW(), INTERVAL -25 HOUR);
-
---
--- Event configuration remove120
---
-
-DROP EVENT IF EXISTS remove120;
-
-CREATE EVENT remove120
-  ON SCHEDULE EVERY 1 DAY
-  STARTS '2018-01-01 08:00:06'
-  COMMENT 'Clears out entries older than 120 days'
-  DO
-    DELETE FROM league_history_daily_rolling
-    WHERE  id_l <= 2
-      AND  time < ADDDATE(NOW(), INTERVAL -120 DAY);
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- User accounts

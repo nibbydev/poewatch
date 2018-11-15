@@ -58,58 +58,17 @@ public class History {
     }
 
     /**
-     * Moves rows from table `league_items_rolling` to table `league_items_inactive` based on league active status
-     *
-     * @return True on success
-     */
-    public boolean moveInactiveItemEntries() {
-        String query1 = "INSERT INTO league_items_inactive ( " +
-                        "              id_l, id_d, time, " +
-                        "              mean, median, mode, " +
-                        "              min, max, exalted, count)" +
-                        "SELECT      id_l, id_d, time, " +
-                        "            mean, median, mode, " +
-                        "            min, max, exalted, count " +
-                        "FROM        league_items_rolling AS i " +
-                        "JOIN        data_leagues         AS l " +
-                        "  ON        l.id = i.id_l " +
-                        "WHERE       l.active = 0 ";
-
-        String query2 = "DELETE i " +
-                        "FROM   league_items_rolling AS i " +
-                        "JOIN   data_leagues         AS l " +
-                        "  ON   l.id = i.id_l " +
-                        "WHERE  l.active = 0 ";
-
-        String query3 = "UPDATE league_items_inactive AS i " +
-                        "JOIN ( " +
-                        "  SELECT  id, TIMESTAMPDIFF( " +
-                        "                DAY, " +
-                        "                STR_TO_DATE(start, '%Y-%m-%dT%H:%i:%sZ'), " +
-                        "                STR_TO_DATE(end,   '%Y-%m-%dT%H:%i:%sZ') " +
-                        "              ) AS diff " +
-                        "  FROM    data_leagues " +
-                        "  WHERE   active = 0 " +
-                        "  HAVING  diff IS NOT NULL " +
-                        ") AS l ON i.id_l = l.id " +
-                        "SET i.quantity = FLOOR(i.count / l.diff) ";
-
-        return database.executeUpdateQueries(query1, query2, query3);
-    }
-
-    /**
-     * Copies data from table `league_items_rolling` to table `league_history_hourly_quantity` every hour
+     * Copies data from table `league_items` to table `league_history_hourly` every hour
      * on a rolling basis with a history of 24 hours
      *
      * @return True on success
      */
     public boolean addHourly() {
-        String query =  "INSERT " +
-                        "INTO   league_history_hourly_quantity (" +
-                        "       id_l, id_d, inc) " +
+        String query =  "INSERT INTO league_history_hourly (" +
+                        "  id_l, id_d, inc) " +
                         "SELECT id_l, id_d, inc " +
-                        "FROM   league_items_rolling AS i " +
-                        "JOIN   data_leagues         AS l " +
+                        "FROM   league_items AS i " +
+                        "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
                         "WHERE  l.active = 1 " +
                         "  AND  i.inc > 0 ";
@@ -118,19 +77,19 @@ public class History {
     }
 
     /**
-     * Copies data from table `league_items_rolling` to table `league_history_daily_rolling` every 24h
-     * on a rolling basis with a history of 120 days for standard and hardcore
+     * Copies data from table `league_items` to table `league_history_daily` every 24h
+     * on a rolling basis
      *
      * @return True on success
      */
     public boolean addDaily() {
-        String query =  "INSERT INTO league_history_daily_rolling ( " +
+        String query =  "INSERT INTO league_history_daily ( " +
                         "  id_l, id_d, mean, median, mode, " +
                         "  min, max, exalted, count, quantity) " +
                         "SELECT " +
                         "  id_l, id_d, mean, median, mode, " +
                         "  min, max, exalted, count, quantity " +
-                        "FROM   league_items_rolling AS i " +
+                        "FROM   league_items AS i " +
                         "JOIN   data_leagues AS l " +
                         "  ON   i.id_l = l.id " +
                         "WHERE  l.active = 1 ";

@@ -154,7 +154,7 @@ public class Init {
         Map<Integer, List<Integer>> tmpLeagueIds = new HashMap<>();
 
         String query =  "SELECT   i.id_l, i.id_d " +
-                        "FROM     league_items_rolling AS i " +
+                        "FROM     league_items AS i " +
                         "JOIN     data_leagues AS l " +
                         "  ON     i.id_l = l.id " +
                         "WHERE    l.active = 1 " +
@@ -203,10 +203,13 @@ public class Init {
         Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
 
         String query =  "SELECT   i.id_l, did.name, i.median " +
-                        "FROM     league_items_rolling  AS i " +
+                        "FROM     league_items  AS i " +
                         "JOIN     data_itemData AS did " +
                         "  ON     i.id_d = did.id " +
-                        "WHERE    did.id_grp = 11 " +
+                        "JOIN     data_leagues  AS l " +
+                        "  ON     i.id_l = l.id " +
+                        "WHERE    l.active = 1 " +
+                        "  AND    did.id_grp = 11 " +
                         "ORDER BY i.id_l; ";
 
         try {

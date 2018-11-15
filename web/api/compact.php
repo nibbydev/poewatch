@@ -14,7 +14,7 @@ function get_data($pdo) {
   $query1 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
     i.exalted, i.count, i.quantity + i.inc AS quantity
-  FROM      league_items_rolling AS i 
+  FROM      league_items AS i 
   JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
   WHERE     l.name   = ?
@@ -25,7 +25,7 @@ function get_data($pdo) {
   $query2 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
     i.exalted, i.count, i.quantity + i.inc AS quantity
-  FROM      league_items_rolling AS i 
+  FROM      league_items AS i 
   JOIN      data_itemData AS did 
     ON      i.id_d = did.id 
   JOIN      data_leagues AS l 

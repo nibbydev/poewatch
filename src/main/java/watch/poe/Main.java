@@ -135,7 +135,6 @@ public class Main {
                 + "    worker - manage workers\n"
                 + "    id - add a start changeID\n"
                 + "    acc - account manager commands\n"
-                + "    moveitem - move inactive item entries to separate table\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -165,9 +164,6 @@ public class Main {
                         break;
                     case "acc":
                         commandAcc(userInput);
-                        break;
-                    case "moveitem":
-                        commandMoveItem();
                         break;
                     default:
                         logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]));
@@ -273,11 +269,5 @@ public class Main {
                 logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[1]));
                 break;
         }
-    }
-
-    private static void commandMoveItem() {
-        logger.info("Moving inactive item entries to separate table...");
-        database.history.moveInactiveItemEntries();
-        logger.info("Moving finished");
     }
 }

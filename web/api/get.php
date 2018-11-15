@@ -18,9 +18,7 @@ function check_league($pdo, $league) {
   $query = "SELECT l.id, l.active
   FROM data_leagues AS l
   JOIN (
-    SELECT DISTINCT id_l FROM league_items_rolling
-    UNION  DISTINCT
-    SELECT DISTINCT id_l FROM league_items_inactive
+    SELECT DISTINCT id_l FROM league_items
   ) AS leagues ON l.id = leagues.id_l
   WHERE l.name = ?
   LIMIT 1";
@@ -31,7 +29,7 @@ function check_league($pdo, $league) {
   return $stmt->rowCount() === 0 ? null : $stmt->fetch();
 }
 
-function get_data_rolling($pdo, $league, $category) {
+function get_data($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.count, i.quantity + i.inc AS quantity, 
@@ -40,44 +38,14 @@ function get_data_rolling($pdo, $league, $category) {
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`,
     i.spark AS history
-  FROM      league_items_rolling          AS i 
-  JOIN      data_itemData                 AS did 
+  FROM      league_items AS i 
+  JOIN      data_itemData AS did 
     ON      i.id_d = did.id 
-  JOIN      data_leagues                  AS l 
+  JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
-  JOIN      data_categories               AS dc
+  JOIN      data_categories AS dc
     ON      did.id_cat = dc.id 
-  LEFT JOIN data_groups                   AS dg 
-    ON      did.id_grp = dg.id 
-  WHERE     l.name   = ?
-    AND     dc.name  = ?
-    AND     l.active = 1 
-    AND     i.count  > 1 
-  ORDER BY  i.mean DESC";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$league, $category]);
-
-  return $stmt;
-}
-
-function get_data_inactive($pdo, $league, $category) {
-  $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.count, i.quantity, 
-    did.name, did.type, did.frame, 
-    did.tier, did.lvl, did.quality, did.corrupted, 
-    did.links, did.ilvl, did.var, did.icon, 
-    dc.name AS category, dg.name AS `group`,
-    NULL AS history
-  FROM      league_items_inactive         AS i 
-  JOIN      data_itemData                 AS did 
-    ON      i.id_d = did.id 
-  JOIN      data_leagues                  AS l 
-    ON      l.id = i.id_l 
-  JOIN      data_categories               AS dc 
-    ON      did.id_cat = dc.id 
-  LEFT JOIN data_groups                   AS dg 
+  LEFT JOIN data_groups AS dg 
     ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
     AND     dc.name  = ?
@@ -90,7 +58,7 @@ function get_data_inactive($pdo, $league, $category) {
   return $stmt;
 }
 
-function get_data_rolling_relic($pdo, $league) {
+function get_data_relic($pdo, $league) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.count, i.quantity + i.inc AS quantity, 
@@ -99,45 +67,14 @@ function get_data_rolling_relic($pdo, $league) {
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`,
     i.spark AS history
-  FROM      league_items_rolling          AS i 
-  JOIN      data_itemData                 AS did 
+  FROM      league_items AS i 
+  JOIN      data_itemData AS did 
     ON      i.id_d = did.id 
-  JOIN      data_leagues                  AS l 
+  JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
-  JOIN      data_categories               AS dc 
+  JOIN      data_categories AS dc 
     ON      did.id_cat = dc.id 
-  LEFT JOIN data_groups                   AS dg 
-    ON      did.id_grp = dg.id 
-  WHERE     l.name   = ?
-    AND     did.frame = 9
-    AND     did.links IS NULL
-    AND     l.active = 1 
-    AND     i.count  > 1 
-  ORDER BY  i.mean DESC";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$league]);
-
-  return $stmt;
-}
-
-function get_data_inactive_relic($pdo, $league) {
-  $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.count, i.quantity, 
-    did.name, did.type, did.frame, 
-    did.tier, did.lvl, did.quality, did.corrupted, 
-    did.links, did.ilvl, did.var, did.icon, 
-    dc.name AS category, dg.name AS `group`
-    NULL AS history
-  FROM      league_items_inactive         AS i 
-  JOIN      data_itemData                 AS did 
-    ON      i.id_d = did.id 
-  JOIN      data_leagues                  AS l 
-    ON      l.id = i.id_l 
-  JOIN      data_categories               AS dc 
-    ON      did.id_cat = dc.id 
-  LEFT JOIN data_groups                   AS dg 
+  LEFT JOIN data_groups AS dg 
     ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
     AND     did.frame = 9
@@ -238,18 +175,10 @@ if ($state === null) {
 }
 
 // Get database entries based on league state
-if ($state["active"]) {
-  if ($_GET["category"] === "relic") {
-    $stmt = get_data_rolling_relic($pdo, $_GET["league"]);
-  } else {
-    $stmt = get_data_rolling($pdo, $_GET["league"], $_GET["category"]);
-  }
+if ($_GET["category"] === "relic") {
+  $stmt = get_data_relic($pdo, $_GET["league"]);
 } else {
-  if ($_GET["category"] === "relic") {
-    $stmt = get_data_inactive_relic($pdo, $_GET["league"]);
-  } else {
-    $stmt = get_data_inactive($pdo, $_GET["league"], $_GET["category"]);
-  }
+  $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
 }
 
 // If no results with provided id
