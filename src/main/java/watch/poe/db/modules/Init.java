@@ -236,42 +236,6 @@ public class Init {
     }
 
     /**
-     * Loads provided Map with currency alias data from database
-     *
-     * @param currencyAliasToName Map that will contain currency alias - currency name relations
-     * @return True on success
-     */
-    public boolean getCurrencyAliases(Map<String, String> currencyAliasToName) {
-        String query =  "SELECT ci.name AS name, " +
-                        "       ca.name AS alias " +
-                        "FROM   data_currencyItems   AS ci " +
-                        "JOIN   data_currencyAliases AS ca " +
-                        "  ON   ci.id = ca.id_ci; ";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                ResultSet resultSet = statement.executeQuery();
-
-                while (resultSet.next()) {
-                    String name = resultSet.getString("name");
-                    String alias = resultSet.getString("alias");
-
-                    currencyAliasToName.put(alias, name);
-                }
-            }
-
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
      * Loads provided Map with timer delay entries from database
      *
      * @param timeLog Empty map that will be filled with key - TimerList relations

@@ -3,6 +3,7 @@ package poe.manager.relation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
+import poe.initializers.CurrencyAliasInitializer;
 import poe.manager.entry.item.Item;
 import poe.manager.entry.item.Key;
 
@@ -16,7 +17,7 @@ public class RelationManager {
     private Database database;
 
     private Map<Key, Integer> keyToId = new HashMap<>();
-    private Map<String, String> currencyAliasToName = new HashMap<>();
+    private static Map<String, String> currencyAliasToName = CurrencyAliasInitializer.GetAliasMap();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
     private List<Key> keysInUse = new ArrayList<>();
     // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
@@ -32,15 +33,6 @@ public class RelationManager {
      */
     public boolean init() {
         boolean success;
-
-        success = database.init.getCurrencyAliases(currencyAliasToName);
-        if (!success) {
-            logger.error("Failed to query currency aliases from database. Shutting down...");
-            return false;
-        } else if (currencyAliasToName.isEmpty()) {
-            logger.error("Database did not contain any currency aliases. Shutting down...");
-            return false;
-        }
 
         success = database.init.getCategories(categoryRelations);
         if (!success) {
