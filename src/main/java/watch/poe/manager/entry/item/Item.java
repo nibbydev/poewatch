@@ -1,11 +1,15 @@
 package poe.manager.entry.item;
 
 
+import poe.initializers.VariantInitializer;
+import poe.manager.entry.item.variant.ItemVariant;
+import poe.manager.entry.item.variant.Variant;
 import poe.manager.relation.RelationManager;
 
 public class Item {
     private RelationManager relationManager;
 
+    private static final ItemVariant[] variants = VariantInitializer.GetVariants();
     private static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
     private Mappers.BaseItem base;
     private String branch;
@@ -290,7 +294,7 @@ public class Item {
         }
 
         extractItemLinks();
-        checkSpecialItemVariant();
+        checkItemVariant();
     }
 
     /**
@@ -408,149 +412,33 @@ public class Item {
     /**
      * Check if item has a variant
      */
-    private void checkSpecialItemVariant() {
-        switch (name) {
-            // Try to determine the type of Atziri's Splendour by looking at the item explicit mods
-            case "Atziri's Splendour":
-                switch (String.join("#", base.getExplicitMods().get(0).split("\\d+"))) {
-                    case "#% increased Armour, Evasion and Energy Shield":
-                        variation = "ar/ev/es";
-                        break;
+    private void checkItemVariant() {
+        int matches;
 
-                    case "#% increased Armour and Energy Shield":
-                        if (base.getExplicitMods().get(1).contains("Life"))
-                            variation = "ar/es/li";
-                        else
-                            variation = "ar/es";
-                        break;
+        for (ItemVariant itemVariant : variants) {
+            if (!name.equals(itemVariant.name)) {
+                continue;
+            }
 
-                    case "#% increased Evasion and Energy Shield":
-                        if (base.getExplicitMods().get(1).contains("Life"))
-                            variation = "ev/es/li";
-                        else
-                            variation = "ev/es";
-                        break;
-
-                    case "#% increased Armour and Evasion":
-                        variation = "ar/ev";
-                        break;
-
-                    case "#% increased Armour":
-                        variation = "ar";
-                        break;
-
-                    case "#% increased Evasion Rating":
-                        variation = "ev";
-                        break;
-
-                    case "+# to maximum Energy Shield":
-                        variation = "es";
-                        break;
-                }
-                break;
-
-            case "Vessel of Vinktar":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : base.getExplicitMods()) {
-                    if (explicitMod.contains("Lightning Damage to Spells")) {
-                        variation = "spells";
-                        break;
-                    } else if (explicitMod.contains("Lightning Damage to Attacks")) {
-                        variation = "attacks";
-                        break;
-                    } else if (explicitMod.contains("Converted to Lightning")) {
-                        variation = "conversion";
-                        break;
-                    } else if (explicitMod.contains("Damage Penetrates")) {
-                        variation = "penetration";
-                        break;
+            for (Variant variant : itemVariant.variants) {
+                // Go though all the item's explicit modifiers and the current variant's mods
+                matches = 0;
+                for (String variantMod : variant.mods) {
+                    for (String itemMod : base.getExplicitMods()) {
+                        if (itemMod.contains(variantMod)) {
+                            // If one of the item's mods matches one of the variant's mods, increase the match counter
+                            matches++;
+                            break;
+                        }
                     }
                 }
-                break;
 
-            case "Doryani's Invitation":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : base.getExplicitMods()) {
-                    if (explicitMod.contains("increased Lightning Damage")) {
-                        variation = "lightning";
-                        break;
-                    } else if (explicitMod.contains("increased Fire Damage")) {
-                        variation = "fire";
-                        break;
-                    } else if (explicitMod.contains("increased Cold Damage")) {
-                        variation = "cold";
-                        break;
-                    } else if (explicitMod.contains("increased Global Physical Damage")) {
-                        variation = "physical";
-                        break;
-                    }
+                // If all the variant's mods were present in the item then this item will take this variant's variation
+                if (matches == variant.mods.length) {
+                    this.variation = variant.variation;
+                    return;
                 }
-                break;
-
-            case "Yriel's Fostering":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : base.getExplicitMods()) {
-                    if (explicitMod.contains("Bestial Snake")) {
-                        variation = "snake";
-                        break;
-                    } else if (explicitMod.contains("Bestial Ursa")) {
-                        variation = "ursa";
-                        break;
-                    } else if (explicitMod.contains("Bestial Rhoa")) {
-                        variation = "rhoa";
-                        break;
-                    }
-                }
-                break;
-
-            case "Volkuur's Guidance":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : base.getExplicitMods()) {
-                    if (explicitMod.contains("Fire Damage to Spells")) {
-                        variation = "fire";
-                        break;
-                    } else if (explicitMod.contains("Cold Damage to Spells")) {
-                        variation = "cold";
-                        break;
-                    } else if (explicitMod.contains("Lightning Damage to Spells")) {
-                        variation = "lightning";
-                        break;
-                    }
-                }
-                break;
-
-            case "Impresence":
-                // Attempt to match preset mod with item mod
-                for (String explicitMod : base.getExplicitMods()) {
-                    if (explicitMod.contains("Lightning Damage")) {
-                        variation = "lightning";
-                        break;
-                    } else if (explicitMod.contains("Fire Damage")) {
-                        variation = "fire";
-                        break;
-                    } else if (explicitMod.contains("Cold Damage")) {
-                        variation = "cold";
-                        break;
-                    } else if (explicitMod.contains("Physical Damage")) {
-                        variation = "physical";
-                        break;
-                    } else if (explicitMod.contains("Chaos Damage")) {
-                        variation = "chaos";
-                        break;
-                    }
-                }
-                break;
-
-            case "Lightpoacher":
-            case "Shroud of the Lightless":
-            case "Bubonic Trail":
-            case "Tombfist":
-            case "Command of the Pit":
-                if (base.getExplicitMods().get(0).equals("Has 1 Abyssal Socket"))
-                    variation = "1 socket";
-                else if (base.getExplicitMods().get(0).equals("Has 2 Abyssal Sockets"))
-                    variation = "2 sockets";
-                break;
+            }
         }
     }
 
