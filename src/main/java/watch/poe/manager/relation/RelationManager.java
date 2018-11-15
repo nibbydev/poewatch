@@ -3,6 +3,7 @@ package poe.manager.relation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
+import poe.initializers.BaseItemInitializer;
 import poe.initializers.CurrencyAliasInitializer;
 import poe.manager.entry.item.Item;
 import poe.manager.entry.item.Key;
@@ -22,7 +23,7 @@ public class RelationManager {
     private List<Key> keysInUse = new ArrayList<>();
     // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
     private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
-    private Map<String, Set<String>> baseMap = new HashMap<>();
+    private static Map<String, Set<String>> baseMap = BaseItemInitializer.GenBaseMap();
 
     public RelationManager(Database database) {
         this.database = database;
@@ -56,14 +57,6 @@ public class RelationManager {
             return false;
         } else if (leagueIds.isEmpty()) {
             logger.warn("Database did not contain any league item id information");
-        }
-
-        success = database.init.getBaseItems(baseMap);
-        if (!success) {
-            logger.error("Failed to query base item names from database. Shutting down...");
-            return false;
-        } else if (baseMap.isEmpty()) {
-            logger.warn("Database did not contain any base item names");
         }
 
         return true;
