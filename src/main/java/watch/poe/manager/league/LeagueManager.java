@@ -219,7 +219,7 @@ public class LeagueManager {
 
         try {
             // Define the request
-            URL request = new URL(config.getString("league.apiUrl"));
+            URL request = new URL("http://api.pathofexile.com/leagues?type=main");
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             connection.setReadTimeout(config.getInt("league.readTimeout"));

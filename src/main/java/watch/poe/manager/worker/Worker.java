@@ -116,7 +116,7 @@ public class Worker extends Thread {
 
         try {
             // Define the request
-            URL request = new URL(config.getString("worker.apiUrl") + this.job);
+            URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection

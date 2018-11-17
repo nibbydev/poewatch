@@ -154,7 +154,7 @@ public class Init {
         Map<Integer, List<Integer>> tmpLeagueIds = new HashMap<>();
 
         String query =  "SELECT   i.id_l, i.id_d " +
-                        "FROM     league_items_rolling AS i " +
+                        "FROM     league_items AS i " +
                         "JOIN     data_leagues AS l " +
                         "  ON     i.id_l = l.id " +
                         "WHERE    l.active = 1 " +
@@ -203,10 +203,13 @@ public class Init {
         Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
 
         String query =  "SELECT   i.id_l, did.name, i.median " +
-                        "FROM     league_items_rolling  AS i " +
+                        "FROM     league_items  AS i " +
                         "JOIN     data_itemData AS did " +
                         "  ON     i.id_d = did.id " +
-                        "WHERE    did.id_grp = 11 " +
+                        "JOIN     data_leagues  AS l " +
+                        "  ON     i.id_l = l.id " +
+                        "WHERE    l.active = 1 " +
+                        "  AND    did.id_grp = 11 " +
                         "ORDER BY i.id_l; ";
 
         try {
@@ -232,42 +235,6 @@ public class Init {
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
             return null;
-        }
-    }
-
-    /**
-     * Loads provided Map with currency alias data from database
-     *
-     * @param currencyAliasToName Map that will contain currency alias - currency name relations
-     * @return True on success
-     */
-    public boolean getCurrencyAliases(Map<String, String> currencyAliasToName) {
-        String query =  "SELECT ci.name AS name, " +
-                        "       ca.name AS alias " +
-                        "FROM   data_currencyItems   AS ci " +
-                        "JOIN   data_currencyAliases AS ca " +
-                        "  ON   ci.id = ca.id_ci; ";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                ResultSet resultSet = statement.executeQuery();
-
-                while (resultSet.next()) {
-                    String name = resultSet.getString("name");
-                    String alias = resultSet.getString("alias");
-
-                    currencyAliasToName.put(alias, name);
-                }
-            }
-
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
         }
     }
 
@@ -316,43 +283,27 @@ public class Init {
     }
 
     /**
-     * Loads provided Map with item base names from database
+     * Gets the local changeId
      *
-     * @param baseMap Empty map that will contain category - base name relations
-     * @return True on success
+     * @return Local changeId or null on error
      */
-    public boolean getBaseItems(Map<String, Set<String>> baseMap) {
-        Map<String, Set<String>> tmpBaseMap = new HashMap<>();
-
-        String query = "SELECT * FROM data_baseNames; ";
+    public String getChangeID() {
+        String query = "SELECT * FROM data_changeId; ";
 
         try {
             if (database.connection.isClosed()) {
-                return false;
-            }
-
-            if (baseMap == null) {
-                throw new SQLException("Provided map was null");
+                return null;
             }
 
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    String category = resultSet.getString("category");
-                    Set<String> tmpBaseSet = tmpBaseMap.getOrDefault(category, new HashSet<>());
-                    tmpBaseSet.add(resultSet.getString("base"));
-                    tmpBaseMap.putIfAbsent(category, tmpBaseSet);
-                }
+                resultSet.next();
+                return resultSet.getString("changeId");
             }
-
-            baseMap.clear();
-            baseMap.putAll(tmpBaseMap);
-
-            return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
-            return false;
         }
+
+        return null;
     }
 }

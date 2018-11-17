@@ -97,14 +97,14 @@ public class Index {
     }
 
     /**
-     * Creates an item entry in table `league_items_rolling`
+     * Creates an item entry in table `league_items`
      *
      * @param leagueId ID of item's league
      * @param dataId   ID of item
      * @return True on success
      */
     public boolean createLeagueItem(Integer leagueId, Integer dataId) {
-        String query =  "INSERT INTO league_items_rolling (id_l, id_d) VALUES (?, ?) " +
+        String query =  "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (database.connection.isClosed()) {

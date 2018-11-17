@@ -59,7 +59,8 @@ public class Main {
             entryManager.setWorkerManager(workerManager);
 
             // Parse CLI parameters
-            parseCommandParameters(args);
+            success = parseCommandParameters(args);
+            if (!success) return;
 
             // Start controllers
             entryManager.start();
@@ -80,17 +81,31 @@ public class Main {
      * Checks CLI parameters
      *
      * @param args Passed CLI args
+     * @return False if app should exit
      */
-    private static void parseCommandParameters(String[] args) {
+    private static boolean parseCommandParameters(String[] args) {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
             workerManager.spawnWorkers(config.getInt("worker.defaultCount"));
             System.out.println("[INFO] Spawned 3 workers");
         }
+
         if (!newArgs.contains("-id")) {
-            workerManager.setNextChangeID(workerManager.getLatestChangeID());
-            System.out.println("[INFO] New ChangeID added");
+            String changeId = database.init.getChangeID();
+
+            if (changeId == null) {
+                System.out.println("[ERROR] Local ChangeID not found");
+                changeId = workerManager.getLatestChangeID();
+            }
+
+            if (changeId == null) {
+                System.out.println("[ERROR] Could not get a change id");
+                return false;
+            }
+
+            workerManager.setNextChangeID(changeId);
+            System.out.println("[INFO] ChangeID (" + changeId + ") added");
         }
 
         for (String arg : newArgs) {
@@ -103,26 +118,17 @@ public class Main {
                     System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
                     break;
                 case "-id":
-                    switch (newArgs.get(newArgs.lastIndexOf(arg) + 1)) {
-                        case "local":
-                            workerManager.setNextChangeID(workerManager.getLocalChangeID());
-                            System.out.println("[INFO] Local ChangeID added");
-                            break;
-                        case "new":
-                            workerManager.setNextChangeID(workerManager.getLatestChangeID());
-                            System.out.println("[INFO] New ChangeID added");
-                            break;
-                        default:
-                            workerManager.setNextChangeID(newArgs.get(newArgs.lastIndexOf(arg) + 1));
-                            System.out.println("[INFO] Custom ChangeID added");
-                            break;
-                    }
+                    String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 1);
+                    workerManager.setNextChangeID(changeId);
+                    System.out.println("[INFO] New ChangeID (" + changeId + ") added");
                     break;
                 default:
                     System.out.println("[ERROR] Unknown CLI parameter: " + arg);
                     break;
             }
         }
+
+        return true;
     }
 
     /**
@@ -133,9 +139,7 @@ public class Main {
                 + "    help - display this help page\n"
                 + "    exit - exit the script safely\n"
                 + "    worker - manage workers\n"
-                + "    id - add a start changeID\n"
                 + "    acc - account manager commands\n"
-                + "    moveitem - move inactive item entries to separate table\n"
                 + "    about - show about page\n";
         System.out.println(helpString);
 
@@ -154,9 +158,6 @@ public class Main {
                     case "exit":
                         System.out.println("[INFO] Shutting down..");
                         return;
-                    case "id":
-                        commandIdAdd(userInput);
-                        break;
                     case "worker":
                         commandWorker(userInput);
                         break;
@@ -165,9 +166,6 @@ public class Main {
                         break;
                     case "acc":
                         commandAcc(userInput);
-                        break;
-                    case "moveitem":
-                        commandMoveItem();
                         break;
                     default:
                         logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]));
@@ -182,44 +180,6 @@ public class Main {
     //------------------------------------------------------------------------------------------------------------
     // Command loop controllers
     //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Adds a ChangeID to the queue
-     *
-     * @param userInput The changeID to be added
-     */
-    private static void commandIdAdd(String[] userInput) {
-        String helpString = "[INFO] Available changeID commands:\n";
-        helpString += "    'id <string>' - Add optional string to job queue\n";
-        helpString += "    'id local' - Add last locally used job to queue\n";
-        helpString += "    'id new' - Add newest string to job queue (recommended)\n";
-
-        if (userInput.length < 2) {
-            System.out.println(helpString);
-            return;
-        }
-
-        switch (userInput[1]) {
-            case "local":
-                workerManager.setNextChangeID(workerManager.getLocalChangeID());
-                System.out.println("[INFO] Local ChangeID added");
-                break;
-            case "new":
-                workerManager.setNextChangeID(workerManager.getLatestChangeID());
-                System.out.println("[INFO] New ChangeID added");
-                break;
-            default:
-                workerManager.setNextChangeID(userInput[1]);
-                System.out.println("[INFO] Custom ChangeID added");
-                break;
-
-        }
-
-        // Wake worker controller
-        synchronized (workerManager.getMonitor()) {
-            workerManager.getMonitor().notifyAll();
-        }
-    }
 
     /**
      * Holds commands that have something to do with worker operation
@@ -273,11 +233,5 @@ public class Main {
                 logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[1]));
                 break;
         }
-    }
-
-    private static void commandMoveItem() {
-        logger.info("Moving inactive item entries to separate table...");
-        database.history.moveInactiveItemEntries();
-        logger.info("Moving finished");
     }
 }

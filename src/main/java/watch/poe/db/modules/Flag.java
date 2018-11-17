@@ -15,16 +15,16 @@ public class Flag {
     }
 
     /**
-     * Updates volatile state for entries in table `league_items_rolling`
+     * Updates volatile state for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean updateVolatile() {
-        String query1 = "UPDATE league_items_rolling " +
+        String query1 = "UPDATE league_items " +
                         "SET volatile = IF(`dec` > 0 && `dec` >= inc * ?, 1, 0);";
 
-        String query2 = "UPDATE  league_entries       AS e " +
-                        "JOIN    league_items_rolling AS i " +
+        String query2 = "UPDATE  league_entries AS e " +
+                        "JOIN    league_items   AS i " +
                         "  ON    e.id_d = i.id_d " +
                         "    AND e.id_l = i.id_l " +
                         "SET     e.approved = 0 " +
@@ -54,21 +54,21 @@ public class Flag {
     }
 
     /**
-     * Updates approved state for entries in table `league_items_rolling`
+     * Updates approved state for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean updateApproved() {
-        String query1 = "UPDATE  league_entries       AS e " +
-                        "JOIN    league_items_rolling AS i " +
+        String query1 = "UPDATE  league_entries AS e " +
+                        "JOIN    league_items   AS i " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +
                         "SET     e.approved = 1 " +
                         "WHERE   e.approved = 0 " +
                         "  AND   i.median   = 0 ";
 
-        String query2 = "UPDATE  league_entries       AS e " +
-                        "JOIN    league_items_rolling AS i " +
+        String query2 = "UPDATE  league_entries AS e " +
+                        "JOIN    league_items   AS i " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +
                         "SET     e.approved = 1 " +
@@ -95,12 +95,12 @@ public class Flag {
     }
 
     /**
-     * Updates multipliers for entries in table `league_items_rolling`
+     * Updates multipliers for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean updateMultipliers() {
-        String query =  "UPDATE league_items_rolling " +
+        String query =  "UPDATE league_items " +
                         "SET multiplier = IF(? - quantity / ? < ?, ?, ? - quantity / ?)";
 
         try {
@@ -128,12 +128,12 @@ public class Flag {
     }
 
     /**
-     * Updates counters for entries in table `league_items_rolling`
+     * Updates counters for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean updateCounters() {
-        String query1 = "UPDATE league_items_rolling AS i " +
+        String query1 = "UPDATE league_items AS i " +
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
@@ -145,7 +145,7 @@ public class Flag {
                         "    i.count = i.count + e.count, " +
                         "    i.inc = i.inc + e.count ";
 
-        String query2 = "UPDATE league_items_rolling AS i " +
+        String query2 = "UPDATE league_items AS i " +
                         "    JOIN ( " +
                         "        SELECT id_l, id_d, COUNT(*) AS count " +
                         "        FROM league_entries " +
@@ -163,12 +163,12 @@ public class Flag {
     }
 
     /**
-     * Resets counters for entries in table `league_items_rolling`
+     * Resets counters for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean resetCounters() {
-        String query = "UPDATE league_items_rolling SET inc = 0, `dec` = 0 ";
+        String query = "UPDATE league_items SET inc = 0, `dec` = 0 ";
 
         return database.executeUpdateQueries(query);
     }

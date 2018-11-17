@@ -15,13 +15,13 @@ public class Calc {
     }
 
     /**
-     * Calculates mean, median and mode price for items in table `league_items_rolling` based on approved entries in
+     * Calculates mean, median and mode price for items in table `league_items` based on approved entries in
      * `league_entries`
      *
      * @return True on success
      */
     public boolean calculatePrices() {
-        String query =  "UPDATE league_items_rolling AS i " +
+        String query =  "UPDATE league_items AS i " +
                         "JOIN ( " +
                         "  SELECT   id_l, id_d, " +
                         "           AVG(price)        AS mean, " +
@@ -64,13 +64,13 @@ public class Calc {
     }
 
     /**
-     * Calculates median price for volatile items in table `league_items_rolling` based on any entries in
+     * Calculates median price for volatile items in table `league_items` based on any entries in
      * `league_entries`
      *
      * @return True on success
      */
     public boolean calculateVolatileMedian() {
-        String query =  "UPDATE league_items_rolling AS i " +
+        String query =  "UPDATE league_items AS i " +
                         "JOIN ( " +
                         "  SELECT   id_l, id_d, " +
                         "           MEDIAN(price) AS median " +
@@ -101,16 +101,16 @@ public class Calc {
     }
 
     /**
-     * Calculates exalted price for items in table `league_items_rolling` based on exalted prices in same table
+     * Calculates exalted price for items in table `league_items` based on exalted prices in same table
      *
      * @return True on success
      */
     public boolean calculateExalted() {
-        String query =  "UPDATE    league_items_rolling AS i " +
+        String query =  "UPDATE    league_items AS i " +
                         "JOIN ( " +
                         "  SELECT  i.id_l, i.mean " +
-                        "  FROM    league_items_rolling AS i " +
-                        "  JOIN    data_itemData        AS did " +
+                        "  FROM    league_items  AS i " +
+                        "  JOIN    data_itemData AS did " +
                         "    ON    i.id_d = did.id " +
                         "  WHERE   did.frame = 5 " +
                         "    AND   did.name = 'Exalted Orb' " +
@@ -139,15 +139,15 @@ public class Calc {
     }
 
     /**
-     * Calculates quantity for items in table `league_items_rolling` based on history entries from table `league_history`
+     * Calculates quantity for items in table `league_items` based on history entries from table `league_history`
      *
      * @return True on success
      */
     public boolean calcQuantity() {
-        String query =  "UPDATE league_items_rolling AS i  " +
+        String query =  "UPDATE league_items AS i  " +
                         "LEFT JOIN ( " +
                         "    SELECT   id_l, id_d, SUM(inc) AS quantity " +
-                        "    FROM     league_history_hourly_quantity " +
+                        "    FROM     league_history_hourly " +
                         "    WHERE    time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "    GROUP BY id_l, id_d " +
                         ") AS    h " +
@@ -159,21 +159,21 @@ public class Calc {
     }
 
     /**
-     * Calculates spark data for items in table `league_items_rolling` based on history entries
+     * Calculates spark data for items in table `league_items` based on history entries
      *
      * @return True on success
      */
     public boolean calcSpark() {
-        String query =  "UPDATE league_items_rolling AS i " +
+        String query =  "UPDATE league_items AS i " +
                         "JOIN ( " +
                         "  SELECT    i.id_l, i.id_d, " +
-                        "            SUBSTRING_INDEX(GROUP_CONCAT(lhdr.mean ORDER BY lhdr.time DESC SEPARATOR ','), ',', 6) AS history " +
-                        "  FROM      league_items_rolling          AS i " +
-                        "  JOIN      data_leagues                  AS l " +
+                        "            SUBSTRING_INDEX(GROUP_CONCAT(lhd.mean ORDER BY lhd.time DESC SEPARATOR ','), ',', 6) AS history " +
+                        "  FROM      league_items  AS i " +
+                        "  JOIN      data_leagues  AS l " +
                         "    ON      l.id = i.id_l " +
-                        "  JOIN      league_history_daily_rolling  AS lhdr " +
-                        "    ON      lhdr.id_d = i.id_d " +
-                        "      AND   lhdr.id_l = l.id " +
+                        "  JOIN      league_history_daily  AS lhd " +
+                        "    ON      lhd.id_d = i.id_d " +
+                        "      AND   lhd.id_l = l.id " +
                         "  WHERE     l.active = 1 " +
                         "    AND     i.count  > 1 " +
                         "  GROUP BY  i.id_l, i.id_d " +

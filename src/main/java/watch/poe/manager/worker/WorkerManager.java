@@ -3,7 +3,7 @@ package poe.manager.worker;
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;;
+import org.slf4j.LoggerFactory;
 import poe.db.Database;
 import poe.manager.entry.EntryManager;
 import poe.manager.entry.item.Mappers;
@@ -12,15 +12,16 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
+;
+
 /**
  * Manages worker objects (eg. distributing jobs, adding/removing workers)
  */
 public class WorkerManager extends Thread {
     private static Logger logger = LoggerFactory.getLogger(WorkerManager.class);
-    private Config config;
-
     private final Gson gson = new Gson();
     private final Object monitor = new Object();
+    private Config config;
     private ArrayList<Worker> workerList = new ArrayList<>();
     private volatile boolean flag_Run = true;
     private volatile boolean readyToExit = false;
@@ -170,54 +171,32 @@ public class WorkerManager extends Thread {
      * @return ChangeID as string
      */
     public String getLatestChangeID() {
-        // Get data from API
-        String idOne = downloadChangeID("http://poe-rates.com/actions/getLastChangeId.php");
-        String idTwo = downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
-
-        // Get current cluster index
-        int sizeTwo = Integer.parseInt(idOne.substring(idOne.lastIndexOf('-') + 1));
-        int sizeThree = Integer.parseInt(idTwo.substring(idTwo.lastIndexOf('-') + 1));
-
-        // Compare cluster indexes and return latest
-        if (sizeThree < sizeTwo) return idOne;
-        else return idTwo;
+        return downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
     }
 
     /**
      * Downloads content of ChangeID url and returns it
      *
      * @param url Link to ChangeID resource
-     * @return ChangeID as string
+     * @return ChangeID as string or null on failure
      */
     private String downloadChangeID(String url) {
-        String response;
-
-        // Download data
         try {
             URL request = new URL(url);
             InputStream input = request.openStream();
 
-            response = new String(input.readAllBytes());
+            String response = new String(input.readAllBytes());
+
+            try {
+                return gson.fromJson(response, Mappers.ChangeID.class).get();
+            } catch (Exception ex) {
+                logger.error(ex.toString());
+            }
         } catch (Exception ex) {
-            response = "0-0-0-0-0";
+            logger.error(ex.toString());
         }
 
-        try {
-            response = gson.fromJson(response, Mappers.ChangeID.class).get();
-        } catch (Exception ex) {
-            logger.error("Could not download ChangeID from: " + url, ex);
-        }
-
-        return response;
-    }
-
-    /**
-     * Gets local ChangeID
-     *
-     * @return ChangeID as string
-     */
-    public String getLocalChangeID() {
-        return downloadChangeID("http://api.poe.watch/id.php");
+        return null;
     }
 
     //------------------------------------------------------------------------------------------------------------

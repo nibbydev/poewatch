@@ -300,9 +300,7 @@ function GetLeagues($pdo) {
   $query = "SELECT l.name, l.display, l.active
   FROM data_leagues AS l 
   JOIN ( 
-    SELECT DISTINCT id_l FROM league_items_rolling 
-    UNION  DISTINCT 
-    SELECT DISTINCT id_l FROM league_items_inactive 
+    SELECT DISTINCT id_l FROM league_items 
   ) AS leagues ON l.id = leagues.id_l 
   ORDER BY active DESC, id DESC";
 
