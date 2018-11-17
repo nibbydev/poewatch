@@ -281,4 +281,29 @@ public class Init {
             return false;
         }
     }
+
+    /**
+     * Gets the local changeId
+     *
+     * @return Local changeId or null on error
+     */
+    public String getChangeID() {
+        String query = "SELECT * FROM data_changeId; ";
+
+        try {
+            if (database.connection.isClosed()) {
+                return null;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+                resultSet.next();
+                return resultSet.getString("changeId");
+            }
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+
+        return null;
+    }
 }
