@@ -228,6 +228,83 @@
               </div>
             </div>
 
+            <div class="col-12">
+              <div class="card-deck">
+                <div class="card custom-card mb-3">
+                  <div class="card-header">
+                    <h2 class="m-0">
+                      <a href='https://api.poe.watch/characters?account=novynn' target='_blank'>characters</a>
+                      <span class='badge custom-badge-green'>New</span>
+                    </h2>
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text">Get player character names found through the stash API. If a player has listed an item in a public stash tab, that character name is recorded.</p>
+                  
+                    <!-- Request fields -->
+                    <h5 class="card-title">Request fields</h5>
+                    <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                      <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Param</th>
+                            <th>Required</th>
+                            <th class="w-100">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>account</td>
+                            <td><span class='badge custom-badge-green'>✓</span></td>
+                            <td>Case insensitive account name</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <!--/Request fields/-->
+                  </div>
+
+
+                  <div class="card-footer slim-card-edge"></div>
+                </div>
+
+                <div class="card custom-card mb-3">
+                  <div class="card-header">
+                    <h2 class="m-0">
+                      <a href='https://api.poe.watch/accounts?character=quillhitman' target='_blank'>accounts</a>
+                      <span class='badge custom-badge-green'>New</span>
+                    </h2>
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text">Get player account names found through the stash API. If a player has listed an item in a public stash tab, that account name is recorded.</p>
+                  
+                    <!-- Request fields -->
+                    <h5 class="card-title">Request fields</h5>
+                    <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                      <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Param</th>
+                            <th>Required</th>
+                            <th class="w-100">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>character</td>
+                            <td><span class='badge custom-badge-green'>✓</span></td>
+                            <td>Case insensitive character name</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <!--/Request fields/-->
+
+                  </div>
+                  <div class="card-footer slim-card-edge"></div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
