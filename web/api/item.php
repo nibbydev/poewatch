@@ -4,8 +4,27 @@ function error($code, $msg) {
   die( json_encode( array("error" => $msg) ) );
 }
 
+function check_errors() {
+  if (!isset($_GET["id"])) {
+    error(400, "Missing id");
+  }
+
+  if (!ctype_digit($_GET["id"])) {
+    error(400, "Invalid id");
+  }
+}
+
 function get_league_data($pdo, $id) {
-  $query = "SELECT 
+  $query = "
+  SELECT 
+    i.mean, 
+    i.median, 
+    i.mode, 
+    i.min, 
+    i.max, 
+    i.exalted, 
+    i.count, 
+    i.quantity, 
     l.id        AS leagueId,
     l.active    AS leagueActive, 
     l.upcoming  AS leagueUpcoming, 
@@ -14,22 +33,13 @@ function get_league_data($pdo, $id) {
     l.name      AS leagueName, 
     l.display   AS leagueDisplay, 
     l.start     AS leagueStart,
-    l.end       AS leagueEnd,
-    TIMESTAMPDIFF(SECOND, l.start, l.end) AS leagueTotal,
-    TIMESTAMPDIFF(SECOND, l.start, NOW()) AS leagueElapsed,
-    TIMESTAMPDIFF(SECOND, NOW(), l.end)   AS leagueRemaining,
-    GROUP_CONCAT(h.mean      ORDER BY h.time ASC) AS mean_list,
-    GROUP_CONCAT(h.median    ORDER BY h.time ASC) AS median_list,
-    GROUP_CONCAT(h.mode      ORDER BY h.time ASC) AS mode_list,
-    GROUP_CONCAT(h.quantity  ORDER BY h.time ASC) AS quantity_list,
-    GROUP_CONCAT(DATE_FORMAT(h.time, '%Y-%m-%dT%H:00:00Z') ORDER BY h.time ASC) AS time_list,
-    i.mean, i.median, i.mode, i.min, i.max, i.exalted, i.count, i.quantity
-  FROM      league_items          AS i
-  JOIN      data_leagues          AS l ON i.id_l = l.id
-  LEFT JOIN league_history_daily  AS h ON h.id_l = l.id AND h.id_d = i.id_d
-  WHERE     i.id_d = ?
-  GROUP BY  i.id_l, i.id_d
-  ORDER BY  l.active DESC, l.id DESC";
+    l.end       AS leagueEnd
+  FROM league_items AS i
+  JOIN data_leagues AS l
+    ON l.id = i.id_l
+  WHERE i.id_d = ?
+  ORDER BY l.active DESC, l.id DESC
+  ";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
@@ -37,8 +47,26 @@ function get_league_data($pdo, $id) {
   return $stmt;
 }
 
+function get_history_entries($pdo, $leagueId, $itemId) {
+  $query = "
+  SELECT 
+    mean, median, mode, quantity, 
+    DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
+  FROM league_history_daily
+  WHERE id_l = ? AND id_d = ?
+  ORDER BY `time` DESC
+  LIMIT 120
+  ";
+
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$leagueId, $itemId]);
+
+  return $stmt;
+}
+
 function get_item_data($pdo, $id) {
-  $query = "SELECT 
+  $query = "
+  SELECT 
     d.name, d.type, d.frame, d.icon,
     d.tier, d.lvl, d.quality, d.corrupted, 
     d.links, d.ilvl, d.var AS variation,
@@ -47,7 +75,8 @@ function get_item_data($pdo, $id) {
   LEFT JOIN data_categories AS dc ON d.id_cat = dc.id 
   LEFT JOIN data_groups     AS dg ON d.id_grp = dg.id 
   WHERE     d.id = ?
-  LIMIT     1";
+  LIMIT     1
+  ";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
@@ -55,15 +84,11 @@ function get_item_data($pdo, $id) {
   return $stmt;
 }
 
-function parse_history_data($stmt) {
+function build_history_payload($pdo, $id) {
   $payload = array();
 
+  $stmt = get_league_data($pdo, $id);
   while ($row = $stmt->fetch()) {
-    // Make sure time differences stay within logical bounds
-    $durationElapsed = $row['leagueTotal'] ? ($row['leagueElapsed'] > $row['leagueTotal'] ? $row['leagueTotal'] : $row['leagueElapsed']) : $row['leagueElapsed'];
-    $durationRemaining = $row['leagueRemaining'] < 0 ? 0 : $row['leagueRemaining'];
-
-    // Form a temporary entry array
     $tmp = array(
       'league'        => array(
         'id'          => (int)  $row['leagueId'],
@@ -74,12 +99,7 @@ function parse_history_data($stmt) {
         'name'        =>        $row['leagueName'],
         'display'     =>        $row['leagueDisplay'],
         'start'       =>        $row['leagueStart'],
-        'end'         =>        $row['leagueEnd'],
-        'duration'    => array(
-          'total'     => $row['leagueTotal'],
-          'elapsed'   => $durationElapsed,
-          'remaining' => $durationRemaining
-        )
+        'end'         =>        $row['leagueEnd']
       ),
       'mean'      =>          $row['mean']      === NULL ? null : (float) $row['mean'],
       'median'    =>          $row['median']    === NULL ? null : (float) $row['median'],
@@ -92,23 +112,15 @@ function parse_history_data($stmt) {
       'history'   => array()
     );
 
-    if (!is_null($row['mean_list'])) {
-      // Convert CSVs to arrays
-      $means    = explode(',', $row['mean_list']);
-      $medians  = explode(',', $row['median_list']);
-      $modes    = explode(',', $row['mode_list']);
-      $quants   = explode(',', $row['quantity_list']);
-      $times    = explode(',', $row['time_list']);
-
-      for ($i = 0; $i < sizeof($means); $i++) { 
-        $tmp['history'][] = array(
-          'time'     =>         $times[$i],
-          'mean'     => (float) $means[$i],
-          'median'   => (float) $medians[$i],
-          'mode'     => (float) $modes[$i],
-          'quantity' => (int)   $quants[$i],
-        );
-      }
+    $historyStmt = get_history_entries($pdo, $row['leagueId'], $id);
+    while ($historyRow = $historyStmt->fetch()) {
+      $tmp['history'][] = array(
+        'time'     =>         $historyRow["time"],
+        'mean'     => (float) $historyRow["mean"],
+        'median'   => (float) $historyRow["median"],
+        'mode'     => (float) $historyRow["mode"],
+        'quantity' => (int)   $historyRow["quantity"]
+      );
     }
 
     $payload[] = $tmp;
@@ -117,7 +129,22 @@ function parse_history_data($stmt) {
   return $payload;
 }
 
-function form_payload($itemData, $historyData) {
+function build_payload($pdo, $id) {
+  // Get item's name, frame, icon, etc.
+  $itemDataStmt = get_item_data($pdo, $id);
+
+  // If there is no item with the provided id
+  if ($itemDataStmt->rowCount() === 0) {
+    error(400, "Invalid id");
+  }
+
+  // Get the one item data row
+  $itemData = $itemDataStmt->fetch();
+
+  // Get prices on a per-league basis
+  $historyData = build_history_payload($pdo, $id);
+
+  // Form payload with predefined fields
   $payload = array(
     'name'      => $itemData['name'],
     'type'      => $itemData['type'],
@@ -141,26 +168,12 @@ function form_payload($itemData, $historyData) {
 // Define content type
 header("Content-Type: application/json");
 
-// Get parameters
-if (!isset($_GET["id"])) error(400, "Missing id");
+check_errors();
 
-// Connect to database
 include_once ( "../details/pdo.php" );
 
-// Get item's name, frame, icon, etc.
-$stmt = get_item_data($pdo, $_GET["id"]);
-// If no results with provided id
-if ($stmt->rowCount() === 0) error(400, "Invalid id");
-// Get the one row of item data
-$itemData = $stmt->fetch();
-
-// Get league-specific data from database
-$stmt = get_league_data($pdo, $_GET["id"]);
-// Parse received league-specific data
-$historyData = parse_history_data($stmt);
-
 // Form the payload
-$payload = form_payload($itemData, $historyData);
+$payload = build_payload($pdo, $_GET["id"]);
 
 // Display generated data
 echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
