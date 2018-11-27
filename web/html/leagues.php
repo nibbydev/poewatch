@@ -27,7 +27,6 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
 
-
           <div class="row">
             <?php GenLeagueEntries($pdo) ?>
           </div>
