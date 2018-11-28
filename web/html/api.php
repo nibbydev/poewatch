@@ -26,19 +26,6 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
           <div class="row mb-4">
-            
-            <div class="col-12">
-              <div class="card custom-card mb-5">
-                <div class="card-header">
-                  <h2 class="m-0">Notice</h2>
-                </div>
-                <div class="card-body">
-                  <p class="card-text">Rate limiting is enabled with 4 requests per 1 second, 10 second timout with 403 status code. Endpoints are cached for 60 seconds (0 for id API).</p>
-                </div>
-                <div class="card-footer slim-card-edge"></div>
-              </div>
-            </div>
-            
             <div class="col-12">
               <div class="card-deck">
                 <div class="card custom-card mb-3">

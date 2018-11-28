@@ -1,11 +1,14 @@
 <?php
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT name, display, start, end, active, upcoming, event
-    FROM      data_leagues 
-    WHERE     id > 2
-    ORDER BY  id DESC
-    LIMIT     10";
+  $query = "
+    SELECT name, display, start, end, active, upcoming, event
+    FROM data_leagues 
+    WHERE id > 2
+    ORDER BY id DESC
+    LIMIT 10
+  ";
+
   $stmt = $pdo->query($query);
   
   $rows = array();
@@ -57,7 +60,9 @@ function GenLeagueEntries($pdo) {
 
             <div class='col nowrap league-countdown'></div>
           </div>
-
+          
+          <div class='league-upcoming d-none' value='{$league["upcoming"]}'></div>
+          <div class='league-active d-none' value='{$league["active"]}'></div>
           <div class='league-start d-none' value='{$league["start"]}'></div>
           <div class='league-end d-none' value='{$league["end"]}'></div>
 
