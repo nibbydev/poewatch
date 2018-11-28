@@ -20,24 +20,28 @@ public class History {
      * @return True on success
      */
     public boolean removeOldItemEntries() {
-        String query =  "DELETE    del " +
-                        "FROM      league_entries AS del " +
-                        "JOIN ( " +
-                        "  SELECT   id_l, id_d, ( " +
-                        "    SELECT   e.time " +
-                        "    FROM     league_entries AS e " +
-                        "    WHERE    e.id_l = d.id_l " +
-                        "      AND    e.id_d = d.id_d " +
-                        "    ORDER BY e.time DESC " +
-                        "    LIMIT    ?, 1 " +
-                        "  ) AS     time " +
-                        "  FROM     league_entries AS d " +
+        String query =  "DELETE e3 FROM league_entries AS e3 " +
+                        "JOIN ( " + // Get group ids and their nth oldest time
+                        "  SELECT   e1.id_l, e1.id_d, ( " + // Get the nth time for each group
+                        "    SELECT time " +
+                        "    FROM league_entries " +
+                        "    WHERE id_l = e1.id_l " +
+                        "      AND id_d = e1.id_d " +
+                        "    ORDER BY time DESC " +
+                        "    LIMIT ?, 1 " +
+                        "  ) AS time " +
+                        "  FROM league_entries AS e1 " +
+                        "  JOIN ( " + // Get ids of all groups that have more than n entries
+                        "    SELECT id_l, id_d " +
+                        "    FROM league_entries " +
+                        "    GROUP BY id_l, id_d " +
+                        "    having count(*) > ? " +
+                        "  ) AS e2 on e1.id_l = e2.id_l and e1.id_d = e2.id_d " +
                         "  GROUP BY id_l, id_d " +
-                        "  HAVING time IS NOT NULL " +
-                        ") AS      tmp " +
-                        "  ON      del.id_l = tmp.id_l " +
-                        "    AND   del.id_d = tmp.id_d " +
-                        "      AND del.time <= tmp.time; ";
+                        ") AS tmp " +
+                        "ON  e3.id_l = tmp.id_l " +
+                        "AND e3.id_d = tmp.id_d " +
+                        "AND e3.time <= tmp.time; ";
 
         try {
             if (database.connection.isClosed()) {
@@ -45,7 +49,8 @@ public class History {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, database.config.getInt("entry.maxCount"));
+                statement.setInt(1, database.config.getInt("entry.maxCount") - 1);
+                statement.setInt(2, database.config.getInt("entry.maxCount"));
                 statement.executeUpdate();
             }
 
