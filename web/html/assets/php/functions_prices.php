@@ -357,6 +357,7 @@ function AddTableHeaders($category) {
   echo "<th scope='col'>Exalted</th>";
   echo "<th>Change</th>";
   echo "<th>Quantity</th>";
+  echo "<th>Total</th>";
 }
 
 // Redirects user to url with necessary query parameters, if missing

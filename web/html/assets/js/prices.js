@@ -17,6 +17,7 @@ class ItemRow {
     rowBuilder += this.buildPriceFields();
     rowBuilder += this.buildChangeField();
     rowBuilder += this.buildQuantField();
+    rowBuilder += this.buildCountField();
 
     this.row = this.row
       .replace("{{id}}",    item.id)
@@ -238,6 +239,18 @@ class ItemRow {
     }
   
     return template.replace("{{quant}}", this.item.quantity);
+  }
+
+  buildCountField() {
+    let template = `
+    <td>
+      <span class='badge custom-badge-block custom-badge-gray'>
+        {{count}}
+      </span>
+    </td>
+    `.trim();
+  
+    return template.replace("{{count}}", this.item.count);
   }
 
   static roundPrice(price) {
