@@ -1,11 +1,14 @@
 <?php
 // Get list of leagues and their display names from DB
 function GetLeagues($pdo) {
-  $query = "SELECT name, display, start, end, active, upcoming, event
-    FROM      data_leagues 
-    WHERE     id > 2
-    ORDER BY  id DESC
-    LIMIT     8";
+  $query = "
+    SELECT name, display, start, end, active, upcoming, event
+    FROM data_leagues 
+    WHERE id > 2
+    ORDER BY id DESC
+    LIMIT 10
+  ";
+
   $stmt = $pdo->query($query);
   
   $rows = array();
@@ -31,7 +34,7 @@ function GenLeagueEntries($pdo) {
     $title  = $league["display"] ? $league["display"] : $league["name"];
     $start  = $league["start"]   ? date('j M Y, H:i (\U\TC)', strtotime($league["start"])) : 'Unavailable';
     $end    = $league["end"]     ? date('j M Y, H:i (\U\TC)', strtotime($league["end"]))   : 'Unavailable';
-    $wrap   = $league["active"] ? "col-md-6 col-12" : "col-xl-4 col-md-6 col-12";
+    $wrap   = $league["active"] || $league["upcoming"] ? "col-md-6 col-12" : "col-xl-4 col-md-6 col-12";
 
     echo "
     <div class='$wrap'>
@@ -57,7 +60,9 @@ function GenLeagueEntries($pdo) {
 
             <div class='col nowrap league-countdown'></div>
           </div>
-
+          
+          <div class='league-upcoming d-none' value='{$league["upcoming"]}'></div>
+          <div class='league-active d-none' value='{$league["active"]}'></div>
           <div class='league-start d-none' value='{$league["start"]}'></div>
           <div class='league-end d-none' value='{$league["end"]}'></div>
 

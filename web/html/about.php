@@ -54,12 +54,14 @@
               <p>Item X has an incredibly high price at league start. Why?<br><span class='custom-text-gray-lo'>Quite often the first person to find a particular item during a new league will list it for much more than it's actually worth.</span></p>
               <p>Can you make feature X on this site less frustrating to use?<br><span class='custom-text-gray-lo'>Do let me know and I'll see how it can be improved.</span></p>
               <p>Why is there no data for day one of new leagues?<br><span class='custom-text-gray-lo'>Timezones. Leagues usually start at 8 PM UTC, which leaves a total of 4 hours for day one. Not really enough to get any useful statistics. Which is why the first day is skipped and the next one includes the whole 24 + 4 hours of data.</span></p>
-              <p>What are the API limitations?<br><span class='custom-text-gray-lo'>Based on fair use. Though it does have a rate limitation of 5 requests per second - 60 second timeout.</span></p>
+              <p>What are the API limitations?<br><span class='custom-text-gray-lo'>Based on fair use. Though it does have a rate limitation of 4 requests per second - 10 second timeout.</span></p>
               <p>Some of the pages don't work with Internet Explorer<br><span class='custom-text-gray-lo'>More like Internet Explorer doesn't work with some of the pages. But seriously, it's an outdated browser. You should upgrade to something newer.</span></p>
             </div>
-            <div class="card-body pagination-page d-none" id='page-contact'>Currently none</div>
+            <div class="card-body pagination-page d-none" id='page-contact'>
+              <p>Currently none</p>
+            </div>
             <div class="card-body pagination-page d-none" id='page-legal'>
-              <div>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</div>
+              <p>This site uses cookies. By continuing to browse the site, you are agreeing to our use of cookies.</p>
             </div>
 
             <div class="card-footer slim-card-edge"></div>

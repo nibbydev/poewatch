@@ -4,7 +4,10 @@ $(".league-element").each(function() {
 
 function addCountDownTimer(element) {
   let start = new Date($(".league-start", element).attr("value"));
-  let end   = new Date($(".league-end",   element).attr("value"));
+  let end = new Date($(".league-end", element).attr("value"));
+
+  let isUpcoming = $(".league-upcoming", element).attr("value") == 1;
+  let isActive = $(".league-active", element).attr("value") == 1;
 
   var cdText = $(".league-countdown", element);
   var cdBar = $(".progressbar-bar", element);
@@ -15,11 +18,20 @@ function addCountDownTimer(element) {
   var _day = _hour * 24;
   var timer;
 
+  var label2 = isUpcoming ? "Starts in" : "Elapsed";
+  var label1 = isUpcoming ? "Ends in"   : "Remaining";
+
   function showRemaining() {
     var now = new Date();
     var rDist = end - now;
     var eDist = now - start;
     var percentage = start < now ? (now - start) / (end - start) * 100 : 0;
+
+    if (isUpcoming) {
+      rDist = eDist = percentage = 0;
+      if (start) rDist = start - now;
+      if (end) eDist = end - now;
+    }
 
     if (rDist < 1000) {
       clearInterval(timer);
@@ -70,33 +82,38 @@ function addCountDownTimer(element) {
     var template = `
     <table>
       <tr>
-        <td class='pr-2'>Elapsed:</td>
+        <td class='pr-2'>{{lb1}}:</td>
         <td class='text-right pr-1 subtext-0'>{{e-d}}d</td>
         <td class='text-right pr-1 subtext-0'>{{e-h}}h</td>
         <td class='text-right pr-1 subtext-0'>{{e-m}}m</td>
         <td class='text-right pr-1 subtext-0'>{{e-s}}s</td>
       </tr>
       <tr>
-        <td class='pr-2'>Remaining:</td>
+        <td class='pr-2'>{{lb2}}:</td>
         <td class='text-right pr-1'>{{r-d}}</td>
         <td class='text-right pr-1'>{{r-h}}</td>
         <td class='text-right pr-1'>{{r-m}}</td>
         <td class='text-right pr-1'>{{r-s}}</td>
       </tr>
     </table>
-    `.trim().replace("{{e-d}}", eDays)
-            .replace("{{e-h}}", eHours)
-            .replace("{{e-m}}", eMinutes)
-            .replace("{{e-s}}", eSeconds)
-            .replace("{{r-d}}", rDd)
-            .replace("{{r-h}}", rHd)
-            .replace("{{r-m}}", rMd)
-            .replace("{{r-s}}", rSd);
+    `.trim()
+    .replace("{{e-d}}", eDays)
+    .replace("{{e-h}}", eHours)
+    .replace("{{e-m}}", eMinutes)
+    .replace("{{e-s}}", eSeconds)
+    .replace("{{r-d}}", rDd)
+    .replace("{{r-h}}", rHd)
+    .replace("{{r-m}}", rMd)
+    .replace("{{r-s}}", rSd)
+    .replace("{{lb1}}", label1)
+    .replace("{{lb2}}", label2);
 
     cdText.html(template);
     cdBar.css("width", percentage+"%");
   }
 
-  showRemaining();
-  timer = setInterval(showRemaining, 1000);
+  if (isActive || isUpcoming) {
+    showRemaining();
+    timer = setInterval(showRemaining, 1000);
+  }
 }
