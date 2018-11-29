@@ -76,7 +76,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -110,7 +110,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -150,7 +150,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -185,7 +185,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -229,7 +229,7 @@
                   
                     <!-- Request fields -->
                     <h5 class="card-title">Request fields</h5>
-                    <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                    <div class="card api-data-table p-1 m-0">
                       <table class="table table-sm">
                         <thead>
                           <tr>
@@ -266,7 +266,7 @@
                   
                     <!-- Request fields -->
                     <h5 class="card-title">Request fields</h5>
-                    <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                    <div class="card api-data-table p-1 m-0">
                       <table class="table table-sm">
                         <thead>
                           <tr>
