@@ -809,10 +809,11 @@ var FILTER = {
   gemCorrupted: null,
   ilvl: null,
   influence: null,
-  parseAmount: 150
+  parseAmount: 150,
+  sortFunction: null
 };
 
-var ITEMS = {};
+var ITEMS = [];
 var LEAGUES = null;
 var INTERVAL;
 var EXPROW = new ExpandedRow();
@@ -906,6 +907,48 @@ function parseQueryParams() {
     $('#select-influence').val(tmp);
     FILTER.influence = tmp;
   }
+
+  if (tmpCol = parseQueryParam('sortby')) {
+    let element;
+
+    $(".sort-column").each(function( index ) {
+      if (this.innerHTML.toLowerCase() === tmpCol) {
+        element = this;
+        return;
+      }
+    });
+
+    if (!element) {
+      updateQueryParam("sortby", null);
+      updateQueryParam("sortorder", null);
+      return;
+    }
+
+    let col = element.innerHTML.toLowerCase();
+
+    if (tmpOrder = parseQueryParam('sortorder')) {
+      let order = null;
+      let color;
+
+      if (tmpOrder === "descending") {
+        order = "descending";
+        color = "custom-text-green";
+      } else if (tmpOrder === "ascending") {
+        order = "ascending";
+        color = "custom-text-red";
+      }
+
+      if (!order) {
+        updateQueryParam("sortby", null);
+        updateQueryParam("sortorder", null);
+        return;
+     }
+
+      console.log("Sorting: " + col + " " + order);
+      FILTER.sortFunction = getSortFunc(col, order);
+      $(element).addClass(color);
+    }
+  }
 }
 
 function readLeagueFromCookies() {
@@ -946,7 +989,7 @@ function defineListeners() {
     FILTER.group = $(this).find(":selected").val();
     console.log("Selected group: " + FILTER.group);
     updateQueryParam("group", FILTER.group);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Load all button
@@ -954,7 +997,7 @@ function defineListeners() {
     console.log("Button press: show all");
     $(this).hide();
     FILTER.parseAmount = -1;
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Searchbar
@@ -962,7 +1005,7 @@ function defineListeners() {
     FILTER.search = $(this).val().toLowerCase().trim();
     console.log("Search: " + FILTER.search);
     updateQueryParam("search", FILTER.search);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Low confidence
@@ -971,7 +1014,7 @@ function defineListeners() {
     console.log("Show low count: " + option);
     FILTER.showLowConfidence = option;
     updateQueryParam("confidence", option);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Rarity
@@ -984,7 +1027,7 @@ function defineListeners() {
     else if (FILTER.rarity === "unique") FILTER.rarity =    3;
     else if (FILTER.rarity ===  "relic") FILTER.rarity =    9;
     
-    sortResults(ITEMS);
+    sortResults();
   });
   
   // Item links
@@ -995,7 +1038,7 @@ function defineListeners() {
     if      (FILTER.links === "none") FILTER.links = null;
     else if (FILTER.links ===  "all") FILTER.links = -1;
     else FILTER.links = parseInt(FILTER.links);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Map tier
@@ -1006,7 +1049,7 @@ function defineListeners() {
     if (FILTER.tier === "all") FILTER.tier = null;
     else if (FILTER.tier === "none") FILTER.tier = 0;
     else FILTER.tier = parseInt(FILTER.tier);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Gem level
@@ -1016,7 +1059,7 @@ function defineListeners() {
     if (FILTER.gemLvl === "all") FILTER.gemLvl = null;
     else FILTER.gemLvl = parseInt(FILTER.gemLvl);
     updateQueryParam("lvl", FILTER.gemLvl);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Gem quality
@@ -1026,7 +1069,7 @@ function defineListeners() {
     if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
     else FILTER.gemQuality = parseInt(FILTER.gemQuality);
     updateQueryParam("quality", FILTER.gemQuality);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Gem corrupted
@@ -1036,7 +1079,7 @@ function defineListeners() {
     if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
     else FILTER.gemCorrupted = FILTER.gemCorrupted === "true";
     updateQueryParam("corrupted", FILTER.gemCorrupted);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Base iLvl
@@ -1045,7 +1088,7 @@ function defineListeners() {
     console.log("Base iLvl filter: " + ilvl);
     FILTER.ilvl = ilvl === "all" ? null : parseInt(ilvl);
     updateQueryParam("ilvl", ilvl);
-    sortResults(ITEMS);
+    sortResults();
   });
 
   // Base influence
@@ -1054,9 +1097,8 @@ function defineListeners() {
     console.log("Influence filter: " + FILTER.influence);
     if (FILTER.influence == "all") FILTER.influence = null; 
     updateQueryParam("influence", FILTER.influence);
-    sortResults(ITEMS);
+    sortResults();
   });
-
 
   // Expand row
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
@@ -1076,6 +1118,39 @@ function defineListeners() {
       $("#progressbar-live").css("animation-name", "").hide();
       clearInterval(INTERVAL);
     }
+  });
+
+  // Sort
+  $(".sort-column").on("click", function(){
+    let col = $(this)[0].innerHTML.toLowerCase();
+    let order = $(this).attr("order");
+    let color = null;
+
+    // Remove all data from all sort columns
+    $(".sort-column")
+      .attr("class", "sort-column")
+      .attr("order", null);
+
+    // Toggle descriptions and orders
+    if (!order || order === "ascending") {
+      order = "descending";
+      color = "custom-text-green";
+    } else {
+      order = "ascending";
+      color = "custom-text-red";
+    }
+
+    updateQueryParam("sortby", col);
+    updateQueryParam("sortorder", order);
+
+    // Set clicked col's data
+    $(this).attr("order", order);
+    $(this).addClass(color);
+
+    console.log("Sorting: " + col + " " + order);
+    FILTER.sortFunction = getSortFunc(col, order);
+
+    sortResults();
   });
 }
 
@@ -1105,13 +1180,12 @@ function makeGetRequest() {
     $(".buffering").hide();
     $(".buffering-msg").remove();
 
-    let items = parseRequest(json);
-    sortResults(items);
-    ITEMS = items;
+    ITEMS = json;
+    sortResults();
   });
 
   request.fail(function(response) {
-    ITEMS = {};
+    ITEMS = [];
 
     $(".buffering-msg").remove();
 
@@ -1127,18 +1201,6 @@ function makeGetRequest() {
 
     buffering.after(msg);
   });
-}
-
-function parseRequest(json) {
-  let items = new Map();
-
-  // Loop though array, creating an associative array based on IDs
-  for (let i = 0; i < json.length; i++) {
-    const item = json[i];
-    items['_' + item.id] = item;
-  }
-
-  return items;
 }
 
 function timedRequestCallback() {
@@ -1158,15 +1220,93 @@ function timedRequestCallback() {
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
 
-    let items = parseRequest(json);
-    sortResults(items);
-    ITEMS = items;
+    ITEMS = json;
+    sortResults();
   });
 
   request.fail(function(response) {
     $("#searchResults tbody").empty();
     buffering.after("<div class='buffering-msg align-self-center mb-2'>" + response.responseJSON.error + "</div>");
   });
+}
+
+//------------------------------------------------------------------------------------------------------------
+// Sorting. This can probably be done better. If you know how, let me know.
+//------------------------------------------------------------------------------------------------------------
+
+function getSortFunc(col, order) {
+  switch (col) {
+    case "change":
+      return order === "descending" ? sort_changeDesc : sort_changeAsc;
+    case "quantity":
+      return order === "descending" ? sort_quantDesc  : sort_quantAsc;
+    case "total":
+      return order === "descending" ? sort_totalDesc  : sort_totalAsc;
+    case "item":
+      return order === "descending" ? sort_itemDesc   : sort_itemAsc;
+    default:
+      return order === "descending" ? sort_priceDesc  : sort_priceAsc;
+  }
+}
+
+function sort_priceDesc(a, b) {
+  if (a.mean > b.mean) return -1;
+  if (a.mean < b.mean) return 1;
+  return 0;
+}
+
+function sort_priceAsc(a, b) {
+  if (a.mean < b.mean) return -1;
+  if (a.mean > b.mean) return 1;
+  return 0;
+}
+
+function sort_quantDesc(a, b) {
+  if (a.quantity > b.quantity) return -1;
+  if (a.quantity < b.quantity) return 1;
+  return 0;
+}
+
+function sort_quantAsc(a, b) {
+  if (a.quantity < b.quantity) return -1;
+  if (a.quantity > b.quantity) return 1;
+  return 0;
+}
+
+function sort_totalDesc(a, b) {
+  if (a.count > b.count) return -1;
+  if (a.count < b.count) return 1;
+  return 0;
+}
+
+function sort_totalAsc(a, b) {
+  if (a.count < b.count) return -1;
+  if (a.count > b.count) return 1;
+  return 0;
+}
+
+function sort_changeDesc(a, b) {
+  if (a.change > b.change) return -1;
+  if (a.change < b.change) return 1;
+  return 0;
+}
+
+function sort_changeAsc(a, b) {
+  if (a.change < b.change) return -1;
+  if (a.change > b.change) return 1;
+  return 0;
+}
+
+function sort_itemDesc(a, b) {
+  if (a.name > b.name) return -1;
+  if (a.name < b.name) return 1;
+  return 0;
+}
+
+function sort_itemAsc(a, b) {
+  if (a.name < b.name) return -1;
+  if (a.name > b.name) return 1;
+  return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -1207,19 +1347,21 @@ function getCookie(cname) {
 
 function updateQueryParam(key, value) {
   switch (key) {
-    case "confidence": value = value === false  ? null : value;   break;
-    case "search":     value = value === ""     ? null : value;   break;
-    case "rarity":     value = value === "all"  ? null : value;   break;
-    case "corrupted":  value = value === "all"  ? null : value;   break;
-    case "quality":    value = value === "all"  ? null : value;   break;
-    case "lvl":        value = value === "all"  ? null : value;   break;
-    case "links":      value = value === "none" ? null : value;   break;
-    case "group":      value = value === "all"  ? null : value;   break;
-    case "tier":       value = value === "all"  ? null : value;   break;
-    case "influence":  value = value === "all"  ? null : value;   break;
+    case "confidence": value = value === false        ? null : value;   break;
+    case "search":     value = value === ""           ? null : value;   break;
+    case "rarity":     value = value === "all"        ? null : value;   break;
+    case "corrupted":  value = value === "all"        ? null : value;   break;
+    case "quality":    value = value === "all"        ? null : value;   break;
+    case "lvl":        value = value === "all"        ? null : value;   break;
+    case "links":      value = value === "none"       ? null : value;   break;
+    case "group":      value = value === "all"        ? null : value;   break;
+    case "tier":       value = value === "all"        ? null : value;   break;
+    case "influence":  value = value === "all"        ? null : value;   break;
+    case "sortorder":  value = value === "descending" ? null : value;   break;
+    case "sortby":     value = value === "chaos"      ? null : value;   break;
     default:           break;
   }
-
+  
   var url = document.location.href;
   var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
   var hash;
@@ -1271,7 +1413,7 @@ Date.prototype.addDays = function(days) {
 // Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
 
-function sortResults(items) {
+function sortResults() {
   // Empty the table
   let table = $("#searchResults");
   $("tbody", table).empty();
@@ -1279,27 +1421,30 @@ function sortResults(items) {
   let count = 0, matches = 0;
   let buffer = "";
 
-  // Loop through every item provided
-  for (var key in items) {
-    if (items.hasOwnProperty(key)) {
-      // Skip parsing if item should be hidden according to filters
-      if ( checkHideItem(items[key]) ) {
-        continue;
+  if (FILTER.sortFunction) {
+    ITEMS.sort(FILTER.sortFunction);
+  }
+
+  for (let i = 0; i < ITEMS.length; i++) {
+    const item = ITEMS[i];
+    
+    // Skip parsing if item should be hidden according to filters
+    if (checkHideItem(item)) {
+      continue;
+    }
+
+    matches++;
+
+    // Stop if specified item limit has been reached
+    if ( FILTER.parseAmount < 0 || count < FILTER.parseAmount ) {
+      // If item has not been parsed, parse it 
+      if ( !('tableData' in item) ) {
+        item.tableData = new ItemRow(item);
       }
 
-      matches++;
-
-      // Stop if specified item limit has been reached
-      if ( FILTER.parseAmount < 0 || count < FILTER.parseAmount ) {
-        // If item has not been parsed, parse it 
-        if ( !('tableData' in items[key]) ) {
-          items[key].tableData = new ItemRow(items[key]);
-        }
-
-        // Append generated table data to buffer
-        buffer += items[key].tableData.row;
-        count++;
-      }
+      // Append generated table data to buffer
+      buffer += item.tableData.row;
+      count++;
     }
   }
 

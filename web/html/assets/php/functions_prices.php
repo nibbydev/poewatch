@@ -341,23 +341,23 @@ function AddLeagueSelects($leagues) {
 
 // Add table headers based on category
 function AddTableHeaders($category) {
-  echo "<th class='w-100' scope='col'>Item</th>";
+  echo "<th class='w-100' scope='col'><span class='sort-column'>Item</span></th>";
 
   if ( $category === "gem" ) {
-    echo "<th scope='col'>Lvl</th>";
-    echo "<th scope='col'>Qual</th>";
-    echo "<th scope='col'>Corr</th>";
+    echo "<th>Lvl</th>";
+    echo "<th>Qual</th>";
+    echo "<th>Corr</th>";
   } else if ( $category === "base" ) {
-    echo "<th scope='col'>iLvl</th>";
+    echo "<th>iLvl</th>";
   } else if ( $category === "map" ) {
-    echo "<th scope='col'>Tier</th>";
+    echo "<th>Tier</th>";
   }
   
-  echo "<th scope='col'>Chaos</th>";
-  echo "<th scope='col'>Exalted</th>";
-  echo "<th>Change</th>";
-  echo "<th>Quantity</th>";
-  echo "<th>Total</th>";
+  echo "<th><span class='sort-column custom-text-green' order='descending'>Chaos</span></th>";
+  echo "<th><span class='sort-column'>Exalted</span></th>";
+  echo "<th><span class='sort-column'>Change</span></th>";
+  echo "<th><span class='sort-column'>Quantity</span></th>";
+  echo "<th><span class='sort-column'>Total</span></th>";
 }
 
 // Redirects user to url with necessary query parameters, if missing
