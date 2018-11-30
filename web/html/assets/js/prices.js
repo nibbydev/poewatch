@@ -826,9 +826,9 @@ const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRe
 var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
+  readLeagueFromCookies();
   parseQueryParams();
 
-  readLeagueFromCookies();
   makeGetRequest();
   defineListeners();
 }); 
@@ -964,7 +964,6 @@ function readLeagueFromCookies() {
       if (league === entry.name) {
         FILTER.league = league;
         // Point league dropdown to that league
-        updateQueryParam("league", FILTER.league);
         $("#search-league").val(FILTER.league);
         return;
       }
