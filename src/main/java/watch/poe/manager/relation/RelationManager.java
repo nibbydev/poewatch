@@ -20,8 +20,7 @@ public class RelationManager {
     private Map<Key, Integer> keyToId = new HashMap<>();
     private static Map<String, String> currencyAliasToName = CurrencyAliasInitializer.GetAliasMap();
     private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
-    private List<Key> keysInUse = new ArrayList<>();
-    // List of ids currently used in a league. Used for determining whether to create a new item entry in DB
+    private Set<Key> indexingKeys = Collections.synchronizedSet(new HashSet<>());
     private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
     private static Map<String, Set<String>> baseMap = BaseItemInitializer.GenBaseMap();
 
@@ -80,9 +79,9 @@ public class RelationManager {
         }
 
         // If the same item is currently being indexed in another thread
-        if (keysInUse.contains(itemKey)) {
+        if (indexingKeys.contains(itemKey)) {
             return null;
-        } else keysInUse.add(itemKey);
+        } else indexingKeys.add(itemKey);
 
         indexCategory(item);
 
@@ -107,8 +106,7 @@ public class RelationManager {
             database.index.createLeagueItem(leagueId, itemId);
         }
 
-        // Remove unique key from the list
-        keysInUse.remove(itemKey);
+        indexingKeys.remove(itemKey);
 
         return itemId;
     }
