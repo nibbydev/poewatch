@@ -10,7 +10,6 @@ public class RawEntry {
     private double price;
     private int id_l, id_d;
     private String id;
-    private long id;
 
     private static int precision;
 
@@ -96,11 +95,11 @@ public class RawEntry {
         return accountName;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
