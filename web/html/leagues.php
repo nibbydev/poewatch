@@ -27,6 +27,8 @@
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
 
+          <?php GenMotDBox(); ?>
+
           <div class="row">
             <?php GenLeagueEntries($pdo) ?>
           </div>

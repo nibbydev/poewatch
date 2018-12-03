@@ -25,6 +25,9 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
+
+          <?php GenMotDBox(); ?>
+
           <div class="row mb-4">
             <div class="col-12">
               <div class="card-deck">
