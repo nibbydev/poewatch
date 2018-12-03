@@ -35,8 +35,6 @@ public class EntryManager extends Thread {
     private RelationManager relationManager;
     private AccountManager accountManager;
 
-
-
     public EntryManager(Database database, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager, Config config) {
         this.database = database;
         this.config = config;

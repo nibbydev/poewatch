@@ -688,8 +688,8 @@ public class Item {
         return typeLine;
     }
 
-    public long getId() {
-        return Long.parseLong(id.substring(56), 16);
+    public String getId() {
+        return id;
     }
 
     public Integer getFrameType() {
