@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import poe.db.Database;
 import poe.manager.account.AccountManager;
 import poe.manager.entry.EntryManager;
+import poe.manager.entry.RawEntry;
 import poe.manager.league.LeagueManager;
 import poe.manager.relation.RelationManager;
 import poe.manager.worker.WorkerManager;
@@ -36,6 +37,7 @@ public class Main {
         try {
             // Load config
             config = ConfigFactory.load("config");
+            RawEntry.setPrecision(config.getInt("precision.precision"));
 
             // Initialize database connector
             database = new Database(config);

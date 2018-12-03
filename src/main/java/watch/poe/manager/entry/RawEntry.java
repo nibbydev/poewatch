@@ -9,9 +9,10 @@ public class RawEntry {
     private String accountName;
     private double price;
     private int id_l, id_d;
+    private String id;
     private long id;
 
-    private static DecimalFormat decimalFormat;
+    private static int precision;
 
     //------------------------------------------------------------------------------------------------------------
     // Equality methods to root out duplicates in a Set
@@ -57,7 +58,14 @@ public class RawEntry {
 
 
     public String getPrice() {
-        return decimalFormat.format(price);
+        String price = Double.toString(this.price);
+        int index = price.indexOf('.');
+
+        if (price.length() - index > precision) {
+            return price.substring(0, price.indexOf('.') + precision + 1);
+        }
+
+        return price;
     }
 
     public void setAccountName(String accountName) {
@@ -96,7 +104,7 @@ public class RawEntry {
         return id;
     }
 
-    public static void setDecimalFormat(String pattern) {
-        decimalFormat = new DecimalFormat(pattern);
+    public static void setPrecision(int precision) {
+        RawEntry.precision = precision;
     }
 }

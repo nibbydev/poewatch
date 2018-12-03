@@ -43,7 +43,6 @@ public class EntryManager extends Thread {
         this.timer = new Timer(database);
 
         status = new StatusElement(config);
-        RawEntry.setDecimalFormat(config.getString("precision.formatPattern"));
 
         this.leagueManager = leagueManager;
         this.accountManager = accountManager;

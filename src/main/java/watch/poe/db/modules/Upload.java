@@ -52,7 +52,7 @@ public class Upload {
                     statement.setString(5, rawEntry.getAccountName());
                     statement.addBatch();
 
-                    if (++count % 500 == 0) statement.executeBatch();
+                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
