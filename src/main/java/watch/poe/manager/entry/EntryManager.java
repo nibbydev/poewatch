@@ -238,18 +238,8 @@ public class EntryManager extends Thread {
      * Recalculates database data
      */
     private void cycleDatabase() {
-        if (status.isSixtyBool()) {
-            timer.start("a20", Timer.TimerType.SIXTY);
-            database.flag.updateVolatile();
-            timer.clk("a20");
-
-            timer.start("a21", Timer.TimerType.SIXTY);
-            database.calc.calculateVolatileMedian();
-            timer.clk("a21");
-        }
-
         timer.start("a10");
-        database.flag.updateApproved();
+        database.flag.updateOutliers();
         timer.clk("a10");
 
         timer.start("a11");
@@ -272,10 +262,6 @@ public class EntryManager extends Thread {
             timer.start("a22", Timer.TimerType.SIXTY);
             database.history.addHourly();
             timer.clk("a22");
-
-            timer.start("a23", Timer.TimerType.SIXTY);
-            database.flag.updateMultipliers();
-            timer.clk("a23");
 
             timer.start("a24", Timer.TimerType.SIXTY);
             database.calc.calcQuantity();

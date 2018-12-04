@@ -69,14 +69,11 @@ public class History {
      * @return True on success
      */
     public boolean addHourly() {
-        String query =  "INSERT INTO league_history_hourly (" +
-                        "  id_l, id_d, inc) " +
+        String query =  "INSERT INTO league_history_hourly (id_l, id_d, inc) " +
                         "SELECT id_l, id_d, inc " +
-                        "FROM   league_items AS i " +
-                        "JOIN   data_leagues AS l " +
-                        "  ON   i.id_l = l.id " +
-                        "WHERE  l.active = 1 " +
-                        "  AND  i.inc > 0 ";
+                        "FROM league_items AS i " +
+                        "JOIN data_leagues AS l ON i.id_l = l.id " +
+                        "WHERE l.active = 1 ";
 
         return database.executeUpdateQueries(query);
     }
@@ -88,16 +85,11 @@ public class History {
      * @return True on success
      */
     public boolean addDaily() {
-        String query =  "INSERT INTO league_history_daily ( " +
-                        "  id_l, id_d, mean, median, mode, " +
-                        "  min, max, exalted, count, quantity) " +
-                        "SELECT " +
-                        "  id_l, id_d, mean, median, mode, " +
-                        "  min, max, exalted, count, quantity " +
-                        "FROM   league_items AS i " +
-                        "JOIN   data_leagues AS l " +
-                        "  ON   i.id_l = l.id " +
-                        "WHERE  l.active = 1 ";
+        String query =  "INSERT INTO league_history_daily " +
+                        "SELECT id_l, id_d, mean, median, mode, min, max, exalted, count, quantity " +
+                        "FROM league_items AS i " +
+                        "JOIN data_leagues AS l ON i.id_l = l.id " +
+                        "WHERE l.active = 1 ";
 
         return database.executeUpdateQueries(query);
     }

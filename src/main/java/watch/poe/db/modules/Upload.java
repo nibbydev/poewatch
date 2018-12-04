@@ -29,12 +29,9 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadRaw(Set<RawEntry> entrySet) {
-        String query =  "INSERT INTO league_entries ( " +
-                        "  id_item, id_l, id_d, price) " +
+        String query =  "INSERT INTO league_entries (id_item, id_l, id_d, price) " +
                         "VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "  approved = 0, " +
-                        "  price = VALUES(price) ";
+                        "ON DUPLICATE KEY UPDATE price = VALUES(price) ";
 
         try {
             if (database.connection.isClosed()) {

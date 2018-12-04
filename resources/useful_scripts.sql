@@ -1,7 +1,6 @@
--- ---------------------------------------------------------------------------------------------------------------------
+--
 -- A list of somewhat useful queries for database management
--- ---------------------------------------------------------------------------------------------------------------------
-
+--
 
 
 
@@ -10,12 +9,24 @@
 -- ---------------------------------------------------------------------------------------------------------------------
 
 --
+-- Half-arsed migration script for databases created before 4 Dec 2018
+--
+
 drop index `PRIMARY` ON league_entries;
-alter table league_entries add id_item varchar(64) first;
+alter table league_entries add id_item varchar(64) after id_d;
 update league_entries set id_item = concat(id, '_', account);
 alter table league_entries drop column account;
 alter table league_entries drop column id;
 alter table league_entries add primary key(id_item);
+
+alter table league_entries add outlier bit(1) not null default 0 after approved;
+drop index approved_time on league_entries;
+create index outlier_time on league_entries (outlier, `time`);
+alter table league_entries drop column approved;
+
+alter table league_items drop column volatile;
+alter table league_items drop column multiplier;
+alter table league_items drop column `dec`;
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
@@ -30,3 +41,60 @@ join (
 ) as tmp on tmp.name = did.name and tmp.type = did.type and tmp.frame = did.frame
 where did.var is null
 order by id desc
+
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Development
+-- ---------------------------------------------------------------------------------------------------------------------
+
+--
+-- Update outlier flag for all items in the `league_entries` table that have had entries added in the past cycle
+--
+
+-- get ids that have been added in the past cycle
+select distinct id_l, id_d
+from league_entries
+where time > date_sub(now(), interval 60 second)
+
+-- get trimming medians for all items
+select id_l, id_d,
+  median(price) as median,
+  median(price) / 1.5 as minMed,
+  median(price) * 1.2 as maxMed
+from league_entries
+group by id_l, id_d
+having median > 0
+
+-- get trimming medians of items that have new entries in the past cycle
+select e1.id_l, e1.id_d,
+  median(e1.price) as median,
+  median(e1.price) / 1.5 as minMed,
+  median(e1.price) * 1.2 as maxMed
+from league_entries as e1
+join (
+  -- get ids that have been added in the past cycle
+  select distinct id_l, id_d
+  from league_entries
+  where time > date_sub(now(), interval 60 second)
+) as e2 on e2.id_l = e1.id_l and e2.id_d = e1.id_d
+group by e1.id_l, e1.id_d
+having median > 0
+
+-- update outlier state for items that have new entries in the past cycle
+update league_entries as e4
+join (
+  -- get trimming medians of items that have new entries in the past cycle
+  select e1.id_l, e1.id_d,
+    median(e1.price) / 1.5 as minMed,
+    median(e1.price) * 1.2 as maxMed
+  from league_entries as e1
+  join (
+    -- get ids that have been added in the past cycle
+    select distinct id_l, id_d
+    from league_entries
+    where time > date_sub(now(), interval 60 second)
+  ) as e2 on e2.id_l = e1.id_l and e2.id_d = e1.id_d
+  group by e1.id_l, e1.id_d
+  having median(e1.price) > 0
+) as e3 on e4.id_l = e3.id_l and e4.id_d = e3.id_d
+set e4.outlier = IF(e4.price between e3.minMed and e3.maxMed, 0, 1)
