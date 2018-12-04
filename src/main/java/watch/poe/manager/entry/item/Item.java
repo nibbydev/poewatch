@@ -154,6 +154,8 @@ public class Item {
                     group = "unique";
                 } else if (iconCategory.equals("breach")) {
                     group = "fragment";
+                } else if (iconCategory.equals("scarabs")) {
+                    group = "scarab";
                 } else if (base.getProperties() == null){
                     group = "fragment";
                 } else {
