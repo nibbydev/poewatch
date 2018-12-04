@@ -20,7 +20,6 @@ public class Database {
     public Calc calc = new Calc(this);
 
     public Connection connection;
-    private String address;
 
     public Database(Config config) {
         this.config = config;

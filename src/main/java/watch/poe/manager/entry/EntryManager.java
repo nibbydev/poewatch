@@ -45,6 +45,10 @@ public class EntryManager extends Thread {
         this.leagueManager = leagueManager;
         this.accountManager = accountManager;
         this.relationManager = relationManager;
+
+        if (!config.getBoolean("misc.enableTimers")) {
+            timer.stop();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
