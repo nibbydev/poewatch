@@ -826,7 +826,6 @@ const ICON_CHAOS = "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRe
 var TEMPLATE_imgContainer = "<span class='img-container img-container-sm text-center mr-1'><img src={{img}}></span>";
 
 $(document).ready(function() {
-  readLeagueFromCookies();
   parseQueryParams();
 
   makeGetRequest();
@@ -951,34 +950,11 @@ function parseQueryParams() {
   }
 }
 
-function readLeagueFromCookies() {
-  let league = getCookie("league");
-
-  if (league) {
-    console.log("Got league from cookie: " + league);
-
-    // Check if league from cookie is still active
-    for (let i = 0; i < SERVICE_leagues.length; i++) {
-      const entry = SERVICE_leagues[i];
-      
-      if (league === entry.name) {
-        FILTER.league = league;
-        // Point league dropdown to that league
-        $("#search-league").val(FILTER.league);
-        return;
-      }
-    }
-
-    console.log("League cookie did not match any active leagues");
-  }
-}
-
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
     FILTER.league = $(":selected", this).val();
     console.log("Selected league: " + FILTER.league);
-    document.cookie = "league="+FILTER.league;
     updateQueryParam("league", FILTER.league);
     makeGetRequest();
   });
@@ -1108,7 +1084,6 @@ function defineListeners() {
   $("#live-updates").on("change", function(){
     let live = $("input[name=live]:checked", this).val() === "true";
     console.log("Live updates: " + live);
-    document.cookie = "live="+live;
 
     if (live) {
       $("#progressbar-live").css("animation-name", "progressbar-live").show();
@@ -1322,26 +1297,6 @@ function formatNum(num) {
   if (num === null) {
     return 'Unavailable';
   } else return numberWithCommas(Math.round(num * 100) / 100);
-}
-
-function getCookie(cname) {
-  var name = cname + "=";
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-
-  for(var i = 0; i <ca.length; i++) {
-    var c = ca[i];
-
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-
-  return "";
 }
 
 function updateQueryParam(key, value) {
