@@ -29,9 +29,12 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadRaw(Set<RawEntry> entrySet) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, account, price) " +
-                        "VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE price = VALUES(price) ";
+        String query =  "INSERT INTO league_entries (id_l, id_d, account, id_item, price) " +
+                        "VALUES (?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "  listings = IF(price = VALUES(price), listings, listings + 1), " +
+                        "  time = IF(price = VALUES(price), time, NOW()), " +
+                        "  price = VALUES(price); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -45,7 +48,8 @@ public class Upload {
                     statement.setInt(1, rawEntry.getLeagueId());
                     statement.setInt(2, rawEntry.getItemId());
                     statement.setString(3, rawEntry.getAccountName());
-                    statement.setString(4, rawEntry.getPrice());
+                    statement.setString(4, rawEntry.getId_item());
+                    statement.setString(5, rawEntry.getPrice());
                     statement.addBatch();
 
                     if (++count % 100 == 0) statement.executeBatch();
