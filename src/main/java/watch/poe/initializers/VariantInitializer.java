@@ -36,6 +36,14 @@ public class VariantInitializer {
                 new Variant() {{
                     variation = "ar";
                     mods = new String[]{"increased Armour"};
+                }},
+                new Variant() {{
+                    variation = "ev";
+                    mods = new String[]{"increased Evasion"};
+                }},
+                new Variant() {{
+                    variation = "es";
+                    mods = new String[]{"increased Energy Shield"};
                 }}
         };
     }};

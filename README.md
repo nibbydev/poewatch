@@ -14,8 +14,11 @@ The general goal was to make a statistics website with everything in one place. 
 
 ## Setup
 
-Crude set up instructions can be found in `DEPLOYMENT.md`. 
+Prerequisites: Maven, GCC (for compiling UDFs), the latest JDK and MySQL.
 
-## HW requirements
+Note: PoeWatch relies on MySQL UD functions such as `MEDIAN` and `STATS_MODE`. These are provided by
+[infusion](https://github.com/infusion/udf_infusion) and can be installed using the instructions provided there.
 
-The backend is relatively lightweight and can run on a regular $4 VPS. SSD with high IOPS is recommended.
+1. Compile Java app with `mvn clean install`
+2. Prep SQL database by running the configuration script from `resources/DatabaseSetup.sql`
+3. Run app `java -Xmx256M -jar poewatch-1.0-SNAPSHOT-jar-with-dependencies.jar`

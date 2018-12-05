@@ -18,8 +18,8 @@ function addCountDownTimer(element) {
   var _day = _hour * 24;
   var timer;
 
-  var label2 = isUpcoming ? "Starts in" : "Elapsed";
-  var label1 = isUpcoming ? "Ends in"   : "Remaining";
+  var label2 = isUpcoming ? "Starts in" : "Remaining";
+  var label1 = isUpcoming ? "Ends in"   : "Elapsed";
 
   function showRemaining() {
     var now = new Date();

@@ -35,19 +35,20 @@ public class EntryManager extends Thread {
     private RelationManager relationManager;
     private AccountManager accountManager;
 
-
-
     public EntryManager(Database database, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager, Config config) {
         this.database = database;
         this.config = config;
         this.timer = new Timer(database);
 
         status = new StatusElement(config);
-        RawEntry.setDecimalFormat(config.getString("precision.formatPattern"));
 
         this.leagueManager = leagueManager;
         this.accountManager = accountManager;
         this.relationManager = relationManager;
+
+        if (!config.getBoolean("misc.enableTimers")) {
+            timer.stop();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -237,18 +238,8 @@ public class EntryManager extends Thread {
      * Recalculates database data
      */
     private void cycleDatabase() {
-        if (status.isSixtyBool()) {
-            timer.start("a20", Timer.TimerType.SIXTY);
-            database.flag.updateVolatile();
-            timer.clk("a20");
-
-            timer.start("a21", Timer.TimerType.SIXTY);
-            database.calc.calculateVolatileMedian();
-            timer.clk("a21");
-        }
-
         timer.start("a10");
-        database.flag.updateApproved();
+        database.flag.updateOutliers();
         timer.clk("a10");
 
         timer.start("a11");
@@ -271,10 +262,6 @@ public class EntryManager extends Thread {
             timer.start("a22", Timer.TimerType.SIXTY);
             database.history.addHourly();
             timer.clk("a22");
-
-            timer.start("a23", Timer.TimerType.SIXTY);
-            database.flag.updateMultipliers();
-            timer.clk("a23");
 
             timer.start("a24", Timer.TimerType.SIXTY);
             database.calc.calcQuantity();
@@ -348,7 +335,7 @@ public class EntryManager extends Thread {
                     rawEntry.setLeagueId(leagueId);
                     rawEntry.setAccountName(stash.accountName);
                     rawEntry.setPrice(itemParser.getPrice());
-                    rawEntry.setId(item.getId());
+                    rawEntry.setId_item(item.getId());
 
                     // Add it to the db queue
                     entrySet.add(rawEntry);

@@ -161,14 +161,18 @@ function GenCatMenuHTML($pdo) {
 }
 
 function GenMotDBox() {
+  // I can't be bothered to add website config database tables atm so just
+  // remove this line to enable the motd box
+  return;
+
   echo "
   <div class='row d-block mb-3'>
     <div class='col'> 
-      <div class='card custom-card'>
+      <div class='card custom-card custom-badge-red'>
         <div class='card-header slim-card-edge'></div>
         <div class='card-body p-1'>
-          <p class='mb-0 text-center subtext-1'>
-            [ allan please add advertisement ]
+          <p class='mb-0 text-center text-white'>
+            [allan please add advertisment]
           </p>
         </div>
         <div class='card-footer slim-card-edge'></div>

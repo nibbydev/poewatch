@@ -15,151 +15,42 @@ public class Flag {
     }
 
     /**
-     * Updates volatile state for entries in table `league_items`
-     *
-     * @return True on success
-     */
-    public boolean updateVolatile() {
-        String query1 = "UPDATE league_items " +
-                        "SET volatile = IF(`dec` > 0 && `dec` >= inc * ?, 1, 0);";
-
-        String query2 = "UPDATE  league_entries AS e " +
-                        "JOIN    league_items   AS i " +
-                        "  ON    e.id_d = i.id_d " +
-                        "    AND e.id_l = i.id_l " +
-                        "SET     e.approved = 0 " +
-                        "WHERE   i.volatile = 1 " +
-                        "  AND   e.approved = 1;";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setDouble(1, database.config.getDouble("entry.volatileRatio"));
-                statement.executeUpdate();
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                statement.executeUpdate(query2);
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
-     * Updates approved state for entries in table `league_items`
-     *
-     * @return True on success
-     */
-    public boolean updateApproved() {
-        String query1 = "UPDATE  league_entries AS e " +
-                        "JOIN    league_items   AS i " +
-                        "  ON    i.id_l = e.id_l " +
-                        "    AND i.id_d = e.id_d " +
-                        "SET     e.approved = 1 " +
-                        "WHERE   e.approved = 0 " +
-                        "  AND   i.median   = 0 ";
-
-        String query2 = "UPDATE  league_entries AS e " +
-                        "JOIN    league_items   AS i " +
-                        "  ON    i.id_l = e.id_l " +
-                        "    AND i.id_d = e.id_d " +
-                        "SET     e.approved = 1 " +
-                        "WHERE   e.approved = 0 " +
-                        "  AND   e.price > i.median / i.multiplier " +
-                        "  AND   e.price < i.median * i.multiplier ";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                statement.executeUpdate(query1);
-                statement.executeUpdate(query2);
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
-     * Updates multipliers for entries in table `league_items`
-     *
-     * @return True on success
-     */
-    public boolean updateMultipliers() {
-        String query =  "UPDATE league_items " +
-                        "SET multiplier = IF(? - quantity / ? < ?, ?, ? - quantity / ?)";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setDouble(1, database.config.getDouble("entry.approvedMax"));
-                statement.setDouble(2, database.config.getDouble("entry.approvedDiv"));
-                statement.setDouble(3, database.config.getDouble("entry.approvedMin"));
-                statement.setDouble(4, database.config.getDouble("entry.approvedMin"));
-                statement.setDouble(5, database.config.getDouble("entry.approvedMax"));
-                statement.setDouble(6, database.config.getDouble("entry.approvedDiv"));
-
-                statement.executeUpdate();
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
      * Updates counters for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean updateCounters() {
         String query1 = "UPDATE league_items AS i " +
-                        "    JOIN ( " +
-                        "        SELECT id_l, id_d, COUNT(*) AS count " +
-                        "        FROM league_entries " +
-                        "        WHERE approved = 1 " +
-                        "           AND time > ADDDATE(NOW(), INTERVAL -60 SECOND)" +
-                        "        GROUP BY id_l, id_d" +
-                        "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
-                        "SET " +
-                        "    i.count = i.count + e.count, " +
-                        "    i.inc = i.inc + e.count ";
+                        "JOIN ( " +
+                        "  SELECT id_l, id_d, COUNT(*) AS count " +
+                        "  FROM league_entries " +
+                        "  WHERE time > date_sub(now(), interval 60 second) " +
+                        "  GROUP BY id_l, id_d" +
+                        ") AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
+                        "SET i.count = i.count + e.count, i.inc = i.inc + e.count ";
 
-        String query2 = "UPDATE league_items AS i " +
-                        "    JOIN ( " +
-                        "        SELECT id_l, id_d, COUNT(*) AS count " +
-                        "        FROM league_entries " +
-                        "        WHERE approved = 0 " +
-                        "           AND time > ADDDATE(NOW(), INTERVAL -60 SECOND) " +
-                        "        GROUP BY id_l, id_d" +
-                        "    ) AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
-                        "SET " +
-                        "    i.count = i.count + e.count, " +
-                        "    i.inc = i.inc + e.count, " +
-                        "    i.dec = i.dec + e.count ";
+        return database.executeUpdateQueries(query1);
+    }
 
+    public boolean updateOutliers() {
+        String query  =
+                "update league_entries as e4 " +
+                "join ( " +
+                "  select e1.id_l, e1.id_d, " +
+                "    median(e1.price) / 1.5 as minMed, " +
+                "    median(e1.price) * 1.2 as maxMed " +
+                "  from league_entries as e1 " +
+                "  join ( " +
+                "    select distinct id_l, id_d " +
+                "    from league_entries " +
+                "    where time > date_sub(now(), interval 60 second) " +
+                "  ) as e2 on e2.id_l = e1.id_l and e2.id_d = e1.id_d " +
+                "  group by e1.id_l, e1.id_d " +
+                "  having median(e1.price) > 0 " +
+                ") as e3 on e4.id_l = e3.id_l and e4.id_d = e3.id_d " +
+                "set e4.outlier = IF(e4.price between e3.minMed and e3.maxMed, 0, 1); ";
 
-        return database.executeUpdateQueries(query1, query2);
+        return database.executeUpdateQueries(query);
     }
 
     /**
@@ -168,7 +59,7 @@ public class Flag {
      * @return True on success
      */
     public boolean resetCounters() {
-        String query = "UPDATE league_items SET inc = 0, `dec` = 0 ";
+        String query = "UPDATE league_items SET inc = 0; ";
 
         return database.executeUpdateQueries(query);
     }

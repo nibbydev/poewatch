@@ -23,12 +23,8 @@ public class Index {
      * @return ID of created category on success, null on failure
      */
     public Integer addCategory(String categoryName) {
-        String query1 = "INSERT INTO data_categories (name) VALUES (?); ";
-
-        String query2 = "SELECT id " +
-                        "FROM   data_categories " +
-                        "WHERE  name = ? " +
-                        "LIMIT  1;";
+        String query1 = "INSERT INTO data_categories (`name`) VALUES (?); ";
+        String query2 = "SELECT id FROM data_categories WHERE `name` = ? LIMIT 1;";
 
         try {
             if (database.connection.isClosed()) {
@@ -62,13 +58,8 @@ public class Index {
      * @return ID of created category on success, null on failure
      */
     public Integer addGroup(Integer categoryId, String groupName) {
-        String query1 = "INSERT INTO data_groups (id_cat, name) VALUES (?, ?)";
-
-        String query2 = "SELECT id " +
-                        "FROM   data_groups " +
-                        "WHERE  id_cat = ? " +
-                        "  AND  name = ? " +
-                        "LIMIT  1; ";
+        String query1 = "INSERT INTO data_groups (id_cat, `name`) VALUES (?, ?)";
+        String query2 = "SELECT id FROM data_groups WHERE id_cat = ? AND `name` = ? IMIT 1; ";
 
         try {
             if (database.connection.isClosed()) {
@@ -104,8 +95,7 @@ public class Index {
      * @return True on success
      */
     public boolean createLeagueItem(Integer leagueId, Integer dataId) {
-        String query =  "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) " +
-                        "ON DUPLICATE KEY UPDATE id_l = id_l; ";
+        String query =  "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (database.connection.isClosed()) {
                 return false;
@@ -135,7 +125,7 @@ public class Index {
      */
     public Integer indexItemData(Item item, Integer categoryId, Integer groupId) {
         String query1 = "INSERT INTO data_itemData (" +
-                        "  id_cat, id_grp, name, type, frame, tier, lvl, " +
+                        "  id_cat, id_grp, `name`, `type`, frame, tier, lvl, " +
                         "  quality, corrupted, links, ilvl, var, icon) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
         String query2 = "SELECT LAST_INSERT_ID(); ";

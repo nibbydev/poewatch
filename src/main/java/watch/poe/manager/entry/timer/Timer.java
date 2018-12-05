@@ -15,7 +15,7 @@ public class Timer {
     private Map<String, TimerEntry> timers = new HashMap<>();
     private Map<String, Long> delays = new HashMap<>();
     private final Object monitor = new Object();
-    private volatile boolean flagStop = false;
+    private volatile boolean isEnabled = true;
     private Database database;
 
     private static Logger logger = LoggerFactory.getLogger(Timer.class);
@@ -175,7 +175,7 @@ public class Timer {
                 long startTime = System.currentTimeMillis();
 
                 // Wait for specified time before proceeding
-                while (!flagStop && System.currentTimeMillis() - startTime < delay) {
+                while (isEnabled && System.currentTimeMillis() - startTime < delay) {
                     synchronized (monitor) {
                         try {
                             monitor.wait(10);
@@ -237,13 +237,17 @@ public class Timer {
      */
     public void stop() {
         delays.clear();
-        flagStop = true;
+        isEnabled = false;
     }
 
     /**
      * Uploads all latest timer delays to database
      */
     public void uploadDelays(StatusElement statusElement) {
+        if (!isEnabled) {
+            return;
+        }
+
         database.upload.uploadTimers(timeLog, statusElement);
     }
 

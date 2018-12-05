@@ -15,8 +15,7 @@ public class Calc {
     }
 
     /**
-     * Calculates mean, median and mode price for items in table `league_items` based on approved entries in
-     * `league_entries`
+     * Calculates mean, median and mode price for items in table `league_items` based on entries in `league_entries`
      *
      * @return True on success
      */
@@ -30,74 +29,18 @@ public class Calc {
                         "           MIN(price)        AS min, " +
                         "           MAX(price)        AS max " +
                         "  FROM     league_entries " +
-                        "  WHERE    approved = 1 " +
+                        "  WHERE    outlier = 0 " +
                         "  GROUP BY id_l, id_d " +
                         ") AS    e " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +
-                        "SET     i.mean   = TRUNCATE(e.mean,   ?), " +
-                        "        i.median = TRUNCATE(e.median, ?), " +
-                        "        i.mode   = TRUNCATE(e.mode,   ?), " +
-                        "        i.min    = TRUNCATE(e.min,    ?), " +
-                        "        i.max    = TRUNCATE(e.max,    ?); ";
+                        "SET     i.mean   = e.mean, " +
+                        "        i.median = e.median, " +
+                        "        i.mode   = e.mode, " +
+                        "        i.min    = e.min, " +
+                        "        i.max    = e.max ";
 
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, database.config.getInt("precision.precision"));
-                statement.setInt(2, database.config.getInt("precision.precision"));
-                statement.setInt(3, database.config.getInt("precision.precision"));
-                statement.setInt(4, database.config.getInt("precision.precision"));
-                statement.setInt(5, database.config.getInt("precision.precision"));
-                statement.executeUpdate();
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
-     * Calculates median price for volatile items in table `league_items` based on any entries in
-     * `league_entries`
-     *
-     * @return True on success
-     */
-    public boolean calculateVolatileMedian() {
-        String query =  "UPDATE league_items AS i " +
-                        "JOIN ( " +
-                        "  SELECT   id_l, id_d, " +
-                        "           MEDIAN(price) AS median " +
-                        "  FROM     league_entries " +
-                        "  GROUP BY id_l, id_d " +
-                        ") AS    e " +
-                        "  ON    i.id_l = e.id_l " +
-                        "    AND i.id_d = e.id_d " +
-                        "SET     i.median = TRUNCATE(e.median, ?) " +
-                        "WHERE   i.volatile = 1;";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, database.config.getInt("precision.precision"));
-                statement.executeUpdate();
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
+        return database.executeUpdateQueries(query);
     }
 
     /**
@@ -106,36 +49,17 @@ public class Calc {
      * @return True on success
      */
     public boolean calculateExalted() {
-        String query =  "UPDATE    league_items AS i " +
+        String query =  "UPDATE league_items AS i " +
                         "JOIN ( " +
-                        "  SELECT  i.id_l, i.mean " +
-                        "  FROM    league_items  AS i " +
-                        "  JOIN    data_itemData AS did " +
-                        "    ON    i.id_d = did.id " +
-                        "  WHERE   did.frame = 5 " +
-                        "    AND   did.name = 'Exalted Orb' " +
-                        ") AS      ex " +
-                        "  ON      i.id_l = ex.id_l " +
-                        "SET       i.exalted = TRUNCATE(i.mean / ex.mean, ?) " +
-                        "WHERE     ex.mean > 0 " +
-                        "  AND     i.mean  > 0; ";
+                        "  SELECT i.id_l, i.mean " +
+                        "  FROM league_items AS i " +
+                        "  JOIN data_itemData AS did ON i.id_d = did.id " +
+                        "  WHERE did.name = 'Exalted Orb' " +
+                        ") AS ex ON i.id_l = ex.id_l " +
+                        "SET i.exalted = i.mean / ex.mean " +
+                        "WHERE ex.mean > 0 AND i.mean > 0; ";
 
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, database.config.getInt("precision.precision"));
-                statement.executeUpdate();
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
+        return database.executeUpdateQueries(query);
     }
 
     /**
@@ -146,14 +70,12 @@ public class Calc {
     public boolean calcQuantity() {
         String query =  "UPDATE league_items AS i  " +
                         "LEFT JOIN ( " +
-                        "    SELECT   id_l, id_d, SUM(inc) AS quantity " +
-                        "    FROM     league_history_hourly " +
-                        "    WHERE    time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
-                        "    GROUP BY id_l, id_d " +
-                        ") AS    h " +
-                        "  ON    h.id_l = i.id_l " +
-                        "    AND h.id_d = i.id_d " +
-                        "SET     i.quantity = IFNULL(h.quantity, 0) ";
+                        "  SELECT id_l, id_d, SUM(inc) AS quantity " +
+                        "  FROM league_history_hourly " +
+                        "  WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
+                        "  GROUP BY id_l, id_d " +
+                        ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
+                        "SET i.quantity = IFNULL(h.quantity, 0) ";
 
         return database.executeUpdateQueries(query);
     }

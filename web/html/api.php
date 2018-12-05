@@ -25,6 +25,9 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
+
+          <?php GenMotDBox(); ?>
+
           <div class="row mb-4">
             <div class="col-12">
               <div class="card-deck">
@@ -76,7 +79,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -110,7 +113,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -150,7 +153,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -185,7 +188,7 @@
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>
-                  <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                  <div class="card api-data-table p-1 m-0">
                     <table class="table table-sm">
                       <thead>
                         <tr>
@@ -229,7 +232,7 @@
                   
                     <!-- Request fields -->
                     <h5 class="card-title">Request fields</h5>
-                    <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                    <div class="card api-data-table p-1 m-0">
                       <table class="table table-sm">
                         <thead>
                           <tr>
@@ -266,7 +269,7 @@
                   
                     <!-- Request fields -->
                     <h5 class="card-title">Request fields</h5>
-                    <div class="card api-data-table px-2 pt-1 pb-1 mb-3">
+                    <div class="card api-data-table p-1 m-0">
                       <table class="table table-sm">
                         <thead>
                           <tr>

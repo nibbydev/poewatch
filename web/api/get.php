@@ -49,7 +49,6 @@ function get_data($pdo, $league, $category) {
     ON      did.id_grp = dg.id 
   WHERE     l.name   = ?
     AND     dc.name  = ?
-    AND     i.count  > 1 
   ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);
@@ -79,7 +78,6 @@ function get_data_relic($pdo, $league) {
   WHERE     l.name   = ?
     AND     did.frame = 9
     AND     did.links IS NULL
-    AND     i.count  > 1 
   ORDER BY  i.mean DESC";
 
   $stmt = $pdo->prepare($query);

@@ -53,7 +53,6 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col d-flex my-3">
-
       <!-- Menu -->
       <?php GenCatMenuHTML($pdo) ?>
       <!--/Menu/-->
@@ -61,6 +60,8 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'>
+
+          <?php GenMotDBox(); ?>
 
           <div class="row mb-3">
             <div class='col d-flex flex-column'>

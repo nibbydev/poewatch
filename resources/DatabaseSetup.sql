@@ -65,7 +65,7 @@ CREATE TABLE data_leagues (
 
 CREATE TABLE data_changeId (
     changeId  VARCHAR(64)  NOT NULL UNIQUE,
-    time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -127,8 +127,6 @@ CREATE TABLE league_items (
     id_l        SMALLINT       UNSIGNED NOT NULL,
     id_d        INT            UNSIGNED NOT NULL,
     time        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    volatile    TINYINT(1)     UNSIGNED NOT NULL DEFAULT 0,
-    multiplier  DECIMAL(6,4)   UNSIGNED NOT NULL DEFAULT 2.0,
     mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
@@ -138,7 +136,6 @@ CREATE TABLE league_items (
     count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc         INT(8)         UNSIGNED NOT NULL DEFAULT 0,
-    `dec`       INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     spark       VARCHAR(128)   DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
@@ -156,19 +153,18 @@ CREATE TABLE league_items (
 --
 
 CREATE TABLE league_entries (
-    id         INT            UNSIGNED NOT NULL,
     id_l       SMALLINT       UNSIGNED NOT NULL,
     id_d       INT            UNSIGNED NOT NULL,
-    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    approved   TINYINT(1)     UNSIGNED NOT NULL DEFAULT 0,
-    price      DECIMAL(14,8)  UNSIGNED NOT NULL,
     account    VARCHAR(32)    NOT NULL,
+    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    outlier    BIT(1)         NOT NULL DEFAULT 0,
+    price      DECIMAL(14,8)  UNSIGNED NOT NULL,
 
     FOREIGN KEY (id_l) REFERENCES  data_leagues (id)   ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
 
-    CONSTRAINT pk PRIMARY KEY (id, account),
-    INDEX approved_time (approved, time),
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
+    INDEX outlier_time (outlier, `time`),
     INDEX compound_id (id_l, id_d)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

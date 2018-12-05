@@ -154,6 +154,8 @@ public class Item {
                     group = "unique";
                 } else if (iconCategory.equals("breach")) {
                     group = "fragment";
+                } else if (iconCategory.equals("scarabs")) {
+                    group = "scarab";
                 } else if (base.getProperties() == null){
                     group = "fragment";
                 } else {
@@ -688,8 +690,8 @@ public class Item {
         return typeLine;
     }
 
-    public long getId() {
-        return Long.parseLong(id.substring(56), 16);
+    public String getId() {
+        return id;
     }
 
     public Integer getFrameType() {

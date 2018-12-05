@@ -25,6 +25,9 @@
       <!-- Main content -->
       <div class="d-flex w-100 justify-content-center"> 
         <div class='body-boundaries w-100'> 
+        
+          <?php GenMotDBox(); ?>
+
           <div class="card custom-card">
             <div class="card-header">
               <h2 class="text-white">PoeWatch</h2>
