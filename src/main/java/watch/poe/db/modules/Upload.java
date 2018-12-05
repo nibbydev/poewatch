@@ -69,15 +69,11 @@ public class Upload {
      * @return True on success
      */
     public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query1 = "INSERT INTO " +
-                        "  data_leagues (name) " +
-                        "SELECT ? " +
-                        "FROM   DUAL " +
-                        "WHERE  NOT EXISTS ( " +
-                        "  SELECT 1 " +
-                        "  FROM   data_leagues " +
-                        "  WHERE  name = ? " +
-                        "  LIMIT  1); ";
+        String query1 = "insert into data_leagues (`name`) " +
+                        "select ? from dual " +
+                        "where not exists ( " +
+                        "  select 1 from data_leagues " +
+                        "  where name = ? limit 1);";
 
         String query2 = "UPDATE data_leagues " +
                         "SET    start    = ?, " +
@@ -132,7 +128,7 @@ public class Upload {
      * @return True on success
      */
     public boolean updateChangeID(String id) {
-        String query = "UPDATE data_changeId SET changeId = ?, time = CURRENT_TIMESTAMP; ";
+        String query = "UPDATE data_changeId SET changeId = ?; ";
 
         try {
             if (database.connection.isClosed()) {

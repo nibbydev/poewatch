@@ -37,6 +37,8 @@ alter table league_items drop column volatile;
 alter table league_items drop column multiplier;
 alter table league_items drop column `dec`;
 
+alter table data_changeid modify `time` timestamp not null default current_timestamp on update current_timestamp;
+
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------------------------------------------------------

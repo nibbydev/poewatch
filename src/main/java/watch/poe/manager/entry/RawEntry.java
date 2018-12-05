@@ -53,7 +53,6 @@ public class RawEntry {
     // Getters and Setters
     //------------------------------------------------------------------------------------------------------------
 
-
     public String getPrice() {
         String price = Double.toString(this.price);
         int index = price.indexOf('.');
