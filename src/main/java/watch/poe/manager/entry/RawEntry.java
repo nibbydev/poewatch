@@ -1,7 +1,5 @@
 package poe.manager.entry;
 
-import java.text.DecimalFormat;
-
 /**
  * The default format that new entries are stored as before uploading to database
  */
@@ -9,7 +7,7 @@ public class RawEntry {
     private String accountName;
     private double price;
     private int id_l, id_d;
-    private String id;
+    private String id_item;
 
     private static int precision;
 
@@ -95,12 +93,12 @@ public class RawEntry {
         return accountName;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setId_item(String id_item) {
+        this.id_item = id_item;
     }
 
-    public String getId() {
-        return id;
+    public String getId_item() {
+        return id_item;
     }
 
     public static void setPrecision(int precision) {

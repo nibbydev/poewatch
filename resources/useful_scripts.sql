@@ -12,12 +12,21 @@
 -- Half-arsed migration script for databases created before 4 Dec 2018
 --
 
+-- delete duplicate listings from `league_entries`
+delete e2 from league_entries as e2
+join (
+  -- get groups that have listed more than n of the same item
+  select id_l, id_d, account
+  from league_entries
+  group by id_l, id_d, account
+  having count(*) > 1
+) as e1 on e1.id_l = e2.id_l and e1.id_d = e2.id_d and e1.account = e2.account
+
 drop index `PRIMARY` ON league_entries;
-alter table league_entries add id_item varchar(64) after id_d;
-update league_entries set id_item = concat(id, '_', account);
-alter table league_entries drop column account;
 alter table league_entries drop column id;
-alter table league_entries add primary key(id_item);
+alter table league_entries modify account varchar(32) not null after id_d;
+alter table league_entries add constraint pk primary key (id_l, id_d, account);
+alter table league_entries modify `time` timestamp not null default current_timestamp on update current_timestamp;
 
 alter table league_entries add outlier bit(1) not null default 0 after approved;
 drop index approved_time on league_entries;

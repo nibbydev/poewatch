@@ -153,16 +153,17 @@ CREATE TABLE league_items (
 --
 
 CREATE TABLE league_entries (
-    id_item    VARCHAR(64)    PRIMARY KEY,
     id_l       SMALLINT       UNSIGNED NOT NULL,
     id_d       INT            UNSIGNED NOT NULL,
-    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    account    VARCHAR(32)    NOT NULL,
+    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     outlier    BIT(1)         NOT NULL DEFAULT 0,
     price      DECIMAL(14,8)  UNSIGNED NOT NULL,
 
     FOREIGN KEY (id_l) REFERENCES  data_leagues (id)   ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
 
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account),
     INDEX outlier_time (outlier, `time`),
     INDEX compound_id (id_l, id_d)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
