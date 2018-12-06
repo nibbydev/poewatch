@@ -228,14 +228,18 @@ class ItemRow {
     </td>
     `.trim();
 
-    if (this.item.quantity >= 20) {
+    if (FILTER.league.active) {
+      if (this.item.quantity >= 20) {
+        template = template.replace("{{color}}", "gray");
+      } else if (this.item.quantity >= 10) {
+        template = template.replace("{{color}}", "orange-lo");
+      } else if (this.item.quantity >= 5) {
+        template = template.replace("{{color}}", "red-lo");
+      } else if (this.item.quantity >= 0) {
+        template = template.replace("{{color}}", "red");
+      }
+    } else {
       template = template.replace("{{color}}", "gray");
-    } else if (this.item.quantity >= 10) {
-      template = template.replace("{{color}}", "orange-lo");
-    } else if (this.item.quantity >= 5) {
-      template = template.replace("{{color}}", "red-lo");
-    } else if (this.item.quantity >= 0) {
-      template = template.replace("{{color}}", "red");
     }
   
     return template.replace("{{quant}}", this.item.quantity);
