@@ -58,7 +58,7 @@ public class Item {
         name = base.getName();
         typeLine = base.getTypeLine();
 
-        // Fixes some wrongly formatted data
+        // Formats some data for better parsing
         fixBaseData();
 
         // Find out the item category and group (eg armour/belt/weapon etc)
@@ -121,12 +121,17 @@ public class Item {
                     group = "essence";
                 } else if (iconCategory.equals("piece")) {
                     group = "piece";
+                } else if (name.contains(" Net")) {
+                    group = "net";
+                } else if (name.contains("Vial of ")) {
+                    group = "net";
                 }
 
                 if (group == null) {
                     group = category;
                 }
 
+                nullId();
                 break;
 
             case "gems":
@@ -153,19 +158,24 @@ public class Item {
                 if (frameType == 3 || frameType == 9) {
                     group = "unique";
                 } else if (iconCategory.equals("breach")) {
+                    nullId();
                     group = "fragment";
                 } else if (iconCategory.equals("scarabs")) {
+                    nullId();
                     group = "scarab";
                 } else if (base.getProperties() == null){
+                    nullId();
                     group = "fragment";
                 } else {
                     group = "map";
                 }
+
                 break;
 
             case "cards":
                 category = "card";
                 group = category;
+                nullId();
                 break;
 
             case "flasks":
@@ -499,6 +509,15 @@ public class Item {
         this.level = lvl;
         this.quality = qual;
         this.corrupted = corrupted;
+    }
+
+    /**
+     * Literally just a function that sets the item id (the 64char hex string) to null. This is to keep track of the
+     * different places it might get set to null. Necessary to limit certain items (eg. stackable currency) from
+     * being able to generate multiple database entries.
+     */
+    private void nullId() {
+        id = "";
     }
 
     //------------------------------------------------------------------------------------------------------------

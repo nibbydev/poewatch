@@ -25,8 +25,10 @@ join (
 drop index `PRIMARY` ON league_entries;
 alter table league_entries drop column id;
 alter table league_entries modify account varchar(32) not null after id_d;
-alter table league_entries add constraint pk primary key (id_l, id_d, account);
-alter table league_entries modify `time` timestamp not null default current_timestamp on update current_timestamp;
+alter table league_entries add listings int unsigned not null default 1;
+alter table league_entries add id_item varchar(64) not null default '';
+alter table league_entries add constraint pk primary key (id_l, id_d, account, id_item);
+alter table league_entries modify `time` timestamp not null default current_timestamp;
 
 alter table league_entries add outlier bit(1) not null default 0 after approved;
 drop index approved_time on league_entries;
@@ -37,7 +39,24 @@ alter table league_items drop column volatile;
 alter table league_items drop column multiplier;
 alter table league_items drop column `dec`;
 
-alter table data_changeid modify `time` timestamp not null default current_timestamp on update current_timestamp;
+alter table data_changeId modify `time` timestamp not null default current_timestamp on update current_timestamp;
+
+--
+-- Create separate group for Incursion vials and Bestiary nets
+--
+
+BEGIN;
+  insert into data_groups(id_cat, `name`, display)
+  values (4, 'vial', 'Vials'), (4, 'net', 'Nets');
+
+  update `data_itemData`
+  set id_grp = (select id from data_groups where `name` = 'net' limit 1)
+  where id_grp = 11 and `name` like '% Net';
+
+  update `data_itemData`
+  set id_grp = (select id from data_groups where `name` = 'vial' limit 1)
+  where id_grp = 11 and `name` like 'Vial %';
+COMMIT;
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
