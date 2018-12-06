@@ -1363,6 +1363,16 @@ Date.prototype.addDays = function(days) {
   return date;
 }
 
+function checkLeagueActive(league) {
+  for (let i = 0; i < SERVICE_leagues.length; i++) {
+    if (SERVICE_leagues[i].name === league) {
+      return SERVICE_leagues[i].active;
+    }
+  }
+
+  return false;
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
@@ -1379,8 +1389,15 @@ function sortResults() {
     ITEMS.sort(FILTER.sortFunction);
   }
 
+  let active = checkLeagueActive(FILTER.league);
+
   for (let i = 0; i < ITEMS.length; i++) {
     const item = ITEMS[i];
+
+    // Hide low confidence items
+    if (!FILTER.showLowConfidence && active && item.quantity < 5) {
+      continue;
+    }
     
     // Skip parsing if item should be hidden according to filters
     if (checkHideItem(item)) {
@@ -1422,11 +1439,6 @@ function sortResults() {
 }
 
 function checkHideItem(item) {
-  // Hide low confidence items
-  if (!FILTER.showLowConfidence) {
-    if (item.quantity < 5) return true;
-  }
-
   // String search
   if (FILTER.search) {
     if (item.name.toLowerCase().indexOf(FILTER.search) === -1) {
