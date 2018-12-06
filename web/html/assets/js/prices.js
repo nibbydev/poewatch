@@ -34,7 +34,7 @@ class ItemRow {
     </td>
     `.trim();
   
-    template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + this.item.id);
+    template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league.name + "&id=" + this.item.id);
   
     if (FILTER.category === "base") {
       if (this.item.var === "shaper") {
@@ -504,7 +504,7 @@ class ExpandedRow {
     // Define current row as parent target row
     target.addClass("parent-row");
     this.rowParent = target;
-    this.league = FILTER.league;
+    this.league = FILTER.league.name;
     this.id = id;
     this.dataset = 1;
   
@@ -627,7 +627,7 @@ class ExpandedRow {
   
     for (let i = 0; i < leagues.length; i++) {
       let display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
-      let selected = FILTER.league === leagues[i].name ? "selected" : "";
+      let selected = FILTER.league.name === leagues[i].name ? "selected" : "";
   
       builder += "<option value='{{value}}' {{selected}}>{{name}}</option>"
         .replace("{{selected}}",  selected)
@@ -796,7 +796,7 @@ class ExpandedRow {
 
 // Default item search filter options
 var FILTER = {
-  league: null,
+  league: SERVICE_leagues[0],
   category: null,
   group: "all",
   showLowConfidence: false,
@@ -840,12 +840,15 @@ function parseQueryParams() {
   let tmp;
 
   if (tmp = parseQueryParam('league')) {
-    $("#search-league").val(tmp);
-    FILTER.league = tmp;
-  } else {
-    FILTER.league = SERVICE_leagues[0].name;
-    updateQueryParam("league", FILTER.league);
+    tmp = getServiceLeague(tmp);
+
+    if (tmp) {
+      FILTER.league = tmp;
+      $("#search-league").val(FILTER.league.name);
+    }
   }
+
+  updateQueryParam("league", FILTER.league.name);
 
   if (tmp = parseQueryParam('category')) {
     FILTER.category = tmp;
@@ -953,9 +956,12 @@ function parseQueryParams() {
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
-    FILTER.league = $(":selected", this).val();
-    console.log("Selected league: " + FILTER.league);
-    updateQueryParam("league", FILTER.league);
+    let tmp = getServiceLeague($(":selected", this).val());
+    if (!tmp) return;
+    
+    FILTER.league = tmp;
+    console.log("Selected league: " + FILTER.league.name);
+    updateQueryParam("league", FILTER.league.name);
     makeGetRequest();
   });
 
@@ -1141,7 +1147,7 @@ function makeGetRequest() {
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
-      league: FILTER.league, 
+      league: FILTER.league.name, 
       category: FILTER.category
     },
     type: "GET",
@@ -1183,7 +1189,7 @@ function timedRequestCallback() {
   var request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
-      league: FILTER.league, 
+      league: FILTER.league.name, 
       category: FILTER.category
     },
     type: "GET",
@@ -1363,14 +1369,14 @@ Date.prototype.addDays = function(days) {
   return date;
 }
 
-function checkLeagueActive(league) {
+function getServiceLeague(league) {
   for (let i = 0; i < SERVICE_leagues.length; i++) {
     if (SERVICE_leagues[i].name === league) {
-      return SERVICE_leagues[i].active;
+      return SERVICE_leagues[i];
     }
   }
 
-  return false;
+  return null;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -1389,16 +1395,9 @@ function sortResults() {
     ITEMS.sort(FILTER.sortFunction);
   }
 
-  let active = checkLeagueActive(FILTER.league);
-
   for (let i = 0; i < ITEMS.length; i++) {
     const item = ITEMS[i];
 
-    // Hide low confidence items
-    if (!FILTER.showLowConfidence && active && item.quantity < 5) {
-      continue;
-    }
-    
     // Skip parsing if item should be hidden according to filters
     if (checkHideItem(item)) {
       continue;
@@ -1439,6 +1438,11 @@ function sortResults() {
 }
 
 function checkHideItem(item) {
+  // Hide low confidence items
+  if (!FILTER.showLowConfidence && FILTER.league.active && item.quantity < 5) {
+    return true;
+  }
+
   // String search
   if (FILTER.search) {
     if (item.name.toLowerCase().indexOf(FILTER.search) === -1) {
