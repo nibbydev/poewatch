@@ -130,7 +130,7 @@
                         <tr>
                           <td class='nowrap w-100'>Total amount listed</td>
                           <td class='nowrap'>
-                            <span id='details-table-count'></span>
+                            <span id='details-table-total'></span>
                           </td>
                         </tr>
                         <tr>
@@ -160,10 +160,10 @@
                 <div class='row m-1 mb-3'>
                   <div class='col-sm'>
                     <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if (!isset($_GET['dataset']) || $_GET['dataset'] ===      'mean') echo 'active' ?>"><input type="radio" name="dataset" value='mean'     <?php if (!isset($_GET['dataset']) || $_GET['dataset'] ===     'mean') echo 'checked' ?>>Mean</label>
-                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===    'median') echo 'active' ?>"><input type="radio" name="dataset" value='median'   <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===   'median') echo 'checked' ?>>Median</label>
-                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===      'mode') echo 'active' ?>"><input type="radio" name="dataset" value='mode'     <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===     'mode') echo 'checked' ?>>Mode</label>
-                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===  'quantity') echo 'active' ?>"><input type="radio" name="dataset" value='quantity' <?php if ( isset($_GET['dataset']) && $_GET['dataset'] === 'quantity') echo 'checked' ?>>Quantity</label>
+                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if (!isset($_GET['dataset']) || $_GET['dataset'] ===   'mean') echo 'active' ?>"><input type="radio" name="dataset" value='mean'   <?php if (!isset($_GET['dataset']) || $_GET['dataset'] ===   'mean') echo 'checked' ?>>Mean</label>
+                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if ( isset($_GET['dataset']) && $_GET['dataset'] === 'median') echo 'active' ?>"><input type="radio" name="dataset" value='median' <?php if ( isset($_GET['dataset']) && $_GET['dataset'] === 'median') echo 'checked' ?>>Median</label>
+                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===   'mode') echo 'active' ?>"><input type="radio" name="dataset" value='mode'   <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===   'mode') echo 'checked' ?>>Mode</label>
+                      <label class="btn btn-sm btn-outline-dark p-0 px-1 <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===  'daily') echo 'active' ?>"><input type="radio" name="dataset" value='daily'  <?php if ( isset($_GET['dataset']) && $_GET['dataset'] ===  'daily') echo 'checked' ?>>Daily</label>
                     </div>
                     <div class='chart-large'><canvas id="chart-past"></canvas></div>
                   </div>

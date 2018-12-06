@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <?php GenHeaderMetaTags("Characters - PoeWatch", "Find users based on character names, account name changes and much more") ?>
+  <?php GenHeaderMetaTags("Characters - PoeWatch", "Find users based on character names, account names and more") ?>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
@@ -33,7 +33,7 @@
             <div class="card-header">
               <h2 class="text-white">Characters</h2>
               <div>
-                <?php DisplayMotD($DATA); ?>
+                <?php DisplayCharacterMotD($DATA); ?>
               </div>
             </div>
 

@@ -20,10 +20,10 @@ $(document).ready(function() {
 function parseQueryParams() {
   let tmp;
   if (tmp = parseQueryParam('dataset')) {
-    if      (tmp ===      'mean') HISTORY_DATASET = 1;
-    else if (tmp ===    'median') HISTORY_DATASET = 2;
-    else if (tmp ===      'mode') HISTORY_DATASET = 3;
-    else if (tmp ===  'quantity') HISTORY_DATASET = 4;
+    if      (tmp ===   'mean') HISTORY_DATASET = 1;
+    else if (tmp === 'median') HISTORY_DATASET = 2;
+    else if (tmp ===   'mode') HISTORY_DATASET = 3;
+    else if (tmp ===  'daily') HISTORY_DATASET = 4;
   }
 }
 
@@ -74,10 +74,10 @@ function createCharts() {
       chart.data.labels = keys;
 
       switch (HISTORY_DATASET) {
-        case 1: chart.data.datasets[0].data = vals.mean;      break;
-        case 2: chart.data.datasets[0].data = vals.median;    break;
-        case 3: chart.data.datasets[0].data = vals.mode;      break;
-        case 4: chart.data.datasets[0].data = vals.quantity;  break;
+        case 1: chart.data.datasets[0].data = vals.mean;   break;
+        case 2: chart.data.datasets[0].data = vals.median; break;
+        case 3: chart.data.datasets[0].data = vals.mode;   break;
+        case 4: chart.data.datasets[0].data = vals.daily;  break;
       }
     }
   };
@@ -211,12 +211,12 @@ function fillData() {
   CHART_HISTORY.update();
 
   // Set data in details table
-  $("#details-table-mean")    .html(  formatNum(leaguePayload.mean)      );
-  $("#details-table-median")  .html(  formatNum(leaguePayload.median)    );
-  $("#details-table-mode")    .html(  formatNum(leaguePayload.mode)      );
-  $("#details-table-count")   .html(  formatNum(leaguePayload.count)     );
-  $("#details-table-1d")      .html(  formatNum(leaguePayload.quantity)  );
-  $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted)   );
+  $("#details-table-mean")    .html(  formatNum(leaguePayload.mean)   );
+  $("#details-table-median")  .html(  formatNum(leaguePayload.median) );
+  $("#details-table-mode")    .html(  formatNum(leaguePayload.mode)   );
+  $("#details-table-total")   .html(  formatNum(leaguePayload.total)  );
+  $("#details-table-1d")      .html(  formatNum(leaguePayload.daily)  );
+  $("#details-table-exalted") .html(  formatNum(leaguePayload.exalted));
 
   fixIcon(ITEM);
 
@@ -259,10 +259,10 @@ function createListeners() {
     let val = $("input[name=dataset]:checked", this).val();
     updateQueryParam('dataset', val);
 
-    if      (val ===      'mean') HISTORY_DATASET = 1;
-    else if (val ===    'median') HISTORY_DATASET = 2;
-    else if (val ===      'mode') HISTORY_DATASET = 3;
-    else if (val ===  'quantity') HISTORY_DATASET = 4;
+    if      (val ===   'mean') HISTORY_DATASET = 1;
+    else if (val === 'median') HISTORY_DATASET = 2;
+    else if (val ===   'mode') HISTORY_DATASET = 3;
+    else if (val ===  'daily') HISTORY_DATASET = 4;
 
     fillData();
   });
@@ -378,10 +378,10 @@ Date.prototype.addDays = function(days) {
 function formatHistory(leaguePayload) {
   let keys = [];
   let vals = {
-    mean:     [],
-    median:   [],
-    mode:     [],
-    quantity: []
+    mean:   [],
+    median: [],
+    mode:   [],
+    daily:   []
   };
 
   // Convert date strings into objects
@@ -408,7 +408,7 @@ function formatHistory(leaguePayload) {
     vals.mean.push(null);
     vals.median.push(null);
     vals.mode.push(null);
-    vals.quantity.push(null);
+    vals.daily.push(null);
     keys.push(null);
   }
 
@@ -426,7 +426,7 @@ function formatHistory(leaguePayload) {
       vals.mean.push(0);
       vals.median.push(0);
       vals.mode.push(0);
-      vals.quantity.push(0);
+      vals.daily.push(0);
 
       // Format display date
       let tmpDate = new Date(startDate);
@@ -443,7 +443,7 @@ function formatHistory(leaguePayload) {
     vals.mean.push(Math.round(entry.mean * 100) / 100);
     vals.median.push(Math.round(entry.median * 100) / 100);
     vals.mode.push(Math.round(entry.mode * 100) / 100);
-    vals.quantity.push(entry.quantity);
+    vals.daily.push(entry.daily);
     keys.push(formatDate(entry.time));
 
     // Check if there are any missing entries between the current one and the next one
@@ -463,7 +463,7 @@ function formatHistory(leaguePayload) {
         vals.mean.push(0);
         vals.median.push(0);
         vals.mode.push(0);
-        vals.quantity.push(0);
+        vals.daily.push(0);
         keys.push(formatDate(currentDate.addDays(i + 1)));
       }
     }
@@ -473,7 +473,7 @@ function formatHistory(leaguePayload) {
   vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
   vals.median.push(Math.round(leaguePayload.median * 100) / 100);
   vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
-  vals.quantity.push(leaguePayload.quantity);
+  vals.daily.push(leaguePayload.daily);
   keys.push("Now");
 
   // Return generated data

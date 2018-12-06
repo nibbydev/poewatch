@@ -264,7 +264,7 @@ public class EntryManager extends Thread {
             timer.clk("a22");
 
             timer.start("a24", Timer.TimerType.SIXTY);
-            database.calc.calcQuantity();
+            database.calc.calcDaily();
             timer.clk("a24");
         }
 

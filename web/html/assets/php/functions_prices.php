@@ -169,7 +169,7 @@ class FormGen {
     );
 
     echo "<div class='mr-3'>
-    <h4 class='nowrap'>Low count</h4>
+    <h4 class='nowrap'>Low daily</h4>
     <div class='btn-group btn-group-toggle' data-toggle='buttons' id='radio-confidence'>";
 
     foreach ($options as $value => $display) {
@@ -356,7 +356,7 @@ function AddTableHeaders($category) {
   echo "<th><span class='sort-column custom-text-green' order='descending'>Chaos</span></th>";
   echo "<th><span class='sort-column'>Exalted</span></th>";
   echo "<th><span class='sort-column'>Change</span></th>";
-  echo "<th><span class='sort-column'>Quantity</span></th>";
+  echo "<th><span class='sort-column'>Daily</span></th>";
   echo "<th><span class='sort-column'>Total</span></th>";
 }
 

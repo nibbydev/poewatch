@@ -16,8 +16,8 @@ class ItemRow {
     rowBuilder += this.buildMapFields();
     rowBuilder += this.buildPriceFields();
     rowBuilder += this.buildChangeField();
-    rowBuilder += this.buildQuantField();
-    rowBuilder += this.buildCountField();
+    rowBuilder += this.buildDailyField();
+    rowBuilder += this.buildTotalField();
 
     this.row = this.row
       .replace("{{id}}",    item.id)
@@ -219,42 +219,42 @@ class ItemRow {
     return template.replace("{{percent}}", change);
   }
   
-  buildQuantField() {
+  buildDailyField() {
     let template = `
     <td>
       <span class='badge custom-badge-block custom-badge-{{color}}'>
-        {{quant}}
+        {{daily}}
       </span>
     </td>
     `.trim();
 
     if (FILTER.league.active) {
-      if (this.item.quantity >= 20) {
+      if (this.item.daily >= 20) {
         template = template.replace("{{color}}", "gray");
-      } else if (this.item.quantity >= 10) {
+      } else if (this.item.daily >= 10) {
         template = template.replace("{{color}}", "orange-lo");
-      } else if (this.item.quantity >= 5) {
+      } else if (this.item.daily >= 5) {
         template = template.replace("{{color}}", "red-lo");
-      } else if (this.item.quantity >= 0) {
+      } else if (this.item.daily >= 0) {
         template = template.replace("{{color}}", "red");
       }
     } else {
       template = template.replace("{{color}}", "gray");
     }
   
-    return template.replace("{{quant}}", this.item.quantity);
+    return template.replace("{{daily}}", this.item.daily);
   }
 
-  buildCountField() {
+  buildTotalField() {
     let template = `
     <td>
       <span class='badge custom-badge-block custom-badge-gray'>
-        {{count}}
+        {{total}}
       </span>
     </td>
     `.trim();
   
-    return template.replace("{{count}}", this.item.count);
+    return template.replace("{{total}}", this.item.total);
   }
 
   static roundPrice(price) {
@@ -336,11 +336,11 @@ class ExpandedRow {
             <tbody>
               <tr>
                 <td class='nowra pw-100'>Total amount listed</td>
-                <td class='nowrap'><span id='details-table-count'></span></td>
+                <td class='nowrap'><span id='details-table-total'></span></td>
               </tr>
               <tr>
                 <td class='nowrap w-100'>Listed every 24h</td>
-                <td class='nowrap'><span id='details-table-quantity'></span></td>
+                <td class='nowrap'><span id='details-table-daily'></span></td>
               </tr>
               <tr>
                 <td class='nowrap w-100'>Price in exalted</td>
@@ -358,7 +358,7 @@ class ExpandedRow {
             <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
             <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
             <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
+            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Daily</label>
           </div>
           <div class='chart-large'><canvas id="chart"></canvas></div>
         </div>
@@ -392,10 +392,10 @@ class ExpandedRow {
         chart.data.labels = keys;
   
         switch (EXPROW.dataset) {
-          case 1: chart.data.datasets[0].data = vals.mean;      break;
-          case 2: chart.data.datasets[0].data = vals.median;    break;
-          case 3: chart.data.datasets[0].data = vals.mode;      break;
-          case 4: chart.data.datasets[0].data = vals.quantity;  break;
+          case 1: chart.data.datasets[0].data = vals.mean;   break;
+          case 2: chart.data.datasets[0].data = vals.median; break;
+          case 3: chart.data.datasets[0].data = vals.mode;   break;
+          case 4: chart.data.datasets[0].data = vals.daily;  break;
         }
       }
     };
@@ -617,12 +617,12 @@ class ExpandedRow {
     this.chart.update();
     
     // Set data in details table
-    $("#details-table-mean",     this.rowExpanded).html( formatNum(leaguePayload.mean)     );
-    $("#details-table-median",   this.rowExpanded).html( formatNum(leaguePayload.median)   );
-    $("#details-table-mode",     this.rowExpanded).html( formatNum(leaguePayload.mode)     );
-    $("#details-table-count",    this.rowExpanded).html( formatNum(leaguePayload.count)    );
-    $("#details-table-quantity", this.rowExpanded).html( formatNum(leaguePayload.quantity) );
-    $("#details-table-exalted",  this.rowExpanded).html( formatNum(leaguePayload.exalted)  );
+    $("#details-table-mean",     this.rowExpanded).html( formatNum(leaguePayload.mean)   );
+    $("#details-table-median",   this.rowExpanded).html( formatNum(leaguePayload.median) );
+    $("#details-table-mode",     this.rowExpanded).html( formatNum(leaguePayload.mode)   );
+    $("#details-table-total",    this.rowExpanded).html( formatNum(leaguePayload.total)  );
+    $("#details-table-daily",    this.rowExpanded).html( formatNum(leaguePayload.daily)  );
+    $("#details-table-exalted",  this.rowExpanded).html( formatNum(leaguePayload.exalted));
   }
 
   // Create league selectors
@@ -682,10 +682,10 @@ class ExpandedRow {
   static formatHistory(leaguePayload) {
     let keys = [];
     let vals = {
-      mean:     [],
-      median:   [],
-      mode:     [],
-      quantity: []
+      mean:   [],
+      median: [],
+      mode:   [],
+      daily:  []
     };
   
     // Convert date strings into objects
@@ -712,7 +712,7 @@ class ExpandedRow {
       vals.mean.push(null);
       vals.median.push(null);
       vals.mode.push(null);
-      vals.quantity.push(null);
+      vals.daily.push(null);
       keys.push(null);
     }
   
@@ -730,7 +730,7 @@ class ExpandedRow {
         vals.mean.push(0);
         vals.median.push(0);
         vals.mode.push(0);
-        vals.quantity.push(0);
+        vals.daily.push(0);
   
         // Format display date
         let tmpDate = new Date(startDate);
@@ -747,7 +747,7 @@ class ExpandedRow {
       vals.mean.push(Math.round(entry.mean * 100) / 100);
       vals.median.push(Math.round(entry.median * 100) / 100);
       vals.mode.push(Math.round(entry.mode * 100) / 100);
-      vals.quantity.push(entry.quantity);
+      vals.daily.push(entry.daily);
       keys.push(ExpandedRow.formatDate(entry.time));
   
       // Check if there are any missing entries between the current one and the next one
@@ -767,7 +767,7 @@ class ExpandedRow {
           vals.mean.push(0);
           vals.median.push(0);
           vals.mode.push(0);
-          vals.quantity.push(0);
+          vals.daily.push(0);
           keys.push(ExpandedRow.formatDate(currentDate.addDays(i + 1)));
         }
       }
@@ -777,7 +777,7 @@ class ExpandedRow {
     vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
     vals.median.push(Math.round(leaguePayload.median * 100) / 100);
     vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
-    vals.quantity.push(leaguePayload.quantity);
+    vals.daily.push(leaguePayload.daily);
     keys.push("Now");
   
     // Return generated data
@@ -996,7 +996,7 @@ function defineListeners() {
   // Low confidence
   $("#radio-confidence").on("change", function(){
     let option = $("input:checked", this).val() === "true";
-    console.log("Show low count: " + option);
+    console.log("Show low daily: " + option);
     FILTER.showLowConfidence = option;
     updateQueryParam("confidence", option);
     sortResults();
@@ -1222,8 +1222,8 @@ function getSortFunc(col, order) {
   switch (col) {
     case "change":
       return order === "descending" ? sort_changeDesc : sort_changeAsc;
-    case "quantity":
-      return order === "descending" ? sort_quantDesc  : sort_quantAsc;
+    case "daily":
+      return order === "descending" ? sort_dailyDesc  : sort_dailyAsc;
     case "total":
       return order === "descending" ? sort_totalDesc  : sort_totalAsc;
     case "item":
@@ -1245,27 +1245,27 @@ function sort_priceAsc(a, b) {
   return 0;
 }
 
-function sort_quantDesc(a, b) {
-  if (a.quantity > b.quantity) return -1;
-  if (a.quantity < b.quantity) return 1;
+function sort_dailyDesc(a, b) {
+  if (a.daily > b.daily) return -1;
+  if (a.daily < b.daily) return 1;
   return 0;
 }
 
-function sort_quantAsc(a, b) {
-  if (a.quantity < b.quantity) return -1;
-  if (a.quantity > b.quantity) return 1;
+function sort_dailyAsc(a, b) {
+  if (a.daily < b.daily) return -1;
+  if (a.daily > b.daily) return 1;
   return 0;
 }
 
 function sort_totalDesc(a, b) {
-  if (a.count > b.count) return -1;
-  if (a.count < b.count) return 1;
+  if (a.total > b.total) return -1;
+  if (a.total < b.total) return 1;
   return 0;
 }
 
 function sort_totalAsc(a, b) {
-  if (a.count < b.count) return -1;
-  if (a.count > b.count) return 1;
+  if (a.total < b.total) return -1;
+  if (a.total > b.total) return 1;
   return 0;
 }
 
@@ -1443,7 +1443,7 @@ function sortResults() {
 
 function checkHideItem(item) {
   // Hide low confidence items
-  if (!FILTER.showLowConfidence && FILTER.league.active && item.quantity < 5) {
+  if (!FILTER.showLowConfidence && FILTER.league.active && item.daily < 5) {
     return true;
   }
 

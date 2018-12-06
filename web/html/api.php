@@ -184,7 +184,7 @@
                   <h2 class="m-0"><a href='https://api.poe.watch/compact?league=Standard' target='_blank'>compact</a> <span class='badge custom-badge-green'>New</span></h2>
                 </div>
                 <div class="card-body">
-                  <p class="card-text">Return price data (id, mean, median, mode, min, max, count, quantity, exalted) of all items of the provided league. Works only with active leagues. IDs can be found in itemdata API described above.</p>
+                  <p class="card-text">Return price data (id, mean, median, mode, min, max, total, daily, exalted) of all items of the provided league. Works only with active leagues. IDs can be found in itemdata API described above.</p>
 
                   <!-- Request fields -->
                   <h5 class="card-title">Request fields</h5>

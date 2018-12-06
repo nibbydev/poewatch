@@ -168,12 +168,10 @@ function GenMotDBox() {
   echo "
   <div class='row d-block mb-3'>
     <div class='col'> 
-      <div class='card custom-card custom-badge-red'>
+      <div class='card custom-card custom-badge-green'>
         <div class='card-header slim-card-edge'></div>
         <div class='card-body p-1'>
-          <p class='mb-0 text-center text-white'>
-            [allan please add advertisment]
-          </p>
+          <p class='mb-0 text-center'>Updating site. Things might not work for ~5min</p>
         </div>
         <div class='card-footer slim-card-edge'></div>
       </div>

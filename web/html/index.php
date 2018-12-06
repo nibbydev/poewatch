@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <?php GenHeaderMetaTags("PoeWatch", "A collection of useful resources all combined under one roof") ?>
+  <?php GenHeaderMetaTags("PoeWatch", "Price statistics and history") ?>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/main.css">
 </head>

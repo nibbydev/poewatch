@@ -13,18 +13,18 @@ function check_errors() {
 function get_data($pdo) {
   $query1 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.count, i.quantity + i.inc AS quantity
+    i.exalted, i.total, i.daily + i.inc AS daily
   FROM      league_items AS i 
   JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
   WHERE     l.name   = ?
     AND     l.active = 1 
-    AND     i.count  > 1 
+    AND     i.total  > 1 
   ORDER BY  id ASC";
 
   $query2 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.count, i.quantity + i.inc AS quantity
+    i.exalted, i.total, i.daily + i.inc AS daily
   FROM      league_items AS i 
   JOIN      data_itemData AS did 
     ON      i.id_d = did.id 
@@ -35,7 +35,7 @@ function get_data($pdo) {
   WHERE     l.name   = ?
     AND     dc.name  = ?
     AND     l.active = 1 
-    AND     i.count  > 1 
+    AND     i.total  > 1 
   ORDER BY  i.id_d ASC";
 
   if (isset($_GET["category"])) {
@@ -62,8 +62,8 @@ function parse_data($stmt) {
       'min'      =>        $row['min']      === NULL ?  0.0 : (float) $row['min'],
       'max'      =>        $row['max']      === NULL ?  0.0 : (float) $row['max'],
       'exalted'  =>        $row['exalted']  === NULL ?  0.0 : (float) $row['exalted'],
-      'count'    =>        $row['count']    === NULL ?    0 :   (int) $row['count'],
-      'quantity' =>        $row['quantity'] === NULL ?    0 :   (int) $row['quantity']
+      'total'    =>        $row['total']    === NULL ?    0 :   (int) $row['total'],
+      'daily'    =>        $row['daily']    === NULL ?    0 :   (int) $row['daily']
     );
 
     // Append row to payload
