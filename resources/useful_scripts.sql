@@ -41,6 +41,23 @@ alter table league_items drop column `dec`;
 
 alter table data_changeId modify `time` timestamp not null default current_timestamp on update current_timestamp;
 
+--
+-- Create separate group for Incursion vials and Bestiary nets
+--
+
+BEGIN;
+  insert into data_groups(id_cat, `name`, display)
+  values (4, 'vial', 'Vials'), (4, 'net', 'Nets');
+
+  update `data_itemData`
+  set id_grp = (select id from data_groups where `name` = 'net' limit 1)
+  where id_grp = 11 and `name` like '% Net';
+
+  update `data_itemData`
+  set id_grp = (select id from data_groups where `name` = 'vial' limit 1)
+  where id_grp = 11 and `name` like 'Vial %';
+COMMIT;
+
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------------------------------------------------------

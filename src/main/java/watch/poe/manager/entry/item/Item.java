@@ -58,7 +58,7 @@ public class Item {
         name = base.getName();
         typeLine = base.getTypeLine();
 
-        // Fixes some wrongly formatted data
+        // Formats some data for better parsing
         fixBaseData();
 
         // Find out the item category and group (eg armour/belt/weapon etc)
@@ -121,6 +121,10 @@ public class Item {
                     group = "essence";
                 } else if (iconCategory.equals("piece")) {
                     group = "piece";
+                } else if (name.contains(" Net")) {
+                    group = "net";
+                } else if (name.contains("Vial of ")) {
+                    group = "net";
                 }
 
                 if (group == null) {
