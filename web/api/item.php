@@ -49,13 +49,15 @@ function get_league_data($pdo, $id) {
 
 function get_history_entries($pdo, $leagueId, $itemId) {
   $query = "
-  SELECT 
-    mean, median, mode, daily, 
-    DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
-  FROM league_history_daily
-  WHERE id_l = ? AND id_d = ?
-  ORDER BY `time` DESC
-  LIMIT 120
+  select * from (
+    SELECT 
+      mean, median, mode, daily, 
+      DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
+    FROM league_history_daily
+    WHERE id_l = ? AND id_d = ?
+    ORDER BY `time` DESC
+    LIMIT 120
+  ) as foo ORDER BY foo.`time` ASC
   ";
 
   $stmt = $pdo->prepare($query);
