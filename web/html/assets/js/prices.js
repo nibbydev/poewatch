@@ -774,11 +774,13 @@ class ExpandedRow {
     }
   
     // Add current values
-    vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
-    vals.median.push(Math.round(leaguePayload.median * 100) / 100);
-    vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
-    vals.daily.push(leaguePayload.daily);
-    keys.push("Now");
+    if (leaguePayload.league.active) {
+      vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
+      vals.median.push(Math.round(leaguePayload.median * 100) / 100);
+      vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
+      vals.daily.push(leaguePayload.daily);
+      keys.push("Now");
+    }
   
     // Return generated data
     return {
