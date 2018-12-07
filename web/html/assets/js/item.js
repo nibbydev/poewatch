@@ -381,30 +381,24 @@ function formatHistory(leaguePayload) {
     mean:   [],
     median: [],
     mode:   [],
-    daily:   []
+    daily:  []
   };
 
   // Convert date strings into objects
   let firstDate  = leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null;
   let startDate  = leaguePayload.league.start ? new Date(leaguePayload.league.start) : null;
-  let endDate    = leaguePayload.league.end ? new Date(leaguePayload.league.end) : null;
 
   // Nr of days league data is missing since league start until first entry
   let timeDiffMissing = Math.abs(startDate.getTime() - firstDate.getTime());
   let daysMissing     = Math.floor(timeDiffMissing / (1000 * 60 * 60 * 24));
 
-  // Nr of days in a league
-  let timeDiffLeague = endDate ? Math.abs(endDate.getTime() - startDate.getTime()) : 0;
-  let daysLeague     = Math.ceil(timeDiffLeague / (1000 * 60 * 60 * 24));
-
   // Hardcore (id 1) and Standard (id 2) don't have an end date
   if (leaguePayload.league.id <= 2) {
-    daysLeague = 120;
-    daysMissing = 0;
+    daysMissing = 120 - leaguePayload.history.length;
   }
 
   // Bloat using 'null's the amount of days that should not have a tooltip
-  for (let i = 0; i < daysLeague - daysMissing - leaguePayload.history.length; i++) {
+  for (let i = 0; i < daysMissing; i++) {
     vals.mean.push(null);
     vals.median.push(null);
     vals.mode.push(null);
