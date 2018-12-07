@@ -384,21 +384,81 @@ function formatHistory(leaguePayload) {
     daily:  []
   };
 
-  // Convert date strings into objects
-  let firstDate  = leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null;
-  let startDate  = leaguePayload.league.start ? new Date(leaguePayload.league.start) : null;
+  const msInDay = 86400000;
+  let firstDate = null, lastDate = null;
+  let totalDays = null, elapDays = null;
+  let startDate = null, endDate  = null;
+  let daysMissingStart = 0, daysMissingEnd = 0;
+  let startEmptyPadding = 0;
 
-  // Nr of days league data is missing since league start until first entry
-  let timeDiffMissing = Math.abs(startDate.getTime() - firstDate.getTime());
-  let daysMissing     = Math.floor(timeDiffMissing / (1000 * 60 * 60 * 24));
-
-  // Hardcore (id 1) and Standard (id 2) don't have an end date
-  if (leaguePayload.league.id <= 2) {
-    daysMissing = 120 - leaguePayload.history.length;
+  // If there are any history entries for this league, find the first and last date
+  if (leaguePayload.history.length) {
+    firstDate = new Date(leaguePayload.history[0].time);
+    lastDate = new Date(leaguePayload.history[leaguePayload.history.length - 1].time);
   }
 
+  // League should always have a start date
+  if (leaguePayload.league.start) {
+    startDate = new Date(leaguePayload.league.start);
+  }
+
+  // Permanent leagues don't have an end date
+  if (leaguePayload.league.end) {
+    endDate = new Date(leaguePayload.league.end);
+  }
+
+  // Find duration for non-permanent leagues
+  if (startDate && endDate) {
+    let diff = Math.abs(endDate.getTime() - startDate.getTime());
+    totalDays = Math.floor(diff / msInDay);
+    
+    if (leaguePayload.league.active) {
+      let diff = Math.abs(new Date().getTime() - startDate.getTime());
+      elapDays = Math.floor(diff / msInDay);
+    } else {
+      elapDays = totalDays;
+    }
+  }
+
+  // Find how many days worth of data is missing from the league start
+  if (leaguePayload.league.id > 2) {
+    if (firstDate && startDate) {
+      let diff = Math.abs(firstDate.getTime() - startDate.getTime());
+      daysMissingStart = Math.floor(diff / msInDay);
+    }
+  } 
+
+  // Find how many days worth of data is missing from the league end, if league has ended
+  if (leaguePayload.league.active) {
+    // League is active, compare time of last entry to right now
+    if (lastDate) {
+      let diff = Math.abs(new Date().getTime() - lastDate.getTime());
+      daysMissingEnd = Math.floor(diff / msInDay);
+    }
+  } else {
+    // League has ended, compare time of last entry to time of league end
+    if (lastDate && endDate) {
+      let diff = Math.abs(lastDate.getTime() - endDate.getTime());
+      daysMissingEnd = Math.floor(diff / msInDay);
+    }
+  }
+
+  // Find number of ticks the graph should be padded with empty entries on the left
+  if (leaguePayload.league.id > 2) {
+    if (totalDays !== null && elapDays !== null) {
+      startEmptyPadding = totalDays - elapDays;
+    }
+  } else {
+    startEmptyPadding = 120 - leaguePayload.history.length;
+  }
+
+
+  // Right, now that we have all the dates, durations and counts we can start 
+  // building the actual payload
+
+
   // Bloat using 'null's the amount of days that should not have a tooltip
-  for (let i = 0; i < daysMissing; i++) {
+  for (let i = 0; i < startEmptyPadding; i++) {
     vals.mean.push(null);
     vals.median.push(null);
     vals.mode.push(null);
@@ -406,26 +466,16 @@ function formatHistory(leaguePayload) {
     keys.push(null);
   }
 
-  // If entries are missing before the first entry
-  if (leaguePayload.history.length && leaguePayload.league.id > 2) {
-    // Get the first entry's time
-    let firstDate = new Date(leaguePayload.history[0].time);
+  // If entries are missing before the first entry, fill with "No data"
+  if (daysMissingStart) {
+    let date = new Date(startDate);
 
-    // Get difference in days between league start and first entry
-    let timeDiff = Math.abs(startDate.getTime() - firstDate.getTime());
-    let diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)); 
-
-    // Fill missing days with "No data" (if any)
-    for (let i = 0; i < diffDays; i++) {
+    for (let i = 0; i < daysMissingStart; i++) {
       vals.mean.push(0);
       vals.median.push(0);
       vals.mode.push(0);
       vals.daily.push(0);
-
-      // Format display date
-      let tmpDate = new Date(startDate);
-      tmpDate.setDate(tmpDate.getDate() + i);
-      keys.push(formatDate(tmpDate));
+      keys.push(formatDate(date.addDays(i)));
     }
   }
 
@@ -460,6 +510,20 @@ function formatHistory(leaguePayload) {
         vals.daily.push(0);
         keys.push(formatDate(currentDate.addDays(i + 1)));
       }
+    }
+  }
+
+  // If entries are missing before the first entry, fill with "No data"
+  if (daysMissingEnd) {
+    let date = new Date(lastDate);
+
+    // Fill missing days with "No data" (if any)
+    for (let i = 0; i < daysMissingEnd; i++) {
+      vals.mean.push(0);
+      vals.median.push(0);
+      vals.mode.push(0);
+      vals.daily.push(0);
+      keys.push(formatDate(date.addDays(i)));
     }
   }
 
