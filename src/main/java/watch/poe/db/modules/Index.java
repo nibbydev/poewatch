@@ -59,7 +59,7 @@ public class Index {
      */
     public Integer addGroup(Integer categoryId, String groupName) {
         String query1 = "INSERT INTO data_groups (id_cat, `name`) VALUES (?, ?)";
-        String query2 = "SELECT id FROM data_groups WHERE id_cat = ? AND `name` = ? IMIT 1; ";
+        String query2 = "SELECT id FROM data_groups WHERE id_cat = ? AND `name` = ? LIMIT 1; ";
 
         try {
             if (database.connection.isClosed()) {
