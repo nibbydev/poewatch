@@ -179,10 +179,7 @@ if ($_GET["category"] === "relic") {
   $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
 }
 
-// If no results with provided id
-if ($stmt->rowCount() === 0) {
-  error(400, "No results");
-}
+
 
 $data = parse_data($stmt, $state["active"]);
 
