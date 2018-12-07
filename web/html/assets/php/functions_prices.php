@@ -341,7 +341,7 @@ function AddLeagueSelects($leagues) {
 
 // Add table headers based on category
 function AddTableHeaders($category) {
-  echo "<th class='w-100' scope='col'><span class='sort-column'>Item</span></th>";
+  echo "<th class='w-100'><span class='sort-column'>Item</span></th>";
 
   if ( $category === "gem" ) {
     echo "<th>Lvl</th>";
@@ -353,7 +353,7 @@ function AddTableHeaders($category) {
     echo "<th>Tier</th>";
   }
   
-  echo "<th><span class='sort-column custom-text-green' order='descending'>Chaos</span></th>";
+  echo "<th><span class='sort-column'>Chaos</span></th>";
   echo "<th><span class='sort-column'>Exalted</span></th>";
   echo "<th><span class='sort-column'>Change</span></th>";
   echo "<th><span class='sort-column'>Daily</span></th>";

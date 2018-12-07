@@ -917,6 +917,7 @@ function parseQueryParams() {
   if (tmpCol = parseQueryParam('sortby')) {
     let element;
 
+    // Find column that matches the provided param
     $(".sort-column").each(function( index ) {
       if (this.innerHTML.toLowerCase() === tmpCol) {
         element = this;
@@ -924,18 +925,22 @@ function parseQueryParams() {
       }
     });
 
+    // If there was no match then clear the browser's query params
     if (!element) {
       updateQueryParam("sortby", null);
       updateQueryParam("sortorder", null);
       return;
     }
 
+    // Get column name
     let col = element.innerHTML.toLowerCase();
 
+    // If there was a sortorder query param as well
     if (tmpOrder = parseQueryParam('sortorder')) {
       let order = null;
       let color;
 
+      // Only two options
       if (tmpOrder === "descending") {
         order = "descending";
         color = "custom-text-green";
@@ -944,12 +949,16 @@ function parseQueryParams() {
         color = "custom-text-red";
       }
 
+      // If user provided a third option, count that as invalid and
+      // clear the browser's query params
       if (!order) {
         updateQueryParam("sortby", null);
         updateQueryParam("sortorder", null);
         return;
-     }
+      }
 
+      // User-provided params were a-ok, set the sort function and
+      // add indication which col is being sorted
       console.log("Sorting: " + col + " " + order);
       FILTER.sortFunction = getSortFunc(col, order);
       $(element).addClass(color);
@@ -1106,7 +1115,9 @@ function defineListeners() {
 
   // Sort
   $(".sort-column").on("click", function(){
+    // Get col name
     let col = $(this)[0].innerHTML.toLowerCase();
+    // Get order tag, if present
     let order = $(this).attr("order");
     let color = null;
 
@@ -1116,12 +1127,19 @@ function defineListeners() {
       .attr("order", null);
 
     // Toggle descriptions and orders
-    if (!order || order === "ascending") {
+    if (!order) {
       order = "descending";
       color = "custom-text-green";
-    } else {
+    } else if (order === "descending") {
       order = "ascending";
       color = "custom-text-red";
+    } else if (order === "ascending") {
+      updateQueryParam("sortby", null);
+      updateQueryParam("sortorder", null);
+      console.log("Sorting: default");
+      FILTER.sortFunction = sort_priceDesc;
+      sortResults();
+      return;
     }
 
     updateQueryParam("sortby", col);
@@ -1321,8 +1339,6 @@ function updateQueryParam(key, value) {
     case "group":      value = value === "all"        ? null : value;   break;
     case "tier":       value = value === "all"        ? null : value;   break;
     case "influence":  value = value === "all"        ? null : value;   break;
-    case "sortorder":  value = value === "descending" ? null : value;   break;
-    case "sortby":     value = value === "chaos"      ? null : value;   break;
     default:           break;
   }
   
