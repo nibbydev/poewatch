@@ -154,6 +154,12 @@ input.form-control,select.form-control {
 .form-group input {background-color: #222 !important}
 option {background-color: #333}
 
+.form-group textarea {
+  background-color: #222 !important;
+  border-color: #555 !important;
+  color: #ddd !important;
+}
+
 /*------------------------------------------------------------------------------------------------------------
 // Navs
 //----------------------------------------------------------------------------------------------------------*/

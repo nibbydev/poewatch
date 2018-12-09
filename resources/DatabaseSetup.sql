@@ -276,6 +276,26 @@ CREATE TABLE account_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
+-- Web tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Table structure web_feedback
+--
+
+CREATE TABLE web_feedback (
+    id        INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ip        VARCHAR(15)   NOT NULL,
+    contact   VARCHAR(128)  NOT NULL,
+    message   TEXT          NOT NULL,
+    
+    INDEX ip      (ip),
+    INDEX time    (time),
+    INDEX contact (contact)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------------------------------------------------------------------
 -- Base values
 -- --------------------------------------------------------------------------------------------------------------------
 
@@ -435,5 +455,6 @@ GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
 DROP USER IF EXISTS 'pw_web'@'localhost';
 CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
+GRANT INSERT ON pw.* TO 'pw_web'@'localhost';
 
 FLUSH PRIVILEGES;

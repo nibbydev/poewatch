@@ -29,6 +29,10 @@ function GenNavbar($pdo) {
       'href' => '/characters'
     ),
     array(
+      'name' => 'Feedback',
+      'href' => '/feedback'
+    ),
+    array(
       'name' => 'About',
       'href' => '/about'
     )
@@ -171,7 +175,7 @@ function GenMotDBox() {
       <div class='card custom-card custom-badge-green'>
         <div class='card-header slim-card-edge'></div>
         <div class='card-body p-1'>
-          <p class='mb-0 text-center'>Updating site. Things might not work for ~5min</p>
+          <p class='mb-0 text-center'>Site updated. Hit Ctrl+F5 if prices are not loading.</p>
         </div>
         <div class='card-footer slim-card-edge'></div>
       </div>
