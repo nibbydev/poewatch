@@ -513,11 +513,11 @@ function formatHistory(leaguePayload) {
     }
   }
 
-  // If entries are missing before the first entry, fill with "No data"
-  if (daysMissingEnd) {
+  // If entries are missing after the first entry, fill with "No data"
+  if (daysMissingEnd && lastDate) {
     let date = new Date(lastDate);
+    date.setDate(date.getDate() + 1);
 
-    // Fill missing days with "No data" (if any)
     for (let i = 0; i < daysMissingEnd; i++) {
       vals.mean.push(0);
       vals.median.push(0);
