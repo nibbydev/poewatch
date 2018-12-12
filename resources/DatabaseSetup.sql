@@ -455,6 +455,6 @@ GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
 DROP USER IF EXISTS 'pw_web'@'localhost';
 CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
-GRANT INSERT ON pw.* TO 'pw_web'@'localhost';
+GRANT INSERT ON pw.web_feedback TO 'pw_web'@'localhost';
 
 FLUSH PRIVILEGES;
