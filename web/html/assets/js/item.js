@@ -334,6 +334,11 @@ function fixIcon(ITEM) {
     ITEM.icon += "&elder=1";
   }
 
+  // Flaks have no params
+  if (!ITEM.icon.includes("?")) {
+    return;
+  }
+
   let splitIcon = ITEM.icon.split("?");
   let splitParams = splitIcon[1].split("&");
   let newParams = "";
