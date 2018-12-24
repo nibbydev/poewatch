@@ -295,14 +295,18 @@ class FormGen {
   }
 }
 
-// Get list of leagues and their display names from DB
-function GetLeagues($pdo) {
-  $query = "SELECT l.name, l.display, l.active
+// Get all leagues that have items
+function GetItemLeagues() {
+  global $pdo;
+
+  $query = "
+  SELECT l.name, l.display, l.active
   FROM data_leagues AS l 
   JOIN ( 
     SELECT DISTINCT id_l FROM league_items 
   ) AS leagues ON l.id = leagues.id_l 
-  ORDER BY active DESC, id DESC";
+  ORDER BY active DESC, id DESC
+  ";
 
   $stmt = $pdo->query($query);
   $payload = array();
@@ -314,9 +318,12 @@ function GetLeagues($pdo) {
   return $payload;
 }
 
-// Get all available category relations
-function GetCategories($pdo) {
-  $stmt = $pdo->query("SELECT name FROM data_categories");
+// Get all categories
+function GetCategories() {
+  global $pdo;
+
+  $query = "SELECT `name` FROM data_categories";
+  $stmt = $pdo->query($query);
   
   $payload = array();
   while ($row = $stmt->fetch()) {
@@ -324,6 +331,34 @@ function GetCategories($pdo) {
   }
 
   return $payload;
+}
+
+// Redirects user to url with necessary query parameters, if missing
+function CheckQueryParams($leagues, $categories) {
+  // Check if user-provided league param is valid
+  if (isset($_GET['league'])) {
+    $found = false;
+    
+    foreach ($leagues as $league) {
+      if ($league['name'] === $_GET['league']) {
+        $found = true;
+        break;
+      }
+    }
+
+    if (!$found) {
+      header("Location: prices");
+      exit();
+    }
+  }
+
+  // Check if user-provided category param is valid
+  if (isset($_GET['category'])) {
+    if (!in_array($_GET['category'], $categories, true)) {
+      header("Location: prices");
+      exit();
+    }
+  }
 }
 
 // Add league select fields to second navbar
@@ -360,32 +395,4 @@ function AddTableHeaders($category) {
   echo "<th><span class='sort-column'>Total</span></th>";
 }
 
-// Redirects user to url with necessary query parameters, if missing
-function CheckQueryParams($leagues, $categories) {
-  // Check if user-provided league param is valid
-  if (isset($_GET['league'])) {
-    $found = false;
-    
-    foreach ($leagues as $lEntry) {
-      if ($lEntry['name'] === $_GET['league']) {
-        $found = true;
-        break;
-      }
-    }
 
-    if (!$found) {
-      header("Location: prices");
-      exit();
-    }
-  }
-
-  // Check if user-provided category param is valid
-  if (isset($_GET['league'])) {
-    if ($_GET['category'] !== 'relic') {
-      if (!in_array($_GET['category'], $categories, true)) {
-        header("Location: prices");
-        exit();
-      }
-    }
-  }
-}

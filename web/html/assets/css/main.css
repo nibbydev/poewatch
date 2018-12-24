@@ -91,8 +91,8 @@ a:hover {color: #bbb}
   max-height: 35px;
 }
 .img-container-sm img {
-  max-height: 35px;
-  max-width: 35px;
+  max-height: 32px;
+  max-width: 32px;
 }
 
 /* XS image containers */
@@ -206,12 +206,6 @@ footer {
 .custom-menu-item.active {background-color: #3f3f3f} 
 .custom-menu-item:hover {background-color: #444}
 .custom-sidebar-column a:hover {text-decoration: none !important}
-
-@media (max-width: 992px) {
-  .custom-menu-name {
-    display: none;
-  }
-}
 
 /*------------------------------------------------------------------------------------------------------------
 // Table formatting
@@ -358,7 +352,6 @@ pre {
 .mv-sm {max-width: 576px}
 
 .w-auto {width: auto}
-
 .nowrap {white-space: nowrap}
 
 /*------------------------------------------------------------------------------------------------------------
@@ -395,3 +388,7 @@ pre {
 .mh-item-largeCol {max-height: 120px}
 
 .mw-item-dTable {max-width: 260px}
+
+
+.pw-hover-light:hover {background-color: rgba(255, 255, 255, 0.2) }
+.pw-hover-dark:hover  {background-color: rgba(0, 0, 0, 0.2) }

@@ -179,8 +179,6 @@ if ($_GET["category"] === "relic") {
   $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
 }
 
-
-
 $data = parse_data($stmt, $state["active"]);
 
 // Display generated data
