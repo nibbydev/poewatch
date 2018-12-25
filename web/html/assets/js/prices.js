@@ -6,22 +6,25 @@
 class ItemRow {
   constructor (item) {
     this.item = item;
-    this.row = "<tr value={{id}}>{{fill}}</tr>";
-
-    let rowBuilder = "";
-
-    rowBuilder += this.buildNameField();
-    rowBuilder += this.buildGemFields();
-    rowBuilder += this.buildBaseFields();
-    rowBuilder += this.buildMapFields();
-    rowBuilder += this.buildPriceFields();
-    rowBuilder += this.buildChangeField();
-    rowBuilder += this.buildDailyField();
-    rowBuilder += this.buildTotalField();
+    this.row = "<tr value={{id}}>{{data}}</tr>";
+    this.fields = {};
+    
+    // Build HTML elements
+    var rowBuilder = [];
+    rowBuilder.push(
+      this.buildNameField(),
+      this.buildGemFields(),
+      this.buildBaseFields(),
+      this.buildMapFields(),
+      this.buildPriceFields(),
+      this.buildChangeField(),
+      this.buildDailyField(),
+      this.buildTotalField()
+    );
 
     this.row = this.row
-      .replace("{{id}}",    item.id)
-      .replace("{{fill}}",  rowBuilder);
+      .replace("{{id}}", item.id)
+      .replace("{{data}}", rowBuilder.join(""));
   }
 
   buildNameField() {
@@ -29,7 +32,7 @@ class ItemRow {
     <td>
       <div class='d-flex align-items-center'>
         <span class='img-container img-container-sm text-center mr-1'><img src="{{icon}}"></span>
-        <a href='{{url}}' target="_blank" class='{{color}}'>{{name}}{{type}}</a>{{var}}{{link}}
+        <span class='cursor-pointer {{color}}'>{{name}}{{type}}</span>{{var}}{{link}}
       </div>
     </td>
     `.trim();
@@ -268,105 +271,22 @@ class ItemRow {
   }
 }
 
-class ExpandedRow {
+class DetailsModal {
   constructor() {
-    this.dataSets     = {};
+    this.dataSets = {};
 
-    this.rowExpanded  = null;
-    this.rowParent    = null;
-    this.rowFiller    = null;
+    // Find modal in DOM
+    this.modal = $("#modal-details");
 
-    this.id           = null;
-    this.league       = null;
-    this.chart        = null;
-    this.dataset      = 1;
+    this.id = null;
+    this.league = null;
+    this.chart = null;
+    this.dataset = 1;
 
-    // A bit more "static" variables
-    this.template_exaltedContainer = null;
-    this.template_chaosContainer = null;
-    this.template_expandedRow = null;
-    this.chart_settings = null;
+    this.nameHtml = null;
+    this.icon = null;
 
-    this.setStaticData();
-  }
-
-  // Set some more or less static data
-  setStaticData() {
-    this.template_exaltedContainer = `
-    <span class='img-container img-container-xs text-center mr-1'>
-      <img src='https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1'>
-    </span>
-    `.trim();
-
-    this.template_chaosContainer = `
-    <span class='img-container img-container-xs text-center mr-1'>
-      <img src='https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1'>
-    </span>
-    `.trim();
-
-    this.template_expandedRow = `
-    <tr class='selected-row'><td colspan='100'>
-      <div class='row m-1'>
-        <div class='col-sm d-flex mt-2'>
-          <h4 class='m-0 mr-2'>League</h4>
-          <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-        </div>
-      </div>
-      <hr>
-      <div class='row m-1 mt-2'>
-        <div class='col d-flex'>
-          <table class="table table-sm details-table mw-item-dTable mr-4">
-            <tbody>
-              <tr>
-                <td class='nowrap w-100'>Mean</td>
-                <td class='nowrap'>{{chaosContainter}}<span id='details-table-mean'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Median</td>
-                <td class='nowrap'>{{chaosContainter}}<span id='details-table-median'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Mode</td>
-                <td class='nowrap'>{{chaosContainter}}<span id='details-table-mode'></span></td>
-              </tr>
-            </tbody>
-          </table>
-  
-          <table class="table table-sm details-table mw-item-dTable">
-            <tbody>
-              <tr>
-                <td class='nowra pw-100'>Total amount listed</td>
-                <td class='nowrap'><span id='details-table-total'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Listed every 24h</td>
-                <td class='nowrap'><span id='details-table-daily'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Price in exalted</td>
-                <td class='nowrap'>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <hr>
-      <div class='row m-1 mb-3'>
-        <div class='col-sm'>
-          <h4>Past data</h4>
-          <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-            <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Daily</label>
-          </div>
-          <div class='chart-large'><canvas id="chart"></canvas></div>
-        </div>
-      </div>
-    </td></tr>
-    `.trim();
-  
-    let gradientPlugin = {
+    let chartGradientPlugin = {
       beforeDatasetUpdate: function(chart) {
         if (!chart.width) return;
   
@@ -381,7 +301,7 @@ class ExpandedRow {
       }
     };
 
-    let dataPlugin = {
+    let chartDataPlugin = {
       beforeUpdate: function(chart) {
         // Don't run if data has not yet been initialized
         if (chart.data.data.length < 1) return;
@@ -391,7 +311,7 @@ class ExpandedRow {
   
         chart.data.labels = keys;
   
-        switch (EXPROW.dataset) {
+        switch (DETMODAL.dataset) {
           case 1: chart.data.datasets[0].data = vals.mean;   break;
           case 2: chart.data.datasets[0].data = vals.median; break;
           case 3: chart.data.datasets[0].data = vals.mode;   break;
@@ -401,7 +321,7 @@ class ExpandedRow {
     };
   
     this.chart_settings = {
-      plugins: [dataPlugin, gradientPlugin],
+      plugins: [chartDataPlugin, chartGradientPlugin],
       type: "line",
       data: {
         data: [],
@@ -464,6 +384,22 @@ class ExpandedRow {
         }
       }
     }
+
+    // Instantiate chart
+    let chartCanvas = $("#modal-chart", this.modal);
+    this.chart = new Chart(chartCanvas, this.chart_settings);
+
+    // Create league select event listener
+    $("#modal-leagues", this.modal).change(function(){
+      DETMODAL.league = $(":selected", this).val();
+      DETMODAL.updateContent();
+    });
+  
+    // Create dataset radio event listener
+    $("#modal-radio", this.modal).change(function(){
+      DETMODAL.dataset = parseInt($("input[name=dataset]:checked", this).val());
+      DETMODAL.updateContent();
+    });
   }
 
   onRowClick(event) {
@@ -471,162 +407,193 @@ class ExpandedRow {
     let id = parseInt(target.attr('value'));
   
     // If user clicked on a table that does not contain an id
-    if (isNaN(id)) return;
-    // If user clicked on item name
-    if (event.target.href) return;
-    // If user clicked on item type
-    if (event.target.parentElement.href) return;
-  
-    // Get rid of any filler rows
-    this.removeFillerRow();
-  
-    // User clicked on open parent-row
-    if (target.is(this.rowParent)) {
-      console.log("Closed open row");
-  
-      $(".parent-row").removeAttr("class");
-      this.rowParent = null;
-  
-      $(".selected-row").remove();
-      this.rowExpanded = null;
+    if (isNaN(id)) {
       return;
     }
-  
-    // There's an open row somewhere
-    if (this.rowParent !== null || this.rowExpanded !== null) {
-      $(".selected-row").remove();
-      $(".parent-row").removeAttr("class");
-  
-      console.log("Closed row: " + this.id);
-  
-      this.rowParent = null;
-      this.rowExpanded = null;
-    }
-  
+
     console.log("Clicked on row id: " + id);
-  
+
+    // Show buffer and hide content
+    this.setBufferVisibility(true);
+
     // Define current row as parent target row
-    target.addClass("parent-row");
-    this.rowParent = target;
     this.league = FILTER.league.name;
-    this.id = id;
     this.dataset = 1;
+    this.id = id;
   
     // Load history data
     if (id in this.dataSets) {
       console.log("History source: local");
-      this.buildExpandedRow();
+      this.updateContent();
     } else {
       console.log("History source: remote");
-      this.displayFillerRow();
-      this.makeHistoryRequest();
-    }
-  }
 
-  displayFillerRow() {
-    let template = `
-    <tr class='filler-row'><td colspan='100'>
-      <div class="d-flex justify-content-center">
-        <div class="buffering m-2"></div>
-      </div>
-    </td></tr>
-    `.trim();
-  
-    this.rowFiller = $(template);
-    this.rowParent.after(this.rowFiller);
-  }
-
-  makeHistoryRequest() {
-    let request = $.ajax({
-      url: "https://api.poe.watch/item.php",
-      data: {id: this.id},
-      type: "GET",
-      async: true,
-      dataTypes: "json"
-    });
-  
-    request.done(function(payload) {
-      // Get rid of any filler rows
-      EXPROW.removeFillerRow();
-            
-      EXPROW.dataSets[EXPROW.id] = payload;
-      EXPROW.buildExpandedRow();
-    });
-  }
-
-  // Removes all fillers rows
-  removeFillerRow() {
-    if (this.rowFiller) {
-      $(".filler-row").remove();
-      this.rowFiller = null;
-    }
-  }
-
-  buildExpandedRow() {
-    // Get list of past leagues available for the row
-    let leagues = ExpandedRow.getItemHistoryLeagues(this.dataSets, this.id);
-  
-    // Stop if no leagues available
-    if (leagues.length < 1) {
-      return;
-    }
-  
-    // Create expandedRow jQuery object
-    let template = this.template_expandedRow
-      .replace("{{chaosContainter}}",   this.template_chaosContainer)
-      .replace("{{chaosContainter}}",   this.template_chaosContainer)
-      .replace("{{chaosContainter}}",   this.template_chaosContainer)
-      .replace("{{exaltedContainter}}", this.template_exaltedContainer);
-    this.rowExpanded = $(template);
-
-    // Instantiate chart
-    let chartCanvas = $("#chart", this.rowExpanded);
-    this.chart = new Chart(chartCanvas, this.chart_settings);
-
-    // Format and display data
-    this.fillData();
-    // Create league selectors
-    this.createSelectors(leagues);
-  
-    // Place expanded row in table
-    this.rowParent.after(this.rowExpanded);
-  
-    // Create league select event listener
-    $("#history-league-selector", this.rowExpanded).change(function(){
-      EXPROW.league = $(":selected", this).val();
-      EXPROW.fillData();
-    });
-  
-    // Create dataset radio event listener
-    $("#history-dataset-radio", this.rowExpanded).change(function(){
-      EXPROW.dataset = parseInt($("input[name=dataset]:checked", this).val());
-      EXPROW.fillData();
-    });
-  }
-
-  // Format and display data
-  fillData() {
-    // Get league-specific data pack
-    let leaguePayload = ExpandedRow.getLeaguePayload(this.dataSets, this.league, this.id);
-
-    // Format history
-    let formattedHistory = ExpandedRow.formatHistory(leaguePayload);
-
-    // Assign chart datasets
-    this.chart.data.data = formattedHistory;
-    this.chart.update();
+      let request = $.ajax({
+        url: "https://api.poe.watch/item",
+        data: {id: this.id},
+        type: "GET",
+        async: true,
+        dataTypes: "json"
+      });
     
-    // Set data in details table
-    $("#details-table-mean",     this.rowExpanded).html( formatNum(leaguePayload.mean)   );
-    $("#details-table-median",   this.rowExpanded).html( formatNum(leaguePayload.median) );
-    $("#details-table-mode",     this.rowExpanded).html( formatNum(leaguePayload.mode)   );
-    $("#details-table-total",    this.rowExpanded).html( formatNum(leaguePayload.total)  );
-    $("#details-table-daily",    this.rowExpanded).html( formatNum(leaguePayload.daily)  );
-    $("#details-table-exalted",  this.rowExpanded).html( formatNum(leaguePayload.exalted));
+      request.done(DetailsModal.requestDone);
+    }
+
+    let item = this.findItem(id);
+    $("#modal-icon", this.modal).attr("src", item.icon);
+    $("#modal-name", this.modal).html(this.buildNameField(item));
+    
+    // Show modal
+    this.modal.modal("show");
   }
 
-  // Create league selectors
-  createSelectors(leagues) {
+  static requestDone(payload) {
+    DETMODAL.dataSets[DETMODAL.id] = payload;
+    DETMODAL.updateContent();
+  }
+
+  updateContent() {
+    // Clear previous leagues from selector
+    $("#modal-leagues", this.modal).find('option').remove();
+
+    // Get current item user clicked on
+    let item = this.dataSets[this.id];
+
+    // Get list of leagues with history data
+    let leagues = this.getLeagues(item);
+
+    // Add leagues as selector options
+    this.createLeagueSelector(leagues);
+
+    // Format league data
+    let leaguePayload = this.getPayload();
+    this.chart.data.data = this.formatHistory(leaguePayload);
+    this.chart.update();
+
+    // Update modal table
+    $("#modal-mean",     this.modal).html( formatNum(leaguePayload.mean)   );
+    $("#modal-median",   this.modal).html( formatNum(leaguePayload.median) );
+    $("#modal-mode",     this.modal).html( formatNum(leaguePayload.mode)   );
+    $("#modal-total",    this.modal).html( formatNum(leaguePayload.total)  );
+    $("#modal-daily",    this.modal).html( formatNum(leaguePayload.daily)  );
+    $("#modal-exalted",  this.modal).html( formatNum(leaguePayload.exalted));
+
+    // Hide buffer and show content
+    this.setBufferVisibility(false);
+  }
+
+  findItem(id) {
+    for (let i = 0; i < ITEMS.length; i++) {
+      if (ITEMS[i].id === id) {
+         return ITEMS[i];
+      }
+    }
+
+    return null;
+  }
+
+  setBufferVisibility(visible) { 
+    if (visible) {
+      $("#modal-body-buffer", this.modal).removeClass("d-none").addClass("d-flex");
+      $("#modal-body-content", this.modal).addClass("d-none").removeClass("d-flex");
+    } else {
+      $("#modal-body-buffer", this.modal).addClass("d-none").removeClass("d-flex");
+      $("#modal-body-content", this.modal).removeClass("d-none").addClass("d-flex");
+    }
+  }
+
+  buildNameField(item) {
+    // Fix name if item is enchantment
+    if (item.category === "enchantment" && item.variation !== null) {
+      let splitVar = item.variation.split('-');
+  
+      for (var num in splitVar) {
+        item.name = item.name.replace("#", splitVar[num]);
+      }
+    }
+  
+    // Begin builder
+    let builder = item.name;
+  
+    if (item.type) {
+      builder += "<span class='subtext-1'>, " + item.type + "</span>";;
+    }
+  
+    if (item.frame === 9) {
+      builder = "<span class='item-foil'>" + builder + "</span>";
+    } else if (item.variation === "shaper") {
+      builder = "<span class='item-shaper'>" + builder + "</span>";
+    } else if (item.variation === "elder") {
+      builder = "<span class='item-elder'>" + builder + "</span>";
+    }
+  
+    if (item.variation && item.category !== "enchantment") { 
+      builder += " <span class='badge custom-badge-gray ml-1'>" + item.variation + "</span>";
+    } 
+    
+    if (item.tier) {
+      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.tier + "</span>";
+    } 
+  
+    if (item.ilvl) {
+      builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + item.ilvl + "</span>";
+    } 
+    
+    if (item.links) {
+      builder += " <span class='badge custom-badge-gray ml-1'>" + item.links + " Link</span>";
+    }
+  
+    if (item.frame === 4) {
+      builder += "<span class='badge custom-badge-gray ml-1'>Lvl " + item.lvl + "</span>";
+      builder += "<span class='badge custom-badge-gray ml-1'>Quality " + item.quality + "</span>";
+  
+      if (item.corrupted) {
+        builder += "<span class='badge custom-badge-red ml-1'>Corrupted</span>";
+      }
+    }
+  
+    return builder;
+  }
+
+  formatIcon(item) {
+    var icon = item.icon.replace("http://", "https://");
+  
+    if (item.variation === "shaper") {
+      icon += "&shaper=1";
+    } else if (item.variation === "elder") {
+      icon += "&elder=1";
+    }
+  
+    // Flaks have no params
+    if (!icon.includes("?")) {
+      return icon;
+    }
+  
+    let splitIcon = icon.split("?");
+    let splitParams = splitIcon[1].split("&");
+    let newParams = "";
+  
+    for (let i = 0; i < splitParams.length; i++) {
+      switch (splitParams[i].split("=")[0]) {
+        case "scale": 
+          break;
+        default:
+          newParams += "&" + splitParams[i];
+          break;
+      }
+    }
+  
+    if (newParams) {
+      icon = splitIcon[0] + "?" + newParams.substr(1);
+    } else {
+      icon = splitIcon[0];
+    }
+
+    return icon;
+  }
+
+
+  createLeagueSelector(leagues) {
     let builder = "";
   
     for (let i = 0; i < leagues.length; i++) {
@@ -634,52 +601,39 @@ class ExpandedRow {
       let selected = FILTER.league.name === leagues[i].name ? "selected" : "";
   
       builder += "<option value='{{value}}' {{selected}}>{{name}}</option>"
-        .replace("{{selected}}",  selected)
-        .replace("{{value}}",     leagues[i].name)
-        .replace("{{name}}",      display);
+        .replace("{{selected}}", selected)
+        .replace("{{value}}", leagues[i].name)
+        .replace("{{name}}", display);
     }
   
-    $("#history-league-selector", this.rowExpanded).append(builder);
+    $("#modal-leagues", this.modal).html(builder);
   }
 
-  // Return the matching payload from dataSets
-  static getLeaguePayload(dataSets, league, id) {
-    for (let i = 0; i < dataSets[id].data.length; i++) {
-      if (dataSets[id].data[i].league.name === league) {
-        return dataSets[id].data[i];
+  getPayload() {
+    for (let i = 0; i < this.dataSets[this.id].data.length; i++) {
+      if (this.dataSets[this.id].data[i].league.name === this.league) {
+        return this.dataSets[this.id].data[i];
       }
     }
   
     return null;
   }
 
-  // Get list of past leagues available for the row
-  static getItemHistoryLeagues(dataSets, id) {
+  getLeagues(item) {
     let leagues = [];
-  
-    for (let i = 0; i < dataSets[id].data.length; i++) {
+
+    for (let i = 0; i < item.data.length; i++) {
       leagues.push({
-        name:    dataSets[id].data[i].league.name,
-        display: dataSets[id].data[i].league.display,
-        active:  dataSets[id].data[i].league.active
+        name: item.data[i].league.name,
+        display: item.data[i].league.display,
+        active: item.data[i].league.active
       });
     }
   
     return leagues;
   }
 
-  static convertDateToUTC(date) {
-    return new Date(
-      date.getUTCFullYear(), 
-      date.getUTCMonth(), 
-      date.getUTCDate(), 
-      date.getUTCHours(), 
-      date.getUTCMinutes(), 
-      date.getUTCSeconds());
-  }
-
-  // Format history
-  static formatHistory(leaguePayload) {
+  formatHistory(leaguePayload) {
     let keys = [];
     let vals = {
       mean:   [],
@@ -779,7 +733,7 @@ class ExpandedRow {
         vals.median.push(0);
         vals.mode.push(0);
         vals.daily.push(0);
-        keys.push(ExpandedRow.formatDate(date.addDays(i)));
+        keys.push(this.formatDate(date.addDays(i)));
       }
     }
   
@@ -792,7 +746,7 @@ class ExpandedRow {
       vals.median.push(Math.round(entry.median * 100) / 100);
       vals.mode.push(Math.round(entry.mode * 100) / 100);
       vals.daily.push(entry.daily);
-      keys.push(ExpandedRow.formatDate(entry.time));
+      keys.push(this.formatDate(entry.time));
   
       // Check if there are any missing entries between the current one and the next one
       if (i + 1 < leaguePayload.history.length) {
@@ -812,7 +766,7 @@ class ExpandedRow {
           vals.median.push(0);
           vals.mode.push(0);
           vals.daily.push(0);
-          keys.push(ExpandedRow.formatDate(currentDate.addDays(i + 1)));
+          keys.push(this.formatDate(currentDate.addDays(i + 1)));
         }
       }
     }
@@ -827,7 +781,7 @@ class ExpandedRow {
         vals.median.push(0);
         vals.mode.push(0);
         vals.daily.push(0);
-        keys.push(ExpandedRow.formatDate(date.addDays(i)));
+        keys.push(this.formatDate(date.addDays(i)));
       }
     }
   
@@ -847,13 +801,14 @@ class ExpandedRow {
     }
   }
 
-  static formatDate(date) {
+  formatDate(date) {
     const MONTH_NAMES = [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
   
-    let s = ExpandedRow.convertDateToUTC(new Date(date));
+    let s = new Date(date);
+
     return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
   }
 }
@@ -880,7 +835,7 @@ var FILTER = {
 var ITEMS = [];
 var LEAGUES = null;
 var INTERVAL;
-var EXPROW = new ExpandedRow();
+var DETMODAL = new DetailsModal();
 
 // Re-used icon urls
 const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
@@ -1156,7 +1111,7 @@ function defineListeners() {
 
   // Expand row
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
-    EXPROW.onRowClick(event);
+    DETMODAL.onRowClick(event);
   });
 
   // Live search toggle
@@ -1222,7 +1177,7 @@ function defineListeners() {
 
 function makeGetRequest() {
   $("#searchResults tbody").empty();
-  $(".buffering").show();
+  $("#buffering-main").show();
   $("#button-showAll").hide();
   $(".buffering-msg").remove();
 
@@ -1239,7 +1194,7 @@ function makeGetRequest() {
 
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
-    $(".buffering").hide();
+    $("#buffering-main").hide();
     $(".buffering-msg").remove();
 
     ITEMS = json;
@@ -1251,7 +1206,7 @@ function makeGetRequest() {
 
     $(".buffering-msg").remove();
 
-    let buffering = $(".buffering");
+    let buffering = $("#buffering-main");
     buffering.hide();
 
     let msg;
@@ -1502,7 +1457,7 @@ function sortResults() {
 
   if (count < 1) {
     let msg = "<div class='buffering-msg align-self-center mb-2'>No results</div>";
-    $(".buffering").after(msg);
+    $("#buffering-main").after(msg);
   }
 
   let loadAllBtn = $("#button-showAll");

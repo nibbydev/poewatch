@@ -9,9 +9,5 @@ $PAGEDATA = array(
   "cssIncludes" => array(
     "https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css",
     "main.css"
-  ),
-  "cols" => array(
-    "priceNav" => "col mb-3",
-    "mainContent" => "col-12"
   )
 );

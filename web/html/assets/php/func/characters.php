@@ -119,7 +119,7 @@ function CreateTable($DATA) {
   }
 
   // Create div and table
-  $table = "<hr><div class='card api-data-table'><table class='table table-striped table-hover mb-0'>";
+  $table = "<hr><div class='card api-data-table'><table class='table table-striped table-hover table-responsive mb-0'>";
 
   // Create table header
   $table .= "<thead>";
