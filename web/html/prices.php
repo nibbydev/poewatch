@@ -7,10 +7,12 @@
   $PAGEDATA["title"] = "Prices - PoeWatch";
   $PAGEDATA["description"] = "Discover the average price of almost any item";
   $PAGEDATA["cssIncludes"][] = "prices.css";
-  $PAGEDATA["jsIncludes"][] = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js";
+  $PAGEDATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
+  $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
+  $PAGEDATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
   $PAGEDATA["jsIncludes"][] = "prices.js";
   $PAGEDATA["jsIncludes"][] = "sparkline.js";
-
+  
   // Get list of leagues that have items
   $leagueList = GetItemLeagues($pdo);
   // Get all available categories
@@ -33,14 +35,14 @@
     <div class="modal-content w-100">
       <div class="modal-header d-flex align-items-center">
         <div class="row d-flex justify-content-between w-100 m-0">
-          <div class="col-12 col-sm-6 d-flex align-items-center p-0 mb-3 mb-sm-0">
+          <div class="col-12 col-sm-8 d-flex align-items-center p-0 mb-3 mb-sm-0">
             <span class="img-container img-container-lg text-center mr-1">
               <img id="modal-icon">
             </span>
             <h4 id="modal-name" target="_blank"></h4>
           </div>
 
-          <div class="col-12 col-sm-5 d-flex align-items-center p-0 ml-3 ml-sm-0 justify-content-start justify-content-sm-end">
+          <div class="col-12 col-sm-4 d-flex align-items-center p-0 ml-3 ml-sm-0 justify-content-start justify-content-sm-end">
             <select class="form-control form-control-sm w-auto mr-2" id="modal-leagues"></select>
           </div>
         </div>
@@ -120,15 +122,14 @@
           <div class="row m-0">
             <div class="col">
               <h4>Past data</h4>
-              <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="modal-radio">
-                <label class="btn btn-outline-dark btn-sm p-0 px-1 active"><input type="radio" name="dataset" value="1">Mean</label>
-                <label class="btn btn-outline-dark btn-sm p-0 px-1"><input type="radio" name="dataset" value="2">Median</label>
-                <label class="btn btn-outline-dark btn-sm p-0 px-1"><input type="radio" name="dataset" value="3">Mode</label>
-                <label class="btn btn-outline-dark btn-sm p-0 px-1"><input type="radio" name="dataset" value="4">Daily</label>
-              </div>
-
-              <div class="chart-large">
-                <canvas id="modal-chart" height="250" width="574"></canvas>
+              <div class="ct-chart"></div>
+              <div class="d-flex justify-content-center">
+                <div class="btn-group btn-group-toggle mt-2" data-toggle="buttons" id="modal-radio">
+                  <label class="btn btn-outline-success btn-md p-0 px-1 active"><input type="radio" name="dataset" value="1">Mean</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="2">Median</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="3">Mode</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="4">Daily</label>
+                </div>
               </div>
             </div>
           </div>

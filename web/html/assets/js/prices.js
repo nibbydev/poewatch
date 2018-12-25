@@ -286,108 +286,31 @@ class DetailsModal {
     this.nameHtml = null;
     this.icon = null;
 
-    let chartGradientPlugin = {
-      beforeDatasetUpdate: function(chart) {
-        if (!chart.width) return;
-  
-        // Create the linear gradient  chart.scales['x-axis-0'].width
-        var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
-  
-        gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
-        gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
-  
-        // Assign the gradient to the dataset's border color.
-        chart.data.datasets[0].borderColor = gradient;
-      }
-    };
-
-    let chartDataPlugin = {
-      beforeUpdate: function(chart) {
-        // Don't run if data has not yet been initialized
-        if (chart.data.data.length < 1) return;
-  
-        var keys = chart.data.data.keys;
-        var vals = chart.data.data.vals;
-  
-        chart.data.labels = keys;
-  
-        switch (DETMODAL.dataset) {
-          case 1: chart.data.datasets[0].data = vals.mean;   break;
-          case 2: chart.data.datasets[0].data = vals.median; break;
-          case 3: chart.data.datasets[0].data = vals.mode;   break;
-          case 4: chart.data.datasets[0].data = vals.daily;  break;
+    this.chart = null;
+    this.chartOptions = {
+      height: 250,
+      showPoint: true,
+      lineSmooth: true,
+      axisX: {
+        showGrid: true,
+        showLabel: true,
+        labelInterpolationFnc: function skipLabels(value, index) {
+          return index % 7  === 0 ? value : null;
         }
-      }
-    };
-  
-    this.chart_settings = {
-      plugins: [chartDataPlugin, chartGradientPlugin],
-      type: "line",
-      data: {
-        data: [],
-        labels: [],
-        datasets: [{
-          data: [],
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          borderColor: "rgba(255, 255, 255, 0.5)",
-          borderWidth: 3,
-          lineTension: 0.4,
-          pointRadius: 0
-        }]
       },
-      options: {
-        title: {display: false},
-        layout: {padding: 0},
-        legend: {display: false},
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: {duration: 0},
-        hover: {animationDuration: 0},
-        responsiveAnimationDuration: 0,
-        tooltips: {
-          intersect: false,
-          mode: "index",
-          callbacks: {
-            title: function(tooltipItem, data) {
-              let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-              return price ? price : "No data";
-            },
-            label: function(tooltipItem, data) {
-              return data['labels'][tooltipItem['index']];
-            }
+      fullWidth: true,
+      plugins: [
+        Chartist.plugins.tooltip2({
+          cssClass: 'chartist-tooltip',
+          offset: {
+            x: 0,
+            y: -20,
           },
-          backgroundColor: '#fff',
-          titleFontSize: 16,
-          titleFontColor: '#222',
-          bodyFontColor: '#444',
-          bodyFontSize: 14,
-          displayColors: false,
-          borderWidth: 1,
-          borderColor: '#aaa'
-        },
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: true,
-              padding: 0
-            }
-          }],
-          xAxes: [{
-            ticks: {
-              callback: function(value, index, values) {
-                return (value ? value : '');
-              },
-              maxRotation: 0,
-              padding: 0
-            }
-          }]
-        }
-      }
-    }
-
-    // Instantiate chart
-    let chartCanvas = $("#modal-chart", this.modal);
-    this.chart = new Chart(chartCanvas, this.chart_settings);
+          template: '{{key}}: {{value}}',
+          hideDelay: 500
+        })
+      ]
+    };
 
     // Create league select event listener
     $("#modal-leagues", this.modal).change(function(){
@@ -413,18 +336,18 @@ class DetailsModal {
 
     console.log("Clicked on row id: " + id);
 
-    // Show buffer and hide content
-    this.setBufferVisibility(true);
-
-    // Define current row as parent target row
-    this.league = FILTER.league.name;
+    // Clear previous leagues from selector
+    $("#modal-leagues", this.modal).find('option').remove();
     this.dataset = 1;
     this.id = id;
+
+    // Show buffer and hide content
+    this.setBufferVisibility(true);
   
     // Load history data
     if (id in this.dataSets) {
       console.log("History source: local");
-      this.updateContent();
+      this.setContent();
     } else {
       console.log("History source: remote");
 
@@ -442,44 +365,60 @@ class DetailsModal {
     let item = this.findItem(id);
     $("#modal-icon", this.modal).attr("src", item.icon);
     $("#modal-name", this.modal).html(this.buildNameField(item));
-    
-    // Show modal
+
     this.modal.modal("show");
   }
 
   static requestDone(payload) {
     DETMODAL.dataSets[DETMODAL.id] = payload;
-    DETMODAL.updateContent();
+    DETMODAL.setContent();
   }
 
-  updateContent() {
-    // Clear previous leagues from selector
-    $("#modal-leagues", this.modal).find('option').remove();
-
+  setContent() {
     // Get current item user clicked on
     let item = this.dataSets[this.id];
 
-    // Get list of leagues with history data
+    // Get list of leagues with history data for the item
     let leagues = this.getLeagues(item);
+    this.league = leagues[0].name;
 
     // Add leagues as selector options
     this.createLeagueSelector(leagues);
 
-    // Format league data
-    let leaguePayload = this.getPayload();
-    this.chart.data.data = this.formatHistory(leaguePayload);
-    this.chart.update();
-
-    // Update modal table
-    $("#modal-mean",     this.modal).html( formatNum(leaguePayload.mean)   );
-    $("#modal-median",   this.modal).html( formatNum(leaguePayload.median) );
-    $("#modal-mode",     this.modal).html( formatNum(leaguePayload.mode)   );
-    $("#modal-total",    this.modal).html( formatNum(leaguePayload.total)  );
-    $("#modal-daily",    this.modal).html( formatNum(leaguePayload.daily)  );
-    $("#modal-exalted",  this.modal).html( formatNum(leaguePayload.exalted));
-
     // Hide buffer and show content
     this.setBufferVisibility(false);
+    this.updateContent();
+  }
+
+  updateContent() {
+    // Format league data
+    var currentHistory = this.getPayload();
+    var currentFrmtHistory = this.formatHistory(currentHistory);
+
+    var data = {
+      labels: currentFrmtHistory.keys,
+      series: [
+        currentFrmtHistory.vals.mean
+      ]
+    };
+
+    switch (this.dataset) {
+      case 1: data.series[0] = currentFrmtHistory.vals.mean;   break;
+      case 2: data.series[0] = currentFrmtHistory.vals.median; break;
+      case 3: data.series[0] = currentFrmtHistory.vals.mode;   break;
+      case 4: data.series[0] = currentFrmtHistory.vals.daily;  break;
+    }
+
+    
+    this.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
+
+    // Update modal table
+    $("#modal-mean",     this.modal).html( formatNum(currentHistory.mean)   );
+    $("#modal-median",   this.modal).html( formatNum(currentHistory.median) );
+    $("#modal-mode",     this.modal).html( formatNum(currentHistory.mode)   );
+    $("#modal-total",    this.modal).html( formatNum(currentHistory.total)  );
+    $("#modal-daily",    this.modal).html( formatNum(currentHistory.daily)  );
+    $("#modal-exalted",  this.modal).html( formatNum(currentHistory.exalted));
   }
 
   findItem(id) {
@@ -504,8 +443,8 @@ class DetailsModal {
 
   buildNameField(item) {
     // Fix name if item is enchantment
-    if (item.category === "enchantment" && item.variation !== null) {
-      let splitVar = item.variation.split('-');
+    if (item.category === "enchantment" && item.var !== null) {
+      let splitVar = item.var.split('-');
   
       for (var num in splitVar) {
         item.name = item.name.replace("#", splitVar[num]);
@@ -521,14 +460,14 @@ class DetailsModal {
   
     if (item.frame === 9) {
       builder = "<span class='item-foil'>" + builder + "</span>";
-    } else if (item.variation === "shaper") {
+    } else if (item.var === "shaper") {
       builder = "<span class='item-shaper'>" + builder + "</span>";
-    } else if (item.variation === "elder") {
+    } else if (item.var === "elder") {
       builder = "<span class='item-elder'>" + builder + "</span>";
     }
-  
-    if (item.variation && item.category !== "enchantment") { 
-      builder += " <span class='badge custom-badge-gray ml-1'>" + item.variation + "</span>";
+
+    if (item.var && item.category !== "enchantment") { 
+      builder += " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
     } 
     
     if (item.tier) {
@@ -558,9 +497,9 @@ class DetailsModal {
   formatIcon(item) {
     var icon = item.icon.replace("http://", "https://");
   
-    if (item.variation === "shaper") {
+    if (item.var === "shaper") {
       icon += "&shaper=1";
-    } else if (item.variation === "elder") {
+    } else if (item.var === "elder") {
       icon += "&elder=1";
     }
   
@@ -598,10 +537,8 @@ class DetailsModal {
   
     for (let i = 0; i < leagues.length; i++) {
       let display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
-      let selected = FILTER.league.name === leagues[i].name ? "selected" : "";
   
-      builder += "<option value='{{value}}' {{selected}}>{{name}}</option>"
-        .replace("{{selected}}", selected)
+      builder += "<option value='{{value}}'>{{name}}</option>"
         .replace("{{value}}", leagues[i].name)
         .replace("{{name}}", display);
     }
@@ -716,14 +653,18 @@ class DetailsModal {
   
   
     // Bloat using 'null's the amount of days that should not have a tooltip
-    for (let i = 0; i < startEmptyPadding; i++) {
-      vals.mean.push(null);
-      vals.median.push(null);
-      vals.mode.push(null);
-      vals.daily.push(null);
-      keys.push(null);
+    if (startEmptyPadding) {
+      let date = new Date(startDate);
+
+      for (let i = 0; i < startEmptyPadding; i++) {
+        vals.mean.push(0);
+        vals.median.push(0);
+        vals.mode.push(0);
+        vals.daily.push(0);
+        keys.push(this.formatDate(date.addDays(i)));
+      }
     }
-  
+    
     // If entries are missing before the first entry, fill with "No data"
     if (daysMissingStart) {
       let date = new Date(startDate);
