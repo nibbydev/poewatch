@@ -202,17 +202,13 @@
                         return;
                     }
 
-                    itemData = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
+                    value = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
 
-
-                    if (!itemData) {
+                    if (!value) {
                         return;
                     }
 
-                    meta = itemData.meta;
-                    value = itemData.value;
-
-                    if (typeof options.valueTransformFunction === 'function') {
+                    if (options.valueTransformFunction) {
                         value = options.valueTransformFunction.call(chart, value);
                     }
 
@@ -229,22 +225,10 @@
                     triggerElement.setAttribute('aria-describedby', options.id);
 
                     // value
-                    textMarkup = textMarkup.replace(new RegExp('{{value}}', 'gi'), itemData);
+                    textMarkup = textMarkup.replace(new RegExp('{{value}}', 'gi'), value);
 
-                    // replace all known {{}} occurences with their respective values
-                    if (meta && typeof meta === 'object') {
-                        for (var metaKey in meta) {
-                            textMarkup = textMarkup.replace(new RegExp('{{' + metaKey + '}}', 'gi'), meta[metaKey] || '');
-                        }
-                    } else {
-                        textMarkup = textMarkup.replace(new RegExp('{{meta}}', 'gi'), meta || '');
-                    }
-                    
                     // key
                     textMarkup = textMarkup.replace(new RegExp('{{key}}', 'gi'), chart.data.labels[valueIndex] || '');
-
-                    // series name
-                    textMarkup = textMarkup.replace(new RegExp('{{seriesName}}', 'gi'), seriesName || '');
 
                     tooltipElement.innerHTML = textMarkup;
                     tooltipElement.removeAttribute('hidden');

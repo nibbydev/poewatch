@@ -274,19 +274,14 @@ class ItemRow {
 class DetailsModal {
   constructor() {
     this.dataSets = {};
-
-    // Find modal in DOM
     this.modal = $("#modal-details");
+    this.current = {
+      id: null,
+      league: null,
+      chart: null,
+      dataset: 1
+    }
 
-    this.id = null;
-    this.league = null;
-    this.chart = null;
-    this.dataset = 1;
-
-    this.nameHtml = null;
-    this.icon = null;
-
-    this.chart = null;
     this.chartOptions = {
       height: 250,
       showPoint: true,
@@ -307,45 +302,60 @@ class DetailsModal {
             y: -20,
           },
           template: '{{key}}: {{value}}',
-          hideDelay: 500
+          hideDelay: 500,
+          valueTransformFunction: formatNum
         })
       ]
     };
 
     // Create league select event listener
     $("#modal-leagues", this.modal).change(function(){
-      DETMODAL.league = $(":selected", this).val();
+      DETMODAL.current.league = $(":selected", this).val();
       DETMODAL.updateContent();
     });
   
     // Create dataset radio event listener
     $("#modal-radio", this.modal).change(function(){
-      DETMODAL.dataset = parseInt($("input[name=dataset]:checked", this).val());
+      DETMODAL.current.dataset = parseInt($("input[name=dataset]:checked", this).val());
       DETMODAL.updateContent();
     });
   }
 
-  onRowClick(event) {
-    let target = $(event.currentTarget);
-    let id = parseInt(target.attr('value'));
-  
-    // If user clicked on a table that does not contain an id
-    if (isNaN(id)) {
-      return;
-    }
-
-    console.log("Clicked on row id: " + id);
-
-    // Clear previous leagues from selector
+  resetData() {
+    // Clear leagues from selector
     $("#modal-leagues", this.modal).find('option').remove();
-    this.dataset = 1;
-    this.id = id;
+
+    // Dataset selection
+    var $radios = $('#modal-radio').children();
+    $radios.prop('checked', false).removeClass('active');
+    $radios.first().prop('checked', true).addClass('active');
+
+    this.current = {
+      id: null,
+      league: null,
+      chart: null,
+      dataset: 1
+    }
+  }
+
+  onRowClick(event) {
+    var target = $(event.currentTarget);
+    var id = parseInt(target.attr('value'));
+
+    // If user clicked on a different row
+    if (isNaN(id)) return;
+
+    // Reset anything left by previous modal
+    this.resetData();
+
+    this.current.id = id;
+    console.log("Clicked on row id: " + this.current.id);
 
     // Show buffer and hide content
     this.setBufferVisibility(true);
-  
+
     // Load history data
-    if (id in this.dataSets) {
+    if (this.current.id in this.dataSets) {
       console.log("History source: local");
       this.setContent();
     } else {
@@ -353,41 +363,44 @@ class DetailsModal {
 
       let request = $.ajax({
         url: "https://api.poe.watch/item",
-        data: {id: this.id},
+        data: {id: this.current.id},
         type: "GET",
         async: true,
         dataTypes: "json"
       });
     
-      request.done(DetailsModal.requestDone);
+      request.done(function(payload) {
+        DETMODAL.dataSets[DETMODAL.current.id] = payload;
+        DETMODAL.setContent();
+      });
     }
 
-    let item = this.findItem(id);
+    // Find item entry from current price category
+    let item = DetailsModal.findItem(this.current.id);
+
+    // Set modal's icon and name while request might still be processing
     $("#modal-icon", this.modal).attr("src", item.icon);
     $("#modal-name", this.modal).html(this.buildNameField(item));
 
+    // Open the modal
     this.modal.modal("show");
   }
 
-  static requestDone(payload) {
-    DETMODAL.dataSets[DETMODAL.id] = payload;
-    DETMODAL.setContent();
-  }
-
   setContent() {
-    // Get current item user clicked on
-    let item = this.dataSets[this.id];
+    // Get item user clicked on
+    let item = this.dataSets[this.current.id];
 
     // Get list of leagues with history data for the item
     let leagues = this.getLeagues(item);
-    this.league = leagues[0].name;
+    this.current.league = leagues[0].name;
 
     // Add leagues as selector options
     this.createLeagueSelector(leagues);
 
+    this.updateContent();
+
     // Hide buffer and show content
     this.setBufferVisibility(false);
-    this.updateContent();
   }
 
   updateContent() {
@@ -397,20 +410,17 @@ class DetailsModal {
 
     var data = {
       labels: currentFrmtHistory.keys,
-      series: [
-        currentFrmtHistory.vals.mean
-      ]
+      series: []
     };
 
-    switch (this.dataset) {
+    switch (this.current.dataset) {
       case 1: data.series[0] = currentFrmtHistory.vals.mean;   break;
       case 2: data.series[0] = currentFrmtHistory.vals.median; break;
       case 3: data.series[0] = currentFrmtHistory.vals.mode;   break;
       case 4: data.series[0] = currentFrmtHistory.vals.daily;  break;
     }
 
-    
-    this.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
+    this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
 
     // Update modal table
     $("#modal-mean",     this.modal).html( formatNum(currentHistory.mean)   );
@@ -421,7 +431,7 @@ class DetailsModal {
     $("#modal-exalted",  this.modal).html( formatNum(currentHistory.exalted));
   }
 
-  findItem(id) {
+  static findItem(id) {
     for (let i = 0; i < ITEMS.length; i++) {
       if (ITEMS[i].id === id) {
          return ITEMS[i];
@@ -547,9 +557,9 @@ class DetailsModal {
   }
 
   getPayload() {
-    for (let i = 0; i < this.dataSets[this.id].data.length; i++) {
-      if (this.dataSets[this.id].data[i].league.name === this.league) {
-        return this.dataSets[this.id].data[i];
+    for (let i = 0; i < this.dataSets[this.current.id].data.length; i++) {
+      if (this.dataSets[this.current.id].data[i].league.name === this.current.league) {
+        return this.dataSets[this.current.id].data[i];
       }
     }
   
