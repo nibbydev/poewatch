@@ -35,7 +35,7 @@ $DATA = MakeSearch    ($pdo, $DATA);
 //------------------------------------------------------------------------------------------------------------
 
 // Shows a MotD message of table sizes
-function DisplayMotD($DATA) {
+function DisplayCharacterMotD($DATA) {
   $accDisplay = number_format($DATA["totalAccs"]);
   $charDisplay = number_format($DATA["totalChars"]);
   $relDisplay = number_format($DATA["totalRels"]);
@@ -105,7 +105,8 @@ function CreateModeRadios($DATA) {
 
     $name = ucwords($mode);
 
-    echo "<label class='btn btn-outline-dark $active'>
+    echo 
+    "<label class='btn btn-outline-dark $active'>
       <input type='radio' name='mode' value='$mode' $checked><a>$name</a>
     </label>";
   }
@@ -118,7 +119,7 @@ function CreateTable($DATA) {
   }
 
   // Create div and table
-  $table = "<hr><div class='card api-data-table'><table class='table table-striped table-hover mb-0'>";
+  $table = "<hr><div class='card api-data-table'><table class='table table-striped table-hover table-responsive mb-0'>";
 
   // Create table header
   $table .= "<thead>";

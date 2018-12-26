@@ -58,6 +58,15 @@ BEGIN;
   where id_grp = 11 and `name` like 'Vial %';
 COMMIT;
 
+--
+-- Refactor count to total and quantity to daily
+--
+
+alter table league_items change quantity daily int(8) unsigned not null default 0;
+alter table league_history_daily change quantity daily int(8) unsigned not null default 0;
+alter table league_items change `count` total int(16) unsigned not null default 0;
+alter table league_history_daily change `count` total int(16) unsigned not null default 0;
+
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------------------------------------------------------

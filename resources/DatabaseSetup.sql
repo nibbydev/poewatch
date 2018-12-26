@@ -124,26 +124,26 @@ CREATE TABLE data_itemData (
 --
 
 CREATE TABLE league_items (
-    id_l        SMALLINT       UNSIGNED NOT NULL,
-    id_d        INT            UNSIGNED NOT NULL,
-    time        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    mean        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    median      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    mode        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    min         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    max         DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    count       INT(16)        UNSIGNED NOT NULL DEFAULT 0,
-    quantity    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
-    inc         INT(8)         UNSIGNED NOT NULL DEFAULT 0,
-    spark       VARCHAR(128)   DEFAULT NULL,
+    id_l     SMALLINT       UNSIGNED NOT NULL,
+    id_d     INT            UNSIGNED NOT NULL,
+    time     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    mean     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    median   DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    mode     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    min      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    max      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    exalted  DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    total    INT(16)        UNSIGNED NOT NULL DEFAULT 0,
+    daily    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    inc      INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    spark    VARCHAR(128)   DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
     INDEX volatile (volatile),
-    INDEX `count`  (`count`),
+    INDEX total    (total),
     INDEX median   (median),
     INDEX inc      (inc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -175,17 +175,17 @@ CREATE TABLE league_entries (
 -- --------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE league_history_daily (
-    id_l       SMALLINT       UNSIGNED NOT NULL,
-    id_d       INT            UNSIGNED NOT NULL,
-    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    mean       DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    median     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    mode       DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    min        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    max        DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted    DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    count      INT(16)        UNSIGNED DEFAULT NULL,
-    quantity   INT(8)         UNSIGNED DEFAULT NULL,
+    id_l     SMALLINT       UNSIGNED NOT NULL,
+    id_d     INT            UNSIGNED NOT NULL,
+    time     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    mean     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    median   DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    mode     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    min      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    max      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
+    exalted  DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
+    total    INT(16)        UNSIGNED DEFAULT NULL,
+    daily    INT(8)         UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
@@ -273,6 +273,26 @@ CREATE TABLE account_history (
     FOREIGN KEY (id_old) REFERENCES account_accounts (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_new) REFERENCES account_accounts (id) ON DELETE RESTRICT,
     CONSTRAINT `unique` UNIQUE (id_old, id_new)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Web tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+--
+-- Table structure web_feedback
+--
+
+CREATE TABLE web_feedback (
+    id        INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ip        VARCHAR(15)   NOT NULL,
+    contact   VARCHAR(128)  NOT NULL,
+    message   TEXT          NOT NULL,
+    
+    INDEX ip      (ip),
+    INDEX time    (time),
+    INDEX contact (contact)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -435,5 +455,6 @@ GRANT ALL PRIVILEGES ON pw.* TO 'pw_app'@'localhost';
 DROP USER IF EXISTS 'pw_web'@'localhost';
 CREATE USER 'pw_web'@'localhost' IDENTIFIED BY 'password goes here';
 GRANT SELECT ON pw.* TO 'pw_web'@'localhost';
+GRANT INSERT ON pw.web_feedback TO 'pw_web'@'localhost';
 
 FLUSH PRIVILEGES;

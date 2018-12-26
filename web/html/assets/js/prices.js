@@ -6,22 +6,25 @@
 class ItemRow {
   constructor (item) {
     this.item = item;
-    this.row = "<tr value={{id}}>{{fill}}</tr>";
-
-    let rowBuilder = "";
-
-    rowBuilder += this.buildNameField();
-    rowBuilder += this.buildGemFields();
-    rowBuilder += this.buildBaseFields();
-    rowBuilder += this.buildMapFields();
-    rowBuilder += this.buildPriceFields();
-    rowBuilder += this.buildChangeField();
-    rowBuilder += this.buildQuantField();
-    rowBuilder += this.buildCountField();
+    this.row = "<tr value={{id}}>{{data}}</tr>";
+    this.fields = {};
+    
+    // Build HTML elements
+    var rowBuilder = [];
+    rowBuilder.push(
+      this.buildNameField(),
+      this.buildGemFields(),
+      this.buildBaseFields(),
+      this.buildMapFields(),
+      this.buildPriceFields(),
+      this.buildChangeField(),
+      this.buildDailyField(),
+      this.buildTotalField()
+    );
 
     this.row = this.row
-      .replace("{{id}}",    item.id)
-      .replace("{{fill}}",  rowBuilder);
+      .replace("{{id}}", item.id)
+      .replace("{{data}}", rowBuilder.join(""));
   }
 
   buildNameField() {
@@ -29,12 +32,12 @@ class ItemRow {
     <td>
       <div class='d-flex align-items-center'>
         <span class='img-container img-container-sm text-center mr-1'><img src="{{icon}}"></span>
-        <a href='{{url}}' target="_blank" class='{{color}}'>{{name}}{{type}}</a>{{var}}{{link}}
+        <span class='cursor-pointer {{color}}'>{{name}}{{type}}</span>{{var}}{{link}}
       </div>
     </td>
     `.trim();
   
-    template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league + "&id=" + this.item.id);
+    template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league.name + "&id=" + this.item.id);
   
     if (FILTER.category === "base") {
       if (this.item.var === "shaper") {
@@ -219,38 +222,42 @@ class ItemRow {
     return template.replace("{{percent}}", change);
   }
   
-  buildQuantField() {
+  buildDailyField() {
     let template = `
     <td>
       <span class='badge custom-badge-block custom-badge-{{color}}'>
-        {{quant}}
+        {{daily}}
       </span>
     </td>
     `.trim();
 
-    if (this.item.quantity >= 20) {
+    if (FILTER.league.active) {
+      if (this.item.daily >= 20) {
+        template = template.replace("{{color}}", "gray");
+      } else if (this.item.daily >= 10) {
+        template = template.replace("{{color}}", "orange-lo");
+      } else if (this.item.daily >= 5) {
+        template = template.replace("{{color}}", "red-lo");
+      } else if (this.item.daily >= 0) {
+        template = template.replace("{{color}}", "red");
+      }
+    } else {
       template = template.replace("{{color}}", "gray");
-    } else if (this.item.quantity >= 10) {
-      template = template.replace("{{color}}", "orange-lo");
-    } else if (this.item.quantity >= 5) {
-      template = template.replace("{{color}}", "red-lo");
-    } else if (this.item.quantity >= 0) {
-      template = template.replace("{{color}}", "red");
     }
   
-    return template.replace("{{quant}}", this.item.quantity);
+    return template.replace("{{daily}}", this.item.daily);
   }
 
-  buildCountField() {
+  buildTotalField() {
     let template = `
     <td>
       <span class='badge custom-badge-block custom-badge-gray'>
-        {{count}}
+        {{total}}
       </span>
     </td>
     `.trim();
   
-    return template.replace("{{count}}", this.item.count);
+    return template.replace("{{total}}", this.item.total);
   }
 
   static roundPrice(price) {
@@ -264,474 +271,420 @@ class ItemRow {
   }
 }
 
-class ExpandedRow {
+class DetailsModal {
   constructor() {
-    this.dataSets     = {};
+    this.dataSets = {};
+    this.modal = $("#modal-details");
+    this.current = {
+      id: null,
+      league: null,
+      chart: null,
+      dataset: 1
+    }
 
-    this.rowExpanded  = null;
-    this.rowParent    = null;
-    this.rowFiller    = null;
+    this.chartOptions = {
+      height: 250,
+      showPoint: true,
+      lineSmooth: true,
+      axisX: {
+        showGrid: true,
+        showLabel: true,
+        labelInterpolationFnc: function skipLabels(value, index) {
+          return index % 7  === 0 ? value : null;
+        }
+      },
+      fullWidth: true,
+      plugins: [
+        Chartist.plugins.tooltip2({
+          cssClass: 'chartist-tooltip',
+          offset: {
+            x: 0,
+            y: -20,
+          },
+          template: '{{key}}: {{value}}',
+          hideDelay: 500,
+          valueTransformFunction: formatNum
+        })
+      ]
+    };
 
-    this.id           = null;
-    this.league       = null;
-    this.chart        = null;
-    this.dataset      = 1;
-
-    // A bit more "static" variables
-    this.template_exaltedContainer = null;
-    this.template_chaosContainer = null;
-    this.template_expandedRow = null;
-    this.chart_settings = null;
-
-    this.setStaticData();
+    // Create league select event listener
+    $("#modal-leagues", this.modal).change(function(){
+      DETMODAL.current.league = $(":selected", this).val();
+      DETMODAL.updateContent();
+    });
+  
+    // Create dataset radio event listener
+    $("#modal-radio", this.modal).change(function(){
+      DETMODAL.current.dataset = parseInt($("input[name=dataset]:checked", this).val());
+      DETMODAL.updateContent();
+    });
   }
 
-  // Set some more or less static data
-  setStaticData() {
-    this.template_exaltedContainer = `
-    <span class='img-container img-container-xs text-center mr-1'>
-      <img src='https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1'>
-    </span>
-    `.trim();
+  resetData() {
+    // Clear leagues from selector
+    $("#modal-leagues", this.modal).find('option').remove();
 
-    this.template_chaosContainer = `
-    <span class='img-container img-container-xs text-center mr-1'>
-      <img src='https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1'>
-    </span>
-    `.trim();
+    // Dataset selection
+    var $radios = $('#modal-radio').children();
+    $radios.prop('checked', false).removeClass('active');
+    $radios.first().prop('checked', true).addClass('active');
 
-    this.template_expandedRow = `
-    <tr class='selected-row'><td colspan='100'>
-      <div class='row m-1'>
-        <div class='col-sm d-flex mt-2'>
-          <h4 class='m-0 mr-2'>League</h4>
-          <select class="form-control form-control-sm w-auto mr-2" id="history-league-selector"></select>
-        </div>
-      </div>
-      <hr>
-      <div class='row m-1 mt-2'>
-        <div class='col d-flex'>
-          <table class="table table-sm details-table mw-item-dTable mr-4">
-            <tbody>
-              <tr>
-                <td class='nowrap w-100'>Mean</td>
-                <td class='nowrap'>{{chaosContainter}}<span id='details-table-mean'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Median</td>
-                <td class='nowrap'>{{chaosContainter}}<span id='details-table-median'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Mode</td>
-                <td class='nowrap'>{{chaosContainter}}<span id='details-table-mode'></span></td>
-              </tr>
-            </tbody>
-          </table>
-  
-          <table class="table table-sm details-table mw-item-dTable">
-            <tbody>
-              <tr>
-                <td class='nowra pw-100'>Total amount listed</td>
-                <td class='nowrap'><span id='details-table-count'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Listed every 24h</td>
-                <td class='nowrap'><span id='details-table-quantity'></span></td>
-              </tr>
-              <tr>
-                <td class='nowrap w-100'>Price in exalted</td>
-                <td class='nowrap'>{{exaltedContainter}}<span id='details-table-exalted'></span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <hr>
-      <div class='row m-1 mb-3'>
-        <div class='col-sm'>
-          <h4>Past data</h4>
-          <div class="btn-group btn-group-toggle mt-1 mb-3" data-toggle="buttons" id="history-dataset-radio">
-            <label class="btn btn-sm btn-outline-dark p-0 px-1 active"><input type="radio" name="dataset" value=1>Mean</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=2>Median</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=3>Mode</label>
-            <label class="btn btn-sm btn-outline-dark p-0 px-1"><input type="radio" name="dataset" value=4>Quantity</label>
-          </div>
-          <div class='chart-large'><canvas id="chart"></canvas></div>
-        </div>
-      </div>
-    </td></tr>
-    `.trim();
-  
-    let gradientPlugin = {
-      beforeDatasetUpdate: function(chart) {
-        if (!chart.width) return;
-  
-        // Create the linear gradient  chart.scales['x-axis-0'].width
-        var gradient = chart.ctx.createLinearGradient(0, 0, 0, 250);
-  
-        gradient.addColorStop(0.0, 'rgba(247, 233, 152, 1)');
-        gradient.addColorStop(1.0, 'rgba(244, 149, 179, 1)');
-  
-        // Assign the gradient to the dataset's border color.
-        chart.data.datasets[0].borderColor = gradient;
-      }
-    };
-
-    let dataPlugin = {
-      beforeUpdate: function(chart) {
-        // Don't run if data has not yet been initialized
-        if (chart.data.data.length < 1) return;
-  
-        var keys = chart.data.data.keys;
-        var vals = chart.data.data.vals;
-  
-        chart.data.labels = keys;
-  
-        switch (EXPROW.dataset) {
-          case 1: chart.data.datasets[0].data = vals.mean;      break;
-          case 2: chart.data.datasets[0].data = vals.median;    break;
-          case 3: chart.data.datasets[0].data = vals.mode;      break;
-          case 4: chart.data.datasets[0].data = vals.quantity;  break;
-        }
-      }
-    };
-  
-    this.chart_settings = {
-      plugins: [dataPlugin, gradientPlugin],
-      type: "line",
-      data: {
-        data: [],
-        labels: [],
-        datasets: [{
-          data: [],
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          borderColor: "rgba(255, 255, 255, 0.5)",
-          borderWidth: 3,
-          lineTension: 0.4,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        title: {display: false},
-        layout: {padding: 0},
-        legend: {display: false},
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: {duration: 0},
-        hover: {animationDuration: 0},
-        responsiveAnimationDuration: 0,
-        tooltips: {
-          intersect: false,
-          mode: "index",
-          callbacks: {
-            title: function(tooltipItem, data) {
-              let price = data['datasets'][0]['data'][tooltipItem[0]['index']];
-              return price ? price : "No data";
-            },
-            label: function(tooltipItem, data) {
-              return data['labels'][tooltipItem['index']];
-            }
-          },
-          backgroundColor: '#fff',
-          titleFontSize: 16,
-          titleFontColor: '#222',
-          bodyFontColor: '#444',
-          bodyFontSize: 14,
-          displayColors: false,
-          borderWidth: 1,
-          borderColor: '#aaa'
-        },
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: true,
-              padding: 0
-            }
-          }],
-          xAxes: [{
-            ticks: {
-              callback: function(value, index, values) {
-                return (value ? value : '');
-              },
-              maxRotation: 0,
-              padding: 0
-            }
-          }]
-        }
-      }
+    this.current = {
+      id: null,
+      league: null,
+      chart: null,
+      dataset: 1
     }
   }
 
   onRowClick(event) {
-    let target = $(event.currentTarget);
-    let id = parseInt(target.attr('value'));
-  
-    // If user clicked on a table that does not contain an id
+    var target = $(event.currentTarget);
+    var id = parseInt(target.attr('value'));
+
+    // If user clicked on a different row
     if (isNaN(id)) return;
-    // If user clicked on item name
-    if (event.target.href) return;
-    // If user clicked on item type
-    if (event.target.parentElement.href) return;
-  
-    // Get rid of any filler rows
-    this.removeFillerRow();
-  
-    // User clicked on open parent-row
-    if (target.is(this.rowParent)) {
-      console.log("Closed open row");
-  
-      $(".parent-row").removeAttr("class");
-      this.rowParent = null;
-  
-      $(".selected-row").remove();
-      this.rowExpanded = null;
-      return;
-    }
-  
-    // There's an open row somewhere
-    if (this.rowParent !== null || this.rowExpanded !== null) {
-      $(".selected-row").remove();
-      $(".parent-row").removeAttr("class");
-  
-      console.log("Closed row: " + this.id);
-  
-      this.rowParent = null;
-      this.rowExpanded = null;
-    }
-  
-    console.log("Clicked on row id: " + id);
-  
-    // Define current row as parent target row
-    target.addClass("parent-row");
-    this.rowParent = target;
-    this.league = FILTER.league;
-    this.id = id;
-    this.dataset = 1;
-  
+
+    // Reset anything left by previous modal
+    this.resetData();
+
+    this.current.id = id;
+    console.log("Clicked on row id: " + this.current.id);
+
+    // Show buffer and hide content
+    this.setBufferVisibility(true);
+
     // Load history data
-    if (id in this.dataSets) {
+    if (this.current.id in this.dataSets) {
       console.log("History source: local");
-      this.buildExpandedRow();
+      this.setContent();
     } else {
       console.log("History source: remote");
-      this.displayFillerRow();
-      this.makeHistoryRequest();
-    }
-  }
 
-  displayFillerRow() {
-    let template = `
-    <tr class='filler-row'><td colspan='100'>
-      <div class="d-flex justify-content-center">
-        <div class="buffering m-2"></div>
-      </div>
-    </td></tr>
-    `.trim();
-  
-    this.rowFiller = $(template);
-    this.rowParent.after(this.rowFiller);
-  }
-
-  makeHistoryRequest() {
-    let request = $.ajax({
-      url: "https://api.poe.watch/item.php",
-      data: {id: this.id},
-      type: "GET",
-      async: true,
-      dataTypes: "json"
-    });
-  
-    request.done(function(payload) {
-      // Get rid of any filler rows
-      EXPROW.removeFillerRow();
-            
-      EXPROW.dataSets[EXPROW.id] = payload;
-      EXPROW.buildExpandedRow();
-    });
-  }
-
-  // Removes all fillers rows
-  removeFillerRow() {
-    if (this.rowFiller) {
-      $(".filler-row").remove();
-      this.rowFiller = null;
-    }
-  }
-
-  buildExpandedRow() {
-    // Get list of past leagues available for the row
-    let leagues = ExpandedRow.getItemHistoryLeagues(this.dataSets, this.id);
-  
-    // Stop if no leagues available
-    if (leagues.length < 1) {
-      return;
-    }
-  
-    // Create expandedRow jQuery object
-    let template = this.template_expandedRow
-      .replace("{{chaosContainter}}",   this.template_chaosContainer)
-      .replace("{{chaosContainter}}",   this.template_chaosContainer)
-      .replace("{{chaosContainter}}",   this.template_chaosContainer)
-      .replace("{{exaltedContainter}}", this.template_exaltedContainer);
-    this.rowExpanded = $(template);
-
-    // Instantiate chart
-    let chartCanvas = $("#chart", this.rowExpanded);
-    this.chart = new Chart(chartCanvas, this.chart_settings);
-
-    // Format and display data
-    this.fillData();
-    // Create league selectors
-    this.createSelectors(leagues);
-  
-    // Place expanded row in table
-    this.rowParent.after(this.rowExpanded);
-  
-    // Create league select event listener
-    $("#history-league-selector", this.rowExpanded).change(function(){
-      EXPROW.league = $(":selected", this).val();
-      EXPROW.fillData();
-    });
-  
-    // Create dataset radio event listener
-    $("#history-dataset-radio", this.rowExpanded).change(function(){
-      EXPROW.dataset = parseInt($("input[name=dataset]:checked", this).val());
-      EXPROW.fillData();
-    });
-  }
-
-  // Format and display data
-  fillData() {
-    // Get league-specific data pack
-    let leaguePayload = ExpandedRow.getLeaguePayload(this.dataSets, this.league, this.id);
-
-    // Format history
-    let formattedHistory = ExpandedRow.formatHistory(leaguePayload);
-
-    // Assign chart datasets
-    this.chart.data.data = formattedHistory;
-    this.chart.update();
+      let request = $.ajax({
+        url: "https://api.poe.watch/item",
+        data: {id: this.current.id},
+        type: "GET",
+        async: true,
+        dataTypes: "json"
+      });
     
-    // Set data in details table
-    $("#details-table-mean",     this.rowExpanded).html( formatNum(leaguePayload.mean)     );
-    $("#details-table-median",   this.rowExpanded).html( formatNum(leaguePayload.median)   );
-    $("#details-table-mode",     this.rowExpanded).html( formatNum(leaguePayload.mode)     );
-    $("#details-table-count",    this.rowExpanded).html( formatNum(leaguePayload.count)    );
-    $("#details-table-quantity", this.rowExpanded).html( formatNum(leaguePayload.quantity) );
-    $("#details-table-exalted",  this.rowExpanded).html( formatNum(leaguePayload.exalted)  );
+      request.done(function(payload) {
+        DETMODAL.dataSets[DETMODAL.current.id] = payload;
+        DETMODAL.setContent();
+      });
+    }
+
+    // Find item entry from current price category
+    let item = DetailsModal.findItem(this.current.id);
+
+    // Set modal's icon and name while request might still be processing
+    $("#modal-icon", this.modal).attr("src", item.icon);
+    $("#modal-name", this.modal).html(this.buildNameField(item));
+
+    // Open the modal
+    this.modal.modal("show");
   }
 
-  // Create league selectors
-  createSelectors(leagues) {
+  setContent() {
+    // Get item user clicked on
+    let item = this.dataSets[this.current.id];
+
+    // Get list of leagues with history data for the item
+    let leagues = this.getLeagues(item);
+    this.current.league = leagues[0].name;
+
+    // Add leagues as selector options
+    this.createLeagueSelector(leagues);
+
+    this.updateContent();
+
+    // Hide buffer and show content
+    this.setBufferVisibility(false);
+  }
+
+  updateContent() {
+    // Format league data
+    var currentHistory = this.getPayload();
+    var currentFrmtHistory = this.formatHistory(currentHistory);
+
+    var data = {
+      labels: currentFrmtHistory.keys,
+      series: []
+    };
+
+    switch (this.current.dataset) {
+      case 1: data.series[0] = currentFrmtHistory.vals.mean;   break;
+      case 2: data.series[0] = currentFrmtHistory.vals.median; break;
+      case 3: data.series[0] = currentFrmtHistory.vals.mode;   break;
+      case 4: data.series[0] = currentFrmtHistory.vals.daily;  break;
+    }
+
+    this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
+
+    // Update modal table
+    $("#modal-mean",     this.modal).html( formatNum(currentHistory.mean)   );
+    $("#modal-median",   this.modal).html( formatNum(currentHistory.median) );
+    $("#modal-mode",     this.modal).html( formatNum(currentHistory.mode)   );
+    $("#modal-total",    this.modal).html( formatNum(currentHistory.total)  );
+    $("#modal-daily",    this.modal).html( formatNum(currentHistory.daily)  );
+    $("#modal-exalted",  this.modal).html( formatNum(currentHistory.exalted));
+  }
+
+  static findItem(id) {
+    for (let i = 0; i < ITEMS.length; i++) {
+      if (ITEMS[i].id === id) {
+         return ITEMS[i];
+      }
+    }
+
+    return null;
+  }
+
+  setBufferVisibility(visible) { 
+    if (visible) {
+      $("#modal-body-buffer", this.modal).removeClass("d-none").addClass("d-flex");
+      $("#modal-body-content", this.modal).addClass("d-none").removeClass("d-flex");
+    } else {
+      $("#modal-body-buffer", this.modal).addClass("d-none").removeClass("d-flex");
+      $("#modal-body-content", this.modal).removeClass("d-none").addClass("d-flex");
+    }
+  }
+
+  buildNameField(item) {
+    // Fix name if item is enchantment
+    if (item.category === "enchantment" && item.var !== null) {
+      let splitVar = item.var.split('-');
+  
+      for (var num in splitVar) {
+        item.name = item.name.replace("#", splitVar[num]);
+      }
+    }
+  
+    // Begin builder
+    let builder = item.name;
+  
+    if (item.type) {
+      builder += "<span class='subtext-1'>, " + item.type + "</span>";;
+    }
+  
+    if (item.frame === 9) {
+      builder = "<span class='item-foil'>" + builder + "</span>";
+    } else if (item.var === "shaper") {
+      builder = "<span class='item-shaper'>" + builder + "</span>";
+    } else if (item.var === "elder") {
+      builder = "<span class='item-elder'>" + builder + "</span>";
+    }
+
+    if (item.var && item.category !== "enchantment") { 
+      builder += " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
+    } 
+    
+    if (item.tier) {
+      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.tier + "</span>";
+    } 
+  
+    if (item.ilvl) {
+      builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + item.ilvl + "</span>";
+    } 
+    
+    if (item.links) {
+      builder += " <span class='badge custom-badge-gray ml-1'>" + item.links + " Link</span>";
+    }
+  
+    if (item.frame === 4) {
+      builder += "<span class='badge custom-badge-gray ml-1'>Lvl " + item.lvl + "</span>";
+      builder += "<span class='badge custom-badge-gray ml-1'>Quality " + item.quality + "</span>";
+  
+      if (item.corrupted) {
+        builder += "<span class='badge custom-badge-red ml-1'>Corrupted</span>";
+      }
+    }
+  
+    return builder;
+  }
+
+  formatIcon(item) {
+    var icon = item.icon.replace("http://", "https://");
+  
+    if (item.var === "shaper") {
+      icon += "&shaper=1";
+    } else if (item.var === "elder") {
+      icon += "&elder=1";
+    }
+  
+    // Flaks have no params
+    if (!icon.includes("?")) {
+      return icon;
+    }
+  
+    let splitIcon = icon.split("?");
+    let splitParams = splitIcon[1].split("&");
+    let newParams = "";
+  
+    for (let i = 0; i < splitParams.length; i++) {
+      switch (splitParams[i].split("=")[0]) {
+        case "scale": 
+          break;
+        default:
+          newParams += "&" + splitParams[i];
+          break;
+      }
+    }
+  
+    if (newParams) {
+      icon = splitIcon[0] + "?" + newParams.substr(1);
+    } else {
+      icon = splitIcon[0];
+    }
+
+    return icon;
+  }
+
+
+  createLeagueSelector(leagues) {
     let builder = "";
   
     for (let i = 0; i < leagues.length; i++) {
       let display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
-      let selected = FILTER.league === leagues[i].name ? "selected" : "";
   
-      builder += "<option value='{{value}}' {{selected}}>{{name}}</option>"
-        .replace("{{selected}}",  selected)
-        .replace("{{value}}",     leagues[i].name)
-        .replace("{{name}}",      display);
+      builder += "<option value='{{value}}'>{{name}}</option>"
+        .replace("{{value}}", leagues[i].name)
+        .replace("{{name}}", display);
     }
   
-    $("#history-league-selector", this.rowExpanded).append(builder);
+    $("#modal-leagues", this.modal).html(builder);
   }
 
-  // Return the matching payload from dataSets
-  static getLeaguePayload(dataSets, league, id) {
-    for (let i = 0; i < dataSets[id].data.length; i++) {
-      if (dataSets[id].data[i].league.name === league) {
-        return dataSets[id].data[i];
+  getPayload() {
+    for (let i = 0; i < this.dataSets[this.current.id].data.length; i++) {
+      if (this.dataSets[this.current.id].data[i].league.name === this.current.league) {
+        return this.dataSets[this.current.id].data[i];
       }
     }
   
     return null;
   }
 
-  // Get list of past leagues available for the row
-  static getItemHistoryLeagues(dataSets, id) {
+  getLeagues(item) {
     let leagues = [];
-  
-    for (let i = 0; i < dataSets[id].data.length; i++) {
+
+    for (let i = 0; i < item.data.length; i++) {
       leagues.push({
-        name:    dataSets[id].data[i].league.name,
-        display: dataSets[id].data[i].league.display,
-        active:  dataSets[id].data[i].league.active
+        name: item.data[i].league.name,
+        display: item.data[i].league.display,
+        active: item.data[i].league.active
       });
     }
   
     return leagues;
   }
 
-  static convertDateToUTC(date) {
-    return new Date(
-      date.getUTCFullYear(), 
-      date.getUTCMonth(), 
-      date.getUTCDate(), 
-      date.getUTCHours(), 
-      date.getUTCMinutes(), 
-      date.getUTCSeconds());
-  }
-
-  // Format history
-  static formatHistory(leaguePayload) {
+  formatHistory(leaguePayload) {
     let keys = [];
     let vals = {
-      mean:     [],
-      median:   [],
-      mode:     [],
-      quantity: []
+      mean:   [],
+      median: [],
+      mode:   [],
+      daily:  []
     };
   
-    // Convert date strings into objects
-    let firstDate  = leaguePayload.history.length ? new Date(leaguePayload.history[0].time) : null;
-    let startDate  = leaguePayload.league.start ? new Date(leaguePayload.league.start) : null;
-    let endDate    = leaguePayload.league.end ? new Date(leaguePayload.league.end) : null;
+    const msInDay = 86400000;
+    let firstDate = null, lastDate = null;
+    let totalDays = null, elapDays = null;
+    let startDate = null, endDate  = null;
+    let daysMissingStart = 0, daysMissingEnd = 0;
+    let startEmptyPadding = 0;
   
-    // Nr of days league data is missing since league start until first entry
-    let timeDiffMissing = Math.abs(startDate.getTime() - firstDate.getTime());
-    let daysMissing     = Math.floor(timeDiffMissing / (1000 * 60 * 60 * 24));
-  
-    // Nr of days in a league
-    let timeDiffLeague = endDate ? Math.abs(endDate.getTime() - startDate.getTime()) : 0;
-    let daysLeague     = Math.ceil(timeDiffLeague / (1000 * 60 * 60 * 24));
-  
-    // Hardcore (id 1) and Standard (id 2) don't have an end date
-    if (leaguePayload.league.id <= 2) {
-      daysLeague = 120;
-      daysMissing = 0;
+    // If there are any history entries for this league, find the first and last date
+    if (leaguePayload.history.length) {
+      firstDate = new Date(leaguePayload.history[0].time);
+      lastDate = new Date(leaguePayload.history[leaguePayload.history.length - 1].time);
     }
+  
+    // League should always have a start date
+    if (leaguePayload.league.start) {
+      startDate = new Date(leaguePayload.league.start);
+    }
+  
+    // Permanent leagues don't have an end date
+    if (leaguePayload.league.end) {
+      endDate = new Date(leaguePayload.league.end);
+    }
+  
+    // Find duration for non-permanent leagues
+    if (startDate && endDate) {
+      let diff = Math.abs(endDate.getTime() - startDate.getTime());
+      totalDays = Math.floor(diff / msInDay);
+      
+      if (leaguePayload.league.active) {
+        let diff = Math.abs(new Date().getTime() - startDate.getTime());
+        elapDays = Math.floor(diff / msInDay);
+      } else {
+        elapDays = totalDays;
+      }
+    }
+  
+    // Find how many days worth of data is missing from the league start
+    if (leaguePayload.league.id > 2) {
+      if (firstDate && startDate) {
+        let diff = Math.abs(firstDate.getTime() - startDate.getTime());
+        daysMissingStart = Math.floor(diff / msInDay);
+      }
+    } 
+  
+    // Find how many days worth of data is missing from the league end, if league has ended
+    if (leaguePayload.league.active) {
+      // League is active, compare time of last entry to right now
+      if (lastDate) {
+        let diff = Math.abs(new Date().getTime() - lastDate.getTime());
+        daysMissingEnd = Math.floor(diff / msInDay);
+      }
+    } else {
+      // League has ended, compare time of last entry to time of league end
+      if (lastDate && endDate) {
+        let diff = Math.abs(lastDate.getTime() - endDate.getTime());
+        daysMissingEnd = Math.floor(diff / msInDay);
+      }
+    }
+  
+    // Find number of ticks the graph should be padded with empty entries on the left
+    if (leaguePayload.league.id > 2) {
+      if (totalDays !== null && elapDays !== null) {
+        startEmptyPadding = totalDays - elapDays;
+      }
+    } else {
+      startEmptyPadding = 120 - leaguePayload.history.length;
+    }
+  
+  
+    // Right, now that we have all the dates, durations and counts we can start 
+    // building the actual payload
+  
   
     // Bloat using 'null's the amount of days that should not have a tooltip
-    for (let i = 0; i < daysLeague - daysMissing - leaguePayload.history.length; i++) {
-      vals.mean.push(null);
-      vals.median.push(null);
-      vals.mode.push(null);
-      vals.quantity.push(null);
-      keys.push(null);
-    }
-  
-    // If entries are missing before the first entry
-    if (leaguePayload.history.length && leaguePayload.league.id > 2) {
-      // Get the first entry's time
-      let firstDate = new Date(leaguePayload.history[0].time);
-  
-      // Get difference in days between league start and first entry
-      let timeDiff = Math.abs(startDate.getTime() - firstDate.getTime());
-      let diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)); 
-  
-      // Fill missing days with "No data" (if any)
-      for (let i = 0; i < diffDays; i++) {
+    if (startEmptyPadding) {
+      let date = new Date(startDate);
+
+      for (let i = 0; i < startEmptyPadding; i++) {
         vals.mean.push(0);
         vals.median.push(0);
         vals.mode.push(0);
-        vals.quantity.push(0);
+        vals.daily.push(0);
+        keys.push(this.formatDate(date.addDays(i)));
+      }
+    }
+    
+    // If entries are missing before the first entry, fill with "No data"
+    if (daysMissingStart) {
+      let date = new Date(startDate);
   
-        // Format display date
-        let tmpDate = new Date(startDate);
-        tmpDate.setDate(tmpDate.getDate() + i);
-        keys.push(ExpandedRow.formatDate(tmpDate));
+      for (let i = 0; i < daysMissingStart; i++) {
+        vals.mean.push(0);
+        vals.median.push(0);
+        vals.mode.push(0);
+        vals.daily.push(0);
+        keys.push(this.formatDate(date.addDays(i)));
       }
     }
   
@@ -743,8 +696,8 @@ class ExpandedRow {
       vals.mean.push(Math.round(entry.mean * 100) / 100);
       vals.median.push(Math.round(entry.median * 100) / 100);
       vals.mode.push(Math.round(entry.mode * 100) / 100);
-      vals.quantity.push(entry.quantity);
-      keys.push(ExpandedRow.formatDate(entry.time));
+      vals.daily.push(entry.daily);
+      keys.push(this.formatDate(entry.time));
   
       // Check if there are any missing entries between the current one and the next one
       if (i + 1 < leaguePayload.history.length) {
@@ -763,18 +716,34 @@ class ExpandedRow {
           vals.mean.push(0);
           vals.median.push(0);
           vals.mode.push(0);
-          vals.quantity.push(0);
-          keys.push(ExpandedRow.formatDate(currentDate.addDays(i + 1)));
+          vals.daily.push(0);
+          keys.push(this.formatDate(currentDate.addDays(i + 1)));
         }
       }
     }
   
+    // If entries are missing after the first entry, fill with "No data"
+    if (daysMissingEnd && lastDate) {
+      let date = new Date(lastDate);
+      date.setDate(date.getDate() + 1);
+  
+      for (let i = 0; i < daysMissingEnd; i++) {
+        vals.mean.push(0);
+        vals.median.push(0);
+        vals.mode.push(0);
+        vals.daily.push(0);
+        keys.push(this.formatDate(date.addDays(i)));
+      }
+    }
+  
     // Add current values
-    vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
-    vals.median.push(Math.round(leaguePayload.median * 100) / 100);
-    vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
-    vals.quantity.push(leaguePayload.quantity);
-    keys.push("Now");
+    if (leaguePayload.league.active) {
+      vals.mean.push(Math.round(leaguePayload.mean * 100) / 100);
+      vals.median.push(Math.round(leaguePayload.median * 100) / 100);
+      vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
+      vals.daily.push(leaguePayload.daily);
+      keys.push("Now");
+    }
   
     // Return generated data
     return {
@@ -783,20 +752,21 @@ class ExpandedRow {
     }
   }
 
-  static formatDate(date) {
+  formatDate(date) {
     const MONTH_NAMES = [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
   
-    let s = ExpandedRow.convertDateToUTC(new Date(date));
+    let s = new Date(date);
+
     return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
   }
 }
 
 // Default item search filter options
 var FILTER = {
-  league: null,
+  league: SERVICE_leagues[0],
   category: null,
   group: "all",
   showLowConfidence: false,
@@ -816,7 +786,7 @@ var FILTER = {
 var ITEMS = [];
 var LEAGUES = null;
 var INTERVAL;
-var EXPROW = new ExpandedRow();
+var DETMODAL = new DetailsModal();
 
 // Re-used icon urls
 const ICON_ENCHANTMENT = "https://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
@@ -840,12 +810,15 @@ function parseQueryParams() {
   let tmp;
 
   if (tmp = parseQueryParam('league')) {
-    $("#search-league").val(tmp);
-    FILTER.league = tmp;
-  } else {
-    FILTER.league = SERVICE_leagues[0].name;
-    updateQueryParam("league", FILTER.league);
+    tmp = getServiceLeague(tmp);
+
+    if (tmp) {
+      FILTER.league = tmp;
+      $("#search-league").val(FILTER.league.name);
+    }
   }
+
+  updateQueryParam("league", FILTER.league.name);
 
   if (tmp = parseQueryParam('category')) {
     FILTER.category = tmp;
@@ -910,6 +883,7 @@ function parseQueryParams() {
   if (tmpCol = parseQueryParam('sortby')) {
     let element;
 
+    // Find column that matches the provided param
     $(".sort-column").each(function( index ) {
       if (this.innerHTML.toLowerCase() === tmpCol) {
         element = this;
@@ -917,18 +891,22 @@ function parseQueryParams() {
       }
     });
 
+    // If there was no match then clear the browser's query params
     if (!element) {
       updateQueryParam("sortby", null);
       updateQueryParam("sortorder", null);
       return;
     }
 
+    // Get column name
     let col = element.innerHTML.toLowerCase();
 
+    // If there was a sortorder query param as well
     if (tmpOrder = parseQueryParam('sortorder')) {
       let order = null;
       let color;
 
+      // Only two options
       if (tmpOrder === "descending") {
         order = "descending";
         color = "custom-text-green";
@@ -937,12 +915,16 @@ function parseQueryParams() {
         color = "custom-text-red";
       }
 
+      // If user provided a third option, count that as invalid and
+      // clear the browser's query params
       if (!order) {
         updateQueryParam("sortby", null);
         updateQueryParam("sortorder", null);
         return;
-     }
+      }
 
+      // User-provided params were a-ok, set the sort function and
+      // add indication which col is being sorted
       console.log("Sorting: " + col + " " + order);
       FILTER.sortFunction = getSortFunc(col, order);
       $(element).addClass(color);
@@ -953,9 +935,12 @@ function parseQueryParams() {
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
-    FILTER.league = $(":selected", this).val();
-    console.log("Selected league: " + FILTER.league);
-    updateQueryParam("league", FILTER.league);
+    let tmp = getServiceLeague($(":selected", this).val());
+    if (!tmp) return;
+    
+    FILTER.league = tmp;
+    console.log("Selected league: " + FILTER.league.name);
+    updateQueryParam("league", FILTER.league.name);
     makeGetRequest();
   });
 
@@ -986,7 +971,7 @@ function defineListeners() {
   // Low confidence
   $("#radio-confidence").on("change", function(){
     let option = $("input:checked", this).val() === "true";
-    console.log("Show low count: " + option);
+    console.log("Show low daily: " + option);
     FILTER.showLowConfidence = option;
     updateQueryParam("confidence", option);
     sortResults();
@@ -1077,7 +1062,7 @@ function defineListeners() {
 
   // Expand row
   $("#searchResults > tbody").delegate("tr", "click", function(event) {
-    EXPROW.onRowClick(event);
+    DETMODAL.onRowClick(event);
   });
 
   // Live search toggle
@@ -1096,7 +1081,9 @@ function defineListeners() {
 
   // Sort
   $(".sort-column").on("click", function(){
+    // Get col name
     let col = $(this)[0].innerHTML.toLowerCase();
+    // Get order tag, if present
     let order = $(this).attr("order");
     let color = null;
 
@@ -1106,12 +1093,19 @@ function defineListeners() {
       .attr("order", null);
 
     // Toggle descriptions and orders
-    if (!order || order === "ascending") {
+    if (!order) {
       order = "descending";
       color = "custom-text-green";
-    } else {
+    } else if (order === "descending") {
       order = "ascending";
       color = "custom-text-red";
+    } else if (order === "ascending") {
+      updateQueryParam("sortby", null);
+      updateQueryParam("sortorder", null);
+      console.log("Sorting: default");
+      FILTER.sortFunction = sort_priceDesc;
+      sortResults();
+      return;
     }
 
     updateQueryParam("sortby", col);
@@ -1134,14 +1128,14 @@ function defineListeners() {
 
 function makeGetRequest() {
   $("#searchResults tbody").empty();
-  $(".buffering").show();
+  $("#buffering-main").show();
   $("#button-showAll").hide();
   $(".buffering-msg").remove();
 
   let request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
-      league: FILTER.league, 
+      league: FILTER.league.name, 
       category: FILTER.category
     },
     type: "GET",
@@ -1151,7 +1145,7 @@ function makeGetRequest() {
 
   request.done(function(json) {
     console.log("Got " + json.length + " items from request");
-    $(".buffering").hide();
+    $("#buffering-main").hide();
     $(".buffering-msg").remove();
 
     ITEMS = json;
@@ -1163,7 +1157,7 @@ function makeGetRequest() {
 
     $(".buffering-msg").remove();
 
-    let buffering = $(".buffering");
+    let buffering = $("#buffering-main");
     buffering.hide();
 
     let msg;
@@ -1183,7 +1177,7 @@ function timedRequestCallback() {
   var request = $.ajax({
     url: "https://api.poe.watch/get.php",
     data: {
-      league: FILTER.league, 
+      league: FILTER.league.name, 
       category: FILTER.category
     },
     type: "GET",
@@ -1212,8 +1206,8 @@ function getSortFunc(col, order) {
   switch (col) {
     case "change":
       return order === "descending" ? sort_changeDesc : sort_changeAsc;
-    case "quantity":
-      return order === "descending" ? sort_quantDesc  : sort_quantAsc;
+    case "daily":
+      return order === "descending" ? sort_dailyDesc  : sort_dailyAsc;
     case "total":
       return order === "descending" ? sort_totalDesc  : sort_totalAsc;
     case "item":
@@ -1235,27 +1229,27 @@ function sort_priceAsc(a, b) {
   return 0;
 }
 
-function sort_quantDesc(a, b) {
-  if (a.quantity > b.quantity) return -1;
-  if (a.quantity < b.quantity) return 1;
+function sort_dailyDesc(a, b) {
+  if (a.daily > b.daily) return -1;
+  if (a.daily < b.daily) return 1;
   return 0;
 }
 
-function sort_quantAsc(a, b) {
-  if (a.quantity < b.quantity) return -1;
-  if (a.quantity > b.quantity) return 1;
+function sort_dailyAsc(a, b) {
+  if (a.daily < b.daily) return -1;
+  if (a.daily > b.daily) return 1;
   return 0;
 }
 
 function sort_totalDesc(a, b) {
-  if (a.count > b.count) return -1;
-  if (a.count < b.count) return 1;
+  if (a.total > b.total) return -1;
+  if (a.total < b.total) return 1;
   return 0;
 }
 
 function sort_totalAsc(a, b) {
-  if (a.count < b.count) return -1;
-  if (a.count > b.count) return 1;
+  if (a.total < b.total) return -1;
+  if (a.total > b.total) return 1;
   return 0;
 }
 
@@ -1311,8 +1305,6 @@ function updateQueryParam(key, value) {
     case "group":      value = value === "all"        ? null : value;   break;
     case "tier":       value = value === "all"        ? null : value;   break;
     case "influence":  value = value === "all"        ? null : value;   break;
-    case "sortorder":  value = value === "descending" ? null : value;   break;
-    case "sortby":     value = value === "chaos"      ? null : value;   break;
     default:           break;
   }
   
@@ -1363,6 +1355,16 @@ Date.prototype.addDays = function(days) {
   return date;
 }
 
+function getServiceLeague(league) {
+  for (let i = 0; i < SERVICE_leagues.length; i++) {
+    if (SERVICE_leagues[i].name === league) {
+      return SERVICE_leagues[i];
+    }
+  }
+
+  return null;
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
@@ -1381,7 +1383,7 @@ function sortResults() {
 
   for (let i = 0; i < ITEMS.length; i++) {
     const item = ITEMS[i];
-    
+
     // Skip parsing if item should be hidden according to filters
     if (checkHideItem(item)) {
       continue;
@@ -1406,7 +1408,7 @@ function sortResults() {
 
   if (count < 1) {
     let msg = "<div class='buffering-msg align-self-center mb-2'>No results</div>";
-    $(".buffering").after(msg);
+    $("#buffering-main").after(msg);
   }
 
   let loadAllBtn = $("#button-showAll");
@@ -1423,8 +1425,8 @@ function sortResults() {
 
 function checkHideItem(item) {
   // Hide low confidence items
-  if (!FILTER.showLowConfidence) {
-    if (item.quantity < 5) return true;
+  if (!FILTER.showLowConfidence && FILTER.league.active && item.daily < 5) {
+    return true;
   }
 
   // String search

@@ -32,7 +32,7 @@ function check_league($pdo, $league) {
 function get_data($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.count, i.quantity + i.inc AS quantity, 
+    i.total, i.daily + i.inc AS daily, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -60,7 +60,7 @@ function get_data($pdo, $league, $category) {
 function get_data_relic($pdo, $league) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.count, i.quantity + i.inc AS quantity, 
+    i.total, i.daily + i.inc AS daily, 
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
@@ -106,8 +106,8 @@ function parse_data($stmt, $active) {
       'max'           =>        $row['max']       === NULL ?  0.0 : (float) $row['max'],
       'exalted'       =>        $row['exalted']   === NULL ?  0.0 : (float) $row['exalted'],
       
-      'count'         =>        $row['count']     === NULL ?    0 :   (int) $row['count'],
-      'quantity'      =>        $row['quantity']  === NULL ?    0 :   (int) $row['quantity'],
+      'total'         =>        $row['total']     === NULL ?    0 :   (int) $row['total'],
+      'daily'         =>        $row['daily']     === NULL ?    0 :   (int) $row['daily'],
       'spark'         =>        null,
       'change'        =>        0.0,
 
@@ -177,11 +177,6 @@ if ($_GET["category"] === "relic") {
   $stmt = get_data_relic($pdo, $_GET["league"]);
 } else {
   $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
-}
-
-// If no results with provided id
-if ($stmt->rowCount() === 0) {
-  error(400, "No results");
 }
 
 $data = parse_data($stmt, $state["active"]);

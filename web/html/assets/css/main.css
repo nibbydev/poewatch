@@ -13,7 +13,7 @@ body {
   margin-bottom: 70px;
 }
 
-hr {border-color: #282828}
+hr {border-color: rgba(0,0,0,.4) !important}
 
 a {color: #ddd}
 a:hover {color: #bbb}
@@ -91,8 +91,8 @@ a:hover {color: #bbb}
   max-height: 35px;
 }
 .img-container-sm img {
-  max-height: 35px;
-  max-width: 35px;
+  max-height: 32px;
+  max-width: 32px;
 }
 
 /* XS image containers */
@@ -110,14 +110,26 @@ a:hover {color: #bbb}
 }
 
 /*------------------------------------------------------------------------------------------------------------
-// Card styling
+// Card and modal styling
 //----------------------------------------------------------------------------------------------------------*/
 
 .card-header, 
-.card-footer {background-color: rgba(0,0,0,.2)}
-.custom-card {background-color: #333}
+.card-footer,
+.modal-header,
+.modal-footer {
+  background-color: rgba(0,0,0,.2);
+  border-color: rgba(0,0,0,.2) !important;
+}
+.card,
+.modal-content {background-color: #383838}
 .slim-card-edge {padding: .1rem .75rem}
 .body-boundaries {max-width: 1200px}
+
+/* X button on modals*/
+.close {
+  text-shadow: none;
+  color: rgba(255, 255, 255, 0.5);
+}
 
 /*------------------------------------------------------------------------------------------------------------
 // Form element styling
@@ -153,6 +165,12 @@ input.form-control,select.form-control {
 
 .form-group input {background-color: #222 !important}
 option {background-color: #333}
+
+.form-group textarea {
+  background-color: #222 !important;
+  border-color: #555 !important;
+  color: #ddd !important;
+}
 
 /*------------------------------------------------------------------------------------------------------------
 // Navs
@@ -194,18 +212,26 @@ footer {
 }
 
 /*------------------------------------------------------------------------------------------------------------
+// Second navbar
+//----------------------------------------------------------------------------------------------------------*/
+
+.second-navbar {
+  background-color: #2c2c2c;
+  white-space: nowrap;
+}
+.second-navbar select.btn {
+  -webkit-appearance: button;
+     -moz-appearance: button;
+}
+
+
+/*------------------------------------------------------------------------------------------------------------
 // Sidebar
 //----------------------------------------------------------------------------------------------------------*/
 
 .custom-menu-item.active {background-color: #3f3f3f} 
 .custom-menu-item:hover {background-color: #444}
 .custom-sidebar-column a:hover {text-decoration: none !important}
-
-@media (max-width: 992px) {
-  .custom-menu-name {
-    display: none;
-  }
-}
 
 /*------------------------------------------------------------------------------------------------------------
 // Table formatting
@@ -340,7 +366,8 @@ pre {
   border-bottom-right-radius: 0;
 }
 
-.sort-column { cursor: pointer; }
+.sort-column,
+.cursor-pointer { cursor: pointer; }
 
 /*------------------------------------------------------------------------------------------------------------
 // Manual Bootstrap
@@ -352,8 +379,13 @@ pre {
 .mv-sm {max-width: 576px}
 
 .w-auto {width: auto}
-
 .nowrap {white-space: nowrap}
+
+/* Modal breakpoints are weird. Gives price page modal more girth */
+.pw-modal-lg {
+  max-width: 800px !important;
+  margin: 1.75rem auto;
+}
 
 /*------------------------------------------------------------------------------------------------------------
 // Buffering
@@ -389,3 +421,9 @@ pre {
 .mh-item-largeCol {max-height: 120px}
 
 .mw-item-dTable {max-width: 260px}
+
+
+.pw-highlight {background-color: rgba(255, 255, 255, 0.1) }
+.pw-hover-light:hover {background-color: rgba(255, 255, 255, 0.2) }
+.pw-hover-dark:hover  {background-color: rgba(0, 0, 0, 0.2) }
+

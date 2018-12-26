@@ -15,19 +15,19 @@ public class Flag {
     }
 
     /**
-     * Updates counters for entries in table `league_items`
+     * Updates totals for entries in table `league_items`
      *
      * @return True on success
      */
     public boolean updateCounters() {
         String query1 = "UPDATE league_items AS i " +
                         "JOIN ( " +
-                        "  SELECT id_l, id_d, COUNT(*) AS count " +
+                        "  SELECT id_l, id_d, COUNT(*) AS total " +
                         "  FROM league_entries " +
                         "  WHERE time > date_sub(now(), interval 60 second) " +
                         "  GROUP BY id_l, id_d" +
                         ") AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
-                        "SET i.count = i.count + e.count, i.inc = i.inc + e.count ";
+                        "SET i.total = i.total + e.total, i.inc = i.inc + e.total ";
 
         return database.executeUpdateQueries(query1);
     }

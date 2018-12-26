@@ -23,8 +23,8 @@ function get_league_data($pdo, $id) {
     i.min, 
     i.max, 
     i.exalted, 
-    i.count, 
-    i.quantity, 
+    i.total, 
+    i.daily, 
     l.id        AS leagueId,
     l.active    AS leagueActive, 
     l.upcoming  AS leagueUpcoming, 
@@ -49,13 +49,15 @@ function get_league_data($pdo, $id) {
 
 function get_history_entries($pdo, $leagueId, $itemId) {
   $query = "
-  SELECT 
-    mean, median, mode, quantity, 
-    DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
-  FROM league_history_daily
-  WHERE id_l = ? AND id_d = ?
-  ORDER BY `time` DESC
-  LIMIT 120
+  select * from (
+    SELECT 
+      mean, median, mode, daily, 
+      DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
+    FROM league_history_daily
+    WHERE id_l = ? AND id_d = ?
+    ORDER BY `time` DESC
+    LIMIT 120
+  ) as foo ORDER BY foo.`time` ASC
   ";
 
   $stmt = $pdo->prepare($query);
@@ -107,19 +109,19 @@ function build_history_payload($pdo, $id) {
       'min'       =>          $row['min']       === NULL ? null : (float) $row['min'],
       'max'       =>          $row['max']       === NULL ? null : (float) $row['max'],
       'exalted'   =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
-      'count'     =>          $row['count']     === NULL ? null :   (int) $row['count'],
-      'quantity'  =>          $row['quantity']  === NULL ?    0 :   (int) $row['quantity'],
+      'total'     =>          $row['total']     === NULL ? null :   (int) $row['total'],
+      'daily'     =>          $row['daily']     === NULL ?    0 :   (int) $row['daily'],
       'history'   => array()
     );
 
     $historyStmt = get_history_entries($pdo, $row['leagueId'], $id);
     while ($historyRow = $historyStmt->fetch()) {
       $tmp['history'][] = array(
-        'time'     =>         $historyRow["time"],
-        'mean'     => (float) $historyRow["mean"],
-        'median'   => (float) $historyRow["median"],
-        'mode'     => (float) $historyRow["mode"],
-        'quantity' => (int)   $historyRow["quantity"]
+        'time'   =>         $historyRow["time"],
+        'mean'   => (float) $historyRow["mean"],
+        'median' => (float) $historyRow["median"],
+        'mode'   => (float) $historyRow["mode"],
+        'daily'  => (int)   $historyRow["daily"]
       );
     }
 

@@ -63,19 +63,19 @@ public class Calc {
     }
 
     /**
-     * Calculates quantity for items in table `league_items` based on history entries from table `league_history`
+     * Calculates the daily total for items in table `league_items` based on history entries from table `league_history`
      *
      * @return True on success
      */
-    public boolean calcQuantity() {
+    public boolean calcDaily() {
         String query =  "UPDATE league_items AS i  " +
                         "LEFT JOIN ( " +
-                        "  SELECT id_l, id_d, SUM(inc) AS quantity " +
+                        "  SELECT id_l, id_d, SUM(inc) AS daily " +
                         "  FROM league_history_hourly " +
                         "  WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
                         "  GROUP BY id_l, id_d " +
                         ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "SET i.quantity = IFNULL(h.quantity, 0) ";
+                        "SET i.daily = IFNULL(h.daily, 0) ";
 
         return database.executeUpdateQueries(query);
     }
@@ -97,7 +97,7 @@ public class Calc {
                         "    ON      lhd.id_d = i.id_d " +
                         "      AND   lhd.id_l = l.id " +
                         "  WHERE     l.active = 1 " +
-                        "    AND     i.count  > 1 " +
+                        "    AND     i.total  > 1 " +
                         "  GROUP BY  i.id_l, i.id_d " +
                         ") AS    tmp " +
                         "  ON    i.id_l = tmp.id_l " +
