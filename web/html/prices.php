@@ -185,7 +185,7 @@
         <!-- League -->
         <div class="col-6 col-sm">
           <h4 class="nowrap">League</h4>
-          <select class="form-control form-control-sm custom-select w-auto" id="search-league">
+          <select class="form-control custom-select" id="search-league">
             <?php foreach ($leagueList as $league): ?>
             <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● "; echo $league['display'] ? $league['display'] : $league['name'] ?></option>
             <?php endforeach ?>

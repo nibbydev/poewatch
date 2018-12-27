@@ -2,12 +2,15 @@
   <div>PoeWatch © <?php echo date('Y') ?></div>
   <div><a href='http://github.com/siegrest/poewatch' target='_blank'>Available on Github</a></div>
 </footer>
-<?php foreach($PAGEDATA['jsIncludes'] as $js): ?>
-<?php if (strpos($js, 'http://') !== false || strpos($js, 'https://') !== false): ?>
-<script type="text/javascript" src="<?php echo $js ?>"></script>
+<?php foreach($PAGEDATA['jsIncludes'] as $include): ?>
+<?php if (strpos($include, 'http://') !== false || strpos($include, 'https://') !== false): ?>
+<script type="text/javascript" src="<?php echo $include ?>"></script>
 <?php else: ?>
-<script type="text/javascript" src="assets/js/<?php echo $js ?>"></script>
+<script type="text/javascript" src="assets/js/<?php echo $include ?>"></script>
 <?php endif ?>
-<?php endforeach; ?>
+<?php endforeach ?>
+<?php foreach($PAGEDATA['footerIncludes'] as $include): ?>
+  <?php echo $include ?>
+<?php endforeach ?>
 </body>
 </html>

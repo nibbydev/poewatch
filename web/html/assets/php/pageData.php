@@ -9,5 +9,7 @@ $PAGEDATA = array(
   "cssIncludes" => array(
     "https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css",
     "main.css"
-  )
+  ),
+  "headerIncludes" => array(),
+  "footerIncludes" => array()
 );

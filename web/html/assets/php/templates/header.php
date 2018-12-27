@@ -14,11 +14,17 @@
   <link rel='icon' type='image/png' href='assets/img/ico/32.png' sizes='32x32'>
   <link rel='icon' type='image/png' href='assets/img/ico/16.png' sizes='16x16'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
-<?php foreach($PAGEDATA['cssIncludes'] as $css): ?>
-<?php if (strpos($css, 'http://') !== false || strpos($css, 'https://') !== false): ?>
-  <link rel="stylesheet" href="<?php echo $css ?>">
+
+<?php foreach($PAGEDATA['cssIncludes'] as $include): ?>
+<?php if (strpos($include, 'http://') !== false || strpos($include, 'https://') !== false): ?>
+  <link rel="stylesheet" href="<?php echo $include ?>">
 <?php else: ?>
-  <link rel="stylesheet" href="assets/css/<?php echo $css ?>">
+  <link rel="stylesheet" href="assets/css/<?php echo $include ?>">
 <?php endif ?>
 <?php endforeach ?>
+
+<?php foreach($PAGEDATA['headerIncludes'] as $include): ?>
+  <?php echo $include ?>
+<?php endforeach ?>
+
 </head>
