@@ -142,7 +142,7 @@ class ItemRow {
   buildPriceFields() {
     let template = `
     <td>
-      <div class='pricebox'><div id='pw-sparkline-{{sparkline}}'></div>{{chaos_icon}}{{chaos_price}}</div>
+      <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
     </td>
     <td>
       <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
@@ -151,8 +151,9 @@ class ItemRow {
 
     let chaosContainer  = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
     let exContainer     = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
+    let sparkLine       = this.buildSparkLine(this.item);
   
-    template = template.replace("{{sparkline}}",    this.item.id);
+    template = template.replace("{{sparkline}}",    sparkLine);
     template = template.replace("{{chaos_price}}",  ItemRow.roundPrice(this.item.mean));
     template = template.replace("{{chaos_icon}}",   chaosContainer);
   
@@ -165,6 +166,22 @@ class ItemRow {
     }
     
     return template;
+  }
+  
+  buildSparkLine() {
+    if (!this.item.spark) return "";
+
+    let svgColorClass = this.item.change > 0 ? "sparkline-green" : "sparkline-orange";
+    let svg = document.createElement("svg");
+
+    svg.setAttribute("class", "sparkline " + svgColorClass);
+    svg.setAttribute("width", 60);
+    svg.setAttribute("height", 30);
+    svg.setAttribute("stroke-width", 3);
+
+    sparkline(svg, this.item.spark);
+
+    return svg.outerHTML;
   }
   
   buildChangeField() {
@@ -1404,30 +1421,6 @@ function sortResults() {
   
   // Add the generated HTML table data to the table
   table.append(buffer);
-
-  
-}
-
-function buildSparkLine() {
-  var chartOptions = {
-    height: 30,
-    width: 60,
-    showPoint: true,
-    lineSmooth: true,
-    axisX: {
-      showGrid: false,
-      showLabel: false
-    },
-    axisY: {
-      showGrid: false,
-      showLabel: false
-    },
-    fullWidth: true
-  };
-
-  for (let i = 0; i < ITEMS.length; i++) {
-    new Chartist.Line("#pw-sparkline-" + ITEMS[i].id, {series: ITEMS[i].spark}, chartOptions);
-  }
 }
 
 function checkHideItem(item) {
