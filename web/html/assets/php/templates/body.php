@@ -2,7 +2,7 @@
 <div class='container-fluid d-flex justify-content-center p-0'>
   <div class='row body-boundaries w-100 p-3'>
     
-    <div class='col-2 d-none d-xl-block'>
+    <div class='col-2 d-none d-xl-block pl-0'>
       <div class='row m-0'>
         <div class="card w-100 custom-card">
           <div class="card-header slim-card-edge"></div>
