@@ -12,7 +12,6 @@
   $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
   $PAGEDATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
   $PAGEDATA["jsIncludes"][] = "prices.js";
-  $PAGEDATA["jsIncludes"][] = "sparkline.js";
   
   // Get list of leagues that have items
   $leagueList = GetItemLeagues($pdo);
@@ -243,6 +242,9 @@
       <div class="card-footer slim-card-edge"></div>
     </div>
   </div>
+
+  
+
 <?php genBodyFooter() ?>
 
 <script>

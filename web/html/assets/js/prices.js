@@ -7,7 +7,12 @@ class ItemRow {
   constructor (item) {
     this.item = item;
     this.row = "<tr value={{id}}>{{data}}</tr>";
-    this.fields = {};
+
+    this.sparkOptions = {
+      pad_y: 2,
+      width: 60,
+      height: 30
+    }
 
     // Build HTML elements
     var rowBuilder = [];
@@ -16,6 +21,7 @@ class ItemRow {
       this.buildGemFields(),
       this.buildBaseFields(),
       this.buildMapFields(),
+      this.buildSparkField(),
       this.buildPriceFields(),
       this.buildChangeField(),
       this.buildDailyField(),
@@ -138,11 +144,22 @@ class ItemRow {
 
     return this.item.tier ? template.replace("{{tier}}", this.item.tier) : "<td></td>";
   }
+
+  buildSparkField() {
+    var spark = ItemRow.genSparkSVG(this.sparkOptions, this.item.spark);
+
+    return `
+    <td>
+      <div>{{spark}}</div>
+    </td>`
+      .trim()
+      .replace("{{spark}}", spark);
+  }
   
   buildPriceFields() {
     let template = `
     <td>
-      <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
+      <div class='pricebox'>{{chaos_icon}}{{chaos_price}}</div>
     </td>
     <td>
       <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
@@ -151,9 +168,7 @@ class ItemRow {
 
     let chaosContainer  = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
     let exContainer     = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
-    let sparkLine       = this.buildSparkLine(this.item);
   
-    template = template.replace("{{sparkline}}",    sparkLine);
     template = template.replace("{{chaos_price}}",  ItemRow.roundPrice(this.item.mean));
     template = template.replace("{{chaos_icon}}",   chaosContainer);
   
@@ -166,22 +181,6 @@ class ItemRow {
     }
     
     return template;
-  }
-  
-  buildSparkLine() {
-    if (!this.item.spark) return "";
-
-    let svgColorClass = this.item.change > 0 ? "sparkline-green" : "sparkline-orange";
-    let svg = document.createElement("svg");
-
-    svg.setAttribute("class", "sparkline " + svgColorClass);
-    svg.setAttribute("width", 60);
-    svg.setAttribute("height", 30);
-    svg.setAttribute("stroke-width", 3);
-
-    sparkline(svg, this.item.spark);
-
-    return svg.outerHTML;
   }
   
   buildChangeField() {
@@ -268,6 +267,44 @@ class ItemRow {
     }
   
     return numberWithCommas(Math.round(price * 100) / 100);
+  }
+
+  static genSparkSVG(options, elements) {
+    var maxElement = Math.max(...elements);
+    var minElement = Math.min(...elements);
+  
+    // There has been no change in the past week
+    if (maxElement === minElement && minElement === 0) {
+      maxElement = 1;
+    }
+  
+    var stepX = options.width / (elements.length - 1);
+    var stepY = (options.height - options.pad_y*2) / (maxElement - minElement);
+  
+    // Create pointarray
+    var points = ["M"];
+    for (var i = 0; i < elements.length; i++) {
+      if (elements[i] !== null) {
+        var x = stepX * i;
+        var y = (options.height - elements[i]*stepY + minElement*stepY - options.pad_y/2).toFixed(2);
+  
+        points.push(x, " ", y, ",");
+      }
+    }
+  
+    // Remove trailing zero
+    points.pop();
+  
+    return `
+    <svg width="{{width}}" height="{{height}}" class="ct-chart-line" style="width: {{width}}px; height: {{height}}px;">
+      <g class="ct-series ct-series-a">
+        <path d="{{points}}" class="ct-line"></path>
+      </g>
+    </svg>`
+      .trim()
+      .replace(/{{width}}/g,  options.width)
+      .replace(/{{height}}/g, options.height)
+      .replace(/{{points}}/g, points.join(""));
   }
 }
 
@@ -1365,6 +1402,16 @@ function getServiceLeague(league) {
   return null;
 }
 
+function getItem(id) {
+  for (let i = 0; i < ITEMS.length; i++) {
+    if (ITEMS[i].id === id) {
+      return ITEMS[i];
+    }
+  }
+
+  return null;
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
@@ -1375,7 +1422,6 @@ function sortResults() {
   $("tbody", table).empty();
 
   let count = 0, matches = 0;
-  let buffer = "";
 
   if (FILTER.sortFunction) {
     ITEMS.sort(FILTER.sortFunction);
@@ -1399,7 +1445,7 @@ function sortResults() {
       }
 
       // Append generated table data to buffer
-      buffer += item.tableData.row;
+      table.append(item.tableData.row);
       count++;
     }
   }
@@ -1418,9 +1464,6 @@ function sortResults() {
   } else {
     loadAllBtn.hide();
   }
-  
-  // Add the generated HTML table data to the table
-  table.append(buffer);
 }
 
 function checkHideItem(item) {

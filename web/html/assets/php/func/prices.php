@@ -76,6 +76,7 @@ function AddTableHeaders($category) {
     echo "<th>Tier</th>";
   }
   
+  echo "<th><span class='sort-column'>Spark</span></th>";
   echo "<th><span class='sort-column'>Chaos</span></th>";
   echo "<th><span class='sort-column'>Exalted</span></th>";
   echo "<th><span class='sort-column'>Change</span></th>";
