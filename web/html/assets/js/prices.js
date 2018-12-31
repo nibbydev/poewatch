@@ -148,7 +148,7 @@ class ItemRow {
 
   buildSparkField() {
     var spark = ItemRow.genSparkSVG(this.sparkOptions, this.item.spark);
-    return "<td>" + spark + "</td>";
+    return "<td class='d-none d-md-flex'>" + spark + "</td>";
   }
   
   buildPriceFields() {
@@ -156,7 +156,7 @@ class ItemRow {
     <td>
       <div class='pricebox'>{{chaos_icon}}{{chaos_price}}</div>
     </td>
-    <td>
+    <td class='d-none d-md-flex'>
       <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
     </td>
     `.trim();
