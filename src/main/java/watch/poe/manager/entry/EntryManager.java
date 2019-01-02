@@ -14,9 +14,11 @@ import poe.manager.relation.RelationManager;
 import poe.manager.worker.WorkerManager;
 
 import java.util.*;
+import java.util.zip.CRC32;
 
 public class EntryManager extends Thread {
     private static Logger logger = LoggerFactory.getLogger(EntryManager.class);
+    private static CRC32 crc = new CRC32();
     private Config config;
 
     private Set<AccountEntry> accountSet = new HashSet<>();
@@ -333,9 +335,9 @@ public class EntryManager extends Thread {
                     RawEntry rawEntry = new RawEntry();
                     rawEntry.setItemId(itemId);
                     rawEntry.setLeagueId(leagueId);
-                    rawEntry.setAccountName(stash.accountName);
+                    rawEntry.setAccCrc(calcCrc(stash.accountName));
                     rawEntry.setPrice(itemParser.getPrice());
-                    rawEntry.setId_item(item.getId());
+                    rawEntry.setItmCrc(calcCrc(item.getId()));
 
                     // Add it to the db queue
                     entrySet.add(rawEntry);
@@ -350,5 +352,15 @@ public class EntryManager extends Thread {
 
     public void setWorkerManager(WorkerManager workerManager) {
         this.workerManager = workerManager;
+    }
+
+    private static long calcCrc(String str) {
+        if (str == null) {
+            return 0;
+        } else {
+            crc.reset();
+            crc.update(str.getBytes());
+            return crc.getValue();
+        }
     }
 }

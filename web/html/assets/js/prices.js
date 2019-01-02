@@ -7,8 +7,14 @@ class ItemRow {
   constructor (item) {
     this.item = item;
     this.row = "<tr value={{id}}>{{data}}</tr>";
-    this.fields = {};
-    
+
+    this.sparkOptions = {
+      pad_y: 2,
+      width: 60,
+      height: 30,
+      radius: 0.2
+    }
+
     // Build HTML elements
     var rowBuilder = [];
     rowBuilder.push(
@@ -16,6 +22,7 @@ class ItemRow {
       this.buildGemFields(),
       this.buildBaseFields(),
       this.buildMapFields(),
+      this.buildSparkField(),
       this.buildPriceFields(),
       this.buildChangeField(),
       this.buildDailyField(),
@@ -138,22 +145,25 @@ class ItemRow {
 
     return this.item.tier ? template.replace("{{tier}}", this.item.tier) : "<td></td>";
   }
+
+  buildSparkField() {
+    var spark = ItemRow.genSparkSVG(this.sparkOptions, this.item.spark);
+    return "<td class='d-none d-md-flex'>" + spark + "</td>";
+  }
   
   buildPriceFields() {
     let template = `
     <td>
-      <div class='pricebox'>{{sparkline}}{{chaos_icon}}{{chaos_price}}</div>
+      <div class='pricebox'>{{chaos_icon}}{{chaos_price}}</div>
     </td>
-    <td>
+    <td class='d-none d-md-flex'>
       <div class='pricebox'>{{ex_icon}}{{ex_price}}</div>
     </td>
     `.trim();
 
     let chaosContainer  = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_CHAOS);
     let exContainer     = TEMPLATE_imgContainer.trim().replace("{{img}}", ICON_EXALTED);
-    let sparkLine       = this.buildSparkLine(this.item);
   
-    template = template.replace("{{sparkline}}",    sparkLine);
     template = template.replace("{{chaos_price}}",  ItemRow.roundPrice(this.item.mean));
     template = template.replace("{{chaos_icon}}",   chaosContainer);
   
@@ -166,22 +176,6 @@ class ItemRow {
     }
     
     return template;
-  }
-  
-  buildSparkLine() {
-    if (!this.item.spark) return "";
-  
-    let svgColorClass = this.item.change > 0 ? "sparkline-green" : "sparkline-orange";
-    let svg = document.createElement("svg");
-    
-    svg.setAttribute("class", "sparkline " + svgColorClass);
-    svg.setAttribute("width", 60);
-    svg.setAttribute("height", 30);
-    svg.setAttribute("stroke-width", 3);
-  
-    sparkline(svg, this.item.spark);
-    
-    return svg.outerHTML;
   }
   
   buildChangeField() {
@@ -268,6 +262,165 @@ class ItemRow {
     }
   
     return numberWithCommas(Math.round(price * 100) / 100);
+  }
+
+  static genSparkSVG(options, elements) {
+    var maxElement = Math.max(...elements);
+    var minElement = Math.min(...elements);
+  
+    // There has been no change in the past week
+    if (maxElement === minElement && minElement === 0) {
+      maxElement = 1;
+    }
+  
+    var stepX = options.width / (elements.length - 1);
+    var stepY = (options.height - options.pad_y*2) / (maxElement - minElement);
+  
+    // Create pointarray
+    var pointBuilder = ["M "];
+    for (var i = 0; i < elements.length; i++) {
+      if (elements[i] !== null) {
+        var x = stepX * i;
+        var y = (options.height - elements[i]*stepY + minElement*stepY - options.pad_y/2).toFixed(3);
+  
+        pointBuilder.push(x, " ", y, " L ");
+      }
+    }
+  
+    // Remove trailing zero
+    pointBuilder.pop();
+
+    return `
+    <svg width="{{width}}" height="{{height}}" class="ct-chart-line">
+      <g class="ct-series ct-series-a">
+        <path d="{{points}}" class="ct-line" />
+      </g>
+    </svg>`
+      .trim()
+      .replace(/{{width}}/g,  options.width)
+      .replace(/{{height}}/g, options.height)
+      .replace(/{{points}}/g, ItemRow.roundSVGPathCorners(pointBuilder.join(""), options));
+  }
+
+  static roundSVGPathCorners(pathString, options) {
+    function moveTowardsFractional(movingPoint, targetPoint, fraction) {
+      return {
+        x: parseFloat(movingPoint.x + (targetPoint.x - movingPoint.x)*fraction).toFixed(3),
+        y: parseFloat(movingPoint.y + (targetPoint.y - movingPoint.y)*fraction).toFixed(3)
+      };
+    }
+    
+    // Adjusts the ending position of a command
+    function adjustCommand(cmd, newPoint) {
+      if (cmd.length > 2) {
+        cmd[cmd.length - 2] = newPoint.x;
+        cmd[cmd.length - 1] = newPoint.y;
+      }
+    }
+    
+    // Gives an {x, y} object for a command's ending position
+    function pointForCommand(cmd) {
+      return {
+        x: parseFloat(cmd[cmd.length - 2]),
+        y: parseFloat(cmd[cmd.length - 1]),
+      };
+    }
+    
+    // Split apart the path, handing concatonated letters and numbers
+    var pathParts = pathString
+      .split(/[,\s]/)
+      .reduce(function(parts, part){
+        var match = part.match("([a-zA-Z])(.+)");
+        if (match) {
+          parts.push(match[1]);
+          parts.push(match[2]);
+        } else {
+          parts.push(part);
+        }
+        
+        return parts;
+      }, []);
+    
+    // Group the commands with their arguments for easier handling
+    var commands = pathParts.reduce(function(commands, part) {
+      if (parseFloat(part) == part && commands.length) {
+        commands[commands.length - 1].push(part);
+      } else {
+        commands.push([part]);
+      }
+      
+      return commands;
+    }, []);
+    
+    // The resulting commands, also grouped
+    var resultCommands = [];
+    
+    if (commands.length > 1) {
+      var startPoint = pointForCommand(commands[0]);
+      
+      // Handle the close path case with a "virtual" closing line
+      var virtualCloseLine = null;
+      if (commands[commands.length - 1][0] == "Z" && commands[0].length > 2) {
+        virtualCloseLine = ["L", startPoint.x, startPoint.y];
+        commands[commands.length - 1] = virtualCloseLine;
+      }
+      
+      // We always use the first command (but it may be mutated)
+      resultCommands.push(commands[0]);
+      
+      for (var cmdIndex=1; cmdIndex < commands.length; cmdIndex++) {
+        var prevCmd = resultCommands[resultCommands.length - 1];
+        
+        var curCmd = commands[cmdIndex];
+        
+        // Handle closing case
+        var nextCmd = (curCmd == virtualCloseLine)
+          ? commands[1]
+          : commands[cmdIndex + 1];
+        
+        // Nasty logic to decide if this path is a candidite.
+        if (nextCmd && prevCmd && (prevCmd.length > 2) && curCmd[0] == "L" && nextCmd.length > 2 && nextCmd[0] == "L") {
+          // Calc the points we're dealing with
+          var prevPoint = pointForCommand(prevCmd);
+          var curPoint = pointForCommand(curCmd);
+          var nextPoint = pointForCommand(nextCmd);
+          
+          // The start and end of the cuve are just our point moved towards the previous and next points, respectivly
+          var curveStart = moveTowardsFractional(curPoint, prevCmd.origPoint || prevPoint, options.radius);
+          var curveEnd = moveTowardsFractional(curPoint, nextCmd.origPoint || nextPoint, options.radius);
+          
+          // Adjust the current command and add it
+          adjustCommand(curCmd, curveStart);
+          curCmd.origPoint = curPoint;
+          resultCommands.push(curCmd);
+          
+          // The curve control points are halfway between the start/end of the curve and
+          // the original point
+          var startControl = moveTowardsFractional(curveStart, curPoint, .5);
+          var endControl = moveTowardsFractional(curPoint, curveEnd, .5);
+    
+          // Create the curve 
+          var curveCmd = ["C", startControl.x, startControl.y, endControl.x, endControl.y, curveEnd.x, curveEnd.y];
+          // Save the original point for fractional calculations
+          curveCmd.origPoint = curPoint;
+          resultCommands.push(curveCmd);
+        } else {
+          // Pass through commands that don't qualify
+          resultCommands.push(curCmd);
+        }
+      }
+      
+      // Fix up the starting point and restore the close path if the path was orignally closed
+      if (virtualCloseLine) {
+        var newStartPoint = pointForCommand(resultCommands[resultCommands.length-1]);
+        resultCommands.push(["Z"]);
+        adjustCommand(resultCommands[0], newStartPoint);
+      }
+    } else {
+      resultCommands = commands;
+    }
+    
+    return resultCommands.reduce(function(str, c){ return str + c.join(" ") + " "; }, "");
   }
 }
 
@@ -1365,6 +1518,16 @@ function getServiceLeague(league) {
   return null;
 }
 
+function getItem(id) {
+  for (let i = 0; i < ITEMS.length; i++) {
+    if (ITEMS[i].id === id) {
+      return ITEMS[i];
+    }
+  }
+
+  return null;
+}
+
 //------------------------------------------------------------------------------------------------------------
 // Itetm sorting and searching
 //------------------------------------------------------------------------------------------------------------
@@ -1375,7 +1538,6 @@ function sortResults() {
   $("tbody", table).empty();
 
   let count = 0, matches = 0;
-  let buffer = "";
 
   if (FILTER.sortFunction) {
     ITEMS.sort(FILTER.sortFunction);
@@ -1399,7 +1561,7 @@ function sortResults() {
       }
 
       // Append generated table data to buffer
-      buffer += item.tableData.row;
+      table.append(item.tableData.row);
       count++;
     }
   }
@@ -1418,9 +1580,6 @@ function sortResults() {
   } else {
     loadAllBtn.hide();
   }
-  
-  // Add the generated HTML table data to the table
-  table.append(buffer);
 }
 
 function checkHideItem(item) {
@@ -1500,3 +1659,4 @@ function checkHideItem(item) {
 
   return false;
 }
+

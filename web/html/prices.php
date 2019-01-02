@@ -3,6 +3,7 @@
   require_once "../details/pdo.php";
   require_once "assets/php/func/prices.php"; 
   require_once "assets/php/templates/priceForms.php"; 
+  require_once "assets/php/templates/body.php"; 
 
   $PAGEDATA["title"] = "Prices - PoeWatch";
   $PAGEDATA["description"] = "Discover the average price of almost any item";
@@ -11,7 +12,6 @@
   $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
   $PAGEDATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
   $PAGEDATA["jsIncludes"][] = "prices.js";
-  $PAGEDATA["jsIncludes"][] = "sparkline.js";
   
   // Get list of leagues that have items
   $leagueList = GetItemLeagues($pdo);
@@ -142,113 +142,111 @@
   </div>
 </div>
 
-
-
-<div class='container-fluid d-flex justify-content-center p-0'>
-  <div class='row body-boundaries w-100 px-3 py-3'>
-    
-    <!-- Search forms -->
-    <div class="col-12 p-0 mb-3">
-      <div class='d-flex flex-wrap'>
-        <?php 
-          switch ($category) {
-            case "gem":
-              corruptedForm();
-              levelForm();
-              qualityForm();
-              break;
-            case "armour":
-            case "weapon":
-              linksForm();
-              rarityForm();
-              break;
-            case "map":
-              tierForm();
-              rarityForm();
-              break;
-            case "base":
-              itemLevelForm();
-              influenceForm();
-              break;
-            case "flask":
-            case "accessory":
-            case "jewel":
-              rarityForm();
-              break;
-            default:
-              break;
-          }
-        ?>
-      </div>
-
-      <div class='row'>
-        <!-- League -->
-        <div class="col-6 col-sm">
-          <h4 class="nowrap">League</h4>
-          <select class="form-control form-control-sm custom-select w-auto" id="search-league">
-            <?php foreach ($leagueList as $league): ?>
-            <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● "; echo $league['display'] ? $league['display'] : $league['name'] ?></option>
-            <?php endforeach ?>
-          </select>
-        </div>
-        <!--//League//-->
-
-        <!-- Confidence -->
-        <div class="col-6 col-sm">
-          <h4 class="nowrap">Low daily</h4>
-          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-            <label class="btn btn-outline-dark active">
-              <input type="radio" name="confidence" value="false" checked>Hide
-            </label>
-            <label class="btn btn-outline-dark">
-              <input type="radio" name="confidence" value="true">Show
-            </label>
-          </div>
-        </div>
-        <!--//Confidence//-->
-
-        <!-- Group -->
-        <div class="col-6 col-sm">
-          <h4>Group</h4>
-          <select class="form-control custom-select" id="search-group">
-            <?php AddGroups($groups) ?>
-          </select>
-        </div>
-        <!--//Group//-->
-
-        <!-- Search -->
-        <div class="col-6 col-sm">
-          <h4>Search</h4>
-          <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-        </div>
-        <!--//Search//-->
-      </div>
-    </div>
-    <!--//Search forms//-->
-
-    <div class='col-12 p-0'>
-      <div class="card custom-card">
-        <div class="card-header slim-card-edge"></div>
-        <div class="card-body d-flex flex-column p-2">
-          <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
-            <thead>
-              <tr>
-            
-                <?php AddTableHeaders($category) ?>
-            
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-          <div class="buffering align-self-center mb-2" id="buffering-main"></div>
-          <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
-        </div>
-        <div class="card-footer slim-card-edge"></div>
-      </div>
+<?php genBodyHeader() ?>
+  <!-- Search forms -->
+  <div class="col-12 p-0 mb-3">
+    <div class='d-flex flex-wrap'>
+      <?php 
+        switch ($category) {
+          case "gem":
+            corruptedForm();
+            levelForm();
+            qualityForm();
+            break;
+          case "armour":
+          case "weapon":
+            linksForm();
+            rarityForm();
+            break;
+          case "map":
+            tierForm();
+            rarityForm();
+            break;
+          case "base":
+            itemLevelForm();
+            influenceForm();
+            break;
+          case "flask":
+          case "accessory":
+          case "jewel":
+            rarityForm();
+            break;
+          default:
+            break;
+        }
+      ?>
     </div>
 
+    <div class='row'>
+      <!-- League -->
+      <div class="col-6 col-sm">
+        <h4 class="nowrap">League</h4>
+        <select class="form-control custom-select" id="search-league">
+          <?php foreach ($leagueList as $league): ?>
+          <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● "; echo $league['display'] ? $league['display'] : $league['name'] ?></option>
+          <?php endforeach ?>
+        </select>
+      </div>
+      <!--//League//-->
+
+      <!-- Confidence -->
+      <div class="col-6 col-sm">
+        <h4 class="nowrap">Low daily</h4>
+        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+          <label class="btn btn-outline-dark active">
+            <input type="radio" name="confidence" value="false" checked>Hide
+          </label>
+          <label class="btn btn-outline-dark">
+            <input type="radio" name="confidence" value="true">Show
+          </label>
+        </div>
+      </div>
+      <!--//Confidence//-->
+
+      <!-- Group -->
+      <div class="col-6 col-sm">
+        <h4>Group</h4>
+        <select class="form-control custom-select" id="search-group">
+          <?php AddGroups($groups) ?>
+        </select>
+      </div>
+      <!--//Group//-->
+
+      <!-- Search -->
+      <div class="col-6 col-sm">
+        <h4>Search</h4>
+        <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+      </div>
+      <!--//Search//-->
+    </div>
   </div>
-</div>
+  <!--//Search forms//-->
+
+  <div class='col-12 p-0'>
+    <div class="card custom-card">
+      <div class="card-header slim-card-edge"></div>
+      <div class="card-body d-flex flex-column p-2">
+        <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
+          <thead>
+            <tr>
+          
+              <?php AddTableHeaders($category) ?>
+          
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="buffering align-self-center mb-2" id="buffering-main"></div>
+        <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
+      </div>
+      <div class="card-footer slim-card-edge"></div>
+    </div>
+  </div>
+
+  
+
+<?php genBodyFooter() ?>
+
 <script>
   var SERVICE_leagues = <?php echo json_encode($leagueList) ?>;
 </script>

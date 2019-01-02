@@ -5,67 +5,24 @@
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
--- Database migration
+-- Database migration: move over to CRC32 hashes
 -- ---------------------------------------------------------------------------------------------------------------------
 
---
--- Half-arsed migration script for databases created before 4 Dec 2018
---
+-- Add crc columns
+alter table league_entries add accCrc int unsigned not null after id_d;
+alter table league_entries add itmCrc int unsigned not null after accCrc;
 
--- delete duplicate listings from `league_entries`
-delete e2 from league_entries as e2
-join (
-  -- get groups that have listed more than n of the same item
-  select id_l, id_d, account
-  from league_entries
-  group by id_l, id_d, account
-  having count(*) > 1
-) as e1 on e1.id_l = e2.id_l and e1.id_d = e2.id_d and e1.account = e2.account
+-- Add values to crc columns
+update league_entries set accCrc = CRC32(account);
+update league_entries set itmCrc = CRC32(id_item) where id_item != "";
 
-drop index `PRIMARY` ON league_entries;
-alter table league_entries drop column id;
-alter table league_entries modify account varchar(32) not null after id_d;
-alter table league_entries add listings int unsigned not null default 1;
-alter table league_entries add id_item varchar(64) not null default '';
-alter table league_entries add constraint pk primary key (id_l, id_d, account, id_item);
-alter table league_entries modify `time` timestamp not null default current_timestamp;
+-- Recreate primary key
+alter table league_entries drop primary key;
+alter table league_entries add primary key(id_l, id_d, accCrc, itmCrc);
 
-alter table league_entries add outlier bit(1) not null default 0 after approved;
-drop index approved_time on league_entries;
-create index outlier_time on league_entries (outlier, `time`);
-alter table league_entries drop column approved;
-
-alter table league_items drop column volatile;
-alter table league_items drop column multiplier;
-alter table league_items drop column `dec`;
-
-alter table data_changeId modify `time` timestamp not null default current_timestamp on update current_timestamp;
-
---
--- Create separate group for Incursion vials and Bestiary nets
---
-
-BEGIN;
-  insert into data_groups(id_cat, `name`, display)
-  values (4, 'vial', 'Vials'), (4, 'net', 'Nets');
-
-  update `data_itemData`
-  set id_grp = (select id from data_groups where `name` = 'net' limit 1)
-  where id_grp = 11 and `name` like '% Net';
-
-  update `data_itemData`
-  set id_grp = (select id from data_groups where `name` = 'vial' limit 1)
-  where id_grp = 11 and `name` like 'Vial %';
-COMMIT;
-
---
--- Refactor count to total and quantity to daily
---
-
-alter table league_items change quantity daily int(8) unsigned not null default 0;
-alter table league_history_daily change quantity daily int(8) unsigned not null default 0;
-alter table league_items change `count` total int(16) unsigned not null default 0;
-alter table league_history_daily change `count` total int(16) unsigned not null default 0;
+-- Drop redundant columns
+alter table league_entries drop column account;
+alter table league_entries drop column id_item;
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
@@ -80,7 +37,6 @@ join (
 ) as tmp on tmp.name = did.name and tmp.type = did.type and tmp.frame = did.frame
 where did.var is null
 order by id desc
-
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Development

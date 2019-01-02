@@ -517,7 +517,7 @@ public class Item {
      * being able to generate multiple database entries.
      */
     private void nullId() {
-        id = "";
+        id = null;
     }
 
     //------------------------------------------------------------------------------------------------------------

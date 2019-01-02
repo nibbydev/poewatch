@@ -4,10 +4,9 @@ package poe.manager.entry;
  * The default format that new entries are stored as before uploading to database
  */
 public class RawEntry {
-    private String accountName;
     private double price;
     private int id_l, id_d;
-    private String id_item;
+    private long itmCrc, accCrc;
 
     private static int precision;
 
@@ -27,7 +26,7 @@ public class RawEntry {
 
         final RawEntry other = (RawEntry) obj;
 
-        if (this.accountName == null ? (other.accountName != null) : !this.accountName.equals(other.accountName)) {
+        if (this.accCrc != other.accCrc) {
             return false;
         }
 
@@ -42,7 +41,7 @@ public class RawEntry {
     public int hashCode() {
         int hash = 3;
 
-        hash = 53 * hash + (this.accountName != null ? this.accountName.hashCode() : 0);
+        hash = 53 * hash + Long.hashCode(this.accCrc);
         hash = 53 * hash + this.id_l;
         hash = 53 * hash + this.id_d;
 
@@ -64,8 +63,8 @@ public class RawEntry {
         return price;
     }
 
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
+    public void setAccCrc(long accCrc) {
+        this.accCrc = accCrc;
     }
 
     public void setLeagueId(int id) {
@@ -88,16 +87,16 @@ public class RawEntry {
         this.price = price;
     }
 
-    public String getAccountName() {
-        return accountName;
+    public long getAccCrc() {
+        return accCrc;
     }
 
-    public void setId_item(String id_item) {
-        this.id_item = id_item;
+    public void setItmCrc(long itmCrc) {
+        this.itmCrc = itmCrc;
     }
 
-    public String getId_item() {
-        return id_item;
+    public long getItmCrc() {
+        return itmCrc;
     }
 
     public static void setPrecision(int precision) {

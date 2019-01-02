@@ -29,7 +29,7 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadRaw(Set<RawEntry> entrySet) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, account, id_item, price) " +
+        String query =  "INSERT INTO league_entries (id_l, id_d, accCrc, itmCrc, price) " +
                         "VALUES (?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  listings = IF(price = VALUES(price), listings, listings + 1), " +
@@ -47,8 +47,8 @@ public class Upload {
                 for (RawEntry rawEntry : entrySet) {
                     statement.setInt(1, rawEntry.getLeagueId());
                     statement.setInt(2, rawEntry.getItemId());
-                    statement.setString(3, rawEntry.getAccountName());
-                    statement.setString(4, rawEntry.getId_item());
+                    statement.setLong(3, rawEntry.getAccCrc());
+                    statement.setLong(4, rawEntry.getItmCrc());
                     statement.setString(5, rawEntry.getPrice());
                     statement.addBatch();
 
