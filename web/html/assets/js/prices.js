@@ -147,7 +147,7 @@ class ItemRow {
   }
 
   buildSparkField() {
-    var spark = ItemRow.genSparkSVG(this.sparkOptions, this.item.spark);
+    var spark = this.item.spark ? ItemRow.genSparkSVG(this.sparkOptions, this.item.spark) : "";
     return "<td class='d-none d-md-flex'>" + spark + "</td>";
   }
   
