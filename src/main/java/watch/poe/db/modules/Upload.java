@@ -27,7 +27,7 @@ public class Upload {
                         "ON DUPLICATE KEY UPDATE " +
                         "  updates = updates + 1, " +
                         "  updated = now()," +
-                        "  outlier = 0, " +
+                        "  outlier = 1, " +
                         "  price = VALUES(price), " +
                         "  stash_crc = VALUES(stash_crc); ";
 

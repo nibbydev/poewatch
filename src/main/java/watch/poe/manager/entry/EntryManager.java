@@ -17,8 +17,8 @@ import java.util.*;
 import java.util.zip.CRC32;
 
 public class EntryManager extends Thread {
-    private static Logger logger = LoggerFactory.getLogger(EntryManager.class);
-    private static CRC32 crc = new CRC32();
+    private static final Logger logger = LoggerFactory.getLogger(EntryManager.class);
+    private static final CRC32 crc = new CRC32();
     private Config config;
 
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
@@ -34,6 +34,8 @@ public class EntryManager extends Thread {
     private LeagueManager leagueManager;
     private RelationManager relationManager;
     private AccountManager accountManager;
+
+    private Set<Long> DbStashes = new HashSet<>(100000);
 
     public EntryManager(Database db, LeagueManager lm, AccountManager am, RelationManager rm, Config cnf) {
         this.database = db;
@@ -51,13 +53,6 @@ public class EntryManager extends Thread {
         }
     }
 
-    /*private Set<Long> _accounts = new HashSet<>();
-    private Set<Long> _nullStashes = new HashSet<>();
-    private Set<RawItemEntry> _items = new HashSet<>();
-    private Set<RawUsernameEntry> _usernames = new HashSet<>();*/
-
-    private Set<Long> DbStashes = new HashSet<>();
-
     //------------------------------------------------------------------------------------------------------------
     // Thread control
     //------------------------------------------------------------------------------------------------------------
@@ -66,6 +61,9 @@ public class EntryManager extends Thread {
      * Method override for starting this object as a Thread
      */
     public void run() {
+        // Just a status msg on startup
+        System.out.printf("Got %d distinct stashes\n", DbStashes.size());
+
         // Loads in currency rates on program start
         getCurrency();
 
@@ -338,8 +336,6 @@ public class EntryManager extends Thread {
                     items.remove(rawItem);
                     items.add(rawItem);
 
-                    DbStashes.add(stash_crc);
-
                     // Set flag to indicate stash contained at least 1 valid item
                     if (!hasValidItems) {
                         hasValidItems = true;
@@ -349,6 +345,7 @@ public class EntryManager extends Thread {
 
             // If stash contained at least 1 valid item, save the account
             if (hasValidItems) {
+                DbStashes.add(stash_crc);
                 accounts.add(account_crc);
             }
 

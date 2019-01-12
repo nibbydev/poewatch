@@ -20,24 +20,24 @@ import java.util.regex.Pattern;
  */
 public class Worker extends Thread {
     private static Logger logger = LoggerFactory.getLogger(Worker.class);
+    private final Gson gson = new Gson();
     private Config config;
 
     private static long lastPullTime;
-    private final Object monitor = new Object();
-    private final Gson gson = new Gson();
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;
-    private int index;
+    private int workerId;
     private EntryManager entryManager;
     private WorkerManager workerManager;
     private Database database;
 
-    private final Object sleepMonitor = new Object();
-    private boolean sleepFlag = false;
-    private boolean isSleeping = false;
+    private final Object jobMonitor = new Object();
+    private final Object pauseMonitor = new Object();
+    private boolean pauseFlag = false;
+    private boolean isPaused = false;
 
-    private static Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+    private static final Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
 
     public Worker(EntryManager entryManager, WorkerManager workerManager, Database database, Config config) {
         this.entryManager = entryManager;
@@ -56,7 +56,7 @@ public class Worker extends Thread {
         // Run while flag is true
         while (flagLocalRun) {
             // If there's no new job, sleep
-            waitOnMonitor();
+            waitForJob();
 
             // Check if worker should close after being woken from sleep
             if (!flagLocalRun) break;
@@ -73,8 +73,8 @@ public class Worker extends Thread {
                 // Deserialize the JSON string
                 reply = gson.fromJson(replyJSONString, Mappers.APIReply.class);
 
-                if (sleepFlag) {
-                    sleepOnMonitor();
+                if (pauseFlag) {
+                    pauseWorker();
                 }
 
                 // Parse the deserialized JSON if deserialization was successful
@@ -211,40 +211,43 @@ public class Worker extends Thread {
     /**
      * Sleeps until monitor object is notified
      */
-    private void waitOnMonitor() {
-        synchronized (monitor) {
-            try {
-                monitor.wait(config.getInt("worker.monitorTimeout"));
-            } catch (InterruptedException e) {
+    private void waitForJob() {
+        synchronized (jobMonitor) {
+            // Wait while worker is supposed to run and there's no new job
+            while (flagLocalRun && job == null) {
+                try {
+                    jobMonitor.wait(100);
+                } catch (InterruptedException e) {
+                }
             }
         }
     }
 
-    private void sleepOnMonitor() {
-        isSleeping = true;
+    private void pauseWorker() {
+        isPaused = true;
 
-        synchronized (sleepMonitor) {
-            System.out.printf("- worker %d paused\n", index);
+        synchronized (pauseMonitor) {
+            System.out.printf("- worker %d paused\n", workerId);
 
-            while (sleepFlag) {
+            while (pauseFlag) {
                 try {
-                    sleepMonitor.wait(100);
+                    pauseMonitor.wait(100);
                 } catch (InterruptedException e) {
                 }
             }
 
-            System.out.printf("- worker %d resumed\n", index);
+            System.out.printf("- worker %d resumed\n", workerId);
         }
 
-        isSleeping = false;
+        isPaused = false;
     }
 
     /**
      * Notifies local monitor
      */
     private void wakeLocalMonitor() {
-        synchronized (monitor) {
-            monitor.notify();
+        synchronized (jobMonitor) {
+            jobMonitor.notify();
         }
     }
 
@@ -252,12 +255,12 @@ public class Worker extends Thread {
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
 
-    public int getIndex() {
-        return index;
+    public int getWorkerId() {
+        return workerId;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
+    public void setWorkerId(int workerId) {
+        this.workerId = workerId;
     }
 
     public boolean hasJob() {
@@ -275,11 +278,11 @@ public class Worker extends Thread {
         wakeLocalMonitor();
     }
 
-    public boolean isSleeping() {
-        return isSleeping;
+    public boolean isPaused() {
+        return isPaused;
     }
 
-    public void setSleepFlag(boolean sleepFlag) {
-        this.sleepFlag = sleepFlag;
+    public void setPauseFlag(boolean pauseFlag) {
+        this.pauseFlag = pauseFlag;
     }
 }

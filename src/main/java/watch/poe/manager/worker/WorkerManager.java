@@ -73,7 +73,7 @@ public class WorkerManager extends Thread {
     private void waitOnMonitor() {
         synchronized (monitor) {
             try {
-                monitor.wait(config.getInt("worker.monitorTimeout"));
+                monitor.wait(100);
             } catch (InterruptedException e) {
             }
         }
@@ -87,9 +87,9 @@ public class WorkerManager extends Thread {
 
         // Loop though every worker and call stop method
         for (Worker worker : workerList) {
-            logger.info("Stopping worker (" + worker.getIndex() + ")");
+            logger.info("Stopping worker (" + worker.getWorkerId() + ")");
             worker.stopWorker();
-            logger.info("Worker (" + worker.getIndex() + ") stopped");
+            logger.info("Worker (" + worker.getWorkerId() + ") stopped");
         }
 
         logger.info("Stopping controller");
@@ -114,7 +114,7 @@ public class WorkerManager extends Thread {
      */
     public void printAllWorkers() {
         for (Worker workerObject : workerList) {
-            logger.info("    " + workerObject.getIndex() + ": " + workerObject.getJob());
+            logger.info("    " + workerObject.getWorkerId() + ": " + workerObject.getJob());
         }
     }
 
@@ -132,7 +132,7 @@ public class WorkerManager extends Thread {
             Worker worker = new Worker(entryManager, this, database, config);
 
             // Set some worker PROPERTIES and start
-            worker.setIndex(i);
+            worker.setWorkerId(i);
             worker.start();
 
             // Add worker to local list
@@ -233,7 +233,7 @@ public class WorkerManager extends Thread {
 
     public boolean getWorkerSleepState() {
         for (Worker worker : workerList) {
-            if (!worker.isSleeping()) {
+            if (!worker.isPaused()) {
                 return false;
             }
         }
@@ -245,7 +245,7 @@ public class WorkerManager extends Thread {
         System.out.println(state ? "Pausing workers.." : "Resuming workers..");
 
         for (Worker worker : workerList) {
-            worker.setSleepFlag(state);
+            worker.setPauseFlag(state);
         }
     }
 }
