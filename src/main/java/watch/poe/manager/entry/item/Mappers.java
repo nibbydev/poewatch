@@ -24,11 +24,11 @@ public class Mappers {
      * Stash object
      */
     public class Stash {
-        public String id;
-        public String accountName;
-        public String stash;
-        public String lastCharacterName;
+        public String id, accountName, stash, stashType, lastCharacterName, league;
         public List<BaseItem> items;
+
+        @SerializedName("public")
+        public boolean isPublic;
     }
 
     /**

@@ -149,25 +149,45 @@ CREATE TABLE league_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
+-- Table structure league_accounts
+--
+
+CREATE TABLE league_accounts (
+  account_crc  INT            UNSIGNED PRIMARY KEY,
+  updates      INT            UNSIGNED NOT NULL DEFAULT 1,
+
+  discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
+  updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+
+  INDEX updated (updated)
+) ENGINE=InnoDB;
+
+--
 -- Table structure league_entries
 --
 
 CREATE TABLE league_entries (
-    id_l       SMALLINT       UNSIGNED NOT NULL,
-    id_d       INT            UNSIGNED NOT NULL,
-    accCrc     INT            UNSIGNED NOT NULL,
-    itmCrc     INT            UNSIGNED NOT NULL,
-    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    outlier    BIT(1)         NOT NULL DEFAULT 0,
-    price      DECIMAL(14,8)  UNSIGNED NOT NULL,
-    listings   INT            UNSIGNED NOT NULL DEFAULT 1,
+  id_l         SMALLINT       UNSIGNED NOT NULL,
+  id_d         INT            UNSIGNED NOT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES  data_leagues (id)   ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
+  account_crc  INT            UNSIGNED NOT NULL,     -- CRC32 of account name
+  stash_crc    INT            UNSIGNED DEFAULT NULL, -- CRC16 of stash id
+  item_crc     INT            UNSIGNED NOT NULL,     -- CRC16 of item id
 
-    CONSTRAINT pk PRIMARY KEY (id_l, id_d, accCrc, itmCrc),
-    INDEX outlier_time (outlier, `time`),
-    INDEX compound_id (id_l, id_d)
+  discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
+  updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+
+  outlier      BIT(1)         NOT NULL DEFAULT 0,
+  updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
+  price        DECIMAL(14,8)  UNSIGNED NOT NULL,
+
+  FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
+  FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+  FOREIGN KEY (account_crc) REFERENCES league_accounts (account_crc) ON DELETE CASCADE,
+  CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
+  INDEX compound_account_stash_crc (account_crc, stash_crc),
+  INDEX discovered (discovered),
+  INDEX updated (updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -291,7 +311,7 @@ CREATE TABLE web_feedback (
     message   TEXT          NOT NULL,
     
     INDEX ip      (ip),
-    INDEX time    (time),
+    INDEX `time`  (`time`),
     INDEX contact (contact)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

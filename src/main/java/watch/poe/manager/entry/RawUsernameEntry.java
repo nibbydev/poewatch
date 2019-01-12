@@ -1,10 +1,10 @@
 package poe.manager.entry;
 
-public class AccountEntry {
+public class RawUsernameEntry {
     public String account, character;
     public Integer league;
 
-    public AccountEntry(String account, String character, Integer league) {
+    public RawUsernameEntry(String account, String character, Integer league) {
         this.account = account;
         this.character = character;
         this.league = league;
@@ -16,11 +16,11 @@ public class AccountEntry {
             return false;
         }
 
-        if (!AccountEntry.class.isAssignableFrom(obj.getClass())) {
+        if (!RawUsernameEntry.class.isAssignableFrom(obj.getClass())) {
             return false;
         }
 
-        final AccountEntry other = (AccountEntry) obj;
+        final RawUsernameEntry other = (RawUsernameEntry) obj;
 
         if ((this.account == null) ? (other.account != null) : !this.account.equals(other.account)) {
             return false;

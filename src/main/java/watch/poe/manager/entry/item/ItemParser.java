@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class ItemParser {
-    private Config config;
+    private static Config config;
+    private static RelationManager relationManager;
 
     private ArrayList<Item> items = new ArrayList<>();
-    private RelationManager relationManager;
+    private Mappers.BaseItem base;
     private boolean discard, doNotIndex;
     private String priceType;
     private Double price;
@@ -19,9 +20,8 @@ public class ItemParser {
     // Constructor
     //------------------------------------------------------------------------------------------------------------
 
-    public ItemParser(RelationManager relationManager, Mappers.BaseItem base, Map<String, Double> currencyMap, Config config) {
-        this.relationManager = relationManager;
-        this.config = config;
+    public ItemParser(Mappers.BaseItem base, Map<String, Double> currencyMap) {
+        this.base = base;
 
         // Do a few checks on the league, note and etc
         basicChecks(base);
@@ -35,8 +35,14 @@ public class ItemParser {
         convertPrice(currencyMap);
         if (discard) return;
 
-        // Branch item if it meets requirements
-        branchItem(base);
+        // Branch item if necessary
+        branchItem();
+        if (discard) return;
+
+        // Parse the items
+        for (Item item : items) {
+            item.parse(base);
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -112,12 +118,12 @@ public class ItemParser {
             base.setTypeLine(typeLineOverride);
 
             priceType = "Chaos Orb";
-            price = (Math.round((1 / tmpPrice) * config.getDouble("precision.pow")) / config.getDouble("precision.pow"));
+            price = (Math.round((1 / tmpPrice) * 100000000.0) / 100000000.0);
 
             // Prevents other currency items getting Chaos Orb's icon
             doNotIndex = true;
         } else {
-            price = Math.round(tmpPrice * config.getDouble("precision.pow")) / config.getDouble("precision.pow");
+            price = Math.round(tmpPrice * 100000000.0) / 100000000.0;
             priceType = relationManager.getCurrencyAliasToName().get(noteList[2]);
         }
     }
@@ -143,7 +149,7 @@ public class ItemParser {
                 return;
             }
 
-            price = Math.round(price * chaosValue * config.getDouble("precision.pow")) / config.getDouble("precision.pow");
+            price = Math.round(price * chaosValue * 100000000.0) / 100000000.0;
             priceType = "Chaos Orb";
         }
 
@@ -157,7 +163,7 @@ public class ItemParser {
     /**
      * Check if item should be branched (i.e there could be more than one database entry from that item)
      */
-    private void branchItem(Mappers.BaseItem base) {
+    private void branchItem() {
         // Branch if item is enchanted
         if (base.getEnchantMods() != null) {
             items.add(new Item("enchantment"));
@@ -170,17 +176,6 @@ public class ItemParser {
 
         // Branch default
         items.add(new Item("default"));
-    }
-
-    /**
-     * Parses branched items
-     */
-    public ArrayList<Item> parseItems(Mappers.BaseItem base) {
-        for (Item item : items) {
-            item.parse(base);
-        }
-
-        return items;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -197,5 +192,17 @@ public class ItemParser {
 
     public boolean isDoNotIndex() {
         return doNotIndex;
+    }
+
+    public ArrayList<Item> getBranchedItems() {
+        return items;
+    }
+
+    public static void setConfig(Config config) {
+        ItemParser.config = config;
+    }
+
+    public static void setRelationManager(RelationManager relationManager) {
+        ItemParser.relationManager = relationManager;
     }
 }

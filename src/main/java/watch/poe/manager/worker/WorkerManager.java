@@ -231,7 +231,21 @@ public class WorkerManager extends Thread {
         return monitor;
     }
 
-    public boolean isFlag_Run() {
-        return flag_Run;
+    public boolean getWorkerSleepState() {
+        for (Worker worker : workerList) {
+            if (!worker.isSleeping()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void setWorkerSleepState(boolean state) {
+        System.out.println(state ? "Pausing workers.." : "Resuming workers..");
+
+        for (Worker worker : workerList) {
+            worker.setSleepFlag(state);
+        }
     }
 }

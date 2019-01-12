@@ -33,6 +33,10 @@ public class Worker extends Thread {
     private WorkerManager workerManager;
     private Database database;
 
+    private final Object sleepMonitor = new Object();
+    private boolean sleepFlag = false;
+    private boolean isSleeping = false;
+
     private static Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
 
     public Worker(EntryManager entryManager, WorkerManager workerManager, Database database, Config config) {
@@ -68,6 +72,10 @@ public class Worker extends Thread {
             if (replyJSONString != null) {
                 // Deserialize the JSON string
                 reply = gson.fromJson(replyJSONString, Mappers.APIReply.class);
+
+                if (sleepFlag) {
+                    sleepOnMonitor();
+                }
 
                 // Parse the deserialized JSON if deserialization was successful
                 if (reply != null && reply.next_change_id != null) {
@@ -212,6 +220,25 @@ public class Worker extends Thread {
         }
     }
 
+    private void sleepOnMonitor() {
+        isSleeping = true;
+
+        synchronized (sleepMonitor) {
+            System.out.printf("- worker %d paused\n", index);
+
+            while (sleepFlag) {
+                try {
+                    sleepMonitor.wait(100);
+                } catch (InterruptedException e) {
+                }
+            }
+
+            System.out.printf("- worker %d resumed\n", index);
+        }
+
+        isSleeping = false;
+    }
+
     /**
      * Notifies local monitor
      */
@@ -246,5 +273,13 @@ public class Worker extends Thread {
 
         // Wake the worker so it can start working on the job
         wakeLocalMonitor();
+    }
+
+    public boolean isSleeping() {
+        return isSleeping;
+    }
+
+    public void setSleepFlag(boolean sleepFlag) {
+        this.sleepFlag = sleepFlag;
     }
 }

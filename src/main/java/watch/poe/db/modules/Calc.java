@@ -20,17 +20,22 @@ public class Calc {
      * @return True on success
      */
     public boolean calculatePrices() {
-        String query =  "UPDATE league_items AS i " +
+        String query  = "UPDATE league_items AS i " +
                         "JOIN ( " +
-                        "  SELECT   id_l, id_d, " +
-                        "           AVG(price)        AS mean, " +
-                        "           MEDIAN(price)     AS median, " +
-                        "           stats_mode(price) AS mode, " +
-                        "           MIN(price)        AS min, " +
-                        "           MAX(price)        AS max " +
-                        "  FROM     league_entries " +
-                        "  WHERE    outlier = 0 " +
-                        "  GROUP BY id_l, id_d " +
+                        "  SELECT   le.id_l, le.id_d, " +
+                        "           AVG(le.price)        AS mean, " +
+                        "           MEDIAN(le.price)     AS median, " +
+                        "           stats_mode(le.price) AS mode, " +
+                        "           MIN(le.price)        AS min, " +
+                        "           MAX(le.price)        AS max " +
+                        "  FROM     league_entries AS le" +
+                        "  JOIN (" +
+                        "    SELECT DISTINCT account_crc AS crc FROM league_accounts " +
+                        "    WHERE updated > DATE_SUB(NOW(), INTERVAL 24 HOUR) " +
+                        "  ) AS active_accounts ON le.account_crc = active_accounts.crc " +
+                        "  WHERE    le.stash_crc IS NOT NULL " +
+                        "    AND    le.outlier = 0 " +
+                        "  GROUP BY le.id_l, le.id_d " +
                         ") AS    e " +
                         "  ON    i.id_l = e.id_l " +
                         "    AND i.id_d = e.id_d " +

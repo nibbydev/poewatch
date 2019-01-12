@@ -3,8 +3,7 @@ package poe.db.modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
-import poe.manager.entry.RawEntry;
-import poe.manager.entry.StatusElement;
+import poe.manager.entry.*;
 import poe.manager.entry.timer.Timer;
 import poe.manager.entry.timer.TimerList;
 import poe.manager.league.LeagueEntry;
@@ -22,37 +21,67 @@ public class Upload {
         this.database = database;
     }
 
-    /**
-     * Adds an item entry in table `league_entries`
-     *
-     * @param entrySet Set of RawEntry objects to upload
-     * @return True on success
-     */
-    public boolean uploadRaw(Set<RawEntry> entrySet) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, accCrc, itmCrc, price) " +
-                        "VALUES (?, ?, ?, ?, ?) " +
+    public boolean uploadItems(Set<RawItemEntry> set) {
+        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, price) " +
+                        "VALUES (?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
-                        "  listings = IF(price = VALUES(price), listings, listings + 1), " +
-                        "  time = IF(price = VALUES(price), time, NOW()), " +
-                        "  price = VALUES(price); ";
+                        "  updates = updates + 1, " +
+                        "  updated = now()," +
+                        "  outlier = 0, " +
+                        "  price = VALUES(price), " +
+                        "  stash_crc = VALUES(stash_crc); ";
 
         try {
             if (database.connection.isClosed()) {
                 return false;
             }
 
-            int count = 0;
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                for (RawItemEntry raw : set) {
+                    // Convert price to string to avoid mysql truncation and rounding errors
+                    String priceStr = Double.toString(raw.price);
+                    int index = priceStr.indexOf('.');
+
+                    if (priceStr.length() - index > 8) {
+                        priceStr = priceStr.substring(0, index + 9);
+                    }
+
+                    statement.setInt(1, raw.id_l);
+                    statement.setInt(2, raw.id_d);
+                    statement.setLong(3, raw.account_crc);
+                    statement.setLong(4, raw.stash_crc);
+                    statement.setLong(5, raw.item_crc);
+                    statement.setString(6, priceStr);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            database.connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
+
+    public boolean uploadAccounts(Set<Long> set) {
+        String query =  "INSERT INTO league_accounts (account_crc) " +
+                        "VALUES (?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "  updates = updates + 1, " +
+                        "  updated = now(); ";
+
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (RawEntry rawEntry : entrySet) {
-                    statement.setInt(1, rawEntry.getLeagueId());
-                    statement.setInt(2, rawEntry.getItemId());
-                    statement.setLong(3, rawEntry.getAccCrc());
-                    statement.setLong(4, rawEntry.getItmCrc());
-                    statement.setString(5, rawEntry.getPrice());
+                for (Long crc : set) {
+                    statement.setLong(1, crc);
                     statement.addBatch();
-
-                    if (++count % 100 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
@@ -218,6 +247,79 @@ public class Upload {
                     statement.setLong(3, timerList.list.get(timerList.list.size() - 1));
 
                     statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            database.connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
+
+    /**
+     * Uploads gathered account and character names to the account database
+     *
+     * @param usernameSet Contains account, character and league name
+     * @return True on success
+     */
+    public boolean uploadUsernames(Set<RawUsernameEntry> usernameSet) {
+        String query1 = "INSERT INTO account_accounts   (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
+        String query2 = "INSERT INTO account_characters (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
+
+        String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
+                        "SELECT ?, " +
+                        "  (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
+                        "  (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
+                        "ON DUPLICATE KEY UPDATE seen = NOW(); ";
+
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
+
+            int counter;
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
+                counter = 0;
+
+                for (RawUsernameEntry rawUsernameEntry : usernameSet) {
+                    statement.setString(1, rawUsernameEntry.account);
+                    statement.addBatch();
+
+                    if (++counter % 500 == 0) statement.executeBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
+                counter = 0;
+
+                for (RawUsernameEntry rawUsernameEntry : usernameSet) {
+                    statement.setString(1, rawUsernameEntry.character);
+                    statement.addBatch();
+
+                    if (++counter % 500 == 0) statement.executeBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query3)) {
+                counter = 0;
+
+                for (RawUsernameEntry rawUsernameEntry : usernameSet) {
+                    statement.setInt(1, rawUsernameEntry.league);
+                    statement.setString(2, rawUsernameEntry.account);
+                    statement.setString(3, rawUsernameEntry.character);
+                    statement.addBatch();
+
+                    if (++counter % 500 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();

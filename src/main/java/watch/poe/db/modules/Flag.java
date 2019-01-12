@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import poe.db.Database;
 
 import java.sql.*;
+import java.util.Set;
 
 public class Flag {
     private static Logger logger = LoggerFactory.getLogger(Flag.class);
@@ -12,6 +13,40 @@ public class Flag {
 
     public Flag(Database database) {
         this.database = database;
+    }
+
+    public boolean deleteItemEntries() {
+        String query =  "delete from league_entries " +
+                        "where stash_crc is null " +
+                        "  and updated < date_sub(now(), interval 1 day); ";
+
+        return database.executeUpdateQueries(query);
+    }
+
+    public boolean resetStashReferences(Set<Long> set) {
+        String query =  "update league_entries " +
+                        "set stash_crc = NULL " +
+                        "where stash_crc = ?; ";
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                for (long crc : set) {
+                    statement.setLong(1, crc);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            database.connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
     }
 
     /**
@@ -24,7 +59,7 @@ public class Flag {
                         "JOIN ( " +
                         "  SELECT id_l, id_d, COUNT(*) AS total " +
                         "  FROM league_entries " +
-                        "  WHERE time > date_sub(now(), interval 60 second) " +
+                        "  WHERE discovered > date_sub(now(), interval 60 second) " +
                         "  GROUP BY id_l, id_d" +
                         ") AS e ON e.id_l = i.id_l AND e.id_d = i.id_d " +
                         "SET i.total = i.total + e.total, i.inc = i.inc + e.total ";
@@ -43,7 +78,8 @@ public class Flag {
                 "  join ( " +
                 "    select distinct id_l, id_d " +
                 "    from league_entries " +
-                "    where time > date_sub(now(), interval 60 second) " +
+                "    where stash_crc is not null " +
+                "      and updated > date_sub(now(), interval 60 second) " +
                 "  ) as e2 on e2.id_l = e1.id_l and e2.id_d = e1.id_d " +
                 "  group by e1.id_l, e1.id_d " +
                 "  having median(e1.price) > 0 " +

@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
 import poe.manager.account.AccountRelation;
-import poe.manager.entry.AccountEntry;
+import poe.manager.entry.RawUsernameEntry;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -17,79 +17,6 @@ public class Account {
 
     public Account(Database database) {
         this.database = database;
-    }
-
-    /**
-     * Uploads gathered account and character names to the account database
-     *
-     * @param accountSet Set of AccountEntries, containing accountName and characterName
-     * @return True on success
-     */
-    public boolean uploadAccountNames(Set<AccountEntry> accountSet) {
-        String query1 = "INSERT INTO account_accounts   (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
-        String query2 = "INSERT INTO account_characters (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
-
-        String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
-                        "SELECT ?, " +
-                        "  (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
-                        "  (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
-                        "ON DUPLICATE KEY UPDATE seen = NOW(); ";
-
-        try {
-            if (database.connection.isClosed()) {
-                return false;
-            }
-
-            int counter;
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                counter = 0;
-
-                for (AccountEntry accountEntry : accountSet) {
-                    statement.setString(1, accountEntry.account);
-                    statement.addBatch();
-
-                    if (++counter % 500 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                counter = 0;
-
-                for (AccountEntry accountEntry : accountSet) {
-                    statement.setString(1, accountEntry.character);
-                    statement.addBatch();
-
-                    if (++counter % 500 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query3)) {
-                counter = 0;
-
-                for (AccountEntry accountEntry : accountSet) {
-                    statement.setInt(1, accountEntry.league);
-                    statement.setString(2, accountEntry.account);
-                    statement.setString(3, accountEntry.character);
-                    statement.addBatch();
-
-                    if (++counter % 500 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
     }
 
     /**

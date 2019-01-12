@@ -21,8 +21,6 @@ public class EntryManager extends Thread {
     private static CRC32 crc = new CRC32();
     private Config config;
 
-    private Set<AccountEntry> accountSet = new HashSet<>();
-    private Set<RawEntry> entrySet = new HashSet<>();
     private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private StatusElement status;
     private Timer timer;
@@ -30,28 +28,35 @@ public class EntryManager extends Thread {
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private final Object monitor = new Object();
+    private WorkerManager workerManager;
 
     private Database database;
-    private WorkerManager workerManager;
     private LeagueManager leagueManager;
     private RelationManager relationManager;
     private AccountManager accountManager;
 
-    public EntryManager(Database database, LeagueManager leagueManager, AccountManager accountManager, RelationManager relationManager, Config config) {
-        this.database = database;
-        this.config = config;
-        this.timer = new Timer(database);
+    public EntryManager(Database db, LeagueManager lm, AccountManager am, RelationManager rm, Config cnf) {
+        this.database = db;
+        this.config = cnf;
+        this.timer = new Timer(db);
 
-        status = new StatusElement(config);
+        status = new StatusElement(cnf);
 
-        this.leagueManager = leagueManager;
-        this.accountManager = accountManager;
-        this.relationManager = relationManager;
+        this.leagueManager = lm;
+        this.accountManager = am;
+        this.relationManager = rm;
 
-        if (!config.getBoolean("misc.enableTimers")) {
+        if (!cnf.getBoolean("misc.enableTimers")) {
             timer.stop();
         }
     }
+
+    /*private Set<Long> _accounts = new HashSet<>();
+    private Set<Long> _nullStashes = new HashSet<>();
+    private Set<RawItemEntry> _items = new HashSet<>();
+    private Set<RawUsernameEntry> _usernames = new HashSet<>();*/
+
+    private Set<Long> DbStashes = new HashSet<>();
 
     //------------------------------------------------------------------------------------------------------------
     // Thread control
@@ -88,8 +93,21 @@ public class EntryManager extends Thread {
 
             // If monitor was woken, check if correct interval has passed
             if (System.currentTimeMillis() - status.lastRunTime > config.getInt("entry.sleepTime")) {
+                workerManager.setWorkerSleepState(true);
+
+                // Wait until all workers are paused
+                while (!workerManager.getWorkerSleepState()) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
                 status.lastRunTime = System.currentTimeMillis();
                 cycle();
+
+                workerManager.setWorkerSleepState(false);
             }
         }
 
@@ -118,29 +136,12 @@ public class EntryManager extends Thread {
         } catch (InterruptedException ex) {
         }
 
-        uploadRawEntries();
-        uploadAccounts();
-
         logger.info("EntryManager stopped");
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Database access
+    // Cycle
     //------------------------------------------------------------------------------------------------------------
-
-    private void uploadRawEntries() {
-        Set<RawEntry> entrySet = this.entrySet;
-        this.entrySet = new HashSet<>();
-
-        database.upload.uploadRaw(entrySet);
-    }
-
-    private void uploadAccounts() {
-        Set<AccountEntry> accountSet = this.accountSet;
-        this.accountSet = new HashSet<>();
-
-        database.account.uploadAccountNames(accountSet);
-    }
 
     private void getCurrency() {
         Map<Integer, Map<String, Double>> currencyLeagueMap = database.init.getCurrencyMap();
@@ -152,10 +153,6 @@ public class EntryManager extends Thread {
         this.currencyLeagueMap = currencyLeagueMap;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Cycle
-    //------------------------------------------------------------------------------------------------------------
-
     /**
      * Control method for starting up the minutely cycle
      */
@@ -163,19 +160,62 @@ public class EntryManager extends Thread {
         status.checkFlagStates();
         timer.computeCycleDelays(status);
 
-        // Upload gathered prices
-        timer.start("upload");
-        uploadRawEntries();
-        timer.clk("upload");
-
-        // Upload account names
-        timer.start("account");
-        uploadAccounts();
-        timer.clk("account");
-
-        // Recalculate prices in database
+        // Start cycle timer
         timer.start("cycle", Timer.TimerType.NONE);
-        cycleDatabase();
+
+        if (status.isSixtyBool()) {
+            timer.start("a21", Timer.TimerType.SIXTY);
+            database.flag.deleteItemEntries();
+            timer.clk("a21");
+        }
+
+        timer.start("a10");
+        database.flag.updateOutliers();
+        timer.clk("a10");
+
+        timer.start("a11");
+        database.flag.updateCounters();
+        timer.clk("a11");
+
+        timer.start("a12");
+        database.calc.calculatePrices();
+        timer.clk("a12");
+
+        timer.start("a13");
+        database.calc.calculateExalted();
+        timer.clk("a13");
+
+        if (status.isSixtyBool()) {
+            timer.start("a22", Timer.TimerType.SIXTY);
+            database.history.addHourly();
+            timer.clk("a22");
+
+            timer.start("a24", Timer.TimerType.SIXTY);
+            database.calc.calcDaily();
+            timer.clk("a24");
+        }
+
+        if (status.isTwentyFourBool()) {
+            timer.start("a30", Timer.TimerType.TWENTY);
+            database.history.addDaily();
+            timer.clk("a30");
+
+            timer.start("a31", Timer.TimerType.TWENTY);
+            database.calc.calcSpark();
+            timer.clk("a31");
+
+            timer.start("a32", Timer.TimerType.TWENTY);
+            database.history.removeOldItemEntries();
+            timer.clk("a32");
+        }
+
+        if (status.isSixtyBool()) {
+            timer.start("a25", Timer.TimerType.SIXTY);
+            database.flag.resetCounters();
+            timer.clk("a25");
+        }
+
+        // End cycle timer
         timer.clk("cycle");
 
         // Get latest currency rates
@@ -198,34 +238,31 @@ public class EntryManager extends Thread {
         }
 
         // Prepare cycle message
-        logger.info(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d / u:%4d / a:%4d",
+        logger.info(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d",
                 System.currentTimeMillis() - status.lastRunTime,
                 status.getTenRemainMin(),
                 status.getSixtyRemainMin(),
                 status.getTwentyFourRemainMin(),
                 timer.getLatest("cycle"),
-                timer.getLatest("prices"),
-                timer.getLatest("upload"),
-                timer.getLatest("account")));
+                timer.getLatest("prices")));
 
-        logger.info(String.format("[10%5d][11%5d][12%5d][13%5d][14%5d]",
+        logger.info(String.format("[10%5d][11%5d][12%5d][13%5d]",
                 timer.getLatest("a10"),
                 timer.getLatest("a11"),
                 timer.getLatest("a12"),
-                timer.getLatest("a13"),
-                timer.getLatest("a14")));
+                timer.getLatest("a13")));
 
-        if (status.isSixtyBool()) logger.info(String.format("[20%5d][21%5d][22%5d][23%5d][24%5d][25%5d]",
-                timer.getLatest("a20"),
+        if (status.isSixtyBool()) logger.info(String.format("[21%5d][22%5d][23%5d][24%5d][25%5d]",
                 timer.getLatest("a21"),
                 timer.getLatest("a22"),
                 timer.getLatest("a23"),
                 timer.getLatest("a24"),
                 timer.getLatest("a25")));
 
-        if (status.isTwentyFourBool()) logger.info(String.format("[30%5d][31%5d]",
+        if (status.isTwentyFourBool()) logger.info(String.format("[30%5d][31%5d][32%5d]",
                 timer.getLatest("a30"),
-                timer.getLatest("a31")));
+                timer.getLatest("a31"),
+                timer.getLatest("a32")));
 
         // Reset flags
         status.setTwentyFourBool(false);
@@ -237,121 +274,97 @@ public class EntryManager extends Thread {
     }
 
     /**
-     * Recalculates database data
-     */
-    private void cycleDatabase() {
-        timer.start("a10");
-        database.flag.updateOutliers();
-        timer.clk("a10");
-
-        timer.start("a11");
-        database.flag.updateCounters();
-        timer.clk("a11");
-
-        timer.start("a12");
-        database.calc.calculatePrices();
-        timer.clk("a12");
-
-        timer.start("a13");
-        database.calc.calculateExalted();
-        timer.clk("a13");
-
-        timer.start("a14");
-        database.history.removeOldItemEntries();
-        timer.clk("a14");
-
-        if (status.isSixtyBool()) {
-            timer.start("a22", Timer.TimerType.SIXTY);
-            database.history.addHourly();
-            timer.clk("a22");
-
-            timer.start("a24", Timer.TimerType.SIXTY);
-            database.calc.calcDaily();
-            timer.clk("a24");
-        }
-
-        if (status.isTwentyFourBool()) {
-            timer.start("a30", Timer.TimerType.TWENTY);
-            database.history.addDaily();
-            timer.clk("a30");
-
-            timer.start("a31", Timer.TimerType.TWENTY);
-            database.calc.calcSpark();
-            timer.clk("a31");
-        }
-
-        if (status.isSixtyBool()) {
-            timer.start("a25", Timer.TimerType.SIXTY);
-            database.flag.resetCounters();
-            timer.clk("a25");
-        }
-    }
-
-    /**
      * Adds entries to the databases
      *
      * @param reply APIReply object that a worker has downloaded and deserialized
      */
     public void parseItems(Mappers.APIReply reply) {
+        // Set of account names and items extracted from the API call
+        Set<Long> accounts = new HashSet<>();
+        Set<Long> nullStashes = new HashSet<>();
+        Set<RawItemEntry> items = new HashSet<>();
+        // Separate set for collecting account and character names
+        Set<RawUsernameEntry> usernames = new HashSet<>();
+
         for (Mappers.Stash stash : reply.stashes) {
-            Integer leagueId = null;
+            // Get league ID. If it's an unknown ID, skip this stash
+            Integer id_l = leagueManager.getLeagueId(stash.league);
+            if (id_l == null) {
+                continue;
+            }
+
+            // Calculate CRCs
+            long account_crc = calcCrc(stash.accountName);
+            long stash_crc = calcCrc(stash.id);
+
+            // If the stash is in use somewhere in the database
+            if (DbStashes.contains(stash_crc)) {
+                nullStashes.add(stash_crc);
+            }
+
+            if (stash.accountName ==  null || !stash.isPublic) {
+                continue;
+            }
+
+            boolean hasValidItems = false;
 
             for (Mappers.BaseItem baseItem : stash.items) {
-                if (!workerManager.isFlag_Run()) {
-                    return;
-                }
+                long item_crc = calcCrc(baseItem.getId());
 
-                if (leagueId == null) {
-                    String league = baseItem.getLeague();
-                    leagueId = leagueManager.getLeagueId(league);
+                // Create an ItemParser instance for every item in the stash, as one item
+                // may branch into multiple db entries. For examples, a Devoto's Devotion with
+                // a Tornado Shot enchantment creates 2 entries.
+                ItemParser itemParser = new ItemParser(baseItem, currencyLeagueMap.get(id_l));
 
-                    if (leagueId == null) {
-                        break;
-                    }
-                }
-
-                // Create ItemParser instance for the item
-                ItemParser itemParser = new ItemParser(relationManager, baseItem, currencyLeagueMap.get(leagueId), config);
-
-                // All  branched items should be discarded
+                // There was something off with the base item, discard it and don'tt create branched items
                 if (itemParser.isDiscard()) {
                     continue;
                 }
 
-                // Parse branched items
-                ArrayList<Item> items = itemParser.parseItems(baseItem);
-
-                for (Item item : items) {
-                    // This specific branched item should be discarded
+                // Parse branched items and create objects for db upload
+                for (Item item : itemParser.getBranchedItems()) {
+                    // Check if this specific branched item should be discarded
                     if (item.isDiscard()) {
                         continue;
                     }
 
-                    // Get item ID (if missing, index it)
-                    Integer itemId = relationManager.indexItem(item, leagueId);
-                    if (itemId == null) continue;
+                    // Get item's ID (if missing, index it)
+                    Integer id_d = relationManager.indexItem(item, id_l);
+                    if (id_d == null) {
+                        continue;
+                    }
 
-                    // Create a RawEntry
-                    RawEntry rawEntry = new RawEntry();
-                    rawEntry.setItemId(itemId);
-                    rawEntry.setLeagueId(leagueId);
-                    rawEntry.setAccCrc(calcCrc(stash.accountName));
-                    rawEntry.setPrice(itemParser.getPrice());
-                    rawEntry.setItmCrc(calcCrc(item.getId()));
+                    RawItemEntry rawItem = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc, itemParser.getPrice());
+                    items.remove(rawItem);
+                    items.add(rawItem);
 
-                    // Add it to the db queue
-                    entrySet.add(rawEntry);
+                    DbStashes.add(stash_crc);
+
+                    // Set flag to indicate stash contained at least 1 valid item
+                    if (!hasValidItems) {
+                        hasValidItems = true;
+                    }
                 }
             }
 
-            if (stash.accountName != null && stash.lastCharacterName != null && leagueId != null) {
-                accountSet.add(new AccountEntry(stash.accountName, stash.lastCharacterName, leagueId));
+            // If stash contained at least 1 valid item, save the account
+            if (hasValidItems) {
+                accounts.add(account_crc);
+            }
+
+            // As this is a completely separate service, collect all character and account names separately
+            if (stash.lastCharacterName != null) {
+                usernames.add(new RawUsernameEntry(stash.accountName, stash.lastCharacterName, id_l));
             }
         }
-    }
 
-    public void setWorkerManager(WorkerManager workerManager) {
-        this.workerManager = workerManager;
+        // Shovel everything to db
+        long start = System.currentTimeMillis();
+        database.upload.uploadAccounts(accounts);
+        database.flag.resetStashReferences(nullStashes);
+        database.upload.uploadItems(items);
+        database.upload.uploadUsernames(usernames);
+        System.out.printf("%d ms\n", System.currentTimeMillis() - start);
     }
 
     private static long calcCrc(String str) {
@@ -362,5 +375,13 @@ public class EntryManager extends Thread {
             crc.update(str.getBytes());
             return crc.getValue();
         }
+    }
+
+    public void setWorkerManager(WorkerManager workerManager) {
+        this.workerManager = workerManager;
+    }
+
+    public Set<Long> getDbStashes() {
+        return DbStashes;
     }
 }

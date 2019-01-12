@@ -288,7 +288,7 @@ public class Init {
      * @return Local changeId or null on error
      */
     public String getChangeID() {
-        String query = "SELECT * FROM data_changeId; ";
+        String query = "SELECT changeId FROM data_changeId; ";
 
         try {
             if (database.connection.isClosed()) {
@@ -305,5 +305,29 @@ public class Init {
         }
 
         return null;
+    }
+
+    public boolean getStashIds(Set<Long> set) {
+        String query = "SELECT DISTINCT stash_crc FROM league_entries WHERE stash_crc IS NOT NULL; ";
+
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    set.add(resultSet.getLong(1));
+                }
+
+                return true;
+            }
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+
+        return false;
     }
 }

@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import poe.db.Database;
 import poe.manager.account.AccountManager;
 import poe.manager.entry.EntryManager;
-import poe.manager.entry.RawEntry;
+import poe.manager.entry.item.ItemParser;
 import poe.manager.league.LeagueManager;
 import poe.manager.relation.RelationManager;
 import poe.manager.worker.WorkerManager;
@@ -37,7 +37,6 @@ public class Main {
         try {
             // Load config
             config = ConfigFactory.load("config");
-            RawEntry.setPrecision(config.getInt("precision.precision"));
 
             // Initialize database connector
             database = new Database(config);
@@ -59,6 +58,13 @@ public class Main {
             workerManager = new WorkerManager(entryManager, database, config);
 
             entryManager.setWorkerManager(workerManager);
+
+            // Get all distinct stash ids that are in the db
+            success = database.init.getStashIds(entryManager.getDbStashes());
+            if (!success) return;
+
+            ItemParser.setConfig(config);
+            ItemParser.setRelationManager(relations);
 
             // Parse CLI parameters
             success = parseCommandParameters(args);
@@ -87,6 +93,9 @@ public class Main {
      */
     private static boolean parseCommandParameters(String[] args) {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
+
+        //newArgs.add("-id");
+        //newArgs.add("321669719-333029667-314326980-360285234-340463149");
 
         if (!newArgs.contains("-workers")) {
             workerManager.spawnWorkers(config.getInt("worker.defaultCount"));
