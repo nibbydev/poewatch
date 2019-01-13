@@ -14,8 +14,8 @@ import java.util.*;
  * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    private static Logger logger = LoggerFactory.getLogger(RelationManager.class);
-    private Database database;
+    private final Logger logger;
+    private final Database database;
 
     private Map<Key, Integer> keyToId = new HashMap<>();
     private static Map<String, String> currencyAliasToName = CurrencyAliasInitializer.GetAliasMap();
@@ -24,8 +24,9 @@ public class RelationManager {
     private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
     private static Map<String, Set<String>> baseMap = BaseItemInitializer.GenBaseMap();
 
-    public RelationManager(Database database) {
-        this.database = database;
+    public RelationManager(Database db) {
+        this.logger = LoggerFactory.getLogger(RelationManager.class);
+        this.database = db;
     }
 
     /**

@@ -6,10 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
 import poe.manager.account.AccountManager;
-import poe.manager.entry.EntryManager;
 import poe.manager.entry.item.ItemParser;
 import poe.manager.league.LeagueManager;
 import poe.manager.relation.RelationManager;
+import poe.manager.worker.Worker;
 import poe.manager.worker.WorkerManager;
 
 import java.io.BufferedReader;
@@ -21,7 +21,6 @@ import java.util.Arrays;
 public class Main {
     private static AccountManager accountManager;
     private static WorkerManager workerManager;
-    private static EntryManager entryManager;
     private static Database database;
     private static Logger logger = LoggerFactory.getLogger(Main.class);
     private static Config config;
@@ -54,13 +53,10 @@ public class Main {
             if (!success) return;
 
             accountManager = new AccountManager(database);
-            entryManager = new EntryManager(database, leagueManager, accountManager, relations, config);
-            workerManager = new WorkerManager(entryManager, database, config);
-
-            entryManager.setWorkerManager(workerManager);
+            workerManager = new WorkerManager(leagueManager, relations, accountManager, database, config);
 
             // Get all distinct stash ids that are in the db
-            success = database.init.getStashIds(entryManager.getDbStashes());
+            success = database.init.getStashIds(Worker.getDbStashes());
             if (!success) return;
 
             ItemParser.setConfig(config);
@@ -71,7 +67,6 @@ public class Main {
             if (!success) return;
 
             // Start controllers
-            entryManager.start();
             accountManager.start();
             workerManager.start();
 
@@ -80,7 +75,6 @@ public class Main {
         } finally {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();
-            if (entryManager != null) entryManager.stopController();
             if (database != null) database.disconnect();
         }
     }
@@ -93,9 +87,6 @@ public class Main {
      */
     private static boolean parseCommandParameters(String[] args) {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
-
-        //newArgs.add("-id");
-        //newArgs.add("321669719-333029667-314326980-360285234-340463149");
 
         if (!newArgs.contains("-workers")) {
             workerManager.spawnWorkers(config.getInt("worker.defaultCount"));

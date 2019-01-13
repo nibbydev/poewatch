@@ -5,81 +5,79 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
-import poe.manager.entry.EntryManager;
+import poe.manager.entry.RawItemEntry;
+import poe.manager.entry.RawUsernameEntry;
+import poe.manager.entry.item.Item;
+import poe.manager.entry.item.ItemParser;
 import poe.manager.entry.item.Mappers;
+import poe.manager.league.LeagueManager;
+import poe.manager.relation.RelationManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 
 /**
  * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
  */
 public class Worker extends Thread {
-    private static Logger logger = LoggerFactory.getLogger(Worker.class);
-    private final Gson gson = new Gson();
-    private Config config;
+    private static final Logger logger = LoggerFactory.getLogger(Worker.class);
+    private static final Set<Long> DbStashes = new HashSet<>(100000);
+    private static final Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+    private static final CRC32 crc = new CRC32();
+
+    private final WorkerManager workerManager;
+    private final LeagueManager leagueManager;
+    private final RelationManager relationManager;
+    private final Database database;
+    private final Config config;
+    private final Gson gson;
 
     private static long lastPullTime;
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;
     private int workerId;
-    private EntryManager entryManager;
-    private WorkerManager workerManager;
-    private Database database;
 
     private final Object jobMonitor = new Object();
     private final Object pauseMonitor = new Object();
     private boolean pauseFlag = false;
     private boolean isPaused = false;
 
-    private static final Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
+    public Worker(WorkerManager wm, LeagueManager lm, RelationManager rm, Database db, Config cnf, int id) {
+        this.workerManager = wm;
+        this.leagueManager = lm;
+        this.relationManager = rm;
+        this.database = db;
+        this.config = cnf;
+        this.workerId = id;
 
-    public Worker(EntryManager entryManager, WorkerManager workerManager, Database database, Config config) {
-        this.entryManager = entryManager;
-        this.workerManager = workerManager;
-        this.database = database;
-        this.config = config;
+        gson = new Gson();
     }
 
     /**
      * Contains main loop. Checks for new jobs and processes them
      */
     public void run() {
-        String replyJSONString;
-        Mappers.APIReply reply;
-
-        // Run while flag is true
         while (flagLocalRun) {
-            // If there's no new job, sleep
             waitForJob();
 
-            // Check if worker should close after being woken from sleep
-            if (!flagLocalRun) break;
-
-            // In case the notify came from some other source or there was a timeout, make sure the worker doesn't
-            // continue with an empty job
-            if (job == null) continue;
-
-            // Download and parse data according to the changeID.
-            replyJSONString = downloadData();
-
-            // If download was unsuccessful, stop
-            if (replyJSONString != null) {
-                // Deserialize the JSON string
-                reply = gson.fromJson(replyJSONString, Mappers.APIReply.class);
+            String replyString = download();
+            if (replyString != null) {
+                Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
 
                 if (pauseFlag) {
                     pauseWorker();
                 }
 
-                // Parse the deserialized JSON if deserialization was successful
                 if (reply != null && reply.next_change_id != null) {
-                    entryManager.parseItems(reply);
+                    parseItems(reply);
                 }
             }
 
@@ -94,12 +92,10 @@ public class Worker extends Thread {
      */
     public void stopWorker() {
         flagLocalRun = false;
-        wakeLocalMonitor();
 
-        while (!readyToExit) try {
-            Thread.sleep(50);
+        while (!readyToExit) {
             wakeLocalMonitor();
-        } catch (InterruptedException ex) {
+            sleepFor(50);
         }
     }
 
@@ -108,7 +104,7 @@ public class Worker extends Thread {
      *
      * @return Whole stash batch as a string
      */
-    private String downloadData() {
+    private String download() {
         StringBuilder stringBuilderBuffer = new StringBuilder();
         byte[] byteBuffer = new byte[config.getInt("worker.bufferSize")];
         boolean regexLock = true;
@@ -117,7 +113,7 @@ public class Worker extends Thread {
 
         // Sleep for x milliseconds
         while (System.currentTimeMillis() - Worker.lastPullTime < config.getInt("worker.downloadDelay")) {
-            sleepX((int) (config.getInt("worker.downloadDelay") - System.currentTimeMillis() + Worker.lastPullTime));
+            sleepFor((int) (config.getInt("worker.downloadDelay") - System.currentTimeMillis() + Worker.lastPullTime));
         }
 
         Worker.lastPullTime = System.currentTimeMillis();
@@ -176,7 +172,7 @@ public class Worker extends Thread {
 
             // Add old changeID to the pool only if a new one hasn't been found
             if (regexLock) {
-                sleepX(config.getInt("worker.lockTimeout"));
+                sleepFor(config.getInt("worker.lockTimeout"));
                 workerManager.setNextChangeID(job);
             }
 
@@ -196,11 +192,104 @@ public class Worker extends Thread {
     }
 
     /**
+     * Adds entries to the databases
+     *
+     * @param reply APIReply object that a worker has downloaded and deserialized
+     */
+    private void parseItems(Mappers.APIReply reply) {
+        // Set of account names and items extracted from the API call
+        Set<Long> accounts = new HashSet<>();
+        Set<Long> nullStashes = new HashSet<>();
+        Set<RawItemEntry> items = new HashSet<>();
+        // Separate set for collecting account and character names
+        Set<RawUsernameEntry> usernames = new HashSet<>();
+
+        for (Mappers.Stash stash : reply.stashes) {
+            // Get league ID. If it's an unknown ID, skip this stash
+            Integer id_l = leagueManager.getLeagueId(stash.league);
+            if (id_l == null) {
+                continue;
+            }
+
+            // Calculate CRCs
+            long account_crc = calcCrc(stash.accountName);
+            long stash_crc = calcCrc(stash.id);
+
+            // If the stash is in use somewhere in the database
+            if (DbStashes.contains(stash_crc)) {
+                nullStashes.add(stash_crc);
+            }
+
+            if (stash.accountName == null || !stash.isPublic) {
+                continue;
+            }
+
+            boolean hasValidItems = false;
+
+            for (Mappers.BaseItem baseItem : stash.items) {
+                long item_crc = calcCrc(baseItem.getId());
+
+                // Create an ItemParser instance for every item in the stash, as one item
+                // may branch into multiple db entries. For examples, a Devoto's Devotion with
+                // a Tornado Shot enchantment creates 2 entries.
+                ItemParser itemParser = new ItemParser(baseItem, workerManager.getCurrencyLeagueMap(id_l));
+
+                // There was something off with the base item, discard it and don'tt create branched items
+                if (itemParser.isDiscard()) {
+                    continue;
+                }
+
+                // Parse branched items and create objects for db upload
+                for (Item item : itemParser.getBranchedItems()) {
+                    // Check if this specific branched item should be discarded
+                    if (item.isDiscard()) {
+                        continue;
+                    }
+
+                    // Get item's ID (if missing, index it)
+                    Integer id_d = relationManager.indexItem(item, id_l);
+                    if (id_d == null) {
+                        continue;
+                    }
+
+                    RawItemEntry rawItem = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc, itemParser.getPrice());
+                    items.remove(rawItem);
+                    items.add(rawItem);
+
+                    // Set flag to indicate stash contained at least 1 valid item
+                    if (!hasValidItems) {
+                        hasValidItems = true;
+                    }
+                }
+            }
+
+            // If stash contained at least 1 valid item, save the account
+            if (hasValidItems) {
+                DbStashes.add(stash_crc);
+                accounts.add(account_crc);
+            }
+
+            // As this is a completely separate service, collect all character and account names separately
+            if (stash.lastCharacterName != null) {
+                usernames.add(new RawUsernameEntry(stash.accountName, stash.lastCharacterName, id_l));
+            }
+        }
+
+        // Shovel everything to db
+        long start = System.currentTimeMillis();
+        database.upload.uploadAccounts(accounts);
+        database.flag.resetStashReferences(nullStashes);
+        database.upload.uploadItems(items);
+        database.upload.uploadUsernames(usernames);
+        System.out.printf("%d ms\n", System.currentTimeMillis() - start);
+    }
+
+    /**
      * Sleeps for designated amount of time
      *
      * @param timeMS Time in milliseconds to sleep
      */
-    private void sleepX(int timeMS) {
+    private void sleepFor(int timeMS) {
         try {
             Thread.sleep(timeMS);
         } catch (InterruptedException ex) {
@@ -208,16 +297,17 @@ public class Worker extends Thread {
         }
     }
 
-    /**
-     * Sleeps until monitor object is notified
-     */
     private void waitForJob() {
         synchronized (jobMonitor) {
-            // Wait while worker is supposed to run and there's no new job
             while (flagLocalRun && job == null) {
                 try {
                     jobMonitor.wait(100);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+
+                if (pauseFlag) {
+                    pauseWorker();
                 }
             }
         }
@@ -232,7 +322,8 @@ public class Worker extends Thread {
             while (pauseFlag) {
                 try {
                     pauseMonitor.wait(100);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
                 }
             }
 
@@ -251,6 +342,16 @@ public class Worker extends Thread {
         }
     }
 
+    private static long calcCrc(String str) {
+        if (str == null) {
+            return 0;
+        } else {
+            crc.reset();
+            crc.update(str.getBytes());
+            return crc.getValue();
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Getters and setters
     //------------------------------------------------------------------------------------------------------------
@@ -259,22 +360,12 @@ public class Worker extends Thread {
         return workerId;
     }
 
-    public void setWorkerId(int workerId) {
-        this.workerId = workerId;
-    }
-
-    public boolean hasJob() {
-        return job != null;
-    }
-
     public String getJob() {
         return job;
     }
 
     public void setJob(String job) {
         this.job = job;
-
-        // Wake the worker so it can start working on the job
         wakeLocalMonitor();
     }
 
@@ -284,5 +375,9 @@ public class Worker extends Thread {
 
     public void setPauseFlag(boolean pauseFlag) {
         this.pauseFlag = pauseFlag;
+    }
+
+    public static Set<Long> getDbStashes() {
+        return DbStashes;
     }
 }

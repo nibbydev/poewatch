@@ -5,85 +5,230 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
-import poe.manager.entry.EntryManager;
+import poe.manager.account.AccountManager;
+import poe.manager.entry.StatusElement;
 import poe.manager.entry.item.Mappers;
+import poe.manager.entry.timer.Timer;
+import poe.manager.league.LeagueManager;
+import poe.manager.relation.RelationManager;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-
-;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages worker objects (eg. distributing jobs, adding/removing workers)
  */
 public class WorkerManager extends Thread {
-    private static Logger logger = LoggerFactory.getLogger(WorkerManager.class);
-    private final Gson gson = new Gson();
-    private final Object monitor = new Object();
-    private Config config;
-    private ArrayList<Worker> workerList = new ArrayList<>();
-    private volatile boolean flag_Run = true;
+    private static final Logger logger = LoggerFactory.getLogger(WorkerManager.class);
+
+    private final Config config;
+    private final Database database;
+    private final LeagueManager leagueManager;
+    private final RelationManager relationManager;
+    private final AccountManager accountManager;
+
+    private final StatusElement status;
+    private final Timer timer;
+    private final Gson gson;
+
+    private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
+    private final ArrayList<Worker> workerList = new ArrayList<>();
+    private volatile boolean flagRun = true;
     private volatile boolean readyToExit = false;
     private String nextChangeID;
-    private EntryManager entryManager;
-    private Database database;
 
-    public WorkerManager(EntryManager entryManager, Database database, Config config) {
-        this.entryManager = entryManager;
-        this.database = database;
-        this.config = config;
+    public WorkerManager(LeagueManager lm, RelationManager rm, AccountManager am, Database db, Config cnf) {
+        this.leagueManager = lm;
+        this.relationManager = rm;
+        this.accountManager = am;
+        this.database = db;
+        this.config = cnf;
+
+        this.timer = new Timer(db);
+        this.status = new StatusElement(cnf);
+        this.gson = new Gson();
+
+        if (!cnf.getBoolean("misc.enableTimers")) {
+            timer.stop();
+        }
     }
 
     /**
      * Contains main loop. Checks for open jobs and assigns them to workers
      */
     public void run() {
-        // Run main loop while flag is up
-        while (flag_Run) {
-            if (nextChangeID == null) waitOnMonitor();
+        status.fixCounters();
+        timer.getDelays();
+
+        logger.info(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
+                10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
+                60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
+                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000));
+
+        while (flagRun) {
+            // If minutely cycle should be initiated
+            if (System.currentTimeMillis() - status.lastRunTime > config.getInt("entry.sleepTime")) {
+                // Wait until all workers are paused
+                setWorkerSleepState(true, true);
+
+                status.lastRunTime = System.currentTimeMillis();
+                cycle();
+
+                // Wait until all workers are resumed
+                setWorkerSleepState(false, true);
+            }
 
             // While there's a job that needs to be given out
-            while (flag_Run && nextChangeID != null) {
+            if (nextChangeID != null) {
                 for (Worker worker : workerList) {
-                    if (worker.hasJob()) continue;
+                    if (worker.getJob() != null) {
+                        continue;
+                    }
 
                     worker.setJob(nextChangeID);
                     nextChangeID = null;
-                    break;
                 }
+            }
 
-                // Wait for a moment if all workers are busy
-                if (nextChangeID != null) {
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
             }
         }
 
+        // If main loop was interrupted, raise flag indicating program is ready to safely exit
         readyToExit = true;
     }
 
     /**
-     * Sleeps until monitor object is notified
+     * Minutely cycle init
      */
-    private void waitOnMonitor() {
-        synchronized (monitor) {
-            try {
-                monitor.wait(100);
-            } catch (InterruptedException e) {
-            }
+    private void cycle() {
+        status.checkFlagStates();
+        timer.computeCycleDelays(status);
+
+        // Start cycle timer
+        timer.start("cycle", Timer.TimerType.NONE);
+
+        if (status.isSixtyBool()) {
+            timer.start("a21", Timer.TimerType.SIXTY);
+            database.flag.deleteItemEntries();
+            timer.clk("a21");
         }
+
+        timer.start("a10");
+        database.flag.updateOutliers();
+        timer.clk("a10");
+
+        timer.start("a11");
+        database.flag.updateCounters();
+        timer.clk("a11");
+
+        timer.start("a12");
+        database.calc.calculatePrices();
+        timer.clk("a12");
+
+        timer.start("a13");
+        database.calc.calculateExalted();
+        timer.clk("a13");
+
+        if (status.isSixtyBool()) {
+            timer.start("a22", Timer.TimerType.SIXTY);
+            database.history.addHourly();
+            timer.clk("a22");
+
+            timer.start("a24", Timer.TimerType.SIXTY);
+            database.calc.calcDaily();
+            timer.clk("a24");
+        }
+
+        if (status.isTwentyFourBool()) {
+            timer.start("a30", Timer.TimerType.TWENTY);
+            database.history.addDaily();
+            timer.clk("a30");
+
+            timer.start("a31", Timer.TimerType.TWENTY);
+            database.calc.calcSpark();
+            timer.clk("a31");
+
+            timer.start("a32", Timer.TimerType.TWENTY);
+            database.history.removeOldItemEntries();
+            timer.clk("a32");
+        }
+
+        if (status.isSixtyBool()) {
+            timer.start("a25", Timer.TimerType.SIXTY);
+            database.flag.resetCounters();
+            timer.clk("a25");
+        }
+
+        // End cycle timer
+        timer.clk("cycle");
+
+        // Get latest currency rates
+        timer.start("prices");
+        loadCurrency();
+        timer.clk("prices");
+
+        // Check league API
+        if (status.isTenBool()) {
+            timer.start("leagues", Timer.TimerType.TEN);
+            leagueManager.cycle();
+            timer.clk("leagues");
+        }
+
+        // Check if there are matching account name changes
+        if (status.isTwentyFourBool()) {
+            timer.start("accountChanges", Timer.TimerType.TWENTY);
+            accountManager.checkAccountNameChanges();
+            timer.clk("accountChanges");
+        }
+
+        // Prepare cycle message
+        logger.info(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d",
+                System.currentTimeMillis() - status.lastRunTime,
+                status.getTenRemainMin(),
+                status.getSixtyRemainMin(),
+                status.getTwentyFourRemainMin(),
+                timer.getLatest("cycle"),
+                timer.getLatest("prices")));
+
+        logger.info(String.format("[10%5d][11%5d][12%5d][13%5d]",
+                timer.getLatest("a10"),
+                timer.getLatest("a11"),
+                timer.getLatest("a12"),
+                timer.getLatest("a13")));
+
+        if (status.isSixtyBool()) logger.info(String.format("[21%5d][22%5d][23%5d][24%5d][25%5d]",
+                timer.getLatest("a21"),
+                timer.getLatest("a22"),
+                timer.getLatest("a23"),
+                timer.getLatest("a24"),
+                timer.getLatest("a25")));
+
+        if (status.isTwentyFourBool()) logger.info(String.format("[30%5d][31%5d][32%5d]",
+                timer.getLatest("a30"),
+                timer.getLatest("a31"),
+                timer.getLatest("a32")));
+
+        // Reset flags
+        status.setTwentyFourBool(false);
+        status.setSixtyBool(false);
+        status.setTenBool(false);
+
+        // Add new delays to database
+        timer.uploadDelays(status);
     }
 
     /**
      * Stops all active Workers and this object's process
      */
     public void stopController() {
-        flag_Run = false;
+        flagRun = false;
 
         // Loop though every worker and call stop method
         for (Worker worker : workerList) {
@@ -97,13 +242,8 @@ public class WorkerManager extends Thread {
         // Wait until run() function is ready to exit
         while (!readyToExit) try {
             Thread.sleep(50);
-
-            // Wake the monitor that's holding up the main loop, allowing safe exit
-            synchronized (getMonitor()) {
-                getMonitor().notify();
-            }
-
         } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
 
         logger.info("Controller stopped");
@@ -129,10 +269,7 @@ public class WorkerManager extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker worker = new Worker(entryManager, this, database, config);
-
-            // Set some worker PROPERTIES and start
-            worker.setWorkerId(i);
+            Worker worker = new Worker(this, leagueManager, relationManager, database, config, i);
             worker.start();
 
             // Add worker to local list
@@ -216,36 +353,50 @@ public class WorkerManager extends Thread {
                 Integer.parseInt(nextChangeID.substring(nextChangeID.lastIndexOf('-') + 1))) {
             nextChangeID = newChangeID;
         }
-
-        synchronized (monitor) {
-            monitor.notifyAll();
-        }
     }
 
-    /**
-     * Shares monitor to other classes
-     *
-     * @return Monitor object
-     */
-    public Object getMonitor() {
-        return monitor;
-    }
-
-    public boolean getWorkerSleepState() {
-        for (Worker worker : workerList) {
-            if (!worker.isPaused()) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void setWorkerSleepState(boolean state) {
+    private void setWorkerSleepState(boolean state, boolean wait) {
         System.out.println(state ? "Pausing workers.." : "Resuming workers..");
 
         for (Worker worker : workerList) {
             worker.setPauseFlag(state);
         }
+
+        // User wants to wait until all workers are paused/resumed
+        while (wait) {
+            boolean tmp = false;
+
+            // If there's at least 1 worker that doesn't match the state
+            for (Worker worker : workerList) {
+                if (worker.isPaused() != state) {
+                    tmp = true;
+                    break;
+                }
+            }
+
+            if (!tmp) {
+                break;
+            }
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void loadCurrency() {
+        Map<Integer, Map<String, Double>> map = database.init.getCurrencyMap();
+
+        if (map == null) {
+            return;
+        }
+
+        currencyLeagueMap = map;
+    }
+
+    public Map<String, Double> getCurrencyLeagueMap(int leagueId) {
+        return currencyLeagueMap.get(leagueId);
     }
 }

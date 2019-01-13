@@ -31,7 +31,7 @@ public class Calc {
                         "  FROM     league_entries AS le" +
                         "  JOIN (" +
                         "    SELECT DISTINCT account_crc AS crc FROM league_accounts " +
-                        "    WHERE updated > DATE_SUB(NOW(), INTERVAL 24 HOUR) " +
+                        "    WHERE updated > DATE_SUB(NOW(), INTERVAL 1 HOUR) " +
                         "  ) AS active_accounts ON le.account_crc = active_accounts.crc " +
                         "  WHERE    le.stash_crc IS NOT NULL " +
                         "    AND    le.outlier = 0 " +
