@@ -142,7 +142,6 @@ CREATE TABLE league_items (
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
-    INDEX volatile (volatile),
     INDEX total    (total),
     INDEX median   (median),
     INDEX inc      (inc)
@@ -308,7 +307,7 @@ CREATE TABLE web_feedback (
     ip        VARCHAR(15)   NOT NULL,
     contact   VARCHAR(128)  NOT NULL,
     message   TEXT          NOT NULL,
-    
+
     INDEX ip      (ip),
     INDEX `time`  (`time`),
     INDEX contact (contact)
@@ -428,8 +427,8 @@ VALUES
     (12,    'helmet',     'Helmets'),
     (12,    'chest',      'Body Armour'),
     (12,    'gloves',     'Gloves'),
-    (12,    'boots',      'Boots');
-    (12,    'onemace,'	  '1H Maces'),
+    (12,    'boots',      'Boots'),
+    (12,    'onemace',	  '1H Maces'),
     (12,    'sceptre',	  'Sceptres'),
     (12,    'bow',	      'Bows'),
     (12,    'wand',	      'Wands'),
