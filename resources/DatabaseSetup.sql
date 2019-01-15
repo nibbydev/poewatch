@@ -160,7 +160,7 @@ CREATE TABLE league_accounts (
   updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
 
   INDEX updated (updated)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure league_entries
@@ -170,14 +170,13 @@ CREATE TABLE league_entries (
   id_l         SMALLINT       UNSIGNED NOT NULL,
   id_d         INT            UNSIGNED NOT NULL,
 
-  account_crc  INT            UNSIGNED NOT NULL,     -- CRC32 of account name
-  stash_crc    INT            UNSIGNED DEFAULT NULL, -- CRC16 of stash id
-  item_crc     INT            UNSIGNED NOT NULL,     -- CRC16 of item id
+  account_crc  INT            UNSIGNED NOT NULL,
+  stash_crc    INT            UNSIGNED DEFAULT NULL,
+  item_crc     INT            UNSIGNED NOT NULL,
 
   discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
   updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
 
-  outlier      BIT(1)         NOT NULL DEFAULT 0,
   updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
   price        DECIMAL(14,8)  UNSIGNED NOT NULL,
 
