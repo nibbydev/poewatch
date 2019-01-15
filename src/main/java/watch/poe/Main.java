@@ -5,6 +5,7 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
+import poe.Logic.PriceCalculator;
 import poe.manager.account.AccountManager;
 import poe.manager.entry.item.ItemParser;
 import poe.manager.league.LeagueManager;
@@ -41,6 +42,8 @@ public class Main {
             database = new Database(config);
             success = database.connect();
             if (!success) return;
+
+            PriceCalculator.setDatabase(database);
 
             // Init league manager
             LeagueManager leagueManager = new LeagueManager(database, config);

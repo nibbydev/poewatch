@@ -279,7 +279,7 @@ public class Worker extends Thread {
         long start = System.currentTimeMillis();
         database.upload.uploadAccounts(accounts);
         database.flag.resetStashReferences(nullStashes);
-        database.upload.uploadItems(items);
+        database.upload.uploadEntries(items);
         database.upload.uploadUsernames(usernames);
         System.out.printf("%d ms\n", System.currentTimeMillis() - start);
     }

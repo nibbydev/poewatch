@@ -5,6 +5,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
+import poe.Logic.PriceCalculator;
 import poe.manager.account.AccountManager;
 import poe.manager.entry.StatusElement;
 import poe.manager.entry.item.Mappers;
@@ -14,9 +15,7 @@ import poe.manager.relation.RelationManager;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Manages worker objects (eg. distributing jobs, adding/removing workers)
@@ -121,7 +120,7 @@ public class WorkerManager extends Thread {
         }
 
         timer.start("a10");
-        database.flag.updateOutliers();
+        PriceCalculator.run();
         timer.clk("a10");
 
         timer.start("a11");
@@ -129,12 +128,8 @@ public class WorkerManager extends Thread {
         timer.clk("a11");
 
         timer.start("a12");
-        database.calc.calculatePrices();
-        timer.clk("a12");
-
-        timer.start("a13");
         database.calc.calculateExalted();
-        timer.clk("a13");
+        timer.clk("a12");
 
         if (status.isSixtyBool()) {
             timer.start("a22", Timer.TimerType.SIXTY);
@@ -197,11 +192,10 @@ public class WorkerManager extends Thread {
                 timer.getLatest("cycle"),
                 timer.getLatest("prices")));
 
-        logger.info(String.format("[10%5d][11%5d][12%5d][13%5d]",
+        logger.info(String.format("[10%5d][11%5d][12%5d]",
                 timer.getLatest("a10"),
                 timer.getLatest("a11"),
-                timer.getLatest("a12"),
-                timer.getLatest("a13")));
+                timer.getLatest("a12")));
 
         if (status.isSixtyBool()) logger.info(String.format("[21%5d][22%5d][23%5d][24%5d][25%5d]",
                 timer.getLatest("a21"),

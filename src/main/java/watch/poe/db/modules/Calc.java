@@ -4,7 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
 
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Calc {
     private static Logger logger = LoggerFactory.getLogger(Calc.class);
@@ -14,38 +20,71 @@ public class Calc {
         this.database = database;
     }
 
-    /**
-     * Calculates mean, median and mode price for items in table `league_items` based on entries in `league_entries`
-     *
-     * @return True on success
-     */
-    public boolean calculatePrices() {
-        String query  = "UPDATE league_items AS i " +
-                        "JOIN ( " +
-                        "  SELECT   le.id_l, le.id_d, " +
-                        "           AVG(le.price)        AS mean, " +
-                        "           MEDIAN(le.price)     AS median, " +
-                        "           stats_mode(le.price) AS mode, " +
-                        "           MIN(le.price)        AS min, " +
-                        "           MAX(le.price)        AS max " +
-                        "  FROM     league_entries AS le" +
-                        "  JOIN (" +
-                        "    SELECT DISTINCT account_crc AS crc FROM league_accounts " +
-                        "    WHERE updated > DATE_SUB(NOW(), INTERVAL 1 HOUR) " +
-                        "  ) AS active_accounts ON le.account_crc = active_accounts.crc " +
-                        "  WHERE    le.stash_crc IS NOT NULL " +
-                        "    AND    le.outlier = 0 " +
-                        "  GROUP BY le.id_l, le.id_d " +
-                        ") AS    e " +
-                        "  ON    i.id_l = e.id_l " +
-                        "    AND i.id_d = e.id_d " +
-                        "SET     i.mean   = e.mean, " +
-                        "        i.median = e.median, " +
-                        "        i.mode   = e.mode, " +
-                        "        i.min    = e.min, " +
-                        "        i.max    = e.max ";
+    public boolean getEntries(Map<Integer, Map<Integer, List<Double>>> entries) {
+        String query =  "select le.id_l, le.id_d, price " +
+                        "from league_entries as le " +
+                        "join ( " +
+                        "  select distinct id_l, id_d from league_entries " +
+                        "  where stash_crc is not null " +
+                        "    and updated > date_sub(now(), interval 65 second) " +
+                        ") as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d " +
+                        "join ( " +
+                        "  select distinct account_crc from league_accounts " +
+                        "  where updated > date_sub(now(), interval 1 hour) " +
+                        ") as foo2 on le.account_crc = foo2.account_crc " +
+                        "where le.stash_crc is not null " +
+                        "order by le.id_l asc, le.id_d asc ";
 
-        return database.executeUpdateQueries(query);
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                // Get first entry
+                resultSet.next();
+                int id_l = resultSet.getInt(1);
+                int id_d = resultSet.getInt(2);
+                Map<Integer, List<Double>> entryMap = new HashMap<>();
+                List<Double> entryList = new ArrayList<>();
+
+                do {
+                    // If league changed
+                    if (id_l != resultSet.getInt(1)) {
+                        // Store previous map
+                        entries.put(id_l, entryMap);
+                        // Get next league id
+                        id_l = resultSet.getInt(1);
+                        // Create new map for new league
+                        entryMap = new HashMap<>();
+                    }
+
+                    // If item changed
+                    if (id_d != resultSet.getInt(2)) {
+                        // Store previous list
+                        entryMap.put(id_d, entryList);
+                        // Get next item id
+                        id_d = resultSet.getInt(2);
+                        // Create new list for new item
+                        entryList = new ArrayList<>();
+                    }
+
+                    entryList.add(resultSet.getDouble(3));
+                } while (resultSet.next());
+
+                // Add last values
+                entryMap.put(id_d, entryList);
+                entries.put(id_l, entryMap);
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+
+        return false;
     }
 
     /**

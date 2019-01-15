@@ -3,6 +3,7 @@ package poe.db.modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.db.Database;
+import poe.Logic.PriceCalculator;
 import poe.manager.entry.*;
 import poe.manager.entry.timer.Timer;
 import poe.manager.entry.timer.TimerList;
@@ -21,13 +22,13 @@ public class Upload {
         this.database = database;
     }
 
-    public boolean uploadItems(Set<RawItemEntry> set) {
+
+    public boolean uploadEntries(Set<RawItemEntry> set) {
         String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, price) " +
                         "VALUES (?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
-                        "  updates = updates + 1, " +
-                        "  updated = now()," +
-                        "  outlier = 1, " +
+                        "  updates = IF(price = VALUES(price), updates, updates + 1)," +
+                        "  updated = IF(price = VALUES(price), updated, now())," +
                         "  price = VALUES(price), " +
                         "  stash_crc = VALUES(stash_crc); ";
 
@@ -53,6 +54,48 @@ public class Upload {
                     statement.setLong(5, raw.item_crc);
                     statement.setString(6, priceStr);
                     statement.addBatch();
+                }
+
+                statement.executeBatch();
+            }
+
+            database.connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
+
+
+    public boolean updateItems(Map<Integer, Map<Integer, PriceCalculator.Result>> results) {
+        String query =  "update league_items " +
+                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ? " +
+                        "where id_l = ? and id_d = ? " +
+                        "limit 1; ";
+
+        try {
+            if (database.connection.isClosed()) {
+                return false;
+            }
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                for (int id_l : results.keySet()) {
+                    Map<Integer, PriceCalculator.Result> tmpMap = results.get(id_l);
+
+                    for (int id_d : tmpMap.keySet()) {
+                        PriceCalculator.Result result = tmpMap.get(id_d);
+
+                        statement.setDouble(1, result.mean);
+                        statement.setDouble(2, result.median);
+                        statement.setDouble(3, result.mode);
+                        statement.setDouble(4, result.min);
+                        statement.setDouble(5, result.max);
+                        statement.setInt(6, id_l);
+                        statement.setInt(7, id_d);
+
+                        statement.addBatch();
+                    }
                 }
 
                 statement.executeBatch();

@@ -67,28 +67,6 @@ public class Flag {
         return database.executeUpdateQueries(query1);
     }
 
-    public boolean updateOutliers() {
-        String query  =
-                "update league_entries as e4 " +
-                "join ( " +
-                "  select e1.id_l, e1.id_d, " +
-                "    median(e1.price) / 1.5 as minMed, " +
-                "    median(e1.price) * 1.2 as maxMed " +
-                "  from league_entries as e1 " +
-                "  join ( " +
-                "    select distinct id_l, id_d " +
-                "    from league_entries " +
-                "    where stash_crc is not null " +
-                "      and updated > date_sub(now(), interval 60 second) " +
-                "  ) as e2 on e2.id_l = e1.id_l and e2.id_d = e1.id_d " +
-                "  group by e1.id_l, e1.id_d " +
-                "  having median(e1.price) > 0 " +
-                ") as e3 on e4.id_l = e3.id_l and e4.id_d = e3.id_d " +
-                "set e4.outlier = IF(e4.price between e3.minMed and e3.maxMed, 0, 1); ";
-
-        return database.executeUpdateQueries(query);
-    }
-
     /**
      * Resets counters for entries in table `league_items`
      *
