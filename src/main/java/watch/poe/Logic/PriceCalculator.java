@@ -2,7 +2,7 @@ package poe.Logic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.db.Database;
+import poe.DB.Database;
 
 import java.util.*;
 
