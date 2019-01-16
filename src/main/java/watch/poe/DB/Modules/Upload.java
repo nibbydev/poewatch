@@ -70,7 +70,7 @@ public class Upload {
 
     public boolean updateItems(Map<Integer, Map<Integer, PriceCalculator.Result>> results) {
         String query =  "update league_items " +
-                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ? " +
+                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, `current` = ? " +
                         "where id_l = ? and id_d = ? " +
                         "limit 1; ";
 
@@ -91,8 +91,9 @@ public class Upload {
                         statement.setDouble(3, result.mode);
                         statement.setDouble(4, result.min);
                         statement.setDouble(5, result.max);
-                        statement.setInt(6, id_l);
-                        statement.setInt(7, id_d);
+                        statement.setDouble(6, result.current);
+                        statement.setInt(7, id_l);
+                        statement.setInt(8, id_d);
 
                         statement.addBatch();
                     }

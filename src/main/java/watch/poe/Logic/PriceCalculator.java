@@ -75,6 +75,7 @@ public class PriceCalculator {
                     mode = calcMode(entryList);
                     min = calcMin(entryList);
                     max = calcMax(entryList);
+                    current = entryList.size();
                 }};
 
                 resultMap.put(id_d, result);
@@ -169,5 +170,6 @@ public class PriceCalculator {
 
     public static class Result {
         public double mean, median, mode, min, max;
+        public int current;
     }
 }

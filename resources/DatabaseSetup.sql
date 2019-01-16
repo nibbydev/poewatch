@@ -136,6 +136,7 @@ CREATE TABLE league_items (
     total    INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     daily    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc      INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    current  INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     spark    VARCHAR(128)   DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
