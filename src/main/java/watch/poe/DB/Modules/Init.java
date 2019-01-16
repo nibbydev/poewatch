@@ -58,8 +58,6 @@ public class Init {
      * @return True on success
      */
     public boolean getCategories(Map<String, CategoryEntry> categoryRelations) {
-        Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
-
         String query =  "SELECT    dc.name AS categoryName, " +
                         "          dc.id   AS categoryId, " +
                         "          GROUP_CONCAT(dg.name) AS groupNames, " +
@@ -78,6 +76,8 @@ public class Init {
                 throw new SQLException("Provided map was null");
             }
 
+            Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
+
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -85,8 +85,7 @@ public class Init {
                     String[] groupIds = resultSet.getString("groupIds").split(",");
                     String[] groupNames = resultSet.getString("groupNames").split(",");
 
-                    CategoryEntry categoryEntry = new CategoryEntry();
-                    categoryEntry.setId(resultSet.getInt("categoryId"));
+                    CategoryEntry categoryEntry = new CategoryEntry(resultSet.getInt("categoryId"));
 
                     for (int i = 0; i < groupIds.length; i++) {
                         categoryEntry.addGroup(groupNames[i], Integer.parseInt(groupIds[i]));
@@ -113,8 +112,6 @@ public class Init {
      * @return True on success
      */
     public boolean getItemData(Map<Key, Integer> keyToId) {
-        Map<Key, Integer> tmpKeyToId = new HashMap<>();
-
         String query = "SELECT * FROM data_itemData; ";
 
         try {
@@ -125,6 +122,9 @@ public class Init {
             if (keyToId == null) {
                 throw new SQLException("Provided map was null");
             }
+
+            Map<Key, Integer> tmpKeyToId = new HashMap<>();
+
 
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
@@ -150,9 +150,7 @@ public class Init {
      * @param leagueIds Empty map that will contain league ID - list of item IDs relations
      * @return True on success
      */
-    public boolean getLeagueItemIds(Map<Integer, List<Integer>> leagueIds) {
-        Map<Integer, List<Integer>> tmpLeagueIds = new HashMap<>();
-
+    public boolean getLeagueItemIds(Map<Integer, Set<Integer>> leagueIds) {
         String query =  "SELECT   i.id_l, i.id_d " +
                         "FROM     league_items AS i " +
                         "JOIN     data_leagues AS l " +
@@ -169,17 +167,17 @@ public class Init {
                 throw new SQLException("Provided map was null");
             }
 
+            Map<Integer, Set<Integer>> tmpLeagueIds = new HashMap<>();
 
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    Integer leagueId = resultSet.getInt("id_l");
-                    Integer itemId = resultSet.getInt("id_d");
+                    int id_l = resultSet.getInt(1);
 
-                    List<Integer> idList = tmpLeagueIds.getOrDefault(leagueId, new ArrayList<>());
-                    idList.add(itemId);
-                    tmpLeagueIds.putIfAbsent(leagueId, idList);
+                    Set<Integer> idList = tmpLeagueIds.getOrDefault(id_l, new HashSet<>());
+                    idList.add(resultSet.getInt(2));
+                    tmpLeagueIds.putIfAbsent(id_l, idList);
                 }
             }
 

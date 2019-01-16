@@ -4,30 +4,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryEntry {
-    private Integer id;
-    private Map<String, Integer> groupNameToId = new HashMap<>();
+    private final Integer categoryId;
+    private final Map<String, Integer> groupNameToId = new HashMap<>();
 
-    public void addGroup(String name, Integer id) {
-        groupNameToId.put(name, id);
+    public CategoryEntry(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and Setters
-    //------------------------------------------------------------------------------------------------------------
-
-    public int getId() {
-        return id;
+    public void addGroup(String groupName, Integer groupId) {
+        groupNameToId.put(groupName, groupId);
     }
 
-    public boolean hasGroup(String name) {
-        return groupNameToId.containsKey(name);
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public boolean hasGroup(String groupName) {
+        return groupNameToId.containsKey(groupName);
     }
 
     public Integer getGroupId(String groupName) {
         return groupNameToId.get(groupName);
-    }
-
-    public void setId(Integer id) {
-        if (this.id == null) this.id = id;
     }
 }

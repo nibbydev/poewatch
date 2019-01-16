@@ -22,7 +22,7 @@ public class Index {
      * @param categoryName Name of category
      * @return ID of created category on success, null on failure
      */
-    public Integer addCategory(String categoryName) {
+    public Integer createCategory(String categoryName) {
         String query1 = "INSERT INTO data_categories (`name`) VALUES (?); ";
         String query2 = "SELECT id FROM data_categories WHERE `name` = ? LIMIT 1;";
 
@@ -57,7 +57,7 @@ public class Index {
      * @param groupName Name of group
      * @return ID of created category on success, null on failure
      */
-    public Integer addGroup(Integer categoryId, String groupName) {
+    public Integer addGroup(int categoryId, String groupName) {
         String query1 = "INSERT INTO data_groups (id_cat, `name`) VALUES (?, ?)";
         String query2 = "SELECT id FROM data_groups WHERE id_cat = ? AND `name` = ? LIMIT 1; ";
 
@@ -90,20 +90,22 @@ public class Index {
     /**
      * Creates an item entry in table `league_items`
      *
-     * @param leagueId ID of item's league
-     * @param dataId   ID of item
+     * @param id_l ID of item's league
+     * @param id_d ID of item
      * @return True on success
      */
-    public boolean createLeagueItem(Integer leagueId, Integer dataId) {
-        String query =  "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) ON DUPLICATE KEY UPDATE id_l = id_l; ";
+    public boolean createLeagueItem(int id_l, int id_d) {
+        String query =  "INSERT INTO league_items (id_l, id_d) " +
+                        "VALUES (?, ?) " +
+                        "ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (database.connection.isClosed()) {
                 return false;
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, leagueId);
-                statement.setInt(2, dataId);
+                statement.setInt(1, id_l);
+                statement.setInt(2, id_d);
                 statement.executeUpdate();
             }
 
@@ -111,6 +113,7 @@ public class Index {
             return true;
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
+            System.out.printf("%d -- %d\n", id_l, id_d); // todo:remove
             return false;
         }
     }
@@ -124,11 +127,10 @@ public class Index {
      * @return ID of created item data entry on success, null on failure
      */
     public Integer indexItemData(Item item, Integer categoryId, Integer groupId) {
-        String query1 = "INSERT INTO data_itemData (" +
+        String query =  "INSERT INTO data_itemData (" +
                         "  id_cat, id_grp, `name`, `type`, frame, tier, lvl, " +
                         "  quality, corrupted, links, ilvl, var, icon) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
-        String query2 = "SELECT LAST_INSERT_ID(); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -137,7 +139,7 @@ public class Index {
 
             Key key = item.getKey();
 
-            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
+            try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, categoryId);
 
                 if (groupId == null) statement.setNull(2, 0);
@@ -175,12 +177,9 @@ public class Index {
                 statement.setString(13, Item.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
-            }
+                database.connection.commit();
 
-            database.connection.commit();
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query2);
+                ResultSet resultSet = statement.getGeneratedKeys();
                 return resultSet.next() ? resultSet.getInt(1) : null;
             }
 

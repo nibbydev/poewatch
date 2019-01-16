@@ -216,8 +216,10 @@ public class Worker extends Thread {
             long stash_crc = calcCrc(stash.id);
 
             // If the stash is in use somewhere in the database
-            if (DbStashes.contains(stash_crc)) {
-                nullStashes.add(stash_crc);
+            synchronized (DbStashes) {
+                if (DbStashes.contains(stash_crc)) {
+                    nullStashes.add(stash_crc);
+                }
             }
 
             if (stash.accountName == null || !stash.isPublic) {
@@ -247,14 +249,12 @@ public class Worker extends Thread {
                     }
 
                     // Get item's ID (if missing, index it)
-                    Integer id_d = relationManager.indexItem(item, id_l);
+                    Integer id_d = relationManager.index(item, id_l);
                     if (id_d == null) {
                         continue;
                     }
 
-                    RawItemEntry rawItem = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc, itemParser.getPrice());
-                    items.remove(rawItem);
-                    items.add(rawItem);
+                    items.add(new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc, itemParser.getPrice()));
 
                     // Set flag to indicate stash contained at least 1 valid item
                     if (!hasValidItems) {
@@ -276,12 +276,10 @@ public class Worker extends Thread {
         }
 
         // Shovel everything to db
-        long start = System.currentTimeMillis();
         database.upload.uploadAccounts(accounts);
         database.flag.resetStashReferences(nullStashes);
         database.upload.uploadEntries(items);
         database.upload.uploadUsernames(usernames);
-        System.out.printf("%d ms\n", System.currentTimeMillis() - start);
     }
 
     /**

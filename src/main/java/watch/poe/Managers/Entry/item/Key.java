@@ -121,6 +121,12 @@ public class Key {
         return hash;
     }
 
+    @Override
+    public String toString() {
+        return "name:"+name+"|type:"+typeLine+"|frame:"+frameType+"|ilvl:"+iLvl+"|links:"+links+
+                "|tier:"+tier+"|var:"+variation+"|lvl:"+level+"|qual:"+quality+"|corr:"+corrupted;
+    }
+
     //------------------------------------------------------------------------------------------------------------
     // Getters and Setters
     //------------------------------------------------------------------------------------------------------------
