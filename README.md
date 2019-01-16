@@ -12,13 +12,10 @@ The repository contains the web frontend, PHP backend and the app written in Jav
 
 The general goal was to make a statistics website with everything in one place. Users can check prices of almost any item type from the current or past leagues and look up character names.
 
-## Setup
+## Minimal setup
 
-Prerequisites: Maven, GCC (for compiling UDFs), the latest JDK and MySQL.
+Prerequisites: Maven, the latest JDK and MySQL server.
 
-Note: PoeWatch relies on MySQL UD functions such as `MEDIAN` and `STATS_MODE`. These are provided by
-[infusion](https://github.com/infusion/udf_infusion) and can be installed using the instructions provided there.
-
-1. Compile Java app with `mvn clean install`
-2. Prep SQL database by running the configuration script from `resources/DatabaseSetup.sql`
-3. Run app `java -Xmx256M -jar poewatch-1.0-SNAPSHOT-jar-with-dependencies.jar`
+1. Build Java app `mvn clean install`
+2. Run db configuration script `resources/DatabaseSetup.sql`
+3. Run app `java -jar poewatch.jar`
