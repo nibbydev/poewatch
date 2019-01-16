@@ -12,6 +12,32 @@ $PAGEDATA = array(
   ),
   "headerIncludes" => array(),
   "footerIncludes" => array(),
+  "navs" => array(
+    array(
+      'name' => 'Front',
+      'href' => '/'
+    ),
+    array(
+      'name' => 'Prices',
+      'href' => '/prices'
+    ),
+    array(
+      'name' => 'API',
+      'href' => '/api'
+    ),
+    array(
+      'name' => 'Leagues',
+      'href' => '/leagues'
+    ),
+    array(
+      'name' => 'Characters',
+      'href' => '/characters'
+    ),
+    array(
+      'name' => 'About',
+      'href' => '/about'
+    )
+  ),
   "priceCategories" => array(
     array(
       "display" => "Accessories",
