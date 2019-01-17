@@ -10,10 +10,10 @@ public class PriceCalculator {
     private static final Logger logger = LoggerFactory.getLogger(PriceCalculator.class);
     private static Database database;
 
-    private static final double zScoreUpper = 1.5;
     private static final double zScoreLower = 2.0;
-    private static final int trimUpper = 10;
+    private static final double zScoreUpper = 1.5;
     private static final int trimLower = 5;
+    private static final int trimUpper = 10;
 
     public static void run() {
         Map<Integer, Map<Integer, List<Double>>> entries = new HashMap<>();
@@ -21,11 +21,13 @@ public class PriceCalculator {
 
         // Get entries from database
         if (!database.calc.getEntries(entries)) {
+            logger.warn("Could not get entries for price calculation");
             return;
         }
 
         // Calculate mean, median, mode, etc
         if (!calculate(entries, results)) {
+            logger.warn("Could not calculate prices");
             return;
         }
 
@@ -36,11 +38,13 @@ public class PriceCalculator {
     private static boolean calculate(Map<Integer, Map<Integer, List<Double>>> entries, Map<Integer, Map<Integer, Result>> results) {
         // If entry map is invalid
         if (entries == null || entries.isEmpty()) {
+            logger.error("Null/empty reference passed");
             return false;
         }
 
         // If result map is invalid
         if (results == null || !results.isEmpty()) {
+            logger.error("Null/empty reference passed");
             return false;
         }
 
@@ -51,6 +55,7 @@ public class PriceCalculator {
 
             // If league map is invalid
             if (entryMap == null || entryMap.isEmpty()) {
+                logger.error("Null/empty entryMap passed");
                 return false;
             }
 
@@ -58,16 +63,39 @@ public class PriceCalculator {
             for (int id_d : entryMap.keySet()) {
                 List<Double> entryList = entryMap.get(id_d);
 
-                // Sort by price and trim the list to remove outliers
+                // If league entry list is invalid
+                if (entryList == null || entryList.isEmpty()) {
+                    logger.error("Null/empty entryList passed");
+                    return false;
+                }
+
+                // Sort by price ascending
                 entryList.sort(Double::compareTo);
-                List<Double> tmpTrimmedList = entryList.subList(entryList.size() * trimLower / 100, entryList.size() - entryList.size() * trimUpper / 100);
+
+                // Trim the list to remove outliers
+                int currentCount = entryList.size();
+                int lowerTrimBound = currentCount * trimLower / 100;
+                int upperTrimBound = currentCount * (100 - trimUpper) / 100;
+                List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
+
+                // If trimming resulted in an empty list, use the original
+                if (tmpTrimmedList.isEmpty()) {
+                    tmpTrimmedList = entryList;
+                }
+
+                // Find standard deviation and bounds
                 double tmpMean = calcMean(tmpTrimmedList);
                 double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
-                double lowerBound = tmpMean - zScoreLower * tmpStdDev;
-                double upperBound = tmpMean + zScoreUpper * tmpStdDev;
+                double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
+                double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
 
-                // Remove all entries that don't fall within the range
-                entryList.removeIf(i -> i < lowerBound || i > upperBound);
+                // Remove all entries that don't fall within the bounds
+                entryList.removeIf(i -> i < lowerPredicateBound || i > upperPredicateBound);
+
+                // If no entries were left, skip the item
+                if (entryList.isEmpty()) {
+                    continue;
+                }
 
                 Result result = new Result() {{
                     mean = calcMean(entryList);
@@ -75,7 +103,7 @@ public class PriceCalculator {
                     mode = calcMode(entryList);
                     min = calcMin(entryList);
                     max = calcMax(entryList);
-                    current = entryList.size();
+                    current = currentCount;
                 }};
 
                 resultMap.put(id_d, result);
@@ -88,6 +116,11 @@ public class PriceCalculator {
     }
 
     private static double calcMean(List<Double> list) {
+        if (list == null || list.isEmpty()) {
+            logger.warn("Null/empty list passed to mean");
+            return 0;
+        }
+
         double sum = 0;
 
         for (Double entry : list) {
@@ -105,6 +138,11 @@ public class PriceCalculator {
      * @return Standard deviation of the sample
      */
     private static double calcStdDev(List<Double> list, double mean) {
+        if (list == null || list.isEmpty()) {
+            logger.warn("Null/empty list passed to standard deviation");
+            return 0;
+        }
+
         double sum = 0;
 
         for (Double entry : list) {
@@ -115,11 +153,21 @@ public class PriceCalculator {
     }
 
     private static double calcMedian(List<Double> list) {
+        if (list == null || list.isEmpty()) {
+            logger.warn("Null/empty list passed to median");
+            return 0;
+        }
+
         list.sort(Double::compareTo);
         return list.get((list.size() - 1) / 2);
     }
 
     private static double calcMin(List<Double> list) {
+        if (list == null || list.isEmpty()) {
+            logger.warn("Null/empty list passed to min");
+            return 0;
+        }
+
         double min = list.get(0);
 
         for (Double entry : list) {
@@ -132,6 +180,11 @@ public class PriceCalculator {
     }
 
     private static double calcMax(List<Double> list) {
+        if (list == null || list.isEmpty()) {
+            logger.warn("Null/empty list passed to max");
+            return 0;
+        }
+
         double max = list.get(0);
 
         for (Double entry : list) {
@@ -144,6 +197,11 @@ public class PriceCalculator {
     }
 
     private static double calcMode(List<Double> list) {
+        if (list == null || list.isEmpty()) {
+            logger.warn("Null/empty list passed to mode");
+            return 0;
+        }
+
         HashMap<Double, Integer> map = new HashMap<>();
         double max = 1, tmp = 0;
 

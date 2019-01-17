@@ -44,7 +44,11 @@ public class Calc {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 // Get first entry
-                resultSet.next();
+                if (!resultSet.next()) {
+                    logger.warn("No entries found for price calculation");
+                    return false;
+                }
+
                 int id_l = resultSet.getInt(1);
                 int id_d = resultSet.getInt(2);
                 Map<Integer, List<Double>> entryMap = new HashMap<>();
