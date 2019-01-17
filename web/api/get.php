@@ -57,35 +57,6 @@ function get_data($pdo, $league, $category) {
   return $stmt;
 }
 
-function get_data_relic($pdo, $league) {
-  $query = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.total, i.daily + i.inc AS daily, 
-    did.name, did.type, did.frame, 
-    did.tier, did.lvl, did.quality, did.corrupted, 
-    did.links, did.ilvl, did.var, did.icon, 
-    dc.name AS category, dg.name AS `group`,
-    i.spark AS history
-  FROM      league_items AS i 
-  JOIN      data_itemData AS did 
-    ON      i.id_d = did.id 
-  JOIN      data_leagues AS l 
-    ON      l.id = i.id_l 
-  JOIN      data_categories AS dc 
-    ON      did.id_cat = dc.id 
-  LEFT JOIN data_groups AS dg 
-    ON      did.id_grp = dg.id 
-  WHERE     l.name   = ?
-    AND     did.frame = 9
-    AND     did.links IS NULL
-  ORDER BY  i.mean DESC";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$league]);
-
-  return $stmt;
-}
-
 function parse_data($stmt, $active) {
   $payload = array();
 
@@ -173,12 +144,7 @@ if ($state === null) {
 }
 
 // Get database entries based on league state
-if ($_GET["category"] === "relic") {
-  $stmt = get_data_relic($pdo, $_GET["league"]);
-} else {
-  $stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
-}
-
+$stmt = get_data($pdo, $_GET["league"], $_GET["category"]);
 $data = parse_data($stmt, $state["active"]);
 
 // Display generated data
