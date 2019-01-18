@@ -34,6 +34,7 @@ public class Upload {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -76,6 +77,7 @@ public class Upload {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -119,6 +121,7 @@ public class Upload {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -157,13 +160,16 @@ public class Upload {
                         "       end      = ?, " +
                         "       upcoming = 0, " +
                         "       active   = 1, " +
-                        "       event    = ?," +
+                        "       event    = ?, " +
                         "       hardcore = ? " +
                         "WHERE  name     = ? " +
                         "LIMIT  1; ";
 
+        logger.info("Updating database leagues");
+
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -191,9 +197,11 @@ public class Upload {
             }
 
             database.connection.commit();
+            logger.info("Database leagues updated");
             return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
+            logger.error("Could not update database leagues");
             return false;
         }
     }
@@ -209,6 +217,7 @@ public class Upload {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -254,6 +263,7 @@ public class Upload {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -322,6 +332,7 @@ public class Upload {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 

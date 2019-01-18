@@ -29,6 +29,7 @@ public class Flag {
                         "where stash_crc = ?; ";
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 

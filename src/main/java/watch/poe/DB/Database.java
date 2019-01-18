@@ -31,6 +31,8 @@ public class Database {
      * @return True on success
      */
     public boolean connect() {
+        logger.info("Connecting to database");
+
         StringBuilder address = new StringBuilder();
         address.append(config.getString("database.address"));
 
@@ -54,23 +56,29 @@ public class Database {
             connection.setCatalog(config.getString("database.database"));
             connection.setAutoCommit(false);
 
+            logger.info("Database connection established");
             return true;
         } catch (SQLException ex) {
-            logger.error(String.format("Failed to connect to database ex=%s", ex.getMessage()), ex);
+            logger.error(ex.getMessage(), ex);
+            logger.error("Failed to connect to database");
+            return false;
         }
-
-        return false;
     }
 
     /**
      * Disconnects from the MySQL database
      */
     public void disconnect() {
+        logger.info("Disconnecting from database");
+
         try {
             if (connection != null) connection.close();
         } catch (SQLException ex) {
-            logger.error(String.format("Failed to disconnect from database ex=%s", ex.getMessage()), ex);
+            logger.error(ex.getMessage(), ex);
+            logger.error("Failed to disconnect from database");
         }
+
+        logger.info("Disconnected from database");
     }
 
     /**
@@ -81,7 +89,10 @@ public class Database {
      */
     public boolean executeUpdateQueries(String... queries) {
         try {
-            if (connection.isClosed()) return false;
+            if (connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
 
             try (Statement statement = connection.createStatement()) {
                 for (String query : queries) {

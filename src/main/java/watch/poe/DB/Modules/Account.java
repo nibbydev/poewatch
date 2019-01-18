@@ -75,6 +75,7 @@ public class Account {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -110,6 +111,7 @@ public class Account {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 

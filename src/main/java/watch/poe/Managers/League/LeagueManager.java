@@ -43,6 +43,8 @@ public class LeagueManager {
         List<BaseLeague> baseLeagues = new ArrayList<>();
         boolean success;
 
+        logger.info("Starting league cycle");
+
         // Get list of leagues from official API
         success = downloadBaseLeagues(baseLeagues);
         if (success) {
@@ -72,6 +74,8 @@ public class LeagueManager {
         // Assign variables by reference
         this.leagues = leagues;
         this.leagueIds = leagueIds;
+
+        logger.info("League cycle finished successfully");
 
         // Return true to mark the league list was successfully obtained
         return true;
@@ -217,6 +221,8 @@ public class LeagueManager {
         InputStream stream = null;
         baseLeagueEntryList.clear();
 
+        logger.info("Getting league list from official API");
+
         try {
             // Define the request
             URL request = new URL("http://api.pathofexile.com/leagues?type=main");
@@ -251,6 +257,8 @@ public class LeagueManager {
             Type listType = new TypeToken<List<BaseLeague>>() {
             }.getType();
             baseLeagueEntryList.addAll(gson.fromJson(stringBuilderBuffer.toString(), listType));
+
+            logger.info("Got league list");
 
             return true;
         } catch (SocketTimeoutException ex) {

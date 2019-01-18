@@ -59,6 +59,8 @@ public class WorkerManager extends Thread {
      * Contains main loop. Checks for open jobs and assigns them to workers
      */
     public void run() {
+        logger.info(String.format("Starting %s", WorkerManager.class.getName()));
+
         status.fixCounters();
         timer.getDelays();
 

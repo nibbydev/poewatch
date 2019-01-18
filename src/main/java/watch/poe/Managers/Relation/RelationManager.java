@@ -17,13 +17,6 @@ public class RelationManager {
     private final Logger logger;
     private final Database database;
 
-    /*private Map<Key, Integer> keyToId = new HashMap<>();
-    private static Map<String, String> currencyAliasToName = CurrencyAliases.GetAliasMap();
-    private Map<String, CategoryEntry> categoryRelations = new HashMap<>();
-    private Set<Key> indexingKeys = Collections.synchronizedSet(new HashSet<>());
-    private Map<Integer, List<Integer>> leagueIds = new HashMap<>();
-    private static Map<String, Set<String>> baseMap = BaseItems.GenBaseMap();*/
-
     private final Set<Key> inProgress = new HashSet<>();
     private final Map<Key, Integer> itemData = new HashMap<>();
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
@@ -45,6 +38,8 @@ public class RelationManager {
      */
     public boolean init() {
         boolean success;
+
+        logger.info("Initializing relations");
 
         success = database.init.getCategories(categories);
         if (!success) {
@@ -69,6 +64,8 @@ public class RelationManager {
         } else if (leagueItems.isEmpty()) {
             logger.warn("Database did not contain any league item id information");
         }
+
+        logger.info("Relations initialized successfully");
 
         return true;
     }

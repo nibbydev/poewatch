@@ -10,12 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccountManager extends Thread {
-    private static Logger logger = LoggerFactory.getLogger(AccountManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(AccountManager.class);
     private final Object monitor = new Object();
-    //------------------------------------------------------------------------------------------------------------
-    // Class variables
-    //------------------------------------------------------------------------------------------------------------
-    private Database database;
+    private final Database database;
+
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private long lastRunTime;
@@ -31,6 +29,8 @@ public class AccountManager extends Thread {
     //------------------------------------------------------------------------------------------------------------
 
     public void run() {
+        logger.info(String.format("Starting %s", AccountManager.class.getName()));
+
         while (flagLocalRun) {
             synchronized (monitor) {
                 try {

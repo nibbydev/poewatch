@@ -29,8 +29,11 @@ public class Init {
     public boolean getLeagues(List<LeagueEntry> leagueEntries) {
         String query = "SELECT * FROM data_leagues WHERE active = 1; ";
 
+        logger.info("Getting leagues from database");
+
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -44,9 +47,11 @@ public class Init {
                 }
             }
 
+            logger.info("Got leagues from database");
             return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
+            logger.error("Could not get leagues from database");
             return false;
         }
     }
@@ -67,13 +72,16 @@ public class Init {
                         "  ON      dc.id = dg.id_cat " +
                         "GROUP BY  dc.id; ";
 
+        logger.info("Getting categories from database");
+
+        if (categoryRelations == null) {
+            throw new NullPointerException("Provided map was null");
+        }
+
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
-            }
-
-            if (categoryRelations == null) {
-                throw new SQLException("Provided map was null");
             }
 
             Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
@@ -97,6 +105,7 @@ public class Init {
 
             categoryRelations.clear();
             categoryRelations.putAll(tmpCategoryRelations);
+            logger.info("Got categories from database");
 
             return true;
         } catch (SQLException ex) {
@@ -114,8 +123,11 @@ public class Init {
     public boolean getItemData(Map<Key, Integer> keyToId) {
         String query = "SELECT * FROM data_itemData; ";
 
+        logger.info("Getting item data from database");
+
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -136,6 +148,7 @@ public class Init {
 
             keyToId.clear();
             keyToId.putAll(tmpKeyToId);
+            logger.info("Got item data from database");
 
             return true;
         } catch (SQLException ex) {
@@ -158,8 +171,11 @@ public class Init {
                         "WHERE    l.active = 1 " +
                         "ORDER BY i.id_l ASC; ";
 
+        logger.info("Getting league item IDs from database");
+
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -183,6 +199,7 @@ public class Init {
 
             leagueIds.clear();
             leagueIds.putAll(tmpLeagueIds);
+            logger.info("Got league item IDs from database");
 
             return true;
         } catch (SQLException ex) {
@@ -212,6 +229,7 @@ public class Init {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return null;
             }
 
@@ -247,6 +265,7 @@ public class Init {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -290,6 +309,7 @@ public class Init {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return null;
             }
 
@@ -308,8 +328,11 @@ public class Init {
     public boolean getStashIds(Set<Long> set) {
         String query = "SELECT DISTINCT stash_crc FROM league_entries WHERE stash_crc IS NOT NULL; ";
 
+        logger.info("Getting stash IDs from database");
+
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -320,12 +343,12 @@ public class Init {
                     set.add(resultSet.getLong(1));
                 }
 
+                logger.info("Got stash IDs from database");
                 return true;
             }
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
+            return false;
         }
-
-        return false;
     }
 }

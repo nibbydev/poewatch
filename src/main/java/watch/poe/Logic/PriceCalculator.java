@@ -11,13 +11,15 @@ public class PriceCalculator {
     private static Database database;
 
     private static final double zScoreLower = 2.0;
-    private static final double zScoreUpper = 1.5;
-    private static final int trimLower = 5;
+    private static final double zScoreUpper = 1.2;
+    private static final int trimLower = 10;
     private static final int trimUpper = 10;
 
     public static void run() {
         Map<Integer, Map<Integer, List<Double>>> entries = new HashMap<>();
         Map<Integer, Map<Integer, Result>> results = new HashMap<>();
+
+        logger.info("Calculating prices");
 
         // Get entries from database
         if (!database.calc.getEntries(entries)) {
@@ -33,6 +35,8 @@ public class PriceCalculator {
 
         // Update entries in database
         database.upload.updateItems(results);
+
+        logger.info("Prices calculated");
     }
 
     private static boolean calculate(Map<Integer, Map<Integer, List<Double>>> entries, Map<Integer, Map<Integer, Result>> results) {

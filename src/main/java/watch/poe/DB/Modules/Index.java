@@ -28,6 +28,7 @@ public class Index {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return null;
             }
 
@@ -63,6 +64,7 @@ public class Index {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return null;
             }
 
@@ -100,6 +102,7 @@ public class Index {
                         "ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return false;
             }
 
@@ -134,6 +137,7 @@ public class Index {
 
         try {
             if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
                 return null;
             }
 

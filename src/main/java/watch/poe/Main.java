@@ -34,6 +34,8 @@ public class Main {
     public static void main(String[] args) {
         boolean success;
 
+        logger.info("Starting PoeWatch app");
+
         try {
             // Load config
             config = ConfigFactory.load("config");
@@ -41,26 +43,39 @@ public class Main {
             // Initialize database connector
             database = new Database(config);
             success = database.connect();
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not connect to database");
+                return;
+            }
 
+            // Set static DB accessor in honour of spaghetti code
             PriceCalculator.setDatabase(database);
 
             // Init league manager
             LeagueManager leagueManager = new LeagueManager(database, config);
             success = leagueManager.cycle();
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not get a list of leagues");
+                return;
+            }
 
             // Get category, item and currency data
             RelationManager relations = new RelationManager(database);
             success = relations.init();
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not get relations");
+                return;
+            }
 
             accountManager = new AccountManager(database);
             workerManager = new WorkerManager(leagueManager, relations, accountManager, database, config);
 
             // Get all distinct stash ids that are in the db
             success = database.init.getStashIds(Worker.getDbStashes());
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not get active stash IDs");
+                return;
+            }
 
             ItemParser.setConfig(config);
             ItemParser.setRelationManager(relations);
@@ -72,6 +87,9 @@ public class Main {
             // Start controllers
             accountManager.start();
             workerManager.start();
+
+            // todo: remove
+            PriceCalculator.run();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
