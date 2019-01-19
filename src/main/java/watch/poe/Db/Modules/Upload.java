@@ -3,10 +3,10 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.PriceCalculator;
-import poe.Managers.Worker.Entry.*;
-import poe.Managers.Worker.Timer.Timer;
-import poe.Managers.Worker.Timer.TimerList;
+import poe.Managers.PriceManager;
+import poe.Worker.Entry.*;
+import poe.Worker.Timer.Timer;
+import poe.Worker.Timer.TimerList;
 import poe.Managers.League.LeagueEntry;
 
 import java.sql.*;
@@ -69,7 +69,7 @@ public class Upload {
     }
 
 
-    public boolean updateItems(Map<Integer, Map<Integer, PriceCalculator.Result>> results) {
+    public boolean updateItems(Map<Integer, Map<Integer, PriceManager.Result>> results) {
         String query =  "update league_items " +
                         "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, `current` = ? " +
                         "where id_l = ? and id_d = ? " +
@@ -83,10 +83,10 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (int id_l : results.keySet()) {
-                    Map<Integer, PriceCalculator.Result> tmpMap = results.get(id_l);
+                    Map<Integer, PriceManager.Result> tmpMap = results.get(id_l);
 
                     for (int id_d : tmpMap.keySet()) {
-                        PriceCalculator.Result result = tmpMap.get(id_d);
+                        PriceManager.Result result = tmpMap.get(id_d);
 
                         statement.setDouble(1, result.mean);
                         statement.setDouble(2, result.median);

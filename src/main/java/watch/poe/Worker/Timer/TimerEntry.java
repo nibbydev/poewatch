@@ -1,4 +1,4 @@
-package poe.Managers.Worker.Timer;
+package poe.Worker.Timer;
 
 public class TimerEntry {
     public Long time;

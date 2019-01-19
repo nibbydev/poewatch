@@ -3,7 +3,7 @@ package poe.Item;
 import poe.Item.Variant.ItemVariant;
 import poe.Item.Variant.VariantType;
 import poe.Item.Variant.Variants;
-import poe.Managers.Relation.RelationManager;
+import poe.Managers.RelationManager;
 
 public class Item {
     private RelationManager relationManager;

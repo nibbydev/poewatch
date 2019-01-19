@@ -1,4 +1,4 @@
-package poe.Managers.Account;
+package poe.Managers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,6 +6,8 @@ import poe.Db.Database;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,5 +137,21 @@ public class AccountManager extends Thread {
         }
 
         return 0;
+    }
+
+    public static class AccountRelation {
+        public String oldAccountName, newAccountName;
+        public long oldAccountId, newAccountId;
+        public int matches;
+
+        public int statusCode, moved;
+
+        public void load (ResultSet resultSet) throws SQLException {
+            oldAccountName = resultSet.getString("oldAccountName");
+            newAccountName = resultSet.getString("newAccountName");
+            oldAccountId = resultSet.getLong("oldAccountId");
+            newAccountId = resultSet.getLong("newAccountId");
+            matches = resultSet.getInt("matches");
+        }
     }
 }

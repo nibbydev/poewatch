@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Key;
-import poe.Managers.Worker.Timer.Timer;
-import poe.Managers.Worker.Timer.TimerList;
+import poe.Worker.Timer.Timer;
+import poe.Worker.Timer.TimerList;
 import poe.Managers.League.LeagueEntry;
 import poe.Managers.Relation.CategoryEntry;
 
@@ -278,7 +278,7 @@ public class Init {
                     Integer type = resultSet.getInt("type");
 
                     if (resultSet.wasNull()) type = null;
-                    poe.Managers.Worker.Timer.Timer.TimerType timerType = Timer.translate(type);
+                    poe.Worker.Timer.Timer.TimerType timerType = Timer.translate(type);
 
                     TimerList timerList = timeLog.getOrDefault(key, new TimerList(timerType));
 

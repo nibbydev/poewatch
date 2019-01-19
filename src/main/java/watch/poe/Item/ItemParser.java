@@ -1,7 +1,7 @@
 package poe.Item;
 
 import com.typesafe.config.Config;
-import poe.Managers.Relation.RelationManager;
+import poe.Managers.RelationManager;
 
 import java.util.ArrayList;
 import java.util.Map;

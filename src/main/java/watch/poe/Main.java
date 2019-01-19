@@ -5,12 +5,9 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.Account.AccountManager;
+import poe.Managers.*;
 import poe.Item.ItemParser;
-import poe.Managers.League.LeagueManager;
-import poe.Managers.Relation.RelationManager;
-import poe.Managers.Worker.Worker;
-import poe.Managers.Worker.WorkerManager;
+import poe.Worker.Worker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,7 +30,7 @@ public class Main {
     public static void main(String[] args) {
         boolean success;
 
-        logger.info("Starting PoeWatch app");
+        logger.info("Starting PoeWatch");
 
         try {
             // Load config
@@ -48,7 +45,7 @@ public class Main {
             }
 
             // Set static DB accessor in honour of spaghetti code
-            PriceCalculator.setDatabase(database);
+            PriceManager.setDatabase(database);
 
             // Init league manager
             LeagueManager leagueManager = new LeagueManager(database, config);
@@ -86,9 +83,6 @@ public class Main {
             // Start controllers
             accountManager.start();
             workerManager.start();
-
-            // todo: remove
-            PriceCalculator.run();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();

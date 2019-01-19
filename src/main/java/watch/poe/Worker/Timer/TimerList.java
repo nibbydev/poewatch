@@ -1,4 +1,4 @@
-package poe.Managers.Worker.Timer;
+package poe.Worker.Timer;
 
 import java.util.ArrayList;
 import java.util.List;

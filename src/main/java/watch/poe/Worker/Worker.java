@@ -1,17 +1,18 @@
-package poe.Managers.Worker;
+package poe.Worker;
 
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.Worker.Entry.RawItemEntry;
-import poe.Managers.Worker.Entry.RawUsernameEntry;
+import poe.Managers.WorkerManager;
+import poe.Worker.Entry.RawItemEntry;
+import poe.Worker.Entry.RawUsernameEntry;
 import poe.Item.Item;
 import poe.Item.ItemParser;
 import poe.Item.Mappers;
-import poe.Managers.League.LeagueManager;
-import poe.Managers.Relation.RelationManager;
+import poe.Managers.LeagueManager;
+import poe.Managers.RelationManager;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,9 +1,9 @@
-package poe.Managers.Worker.Timer;
+package poe.Worker.Timer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.Worker.Entry.StatusElement;
+import poe.Worker.Entry.StatusElement;
 
 import java.util.HashMap;
 import java.util.Map;

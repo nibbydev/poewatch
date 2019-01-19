@@ -3,7 +3,7 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.Account.AccountRelation;
+import poe.Managers.AccountManager;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class Account {
      * @param accountRelations Empty List of AccountRelation to be filled
      * @return True on success
      */
-    public boolean getAccountRelations(List<AccountRelation> accountRelations) {
+    public boolean getAccountRelations(List<AccountManager.AccountRelation> accountRelations) {
         // Very nice
         String query =  "SELECT oldAcc.id         AS oldAccountId, " +
                         "       oldAcc.accName    AS oldAccountName, " +
@@ -87,7 +87,7 @@ public class Account {
                     if (filter.contains(id)) continue;
                     filter.add(id);
 
-                    AccountRelation accountRelation = new AccountRelation();
+                    AccountManager.AccountRelation accountRelation = new AccountManager.AccountRelation();
                     accountRelation.load(resultSet);
                     accountRelations.add(accountRelation);
                 }
@@ -106,7 +106,7 @@ public class Account {
      * @param accountRelations List of AccountRelation to be created
      * @return True on success
      */
-    public boolean createAccountRelation(List<AccountRelation> accountRelations) {
+    public boolean createAccountRelation(List<AccountManager.AccountRelation> accountRelations) {
         String query = "INSERT INTO account_history (id_old, id_new, moved) VALUES (?, ?, ?); ";
 
         try {
@@ -116,7 +116,7 @@ public class Account {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (AccountRelation accountRelation : accountRelations) {
+                for (AccountManager.AccountRelation accountRelation : accountRelations) {
                     statement.setLong(1, accountRelation.oldAccountId);
                     statement.setLong(2, accountRelation.newAccountId);
                     statement.setInt(3, accountRelation.moved);

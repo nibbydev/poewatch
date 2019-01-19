@@ -1,4 +1,4 @@
-package poe;
+package poe.Managers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,8 +6,8 @@ import poe.Db.Database;
 
 import java.util.*;
 
-public class PriceCalculator {
-    private static final Logger logger = LoggerFactory.getLogger(PriceCalculator.class);
+public class PriceManager {
+    private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
     private static Database database;
 
     private static final double zScoreLower = 2.0;
@@ -227,7 +227,7 @@ public class PriceCalculator {
     }
 
     public static void setDatabase(Database database) {
-        PriceCalculator.database = database;
+        PriceManager.database = database;
     }
 
     public static class Result {

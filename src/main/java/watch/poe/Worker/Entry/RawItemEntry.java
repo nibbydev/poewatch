@@ -1,4 +1,4 @@
-package poe.Managers.Worker.Entry;
+package poe.Worker.Entry;
 
 public class RawItemEntry {
     public int id_l, id_d;

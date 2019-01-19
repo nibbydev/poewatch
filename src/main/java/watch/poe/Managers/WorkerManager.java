@@ -1,17 +1,14 @@
-package poe.Managers.Worker;
+package poe.Managers;
 
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.PriceCalculator;
-import poe.Managers.Account.AccountManager;
-import poe.Managers.Worker.Entry.StatusElement;
+import poe.Worker.Entry.StatusElement;
 import poe.Item.Mappers;
-import poe.Managers.Worker.Timer.Timer;
-import poe.Managers.League.LeagueManager;
-import poe.Managers.Relation.RelationManager;
+import poe.Worker.Timer.Timer;
+import poe.Worker.Worker;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -122,7 +119,7 @@ public class WorkerManager extends Thread {
         }
 
         timer.start("a10");
-        PriceCalculator.run();
+        PriceManager.run();
         timer.clk("a10");
 
         timer.start("a11");

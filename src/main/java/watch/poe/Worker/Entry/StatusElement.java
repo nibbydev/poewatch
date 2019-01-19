@@ -1,4 +1,4 @@
-package poe.Managers.Worker.Entry;
+package poe.Worker.Entry;
 
 import com.typesafe.config.Config;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package poe.Managers.League;
+package poe.Managers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.League.Derserializer.BaseLeague;
 import poe.Managers.League.Derserializer.Rule;
+import poe.Managers.League.LeagueEntry;
 
 import java.io.IOException;
 import java.io.InputStream;
