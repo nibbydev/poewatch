@@ -153,13 +153,13 @@ CREATE TABLE league_items (
 --
 
 CREATE TABLE league_accounts (
-  account_crc  INT            UNSIGNED PRIMARY KEY,
-  updates      INT            UNSIGNED NOT NULL DEFAULT 1,
+    account_crc  INT            UNSIGNED PRIMARY KEY,
+    updates      INT            UNSIGNED NOT NULL DEFAULT 1,
 
-  discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
-  updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
 
-  INDEX updated (updated)
+    INDEX updated (updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -167,27 +167,30 @@ CREATE TABLE league_accounts (
 --
 
 CREATE TABLE league_entries (
-  id_l         SMALLINT       UNSIGNED NOT NULL,
-  id_d         INT            UNSIGNED NOT NULL,
+    id_l         SMALLINT       UNSIGNED NOT NULL,
+    id_d         INT            UNSIGNED NOT NULL,
 
-  account_crc  INT            UNSIGNED NOT NULL,
-  stash_crc    INT            UNSIGNED DEFAULT NULL,
-  item_crc     INT            UNSIGNED NOT NULL,
+    account_crc  INT            UNSIGNED NOT NULL,
+    stash_crc    INT            UNSIGNED DEFAULT NULL,
+    item_crc     INT            UNSIGNED NOT NULL,
 
-  discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
-  updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
-  updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
-  price        DECIMAL(14,8)  UNSIGNED NOT NULL,
+    id_price     INT            UNSIGNED DEFAULT NULL,
+    price        DECIMAL(14,8)  UNSIGNED NOT NULL,
 
-  FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
-  FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
-  FOREIGN KEY (account_crc) REFERENCES league_accounts (account_crc) ON DELETE CASCADE,
-  CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
-  INDEX id_l_d (id_l, id_d),
-  INDEX discovered (discovered),
-  INDEX stash_crc (stash_crc),
-  INDEX updated (updated)
+    FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    FOREIGN KEY (account_crc) REFERENCES league_accounts (account_crc) ON DELETE CASCADE,
+    FOREIGN KEY (id_price) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
+
+    INDEX id_l_d (id_l, id_d),
+    INDEX discovered (discovered),
+    INDEX stash_crc (stash_crc),
+    INDEX updated (updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

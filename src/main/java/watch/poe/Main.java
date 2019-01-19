@@ -65,6 +65,7 @@ public class Main {
 
             accountManager = new AccountManager(database);
             workerManager = new WorkerManager(leagueManager, relations, accountManager, database, config);
+            ItemParser.setRelationManager(relations);
 
             // Get all distinct stash ids that are in the db
             success = database.init.getStashIds(Worker.getDbStashes());
@@ -72,10 +73,6 @@ public class Main {
                 logger.error("Could not get active stash IDs");
                 return;
             }
-
-            ItemParser.setConfig(config);
-            ItemParser.setRelationManager(relations);
-            ItemParser.setWorkerManager(workerManager);
 
             // Parse CLI parameters
             success = parseCommandParameters(args);

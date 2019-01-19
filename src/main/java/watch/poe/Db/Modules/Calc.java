@@ -21,7 +21,7 @@ public class Calc {
     }
 
     public boolean getEntries(Map<Integer, Map<Integer, List<Double>>> entries) {
-        String query =  "select le.id_l, le.id_d, price " +
+        String query =  "select le.id_l, le.id_d, truncate(le.price * ifnull(foo3.val, 1), 8) as price " +
                         "from league_entries as le " +
                         "join ( " +
                         "  select distinct id_l, id_d from league_entries " +
@@ -32,8 +32,13 @@ public class Calc {
                         "  select distinct account_crc from league_accounts " +
                         "  where updated > date_sub(now(), interval 1 hour) " +
                         ") as foo2 on le.account_crc = foo2.account_crc " +
+                        "left join ( " +
+                        "  select id_l, id_d, mean as val from league_items" +
+                        "  where mean > 0" +
+                        ") as foo3 on le.id_l = foo3.id_l and le.id_price = foo3.id_d " +
                         "where le.stash_crc is not null " +
-                        "order by le.id_l asc, le.id_d asc ";
+                        "having price > 0 and price < 96000 " +
+                        "order by le.id_l asc, le.id_d asc; ";
 
         try {
             if (database.connection.isClosed()) {

@@ -1,28 +1,23 @@
 package poe.Item;
 
-import com.typesafe.config.Config;
 import poe.Managers.RelationManager;
-import poe.Managers.WorkerManager;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class ItemParser {
-    private static Config config;
     private static RelationManager relationManager;
-    private static WorkerManager workerManager;
 
     private ArrayList<Item> items = new ArrayList<>();
     private Mappers.BaseItem base;
     private boolean discard, doNotIndex;
-    private String priceType;
+    private Integer idPrice;
     private Double price;
 
     //------------------------------------------------------------------------------------------------------------
     // Constructor
     //------------------------------------------------------------------------------------------------------------
 
-    public ItemParser(Mappers.BaseItem base, int id_l) {
+    public ItemParser(Mappers.BaseItem base) {
         this.base = base;
 
         // Do a few checks on the league, note and etc
@@ -31,10 +26,6 @@ public class ItemParser {
 
         // Extract price and currency type from item if present
         parseNote(base);
-        if (discard) return;
-
-        // Convert item's price to chaos if possible
-        convertPrice(id_l);
         if (discard) return;
 
         // Branch item if necessary
@@ -95,72 +86,31 @@ public class ItemParser {
         String[] priceArray = noteList[1].split("/");
 
         // Try to figure out if price is numeric
-        double tmpPrice;
         try {
             if (priceArray.length == 1) {
-                tmpPrice = Double.parseDouble(priceArray[0]);
+                price = Double.parseDouble(priceArray[0]);
             } else {
-                tmpPrice = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
+                price = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
             }
         } catch (Exception ex) {
             discard = true;
             return;
         }
 
-        // See if the currency type listed is valid currency type
-        if (!relationManager.getCurrencyAliasToName().containsKey(noteList[2])) {
+        // If the currency type listed is not valid
+        if (!relationManager.getCurrencyAliases().containsKey(noteList[2])) {
             discard = true;
             return;
         }
 
-        // If the seller is selling Chaos Orbs, swap the places of the names
-        // (Ie [1 Chaos Orb]+"~b/o 6 fus" ---> [6 Orb of Fusing]+"~b/o 1 chaos")
-        if (base.getTypeLine().equals("Chaos Orb")) {
-            String typeLineOverride = relationManager.getCurrencyAliasToName().get(noteList[2]);
-            base.setTypeLine(typeLineOverride);
-
-            priceType = "Chaos Orb";
-            price = (Math.round((1 / tmpPrice) * 100000000.0) / 100000000.0);
-
-            // Prevents other currency items getting Chaos Orb's icon
-            doNotIndex = true;
-        } else {
-            price = Math.round(tmpPrice * 100000000.0) / 100000000.0;
-            priceType = relationManager.getCurrencyAliasToName().get(noteList[2]);
-        }
-    }
-
-    /**
-     * Uses currencyMap to covert Item's price to chaos if necessary
-     *
-     * @param id_l Valid league id
-     */
-    private void convertPrice(int id_l) {
-        // If the Item's price is not in chaos, it needs to be converted to chaos using the currency map
-        if (!priceType.equals("Chaos Orb")) {
-            Map<String, Double> currencyMap = workerManager.getCurrencyLeagueMap(id_l);
-
-            if (currencyMap == null) {
-                discard = true;
-                return;
-            }
-
-            Double chaosValue = currencyMap.get(priceType);
-
-            if (chaosValue == null) {
-                discard = true;
-                return;
-            }
-
-            price = Math.round(price * chaosValue * 100000000.0) / 100000000.0;
-            priceType = "Chaos Orb";
-        }
-
-        // User has specified a retarded price
-        if (price < 0.0001 || price > 120000) {
+        // If listed price was something retarded
+        if (price < 0.0001 || price > 90000) {
             discard = true;
             return;
         }
+
+        // Get id of the currency the item was listed for
+        idPrice = relationManager.getCurrencyAliases().get(noteList[2]);
     }
 
     /**
@@ -189,6 +139,10 @@ public class ItemParser {
         return price;
     }
 
+    public Integer getIdPrice() {
+        return idPrice;
+    }
+
     public boolean isDiscard() {
         return discard;
     }
@@ -201,15 +155,7 @@ public class ItemParser {
         return items;
     }
 
-    public static void setConfig(Config config) {
-        ItemParser.config = config;
-    }
-
     public static void setRelationManager(RelationManager relationManager) {
         ItemParser.relationManager = relationManager;
-    }
-
-    public static void setWorkerManager(WorkerManager workerManager) {
-        ItemParser.workerManager = workerManager;
     }
 }

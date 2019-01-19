@@ -1,118 +1,115 @@
 package poe.Managers.Relation;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class CurrencyAliases {
-    private static Currency[] aliases = new Currency[]{
-            new Currency() {{
+    private static final AliasEntry[] aliases = new AliasEntry[]{
+            new AliasEntry() {{
                 name = "Chaos Orb";
                 aliases = new String[]{"chaos", "choas", "c"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Exalted Orb";
                 aliases = new String[]{"exalted", "exalt", "exa", "ex"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Divine Orb";
                 aliases = new String[]{"divine", "div"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Alchemy";
                 aliases = new String[]{"alchemy", "alch", "alc"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Fusing";
                 aliases = new String[]{"fusings", "fusing", "fuse", "fus"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Alteration";
                 aliases = new String[]{"alteration", "alts", "alt"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Regal Orb";
                 aliases = new String[]{"regal'", "rega"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Vaal Orb";
                 aliases = new String[]{"vaal"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Regret";
                 aliases = new String[]{"regrets", "regret", "regr"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Cartographer's Chisel";
                 aliases = new String[]{"chisel", "chis", "cart"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Jeweller's Orb";
                 aliases = new String[]{"jewellers", "jeweller", "jew"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Silver Coin";
                 aliases = new String[]{"silver"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Perandus Coin";
                 aliases = new String[]{"coins", "coin", "perandus"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Scouring";
                 aliases = new String[]{"scouring", "scour"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Gemcutter's Prism";
                 aliases = new String[]{"gcp", "gemc"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Chance";
                 aliases = new String[]{"chance", "chanc"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Chromatic Orb";
                 aliases = new String[]{"chrome", "chrom"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Blessed Orb";
                 aliases = new String[]{"blessed", "bless", "bles"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Glassblower's Bauble";
                 aliases = new String[]{"bauble", "glass"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Augmentation";
                 aliases = new String[]{"aug"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Orb of Transmutation";
                 aliases = new String[]{"trans", "tra"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Apprentice Cartographer's Sextant";
                 aliases = new String[]{"apprentice-sextant", "apprentice"};
             }},
-            new Currency() {{
+            new AliasEntry() {{
                 name = "Journeyman Cartographer's Sextant";
                 aliases = new String[]{"journeyman-sextant", "journeyman"};
             }}
     };
 
-    public static Map<String, String> GetAliasMap() {
-        HashMap<String, String> tmp = new HashMap<>();
-
-        for (Currency currency : aliases) {
-            for (String alias : currency.aliases) {
-                tmp.put(alias, currency.name);
-            }
-        }
-
-        return tmp;
+    public static AliasEntry[] getAliases() {
+        return aliases;
     }
 
-    private static class Currency {
+    public static class AliasEntry {
         String name;
         String[] aliases;
+
+        public String getName() {
+            return name;
+        }
+
+        public String[] getAliases() {
+            return aliases;
+        }
     }
 }

@@ -137,7 +137,6 @@ public class Init {
 
             Map<Key, Integer> tmpKeyToId = new HashMap<>();
 
-
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
@@ -200,55 +199,6 @@ public class Init {
             leagueIds.clear();
             leagueIds.putAll(tmpLeagueIds);
             logger.info("Got league item IDs from database");
-
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
-     * Creates a map containing currency price data from database in the format of:
-     * {leagueID: {currencyName: chaosValue}}
-     *
-     * @return Generated Map
-     */
-    public boolean getCurrencyMap(Map<Integer, Map<String, Double>> map) {
-        Map<Integer, Map<String, Double>> tmp = new HashMap<>();
-
-        String query =  "SELECT   i.id_l, did.name, i.median " +
-                        "FROM     league_items  AS i " +
-                        "JOIN     data_itemData AS did " +
-                        "  ON     i.id_d = did.id " +
-                        "JOIN     data_leagues  AS l " +
-                        "  ON     i.id_l = l.id " +
-                        "WHERE    l.active = 1 " +
-                        "  AND    did.id_grp = 11 " +
-                        "ORDER BY i.id_l; ";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return false;
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    Integer leagueId = resultSet.getInt("id_l");
-                    String name = resultSet.getString("name");
-                    Double price = resultSet.getDouble("median");
-
-                    Map<String, Double> currencyMap = tmp.getOrDefault(leagueId, new HashMap<>());
-                    currencyMap.put(name, price);
-                    tmp.putIfAbsent(leagueId, currencyMap);
-                }
-            }
-
-            map.clear();
-            map.putAll(tmp);
 
             return true;
         } catch (SQLException ex) {

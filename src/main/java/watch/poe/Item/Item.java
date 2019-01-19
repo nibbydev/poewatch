@@ -297,6 +297,10 @@ public class Item {
                 }
         }
 
+        if (discard) {
+            return;
+        }
+
         extractItemLinks();
         checkItemVariant();
     }

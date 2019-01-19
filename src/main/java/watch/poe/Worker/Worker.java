@@ -5,14 +5,14 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.WorkerManager;
-import poe.Worker.Entry.RawItemEntry;
-import poe.Worker.Entry.RawUsernameEntry;
 import poe.Item.Item;
 import poe.Item.ItemParser;
 import poe.Item.Mappers;
 import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
+import poe.Managers.WorkerManager;
+import poe.Worker.Entry.RawItemEntry;
+import poe.Worker.Entry.RawUsernameEntry;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,22 +32,19 @@ public class Worker extends Thread {
     private static final Set<Long> DbStashes = new HashSet<>(100000);
     private static final Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
     private static final CRC32 crc = new CRC32();
-
+    private static long lastPullTime;
     private final WorkerManager workerManager;
     private final LeagueManager leagueManager;
     private final RelationManager relationManager;
     private final Database database;
     private final Config config;
     private final Gson gson;
-
-    private static long lastPullTime;
+    private final Object jobMonitor = new Object();
+    private final Object pauseMonitor = new Object();
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;
     private int workerId;
-
-    private final Object jobMonitor = new Object();
-    private final Object pauseMonitor = new Object();
     private boolean pauseFlag = false;
     private boolean isPaused = false;
 
@@ -60,6 +57,20 @@ public class Worker extends Thread {
         this.workerId = id;
 
         gson = new Gson();
+    }
+
+    private static long calcCrc(String str) {
+        if (str == null) {
+            return 0;
+        } else {
+            crc.reset();
+            crc.update(str.getBytes());
+            return crc.getValue();
+        }
+    }
+
+    public static Set<Long> getDbStashes() {
+        return DbStashes;
     }
 
     /**
@@ -235,7 +246,7 @@ public class Worker extends Thread {
                 // Create an ItemParser instance for every item in the stash, as one item
                 // may branch into multiple db entries. For examples, a Devoto's Devotion with
                 // a Tornado Shot enchantment creates 2 entries.
-                ItemParser itemParser = new ItemParser(baseItem, id_l);
+                ItemParser itemParser = new ItemParser(baseItem);
 
                 // There was something off with the base item, discard it and don'tt create branched items
                 if (itemParser.isDiscard()) {
@@ -255,7 +266,9 @@ public class Worker extends Thread {
                         continue;
                     }
 
-                    items.add(new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc, itemParser.getPrice()));
+                    RawItemEntry entry = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc,
+                            itemParser.getIdPrice(), itemParser.getPrice());
+                    items.add(entry);
 
                     // Set flag to indicate stash contained at least 1 valid item
                     if (!hasValidItems) {
@@ -332,6 +345,10 @@ public class Worker extends Thread {
         isPaused = false;
     }
 
+    //------------------------------------------------------------------------------------------------------------
+    // Getters and setters
+    //------------------------------------------------------------------------------------------------------------
+
     /**
      * Notifies local monitor
      */
@@ -340,20 +357,6 @@ public class Worker extends Thread {
             jobMonitor.notify();
         }
     }
-
-    private static long calcCrc(String str) {
-        if (str == null) {
-            return 0;
-        } else {
-            crc.reset();
-            crc.update(str.getBytes());
-            return crc.getValue();
-        }
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
-    //------------------------------------------------------------------------------------------------------------
 
     public int getWorkerId() {
         return workerId;
@@ -374,9 +377,5 @@ public class Worker extends Thread {
 
     public void setPauseFlag(boolean pauseFlag) {
         this.pauseFlag = pauseFlag;
-    }
-
-    public static Set<Long> getDbStashes() {
-        return DbStashes;
     }
 }

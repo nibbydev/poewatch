@@ -24,13 +24,12 @@ public class RelationManager {
     private final Map<String, CategoryEntry> categories = new HashMap<>();
 
     private final Map<String, Set<String>> baseItems;
-    private final Map<String, String> currencyAliasToName;
+    private final Map<String, Integer> currencyAliases = new HashMap<>();
 
     public RelationManager(Database db) {
         this.logger = LoggerFactory.getLogger(RelationManager.class);
         this.database = db;
 
-        currencyAliasToName = CurrencyAliases.GetAliasMap();
         baseItems = BaseItems.GenBaseMap();
     }
 
@@ -58,6 +57,9 @@ public class RelationManager {
             logger.warn("Database did not contain any item id information");
         }
 
+        // Create mappings of buyout note shorthand to item id based on itemData
+        createCurrencyAliasMap();
+
         success = database.init.getLeagueItemIds(leagueItems);
         if (!success) {
             logger.error("Failed to query league item IDs from database. Shutting down...");
@@ -69,6 +71,37 @@ public class RelationManager {
         logger.info("Relations initialized successfully");
 
         return true;
+    }
+
+    /**
+     * Creates mappings of buyout note shorthand to item id
+     */
+    private void createCurrencyAliasMap() {
+        currencyAliases.clear();
+
+        // For every alias, find a matching currency item's id
+        for (CurrencyAliases.AliasEntry aliasEntry : CurrencyAliases.getAliases()) {
+            for (Key key : itemData.keySet()) {
+                if (key.getFrameType() == 5 && key.getName().equals(aliasEntry.getName())) {
+                    int id = itemData.get(key);
+
+                    for (String alias : aliasEntry.getAliases()) {
+                        currencyAliases.put(alias, id);
+                    }
+                }
+            }
+        }
+
+        // Since chaos Chaos Orb doesn't actually exist as an item in the database
+        for (CurrencyAliases.AliasEntry aliasEntry : CurrencyAliases.getAliases()) {
+            if (aliasEntry.getName().equals("Chaos Orb")) {
+                for (String alias : aliasEntry.getAliases()) {
+                    currencyAliases.put(alias, null);
+                }
+
+                break;
+            }
+        }
     }
 
     public Integer index(Item item, int id_l) {
@@ -217,7 +250,7 @@ public class RelationManager {
         return null;
     }
 
-    public Map<String, String> getCurrencyAliasToName() {
-        return currencyAliasToName;
+    public Map<String, Integer> getCurrencyAliases() {
+        return currencyAliases;
     }
 }

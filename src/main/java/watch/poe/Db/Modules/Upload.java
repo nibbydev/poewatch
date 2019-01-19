@@ -22,14 +22,14 @@ public class Upload {
         this.database = database;
     }
 
-
     public boolean uploadEntries(Set<RawItemEntry> set) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, price) " +
-                        "VALUES (?, ?, ?, ?, ?, ?) " +
+        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, id_price, price) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  updates = IF(price = VALUES(price), updates, updates + 1)," +
                         "  updated = IF(price = VALUES(price), updated, now())," +
                         "  price = VALUES(price), " +
+                        "  id_price = VALUES(id_price), " +
                         "  stash_crc = VALUES(stash_crc); ";
 
         try {
@@ -53,7 +53,12 @@ public class Upload {
                     statement.setLong(3, raw.account_crc);
                     statement.setLong(4, raw.stash_crc);
                     statement.setLong(5, raw.item_crc);
-                    statement.setString(6, priceStr);
+
+                    if (raw.id_price == null) {
+                        statement.setNull(6, 0);
+                    } else statement.setInt(6, raw.id_price);
+
+                    statement.setString(7, priceStr);
                     statement.addBatch();
                 }
 
@@ -67,7 +72,6 @@ public class Upload {
             return false;
         }
     }
-
 
     public boolean updateItems(Map<Integer, Map<Integer, PriceManager.Result>> results) {
         String query =  "update league_items " +

@@ -31,7 +31,6 @@ public class WorkerManager extends Thread {
     private final Timer timer;
     private final Gson gson;
 
-    private final Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private final ArrayList<Worker> workerList = new ArrayList<>();
     private volatile boolean flagRun = true;
     private volatile boolean readyToExit = false;
@@ -160,11 +159,6 @@ public class WorkerManager extends Thread {
         // End cycle timer
         timer.clk("cycle");
 
-        // Get latest currency rates
-        timer.start("prices");
-        database.init.getCurrencyMap(currencyLeagueMap);
-        timer.clk("prices");
-
         // Check league API
         if (status.isTenBool()) {
             timer.start("leagues", Timer.TimerType.TEN);
@@ -180,13 +174,12 @@ public class WorkerManager extends Thread {
         }
 
         // Prepare cycle message
-        logger.info(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d / p:%2d",
+        logger.info(String.format("Cycle finished: %5d ms | %2d / %3d / %4d | c:%6d",
                 System.currentTimeMillis() - status.lastRunTime,
                 status.getTenRemainMin(),
                 status.getSixtyRemainMin(),
                 status.getTwentyFourRemainMin(),
-                timer.getLatest("cycle"),
-                timer.getLatest("prices")));
+                timer.getLatest("cycle")));
 
         logger.info(String.format("[10%5d][11%5d][12%5d]",
                 timer.getLatest("a10"),
@@ -374,9 +367,5 @@ public class WorkerManager extends Thread {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    public Map<String, Double> getCurrencyLeagueMap(int leagueId) {
-        return currencyLeagueMap.get(leagueId);
     }
 }
