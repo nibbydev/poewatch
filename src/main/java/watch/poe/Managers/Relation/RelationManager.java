@@ -2,11 +2,9 @@ package poe.Managers.Relation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.DB.Database;
-import poe.Initializers.BaseItems;
-import poe.Initializers.CurrencyAliases;
-import poe.Managers.Entry.item.Item;
-import poe.Managers.Entry.item.Key;
+import poe.Db.Database;
+import poe.Item.Item;
+import poe.Item.Key;
 
 import java.util.*;
 

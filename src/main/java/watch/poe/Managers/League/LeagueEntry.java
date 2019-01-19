@@ -3,8 +3,8 @@ package poe.Managers.League;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Managers.League.derserializer.BaseLeague;
-import poe.Managers.League.derserializer.Rule;
+import poe.Managers.League.Derserializer.BaseLeague;
+import poe.Managers.League.Derserializer.Rule;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

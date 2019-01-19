@@ -5,9 +5,9 @@ import com.google.gson.reflect.TypeToken;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.DB.Database;
-import poe.Managers.League.derserializer.BaseLeague;
-import poe.Managers.League.derserializer.Rule;
+import poe.Db.Database;
+import poe.Managers.League.Derserializer.BaseLeague;
+import poe.Managers.League.Derserializer.Rule;
 
 import java.io.IOException;
 import java.io.InputStream;

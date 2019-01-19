@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.DB.Database;
-import poe.Managers.Entry.RawItemEntry;
-import poe.Managers.Entry.RawUsernameEntry;
-import poe.Managers.Entry.item.Item;
-import poe.Managers.Entry.item.ItemParser;
-import poe.Managers.Entry.item.Mappers;
+import poe.Db.Database;
+import poe.Managers.Worker.Entry.RawItemEntry;
+import poe.Managers.Worker.Entry.RawUsernameEntry;
+import poe.Item.Item;
+import poe.Item.ItemParser;
+import poe.Item.Mappers;
 import poe.Managers.League.LeagueManager;
 import poe.Managers.Relation.RelationManager;
 

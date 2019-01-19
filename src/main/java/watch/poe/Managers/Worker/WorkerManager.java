@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.DB.Database;
-import poe.Logic.PriceCalculator;
+import poe.Db.Database;
+import poe.PriceCalculator;
 import poe.Managers.Account.AccountManager;
-import poe.Managers.Entry.StatusElement;
-import poe.Managers.Entry.item.Mappers;
-import poe.Managers.Entry.timer.Timer;
+import poe.Managers.Worker.Entry.StatusElement;
+import poe.Item.Mappers;
+import poe.Managers.Worker.Timer.Timer;
 import poe.Managers.League.LeagueManager;
 import poe.Managers.Relation.RelationManager;
 

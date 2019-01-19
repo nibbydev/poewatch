@@ -2,7 +2,7 @@ package poe.Managers.Account;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.DB.Database;
+import poe.Db.Database;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
