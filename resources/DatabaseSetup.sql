@@ -397,7 +397,6 @@ VALUES
     (4,     'fossil',     'Fossils'),
     (4,     'resonator',  'Resonators'),
     (4,     'vial',       'Vials'),
-    (4,     'net',        'Nets'),
     (5,     'boots',      'Boots'),
     (5,     'gloves',     'Gloves'),
     (5,     'helmet',     'Helmets'),

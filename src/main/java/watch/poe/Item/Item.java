@@ -120,10 +120,8 @@ public class Item {
                     group = "essence";
                 } else if (iconCategory.equals("piece")) {
                     group = "piece";
-                } else if (name.contains(" Net")) {
-                    group = "net";
                 } else if (name.contains("Vial of ")) {
-                    group = "net";
+                    group = "vial";
                 }
 
                 if (group == null) {
