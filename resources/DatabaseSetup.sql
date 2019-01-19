@@ -184,7 +184,7 @@ CREATE TABLE league_entries (
   FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
   FOREIGN KEY (account_crc) REFERENCES league_accounts (account_crc) ON DELETE CASCADE,
   CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
-  INDEX compound_account_stash_crc (account_crc, stash_crc),
+  INDEX id_l_d (id_l, id_d),
   INDEX discovered (discovered),
   INDEX stash_crc (stash_crc),
   INDEX updated (updated)
