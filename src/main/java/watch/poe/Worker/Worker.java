@@ -235,7 +235,7 @@ public class Worker extends Thread {
                 // Create an ItemParser instance for every item in the stash, as one item
                 // may branch into multiple db entries. For examples, a Devoto's Devotion with
                 // a Tornado Shot enchantment creates 2 entries.
-                ItemParser itemParser = new ItemParser(baseItem, workerManager.getCurrencyLeagueMap(id_l));
+                ItemParser itemParser = new ItemParser(baseItem, id_l);
 
                 // There was something off with the base item, discard it and don'tt create branched items
                 if (itemParser.isDiscard()) {

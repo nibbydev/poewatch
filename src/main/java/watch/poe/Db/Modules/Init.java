@@ -214,8 +214,8 @@ public class Init {
      *
      * @return Generated Map
      */
-    public Map<Integer, Map<String, Double>> getCurrencyMap() {
-        Map<Integer, Map<String, Double>> tmpCurrencyLeagueMap = new HashMap<>();
+    public boolean getCurrencyMap(Map<Integer, Map<String, Double>> map) {
+        Map<Integer, Map<String, Double>> tmp = new HashMap<>();
 
         String query =  "SELECT   i.id_l, did.name, i.median " +
                         "FROM     league_items  AS i " +
@@ -230,7 +230,7 @@ public class Init {
         try {
             if (database.connection.isClosed()) {
                 logger.error("Database connection was closed");
-                return null;
+                return false;
             }
 
             try (Statement statement = database.connection.createStatement()) {
@@ -241,16 +241,19 @@ public class Init {
                     String name = resultSet.getString("name");
                     Double price = resultSet.getDouble("median");
 
-                    Map<String, Double> currencyMap = tmpCurrencyLeagueMap.getOrDefault(leagueId, new HashMap<>());
+                    Map<String, Double> currencyMap = tmp.getOrDefault(leagueId, new HashMap<>());
                     currencyMap.put(name, price);
-                    tmpCurrencyLeagueMap.putIfAbsent(leagueId, currencyMap);
+                    tmp.putIfAbsent(leagueId, currencyMap);
                 }
             }
 
-            return tmpCurrencyLeagueMap;
+            map.clear();
+            map.putAll(tmp);
+
+            return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
-            return null;
+            return false;
         }
     }
 

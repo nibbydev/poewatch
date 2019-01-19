@@ -5,6 +5,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Item.ItemParser;
 import poe.Worker.Entry.StatusElement;
 import poe.Item.Mappers;
 import poe.Worker.Timer.Timer;
@@ -30,7 +31,7 @@ public class WorkerManager extends Thread {
     private final Timer timer;
     private final Gson gson;
 
-    private Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
+    private final Map<Integer, Map<String, Double>> currencyLeagueMap = new HashMap<>();
     private final ArrayList<Worker> workerList = new ArrayList<>();
     private volatile boolean flagRun = true;
     private volatile boolean readyToExit = false;
@@ -161,7 +162,7 @@ public class WorkerManager extends Thread {
 
         // Get latest currency rates
         timer.start("prices");
-        loadCurrency();
+        database.init.getCurrencyMap(currencyLeagueMap);
         timer.clk("prices");
 
         // Check league API
@@ -373,16 +374,6 @@ public class WorkerManager extends Thread {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    private void loadCurrency() {
-        Map<Integer, Map<String, Double>> map = database.init.getCurrencyMap();
-
-        if (map == null) {
-            return;
-        }
-
-        currencyLeagueMap = map;
     }
 
     public Map<String, Double> getCurrencyLeagueMap(int leagueId) {

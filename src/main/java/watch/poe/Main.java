@@ -75,6 +75,7 @@ public class Main {
 
             ItemParser.setConfig(config);
             ItemParser.setRelationManager(relations);
+            ItemParser.setWorkerManager(workerManager);
 
             // Parse CLI parameters
             success = parseCommandParameters(args);

@@ -2,6 +2,7 @@ package poe.Item;
 
 import com.typesafe.config.Config;
 import poe.Managers.RelationManager;
+import poe.Managers.WorkerManager;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Map;
 public class ItemParser {
     private static Config config;
     private static RelationManager relationManager;
+    private static WorkerManager workerManager;
 
     private ArrayList<Item> items = new ArrayList<>();
     private Mappers.BaseItem base;
@@ -20,7 +22,7 @@ public class ItemParser {
     // Constructor
     //------------------------------------------------------------------------------------------------------------
 
-    public ItemParser(Mappers.BaseItem base, Map<String, Double> currencyMap) {
+    public ItemParser(Mappers.BaseItem base, int id_l) {
         this.base = base;
 
         // Do a few checks on the league, note and etc
@@ -32,7 +34,7 @@ public class ItemParser {
         if (discard) return;
 
         // Convert item's price to chaos if possible
-        convertPrice(currencyMap);
+        convertPrice(id_l);
         if (discard) return;
 
         // Branch item if necessary
@@ -129,14 +131,15 @@ public class ItemParser {
     }
 
     /**
-     * Uses provided currencyMap to covert Item's price to chaos if necessary
+     * Uses currencyMap to covert Item's price to chaos if necessary
      *
-     * @param currencyMap Map of currency name - chaos value relations
+     * @param id_l Valid league id
      */
-    private void convertPrice(Map<String, Double> currencyMap) {
+    private void convertPrice(int id_l) {
         // If the Item's price is not in chaos, it needs to be converted to chaos using the currency map
         if (!priceType.equals("Chaos Orb")) {
-            // Precaution
+            Map<String, Double> currencyMap = workerManager.getCurrencyLeagueMap(id_l);
+
             if (currencyMap == null) {
                 discard = true;
                 return;
@@ -179,7 +182,7 @@ public class ItemParser {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    // Getters
+    // Getters & setters
     //------------------------------------------------------------------------------------------------------------
 
     public Double getPrice() {
@@ -204,5 +207,9 @@ public class ItemParser {
 
     public static void setRelationManager(RelationManager relationManager) {
         ItemParser.relationManager = relationManager;
+    }
+
+    public static void setWorkerManager(WorkerManager workerManager) {
+        ItemParser.workerManager = workerManager;
     }
 }
