@@ -115,10 +115,10 @@ public class WorkerManager extends Thread {
         // Start cycle timer
         timer.start("cycle", Timer.TimerType.NONE);
 
-        if (status.isSixtyBool()) {
-            timer.start("a21", Timer.TimerType.SIXTY);
-            database.flag.deleteItemEntries();
-            timer.clk("a21");
+        if (status.isTwentyFourBool()) {
+            timer.start("a30", Timer.TimerType.TWENTY);
+            database.history.removeOldItemEntries();
+            timer.clk("a30");
         }
 
         timer.start("a10");
@@ -144,16 +144,12 @@ public class WorkerManager extends Thread {
         }
 
         if (status.isTwentyFourBool()) {
-            timer.start("a30", Timer.TimerType.TWENTY);
-            database.history.addDaily();
-            timer.clk("a30");
-
             timer.start("a31", Timer.TimerType.TWENTY);
-            database.calc.calcSpark();
+            database.history.addDaily();
             timer.clk("a31");
 
             timer.start("a32", Timer.TimerType.TWENTY);
-            database.history.removeOldItemEntries();
+            database.calc.calcSpark();
             timer.clk("a32");
         }
 
