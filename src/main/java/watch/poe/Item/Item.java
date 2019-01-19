@@ -128,7 +128,6 @@ public class Item {
                     group = category;
                 }
 
-                nullId();
                 break;
 
             case "gems":
@@ -155,13 +154,10 @@ public class Item {
                 if (frameType == 3 || frameType == 9) {
                     group = "unique";
                 } else if (iconCategory.equals("breach")) {
-                    nullId();
                     group = "fragment";
                 } else if (iconCategory.equals("scarabs")) {
-                    nullId();
                     group = "scarab";
                 } else if (base.getProperties() == null){
-                    nullId();
                     group = "fragment";
                 } else {
                     group = "map";
@@ -172,7 +168,6 @@ public class Item {
             case "cards":
                 category = "card";
                 group = category;
-                nullId();
                 break;
 
             case "flasks":
@@ -506,15 +501,6 @@ public class Item {
         this.level = lvl;
         this.quality = qual;
         this.corrupted = corrupted;
-    }
-
-    /**
-     * Literally just a function that sets the item id (the 64char hex string) to null. This is to keep track of the
-     * different places it might get set to null. Necessary to limit certain items (eg. stackable currency) from
-     * being able to generate multiple database entries.
-     */
-    private void nullId() {
-        id = null;
     }
 
     //------------------------------------------------------------------------------------------------------------
