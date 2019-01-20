@@ -265,7 +265,11 @@ public class Upload {
                     for (ValueEntry entry : valueList) {
                         statement.setString(1, type.name());
                         statement.setTimestamp(2, entry.getTime());
-                        statement.setLong(3, entry.getValue());
+
+                        if (entry.getValue() == null) {
+                            statement.setNull(3, 0);
+                        } else statement.setLong(3, entry.getValue());
+
                         statement.addBatch();
                     }
                 }

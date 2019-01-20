@@ -183,7 +183,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.worker_duplicateJob, 1, true, true);
+                            statisticsManager.addValue(StatType.worker_duplicateJob, null, true, true);
                             return null;
                         }
                     }

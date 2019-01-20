@@ -79,8 +79,13 @@ public class StatisticsManager {
      * @param record Save entry in database
      * @param group Group all entries with same type up as 1 entry
      */
-    public void addValue(StatType type, long val, boolean record, boolean group) {
+    public void addValue(StatType type, Long val, boolean record, boolean group) {
         if (group) {
+            if (val == null) {
+                logger.error("Cannot use null value together with group");
+                throw new NullPointerException();
+            }
+
             synchronized (groupValues) {
                 Map<StatType, GroupValueEntry> entryMap = groupValues.getOrDefault(Thread.currentThread(), new HashMap<>());
                 GroupValueEntry groupValueEntry = entryMap.getOrDefault(type, new GroupValueEntry(record));
@@ -227,18 +232,18 @@ public class StatisticsManager {
     public static class ValueEntry {
         Timestamp time = new Timestamp(System.currentTimeMillis());
         boolean record;
-        long value;
+        Long value;
 
-        ValueEntry(long value, boolean record) {
+        ValueEntry(Long value, boolean record) {
             this.record = record;
             this.value = value;
         }
 
-        ValueEntry(long value) {
+        ValueEntry(Long value) {
             this.value = value;
         }
 
-        public long getValue() {
+        public Long getValue() {
             return value;
         }
 
@@ -256,7 +261,7 @@ public class StatisticsManager {
             this.record = record;
         }
 
-        public void addValue(long val) {
+        public void addValue(Long val) {
             values.add(val);
         }
 

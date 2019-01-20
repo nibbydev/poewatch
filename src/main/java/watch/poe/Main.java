@@ -46,7 +46,7 @@ public class Main {
             }
 
             statisticsManager = new StatisticsManager(database);
-            statisticsManager.addValue(StatisticsManager.StatType.app_startup, 1, true, false);
+            statisticsManager.addValue(StatisticsManager.StatType.app_startup, null, true, false);
 
             // Set static DB accessor in honour of spaghetti code
             PriceManager.setDatabase(database);
@@ -92,7 +92,7 @@ public class Main {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();
 
-            statisticsManager.addValue(StatisticsManager.StatType.app_shutdown, 1, true, false);
+            statisticsManager.addValue(StatisticsManager.StatType.app_shutdown, null, true, false);
             statisticsManager.upload();
 
             if (database != null) database.disconnect();
