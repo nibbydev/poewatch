@@ -107,9 +107,9 @@ public class WorkerManager extends Thread {
         statisticsManager.startTimer(StatType.CYCLE_TOTAL);
 
         if (status.isTwentyFourBool()) {
-            statisticsManager.startTimer(StatType.CYCLE_REMOVE_OLD_ITEM_ENTRIES);
+            statisticsManager.startTimer(StatType.CYCLE_REMOVE_OLD_ENTRIES);
             database.history.removeOldItemEntries();
-            statisticsManager.clkTimer(StatType.CYCLE_REMOVE_OLD_ITEM_ENTRIES, GroupType.NONE, true);
+            statisticsManager.clkTimer(StatType.CYCLE_REMOVE_OLD_ENTRIES, GroupType.NONE, true);
         }
 
         statisticsManager.startTimer(StatType.CYCLE_CALC_PRICES);
@@ -125,6 +125,8 @@ public class WorkerManager extends Thread {
         statisticsManager.clkTimer(StatType.CYCLE_CALC_EXALTED, GroupType.NONE, true);
 
         if (status.isSixtyBool()) {
+            database.calc.countActiveAccounts(statisticsManager);
+
             statisticsManager.startTimer(StatType.CYCLE_ADD_HOURLY);
             database.history.addHourly();
             statisticsManager.clkTimer(StatType.CYCLE_ADD_HOURLY, GroupType.NONE, true);
@@ -188,7 +190,7 @@ public class WorkerManager extends Thread {
         ));
 
         if (status.isTwentyFourBool()) logger.info(String.format("[%5d][%5d][%5d][%5d]",
-                statisticsManager.getLatest(StatType.CYCLE_REMOVE_OLD_ITEM_ENTRIES),
+                statisticsManager.getLatest(StatType.CYCLE_REMOVE_OLD_ENTRIES),
                 statisticsManager.getLatest(StatType.CYCLE_ADD_DAILY),
                 statisticsManager.getLatest(StatType.CYCLE_CALC_SPARK),
                 statisticsManager.getLatest(StatType.CYCLE_ACCOUNT_CHANGES)

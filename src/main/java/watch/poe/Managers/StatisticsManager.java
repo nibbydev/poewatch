@@ -288,7 +288,7 @@ public class StatisticsManager {
         CYCLE_ADD_HOURLY,
         CYCLE_CALC_DAILY,
         CYCLE_RESET_COUNTERS,
-        CYCLE_REMOVE_OLD_ITEM_ENTRIES,
+        CYCLE_REMOVE_OLD_ENTRIES,
         CYCLE_ADD_DAILY,
         CYCLE_CALC_SPARK,
         CYCLE_ACCOUNT_CHANGES,
@@ -304,8 +304,9 @@ public class StatisticsManager {
         WORKER_GROUP_UL_ENTRIES,
         WORKER_GROUP_UL_USERNAMES,
 
-        TOTAL_ITEMS_PER_STASH,
-        ACCEPTED_ITEMS_PER_STASH,
+        TOTAL_ITEMS,
+        ACCEPTED_ITEMS,
+        ACTIVE_ACCOUNTS
     }
 
     public enum GroupType {

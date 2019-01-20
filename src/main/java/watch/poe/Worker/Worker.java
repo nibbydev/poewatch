@@ -227,7 +227,7 @@ public class Worker extends Thread {
         // Separate set for collecting account and character names
         Set<RawUsernameEntry> usernames = new HashSet<>();
 
-        statisticsManager.addValue(StatType.TOTAL_ITEMS_PER_STASH, (long)reply.stashes.size(), GroupType.ADD, true);
+        statisticsManager.addValue(StatType.TOTAL_ITEMS, (long)reply.stashes.size(), GroupType.ADD, true);
 
         for (Mappers.Stash stash : reply.stashes) {
             // Get league ID. If it's an unknown ID, skip this stash
@@ -302,7 +302,7 @@ public class Worker extends Thread {
             }
         }
 
-        statisticsManager.addValue(StatType.ACCEPTED_ITEMS_PER_STASH, (long)items.size(), GroupType.ADD, true);
+        statisticsManager.addValue(StatType.ACCEPTED_ITEMS, (long)items.size(), GroupType.ADD, true);
 
         // Shovel everything to db
         statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);
