@@ -48,11 +48,11 @@ public class StatisticsManager {
      * Stops the timer instance associated with the provided type and notes the delay.
      *
      * @param type Enum identifier
-     * @param record Save entry in database
      * @param group Group all entries with same type up as 1 entry
+     * @param record Save entry in database
      * @return Timer delay
      */
-    public long clkTimer(StatType type, boolean record, boolean group) {
+    public long clkTimer(StatType type, GroupType group, boolean record) {
         if (type == null) {
             logger.error("Type cannot be null");
             throw new NullPointerException();
@@ -66,36 +66,20 @@ public class StatisticsManager {
         }
 
         long delay = System.currentTimeMillis() - timerMap.remove(type);
-        addValue(type, delay, record, group);
+        addValue(type, delay, group, record);
 
         return delay;
     }
 
     /**
      * Add a value directly
-     *
-     * @param type Enum identifier
+     *  @param type Enum identifier
      * @param val Value to save
-     * @param record Save entry in database
      * @param group Group all entries with same type up as 1 entry
+     * @param record Save entry in database
      */
-    public void addValue(StatType type, Long val, boolean record, boolean group) {
-        if (group) {
-            if (val == null) {
-                logger.error("Cannot use null value together with group");
-                throw new NullPointerException();
-            }
-
-            synchronized (groupValues) {
-                Map<StatType, GroupValueEntry> entryMap = groupValues.getOrDefault(Thread.currentThread(), new HashMap<>());
-                GroupValueEntry groupValueEntry = entryMap.getOrDefault(type, new GroupValueEntry(record));
-
-                groupValueEntry.addValue(val);
-
-                entryMap.putIfAbsent(type, groupValueEntry);
-                groupValues.putIfAbsent(Thread.currentThread(), entryMap);
-            }
-        } else {
+    public void addValue(StatType type, Long val, GroupType group, boolean record) {
+        if (group.equals(GroupType.NONE)) {
             synchronized (values) {
                 Map<StatType, List<ValueEntry>> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
                 List<ValueEntry> entryList = entryMap.getOrDefault(type, new ArrayList<>());
@@ -104,6 +88,21 @@ public class StatisticsManager {
 
                 entryMap.putIfAbsent(type, entryList);
                 values.putIfAbsent(Thread.currentThread(), entryMap);
+            }
+        } else {
+            if (val == null) {
+                logger.error("Cannot use null value together with group");
+                throw new NullPointerException();
+            }
+
+            synchronized (groupValues) {
+                Map<StatType, GroupValueEntry> entryMap = groupValues.getOrDefault(Thread.currentThread(), new HashMap<>());
+                GroupValueEntry groupValueEntry = entryMap.getOrDefault(type, new GroupValueEntry(group, record));
+
+                groupValueEntry.addValue(val);
+
+                entryMap.putIfAbsent(type, groupValueEntry);
+                groupValues.putIfAbsent(Thread.currentThread(), entryMap);
             }
         }
     }
@@ -139,36 +138,61 @@ public class StatisticsManager {
 
         // Combine grouped values from all threads into single list
         synchronized (groupValues) {
-            Map<StatType, List<GroupValueEntry>> threadConcatMap = new HashMap<>();
+            Map<StatType, GroupValueEntry> concatMap = new HashMap<>();
 
-            // Combine all elements from threads under grouped list
+            // Combine all elements from multiple threads under grouped entries
             for (Thread thread : groupValues.keySet()) {
                 Map<StatType, GroupValueEntry> entryMap = groupValues.get(thread);
 
                 for (StatType type : entryMap.keySet()) {
-                    List<GroupValueEntry> threadConcatList = threadConcatMap.getOrDefault(type, new ArrayList<>());
-                    GroupValueEntry groupValueEntry = entryMap.get(type);
+                    GroupValueEntry concatEntry = concatMap.get(type);
+                    GroupValueEntry entry = entryMap.get(type);
 
-                    if (!groupValueEntry.record) {
-                        continue;
+                    // Entry didn't exist yet
+                    if (concatEntry == null) {
+                        concatEntry = new GroupValueEntry(
+                                entry.groupType,
+                                entry.record
+                        );
+
+                        // Next time it won't be null
+                        concatMap.put(type, concatEntry);
                     }
 
-                    threadConcatList.add(groupValueEntry);
-                    threadConcatMap.putIfAbsent(type, threadConcatList);
+                    // Add all values from the thread-specific group entry to the combined one
+                    concatEntry.getValues().addAll(entry.getValues());
                 }
             }
 
-            // Get averages of the values and store them under the same type
-            for (StatType type : threadConcatMap.keySet()) {
-                List<GroupValueEntry> threadConcatList = threadConcatMap.get(type);
+            // Group the concatenated entries using the specified method
+            for (StatType type : concatMap.keySet()) {
+                GroupValueEntry entry = concatMap.get(type);
+                Long value;
 
-                List<Long> means = new ArrayList<>();
-                for (GroupValueEntry groupValueEntry : threadConcatList) {
-                    means.add(findMean(groupValueEntry.values));
+                if (entry.getValues().isEmpty()) {
+                    value = (long) 0;
+                } else if (entry.groupType.equals(GroupType.AVG)) {
+                    long sum = 0;
+
+                    // Not to worry, the values are almost never > smallint
+                    for (Long val : entry.getValues()) {
+                        sum += val;
+                    }
+
+                    value = sum / entry.getValues().size();
+                } else if (entry.groupType.equals(GroupType.ADD)) {
+                    value = (long) 0;
+
+                    for (Long val : entry.getValues()) {
+                        value += val;
+                    }
+                } else {
+                    logger.error("You've reached a part of the code that was impossible to reach. May god have mercy on your soul.");
+                    throw new NullPointerException();
                 }
 
                 List<ValueEntry> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
-                combinedList.add(new ValueEntry(findMean(means)));
+                combinedList.add(new ValueEntry(value));
                 combinedValues.putIfAbsent(type, combinedList);
             }
 
@@ -176,27 +200,6 @@ public class StatisticsManager {
         }
 
         database.upload.uploadStatistics(combinedValues);
-    }
-
-    /**
-     * Finds the mean value from a group of entries
-     *
-     * @param values
-     * @return 0 on failure, mean otherwise
-     */
-    public static long findMean(List<Long> values) {
-        if (values.isEmpty()) {
-            return 0;
-        }
-
-        long sum = 0;
-
-        // Not to worry, the values are almost never > smallint
-        for (Long entry : values) {
-            sum += entry;
-        }
-
-        return sum / values.size();
     }
 
     /**
@@ -253,11 +256,13 @@ public class StatisticsManager {
     }
 
     public static class GroupValueEntry {
-        Timestamp time = new Timestamp(System.currentTimeMillis());
-        List<Long> values = new ArrayList<>();
-        boolean record;
+        private Timestamp time = new Timestamp(System.currentTimeMillis());
+        private List<Long> values = new ArrayList<>();
+        private GroupType groupType;
+        private boolean record;
 
-        GroupValueEntry(boolean record) {
+        GroupValueEntry(GroupType groupType, boolean record) {
+            this.groupType = groupType;
             this.record = record;
         }
 
@@ -275,28 +280,37 @@ public class StatisticsManager {
     }
 
     public enum StatType {
-        cycle_total,
-        cycle_0_calcPrices,
-        cycle_0_updateCounters,
-        cycle_0_calculateExalted,
-        cycle_10_leagueCycle,
-        cycle_60_addHourly,
-        cycle_60_calcDaily,
-        cycle_60_resetCounters,
-        cycle_24_removeOldItemEntries,
-        cycle_24_addDaily,
-        cycle_24_calcSpark,
-        cycle_24_accountNameChanges,
+        CYCLE_TOTAL,
+        CYCLE_CALC_PRICES,
+        CYCLE_UPDATE_COUNTERS,
+        CYCLE_CALC_EXALTED,
+        CYCLE_LEAGUE_CYCLE,
+        CYCLE_ADD_HOURLY,
+        CYCLE_CALC_DAILY,
+        CYCLE_RESET_COUNTERS,
+        CYCLE_REMOVE_OLD_ITEM_ENTRIES,
+        CYCLE_ADD_DAILY,
+        CYCLE_CALC_SPARK,
+        CYCLE_ACCOUNT_CHANGES,
 
-        app_startup,
-        app_shutdown,
+        APP_STARTUP,
+        APP_SHUTDOWN,
 
-        worker_duplicateJob,
-        worker_group_dl,
-        worker_group_parse,
-        worker_group_ulAccounts,
-        worker_group_resetStashes,
-        worker_group_ulEntries,
-        worker_group_ulUsernames
+        WORKER_DUPLICATE_JOB,
+        WORKER_GROUP_DL,
+        WORKER_GROUP_PARSE,
+        WORKER_GROUP_UL_ACCOUNTS,
+        WORKER_GROUP_RESET_STASHES,
+        WORKER_GROUP_UL_ENTRIES,
+        WORKER_GROUP_UL_USERNAMES,
+
+        TOTAL_ITEMS_PER_STASH,
+        ACCEPTED_ITEMS_PER_STASH,
+    }
+
+    public enum GroupType {
+        NONE,
+        AVG,
+        ADD
     }
 }

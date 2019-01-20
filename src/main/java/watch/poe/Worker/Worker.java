@@ -12,6 +12,7 @@ import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
 import poe.Managers.StatisticsManager;
 import poe.Managers.StatisticsManager.StatType;
+import poe.Managers.StatisticsManager.GroupType;
 import poe.Managers.WorkerManager;
 import poe.Worker.Entry.RawItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
@@ -84,9 +85,9 @@ public class Worker extends Thread {
         while (flagLocalRun) {
             waitForJob();
 
-            statisticsManager.startTimer(StatType.worker_group_dl);
+            statisticsManager.startTimer(StatType.WORKER_GROUP_DL);
             String replyString = download();
-            statisticsManager.clkTimer(StatType.worker_group_dl, true, true);
+            statisticsManager.clkTimer(StatType.WORKER_GROUP_DL, GroupType.AVG, true);
 
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
@@ -96,10 +97,9 @@ public class Worker extends Thread {
                 }
 
                 if (reply != null && reply.next_change_id != null) {
-                    statisticsManager.startTimer(StatType.worker_group_parse);
+                    statisticsManager.startTimer(StatType.WORKER_GROUP_PARSE);
                     parseItems(reply);
-                    statisticsManager.clkTimer(StatType.worker_group_parse, true, true);
-
+                    statisticsManager.clkTimer(StatType.WORKER_GROUP_PARSE, GroupType.AVG, true);
                 }
             }
 
@@ -183,7 +183,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.worker_duplicateJob, null, true, true);
+                            statisticsManager.addValue(StatType.WORKER_DUPLICATE_JOB, (long) 1, GroupType.ADD, true);
                             return null;
                         }
                     }
@@ -226,6 +226,8 @@ public class Worker extends Thread {
         Set<RawItemEntry> items = new HashSet<>();
         // Separate set for collecting account and character names
         Set<RawUsernameEntry> usernames = new HashSet<>();
+
+        statisticsManager.addValue(StatType.TOTAL_ITEMS_PER_STASH, (long)reply.stashes.size(), GroupType.ADD, true);
 
         for (Mappers.Stash stash : reply.stashes) {
             // Get league ID. If it's an unknown ID, skip this stash
@@ -300,22 +302,24 @@ public class Worker extends Thread {
             }
         }
 
+        statisticsManager.addValue(StatType.ACCEPTED_ITEMS_PER_STASH, (long)items.size(), GroupType.ADD, true);
+
         // Shovel everything to db
-        statisticsManager.startTimer(StatType.worker_group_ulAccounts);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);
         database.upload.uploadAccounts(accounts);
-        statisticsManager.clkTimer(StatType.worker_group_ulAccounts, true, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ACCOUNTS, GroupType.AVG, true);
 
-        statisticsManager.startTimer(StatType.worker_group_resetStashes);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_RESET_STASHES);
         database.flag.resetStashReferences(nullStashes);
-        statisticsManager.clkTimer(StatType.worker_group_resetStashes, true, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_RESET_STASHES, GroupType.AVG, true);
 
-        statisticsManager.startTimer(StatType.worker_group_ulEntries);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ENTRIES);
         database.upload.uploadEntries(items);
-        statisticsManager.clkTimer(StatType.worker_group_ulEntries, true, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ENTRIES, GroupType.AVG, true);
 
-        statisticsManager.startTimer(StatType.worker_group_ulUsernames);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_USERNAMES);
         database.upload.uploadUsernames(usernames);
-        statisticsManager.clkTimer(StatType.worker_group_ulUsernames, true, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_USERNAMES, GroupType.AVG, true);
     }
 
     /**

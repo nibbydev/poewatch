@@ -8,6 +8,8 @@ import poe.Db.Database;
 import poe.Managers.*;
 import poe.Item.ItemParser;
 import poe.Worker.Worker;
+import poe.Managers.StatisticsManager.GroupType;
+import poe.Managers.StatisticsManager.StatType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,7 +48,7 @@ public class Main {
             }
 
             statisticsManager = new StatisticsManager(database);
-            statisticsManager.addValue(StatisticsManager.StatType.app_startup, null, true, false);
+            statisticsManager.addValue(StatType.APP_STARTUP, null, GroupType.NONE, true);
 
             // Set static DB accessor in honour of spaghetti code
             PriceManager.setDatabase(database);
@@ -92,7 +94,7 @@ public class Main {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();
 
-            statisticsManager.addValue(StatisticsManager.StatType.app_shutdown, null, true, false);
+            statisticsManager.addValue(StatType.APP_SHUTDOWN, null, GroupType.NONE, true);
             statisticsManager.upload();
 
             if (database != null) database.disconnect();
