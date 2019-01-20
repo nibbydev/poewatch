@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Key;
-import poe.Worker.Timer.Timer;
-import poe.Worker.Timer.TimerList;
 import poe.Managers.League.LeagueEntry;
 import poe.Managers.Relation.CategoryEntry;
 
@@ -199,51 +197,6 @@ public class Init {
             leagueIds.clear();
             leagueIds.putAll(tmpLeagueIds);
             logger.info("Got league item IDs from database");
-
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
-     * Loads provided Map with timer delay entries from database
-     *
-     * @param timeLog Empty map that will be filled with key - TimerList relations
-     * @return True on success
-     */
-    public boolean getTimers(Map<String, TimerList> timeLog) {
-        String query = "SELECT `key`, delay, type FROM data_timers ORDER BY time ASC;";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return false;
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    String key = resultSet.getString("key");
-                    long delay = resultSet.getLong("delay");
-                    Integer type = resultSet.getInt("type");
-
-                    if (resultSet.wasNull()) type = null;
-                    poe.Worker.Timer.Timer.TimerType timerType = Timer.translate(type);
-
-                    TimerList timerList = timeLog.getOrDefault(key, new TimerList(timerType));
-
-                    // Truncate list if entry count exceeds limit
-                    if (timerList.list.size() >= database.config.getInt("misc.timerLogHistoryLength")) {
-                        timerList.list.remove(0);
-                    }
-
-                    timerList.list.add(delay);
-                    timeLog.putIfAbsent(key, timerList);
-                }
-            }
 
             return true;
         } catch (SQLException ex) {

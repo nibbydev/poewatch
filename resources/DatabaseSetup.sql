@@ -69,16 +69,13 @@ CREATE TABLE data_changeId (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure data_timers
+-- Table structure data_statistics
 --
 
-CREATE TABLE data_timers (
+CREATE TABLE data_statistics (
     `key`   VARCHAR(32)  NOT NULL,
-    type    TINYINT(1)   UNSIGNED DEFAULT NULL,
     time    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    delay   BIGINT       UNSIGNED NOT NULL,
-
-    CONSTRAINT pk PRIMARY KEY (`key`, time),
+    value   INT          NOT NULL,
 
     INDEX `key` (`key`),
     INDEX time  (time)

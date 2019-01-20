@@ -4,9 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.PriceManager;
+import poe.Managers.StatisticsManager;
+import poe.Managers.StatisticsManager.ValueEntry;
+import poe.Managers.StatisticsManager.KeyType;
 import poe.Worker.Entry.*;
-import poe.Worker.Timer.Timer;
-import poe.Worker.Timer.TimerList;
 import poe.Managers.League.LeagueEntry;
 
 import java.sql.*;
@@ -239,31 +240,18 @@ public class Upload {
     }
 
     /**
-     * Uploads all latest timer delays to database
+     * Uploads all statistics values to database
      *
-     * @param timeLog Valid map of key - TimerList relations
+     * @param values
      * @return True on success
      */
-    public boolean uploadTimers(Map<String, TimerList> timeLog, StatusElement statusElement) {
-        String query1 = "DELETE  del " +
-                        "FROM    data_timers AS del " +
-                        "JOIN ( " +
-                        "  SELECT   `key`, ( " +
-                        "    SELECT   t.time " +
-                        "    FROM     data_timers AS t " +
-                        "    WHERE    t.`key` = d.`key` " +
-                        "    ORDER BY t.time DESC " +
-                        "    LIMIT    4, 1 " +
-                        "  ) AS     time " +
-                        "  FROM     data_timers AS d " +
-                        "  GROUP BY d.`key` " +
-                        "  HAVING   time IS NOT NULL " +
-                        ") AS    tmp " +
-                        "  ON    del.`key` = tmp.`key` " +
-                        "    AND del.time <= tmp.time; ";
+    public boolean uploadStatistics(Map<KeyType, List<ValueEntry>> values) {
+        String query =  "INSERT INTO data_statistics (`key`, `time`, `value`) VALUES (?, ?, ?); ";
 
-        String query =  "INSERT INTO data_timers (`key`, type, delay) " +
-                        "VALUES (?, ?, ?)  ";
+        if (values == null || values.isEmpty()) {
+            logger.error("Invalid map provided");
+            return false;
+        }
 
         try {
             if (database.connection.isClosed()) {
@@ -271,40 +259,16 @@ public class Upload {
                 return false;
             }
 
-            try (Statement statement = database.connection.createStatement()) {
-                statement.executeUpdate(query1);
-            }
-
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (String key : timeLog.keySet()) {
-                    TimerList timerList = timeLog.get(key);
+                for (KeyType key : values.keySet()) {
+                    List<ValueEntry> valueList = values.get(key);
 
-                    if (timerList.type.equals(Timer.TimerType.NONE)) {
-                        continue;
-                    } else if (timerList.list.isEmpty()) {
-                        continue;
+                    for (ValueEntry entry : valueList) {
+                        statement.setString(1, key.name());
+                        statement.setTimestamp(2, entry.getTime());
+                        statement.setLong(3, entry.getValue());
+                        statement.addBatch();
                     }
-
-                    // Very nice
-                    if (!statusElement.isTenBool() || !statusElement.isSixtyBool() || !statusElement.isTwentyFourBool()) {
-                        if (timerList.type.equals(Timer.TimerType.TEN)) continue;
-                        if (timerList.type.equals(Timer.TimerType.SIXTY)) continue;
-                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
-                    } else if (statusElement.isTenBool()) {
-                        if (timerList.type.equals(Timer.TimerType.SIXTY)) continue;
-                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
-                    } else if (statusElement.isSixtyBool()) {
-                        if (timerList.type.equals(Timer.TimerType.TWENTY)) continue;
-                    }
-
-                    Integer type = Timer.translate(timerList.type);
-
-                    statement.setString(1, key);
-                    if (type == null) statement.setNull(2, 0);
-                    else statement.setInt(2, type);
-                    statement.setLong(3, timerList.list.get(timerList.list.size() - 1));
-
-                    statement.addBatch();
                 }
 
                 statement.executeBatch();

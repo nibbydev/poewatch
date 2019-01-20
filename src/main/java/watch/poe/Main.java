@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static StatisticsManager statisticsManager;
     private static AccountManager accountManager;
     private static WorkerManager workerManager;
     private static Database database;
-    private static Logger logger = LoggerFactory.getLogger(Main.class);
     private static Config config;
 
     /**
@@ -44,6 +45,9 @@ public class Main {
                 return;
             }
 
+            statisticsManager = new StatisticsManager(database);
+            statisticsManager.addValue(StatisticsManager.KeyType.app_startup, 1, true, false);
+
             // Set static DB accessor in honour of spaghetti code
             PriceManager.setDatabase(database);
 
@@ -64,7 +68,7 @@ public class Main {
             }
 
             accountManager = new AccountManager(database);
-            workerManager = new WorkerManager(leagueManager, relations, accountManager, database, config);
+            workerManager = new WorkerManager(statisticsManager, leagueManager, relations, accountManager, database, config);
             ItemParser.setRelationManager(relations);
 
             // Get all distinct stash ids that are in the db
@@ -87,6 +91,10 @@ public class Main {
         } finally {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();
+
+            statisticsManager.addValue(StatisticsManager.KeyType.app_shutdown, 1, true, false);
+            statisticsManager.upload();
+
             if (database != null) database.disconnect();
         }
     }

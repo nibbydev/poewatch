@@ -10,6 +10,8 @@ import poe.Item.ItemParser;
 import poe.Item.Mappers;
 import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
+import poe.Managers.StatisticsManager;
+import poe.Managers.StatisticsManager.KeyType;
 import poe.Managers.WorkerManager;
 import poe.Worker.Entry.RawItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
@@ -36,6 +38,7 @@ public class Worker extends Thread {
     private final WorkerManager workerManager;
     private final LeagueManager leagueManager;
     private final RelationManager relationManager;
+    private final StatisticsManager statisticsManager;
     private final Database database;
     private final Config config;
     private final Gson gson;
@@ -48,8 +51,9 @@ public class Worker extends Thread {
     private boolean pauseFlag = false;
     private boolean isPaused = false;
 
-    public Worker(WorkerManager wm, LeagueManager lm, RelationManager rm, Database db, Config cnf, int id) {
+    public Worker(WorkerManager wm, StatisticsManager sm, LeagueManager lm, RelationManager rm, Database db, Config cnf, int id) {
         this.workerManager = wm;
+        this.statisticsManager = sm;
         this.leagueManager = lm;
         this.relationManager = rm;
         this.database = db;
@@ -80,7 +84,10 @@ public class Worker extends Thread {
         while (flagLocalRun) {
             waitForJob();
 
+            statisticsManager.startTimer(KeyType.worker_group_dl);
             String replyString = download();
+            statisticsManager.clkTimer(KeyType.worker_group_dl, true, true);
+
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
 
@@ -89,7 +96,10 @@ public class Worker extends Thread {
                 }
 
                 if (reply != null && reply.next_change_id != null) {
+                    statisticsManager.startTimer(KeyType.worker_group_parse);
                     parseItems(reply);
+                    statisticsManager.clkTimer(KeyType.worker_group_parse, true, true);
+
                 }
             }
 
@@ -173,6 +183,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
+                            statisticsManager.addValue(KeyType.worker_duplicateJob, 1, true, true);
                             return null;
                         }
                     }
@@ -290,10 +301,21 @@ public class Worker extends Thread {
         }
 
         // Shovel everything to db
+        statisticsManager.startTimer(KeyType.worker_group_ulAccounts);
         database.upload.uploadAccounts(accounts);
+        statisticsManager.clkTimer(KeyType.worker_group_ulAccounts, true, true);
+
+        statisticsManager.startTimer(KeyType.worker_group_resetStashes);
         database.flag.resetStashReferences(nullStashes);
+        statisticsManager.clkTimer(KeyType.worker_group_resetStashes, true, true);
+
+        statisticsManager.startTimer(KeyType.worker_group_ulEntries);
         database.upload.uploadEntries(items);
+        statisticsManager.clkTimer(KeyType.worker_group_ulEntries, true, true);
+
+        statisticsManager.startTimer(KeyType.worker_group_ulUsernames);
         database.upload.uploadUsernames(usernames);
+        statisticsManager.clkTimer(KeyType.worker_group_ulUsernames, true, true);
     }
 
     /**
