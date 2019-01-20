@@ -21,7 +21,8 @@ public class Calc {
     }
 
     public boolean getEntries(Map<Integer, Map<Integer, List<Double>>> entries) {
-        String query =  "select le.id_l, le.id_d, truncate(le.price * ifnull(foo3.val, 1), 8) as price " +
+        String query =  "select le.id_l, le.id_d, " +
+                        "  truncate(le.price * ifnull(foo3.val, 1.0), 8) as price " +
                         "from league_entries as le " +
                         "join ( " +
                         "  select distinct id_l, id_d from league_entries " +
@@ -30,15 +31,63 @@ public class Calc {
                         ") as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d " +
                         "join ( " +
                         "  select distinct account_crc from league_accounts " +
-                        "  where updated > date_sub(now(), interval 1 hour) " +
+                        "  where updated > date_sub(now(), interval 6 hour) " +
                         ") as foo2 on le.account_crc = foo2.account_crc " +
                         "left join ( " +
-                        "  select id_l, id_d, mean as val from league_items" +
-                        "  where mean > 0" +
+                        "  select id_l, id_d, mean as val from league_items " +
+                        "  where mean > 0 " +
                         ") as foo3 on le.id_l = foo3.id_l and le.id_price = foo3.id_d " +
+                        "left join ( " +
+                        "  select id from data_itemData where frame = 5 " +
+                        ") as foo4 on le.id_d = foo4.id " +
                         "where le.stash_crc is not null " +
+                        "  and !(foo4.id is not null && le.id_price is not null) " +
                         "having price > 0 and price < 96000 " +
                         "order by le.id_l asc, le.id_d asc; ";
+
+        /*
+        Here's the query somewhat explained. Might not match 1:1 due to fixes/changes.
+        Warning: not for the faint of heart.
+
+            -- Select leagueID, itemID and price from every valid entry.
+            -- When buyout note is in chaos, `foo3.val` is null. Otherwise
+            -- it's the mean chaos value of the currency used
+            select le.id_l, le.id_d,
+              truncate(le.price * ifnull(foo3.val, 1.0), 8) as price
+            from league_entries as le
+            -- get all items that have had entries added since last calculation cycle
+            join (
+              select distinct id_l, id_d from league_entries
+              where stash_crc is not null
+                and updated > date_sub(now(), interval 65 second)
+            ) as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d
+            -- get all accounts that have been active in trade recently
+            join (
+              select distinct account_crc from league_accounts
+              where updated > date_sub(now(), interval 6 hour)
+            ) as foo2 on le.account_crc = foo2.account_crc
+            -- get currency prices in chaos
+            left join (
+              select id_l, id_d, mean as val from league_items
+              where mean > 0
+            ) as foo3 on le.id_l = foo3.id_l and le.id_price = foo3.id_d
+            -- get all itemIDs that are currency
+            left join (
+              select id from data_itemData where frame = 5
+            ) as foo4 on le.id_d = foo4.id
+            -- if item is currently in a public stash tab
+            where le.stash_crc is not null
+            -- if (is currency) and (is not in chaos), return FALSE, otherwise return TRUE.
+            -- This restrict currency price calculation to only use entries listed in chaos
+            -- to avoid circular dependencies. Eg exalted orbs are listed for divines and
+            -- divines are listed in exalted orbs, causing a circular effect which messes up
+            -- the prices.
+              and !(foo4.id is not null && le.id_price is not null)
+            -- Hard-filter out any entries that have ridiculous prices after being converted
+            -- to chaos.
+            having price > 0 and price < 96000
+            order by le.id_l asc, le.id_d asc;
+         */
 
         try {
             if (database.connection.isClosed()) {

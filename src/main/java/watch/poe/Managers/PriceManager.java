@@ -11,7 +11,7 @@ public class PriceManager {
     private static Database database;
 
     private static final double zScoreLower = 2.0;
-    private static final double zScoreUpper = 1.0;
+    private static final double zScoreUpper = -0.5;
     private static final int trimLower = 5;
     private static final int trimUpper = 5;
 
