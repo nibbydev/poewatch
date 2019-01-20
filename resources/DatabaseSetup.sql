@@ -73,12 +73,12 @@ CREATE TABLE data_changeId (
 --
 
 CREATE TABLE data_statistics (
-    `key`   VARCHAR(32)  NOT NULL,
+    type    VARCHAR(32)  NOT NULL,
     time    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     value   INT          NOT NULL,
 
-    INDEX `key` (`key`),
-    INDEX time  (time)
+    INDEX type (type),
+    INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

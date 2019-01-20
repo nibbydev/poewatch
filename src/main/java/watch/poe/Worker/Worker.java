@@ -11,7 +11,7 @@ import poe.Item.Mappers;
 import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
 import poe.Managers.StatisticsManager;
-import poe.Managers.StatisticsManager.KeyType;
+import poe.Managers.StatisticsManager.StatType;
 import poe.Managers.WorkerManager;
 import poe.Worker.Entry.RawItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
@@ -84,9 +84,9 @@ public class Worker extends Thread {
         while (flagLocalRun) {
             waitForJob();
 
-            statisticsManager.startTimer(KeyType.worker_group_dl);
+            statisticsManager.startTimer(StatType.worker_group_dl);
             String replyString = download();
-            statisticsManager.clkTimer(KeyType.worker_group_dl, true, true);
+            statisticsManager.clkTimer(StatType.worker_group_dl, true, true);
 
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
@@ -96,9 +96,9 @@ public class Worker extends Thread {
                 }
 
                 if (reply != null && reply.next_change_id != null) {
-                    statisticsManager.startTimer(KeyType.worker_group_parse);
+                    statisticsManager.startTimer(StatType.worker_group_parse);
                     parseItems(reply);
-                    statisticsManager.clkTimer(KeyType.worker_group_parse, true, true);
+                    statisticsManager.clkTimer(StatType.worker_group_parse, true, true);
 
                 }
             }
@@ -183,7 +183,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(KeyType.worker_duplicateJob, 1, true, true);
+                            statisticsManager.addValue(StatType.worker_duplicateJob, 1, true, true);
                             return null;
                         }
                     }
@@ -301,21 +301,21 @@ public class Worker extends Thread {
         }
 
         // Shovel everything to db
-        statisticsManager.startTimer(KeyType.worker_group_ulAccounts);
+        statisticsManager.startTimer(StatType.worker_group_ulAccounts);
         database.upload.uploadAccounts(accounts);
-        statisticsManager.clkTimer(KeyType.worker_group_ulAccounts, true, true);
+        statisticsManager.clkTimer(StatType.worker_group_ulAccounts, true, true);
 
-        statisticsManager.startTimer(KeyType.worker_group_resetStashes);
+        statisticsManager.startTimer(StatType.worker_group_resetStashes);
         database.flag.resetStashReferences(nullStashes);
-        statisticsManager.clkTimer(KeyType.worker_group_resetStashes, true, true);
+        statisticsManager.clkTimer(StatType.worker_group_resetStashes, true, true);
 
-        statisticsManager.startTimer(KeyType.worker_group_ulEntries);
+        statisticsManager.startTimer(StatType.worker_group_ulEntries);
         database.upload.uploadEntries(items);
-        statisticsManager.clkTimer(KeyType.worker_group_ulEntries, true, true);
+        statisticsManager.clkTimer(StatType.worker_group_ulEntries, true, true);
 
-        statisticsManager.startTimer(KeyType.worker_group_ulUsernames);
+        statisticsManager.startTimer(StatType.worker_group_ulUsernames);
         database.upload.uploadUsernames(usernames);
-        statisticsManager.clkTimer(KeyType.worker_group_ulUsernames, true, true);
+        statisticsManager.clkTimer(StatType.worker_group_ulUsernames, true, true);
     }
 
     /**

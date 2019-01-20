@@ -14,79 +14,90 @@ public class StatisticsManager {
     private static final Logger logger = LoggerFactory.getLogger(StatisticsManager.class);
     private final Database database;
 
-    private final Map<Thread, Map<KeyType, Long>> timers = new HashMap<>();
-    private final Map<Thread, Map<KeyType, GroupValueEntry>> groupValues = new HashMap<>();
-    private final Map<Thread, Map<KeyType, List<ValueEntry>>> values = new HashMap<>();
+    private final Map<Thread, Map<StatType, Long>> timers = new HashMap<>();
+    private final Map<Thread, Map<StatType, GroupValueEntry>> groupValues = new HashMap<>();
+    private final Map<Thread, Map<StatType, List<ValueEntry>>> values = new HashMap<>();
 
     public StatisticsManager(Database database) {
         this.database = database;
     }
 
     /**
-     * Initiates a timer with the specified key.
+     * Initiates a timer with the specified type.
      *
-     * @param key String key for timer
+     * @param type String type for timer
      */
-    public void startTimer(KeyType key) {
-        if (key == null) {
-            logger.error("Key cannot be null");
+    public void startTimer(StatType type) {
+        if (type == null) {
+            logger.error("Type cannot be null");
             throw new NullPointerException();
         }
 
-        Map<KeyType, Long> timerMap = timers.getOrDefault(Thread.currentThread(), new HashMap<>());
+        Map<StatType, Long> timerMap = timers.getOrDefault(Thread.currentThread(), new HashMap<>());
 
-        if (timerMap.containsKey(key)) {
-            logger.error("Key already exists in timer map");
+        if (timerMap.containsKey(type)) {
+            logger.error("Type already exists in timer map");
             throw new NullPointerException();
         }
 
-        timerMap.put(key, System.currentTimeMillis());
+        timerMap.put(type, System.currentTimeMillis());
         timers.putIfAbsent(Thread.currentThread(), timerMap);
     }
 
     /**
-     * Stops the timer instance associated with the provided key and notes the delay.
+     * Stops the timer instance associated with the provided type and notes the delay.
      *
-     * @param key String identifier for timer
+     * @param type Enum identifier
+     * @param record Save entry in database
+     * @param group Group all entries with same type up as 1 entry
+     * @return Timer delay
      */
-    public long clkTimer(KeyType key, boolean record, boolean group) {
-        if (key == null) {
-            logger.error("Key cannot be null");
+    public long clkTimer(StatType type, boolean record, boolean group) {
+        if (type == null) {
+            logger.error("Type cannot be null");
             throw new NullPointerException();
         }
 
-        Map<KeyType, Long> timerMap = timers.getOrDefault(Thread.currentThread(), new HashMap<>());
+        Map<StatType, Long> timerMap = timers.getOrDefault(Thread.currentThread(), new HashMap<>());
 
-        if (!timerMap.containsKey(key)) {
-            logger.error("Key doesn't exist in timer map");
+        if (!timerMap.containsKey(type)) {
+            logger.error("Type doesn't exist in timer map");
             throw new NullPointerException();
         }
 
-        long delay = System.currentTimeMillis() - timerMap.remove(key);
-        addValue(key, delay, record, group);
+        long delay = System.currentTimeMillis() - timerMap.remove(type);
+        addValue(type, delay, record, group);
 
         return delay;
     }
 
-    public void addValue(KeyType key, long val, boolean record, boolean group) {
+    /**
+     * Add a value directly
+     *
+     * @param type Enum identifier
+     * @param val Value to save
+     * @param record Save entry in database
+     * @param group Group all entries with same type up as 1 entry
+     */
+    public void addValue(StatType type, long val, boolean record, boolean group) {
         if (group) {
             synchronized (groupValues) {
-                Map<KeyType, GroupValueEntry> entryMap = groupValues.getOrDefault(Thread.currentThread(), new HashMap<>());
-                GroupValueEntry groupValueEntry = entryMap.getOrDefault(key, new GroupValueEntry(record));
+                Map<StatType, GroupValueEntry> entryMap = groupValues.getOrDefault(Thread.currentThread(), new HashMap<>());
+                GroupValueEntry groupValueEntry = entryMap.getOrDefault(type, new GroupValueEntry(record));
 
                 groupValueEntry.addValue(val);
 
-                entryMap.putIfAbsent(key, groupValueEntry);
+                entryMap.putIfAbsent(type, groupValueEntry);
                 groupValues.putIfAbsent(Thread.currentThread(), entryMap);
             }
         } else {
             synchronized (values) {
-                Map<KeyType, List<ValueEntry>> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
-                List<ValueEntry> entryList = entryMap.getOrDefault(key, new ArrayList<>());
+                Map<StatType, List<ValueEntry>> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
+                List<ValueEntry> entryList = entryMap.getOrDefault(type, new ArrayList<>());
 
                 entryList.add(new ValueEntry(val, record));
 
-                entryMap.putIfAbsent(key, entryList);
+                entryMap.putIfAbsent(type, entryList);
                 values.putIfAbsent(Thread.currentThread(), entryMap);
             }
         }
@@ -96,16 +107,16 @@ public class StatisticsManager {
      * Uploads all latest timer delays to database
      */
     public void upload() {
-        Map<KeyType, List<ValueEntry>> combinedValues = new HashMap<>();
+        Map<StatType, List<ValueEntry>> combinedValues = new HashMap<>();
 
         // Combine values from all threads into single list
         synchronized (values) {
             for (Thread thread : values.keySet()) {
-                Map<KeyType, List<ValueEntry>> entryMap = values.get(thread);
+                Map<StatType, List<ValueEntry>> entryMap = values.get(thread);
 
-                for (KeyType key : entryMap.keySet()) {
-                    List<ValueEntry> entryList = entryMap.get(key);
-                    List<ValueEntry> combinedList = combinedValues.getOrDefault(key, new ArrayList<>());
+                for (StatType type : entryMap.keySet()) {
+                    List<ValueEntry> entryList = entryMap.get(type);
+                    List<ValueEntry> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
 
                     // Add only if entry was mark to be recorded
                     for (ValueEntry valueEntry : entryList) {
@@ -114,7 +125,7 @@ public class StatisticsManager {
                         }
                     }
 
-                    combinedValues.putIfAbsent(key, combinedList);
+                    combinedValues.putIfAbsent(type, combinedList);
                 }
             }
 
@@ -123,37 +134,37 @@ public class StatisticsManager {
 
         // Combine grouped values from all threads into single list
         synchronized (groupValues) {
-            Map<KeyType, List<GroupValueEntry>> threadConcatMap = new HashMap<>();
+            Map<StatType, List<GroupValueEntry>> threadConcatMap = new HashMap<>();
 
             // Combine all elements from threads under grouped list
             for (Thread thread : groupValues.keySet()) {
-                Map<KeyType, GroupValueEntry> entryMap = groupValues.get(thread);
+                Map<StatType, GroupValueEntry> entryMap = groupValues.get(thread);
 
-                for (KeyType key : entryMap.keySet()) {
-                    List<GroupValueEntry> threadConcatList = threadConcatMap.getOrDefault(key, new ArrayList<>());
-                    GroupValueEntry groupValueEntry = entryMap.get(key);
+                for (StatType type : entryMap.keySet()) {
+                    List<GroupValueEntry> threadConcatList = threadConcatMap.getOrDefault(type, new ArrayList<>());
+                    GroupValueEntry groupValueEntry = entryMap.get(type);
 
                     if (!groupValueEntry.record) {
                         continue;
                     }
 
                     threadConcatList.add(groupValueEntry);
-                    threadConcatMap.putIfAbsent(key, threadConcatList);
+                    threadConcatMap.putIfAbsent(type, threadConcatList);
                 }
             }
 
-            // Get averages of the values and store them under the same key
-            for (KeyType key : threadConcatMap.keySet()) {
-                List<GroupValueEntry> threadConcatList = threadConcatMap.get(key);
+            // Get averages of the values and store them under the same type
+            for (StatType type : threadConcatMap.keySet()) {
+                List<GroupValueEntry> threadConcatList = threadConcatMap.get(type);
 
                 List<Long> means = new ArrayList<>();
                 for (GroupValueEntry groupValueEntry : threadConcatList) {
                     means.add(findMean(groupValueEntry.values));
                 }
 
-                List<ValueEntry> combinedList = combinedValues.getOrDefault(key, new ArrayList<>());
+                List<ValueEntry> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
                 combinedList.add(new ValueEntry(findMean(means)));
-                combinedValues.putIfAbsent(key, combinedList);
+                combinedValues.putIfAbsent(type, combinedList);
             }
 
             groupValues.clear();
@@ -162,6 +173,12 @@ public class StatisticsManager {
         database.upload.uploadStatistics(combinedValues);
     }
 
+    /**
+     * Finds the mean value from a group of entries
+     *
+     * @param values
+     * @return 0 on failure, mean otherwise
+     */
     public static long findMean(List<Long> values) {
         if (values.isEmpty()) {
             return 0;
@@ -178,13 +195,13 @@ public class StatisticsManager {
     }
 
     /**
-     * Gets latest value with the specified key
+     * Gets latest value with the specified type
      *
-     * @param key
+     * @param type
      * @return The value or 0
      */
-    public long getLatest(KeyType key) {
-        if (key == null) {
+    public long getLatest(StatType type) {
+        if (type == null) {
             return 0;
         }
 
@@ -192,13 +209,13 @@ public class StatisticsManager {
             return 0;
         }
 
-        Map<KeyType, List<ValueEntry>> timerMap = values.get(Thread.currentThread());
+        Map<StatType, List<ValueEntry>> timerMap = values.get(Thread.currentThread());
 
-        if (!timerMap.containsKey(key)) {
+        if (!timerMap.containsKey(type)) {
             return 0;
         }
 
-        List<ValueEntry> timerList = timerMap.get(key);
+        List<ValueEntry> timerList = timerMap.get(type);
 
         if (timerList.isEmpty()) {
             return 0;
@@ -252,9 +269,7 @@ public class StatisticsManager {
         }
     }
 
-
-
-    public enum KeyType {
+    public enum StatType {
         cycle_total,
         cycle_0_calcPrices,
         cycle_0_updateCounters,

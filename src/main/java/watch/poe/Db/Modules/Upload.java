@@ -4,9 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.PriceManager;
-import poe.Managers.StatisticsManager;
 import poe.Managers.StatisticsManager.ValueEntry;
-import poe.Managers.StatisticsManager.KeyType;
+import poe.Managers.StatisticsManager.StatType;
 import poe.Worker.Entry.*;
 import poe.Managers.League.LeagueEntry;
 
@@ -245,8 +244,8 @@ public class Upload {
      * @param values
      * @return True on success
      */
-    public boolean uploadStatistics(Map<KeyType, List<ValueEntry>> values) {
-        String query =  "INSERT INTO data_statistics (`key`, `time`, `value`) VALUES (?, ?, ?); ";
+    public boolean uploadStatistics(Map<StatType, List<ValueEntry>> values) {
+        String query =  "INSERT INTO data_statistics (type, time, value) VALUES (?, ?, ?); ";
 
         if (values == null || values.isEmpty()) {
             logger.error("Invalid map provided");
@@ -260,11 +259,11 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (KeyType key : values.keySet()) {
-                    List<ValueEntry> valueList = values.get(key);
+                for (StatType type : values.keySet()) {
+                    List<ValueEntry> valueList = values.get(type);
 
                     for (ValueEntry entry : valueList) {
-                        statement.setString(1, key.name());
+                        statement.setString(1, type.name());
                         statement.setTimestamp(2, entry.getTime());
                         statement.setLong(3, entry.getValue());
                         statement.addBatch();
