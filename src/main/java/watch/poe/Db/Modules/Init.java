@@ -6,6 +6,10 @@ import poe.Db.Database;
 import poe.Item.Key;
 import poe.Managers.League.LeagueEntry;
 import poe.Managers.Relation.CategoryEntry;
+import poe.Managers.Stat.GroupType;
+import poe.Managers.Stat.RecordType;
+import poe.Managers.Stat.StatEntry;
+import poe.Managers.Stat.StatType;
 
 import java.sql.*;
 import java.util.*;
@@ -16,6 +20,48 @@ public class Init {
 
     public Init(Database database) {
         this.database = database;
+    }
+
+    public boolean getTmpStatistics(Set<StatEntry> statEntries) {
+        String query = "SELECT * FROM data_statistics_tmp; ";
+
+        if (statEntries == null) {
+            logger.error("Provided set was null");
+            throw new RuntimeException();
+        }
+
+        logger.info("Getting statistics from database");
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    StatType statType = StatType.valueOf(resultSet.getString("statType"));
+                    GroupType groupType = GroupType.valueOf(resultSet.getString("groupType"));
+                    RecordType recordType = RecordType.valueOf(resultSet.getString("recordType"));
+
+                    StatEntry statEntry = new StatEntry(statType, groupType, recordType);
+                    statEntry.setCount(resultSet.getInt("count"));
+                    statEntry.setSum(resultSet.getLong("sum"));
+                    statEntry.setCreationTime(resultSet.getLong("created"));
+
+                    statEntries.add(statEntry);
+                }
+            }
+
+            logger.info("Got statistics from database");
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            logger.error("Could not get statistics from database");
+            return false;
+        }
     }
 
     /**

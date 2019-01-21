@@ -3,40 +3,36 @@ package poe.Managers.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
+
 import static java.lang.Math.toIntExact;
 
 public class StatEntry {
     private static final Logger logger = LoggerFactory.getLogger(StatEntry.class);
     private final GroupType groupType;
     private final RecordType recordType;
+    private final StatType statType;
 
-    private Long startTime;
+    private long creationTime = System.currentTimeMillis();
     private Long sum = 0L;
     private int count = 0;
+    private int latestValue;
 
-    public StatEntry(GroupType groupType, RecordType recordType) {
+    public StatEntry(StatType statType, GroupType groupType, RecordType recordType) {
+        this.statType = statType;
         this.groupType = groupType;
         this.recordType = recordType;
     }
 
     public void addValue(Integer val) {
-        sum = val == null ? null : sum + val;
-        count++;
-    }
-
-    public void addValues(StatEntry otherEntry) {
-        if (!otherEntry.groupType.equals(groupType)) {
-            logger.error("StatEntry aggregation types do not match");
-            throw new RuntimeException();
-        }
-
-        if (otherEntry.sum == null) {
+        if (val == null || sum == null) {
             sum = null;
         } else {
-            sum += otherEntry.sum;
+            latestValue = val;
+            sum += val;
         }
 
-        count += otherEntry.count;
+        count++;
     }
 
     public Long getSum() {
@@ -63,20 +59,65 @@ public class StatEntry {
         return recordType;
     }
 
-    public void startTimer() {
-        this.startTime = System.currentTimeMillis();
+    public long getCreationTime() {
+        return creationTime;
     }
 
-    public void resetTimer() {
-        this.startTime = null;
+    public boolean isRecord() {
+        return !recordType.equals(RecordType.NONE) && !recordType.equals(RecordType.SINGULAR);
     }
 
-    public int clkTimer() {
-        if (startTime == null) {
-            logger.error("Cannot subtract delay when timer has not been started!");
-            throw new NullPointerException();
+    public boolean isExpired() {
+        if (!isRecord()) {
+            return false;
         }
 
-        return (int) (System.currentTimeMillis() - startTime);
+        long delay;
+
+        switch (recordType) {
+            case M_10:
+                delay = 10 * 60 * 1000;
+                break;
+            case M_30:
+                delay = 30 * 60 * 1000;
+                break;
+            case H_1:
+                delay = 60 * 60 * 1000;
+                break;
+            case H_6:
+                delay = 6 * 60 * 60 * 1000;
+                break;
+            case H_12:
+                delay = 12 * 60 * 60 * 1000;
+                break;
+            case H_24:
+                delay = 24 * 60 * 60 * 1000;
+                break;
+            default:
+                logger.error("Unhandled switch branch");
+                throw new RuntimeException();
+        }
+
+        return creationTime - System.currentTimeMillis() > delay;
+    }
+
+    public StatType getStatType() {
+        return statType;
+    }
+
+    public int getLatestValue() {
+        return latestValue;
+    }
+
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
+    }
+
+    public void setSum(Long sum) {
+        this.sum = sum;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 }

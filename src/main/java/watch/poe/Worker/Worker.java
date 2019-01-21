@@ -86,9 +86,9 @@ public class Worker extends Thread {
         while (flagLocalRun) {
             waitForJob();
 
-            statisticsManager.startTimer(StatType.WORKER_GROUP_DL, GroupType.AVG, RecordType.SINGULAR);
+            statisticsManager.startTimer(StatType.WORKER_GROUP_DL);
             String replyString = download();
-            statisticsManager.clkTimer(StatType.WORKER_GROUP_DL);
+            statisticsManager.clkTimer(StatType.WORKER_GROUP_DL, GroupType.AVG, RecordType.SINGULAR);
 
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
@@ -98,9 +98,9 @@ public class Worker extends Thread {
                 }
 
                 if (reply != null && reply.next_change_id != null) {
-                    statisticsManager.startTimer(StatType.WORKER_GROUP_PARSE, GroupType.AVG, RecordType.SINGULAR);
+                    statisticsManager.startTimer(StatType.WORKER_GROUP_PARSE);
                     parseItems(reply);
-                    statisticsManager.clkTimer(StatType.WORKER_GROUP_PARSE);
+                    statisticsManager.clkTimer(StatType.WORKER_GROUP_PARSE, GroupType.AVG, RecordType.SINGULAR);
                 }
             }
 
@@ -227,11 +227,10 @@ public class Worker extends Thread {
         Set<RawItemEntry> items = new HashSet<>();
         // Separate set for collecting account and character names
         Set<RawUsernameEntry> usernames = new HashSet<>();
-
-        statisticsManager.addValue(reply.stashes.size(), StatType.TOTAL_STASHES, GroupType.ADD, RecordType.SINGULAR);
+        int totalItemCount = 0;
 
         for (Mappers.Stash stash : reply.stashes) {
-            statisticsManager.addValue(stash.items.size(), StatType.TOTAL_ITEMS, GroupType.ADD, RecordType.SINGULAR);
+            totalItemCount += stash.items.size();
 
             // Get league ID. If it's an unknown ID, skip this stash
             Integer id_l = leagueManager.getLeagueId(stash.league);
@@ -305,24 +304,27 @@ public class Worker extends Thread {
             }
         }
 
-        statisticsManager.addValue(items.size(), StatType.ACCEPTED_ITEMS, GroupType.ADD, RecordType.SINGULAR);
+        // Collect some statistics
+        statisticsManager.addValue(reply.stashes.size(), StatType.TOTAL_STASHES, GroupType.ADD, RecordType.H_1);
+        statisticsManager.addValue(totalItemCount, StatType.TOTAL_ITEMS, GroupType.ADD, RecordType.H_1);
+        statisticsManager.addValue(items.size(), StatType.ACCEPTED_ITEMS, GroupType.ADD, RecordType.H_1);
 
         // Shovel everything to db
-        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS, GroupType.AVG, RecordType.SINGULAR);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);
         database.upload.uploadAccounts(accounts);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ACCOUNTS, GroupType.AVG, RecordType.SINGULAR);
 
-        statisticsManager.startTimer(StatType.WORKER_GROUP_RESET_STASHES, GroupType.AVG, RecordType.SINGULAR);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_RESET_STASHES);
         database.flag.resetStashReferences(nullStashes);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_RESET_STASHES);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_RESET_STASHES, GroupType.AVG, RecordType.SINGULAR);
 
-        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ENTRIES, GroupType.AVG, RecordType.SINGULAR);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ENTRIES);
         database.upload.uploadEntries(items);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ENTRIES);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ENTRIES, GroupType.AVG, RecordType.SINGULAR);
 
-        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_USERNAMES, GroupType.AVG, RecordType.SINGULAR);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_USERNAMES);
         database.upload.uploadUsernames(usernames);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_USERNAMES);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_USERNAMES, GroupType.AVG, RecordType.SINGULAR);
     }
 
     /**

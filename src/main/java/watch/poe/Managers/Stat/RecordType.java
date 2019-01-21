@@ -10,7 +10,7 @@ public enum RecordType {
     // Record all entries separately
     SINGULAR,
     // Aggregate by the minute
-    M_1, M_10, M_30,
+    M_10, M_30,
     // Aggregate by the hour
     H_1, H_6, H_12, H_24
 }

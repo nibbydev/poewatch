@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.PriceManager;
+import poe.Managers.Stat.StatEntry;
 import poe.Managers.Stat.StatType;
 import poe.Worker.Entry.*;
 import poe.Managers.League.LeagueEntry;
@@ -243,8 +244,8 @@ public class Upload {
      * @param values
      * @return True on success
      */
-    public boolean uploadStatistics(Map<StatType, Integer> values) {
-        String query =  "INSERT INTO data_statistics (type, value) VALUES (?, ?); ";
+    public boolean uploadStatistics(Map<StatType, List<Integer>> values) {
+        String query =  "INSERT INTO data_statistics (statType, value) VALUES (?, ?); ";
 
         if (values == null || values.isEmpty()) {
             logger.error("Invalid map provided");
@@ -259,12 +260,62 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (StatType type : values.keySet()) {
-                    statement.setString(1, type.name());
+                    for (Integer entry : values.get(type)) {
+                        statement.setString(1, type.name());
 
-                    Integer value = values.get(type);
-                    if (value == null) {
-                        statement.setNull(2, 0);
-                    } else statement.setInt(2, value);
+                        if (entry == null) {
+                            statement.setNull(2, 0);
+                        } else statement.setInt(2, entry);
+
+                        statement.addBatch();
+                    }
+
+                }
+
+                statement.executeBatch();
+            }
+
+            database.connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
+
+    /**
+     * Uploads all statistics values to database
+     *
+     * @param statEntryList
+     * @return True on success
+     */
+    public boolean uploadTempStatistics(Set<StatEntry> statEntryList) {
+        String query =  "INSERT INTO data_statistics_tmp (statType, groupType, recordType, created, sum, count) " +
+                        "VALUES (?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "  created = VALUES(created), " +
+                        "  count = VALUES(count), " +
+                        "  sum = VALUES(sum); ";
+
+        if (statEntryList == null) {
+            logger.error("Invalid list provided");
+            throw new RuntimeException();
+        }
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                for (StatEntry statEntry : statEntryList) {
+                    statement.setString(1, statEntry.getStatType().name());
+                    statement.setString(2, statEntry.getGroupType().name());
+                    statement.setString(3, statEntry.getRecordType().name());
+                    statement.setLong(4, statEntry.getCreationTime());
+                    statement.setLong(5, statEntry.getSum());
+                    statement.setInt(6, statEntry.getCount());
 
                     statement.addBatch();
                 }
@@ -279,6 +330,7 @@ public class Upload {
             return false;
         }
     }
+
 
     /**
      * Uploads gathered account and character names to the account database
