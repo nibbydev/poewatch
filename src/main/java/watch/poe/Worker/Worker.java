@@ -183,7 +183,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.WORKER_DUPLICATE_JOB, (long) 1, GroupType.ADD, true);
+                            statisticsManager.addValue(StatType.WORKER_DUPLICATE_JOB, 1, GroupType.ADD, true);
                             return null;
                         }
                     }
@@ -227,10 +227,10 @@ public class Worker extends Thread {
         // Separate set for collecting account and character names
         Set<RawUsernameEntry> usernames = new HashSet<>();
 
-        statisticsManager.addValue(StatType.TOTAL_STASHES, (long)reply.stashes.size(), GroupType.ADD, true);
+        statisticsManager.addValue(StatType.TOTAL_STASHES, reply.stashes.size(), GroupType.ADD, true);
 
         for (Mappers.Stash stash : reply.stashes) {
-            statisticsManager.addValue(StatType.TOTAL_ITEMS, (long)stash.items.size(), GroupType.ADD, true);
+            statisticsManager.addValue(StatType.TOTAL_ITEMS, stash.items.size(), GroupType.ADD, true);
 
             // Get league ID. If it's an unknown ID, skip this stash
             Integer id_l = leagueManager.getLeagueId(stash.league);
@@ -304,7 +304,7 @@ public class Worker extends Thread {
             }
         }
 
-        statisticsManager.addValue(StatType.ACCEPTED_ITEMS, (long)items.size(), GroupType.ADD, true);
+        statisticsManager.addValue(StatType.ACCEPTED_ITEMS, items.size(), GroupType.ADD, true);
 
         // Shovel everything to db
         statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);

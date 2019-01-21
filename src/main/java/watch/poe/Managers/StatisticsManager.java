@@ -52,7 +52,7 @@ public class StatisticsManager {
      * @param record Save entry in database
      * @return Timer delay
      */
-    public long clkTimer(StatType type, GroupType group, boolean record) {
+    public int clkTimer(StatType type, GroupType group, boolean record) {
         if (type == null) {
             logger.error("Type cannot be null");
             throw new NullPointerException();
@@ -65,7 +65,7 @@ public class StatisticsManager {
             throw new NullPointerException();
         }
 
-        long delay = System.currentTimeMillis() - timerMap.remove(type);
+        int delay = (int) (System.currentTimeMillis() - timerMap.remove(type));
         addValue(type, delay, group, record);
 
         return delay;
@@ -73,12 +73,12 @@ public class StatisticsManager {
 
     /**
      * Add a value directly
-     *  @param type Enum identifier
+     * @param type Enum identifier
      * @param val Value to save
      * @param group Group all entries with same type up as 1 entry
      * @param record Save entry in database
      */
-    public void addValue(StatType type, Long val, GroupType group, boolean record) {
+    public void addValue(StatType type, Integer val, GroupType group, boolean record) {
         if (group.equals(GroupType.NONE)) {
             synchronized (values) {
                 Map<StatType, List<ValueEntry>> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
@@ -167,23 +167,23 @@ public class StatisticsManager {
             // Group the concatenated entries using the specified method
             for (StatType type : concatMap.keySet()) {
                 GroupValueEntry entry = concatMap.get(type);
-                Long value;
+                Integer value;
 
                 if (entry.getValues().isEmpty()) {
-                    value = (long) 0;
+                    value = 0;
                 } else if (entry.groupType.equals(GroupType.AVG)) {
                     long sum = 0;
 
                     // Not to worry, the values are almost never > smallint
-                    for (Long val : entry.getValues()) {
+                    for (Integer val : entry.getValues()) {
                         sum += val;
                     }
 
-                    value = sum / entry.getValues().size();
+                    value = (int) (sum / entry.getValues().size());
                 } else if (entry.groupType.equals(GroupType.ADD)) {
-                    value = (long) 0;
+                    value = 0;
 
-                    for (Long val : entry.getValues()) {
+                    for (Integer val : entry.getValues()) {
                         value += val;
                     }
                 } else {
@@ -208,7 +208,7 @@ public class StatisticsManager {
      * @param type
      * @return The value or 0
      */
-    public long getLatest(StatType type) {
+    public int getLatest(StatType type) {
         if (type == null) {
             return 0;
         }
@@ -233,20 +233,20 @@ public class StatisticsManager {
     }
 
     public static class ValueEntry {
-        Timestamp time = new Timestamp(System.currentTimeMillis());
-        boolean record;
-        Long value;
+        private Timestamp time = new Timestamp(System.currentTimeMillis());
+        private boolean record;
+        private Integer value;
 
-        ValueEntry(Long value, boolean record) {
+        ValueEntry(Integer value, boolean record) {
             this.record = record;
             this.value = value;
         }
 
-        ValueEntry(Long value) {
+        ValueEntry(Integer value) {
             this.value = value;
         }
 
-        public Long getValue() {
+        public Integer getValue() {
             return value;
         }
 
@@ -257,7 +257,7 @@ public class StatisticsManager {
 
     public static class GroupValueEntry {
         private Timestamp time = new Timestamp(System.currentTimeMillis());
-        private List<Long> values = new ArrayList<>();
+        private List<Integer> values = new ArrayList<>();
         private GroupType groupType;
         private boolean record;
 
@@ -266,11 +266,11 @@ public class StatisticsManager {
             this.record = record;
         }
 
-        public void addValue(Long val) {
+        public void addValue(Integer val) {
             values.add(val);
         }
 
-        public List<Long> getValues() {
+        public List<Integer> getValues() {
             return values;
         }
 

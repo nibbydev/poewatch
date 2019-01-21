@@ -38,7 +38,7 @@ public class Calc {
                 if (resultSet.next()) {
                     statisticsManager.addValue(
                             StatisticsManager.StatType.ACTIVE_ACCOUNTS,
-                            resultSet.getLong(1),
+                            resultSet.getInt(1),
                             StatisticsManager.GroupType.NONE,
                             true
                     );

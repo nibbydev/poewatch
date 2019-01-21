@@ -268,7 +268,7 @@ public class Upload {
 
                         if (entry.getValue() == null) {
                             statement.setNull(3, 0);
-                        } else statement.setLong(3, entry.getValue());
+                        } else statement.setInt(3, entry.getValue());
 
                         statement.addBatch();
                     }
