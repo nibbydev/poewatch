@@ -304,6 +304,7 @@ public class StatisticsManager {
         WORKER_GROUP_UL_ENTRIES,
         WORKER_GROUP_UL_USERNAMES,
 
+        TOTAL_STASHES,
         TOTAL_ITEMS,
         ACCEPTED_ITEMS,
         ACTIVE_ACCOUNTS
