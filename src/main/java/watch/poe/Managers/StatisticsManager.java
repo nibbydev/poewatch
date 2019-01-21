@@ -4,9 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.Stat.GroupType;
-import poe.Managers.Stat.GroupValueEntry;
-import poe.Managers.Stat.StatType;
 import poe.Managers.Stat.ValueEntry;
+import poe.Managers.Stat.StatType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,8 +17,7 @@ public class StatisticsManager {
     private final Database database;
 
     private final Map<Thread, Map<StatType, Long>> timers = new HashMap<>();
-    private final Map<Thread, Map<StatType, GroupValueEntry>> groupValues = new HashMap<>();
-    private final Map<Thread, Map<StatType, List<ValueEntry>>> values = new HashMap<>();
+    private final Map<Thread, Map<StatType, ValueEntry>> values = new HashMap<>();
 
     public StatisticsManager(Database database) {
         this.database = database;
@@ -82,31 +80,19 @@ public class StatisticsManager {
      * @param record Save entry in database
      */
     public void addValue(StatType type, Integer val, GroupType group, boolean record) {
-        if (group.equals(GroupType.NONE)) {
-            synchronized (values) {
-                Map<StatType, List<ValueEntry>> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
-                List<ValueEntry> entryList = entryMap.getOrDefault(type, new ArrayList<>());
+        if (val == null && !group.equals(GroupType.NONE)) {
+            logger.error("Cannot use null value together with group");
+            throw new NullPointerException();
+        }
 
-                entryList.add(new ValueEntry(val, record));
+        synchronized (values) {
+            Map<StatType, ValueEntry> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
+            ValueEntry valueEntry = entryMap.getOrDefault(type, new ValueEntry(group, record));
 
-                entryMap.putIfAbsent(type, entryList);
-                values.putIfAbsent(Thread.currentThread(), entryMap);
-            }
-        } else {
-            if (val == null) {
-                logger.error("Cannot use null value together with group");
-                throw new NullPointerException();
-            }
+            valueEntry.addValue(val);
 
-            synchronized (groupValues) {
-                Map<StatType, GroupValueEntry> entryMap = groupValues.getOrDefault(Thread.currentThread(), new HashMap<>());
-                GroupValueEntry groupValueEntry = entryMap.getOrDefault(type, new GroupValueEntry(group, record));
-
-                groupValueEntry.addValue(val);
-
-                entryMap.putIfAbsent(type, groupValueEntry);
-                groupValues.putIfAbsent(Thread.currentThread(), entryMap);
-            }
+            entryMap.putIfAbsent(type, valueEntry);
+            values.putIfAbsent(Thread.currentThread(), entryMap);
         }
     }
 
@@ -114,46 +100,23 @@ public class StatisticsManager {
      * Uploads all latest timer delays to database
      */
     public void upload() {
-        Map<StatType, List<ValueEntry>> combinedValues = new HashMap<>();
+        Map<StatType, List<Integer>> combinedValues = new HashMap<>();
 
         // Combine values from all threads into single list
         synchronized (values) {
-            for (Thread thread : values.keySet()) {
-                Map<StatType, List<ValueEntry>> entryMap = values.get(thread);
-
-                for (StatType type : entryMap.keySet()) {
-                    List<ValueEntry> entryList = entryMap.get(type);
-                    List<ValueEntry> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
-
-                    // Add only if entry was mark to be recorded
-                    for (ValueEntry valueEntry : entryList) {
-                        if (valueEntry.isRecord()) {
-                            combinedList.add(valueEntry);
-                        }
-                    }
-
-                    combinedValues.putIfAbsent(type, combinedList);
-                }
-            }
-
-            values.clear();
-        }
-
-        // Combine grouped values from all threads into single list
-        synchronized (groupValues) {
-            Map<StatType, GroupValueEntry> concatMap = new HashMap<>();
+            Map<StatType, ValueEntry> concatMap = new HashMap<>();
 
             // Combine all elements from multiple threads under grouped entries
-            for (Thread thread : groupValues.keySet()) {
-                Map<StatType, GroupValueEntry> entryMap = groupValues.get(thread);
+            for (Thread thread : values.keySet()) {
+                Map<StatType, ValueEntry> entryMap = values.get(thread);
 
                 for (StatType type : entryMap.keySet()) {
-                    GroupValueEntry concatEntry = concatMap.get(type);
-                    GroupValueEntry entry = entryMap.get(type);
+                    ValueEntry concatEntry = concatMap.get(type);
+                    ValueEntry entry = entryMap.get(type);
 
                     // Entry didn't exist yet
                     if (concatEntry == null) {
-                        concatEntry = new GroupValueEntry(
+                        concatEntry = new ValueEntry(
                                 entry.getGroupType(),
                                 entry.isRecord()
                         );
@@ -169,11 +132,20 @@ public class StatisticsManager {
 
             // Group the concatenated entries using the specified method
             for (StatType type : concatMap.keySet()) {
-                GroupValueEntry entry = concatMap.get(type);
-                Integer value;
+                ValueEntry entry = concatMap.get(type);
 
-                if (entry.getValues().isEmpty()) {
-                    value = 0;
+                // Get the combined list
+                List<Integer> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
+                combinedValues.putIfAbsent(type, combinedList);
+
+                if (entry.getGroupType().equals(GroupType.NONE)) {
+                    // If list is empty then have value as null, otherwise with GroupType NONE the list will contain
+                    // only 1 value
+                    if (entry.getValues().isEmpty()) {
+                        combinedList.add(null);
+                    } else {
+                        combinedList.addAll(entry.getValues());
+                    }
                 } else if (entry.getGroupType().equals(GroupType.AVG)) {
                     long sum = 0;
 
@@ -182,24 +154,22 @@ public class StatisticsManager {
                         sum += val;
                     }
 
-                    value = (int) (sum / entry.getValues().size());
+                    combinedList.add((int) (sum / entry.getValues().size()));
                 } else if (entry.getGroupType().equals(GroupType.ADD)) {
-                    value = 0;
+                    int value = 0;
 
                     for (Integer val : entry.getValues()) {
                         value += val;
                     }
+
+                    combinedList.add(value);
                 } else {
                     logger.error("You've reached a part of the code that was impossible to reach. May god have mercy on your soul.");
                     throw new NullPointerException();
                 }
-
-                List<ValueEntry> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
-                combinedList.add(new ValueEntry(value));
-                combinedValues.putIfAbsent(type, combinedList);
             }
 
-            groupValues.clear();
+            values.clear();
         }
 
         database.upload.uploadStatistics(combinedValues);
@@ -220,18 +190,18 @@ public class StatisticsManager {
             return 0;
         }
 
-        Map<StatType, List<ValueEntry>> timerMap = values.get(Thread.currentThread());
+        Map<StatType, ValueEntry> timerMap = values.get(Thread.currentThread());
 
         if (!timerMap.containsKey(type)) {
             return 0;
         }
 
-        List<ValueEntry> timerList = timerMap.get(type);
+        ValueEntry valueEntry = timerMap.get(type);
 
-        if (timerList.isEmpty()) {
+        if (valueEntry.getValues().isEmpty()) {
             return 0;
         }
 
-        return timerList.get(timerList.size() - 1).getValue();
+        return valueEntry.getValues().get(valueEntry.getValues().size() - 1);
     }
 }
