@@ -41,7 +41,7 @@ function parse_data($stmt) {
       'tier'      => $row['tier'],
       'lvl'       => $row['lvl'],
       'quality'   => $row['quality'],
-      'corrupted' => $row['corrupted'],
+      'corrupted' => $row['corrupted'] === NULL ? null : (bool) $row['corrupted'],
       'links'     => $row['links'],
       'ilvl'      => $row['ilvl'],
       'variation' => $row['var'],
