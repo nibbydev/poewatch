@@ -73,28 +73,33 @@ public class PriceManager {
                     return false;
                 }
 
-                // Sort by price ascending
-                entryList.sort(Double::compareTo);
-
-                // Trim the list to remove outliers
                 int currentCount = entryList.size();
-                int lowerTrimBound = currentCount * trimLower / 100;
-                int upperTrimBound = currentCount * (100 - trimUpper) / 100;
-                List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
 
-                // If trimming resulted in an empty list, use the original
-                if (tmpTrimmedList.isEmpty()) {
-                    tmpTrimmedList = entryList;
+                if (entryList.size() > 10) {
+                    // Sort by price ascending
+                    entryList.sort(Double::compareTo);
+
+                    // Trim the list to remove outliers
+                    int lowerTrimBound = currentCount * trimLower / 100;
+                    int upperTrimBound = currentCount * (100 - trimUpper) / 100;
+                    List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
+
+                    // If trimming resulted in an empty list, use the original
+                    if (tmpTrimmedList.isEmpty()) {
+                        tmpTrimmedList = entryList;
+                    }
+
+                    if (tmpTrimmedList.size() > 10){
+                        // Find standard deviation and bounds
+                        double tmpMean = calcMean(tmpTrimmedList);
+                        double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
+                        double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
+                        double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
+
+                        // Remove all entries that don't fall within the bounds
+                        entryList.removeIf(i -> i < lowerPredicateBound || i > upperPredicateBound);
+                    }
                 }
-
-                // Find standard deviation and bounds
-                double tmpMean = calcMean(tmpTrimmedList);
-                double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
-                double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
-                double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
-
-                // Remove all entries that don't fall within the bounds
-                entryList.removeIf(i -> i < lowerPredicateBound || i > upperPredicateBound);
 
                 // If no entries were left, skip the item
                 if (entryList.isEmpty()) {
@@ -109,6 +114,10 @@ public class PriceManager {
                     max = calcMax(entryList);
                     current = currentCount;
                 }};
+
+                if (result.mode == 0) {
+                    result.mode = result.median;
+                }
 
                 resultMap.put(id_d, result);
             }

@@ -3,6 +3,12 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Managers.StatisticsManager;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
 public class History {
     private static Logger logger = LoggerFactory.getLogger(History.class);
@@ -18,11 +24,11 @@ public class History {
      * @return True on success
      */
     public boolean removeOldItemEntries() {
-        String query1 = "delete from league_entries " +
+        String query =  "delete from league_entries " +
                         "where stash_crc is null " +
                         "and updated < subdate(now(), interval 7 day); ";
 
-        return database.executeUpdateQueries(query1);
+        return database.executeUpdateQueries(query);
     }
 
     /**
