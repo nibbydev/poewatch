@@ -4,7 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.Stat.GroupType;
-import poe.Managers.Stat.ValueEntry;
+import poe.Managers.Stat.RecordType;
+import poe.Managers.Stat.StatEntry;
 import poe.Managers.Stat.StatType;
 
 import java.util.ArrayList;
@@ -14,84 +15,104 @@ import java.util.Map;
 
 public class StatisticsManager {
     private static final Logger logger = LoggerFactory.getLogger(StatisticsManager.class);
+    private final Map<Thread, Map<StatType, StatEntry>> values;
     private final Database database;
-
-    private final Map<Thread, Map<StatType, Long>> timers = new HashMap<>();
-    private final Map<Thread, Map<StatType, ValueEntry>> values = new HashMap<>();
 
     public StatisticsManager(Database database) {
         this.database = database;
+        this.values = new HashMap<>();
     }
 
     /**
      * Initiates a timer with the specified type.
      *
-     * @param type String type for timer
+     * @param statType Timer identifier
+     * @param groupType Grouping method
+     * @param recordType Grouping time frame
      */
-    public void startTimer(StatType type) {
-        if (type == null) {
-            logger.error("Type cannot be null");
+    public void startTimer(StatType statType, GroupType groupType, RecordType recordType) {
+        if (statType == null || groupType == null || recordType == null) {
+            logger.error("Timer types cannot be null");
             throw new NullPointerException();
         }
 
-        Map<StatType, Long> timerMap = timers.getOrDefault(Thread.currentThread(), new HashMap<>());
-
-        if (timerMap.containsKey(type)) {
-            logger.error("Type already exists in timer map");
+        if (groupType.equals(GroupType.NONE) && !(recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR))) {
+            logger.error("Cannot use aggregating record types without an aggregating GroupType");
             throw new NullPointerException();
         }
 
-        timerMap.put(type, System.currentTimeMillis());
-        timers.putIfAbsent(Thread.currentThread(), timerMap);
+        synchronized (values) {
+            Map<StatType, StatEntry> timerMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
+            StatEntry statEntry = timerMap.getOrDefault(statType, new StatEntry(groupType, recordType));
+
+            statEntry.startTimer();
+
+            timerMap.putIfAbsent(statType, statEntry);
+            values.putIfAbsent(Thread.currentThread(), timerMap);
+        }
     }
 
     /**
      * Stops the timer instance associated with the provided type and notes the delay.
      *
-     * @param type Enum identifier
-     * @param group Group all entries with same type up as 1 entry
-     * @param record Save entry in database
+     * @param type Timer identifier
      * @return Timer delay
      */
-    public int clkTimer(StatType type, GroupType group, boolean record) {
+    public int clkTimer(StatType type) {
         if (type == null) {
             logger.error("Type cannot be null");
             throw new NullPointerException();
         }
 
-        Map<StatType, Long> timerMap = timers.getOrDefault(Thread.currentThread(), new HashMap<>());
+        synchronized (values) {
+            Map<StatType, StatEntry> timerMap = values.get(Thread.currentThread());
 
-        if (!timerMap.containsKey(type)) {
-            logger.error("Type doesn't exist in timer map");
-            throw new NullPointerException();
+            if (timerMap == null) {
+                logger.error("Thread doesn't exist in timer map");
+                throw new NullPointerException();
+            }
+
+            StatEntry statEntry = timerMap.get(type);
+
+            if (statEntry == null) {
+                logger.error("Type doesn't exist in timer map");
+                throw new NullPointerException();
+            }
+
+            int delay = statEntry.clkTimer();
+            statEntry.resetTimer();
+
+            statEntry.addValue(delay);
+
+            return delay;
         }
-
-        int delay = (int) (System.currentTimeMillis() - timerMap.remove(type));
-        addValue(type, delay, group, record);
-
-        return delay;
     }
 
     /**
      * Add a value directly
-     * @param type Enum identifier
      * @param val Value to save
-     * @param group Group all entries with same type up as 1 entry
-     * @param record Save entry in database
+     * @param statType Timer identifier
+     * @param groupType Grouping method
+     * @param recordType Grouping time frame
      */
-    public void addValue(StatType type, Integer val, GroupType group, boolean record) {
-        if (val == null && !group.equals(GroupType.NONE)) {
+    public void addValue(Integer val, StatType statType, GroupType groupType, RecordType recordType) {
+        if (val == null && !groupType.equals(GroupType.NONE)) {
             logger.error("Cannot use null value together with group");
             throw new NullPointerException();
         }
 
+        if (groupType.equals(GroupType.NONE) && !(recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR))) {
+            logger.error("Cannot use aggregating record types without an aggregating GroupType");
+            throw new NullPointerException();
+        }
+
         synchronized (values) {
-            Map<StatType, ValueEntry> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
-            ValueEntry valueEntry = entryMap.getOrDefault(type, new ValueEntry(group, record));
+            Map<StatType, StatEntry> entryMap = values.getOrDefault(Thread.currentThread(), new HashMap<>());
+            StatEntry statEntry = entryMap.getOrDefault(statType, new StatEntry(groupType, recordType));
 
-            valueEntry.addValue(val);
+            statEntry.addValue(val);
 
-            entryMap.putIfAbsent(type, valueEntry);
+            entryMap.putIfAbsent(statType, statEntry);
             values.putIfAbsent(Thread.currentThread(), entryMap);
         }
     }
@@ -104,21 +125,21 @@ public class StatisticsManager {
 
         // Combine values from all threads into single list
         synchronized (values) {
-            Map<StatType, ValueEntry> concatMap = new HashMap<>();
+            Map<StatType, StatEntry> concatMap = new HashMap<>();
 
             // Combine all elements from multiple threads under grouped entries
             for (Thread thread : values.keySet()) {
-                Map<StatType, ValueEntry> entryMap = values.get(thread);
+                Map<StatType, StatEntry> entryMap = values.get(thread);
 
                 for (StatType type : entryMap.keySet()) {
-                    ValueEntry concatEntry = concatMap.get(type);
-                    ValueEntry entry = entryMap.get(type);
+                    StatEntry concatEntry = concatMap.get(type);
+                    StatEntry entry = entryMap.get(type);
 
                     // Entry didn't exist yet
                     if (concatEntry == null) {
-                        concatEntry = new ValueEntry(
+                        concatEntry = new StatEntry(
                                 entry.getGroupType(),
-                                entry.isRecord()
+                                entry.getRecordType()
                         );
 
                         // Next time it won't be null
@@ -132,7 +153,7 @@ public class StatisticsManager {
 
             // Group the concatenated entries using the specified method
             for (StatType type : concatMap.keySet()) {
-                ValueEntry entry = concatMap.get(type);
+                StatEntry entry = concatMap.get(type);
 
                 // Get the combined list
                 List<Integer> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
@@ -190,18 +211,18 @@ public class StatisticsManager {
             return 0;
         }
 
-        Map<StatType, ValueEntry> timerMap = values.get(Thread.currentThread());
+        Map<StatType, StatEntry> timerMap = values.get(Thread.currentThread());
 
         if (!timerMap.containsKey(type)) {
             return 0;
         }
 
-        ValueEntry valueEntry = timerMap.get(type);
+        StatEntry statEntry = timerMap.get(type);
 
-        if (valueEntry.getValues().isEmpty()) {
+        if (statEntry.getValues().isEmpty()) {
             return 0;
         }
 
-        return valueEntry.getValues().get(valueEntry.getValues().size() - 1);
+        return statEntry.getValues().get(statEntry.getValues().size() - 1);
     }
 }

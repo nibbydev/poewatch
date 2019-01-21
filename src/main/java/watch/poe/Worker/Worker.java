@@ -10,6 +10,7 @@ import poe.Item.ItemParser;
 import poe.Item.Mappers;
 import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
+import poe.Managers.Stat.RecordType;
 import poe.Managers.StatisticsManager;
 import poe.Managers.Stat.StatType;
 import poe.Managers.Stat.GroupType;
@@ -85,9 +86,9 @@ public class Worker extends Thread {
         while (flagLocalRun) {
             waitForJob();
 
-            statisticsManager.startTimer(StatType.WORKER_GROUP_DL);
+            statisticsManager.startTimer(StatType.WORKER_GROUP_DL, GroupType.AVG, RecordType.SINGULAR);
             String replyString = download();
-            statisticsManager.clkTimer(StatType.WORKER_GROUP_DL, GroupType.AVG, true);
+            statisticsManager.clkTimer(StatType.WORKER_GROUP_DL);
 
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
@@ -97,9 +98,9 @@ public class Worker extends Thread {
                 }
 
                 if (reply != null && reply.next_change_id != null) {
-                    statisticsManager.startTimer(StatType.WORKER_GROUP_PARSE);
+                    statisticsManager.startTimer(StatType.WORKER_GROUP_PARSE, GroupType.AVG, RecordType.SINGULAR);
                     parseItems(reply);
-                    statisticsManager.clkTimer(StatType.WORKER_GROUP_PARSE, GroupType.AVG, true);
+                    statisticsManager.clkTimer(StatType.WORKER_GROUP_PARSE);
                 }
             }
 
@@ -183,7 +184,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.WORKER_DUPLICATE_JOB, 1, GroupType.ADD, true);
+                            statisticsManager.addValue(1, StatType.WORKER_DUPLICATE_JOB, GroupType.ADD, RecordType.SINGULAR);
                             return null;
                         }
                     }
@@ -227,10 +228,10 @@ public class Worker extends Thread {
         // Separate set for collecting account and character names
         Set<RawUsernameEntry> usernames = new HashSet<>();
 
-        statisticsManager.addValue(StatType.TOTAL_STASHES, reply.stashes.size(), GroupType.ADD, true);
+        statisticsManager.addValue(reply.stashes.size(), StatType.TOTAL_STASHES, GroupType.ADD, RecordType.SINGULAR);
 
         for (Mappers.Stash stash : reply.stashes) {
-            statisticsManager.addValue(StatType.TOTAL_ITEMS, stash.items.size(), GroupType.ADD, true);
+            statisticsManager.addValue(stash.items.size(), StatType.TOTAL_ITEMS, GroupType.ADD, RecordType.SINGULAR);
 
             // Get league ID. If it's an unknown ID, skip this stash
             Integer id_l = leagueManager.getLeagueId(stash.league);
@@ -304,24 +305,24 @@ public class Worker extends Thread {
             }
         }
 
-        statisticsManager.addValue(StatType.ACCEPTED_ITEMS, items.size(), GroupType.ADD, true);
+        statisticsManager.addValue(items.size(), StatType.ACCEPTED_ITEMS, GroupType.ADD, RecordType.SINGULAR);
 
         // Shovel everything to db
-        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ACCOUNTS, GroupType.AVG, RecordType.SINGULAR);
         database.upload.uploadAccounts(accounts);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ACCOUNTS, GroupType.AVG, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ACCOUNTS);
 
-        statisticsManager.startTimer(StatType.WORKER_GROUP_RESET_STASHES);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_RESET_STASHES, GroupType.AVG, RecordType.SINGULAR);
         database.flag.resetStashReferences(nullStashes);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_RESET_STASHES, GroupType.AVG, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_RESET_STASHES);
 
-        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ENTRIES);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_ENTRIES, GroupType.AVG, RecordType.SINGULAR);
         database.upload.uploadEntries(items);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ENTRIES, GroupType.AVG, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_ENTRIES);
 
-        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_USERNAMES);
+        statisticsManager.startTimer(StatType.WORKER_GROUP_UL_USERNAMES, GroupType.AVG, RecordType.SINGULAR);
         database.upload.uploadUsernames(usernames);
-        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_USERNAMES, GroupType.AVG, true);
+        statisticsManager.clkTimer(StatType.WORKER_GROUP_UL_USERNAMES);
     }
 
     /**
