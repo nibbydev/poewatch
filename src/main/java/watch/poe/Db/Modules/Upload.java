@@ -243,7 +243,7 @@ public class Upload {
      * @param values
      * @return True on success
      */
-    public boolean uploadStatistics(Map<StatType, List<Integer>> values) {
+    public boolean uploadStatistics(Map<StatType, Integer> values) {
         String query =  "INSERT INTO data_statistics (type, value) VALUES (?, ?); ";
 
         if (values == null || values.isEmpty()) {
@@ -259,17 +259,14 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (StatType type : values.keySet()) {
-                    List<Integer> valueList = values.get(type);
+                    statement.setString(1, type.name());
 
-                    for (Integer val : valueList) {
-                        statement.setString(1, type.name());
+                    Integer value = values.get(type);
+                    if (value == null) {
+                        statement.setNull(2, 0);
+                    } else statement.setInt(2, value);
 
-                        if (val == null) {
-                            statement.setNull(2, 0);
-                        } else statement.setInt(2, val);
-
-                        statement.addBatch();
-                    }
+                    statement.addBatch();
                 }
 
                 statement.executeBatch();

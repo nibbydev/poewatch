@@ -121,7 +121,7 @@ public class StatisticsManager {
      * Uploads all latest timer delays to database
      */
     public void upload() {
-        Map<StatType, List<Integer>> combinedValues = new HashMap<>();
+        Map<StatType, Integer> aggregatedValues = new HashMap<>();
 
         // Combine values from all threads into single list
         synchronized (values) {
@@ -135,6 +135,11 @@ public class StatisticsManager {
                     StatEntry concatEntry = concatMap.get(type);
                     StatEntry entry = entryMap.get(type);
 
+                    // This statistic is not meant to be recorded
+                    if (entry.getRecordType().equals(RecordType.NONE)) {
+                        continue;
+                    }
+
                     // Entry didn't exist yet
                     if (concatEntry == null) {
                         concatEntry = new StatEntry(
@@ -147,7 +152,7 @@ public class StatisticsManager {
                     }
 
                     // Add all values from the thread-specific group entry to the combined one
-                    concatEntry.getValues().addAll(entry.getValues());
+                    concatEntry.addValues(entry);
                 }
             }
 
@@ -155,45 +160,24 @@ public class StatisticsManager {
             for (StatType type : concatMap.keySet()) {
                 StatEntry entry = concatMap.get(type);
 
-                // Get the combined list
-                List<Integer> combinedList = combinedValues.getOrDefault(type, new ArrayList<>());
-                combinedValues.putIfAbsent(type, combinedList);
-
-                if (entry.getGroupType().equals(GroupType.NONE)) {
-                    // If list is empty then have value as null, otherwise with GroupType NONE the list will contain
-                    // only 1 value
-                    if (entry.getValues().isEmpty()) {
-                        combinedList.add(null);
-                    } else {
-                        combinedList.addAll(entry.getValues());
-                    }
+                if (entry.getSum() == null) {
+                    aggregatedValues.put(type, null);
+                } else if (entry.getCount() == 1) {
+                    aggregatedValues.put(type, entry.getSumAsInt());
                 } else if (entry.getGroupType().equals(GroupType.AVG)) {
-                    long sum = 0;
-
-                    // Not to worry, the values are almost never > smallint
-                    for (Integer val : entry.getValues()) {
-                        sum += val;
-                    }
-
-                    combinedList.add((int) (sum / entry.getValues().size()));
+                    aggregatedValues.put(type, entry.getAvg());
                 } else if (entry.getGroupType().equals(GroupType.ADD)) {
-                    int value = 0;
-
-                    for (Integer val : entry.getValues()) {
-                        value += val;
-                    }
-
-                    combinedList.add(value);
+                    aggregatedValues.put(type, entry.getSumAsInt());
                 } else {
                     logger.error("You've reached a part of the code that was impossible to reach. May god have mercy on your soul.");
-                    throw new NullPointerException();
+                    throw new RuntimeException();
                 }
             }
 
             values.clear();
         }
 
-        database.upload.uploadStatistics(combinedValues);
+        database.upload.uploadStatistics(aggregatedValues);
     }
 
     /**
@@ -204,25 +188,39 @@ public class StatisticsManager {
      */
     public int getLatest(StatType type) {
         if (type == null) {
-            return 0;
+            logger.error("StatType cannot be null");
+            throw new RuntimeException();
         }
 
         if (!values.containsKey(Thread.currentThread())) {
-            return 0;
+            logger.error("Thread not found in thread map");
+            throw new RuntimeException();
         }
 
-        Map<StatType, StatEntry> timerMap = values.get(Thread.currentThread());
+        Map<StatType, StatEntry> entryMap = values.get(Thread.currentThread());
 
-        if (!timerMap.containsKey(type)) {
-            return 0;
+        if (!entryMap.containsKey(type)) {
+            logger.error("StatType not found in entry map");
+            throw new RuntimeException();
         }
 
-        StatEntry statEntry = timerMap.get(type);
+        StatEntry statEntry = entryMap.get(type);
 
-        if (statEntry.getValues().isEmpty()) {
-            return 0;
+        if (!statEntry.getGroupType().equals(GroupType.NONE)) {
+            logger.error("Cannot get latest value for aggregated statistics!");
+            throw new RuntimeException();
         }
 
-        return statEntry.getValues().get(statEntry.getValues().size() - 1);
+        if (statEntry.getSum() == null) {
+            logger.error("Cannot get latest value from null");
+            throw new RuntimeException();
+        }
+
+        if (statEntry.getCount() != 1) {
+            logger.error("You've reached a part of the code that was impossible to reach. May god have mercy on your soul.");
+            throw new RuntimeException();
+        }
+
+        return statEntry.getSumAsInt();
     }
 }
