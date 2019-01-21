@@ -3,8 +3,11 @@ package poe.Managers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Managers.Stat.GroupType;
+import poe.Managers.Stat.GroupValueEntry;
+import poe.Managers.Stat.StatType;
+import poe.Managers.Stat.ValueEntry;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,7 +127,7 @@ public class StatisticsManager {
 
                     // Add only if entry was mark to be recorded
                     for (ValueEntry valueEntry : entryList) {
-                        if (valueEntry.record) {
+                        if (valueEntry.isRecord()) {
                             combinedList.add(valueEntry);
                         }
                     }
@@ -151,8 +154,8 @@ public class StatisticsManager {
                     // Entry didn't exist yet
                     if (concatEntry == null) {
                         concatEntry = new GroupValueEntry(
-                                entry.groupType,
-                                entry.record
+                                entry.getGroupType(),
+                                entry.isRecord()
                         );
 
                         // Next time it won't be null
@@ -171,7 +174,7 @@ public class StatisticsManager {
 
                 if (entry.getValues().isEmpty()) {
                     value = 0;
-                } else if (entry.groupType.equals(GroupType.AVG)) {
+                } else if (entry.getGroupType().equals(GroupType.AVG)) {
                     long sum = 0;
 
                     // Not to worry, the values are almost never > smallint
@@ -180,7 +183,7 @@ public class StatisticsManager {
                     }
 
                     value = (int) (sum / entry.getValues().size());
-                } else if (entry.groupType.equals(GroupType.ADD)) {
+                } else if (entry.getGroupType().equals(GroupType.ADD)) {
                     value = 0;
 
                     for (Integer val : entry.getValues()) {
@@ -229,90 +232,6 @@ public class StatisticsManager {
             return 0;
         }
 
-        return timerList.get(timerList.size() - 1).value;
-    }
-
-    public static class ValueEntry {
-        private Timestamp time = new Timestamp(System.currentTimeMillis());
-        private boolean record;
-        private Integer value;
-
-        ValueEntry(Integer value, boolean record) {
-            this.record = record;
-            this.value = value;
-        }
-
-        ValueEntry(Integer value) {
-            this.value = value;
-        }
-
-        public Integer getValue() {
-            return value;
-        }
-
-        public Timestamp getTime() {
-            return time;
-        }
-    }
-
-    public static class GroupValueEntry {
-        private Timestamp time = new Timestamp(System.currentTimeMillis());
-        private List<Integer> values = new ArrayList<>();
-        private GroupType groupType;
-        private boolean record;
-
-        GroupValueEntry(GroupType groupType, boolean record) {
-            this.groupType = groupType;
-            this.record = record;
-        }
-
-        public void addValue(Integer val) {
-            values.add(val);
-        }
-
-        public List<Integer> getValues() {
-            return values;
-        }
-
-        public Timestamp getTime() {
-            return time;
-        }
-    }
-
-    public enum StatType {
-        CYCLE_TOTAL,
-        CYCLE_CALC_PRICES,
-        CYCLE_UPDATE_COUNTERS,
-        CYCLE_CALC_EXALTED,
-        CYCLE_LEAGUE_CYCLE,
-        CYCLE_ADD_HOURLY,
-        CYCLE_CALC_DAILY,
-        CYCLE_RESET_COUNTERS,
-        CYCLE_REMOVE_OLD_ENTRIES,
-        CYCLE_ADD_DAILY,
-        CYCLE_CALC_SPARK,
-        CYCLE_ACCOUNT_CHANGES,
-
-        APP_STARTUP,
-        APP_SHUTDOWN,
-
-        WORKER_DUPLICATE_JOB,
-        WORKER_GROUP_DL,
-        WORKER_GROUP_PARSE,
-        WORKER_GROUP_UL_ACCOUNTS,
-        WORKER_GROUP_RESET_STASHES,
-        WORKER_GROUP_UL_ENTRIES,
-        WORKER_GROUP_UL_USERNAMES,
-
-        TOTAL_STASHES,
-        TOTAL_ITEMS,
-        ACCEPTED_ITEMS,
-        ACTIVE_ACCOUNTS
-    }
-
-    public enum GroupType {
-        NONE,
-        AVG,
-        ADD
+        return timerList.get(timerList.size() - 1).getValue();
     }
 }

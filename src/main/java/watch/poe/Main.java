@@ -8,8 +8,8 @@ import poe.Db.Database;
 import poe.Managers.*;
 import poe.Item.ItemParser;
 import poe.Worker.Worker;
-import poe.Managers.StatisticsManager.GroupType;
-import poe.Managers.StatisticsManager.StatType;
+import poe.Managers.Stat.GroupType;
+import poe.Managers.Stat.StatType;
 
 import java.io.BufferedReader;
 import java.io.IOException;

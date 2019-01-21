@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.PriceManager;
-import poe.Managers.StatisticsManager.ValueEntry;
-import poe.Managers.StatisticsManager.StatType;
+import poe.Managers.Stat.ValueEntry;
+import poe.Managers.Stat.StatType;
 import poe.Worker.Entry.*;
 import poe.Managers.League.LeagueEntry;
 
