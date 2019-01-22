@@ -5,8 +5,8 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Worker.Entry.StatusElement;
 import poe.Item.Mappers;
+import poe.Managers.Status.StatusType;
 import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
 
@@ -27,24 +27,22 @@ public class WorkerManager extends Thread {
     private final AccountManager accountManager;
     private final StatisticsManager statisticsManager;
 
-    private final StatusElement status;
-    private final Gson gson;
+    private final StatusManager statusManager;
+    private final Gson gson = new Gson();
 
     private final ArrayList<Worker> workerList = new ArrayList<>();
     private volatile boolean flagRun = true;
     private volatile boolean readyToExit = false;
     private String nextChangeID;
 
-    public WorkerManager(StatisticsManager sm, LeagueManager lm, RelationManager rm, AccountManager am, Database db, Config cnf) {
+    public WorkerManager(Config cnf, StatusManager se, Database db, StatisticsManager sm, LeagueManager lm, RelationManager rm, AccountManager am) {
         this.statisticsManager = sm;
-        this.leagueManager = lm;
         this.relationManager = rm;
         this.accountManager = am;
+        this.leagueManager = lm;
+        this.statusManager = se;
         this.database = db;
         this.config = cnf;
-
-        this.status = new StatusElement(cnf);
-        this.gson = new Gson();
     }
 
     /**
@@ -52,24 +50,20 @@ public class WorkerManager extends Thread {
      */
     public void run() {
         logger.info(String.format("Starting %s", WorkerManager.class.getName()));
-
-        status.fixCounters();
-
-        logger.info(String.format("Loaded params: [10m:%3d min][1h:%3d min][24h:%5d min]",
-                10 - (System.currentTimeMillis() - status.tenCounter) / 60000,
-                60 - (System.currentTimeMillis() - status.sixtyCounter) / 60000,
-                1440 - (System.currentTimeMillis() - status.twentyFourCounter) / 60000));
+        logger.info(String.format("Loaded params: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
+                StatusType.M_1.getRemaining() / 1000,
+                StatusType.M_10.getRemaining() / 60000,
+                StatusType.M_60.getRemaining() / 60000,
+                StatusType.H_24.getRemaining() / 3600000
+        ));
 
         while (flagRun) {
-            // If minutely cycle should be initiated
-            if (System.currentTimeMillis() - status.lastRunTime > config.getInt("entry.sleepTime")) {
-                // Wait until all workers are paused
+            statusManager.checkFlagStates();
+
+            // If cycle should be initiated
+            if (statusManager.isBool(StatusType.M_1)) {
                 setWorkerSleepState(true, true);
-
-                status.lastRunTime = System.currentTimeMillis();
                 cycle();
-
-                // Wait until all workers are resumed
                 setWorkerSleepState(false, true);
             }
 
@@ -85,8 +79,10 @@ public class WorkerManager extends Thread {
                 }
             }
 
+            statusManager.resetFlags();
+
             try {
-                Thread.sleep(10);
+                Thread.sleep(100);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
@@ -100,19 +96,17 @@ public class WorkerManager extends Thread {
      * Minutely cycle init
      */
     private void cycle() {
-        status.checkFlagStates();
-
         // Start cycle timer
         statisticsManager.startTimer(StatType.CYCLE_TOTAL);
 
-        if (status.isTwentyFourBool()) {
+        if (statusManager.isBool(StatusType.H_24)) {
             statisticsManager.startTimer(StatType.REMOVE_OLD_ENTRIES);
             database.history.removeOldItemEntries();
             statisticsManager.clkTimer(StatType.REMOVE_OLD_ENTRIES);
         }
 
         statisticsManager.startTimer(StatType.CALC_PRICES);
-        PriceManager.run();
+        //PriceManager.run();
         statisticsManager.clkTimer(StatType.CALC_PRICES);
 
         statisticsManager.startTimer(StatType.UPDATE_COUNTERS);
@@ -123,7 +117,7 @@ public class WorkerManager extends Thread {
         database.calc.calculateExalted();
         statisticsManager.clkTimer(StatType.CALC_EXALT);
 
-        if (status.isSixtyBool()) {
+        if (statusManager.isBool(StatusType.M_60)) {
             database.calc.countActiveAccounts(statisticsManager);
 
             statisticsManager.startTimer(StatType.ADD_HOURLY);
@@ -135,7 +129,7 @@ public class WorkerManager extends Thread {
             statisticsManager.clkTimer(StatType.CALC_DAILY);
         }
 
-        if (status.isTwentyFourBool()) {
+        if (statusManager.isBool(StatusType.H_24)) {
             statisticsManager.startTimer(StatType.ADD_DAILY);
             database.history.addDaily();
             statisticsManager.clkTimer(StatType.ADD_DAILY);
@@ -145,7 +139,7 @@ public class WorkerManager extends Thread {
             statisticsManager.clkTimer(StatType.CALC_SPARK);
         }
 
-        if (status.isSixtyBool()) {
+        if (statusManager.isBool(StatusType.M_60)) {
             statisticsManager.startTimer(StatType.RESET_COUNTERS);
             database.flag.resetCounters();
             statisticsManager.clkTimer(StatType.RESET_COUNTERS);
@@ -155,25 +149,26 @@ public class WorkerManager extends Thread {
         statisticsManager.clkTimer(StatType.CYCLE_TOTAL);
 
         // Check league API
-        if (status.isTenBool()) {
+        if (statusManager.isBool(StatusType.M_10)) {
             statisticsManager.startTimer(StatType.CYCLE_LEAGUES);
             leagueManager.cycle();
             statisticsManager.clkTimer(StatType.CYCLE_LEAGUES);
         }
 
         // Check if there are matching account name changes
-        if (status.isTwentyFourBool()) {
+        if (statusManager.isBool(StatusType.H_24)) {
             statisticsManager.startTimer(StatType.ACCOUNT_CHANGES);
             accountManager.checkAccountNameChanges();
             statisticsManager.clkTimer(StatType.ACCOUNT_CHANGES);
         }
 
         // Prepare cycle message
-        logger.info(String.format("Cycle finished: %5d ms | %2d / %3d / %4d ",
-                statisticsManager.getLast(StatType.CYCLE_TOTAL),
-                status.getTenRemainMin(),
-                status.getSixtyRemainMin(),
-                status.getTwentyFourRemainMin()
+        logger.info(String.format("Cycle finished: %5d ms", statisticsManager.getLast(StatType.CYCLE_TOTAL)));
+        logger.info(String.format("Status: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
+                StatusType.M_1.getRemaining() / 1000 + 1,
+                StatusType.M_10.getRemaining() / 60000 + 1,
+                StatusType.M_60.getRemaining() / 60000 + 1,
+                StatusType.H_24.getRemaining() / 3600000 + 1
         ));
 
         logger.info(String.format("[%5d][%5d][%5d]",
@@ -182,23 +177,18 @@ public class WorkerManager extends Thread {
                     statisticsManager.getLast(StatType.CALC_EXALT)
         ));
 
-        if (status.isSixtyBool()) logger.info(String.format("[%5d][%5d][%5d]",
+        if (statusManager.isBool(StatusType.M_60)) logger.info(String.format("[%5d][%5d][%5d]",
                 statisticsManager.getLast(StatType.ADD_HOURLY),
                 statisticsManager.getLast(StatType.CALC_DAILY),
                 statisticsManager.getLast(StatType.RESET_COUNTERS)
         ));
 
-        if (status.isTwentyFourBool()) logger.info(String.format("[%5d][%5d][%5d][%5d]",
+        if (statusManager.isBool(StatusType.H_24)) logger.info(String.format("[%5d][%5d][%5d][%5d]",
                 statisticsManager.getLast(StatType.REMOVE_OLD_ENTRIES),
                 statisticsManager.getLast(StatType.ADD_DAILY),
                 statisticsManager.getLast(StatType.CALC_SPARK),
                 statisticsManager.getLast(StatType.ACCOUNT_CHANGES)
         ));
-
-        // Reset flags
-        status.setTwentyFourBool(false);
-        status.setSixtyBool(false);
-        status.setTenBool(false);
 
         // Upload stats to database
         statisticsManager.upload();

@@ -3,6 +3,7 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Managers.Stat.Collector;
 
 import java.sql.*;
 import java.util.Set;

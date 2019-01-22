@@ -39,10 +39,10 @@ public class StatisticsManager {
             new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,  RecordType.SINGULAR),
             new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,  RecordType.SINGULAR),
 
-            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  RecordType.H_1),
-            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  RecordType.H_1),
-            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  RecordType.H_1),
-            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  RecordType.H_1),
+            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  RecordType.M_10),
+            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  RecordType.M_10),
+            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  RecordType.M_10),
+            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  RecordType.M_10),
 
             new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.NONE, RecordType.SINGULAR),
     };
@@ -52,6 +52,24 @@ public class StatisticsManager {
 
         // Get ongoing statistics collectors from database
         database.init.getTmpStatistics(collectors);
+
+        // Find if any of the collectors have expired
+        Set<Collector> expired = Arrays.stream(collectors)
+                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
+                .filter(i -> !i.getRecordType().equals(RecordType.SINGULAR))
+                .filter(i -> i.isCollectingOverTime())
+                .filter(i -> i.isExpired())
+                .peek(i -> logger.info(String.format("Expired collector [%s]", i.getStatType().name())))
+                .collect(Collectors.toSet());
+
+        if (!expired.isEmpty()) {
+            // Delete them from the database
+            database.upload.deleteTmpStatistics(expired);
+            database.upload.uploadStatistics(expired);
+
+            // Reset the expired collectors
+            expired.forEach(Collector::reset);
+        }
     }
 
     /**
@@ -148,19 +166,36 @@ public class StatisticsManager {
     public void upload() {
         // Find collectors that should be uploaded
         Set<Collector> filtered = Arrays.stream(collectors)
-                .filter(Collector::canUpload)
+                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
+                .filter(i -> !i.isCollectingOverTime())
+                .filter(i -> i.getCount() > 0)
+                .collect(Collectors.toSet());
+
+        // Find collectors that should be uploaded
+        Set<Collector> filteredExpired = Arrays.stream(collectors)
+                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
+                .filter(i -> !i.getRecordType().equals(RecordType.SINGULAR))
+                .filter(i -> i.isCollectingOverTime())
+                .filter(i -> i.isExpired())
                 .collect(Collectors.toSet());
 
         // Find collectors that should be uploaded to tmp table
         Set<Collector> filteredTmp = Arrays.stream(collectors)
-                .filter(Collector::canUploadTmp)
+                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
+                .filter(i -> !i.getRecordType().equals(RecordType.SINGULAR))
+                .filter(i -> i.isCollectingOverTime())
+                .filter(i -> !i.isExpired())
+                .filter(i -> i.getCount() > 0)
                 .collect(Collectors.toSet());
 
         database.upload.uploadStatistics(filtered);
+        database.upload.uploadStatistics(filteredExpired);
+        database.upload.deleteTmpStatistics(filteredExpired);
         database.upload.uploadTempStatistics(filteredTmp);
 
         // Reset all collectors that are not ongoing
         filtered.forEach(Collector::reset);
+        filteredExpired.forEach(Collector::reset);
     }
 
     /**

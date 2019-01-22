@@ -2,6 +2,7 @@ package poe.Managers.Stat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import poe.Managers.Status.StatusType;
 
 import static java.lang.Math.toIntExact;
 
@@ -12,14 +13,12 @@ public class Collector {
     private final StatType statType;
 
     private long creationTime;
-    private int latestValue;
-    private boolean isNull;
-    private int count;
-    private long sum;
+    private int latestValue = 0;
+    private boolean isNull = false;
+    private int count = 0;
+    private long sum = 0L;
 
     public Collector(StatType statType, GroupType groupType, RecordType recordType) {
-        reset();
-
         this.statType = statType;
         this.groupType = groupType;
         this.recordType = recordType;
@@ -35,45 +34,26 @@ public class Collector {
                 throw new RuntimeException();
             }
         }
-    }
 
-    public boolean canUpload() {
-        // Specifically marked as not to be uploaded
-        if (recordType.equals(RecordType.NONE)) {
-            return false;
-        }
-
-        // No values have been added
-        if (count == 0) {
-            return false;
-        }
-
-        // Collector is supposed to run over a period of time and has not finished yet
-        if (!recordType.equals(RecordType.SINGULAR) && !isExpired()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean canUploadTmp() {
-        // Not to be uploaded to tmp table
+        // Set default creationTime
         if (recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR)) {
-            return false;
+            creationTime = StatusType.M_1.getCurrent();
+        } else {
+            creationTime = recordType.toStatusType().getCurrent();
         }
-
-        // No values have been added
-        if (count == 0) {
-            return false;
-        }
-
-        if (isExpired()) {
-            return false;
-        }
-
-        return true;
     }
 
+    public boolean isCollectingOverTime() {
+        return !recordType.equals(RecordType.NONE) && !recordType.equals(RecordType.SINGULAR);
+    }
+
+    public boolean isExpired() {
+        return System.currentTimeMillis() - creationTime >= recordType.toStatusType().asMilli();
+    }
+
+    public RecordType getRecordType() {
+        return recordType;
+    }
 
     public void addValue(Integer val) {
         if (val == null) {
@@ -108,7 +88,12 @@ public class Collector {
     }
 
     public void reset() {
-        creationTime = System.currentTimeMillis();
+        if (recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR)) {
+            creationTime = StatusType.M_1.getNext();
+        } else {
+            creationTime = recordType.toStatusType().getNext();
+        }
+
         latestValue = 0;
         isNull = false;
         count = 0;
@@ -125,40 +110,6 @@ public class Collector {
 
     public long getCreationTime() {
         return creationTime;
-    }
-
-    public boolean isExpired() {
-        if (recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR)) {
-            return false;
-        }
-
-        long delay;
-
-        switch (recordType) {
-            case M_10:
-                delay = 10 * 60 * 1000;
-                break;
-            case M_30:
-                delay = 30 * 60 * 1000;
-                break;
-            case H_1:
-                delay = 60 * 60 * 1000;
-                break;
-            case H_6:
-                delay = 6 * 60 * 60 * 1000;
-                break;
-            case H_12:
-                delay = 12 * 60 * 60 * 1000;
-                break;
-            case H_24:
-                delay = 24 * 60 * 60 * 1000;
-                break;
-            default:
-                logger.error("Unhandled switch branch");
-                throw new RuntimeException();
-        }
-
-        return creationTime - System.currentTimeMillis() > delay;
     }
 
     public StatType getStatType() {

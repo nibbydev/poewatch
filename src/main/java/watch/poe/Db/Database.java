@@ -69,8 +69,6 @@ public class Database {
      * Disconnects from the MySQL database
      */
     public void disconnect() {
-        logger.info("Disconnecting from database");
-
         try {
             if (connection != null) connection.close();
         } catch (SQLException ex) {
