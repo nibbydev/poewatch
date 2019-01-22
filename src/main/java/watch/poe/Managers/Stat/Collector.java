@@ -13,15 +13,17 @@ public class Collector {
     private final StatType statType;
 
     private long creationTime;
+    private Integer historySize;
     private int latestValue = 0;
     private boolean isNull = false;
     private int count = 0;
     private long sum = 0L;
 
-    public Collector(StatType statType, GroupType groupType, RecordType recordType) {
+    public Collector(StatType statType, GroupType groupType, RecordType recordType, Integer historySize) {
         this.statType = statType;
         this.groupType = groupType;
         this.recordType = recordType;
+        this.historySize = historySize;
 
         if (statType == null || groupType == null || recordType == null) {
             logger.error("Timer types cannot be null");
@@ -134,5 +136,9 @@ public class Collector {
 
     public void setCount(int count) {
         this.count = count;
+    }
+
+    public Integer getHistorySize() {
+        return historySize;
     }
 }

@@ -16,35 +16,35 @@ public class StatisticsManager {
     private final Database database;
 
     private final Collector[] collectors = {
-            new Collector(StatType.CYCLE_TOTAL,             GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.CALC_PRICES,             GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.UPDATE_COUNTERS,         GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.CALC_EXALT,              GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.CYCLE_LEAGUES,           GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.ADD_HOURLY,              GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.CALC_DAILY,              GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.RESET_COUNTERS,          GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.ADD_DAILY,               GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.CALC_SPARK,              GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.CYCLE_TOTAL,             GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.CALC_PRICES,             GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.UPDATE_COUNTERS,         GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.CALC_EXALT,              GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.CYCLE_LEAGUES,           GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.ADD_HOURLY,              GroupType.NONE, RecordType.SINGULAR,    24),
+            new Collector(StatType.CALC_DAILY,              GroupType.NONE, RecordType.SINGULAR,    24),
+            new Collector(StatType.RESET_COUNTERS,          GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.ADD_DAILY,               GroupType.NONE, RecordType.SINGULAR,    7),
+            new Collector(StatType.CALC_SPARK,              GroupType.NONE, RecordType.SINGULAR,    7),
+            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.NONE, RecordType.SINGULAR,    60),
 
-            new Collector(StatType.APP_STARTUP,             GroupType.NONE, RecordType.SINGULAR),
-            new Collector(StatType.APP_SHUTDOWN,            GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.APP_STARTUP,             GroupType.NONE, RecordType.SINGULAR,    null),
+            new Collector(StatType.APP_SHUTDOWN,            GroupType.NONE, RecordType.SINGULAR,    null),
 
-            new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,  RecordType.SINGULAR),
-            new Collector(StatType.WORKER_PARSE,            GroupType.AVG,  RecordType.SINGULAR),
-            new Collector(StatType.WORKER_UPLOAD_ACCOUNTS,  GroupType.AVG,  RecordType.SINGULAR),
-            new Collector(StatType.WORKER_RESET_STASHES,    GroupType.AVG,  RecordType.SINGULAR),
-            new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,  RecordType.SINGULAR),
-            new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,  RecordType.SINGULAR),
+            new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,  RecordType.SINGULAR,    60),
+            new Collector(StatType.WORKER_PARSE,            GroupType.AVG,  RecordType.SINGULAR,    60),
+            new Collector(StatType.WORKER_UPLOAD_ACCOUNTS,  GroupType.AVG,  RecordType.SINGULAR,    60),
+            new Collector(StatType.WORKER_RESET_STASHES,    GroupType.AVG,  RecordType.SINGULAR,    60),
+            new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,  RecordType.SINGULAR,    60),
+            new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,  RecordType.SINGULAR,    60),
 
-            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  RecordType.M_10),
-            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  RecordType.M_10),
-            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  RecordType.M_10),
-            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  RecordType.M_10),
+            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  RecordType.M_60,        16),
+            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  RecordType.M_60,        null),
+            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  RecordType.M_60,        null),
+            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  RecordType.M_60,        null),
 
-            new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.NONE, RecordType.SINGULAR,    null),
     };
 
     public StatisticsManager(Database database) {
@@ -64,8 +64,8 @@ public class StatisticsManager {
 
         if (!expired.isEmpty()) {
             // Delete them from the database
-            database.upload.deleteTmpStatistics(expired);
-            database.upload.uploadStatistics(expired);
+            database.stats.deleteTmpStatistics(expired);
+            database.stats.uploadStatistics(expired);
 
             // Reset the expired collectors
             expired.forEach(Collector::reset);
@@ -188,10 +188,13 @@ public class StatisticsManager {
                 .filter(i -> i.getCount() > 0)
                 .collect(Collectors.toSet());
 
-        database.upload.uploadStatistics(filtered);
-        database.upload.uploadStatistics(filteredExpired);
-        database.upload.deleteTmpStatistics(filteredExpired);
-        database.upload.uploadTempStatistics(filteredTmp);
+        database.stats.uploadStatistics(filtered);
+        database.stats.uploadStatistics(filteredExpired);
+        database.stats.deleteTmpStatistics(filteredExpired);
+        database.stats.uploadTempStatistics(filteredTmp);
+
+        // Delete old stat entries from database
+        database.stats.trimStatHistory(collectors);
 
         // Reset all collectors that are not ongoing
         filtered.forEach(Collector::reset);

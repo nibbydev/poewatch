@@ -74,7 +74,7 @@ CREATE TABLE data_changeId (
 
 CREATE TABLE data_statistics (
     statType  VARCHAR(32)  NOT NULL,
-    time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    time      TIMESTAMP    NOT NULL,
     value     INT          DEFAULT NULL,
 
     INDEX statType (statType),

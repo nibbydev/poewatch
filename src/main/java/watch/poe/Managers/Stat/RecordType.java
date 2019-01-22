@@ -15,10 +15,8 @@ public enum RecordType {
     NONE,
     // Record all entries separately
     SINGULAR,
-    // Aggregate by the minute
-    M_10, M_30,
-    // Aggregate by the hour
-    H_1, H_6, H_12, H_24;
+    // Aggregate by the time window
+    M_10, M_60, H_24;
 
     private static final Logger logger = LoggerFactory.getLogger(RecordType.class);
 

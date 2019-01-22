@@ -2,7 +2,6 @@ package poe.Managers.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Managers.Stat.RecordType;
 
 public enum StatusType {
     M_1, M_10, M_30, M_60, H_6, H_12, H_24;

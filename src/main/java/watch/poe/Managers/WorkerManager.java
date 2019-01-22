@@ -106,7 +106,7 @@ public class WorkerManager extends Thread {
         }
 
         statisticsManager.startTimer(StatType.CALC_PRICES);
-        //PriceManager.run();
+        PriceManager.run();
         statisticsManager.clkTimer(StatType.CALC_PRICES);
 
         statisticsManager.startTimer(StatType.UPDATE_COUNTERS);

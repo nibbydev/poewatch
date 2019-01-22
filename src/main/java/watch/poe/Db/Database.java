@@ -15,6 +15,7 @@ public class Database {
     public Account account = new Account(this);
     public Upload upload = new Upload(this);
     public Index index = new Index(this);
+    public Stats stats = new Stats(this);
     public Flag flag = new Flag(this);
     public Init init = new Init(this);
     public Calc calc = new Calc(this);
