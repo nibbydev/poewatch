@@ -3,6 +3,7 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Managers.Stat.Collector;
 import poe.Managers.Stat.GroupType;
 import poe.Managers.Stat.RecordType;
 import poe.Managers.Stat.StatType;
@@ -39,11 +40,7 @@ public class Calc {
 
                 // Get first and only entry
                 if (resultSet.next()) {
-                    statisticsManager.addValue(
-                            resultSet.getInt(1), StatType.ACTIVE_ACCOUNTS,
-                            GroupType.NONE,
-                            RecordType.SINGULAR
-                    );
+                    statisticsManager.addValue(StatType.ACTIVE_ACCOUNTS, resultSet.getInt(1));
                 }
             }
 

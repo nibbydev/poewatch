@@ -6,40 +6,66 @@ import poe.Db.Database;
 import poe.Managers.Stat.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.toIntExact;
 
 public class StatisticsManager {
     private static final Logger logger = LoggerFactory.getLogger(StatisticsManager.class);
-    private final Map<Thread, Set<StatTimer>> threadTimers;
-    private final Set<StatEntry> values;
+    private final Map<Thread, Set<StatTimer>> threadTimers = new HashMap<>();
     private final Database database;
+
+    private final Collector[] collectors = {
+            new Collector(StatType.CYCLE_TOTAL,             GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.CALC_PRICES,             GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.UPDATE_COUNTERS,         GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.CALC_EXALT,              GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.CYCLE_LEAGUES,           GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.ADD_HOURLY,              GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.CALC_DAILY,              GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.RESET_COUNTERS,          GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.ADD_DAILY,               GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.CALC_SPARK,              GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.NONE, RecordType.SINGULAR),
+
+            new Collector(StatType.APP_STARTUP,             GroupType.NONE, RecordType.SINGULAR),
+            new Collector(StatType.APP_SHUTDOWN,            GroupType.NONE, RecordType.SINGULAR),
+
+            new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,  RecordType.SINGULAR),
+            new Collector(StatType.WORKER_PARSE,            GroupType.AVG,  RecordType.SINGULAR),
+            new Collector(StatType.WORKER_UPLOAD_ACCOUNTS,  GroupType.AVG,  RecordType.SINGULAR),
+            new Collector(StatType.WORKER_RESET_STASHES,    GroupType.AVG,  RecordType.SINGULAR),
+            new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,  RecordType.SINGULAR),
+            new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,  RecordType.SINGULAR),
+
+            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  RecordType.H_1),
+            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  RecordType.H_1),
+            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  RecordType.H_1),
+            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  RecordType.H_1),
+
+            new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.NONE, RecordType.SINGULAR),
+    };
 
     public StatisticsManager(Database database) {
         this.database = database;
-        this.threadTimers = new HashMap<>();
-        this.values = new HashSet<>();
 
-        database.init.getTmpStatistics(this.values);
+        // Get ongoing statistics collectors from database
+        database.init.getTmpStatistics(collectors);
     }
 
     /**
-     * Initiates a timer with the specified type.
+     * Initiates a timer with the specified type
      *
-     * @param statType Timer identifier
+     * @param statType Stat identifier
      */
     public void startTimer(StatType statType) {
         synchronized (threadTimers) {
             Set<StatTimer> statTimerList = threadTimers.getOrDefault(Thread.currentThread(), new HashSet<>());
             threadTimers.putIfAbsent(Thread.currentThread(), statTimerList);
 
-            StatTimer statTimer = statTimerList.stream()
-                    .filter(i -> i.getStatType().equals(statType))
-                    .findFirst()
-                    .orElse(null);
-
             // If there was no entry, create a new one and add it to the list
-            if (statTimer != null) {
+            if (statTimerList.stream().anyMatch(i -> i.getStatType().equals(statType))) {
                 logger.error("Stat timer already exists");
                 throw new RuntimeException();
             }
@@ -49,27 +75,19 @@ public class StatisticsManager {
     }
 
     /**
-     * Stops the timer instance associated with the provided type and notes the delay.
+     * Stops the timer instance associated with the provided type and notes the delay
      *
-     * @param statType Timer identifier
-     * @return Timer delay
+     * @param statType Stat identifier
+     * @return Delay in MS
      */
-    public int clkTimer(StatType statType, GroupType groupType, RecordType recordType) {
-        if (statType == null || groupType == null || recordType == null) {
-            logger.error("Timer types cannot be null");
-            throw new NullPointerException();
-        }
-
-        if (groupType.equals(GroupType.NONE) && !(recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR))) {
-            logger.error("Cannot use aggregating record types without an aggregating GroupType");
-            throw new NullPointerException();
-        }
+    public int clkTimer(StatType statType) {
+        int delay;
 
         synchronized (threadTimers) {
             Set<StatTimer> statEntryList = threadTimers.get(Thread.currentThread());
 
             if (statEntryList == null) {
-                logger.error("Thread doesn't exist in map");
+                logger.error("Thread doesn't exist in current context");
                 throw new RuntimeException();
             }
 
@@ -81,64 +99,46 @@ public class StatisticsManager {
 
             // If it didn't exist
             if (statTimer == null) {
-                logger.error("Stat type doesn't exist in list");
+                logger.error("Stat type doesn't exist in current context");
                 throw new RuntimeException();
             }
 
             // Remove the timer
             statEntryList.remove(statTimer);
-            int delay = toIntExact(System.currentTimeMillis() - statTimer.getStartTime());
 
-            // Find first entry
-            StatEntry statEntry = values.stream()
-                    .filter(i -> i.getStatType().equals(statType))
-                    .findFirst()
-                    .orElse(null);
-
-            // Create if it didn't exist
-            if (statEntry == null) {
-                statEntry = new StatEntry(statType, groupType, recordType);
-                values.add(statEntry);
-            }
-
-            // Add delay to entry
-            statEntry.addValue(delay);
-
-            // Return value isn't even used anywhere
-            return delay;
+            // Get delay as int MS
+            delay = toIntExact(System.currentTimeMillis() - statTimer.getStartTime());
         }
+
+        // Add value to the collector
+        addValue(statType, delay);
+
+        // Return value isn't even used anywhere
+        return delay;
     }
 
     /**
-     * Add a value directly
+     * Add a value directly to a collector
+     *
+     * @param statType Stat identifier
      * @param val Value to save
-     * @param statType Timer identifier
-     * @param groupType Grouping method
-     * @param recordType Grouping time frame
      */
-    public void addValue(Integer val, StatType statType, GroupType groupType, RecordType recordType) {
-        if (val == null && !groupType.equals(GroupType.NONE)) {
-            logger.error("Cannot use null value together with group");
-            throw new NullPointerException();
-        }
-
-        if (groupType.equals(GroupType.NONE) && !(recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR))) {
-            logger.error("Cannot use aggregating record types without an aggregating GroupType");
-            throw new NullPointerException();
-        }
-
-        synchronized (values) {
-            StatEntry statEntry = values.stream()
+    public void addValue(StatType statType, Integer val) {
+        synchronized (collectors) {
+            // Find first collector
+            Collector collector = Arrays.stream(collectors)
                     .filter(i -> i.getStatType().equals(statType))
                     .findFirst()
                     .orElse(null);
 
-            if (statEntry == null) {
-                statEntry = new StatEntry(statType, groupType, recordType);
-                values.add(statEntry);
+            // If it didn't exist
+            if (collector == null) {
+                logger.error("The specified collector could not be found");
+                throw new RuntimeException();
             }
 
-            statEntry.addValue(val);
+            // Add value to the collector
+            collector.addValue(val);
         }
     }
 
@@ -146,45 +146,27 @@ public class StatisticsManager {
      * Uploads all latest timer delays to database
      */
     public void upload() {
-        Map<StatType, List<Integer>> concMap = new HashMap<>();
-        Set<StatEntry> recordEntries = new HashSet<>();
+        // Find collectors that should be uploaded
+        Set<Collector> filtered = Arrays.stream(collectors)
+                .filter(Collector::canUpload)
+                .collect(Collectors.toSet());
 
-        synchronized (values) {
-            for (StatEntry statEntry : values) {
-                List<Integer> concList = concMap.getOrDefault(statEntry.getStatType(), new ArrayList<>());
-                concMap.putIfAbsent(statEntry.getStatType(), concList);
+        // Find collectors that should be uploaded to tmp table
+        Set<Collector> filteredTmp = Arrays.stream(collectors)
+                .filter(Collector::canUploadTmp)
+                .collect(Collectors.toSet());
 
-                // Should be collected over time
-                if (statEntry.isRecord() && !statEntry.isExpired()) {
-                    recordEntries.add(statEntry);
-                    continue;
-                }
+        database.upload.uploadStatistics(filtered);
+        database.upload.uploadTempStatistics(filteredTmp);
 
-                if (statEntry.getSum() == null) {
-                    concList.add(null);
-                } else if (statEntry.getGroupType().equals(GroupType.ADD)) {
-                    concList.add(statEntry.getSumAsInt());
-                } else if (statEntry.getGroupType().equals(GroupType.AVG)) {
-                    concList.add(statEntry.getAvg());
-                } else {
-                    concList.add(statEntry.getSumAsInt());
-                }
-            }
-
-            values.clear();
-        }
-
-        // Add back the ongoing collectors
-        values.addAll(recordEntries);
-
-        database.upload.uploadStatistics(concMap);
-        database.upload.uploadTempStatistics(recordEntries);
+        // Reset all collectors that are not ongoing
+        filtered.forEach(Collector::reset);
     }
 
     /**
      * Gets latest value with the specified type
      *
-     * @param statType
+     * @param statType Stat identifier
      * @return The value or 0
      */
     public int getLast(StatType statType) {
@@ -193,16 +175,18 @@ public class StatisticsManager {
             throw new RuntimeException();
         }
 
-        StatEntry statEntry = values.stream()
+        // Find first collector
+        Collector collector = Arrays.stream(collectors)
                 .filter(i -> i.getStatType().equals(statType))
                 .findFirst()
                 .orElse(null);
 
-        if (statEntry == null) {
-            logger.error("StatType not found in entry set");
+        // If it didn't exist
+        if (collector == null) {
+            logger.error("The specified collector could not be found");
             throw new RuntimeException();
         }
 
-        return statEntry.getLatestValue();
+        return collector.getLatestValue();
     }
 }

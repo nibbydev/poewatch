@@ -4,15 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.PriceManager;
-import poe.Managers.Stat.StatEntry;
+import poe.Managers.Stat.Collector;
 import poe.Managers.Stat.StatType;
 import poe.Worker.Entry.*;
 import poe.Managers.League.LeagueEntry;
 
 import java.sql.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Upload {
     private static Logger logger = LoggerFactory.getLogger(Upload.class);
@@ -241,15 +243,15 @@ public class Upload {
     /**
      * Uploads all statistics values to database
      *
-     * @param values
+     * @param collectors
      * @return True on success
      */
-    public boolean uploadStatistics(Map<StatType, List<Integer>> values) {
+    public boolean uploadStatistics(Set<Collector> collectors) {
         String query =  "INSERT INTO data_statistics (statType, value) VALUES (?, ?); ";
 
-        if (values == null || values.isEmpty()) {
-            logger.error("Invalid map provided");
-            return false;
+        if (collectors == null) {
+            logger.error("Invalid list provided");
+            throw new RuntimeException();
         }
 
         try {
@@ -259,17 +261,14 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (StatType type : values.keySet()) {
-                    for (Integer entry : values.get(type)) {
-                        statement.setString(1, type.name());
+                for (Collector collector : collectors) {
+                    statement.setString(1, collector.getStatType().name());
 
-                        if (entry == null) {
-                            statement.setNull(2, 0);
-                        } else statement.setInt(2, entry);
+                    if (collector.getValue() == null) {
+                        statement.setNull(2, 0);
+                    } else statement.setInt(2, collector.getValue());
 
-                        statement.addBatch();
-                    }
-
+                    statement.addBatch();
                 }
 
                 statement.executeBatch();
@@ -286,18 +285,18 @@ public class Upload {
     /**
      * Uploads all statistics values to database
      *
-     * @param statEntryList
+     * @param collectors
      * @return True on success
      */
-    public boolean uploadTempStatistics(Set<StatEntry> statEntryList) {
-        String query =  "INSERT INTO data_statistics_tmp (statType, groupType, recordType, created, sum, count) " +
-                        "VALUES (?, ?, ?, ?, ?, ?) " +
+    public boolean uploadTempStatistics(Set<Collector> collectors) {
+        String query =  "INSERT INTO data_statistics_tmp (statType, created, sum, count) " +
+                        "VALUES (?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  created = VALUES(created), " +
                         "  count = VALUES(count), " +
                         "  sum = VALUES(sum); ";
 
-        if (statEntryList == null) {
+        if (collectors == null) {
             logger.error("Invalid list provided");
             throw new RuntimeException();
         }
@@ -309,13 +308,15 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (StatEntry statEntry : statEntryList) {
-                    statement.setString(1, statEntry.getStatType().name());
-                    statement.setString(2, statEntry.getGroupType().name());
-                    statement.setString(3, statEntry.getRecordType().name());
-                    statement.setLong(4, statEntry.getCreationTime());
-                    statement.setLong(5, statEntry.getSum());
-                    statement.setInt(6, statEntry.getCount());
+                for (Collector collector : collectors) {
+                    statement.setString(1, collector.getStatType().name());
+                    statement.setLong(2, collector.getCreationTime());
+
+                    if (collector.getSum() == null) {
+                        statement.setNull(3, 0);
+                    } else statement.setLong(3, collector.getSum());
+
+                    statement.setInt(4, collector.getCount());
 
                     statement.addBatch();
                 }

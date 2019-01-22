@@ -87,8 +87,6 @@ CREATE TABLE data_statistics (
 
 CREATE TABLE data_statistics_tmp (
     statType    VARCHAR(32)  NOT NULL PRIMARY KEY,
-    groupType   VARCHAR(8)   NOT NULL,
-    recordType  VARCHAR(16)  NOT NULL,
     created     BIGINT       NOT NULL,
     sum         BIGINT       DEFAULT NULL,
     count       INT          NOT NULL

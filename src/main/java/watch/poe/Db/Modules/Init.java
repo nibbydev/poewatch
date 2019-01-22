@@ -8,7 +8,7 @@ import poe.Managers.League.LeagueEntry;
 import poe.Managers.Relation.CategoryEntry;
 import poe.Managers.Stat.GroupType;
 import poe.Managers.Stat.RecordType;
-import poe.Managers.Stat.StatEntry;
+import poe.Managers.Stat.Collector;
 import poe.Managers.Stat.StatType;
 
 import java.sql.*;
@@ -22,11 +22,11 @@ public class Init {
         this.database = database;
     }
 
-    public boolean getTmpStatistics(Set<StatEntry> statEntries) {
+    public boolean getTmpStatistics(Collector[] collectors) {
         String query = "SELECT * FROM data_statistics_tmp; ";
 
-        if (statEntries == null) {
-            logger.error("Provided set was null");
+        if (collectors == null) {
+            logger.error("Provided list was null");
             throw new RuntimeException();
         }
 
@@ -43,15 +43,25 @@ public class Init {
 
                 while (resultSet.next()) {
                     StatType statType = StatType.valueOf(resultSet.getString("statType"));
-                    GroupType groupType = GroupType.valueOf(resultSet.getString("groupType"));
-                    RecordType recordType = RecordType.valueOf(resultSet.getString("recordType"));
 
-                    StatEntry statEntry = new StatEntry(statType, groupType, recordType);
-                    statEntry.setCount(resultSet.getInt("count"));
-                    statEntry.setSum(resultSet.getLong("sum"));
-                    statEntry.setCreationTime(resultSet.getLong("created"));
+                    // Find first collector
+                    Collector collector = Arrays.stream(collectors)
+                            .filter(i -> i.getStatType().equals(statType))
+                            .findFirst()
+                            .orElse(null);
 
-                    statEntries.add(statEntry);
+                    // If it didn't exist
+                    if (collector == null) {
+                        logger.error("The specified collector could not be found");
+                        continue;
+                    }
+
+                    collector.setCount(resultSet.getInt("count"));
+
+                    collector.setSum(resultSet.getLong("sum"));
+                    if (resultSet.wasNull()) collector.setSum(null);
+
+                    collector.setCreationTime(resultSet.getLong("created"));
                 }
             }
 

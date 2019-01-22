@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.*;
 import poe.Item.ItemParser;
-import poe.Managers.Stat.RecordType;
 import poe.Worker.Worker;
-import poe.Managers.Stat.GroupType;
 import poe.Managers.Stat.StatType;
 
 import java.io.BufferedReader;
@@ -49,7 +47,7 @@ public class Main {
             }
 
             statisticsManager = new StatisticsManager(database);
-            statisticsManager.addValue(null, StatType.APP_STARTUP, GroupType.NONE, RecordType.SINGULAR);
+            statisticsManager.addValue(StatType.APP_STARTUP, null);
 
             // Set static DB accessor in honour of spaghetti code
             PriceManager.setDatabase(database);
@@ -95,7 +93,7 @@ public class Main {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();
 
-            statisticsManager.addValue(null, StatType.APP_SHUTDOWN, GroupType.NONE, RecordType.SINGULAR);
+            statisticsManager.addValue(StatType.APP_SHUTDOWN, null);
             statisticsManager.upload();
 
             if (database != null) database.disconnect();
