@@ -32,8 +32,8 @@ public class StatisticsManager {
             new Collector(StatType.ACCOUNT_CHANGES,         GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.API_CALLS,               GroupType.COUNT,    TimeFrame.M_60,    null),
 
-            new Collector(StatType.APP_STARTUP,             GroupType.AVG,      TimeFrame.M_1,     null),
-            new Collector(StatType.APP_SHUTDOWN,            GroupType.AVG,      TimeFrame.M_1,     null),
+            new Collector(StatType.APP_STARTUP,             GroupType.COUNT,    TimeFrame.M_1,     null),
+            new Collector(StatType.APP_SHUTDOWN,            GroupType.COUNT,    TimeFrame.M_1,     null),
 
             new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.WORKER_PARSE,            GroupType.AVG,      TimeFrame.M_1,     60),

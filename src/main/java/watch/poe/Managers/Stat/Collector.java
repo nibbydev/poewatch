@@ -64,16 +64,16 @@ public class Collector {
     }
 
     public Integer getValue() {
+        if (groupType.equals(GroupType.COUNT)) {
+            return toIntExact(count);
+        }
+
         if (isValueNull) {
             return null;
         }
 
         if (groupType.equals(GroupType.SUM)) {
             return toIntExact(sum);
-        }
-
-        if (groupType.equals(GroupType.COUNT)) {
-            return toIntExact(count);
         }
 
         if (groupType.equals(GroupType.AVG)) {
