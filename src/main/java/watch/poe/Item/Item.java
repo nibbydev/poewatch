@@ -190,7 +190,7 @@ public class Item {
         }
 
         // Override for enchantments
-        if (base.getEnchantMods() != null) {
+        if (base.getEnchantMods() != null && branch.equals("enchantment")) {
             category = "enchantment";
         }
 
