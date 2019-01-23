@@ -4,7 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PriceManager {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
@@ -13,119 +16,147 @@ public class PriceManager {
     private static final double zScoreLower = 2.0;
     private static final double zScoreUpper = -0.5;
     private static final int trimLower = 5;
-    private static final int trimUpper = 5;
+    private static final int trimUpper = 10;
 
     public static void run() {
-        Map<Integer, Map<Integer, List<Double>>> entries = new HashMap<>();
-        Map<Integer, Map<Integer, Result>> results = new HashMap<>();
-
+        List<Result> results = new ArrayList<>();
         logger.info("Calculating prices");
 
         // Get entries from database
-        if (!database.calc.getEntries(entries)) {
+        ResultSet resultSet = database.calc.getEntryStream();
+        if (resultSet == null) {
             logger.warn("Could not get entries for price calculation");
-            return;
+            throw new RuntimeException();
         }
 
-        // Calculate mean, median, mode, etc
-        if (!calculate(entries, results)) {
+        if (!streamEntries(resultSet, results)) {
             logger.warn("Could not calculate prices");
             return;
         }
 
+        // Close the connection
+        try {
+            resultSet.close();
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            logger.error("Could not close ResultSet");
+        }
+
         // Update entries in database
         database.upload.updateItems(results);
-
         logger.info("Prices calculated");
     }
 
-    private static boolean calculate(Map<Integer, Map<Integer, List<Double>>> entries, Map<Integer, Map<Integer, Result>> results) {
-        // If entry map is invalid
-        if (entries == null || entries.isEmpty()) {
-            logger.error("Null/empty reference passed");
-            return false;
-        }
-
+    private static boolean streamEntries(ResultSet resultSet, List<Result> results) {
         // If result map is invalid
-        if (results == null || !results.isEmpty()) {
-            logger.error("Null/empty reference passed");
+        if (resultSet == null || results == null || !results.isEmpty()) {
+            logger.error("Null/non-empty reference passed");
             return false;
         }
 
-        // Loop though leagues
-        for (int id_l : entries.keySet()) {
-            Map<Integer, List<Double>> entryMap = entries.get(id_l);
-            Map<Integer, Result> resultMap = new HashMap<>();
-
-            // If league map is invalid
-            if (entryMap == null || entryMap.isEmpty()) {
-                logger.error("Null/empty entryMap passed");
+        try {
+            // Get first entry
+            if (!resultSet.next()) {
+                logger.warn("No entries found for price calculation");
                 return false;
             }
 
-            // Loop through items
-            for (int id_d : entryMap.keySet()) {
-                List<Double> entryList = entryMap.get(id_d);
+            int id_l = resultSet.getInt("id_l");
+            int id_d = resultSet.getInt("id_d");
+            List<Double> entryList = new ArrayList<>();
 
-                // If league entry list is invalid
-                if (entryList == null || entryList.isEmpty()) {
-                    logger.error("Null/empty entryList passed");
-                    return false;
+            do {
+                // If league or item changed
+                if (id_l != resultSet.getInt("id_l") || id_d != resultSet.getInt("id_d")) {
+                    calculate(results, entryList, id_l, id_d);
+                    entryList = new ArrayList<>();
+
+                    id_l = resultSet.getInt("id_l");
+                    id_d = resultSet.getInt("id_d");
                 }
 
-                int currentCount = entryList.size();
+                entryList.add(resultSet.getDouble("price"));
+            } while (resultSet.next());
 
-                if (entryList.size() > 10) {
-                    // Sort by price ascending
-                    entryList.sort(Double::compareTo);
-
-                    // Trim the list to remove outliers
-                    int lowerTrimBound = currentCount * trimLower / 100;
-                    int upperTrimBound = currentCount * (100 - trimUpper) / 100;
-                    List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
-
-                    // If trimming resulted in an empty list, use the original
-                    if (tmpTrimmedList.isEmpty()) {
-                        tmpTrimmedList = entryList;
-                    }
-
-                    if (tmpTrimmedList.size() > 10){
-                        // Find standard deviation and bounds
-                        double tmpMean = calcMean(tmpTrimmedList);
-                        double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
-                        double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
-                        double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
-
-                        // Remove all entries that don't fall within the bounds
-                        entryList.removeIf(i -> i < lowerPredicateBound || i > upperPredicateBound);
-                    }
-                }
-
-                // If no entries were left, skip the item
-                if (entryList.isEmpty()) {
-                    continue;
-                }
-
-                Result result = new Result() {{
-                    mean = calcMean(entryList);
-                    median = calcMedian(entryList);
-                    mode = calcMode(entryList);
-                    min = calcMin(entryList);
-                    max = calcMax(entryList);
-                    current = currentCount;
-                }};
-
-                if (result.mode == 0) {
-                    result.mode = result.median;
-                }
-
-                resultMap.put(id_d, result);
-            }
-
-            results.put(id_l, resultMap);
+            // Add last values
+            calculate(results, entryList, id_l, id_d);
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
         }
 
         return true;
+    }
+
+    private static void calculate(List<Result> results, List<Double> entryList, int id_l, int id_d) {
+        // If result list is invalid
+        if (results == null) {
+            logger.error("Null result list passed");
+            throw new RuntimeException();
+        }
+
+        // If entry list is invalid
+        if (entryList == null || entryList.isEmpty()) {
+            logger.error("Null/empty entryList passed");
+            throw new RuntimeException();
+        }
+
+        List<Double> entries;
+        int currentCount = entryList.size();
+
+        if (entryList.size() < 5) {
+            entries = entryList;
+        } else {
+            // Sort by price ascending
+            entryList.sort(Double::compareTo);
+
+            // Trim the list to remove outliers
+            int lowerTrimBound = currentCount * trimLower / 100;
+            int upperTrimBound = currentCount * (100 - trimUpper) / 100;
+            List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
+
+            if (tmpTrimmedList.size() < 10) {
+                entries = tmpTrimmedList;
+            } else {
+                // Find standard deviation and bounds
+                double tmpMean = calcMean(tmpTrimmedList);
+                double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
+                double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
+                double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
+
+                List<Double> tmp = tmpTrimmedList.stream()
+                        .filter(i -> i > lowerPredicateBound)
+                        .filter(i -> i < upperPredicateBound)
+                        .collect(Collectors.toList());
+
+                if (tmp.size() > 5) {
+                    entries = tmp;
+                } else {
+                    entries = tmpTrimmedList;
+                }
+            }
+        }
+
+        // If no entries were left, skip the item
+        if (entries.size() == 0) {
+            logger.warn(String.format("Couldn't find price for id %d in league %d", id_d, id_l));
+            return;
+        }
+
+        Result result = new Result(id_l, id_d);
+        result.mean = calcMean(entries);
+        result.median = calcMedian(entries);
+        result.mode = calcMode(entries);
+        result.min = calcMin(entries);
+        result.max = calcMax(entries);
+        result.current = currentCount;
+        result.accepted = entries.size();
+
+        if (result.mode == 0) {
+            result.mode = result.median;
+        }
+
+        results.add(result);
     }
 
     private static double calcMean(List<Double> list) {
@@ -240,7 +271,13 @@ public class PriceManager {
     }
 
     public static class Result {
+        public int id_l, id_d;
         public double mean, median, mode, min, max;
-        public int current;
+        public int current, accepted;
+
+        public Result(int id_l, int id_d) {
+            this.id_l = id_l;
+            this.id_d = id_d;
+        }
     }
 }

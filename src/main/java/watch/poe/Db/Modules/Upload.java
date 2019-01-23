@@ -75,9 +75,9 @@ public class Upload {
         }
     }
 
-    public boolean updateItems(Map<Integer, Map<Integer, PriceManager.Result>> results) {
+    public boolean updateItems(List<PriceManager.Result> results) {
         String query =  "update league_items " +
-                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, `current` = ? " +
+                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, `current` = ?, accepted = ? " +
                         "where id_l = ? and id_d = ? " +
                         "limit 1; ";
 
@@ -88,23 +88,18 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (int id_l : results.keySet()) {
-                    Map<Integer, PriceManager.Result> tmpMap = results.get(id_l);
+                for (PriceManager.Result result : results) {
+                    statement.setDouble(1, result.mean);
+                    statement.setDouble(2, result.median);
+                    statement.setDouble(3, result.mode);
+                    statement.setDouble(4, result.min);
+                    statement.setDouble(5, result.max);
+                    statement.setDouble(6, result.current);
+                    statement.setDouble(7, result.accepted);
+                    statement.setInt(8, result.id_l);
+                    statement.setInt(9, result.id_d);
 
-                    for (int id_d : tmpMap.keySet()) {
-                        PriceManager.Result result = tmpMap.get(id_d);
-
-                        statement.setDouble(1, result.mean);
-                        statement.setDouble(2, result.median);
-                        statement.setDouble(3, result.mode);
-                        statement.setDouble(4, result.min);
-                        statement.setDouble(5, result.max);
-                        statement.setDouble(6, result.current);
-                        statement.setInt(7, id_l);
-                        statement.setInt(8, id_d);
-
-                        statement.addBatch();
-                    }
+                    statement.addBatch();
                 }
 
                 statement.executeBatch();

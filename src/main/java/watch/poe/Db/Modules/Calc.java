@@ -9,10 +9,6 @@ import poe.Managers.StatisticsManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Calc {
     private static Logger logger = LoggerFactory.getLogger(Calc.class);
@@ -49,8 +45,7 @@ public class Calc {
         return false;
     }
 
-
-    public boolean getEntries(Map<Integer, Map<Integer, List<Double>>> entries) {
+    public ResultSet getEntryStream() {
         String query =  "select le.id_l, le.id_d, " +
                         "  truncate(le.price * ifnull(foo3.val, 1.0), 8) as price " +
                         "from league_entries as le " +
@@ -122,58 +117,16 @@ public class Calc {
         try {
             if (database.connection.isClosed()) {
                 logger.error("Database connection was closed");
-                return false;
+                return null;
             }
 
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
+            // Return open connection
+            return database.connection.createStatement().executeQuery(query);
 
-                // Get first entry
-                if (!resultSet.next()) {
-                    logger.warn("No entries found for price calculation");
-                    return false;
-                }
-
-                int id_l = resultSet.getInt(1);
-                int id_d = resultSet.getInt(2);
-                Map<Integer, List<Double>> entryMap = new HashMap<>();
-                List<Double> entryList = new ArrayList<>();
-
-                do {
-                    // If league changed
-                    if (id_l != resultSet.getInt(1)) {
-                        // Store previous map
-                        entries.put(id_l, entryMap);
-                        // Get next league id
-                        id_l = resultSet.getInt(1);
-                        // Create new map for new league
-                        entryMap = new HashMap<>();
-                    }
-
-                    // If item changed
-                    if (id_d != resultSet.getInt(2)) {
-                        // Store previous list
-                        entryMap.put(id_d, entryList);
-                        // Get next item id
-                        id_d = resultSet.getInt(2);
-                        // Create new list for new item
-                        entryList = new ArrayList<>();
-                    }
-
-                    entryList.add(resultSet.getDouble(3));
-                } while (resultSet.next());
-
-                // Add last values
-                entryMap.put(id_d, entryList);
-                entries.put(id_l, entryMap);
-            }
-
-            return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
+            return null;
         }
-
-        return false;
     }
 
     /**
