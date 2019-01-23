@@ -3,9 +3,6 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.Stat.Collector;
-import poe.Managers.Stat.GroupType;
-import poe.Managers.Stat.RecordType;
 import poe.Managers.Stat.StatType;
 import poe.Managers.StatisticsManager;
 

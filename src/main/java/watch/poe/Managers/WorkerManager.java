@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Mappers;
-import poe.Managers.Status.StatusType;
+import poe.Managers.Status.TimeFrame;
 import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
 
@@ -51,17 +51,17 @@ public class WorkerManager extends Thread {
     public void run() {
         logger.info(String.format("Starting %s", WorkerManager.class.getName()));
         logger.info(String.format("Loaded params: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
-                StatusType.M_1.getRemaining() / 1000,
-                StatusType.M_10.getRemaining() / 60000,
-                StatusType.M_60.getRemaining() / 60000,
-                StatusType.H_24.getRemaining() / 3600000
+                TimeFrame.M_1.getRemaining() / 1000,
+                TimeFrame.M_10.getRemaining() / 60000,
+                TimeFrame.M_60.getRemaining() / 60000,
+                TimeFrame.H_24.getRemaining() / 3600000
         ));
 
         while (flagRun) {
             statusManager.checkFlagStates();
 
             // If cycle should be initiated
-            if (statusManager.isBool(StatusType.M_1)) {
+            if (statusManager.isBool(TimeFrame.M_1)) {
                 setWorkerSleepState(true, true);
                 cycle();
                 setWorkerSleepState(false, true);
@@ -99,7 +99,7 @@ public class WorkerManager extends Thread {
         // Start cycle timer
         statisticsManager.startTimer(StatType.CYCLE_TOTAL);
 
-        if (statusManager.isBool(StatusType.H_24)) {
+        if (statusManager.isBool(TimeFrame.H_24)) {
             statisticsManager.startTimer(StatType.REMOVE_OLD_ENTRIES);
             database.history.removeOldItemEntries();
             statisticsManager.clkTimer(StatType.REMOVE_OLD_ENTRIES);
@@ -117,7 +117,7 @@ public class WorkerManager extends Thread {
         database.calc.calculateExalted();
         statisticsManager.clkTimer(StatType.CALC_EXALT);
 
-        if (statusManager.isBool(StatusType.M_60)) {
+        if (statusManager.isBool(TimeFrame.M_60)) {
             database.calc.countActiveAccounts(statisticsManager);
 
             statisticsManager.startTimer(StatType.ADD_HOURLY);
@@ -129,7 +129,7 @@ public class WorkerManager extends Thread {
             statisticsManager.clkTimer(StatType.CALC_DAILY);
         }
 
-        if (statusManager.isBool(StatusType.H_24)) {
+        if (statusManager.isBool(TimeFrame.H_24)) {
             statisticsManager.startTimer(StatType.ADD_DAILY);
             database.history.addDaily();
             statisticsManager.clkTimer(StatType.ADD_DAILY);
@@ -139,7 +139,7 @@ public class WorkerManager extends Thread {
             statisticsManager.clkTimer(StatType.CALC_SPARK);
         }
 
-        if (statusManager.isBool(StatusType.M_60)) {
+        if (statusManager.isBool(TimeFrame.M_60)) {
             statisticsManager.startTimer(StatType.RESET_COUNTERS);
             database.flag.resetCounters();
             statisticsManager.clkTimer(StatType.RESET_COUNTERS);
@@ -149,14 +149,14 @@ public class WorkerManager extends Thread {
         statisticsManager.clkTimer(StatType.CYCLE_TOTAL);
 
         // Check league API
-        if (statusManager.isBool(StatusType.M_10)) {
+        if (statusManager.isBool(TimeFrame.M_10)) {
             statisticsManager.startTimer(StatType.CYCLE_LEAGUES);
             leagueManager.cycle();
             statisticsManager.clkTimer(StatType.CYCLE_LEAGUES);
         }
 
         // Check if there are matching account name changes
-        if (statusManager.isBool(StatusType.H_24)) {
+        if (statusManager.isBool(TimeFrame.H_24)) {
             statisticsManager.startTimer(StatType.ACCOUNT_CHANGES);
             accountManager.checkAccountNameChanges();
             statisticsManager.clkTimer(StatType.ACCOUNT_CHANGES);
@@ -165,10 +165,10 @@ public class WorkerManager extends Thread {
         // Prepare cycle message
         logger.info(String.format("Cycle finished: %5d ms", statisticsManager.getLast(StatType.CYCLE_TOTAL)));
         logger.info(String.format("Status: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
-                StatusType.M_1.getRemaining() / 1000 + 1,
-                StatusType.M_10.getRemaining() / 60000 + 1,
-                StatusType.M_60.getRemaining() / 60000 + 1,
-                StatusType.H_24.getRemaining() / 3600000 + 1
+                TimeFrame.M_1.getRemaining() / 1000 + 1,
+                TimeFrame.M_10.getRemaining() / 60000 + 1,
+                TimeFrame.M_60.getRemaining() / 60000 + 1,
+                TimeFrame.H_24.getRemaining() / 3600000 + 1
         ));
 
         logger.info(String.format("[%5d][%5d][%5d]",
@@ -177,13 +177,13 @@ public class WorkerManager extends Thread {
                     statisticsManager.getLast(StatType.CALC_EXALT)
         ));
 
-        if (statusManager.isBool(StatusType.M_60)) logger.info(String.format("[%5d][%5d][%5d]",
+        if (statusManager.isBool(TimeFrame.M_60)) logger.info(String.format("[%5d][%5d][%5d]",
                 statisticsManager.getLast(StatType.ADD_HOURLY),
                 statisticsManager.getLast(StatType.CALC_DAILY),
                 statisticsManager.getLast(StatType.RESET_COUNTERS)
         ));
 
-        if (statusManager.isBool(StatusType.H_24)) logger.info(String.format("[%5d][%5d][%5d][%5d]",
+        if (statusManager.isBool(TimeFrame.H_24)) logger.info(String.format("[%5d][%5d][%5d][%5d]",
                 statisticsManager.getLast(StatType.REMOVE_OLD_ENTRIES),
                 statisticsManager.getLast(StatType.ADD_DAILY),
                 statisticsManager.getLast(StatType.CALC_SPARK),

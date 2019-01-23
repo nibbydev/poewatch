@@ -2,68 +2,56 @@ package poe.Managers.Stat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Managers.Status.StatusType;
+import poe.Managers.Status.TimeFrame;
+
+import java.sql.Timestamp;
 
 import static java.lang.Math.toIntExact;
 
 public class Collector {
     private static final Logger logger = LoggerFactory.getLogger(Collector.class);
     private final GroupType groupType;
-    private final RecordType recordType;
+    private final TimeFrame collectionPeriod;
     private final StatType statType;
 
-    private long creationTime;
+    private long creationTime, insertTime;
     private Integer historySize;
     private int latestValue = 0;
     private boolean isNull = false;
     private int count = 0;
     private long sum = 0L;
 
-    public Collector(StatType statType, GroupType groupType, RecordType recordType, Integer historySize) {
+    public Collector(StatType statType, GroupType groupType, TimeFrame collectionPeriod, Integer historySize) {
         this.statType = statType;
         this.groupType = groupType;
-        this.recordType = recordType;
+
+        // Either can be null
+        this.collectionPeriod = collectionPeriod;
         this.historySize = historySize;
 
-        if (statType == null || groupType == null || recordType == null) {
+        if (statType == null || groupType == null) {
             logger.error("Timer types cannot be null");
             throw new RuntimeException();
         }
 
-        if (groupType.equals(GroupType.NONE)) {
-            if (!recordType.equals(RecordType.NONE) && !recordType.equals(RecordType.SINGULAR)) {
-                logger.error("Cannot use aggregating record types without an aggregating GroupType");
-                throw new RuntimeException();
-            }
-        }
-
-        // Set default creationTime
-        if (recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR)) {
-            creationTime = StatusType.M_1.getCurrent();
-        } else {
-            creationTime = recordType.toStatusType().getCurrent();
-        }
+        // Set defaults
+        reset();
     }
 
-    public boolean isCollectingOverTime() {
-        return !recordType.equals(RecordType.NONE) && !recordType.equals(RecordType.SINGULAR);
+    public boolean isRecorded() {
+        return collectionPeriod != null;
+    }
+
+    public boolean hasValues() {
+        return count > 0;
     }
 
     public boolean isExpired() {
-        return System.currentTimeMillis() - creationTime >= recordType.toStatusType().asMilli();
-    }
-
-    public RecordType getRecordType() {
-        return recordType;
+        return System.currentTimeMillis() - creationTime >= collectionPeriod.asMilli();
     }
 
     public void addValue(Integer val) {
         if (val == null) {
-            if (!groupType.equals(GroupType.NONE)) {
-                logger.error("Cannot use null value together with group");
-                throw new RuntimeException();
-            }
-
             isNull = true;
         } else {
             latestValue = val;
@@ -90,10 +78,12 @@ public class Collector {
     }
 
     public void reset() {
-        if (recordType.equals(RecordType.NONE) || recordType.equals(RecordType.SINGULAR)) {
-            creationTime = StatusType.M_1.getNext();
+        if (collectionPeriod == null) {
+            creationTime = TimeFrame.M_1.getCurrent();
+            insertTime = TimeFrame.M_1.getNext();
         } else {
-            creationTime = recordType.toStatusType().getNext();
+            creationTime = collectionPeriod.getCurrent();
+            insertTime = collectionPeriod.getNext();
         }
 
         latestValue = 0;
@@ -110,20 +100,12 @@ public class Collector {
         return count;
     }
 
-    public long getCreationTime() {
-        return creationTime;
-    }
-
     public StatType getStatType() {
         return statType;
     }
 
     public int getLatestValue() {
         return latestValue;
-    }
-
-    public void setCreationTime(long creationTime) {
-        this.creationTime = creationTime;
     }
 
     public void setSum(Long sum) {
@@ -140,5 +122,20 @@ public class Collector {
 
     public Integer getHistorySize() {
         return historySize;
+    }
+
+
+
+    public long getCreationTime() {
+        return creationTime;
+    }
+
+    public long getInsertTime() {
+        return insertTime;
+    }
+
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
+        insertTime = creationTime + collectionPeriod.asMilli();
     }
 }

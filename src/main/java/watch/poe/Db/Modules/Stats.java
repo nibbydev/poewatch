@@ -3,18 +3,11 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.League.LeagueEntry;
-import poe.Managers.PriceManager;
 import poe.Managers.Stat.Collector;
-import poe.Worker.Entry.RawItemEntry;
-import poe.Worker.Entry.RawUsernameEntry;
+import poe.Managers.Stat.StatType;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.Arrays;
 import java.util.Set;
 
 public class Stats {
@@ -23,15 +16,6 @@ public class Stats {
 
     public Stats(Database database) {
         this.database = database;
-    }
-
-    /**
-     * Deletes all tmp statistics from database
-     *
-     * @return True on success
-     */
-    public boolean truncateTmpStatistics() {
-        return database.executeUpdateQueries("truncate data_statistics_tmp");
     }
 
     /**
@@ -95,7 +79,7 @@ public class Stats {
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (Collector collector : collectors) {
                     statement.setString(1, collector.getStatType().name());
-                    statement.setTimestamp(2, new Timestamp(collector.getCreationTime()));
+                    statement.setTimestamp(2, new Timestamp(collector.getInsertTime()));
 
                     if (collector.getValue() == null) {
                         statement.setNull(3, 0);
@@ -143,7 +127,7 @@ public class Stats {
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (Collector collector : collectors) {
                     statement.setString(1, collector.getStatType().name());
-                    statement.setLong(2, collector.getCreationTime());
+                    statement.setTimestamp(2, new Timestamp(collector.getCreationTime()));
 
                     if (collector.getSum() == null) {
                         statement.setNull(3, 0);
@@ -211,6 +195,59 @@ public class Stats {
             return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
+
+
+    public boolean getTmpStatistics(Collector[] collectors) {
+        String query = "SELECT * FROM data_statistics_tmp; ";
+
+        if (collectors == null) {
+            logger.error("Provided list was null");
+            throw new RuntimeException();
+        }
+
+        logger.info("Getting statistics from database");
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    StatType statType = StatType.valueOf(resultSet.getString("statType"));
+
+                    // Find first collector
+                    Collector collector = Arrays.stream(collectors)
+                            .filter(i -> i.getStatType().equals(statType))
+                            .findFirst()
+                            .orElse(null);
+
+                    // If it didn't exist
+                    if (collector == null) {
+                        logger.error("The specified collector could not be found");
+                        continue;
+                    }
+
+                    collector.setCount(resultSet.getInt("count"));
+
+                    collector.setSum(resultSet.getLong("sum"));
+                    if (resultSet.wasNull()) collector.setSum(null);
+
+                    collector.setCreationTime(resultSet.getTimestamp("created").getTime());
+                }
+            }
+
+            logger.info("Got statistics from database");
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            logger.error("Could not get statistics from database");
             return false;
         }
     }

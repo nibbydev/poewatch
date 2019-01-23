@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.Stat.*;
+import poe.Managers.Status.TimeFrame;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,60 +17,57 @@ public class StatisticsManager {
     private final Database database;
 
     private final Collector[] collectors = {
-            new Collector(StatType.CYCLE_TOTAL,             GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.CALC_PRICES,             GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.UPDATE_COUNTERS,         GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.CALC_EXALT,              GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.CYCLE_LEAGUES,           GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.ADD_HOURLY,              GroupType.NONE, RecordType.SINGULAR,    24),
-            new Collector(StatType.CALC_DAILY,              GroupType.NONE, RecordType.SINGULAR,    24),
-            new Collector(StatType.RESET_COUNTERS,          GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.NONE, RecordType.SINGULAR,    60),
-            new Collector(StatType.ADD_DAILY,               GroupType.NONE, RecordType.SINGULAR,    7),
-            new Collector(StatType.CALC_SPARK,              GroupType.NONE, RecordType.SINGULAR,    7),
-            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.NONE, RecordType.SINGULAR,    60),
+            new Collector(StatType.CYCLE_TOTAL,             GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.CALC_PRICES,             GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.UPDATE_COUNTERS,         GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.CALC_EXALT,              GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.CYCLE_LEAGUES,           GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.ADD_HOURLY,              GroupType.AVG,  TimeFrame.M_1,     24),
+            new Collector(StatType.CALC_DAILY,              GroupType.AVG,  TimeFrame.M_1,     24),
+            new Collector(StatType.RESET_COUNTERS,          GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.ADD_DAILY,               GroupType.AVG,  TimeFrame.M_1,     7),
+            new Collector(StatType.CALC_SPARK,              GroupType.AVG,  TimeFrame.M_1,     7),
+            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.AVG,  TimeFrame.M_1,     60),
 
-            new Collector(StatType.APP_STARTUP,             GroupType.NONE, RecordType.SINGULAR,    null),
-            new Collector(StatType.APP_SHUTDOWN,            GroupType.NONE, RecordType.SINGULAR,    null),
+            new Collector(StatType.APP_STARTUP,             GroupType.AVG,  TimeFrame.M_1,     null),
+            new Collector(StatType.APP_SHUTDOWN,            GroupType.AVG,  TimeFrame.M_1,     null),
 
-            new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,  RecordType.SINGULAR,    60),
-            new Collector(StatType.WORKER_PARSE,            GroupType.AVG,  RecordType.SINGULAR,    60),
-            new Collector(StatType.WORKER_UPLOAD_ACCOUNTS,  GroupType.AVG,  RecordType.SINGULAR,    60),
-            new Collector(StatType.WORKER_RESET_STASHES,    GroupType.AVG,  RecordType.SINGULAR,    60),
-            new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,  RecordType.SINGULAR,    60),
-            new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,  RecordType.SINGULAR,    60),
+            new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.WORKER_PARSE,            GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.WORKER_UPLOAD_ACCOUNTS,  GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.WORKER_RESET_STASHES,    GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,  TimeFrame.M_1,     60),
+            new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,  TimeFrame.M_1,     60),
 
-            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  RecordType.M_60,        16),
-            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  RecordType.M_60,        null),
-            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  RecordType.M_60,        null),
-            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  RecordType.M_60,        null),
+            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.ADD,  TimeFrame.M_60,    16),
+            new Collector(StatType.TOTAL_STASHES,           GroupType.ADD,  TimeFrame.M_60,    null),
+            new Collector(StatType.TOTAL_ITEMS,             GroupType.ADD,  TimeFrame.M_60,    null),
+            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.ADD,  TimeFrame.M_60,    null),
 
-            new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.NONE, RecordType.SINGULAR,    null),
+            new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.ADD,  TimeFrame.M_60,    null),
     };
 
     public StatisticsManager(Database database) {
         this.database = database;
 
         // Get ongoing statistics collectors from database
-        database.init.getTmpStatistics(collectors);
+        database.stats.getTmpStatistics(collectors);
 
-        // Find if any of the collectors have expired
+        // Find if any of the collectors have expired during the time the app was offline
         Set<Collector> expired = Arrays.stream(collectors)
-                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
-                .filter(i -> !i.getRecordType().equals(RecordType.SINGULAR))
-                .filter(i -> i.isCollectingOverTime())
-                .filter(i -> i.isExpired())
-                .peek(i -> logger.info(String.format("Expired collector [%s]", i.getStatType().name())))
+                .filter(Collector::isRecorded)
+                .filter(Collector::hasValues)
+                .filter(Collector::isExpired)
+                .peek(i -> logger.info(String.format("Found expired collector [%s]", i.getStatType().name())))
                 .collect(Collectors.toSet());
 
-        if (!expired.isEmpty()) {
-            // Delete them from the database
-            database.stats.deleteTmpStatistics(expired);
-            database.stats.uploadStatistics(expired);
+        // Delete them from the database, if any
+        database.stats.deleteTmpStatistics(expired);
+        database.stats.uploadStatistics(expired);
 
-            // Reset the expired collectors
-            expired.forEach(Collector::reset);
-        }
+        // Reset the expired collectors, if any
+        expired.forEach(Collector::reset);
     }
 
     /**
@@ -164,41 +162,29 @@ public class StatisticsManager {
      * Uploads all latest timer delays to database
      */
     public void upload() {
-        // Find collectors that should be uploaded
-        Set<Collector> filtered = Arrays.stream(collectors)
-                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
-                .filter(i -> !i.isCollectingOverTime())
-                .filter(i -> i.getCount() > 0)
+        // Find collectors that are expired
+        Set<Collector> expired = Arrays.stream(collectors)
+                .filter(Collector::isRecorded)
+                .filter(Collector::hasValues)
+                .filter(Collector::isExpired)
                 .collect(Collectors.toSet());
 
-        // Find collectors that should be uploaded
-        Set<Collector> filteredExpired = Arrays.stream(collectors)
-                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
-                .filter(i -> !i.getRecordType().equals(RecordType.SINGULAR))
-                .filter(i -> i.isCollectingOverTime())
-                .filter(i -> i.isExpired())
-                .collect(Collectors.toSet());
-
-        // Find collectors that should be uploaded to tmp table
-        Set<Collector> filteredTmp = Arrays.stream(collectors)
-                .filter(i -> !i.getRecordType().equals(RecordType.NONE))
-                .filter(i -> !i.getRecordType().equals(RecordType.SINGULAR))
-                .filter(i -> i.isCollectingOverTime())
+        // Find collectors that are still ongoing
+        Set<Collector> unexpired = Arrays.stream(collectors)
+                .filter(Collector::isRecorded)
+                .filter(Collector::hasValues)
                 .filter(i -> !i.isExpired())
-                .filter(i -> i.getCount() > 0)
                 .collect(Collectors.toSet());
 
-        database.stats.uploadStatistics(filtered);
-        database.stats.uploadStatistics(filteredExpired);
-        database.stats.deleteTmpStatistics(filteredExpired);
-        database.stats.uploadTempStatistics(filteredTmp);
+        database.stats.uploadStatistics(expired);
+        database.stats.deleteTmpStatistics(expired);
+        database.stats.uploadTempStatistics(unexpired);
 
         // Delete old stat entries from database
         database.stats.trimStatHistory(collectors);
 
-        // Reset all collectors that are not ongoing
-        filtered.forEach(Collector::reset);
-        filteredExpired.forEach(Collector::reset);
+        // Reset all expired collectors
+        expired.forEach(Collector::reset);
     }
 
     /**

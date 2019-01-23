@@ -3,10 +3,10 @@ package poe.Managers.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public enum StatusType {
+public enum TimeFrame {
     M_1, M_10, M_30, M_60, H_6, H_12, H_24;
 
-    private static Logger logger = LoggerFactory.getLogger(StatusType.class);
+    private static Logger logger = LoggerFactory.getLogger(TimeFrame.class);
 
     /**
      * Get length in milliseconds

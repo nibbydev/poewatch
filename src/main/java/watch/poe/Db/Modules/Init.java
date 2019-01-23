@@ -6,8 +6,6 @@ import poe.Db.Database;
 import poe.Item.Key;
 import poe.Managers.League.LeagueEntry;
 import poe.Managers.Relation.CategoryEntry;
-import poe.Managers.Stat.GroupType;
-import poe.Managers.Stat.RecordType;
 import poe.Managers.Stat.Collector;
 import poe.Managers.Stat.StatType;
 
@@ -20,58 +18,6 @@ public class Init {
 
     public Init(Database database) {
         this.database = database;
-    }
-
-    public boolean getTmpStatistics(Collector[] collectors) {
-        String query = "SELECT * FROM data_statistics_tmp; ";
-
-        if (collectors == null) {
-            logger.error("Provided list was null");
-            throw new RuntimeException();
-        }
-
-        logger.info("Getting statistics from database");
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return false;
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    StatType statType = StatType.valueOf(resultSet.getString("statType"));
-
-                    // Find first collector
-                    Collector collector = Arrays.stream(collectors)
-                            .filter(i -> i.getStatType().equals(statType))
-                            .findFirst()
-                            .orElse(null);
-
-                    // If it didn't exist
-                    if (collector == null) {
-                        logger.error("The specified collector could not be found");
-                        continue;
-                    }
-
-                    collector.setCount(resultSet.getInt("count"));
-
-                    collector.setSum(resultSet.getLong("sum"));
-                    if (resultSet.wasNull()) collector.setSum(null);
-
-                    collector.setCreationTime(resultSet.getLong("created"));
-                }
-            }
-
-            logger.info("Got statistics from database");
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            logger.error("Could not get statistics from database");
-            return false;
-        }
     }
 
     /**

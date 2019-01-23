@@ -22,7 +22,6 @@ public class Main {
     private static StatisticsManager statisticsManager;
     private static AccountManager accountManager;
     private static WorkerManager workerManager;
-    private static StatusManager statusManager;
     private static Database database;
     private static Config config;
 
@@ -37,7 +36,7 @@ public class Main {
         logger.info("Starting PoeWatch");
 
         try {
-            statusManager = new StatusManager();
+            StatusManager statusManager = new StatusManager();
 
             // Load config
             config = ConfigFactory.load("config");

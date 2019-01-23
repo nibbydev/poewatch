@@ -87,7 +87,7 @@ CREATE TABLE data_statistics (
 
 CREATE TABLE data_statistics_tmp (
     statType    VARCHAR(32)  NOT NULL PRIMARY KEY,
-    created     BIGINT       NOT NULL,
+    created     TIMESTAMP    NOT NULL,
     sum         BIGINT       DEFAULT NULL,
     count       INT          NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -1,12 +1,12 @@
 package poe.Managers.Status;
 
 public class Status {
-    private StatusType statusType;
+    private TimeFrame timeFrame;
     private volatile boolean active;
     private long counter;
 
-    public Status(StatusType statusType) {
-        this.statusType = statusType;
+    public Status(TimeFrame timeFrame) {
+        this.timeFrame = timeFrame;
     }
 
     public boolean isActive() {
@@ -17,8 +17,8 @@ public class Status {
         return counter;
     }
 
-    public StatusType getStatusType() {
-        return statusType;
+    public TimeFrame getTimeFrame() {
+        return timeFrame;
     }
 
     public void setActive(boolean active) {

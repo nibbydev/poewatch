@@ -3,7 +3,7 @@ package poe.Managers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Managers.Status.Status;
-import poe.Managers.Status.StatusType;
+import poe.Managers.Status.TimeFrame;
 
 import java.util.Arrays;
 
@@ -11,13 +11,13 @@ public class StatusManager {
     private static Logger logger = LoggerFactory.getLogger(StatusManager.class);
 
     private final Status[] statuses = {
-            new Status(StatusType.M_1),
-            new Status(StatusType.M_10),
-            new Status(StatusType.M_30),
-            new Status(StatusType.M_60),
-            new Status(StatusType.H_6),
-            new Status(StatusType.H_12),
-            new Status(StatusType.H_24)
+            new Status(TimeFrame.M_1),
+            new Status(TimeFrame.M_10),
+            new Status(TimeFrame.M_30),
+            new Status(TimeFrame.M_60),
+            new Status(TimeFrame.H_6),
+            new Status(TimeFrame.H_12),
+            new Status(TimeFrame.H_24)
     };
 
     public StatusManager() {
@@ -35,9 +35,9 @@ public class StatusManager {
 
         // Find all status entries that should be activated
         Arrays.stream(statuses)
-                .filter(i -> current > i.getCounter() + i.getStatusType().asMilli())
+                .filter(i -> current > i.getCounter() + i.getTimeFrame().asMilli())
                 .forEach(i -> {
-                    i.setCounter((current / i.getStatusType().asMilli()) * i.getStatusType().asMilli());
+                    i.setCounter((current / i.getTimeFrame().asMilli()) * i.getTimeFrame().asMilli());
                     i.setActive(true);
                 });
     }
@@ -52,12 +52,12 @@ public class StatusManager {
     /**
      * Returns the flag related to the provided Status
      *
-     * @param statusType
+     * @param timeFrame
      * @return
      */
-    public boolean isBool(StatusType statusType) {
+    public boolean isBool(TimeFrame timeFrame) {
         Status status = Arrays.stream(statuses)
-                .filter(i -> i.getStatusType().equals(statusType))
+                .filter(i -> i.getTimeFrame().equals(timeFrame))
                 .findFirst()
                 .orElse(null);
 
