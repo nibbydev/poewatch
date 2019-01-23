@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Managers.Status.TimeFrame;
 
-import java.sql.Timestamp;
-
 import static java.lang.Math.toIntExact;
 
 public class Collector {
@@ -17,7 +15,7 @@ public class Collector {
     private long creationTime, insertTime;
     private Integer historySize;
     private int latestValue = 0;
-    private boolean isNull = false;
+    private boolean isValueNull = false;
     private int count = 0;
     private long sum = 0L;
 
@@ -50,9 +48,13 @@ public class Collector {
         return System.currentTimeMillis() - creationTime >= collectionPeriod.asMilli();
     }
 
+    public boolean isValueNull() {
+        return isValueNull;
+    }
+
     public void addValue(Integer val) {
         if (val == null) {
-            isNull = true;
+            isValueNull = true;
         } else {
             latestValue = val;
             sum += val;
@@ -62,12 +64,16 @@ public class Collector {
     }
 
     public Integer getValue() {
-        if (isNull) {
+        if (isValueNull) {
             return null;
         }
 
-        if (groupType.equals(GroupType.ADD)) {
+        if (groupType.equals(GroupType.SUM)) {
             return toIntExact(sum);
+        }
+
+        if (groupType.equals(GroupType.COUNT)) {
+            return toIntExact(count);
         }
 
         if (groupType.equals(GroupType.AVG)) {
@@ -87,13 +93,13 @@ public class Collector {
         }
 
         latestValue = 0;
-        isNull = false;
+        isValueNull = false;
         count = 0;
         sum = 0L;
     }
 
-    public Long getSum() {
-        return isNull ? null : sum;
+    public long getSum() {
+        return sum;
     }
 
     public int getCount() {
@@ -110,7 +116,7 @@ public class Collector {
 
     public void setSum(Long sum) {
         if (sum == null) {
-            isNull = true;
+            isValueNull = true;
         } else {
             this.sum = sum;
         }

@@ -13,6 +13,7 @@ public enum StatType {
     ADD_DAILY,
     CALC_SPARK,
     ACCOUNT_CHANGES,
+    API_CALLS,
 
     APP_STARTUP,
     APP_SHUTDOWN,

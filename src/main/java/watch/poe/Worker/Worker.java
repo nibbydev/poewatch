@@ -19,6 +19,7 @@ import poe.Worker.Entry.RawUsernameEntry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -84,9 +85,8 @@ public class Worker extends Thread {
         while (flagLocalRun) {
             waitForJob();
 
-            statisticsManager.startTimer(StatType.WORKER_DOWNLOAD);
             String replyString = download();
-            statisticsManager.clkTimer(StatType.WORKER_DOWNLOAD);
+            statisticsManager.addValue(StatType.API_CALLS, null);
 
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
@@ -140,6 +140,8 @@ public class Worker extends Thread {
         Worker.lastPullTime = System.currentTimeMillis();
 
         try {
+            statisticsManager.startTimer(StatType.WORKER_DOWNLOAD);
+
             // Define the request
             URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
@@ -188,7 +190,6 @@ public class Worker extends Thread {
                     }
                 }
             }
-
         } catch (Exception ex) {
             logger.error("Caught worker download error: " + ex.getMessage());
 
@@ -198,15 +199,17 @@ public class Worker extends Thread {
                 workerManager.setNextChangeID(job);
             }
 
-            // Clear the buffer so that an empty string will be returned instead
-            stringBuilderBuffer.setLength(0);
+            return null;
         } finally {
             try {
-                if (stream != null)
+                if (stream != null) {
                     stream.close();
+                }
             } catch (IOException ex) {
                 logger.error(ex.getMessage(), ex);
             }
+
+            statisticsManager.clkTimer(StatType.WORKER_DOWNLOAD);
         }
 
         // Return the downloaded mess of a JSON string

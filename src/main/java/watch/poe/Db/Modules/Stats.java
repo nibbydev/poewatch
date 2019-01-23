@@ -129,7 +129,7 @@ public class Stats {
                     statement.setString(1, collector.getStatType().name());
                     statement.setTimestamp(2, new Timestamp(collector.getCreationTime()));
 
-                    if (collector.getSum() == null) {
+                    if (collector.isValueNull()) {
                         statement.setNull(3, 0);
                     } else statement.setLong(3, collector.getSum());
 
