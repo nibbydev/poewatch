@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Mappers;
-import poe.Managers.Status.TimeFrame;
+import poe.Managers.Interval.TimeFrame;
 import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
 
@@ -27,7 +27,7 @@ public class WorkerManager extends Thread {
     private final AccountManager accountManager;
     private final StatisticsManager statisticsManager;
 
-    private final StatusManager statusManager;
+    private final IntervalManager intervalManager;
     private final Gson gson = new Gson();
 
     private final ArrayList<Worker> workerList = new ArrayList<>();
@@ -35,12 +35,12 @@ public class WorkerManager extends Thread {
     private volatile boolean readyToExit = false;
     private String nextChangeID;
 
-    public WorkerManager(Config cnf, StatusManager se, Database db, StatisticsManager sm, LeagueManager lm, RelationManager rm, AccountManager am) {
+    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, RelationManager rm, AccountManager am) {
         this.statisticsManager = sm;
         this.relationManager = rm;
         this.accountManager = am;
         this.leagueManager = lm;
-        this.statusManager = se;
+        this.intervalManager = se;
         this.database = db;
         this.config = cnf;
     }
@@ -58,10 +58,10 @@ public class WorkerManager extends Thread {
         ));
 
         while (flagRun) {
-            statusManager.checkFlagStates();
+            intervalManager.checkFlagStates();
 
             // If cycle should be initiated
-            if (statusManager.isBool(TimeFrame.M_1)) {
+            if (intervalManager.isBool(TimeFrame.M_1)) {
                 setWorkerSleepState(true, true);
                 cycle();
                 setWorkerSleepState(false, true);
@@ -79,7 +79,7 @@ public class WorkerManager extends Thread {
                 }
             }
 
-            statusManager.resetFlags();
+            intervalManager.resetFlags();
 
             try {
                 Thread.sleep(100);
@@ -99,7 +99,7 @@ public class WorkerManager extends Thread {
         // Start cycle timer
         statisticsManager.startTimer(StatType.CYCLE_TOTAL);
 
-        if (statusManager.isBool(TimeFrame.H_24)) {
+        if (intervalManager.isBool(TimeFrame.H_24)) {
             statisticsManager.startTimer(StatType.REMOVE_OLD_ENTRIES);
             database.history.removeOldItemEntries();
             statisticsManager.clkTimer(StatType.REMOVE_OLD_ENTRIES);
@@ -117,7 +117,7 @@ public class WorkerManager extends Thread {
         database.calc.calculateExalted();
         statisticsManager.clkTimer(StatType.CALC_EXALT);
 
-        if (statusManager.isBool(TimeFrame.M_60)) {
+        if (intervalManager.isBool(TimeFrame.M_60)) {
             database.calc.countActiveAccounts(statisticsManager);
 
             statisticsManager.startTimer(StatType.ADD_HOURLY);
@@ -129,7 +129,7 @@ public class WorkerManager extends Thread {
             statisticsManager.clkTimer(StatType.CALC_DAILY);
         }
 
-        if (statusManager.isBool(TimeFrame.H_24)) {
+        if (intervalManager.isBool(TimeFrame.H_24)) {
             statisticsManager.startTimer(StatType.ADD_DAILY);
             database.history.addDaily();
             statisticsManager.clkTimer(StatType.ADD_DAILY);
@@ -139,7 +139,7 @@ public class WorkerManager extends Thread {
             statisticsManager.clkTimer(StatType.CALC_SPARK);
         }
 
-        if (statusManager.isBool(TimeFrame.M_60)) {
+        if (intervalManager.isBool(TimeFrame.M_60)) {
             statisticsManager.startTimer(StatType.RESET_COUNTERS);
             database.flag.resetCounters();
             statisticsManager.clkTimer(StatType.RESET_COUNTERS);
@@ -149,14 +149,14 @@ public class WorkerManager extends Thread {
         statisticsManager.clkTimer(StatType.CYCLE_TOTAL);
 
         // Check league API
-        if (statusManager.isBool(TimeFrame.M_10)) {
+        if (intervalManager.isBool(TimeFrame.M_10)) {
             statisticsManager.startTimer(StatType.CYCLE_LEAGUES);
             leagueManager.cycle();
             statisticsManager.clkTimer(StatType.CYCLE_LEAGUES);
         }
 
         // Check if there are matching account name changes
-        if (statusManager.isBool(TimeFrame.H_24)) {
+        if (intervalManager.isBool(TimeFrame.H_24)) {
             statisticsManager.startTimer(StatType.ACCOUNT_CHANGES);
             accountManager.checkAccountNameChanges();
             statisticsManager.clkTimer(StatType.ACCOUNT_CHANGES);
@@ -177,13 +177,13 @@ public class WorkerManager extends Thread {
                     statisticsManager.getLast(StatType.CALC_EXALT)
         ));
 
-        if (statusManager.isBool(TimeFrame.M_60)) logger.info(String.format("[%5d][%5d][%5d]",
+        if (intervalManager.isBool(TimeFrame.M_60)) logger.info(String.format("[%5d][%5d][%5d]",
                 statisticsManager.getLast(StatType.ADD_HOURLY),
                 statisticsManager.getLast(StatType.CALC_DAILY),
                 statisticsManager.getLast(StatType.RESET_COUNTERS)
         ));
 
-        if (statusManager.isBool(TimeFrame.H_24)) logger.info(String.format("[%5d][%5d][%5d][%5d]",
+        if (intervalManager.isBool(TimeFrame.H_24)) logger.info(String.format("[%5d][%5d][%5d][%5d]",
                 statisticsManager.getLast(StatType.REMOVE_OLD_ENTRIES),
                 statisticsManager.getLast(StatType.ADD_DAILY),
                 statisticsManager.getLast(StatType.CALC_SPARK),

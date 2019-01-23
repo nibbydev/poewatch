@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.Stat.*;
-import poe.Managers.Status.TimeFrame;
+import poe.Managers.Interval.TimeFrame;
 
 import java.util.*;
 import java.util.stream.Collectors;

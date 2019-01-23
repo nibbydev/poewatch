@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.*;
 import poe.Item.ItemParser;
-import poe.Managers.StatusManager;
+import poe.Managers.IntervalManager;
 import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
 
@@ -36,7 +36,7 @@ public class Main {
         logger.info("Starting PoeWatch");
 
         try {
-            StatusManager statusManager = new StatusManager();
+            IntervalManager intervalManager = new IntervalManager();
 
             // Load config
             config = ConfigFactory.load("config");
@@ -72,7 +72,7 @@ public class Main {
             }
 
             accountManager = new AccountManager(database);
-            workerManager = new WorkerManager(config, statusManager, database, statisticsManager, leagueManager, relations, accountManager);
+            workerManager = new WorkerManager(config, intervalManager, database, statisticsManager, leagueManager, relations, accountManager);
             ItemParser.setRelationManager(relations);
 
             // Get all distinct stash ids that are in the db

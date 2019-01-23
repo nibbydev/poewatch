@@ -1,4 +1,4 @@
-package poe.Managers.Status;
+package poe.Managers.Interval;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +30,13 @@ public enum TimeFrame {
             case H_24:
                 return 86400000;
             default:
-                logger.error("Attempted to access non-existent status");
+                logger.error("Attempted to access non-existent TimeFrame");
                 throw new RuntimeException();
         }
     }
 
     /**
-     * Gets milliseconds from now until the Status
+     * Gets milliseconds from now until the TimeFrame
      *
      * @return
      */
@@ -46,7 +46,7 @@ public enum TimeFrame {
     }
 
     /**
-     * Gets milliseconds from the Status until now
+     * Gets milliseconds from the TimeFrame until now
      *
      * @return
      */
@@ -56,7 +56,7 @@ public enum TimeFrame {
     }
 
     /**
-     * Gets milliseconds from the start until the Status
+     * Gets milliseconds from the start until the TimeFrame
      *
      * @return
      */
@@ -65,7 +65,7 @@ public enum TimeFrame {
     }
 
     /**
-     * Gets milliseconds from the start until the next Status
+     * Gets milliseconds from the start until the next TimeFrame
      *
      * @return
      */

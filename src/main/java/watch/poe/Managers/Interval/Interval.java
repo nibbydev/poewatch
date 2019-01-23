@@ -1,11 +1,11 @@
-package poe.Managers.Status;
+package poe.Managers.Interval;
 
-public class Status {
+public class Interval {
     private TimeFrame timeFrame;
     private volatile boolean active;
     private long counter;
 
-    public Status(TimeFrame timeFrame) {
+    public Interval(TimeFrame timeFrame) {
         this.timeFrame = timeFrame;
     }
 

@@ -2,7 +2,7 @@ package poe.Managers.Stat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Managers.Status.TimeFrame;
+import poe.Managers.Interval.TimeFrame;
 
 import static java.lang.Math.toIntExact;
 

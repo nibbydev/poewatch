@@ -2,25 +2,25 @@ package poe.Managers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Managers.Status.Status;
-import poe.Managers.Status.TimeFrame;
+import poe.Managers.Interval.Interval;
+import poe.Managers.Interval.TimeFrame;
 
 import java.util.Arrays;
 
-public class StatusManager {
-    private static Logger logger = LoggerFactory.getLogger(StatusManager.class);
+public class IntervalManager {
+    private static Logger logger = LoggerFactory.getLogger(IntervalManager.class);
 
-    private final Status[] statuses = {
-            new Status(TimeFrame.M_1),
-            new Status(TimeFrame.M_10),
-            new Status(TimeFrame.M_30),
-            new Status(TimeFrame.M_60),
-            new Status(TimeFrame.H_6),
-            new Status(TimeFrame.H_12),
-            new Status(TimeFrame.H_24)
+    private final Interval[] intervals = {
+            new Interval(TimeFrame.M_1),
+            new Interval(TimeFrame.M_10),
+            new Interval(TimeFrame.M_30),
+            new Interval(TimeFrame.M_60),
+            new Interval(TimeFrame.H_6),
+            new Interval(TimeFrame.H_12),
+            new Interval(TimeFrame.H_24)
     };
 
-    public StatusManager() {
+    public IntervalManager() {
         // Set counters to their default state upon program start
         checkFlagStates();
         // Reset flags in case any were raised
@@ -33,8 +33,8 @@ public class StatusManager {
     public void checkFlagStates() {
         long current = System.currentTimeMillis();
 
-        // Find all status entries that should be activated
-        Arrays.stream(statuses)
+        // Find all interval entries that should be activated
+        Arrays.stream(intervals)
                 .filter(i -> current > i.getCounter() + i.getTimeFrame().asMilli())
                 .forEach(i -> {
                     i.setCounter((current / i.getTimeFrame().asMilli()) * i.getTimeFrame().asMilli());
@@ -46,26 +46,26 @@ public class StatusManager {
      * Sets all flags as false
      */
     public void resetFlags() {
-        Arrays.stream(statuses).forEach(i -> i.setActive(false));
+        Arrays.stream(intervals).forEach(i -> i.setActive(false));
     }
 
     /**
-     * Returns the flag related to the provided Status
+     * Returns the flag related to the provided Timeframe
      *
      * @param timeFrame
      * @return
      */
     public boolean isBool(TimeFrame timeFrame) {
-        Status status = Arrays.stream(statuses)
+        Interval interval = Arrays.stream(intervals)
                 .filter(i -> i.getTimeFrame().equals(timeFrame))
                 .findFirst()
                 .orElse(null);
 
-        if (status == null) {
-            logger.error("Attempting to access non-existent status");
+        if (interval == null) {
+            logger.error("Attempting to access non-existent timeframe");
             throw new RuntimeException();
         }
 
-        return status.isActive();
+        return interval.isActive();
     }
 }
