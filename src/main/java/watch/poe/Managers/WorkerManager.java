@@ -114,7 +114,7 @@ public class WorkerManager extends Thread {
         statisticsManager.clkTimer(StatType.UPDATE_COUNTERS);
 
         statisticsManager.startTimer(StatType.CALC_EXALT);
-        database.calc.calculateExalted();
+        database.calc.calcExalted();
         statisticsManager.clkTimer(StatType.CALC_EXALT);
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
@@ -127,6 +127,10 @@ public class WorkerManager extends Thread {
             statisticsManager.startTimer(StatType.CALC_DAILY);
             database.calc.calcDaily();
             statisticsManager.clkTimer(StatType.CALC_DAILY);
+
+            statisticsManager.startTimer(StatType.CALC_CURRENT);
+            database.calc.calcCurrent();
+            statisticsManager.clkTimer(StatType.CALC_CURRENT);
         }
 
         if (intervalManager.isBool(TimeFrame.H_24)) {

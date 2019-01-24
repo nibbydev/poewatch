@@ -134,7 +134,29 @@ public class Calc {
      *
      * @return True on success
      */
-    public boolean calculateExalted() {
+    public boolean calcCurrent() {
+        String query =  "update league_items as li " +
+                        "join ( " +
+                        "  select le.id_l, le.id_d, count(*) as count " +
+                        "  from league_entries as le " +
+                        "  join ( " +
+                        "    select distinct account_crc from league_accounts " +
+                        "    where updated > date_sub(now(), interval 6 hour) " +
+                        "  ) as foo2 on le.account_crc = foo2.account_crc " +
+                        "  where le.stash_crc is not null " +
+                        "  group by le.id_l, le.id_d " +
+                        ") as foo1 on foo1.id_l = li.id_l and foo1.id_d = li.id_d " +
+                        "set li.current = foo1.count; ";
+
+        return database.executeUpdateQueries(query);
+    }
+
+    /**
+     * Calculates exalted price for items in table `league_items` based on exalted prices in same table
+     *
+     * @return True on success
+     */
+    public boolean calcExalted() {
         String query =  "UPDATE league_items AS i " +
                         "JOIN ( " +
                         "  SELECT i.id_l, i.mean " +

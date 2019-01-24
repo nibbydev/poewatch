@@ -149,7 +149,6 @@ public class PriceManager {
         result.mode = calcMode(entries);
         result.min = calcMin(entries);
         result.max = calcMax(entries);
-        result.current = currentCount;
         result.accepted = entries.size();
 
         if (result.mode == 0) {
@@ -273,7 +272,7 @@ public class PriceManager {
     public static class Result {
         public int id_l, id_d;
         public double mean, median, mode, min, max;
-        public int current, accepted;
+        public int accepted;
 
         public Result(int id_l, int id_d) {
             this.id_l = id_l;

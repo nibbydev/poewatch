@@ -12,6 +12,7 @@ public enum StatType {
     REMOVE_OLD_ENTRIES,
     ADD_DAILY,
     CALC_SPARK,
+    CALC_CURRENT,
     ACCOUNT_CHANGES,
     API_CALLS,
 

@@ -3,18 +3,15 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.PriceManager;
-import poe.Managers.Stat.Collector;
-import poe.Managers.Stat.StatType;
-import poe.Worker.Entry.*;
 import poe.Managers.League.LeagueEntry;
+import poe.Managers.PriceManager;
+import poe.Worker.Entry.RawItemEntry;
+import poe.Worker.Entry.RawUsernameEntry;
 
-import java.sql.*;
-import java.util.Arrays;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Upload {
     private static Logger logger = LoggerFactory.getLogger(Upload.class);
@@ -77,7 +74,7 @@ public class Upload {
 
     public boolean updateItems(List<PriceManager.Result> results) {
         String query =  "update league_items " +
-                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, `current` = ?, accepted = ? " +
+                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
                         "where id_l = ? and id_d = ? " +
                         "limit 1; ";
 
@@ -94,10 +91,9 @@ public class Upload {
                     statement.setDouble(3, result.mode);
                     statement.setDouble(4, result.min);
                     statement.setDouble(5, result.max);
-                    statement.setDouble(6, result.current);
-                    statement.setDouble(7, result.accepted);
-                    statement.setInt(8, result.id_l);
-                    statement.setInt(9, result.id_d);
+                    statement.setDouble(6, result.accepted);
+                    statement.setInt(7, result.id_l);
+                    statement.setInt(8, result.id_d);
 
                     statement.addBatch();
                 }

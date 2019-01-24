@@ -22,14 +22,19 @@ public class StatisticsManager {
             new Collector(StatType.CALC_PRICES,             GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.UPDATE_COUNTERS,         GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.CALC_EXALT,              GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.CYCLE_LEAGUES,           GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.ADD_HOURLY,              GroupType.AVG,      TimeFrame.M_1,     24),
-            new Collector(StatType.CALC_DAILY,              GroupType.AVG,      TimeFrame.M_1,     24),
-            new Collector(StatType.RESET_COUNTERS,          GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.ADD_DAILY,               GroupType.AVG,      TimeFrame.M_1,     7),
-            new Collector(StatType.CALC_SPARK,              GroupType.AVG,      TimeFrame.M_1,     7),
-            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.AVG,      TimeFrame.M_1,     60),
+
+            new Collector(StatType.CYCLE_LEAGUES,           GroupType.AVG,      TimeFrame.M_10,    10),
+
+            new Collector(StatType.ADD_HOURLY,              GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.CALC_DAILY,              GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.CALC_CURRENT,            GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.RESET_COUNTERS,          GroupType.AVG,      TimeFrame.M_60,    24),
+
+            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.ADD_DAILY,               GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.CALC_SPARK,              GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.AVG,      TimeFrame.H_24,    7),
+
             new Collector(StatType.API_CALLS,               GroupType.COUNT,    TimeFrame.M_60,    null),
 
             new Collector(StatType.APP_STARTUP,             GroupType.COUNT,    TimeFrame.M_1,     null),
