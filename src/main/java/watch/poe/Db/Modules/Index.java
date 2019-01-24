@@ -131,9 +131,9 @@ public class Index {
      */
     public Integer indexItemData(Item item, Integer categoryId, Integer groupId) {
         String query =  "INSERT INTO data_itemData (" +
-                        "  id_cat, id_grp, `name`, `type`, frame, tier, lvl, " +
-                        "  quality, corrupted, links, ilvl, var, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+                        "  id_cat, id_grp, `name`, `type`, frame, stack, " +
+                        "  tier, lvl,  quality, corrupted, links, ilvl, var, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -153,32 +153,36 @@ public class Index {
                 statement.setString(4, key.getTypeLine());
                 statement.setInt(5, key.getFrameType());
 
-                if (key.getTier() == null) {
+                if (item.getStack() == null) {
                     statement.setNull(6, 0);
-                } else statement.setInt(6, key.getTier());
+                } else statement.setInt(6, item.getStack());
+
+                if (key.getTier() == null) {
+                    statement.setNull(7, 0);
+                } else statement.setInt(7, key.getTier());
 
                 if (key.getLevel() == null) {
-                    statement.setNull(7, 0);
-                } else statement.setInt(7, key.getLevel());
+                    statement.setNull(8, 0);
+                } else statement.setInt(8, key.getLevel());
 
                 if (key.getQuality() == null) {
-                    statement.setNull(8, 0);
-                } else statement.setInt(8, key.getQuality());
+                    statement.setNull(9, 0);
+                } else statement.setInt(9, key.getQuality());
 
                 if (key.getCorrupted() == null) {
-                    statement.setNull(9, 0);
-                } else statement.setInt(9, key.getCorrupted());
+                    statement.setNull(10, 0);
+                } else statement.setInt(10, key.getCorrupted());
 
                 if (key.getLinks() == null) {
-                    statement.setNull(10, 0);
-                } else statement.setInt(10, key.getLinks());
+                    statement.setNull(11, 0);
+                } else statement.setInt(11, key.getLinks());
 
                 if (key.getiLvl() == null) {
-                    statement.setNull(11, 0);
-                } else statement.setInt(11, key.getiLvl());
+                    statement.setNull(12, 0);
+                } else statement.setInt(12, key.getiLvl());
 
-                statement.setString(12, key.getVariation());
-                statement.setString(13, Item.formatIconURL(item.getIcon()));
+                statement.setString(13, key.getVariation());
+                statement.setString(14, Item.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
                 database.connection.commit();

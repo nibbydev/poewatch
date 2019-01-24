@@ -74,6 +74,7 @@ public class Mappers {
         private int w, h, x, y, ilvl, frameType;
         private Boolean corrupted, shaper, elder;
         private String icon, league, id, name, typeLine, note;
+        private Integer stackSize;
 
         @SerializedName(value = "raceReward", alternate = {"seaRaceReward", "cisRaceReward", "thRaceReward", "RaceReward"})
         private Object raceReward;
@@ -82,7 +83,7 @@ public class Mappers {
         // Base item objects
         //------------------------------------------------------------------------------------------------------------
 
-        private Map<String, List<String>> category; // TODO: create an object for this monstrosity
+        private Map<String, List<String>> category;
         private List<Mappers.Property> properties;
         private List<Mappers.Socket> sockets;
         private List<String> explicitMods;
@@ -170,6 +171,10 @@ public class Mappers {
 
         public String getTypeLine() {
             return typeLine;
+        }
+
+        public boolean isStackable() {
+            return stackSize != null;
         }
 
         /**

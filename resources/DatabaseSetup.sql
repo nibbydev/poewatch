@@ -107,6 +107,8 @@ CREATE TABLE data_itemData (
     name       VARCHAR(128)  NOT NULL,
     type       VARCHAR(64)   DEFAULT NULL,
     frame      TINYINT(1)    NOT NULL,
+    found      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stack      SMALLINT      DEFAULT NULL,
     tier       TINYINT(1)    UNSIGNED DEFAULT NULL,
     lvl        TINYINT(1)    UNSIGNED DEFAULT NULL,
     quality    TINYINT(1)    UNSIGNED DEFAULT NULL,

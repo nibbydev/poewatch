@@ -1,7 +1,7 @@
 <?php
 function get_all_data($pdo) {
   $query = "SELECT 
-    did.id, did.name, did.type, did.frame, 
+    did.id, did.name, did.type, did.frame, did.stack, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`
@@ -39,6 +39,7 @@ function parse_data($stmt) {
       'type'      => $row['type'],
       'frame'     => $row['frame'],
       'tier'      => $row['tier'],
+      'stack'     => $row['stack'] === NULL ? null : (int) $row['stack'],
       'lvl'       => $row['lvl'],
       'quality'   => $row['quality'],
       'corrupted' => $row['corrupted'] === NULL ? null : (bool) $row['corrupted'],

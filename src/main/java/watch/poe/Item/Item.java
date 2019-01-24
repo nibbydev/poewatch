@@ -16,7 +16,7 @@ public class Item {
 
     private boolean discard, doNotIndex;
     private String category, group, variation;
-    private Integer links, level, quality, tier;
+    private Integer links, level, quality, tier, stack;
 
     // Overrides
     private boolean identified;
@@ -301,9 +301,52 @@ public class Item {
             return;
         }
 
+        extractStackSize();
         extractItemLinks();
         checkItemVariant();
     }
+
+    private void extractStackSize() {
+        if (!base.isStackable() || base.getProperties() == null) {
+            return;
+        }
+
+        /*
+        This is what it looks like as JSON:
+            "properties": [{
+                "name": "Stack Size",
+                "values": [["42/1000", 0]],
+                "displayMode": 0
+              }
+            ]
+         */
+
+        // Find first stacks size property
+        Mappers.Property property = base.getProperties().stream()
+                .filter(i -> i.name.equals("Stack Size"))
+                .findFirst()
+                .orElse(null);
+
+        if (property == null || property.values.isEmpty() || property.values.get(0).isEmpty()) {
+            return;
+        }
+
+        String stackSizeString = property.values.get(0).get(0);
+        int index = stackSizeString.indexOf("/");
+
+        // Must contain the slash eg "42/1000"
+        if (index < 0) {
+            return;
+        }
+
+        // parse as int
+        try {
+            stack = Integer.parseUnsignedInt(stackSizeString.substring(index + 1));
+        } catch (NumberFormatException ex) {
+            stack = null;
+        }
+    }
+
 
     /**
      * Extract map-related data from the item
@@ -328,8 +371,6 @@ public class Item {
                 }
             }
         }
-
-
 
         // Set frame to 0 for all non-unique
         if (frameType < 3) frameType = 0;
@@ -714,5 +755,9 @@ public class Item {
 
     public Boolean getElder() {
         return elder;
+    }
+
+    public Integer getStack() {
+        return stack;
     }
 }
