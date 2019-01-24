@@ -13,7 +13,7 @@ function check_errors() {
 function get_data($pdo) {
   $query1 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.total, i.daily + i.inc AS daily
+    i.exalted, i.total, i.daily + i.inc AS daily, i.current, i.accepted
   FROM      league_items AS i 
   JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
@@ -24,7 +24,7 @@ function get_data($pdo) {
 
   $query2 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.total, i.daily + i.inc AS daily
+    i.exalted, i.total, i.daily + i.inc AS daily, i.current, i.accepted
   FROM      league_items AS i 
   JOIN      data_itemData AS did 
     ON      i.id_d = did.id 
@@ -55,15 +55,19 @@ function parse_data($stmt) {
   while ($row = $stmt->fetch()) {
     // Form a temporary row array
     $tmp = array(
-      'id'       => (int)  $row['id_d'],
-      'mean'     =>        $row['mean']     === NULL ?  0.0 : (float) $row['mean'],
-      'median'   =>        $row['median']   === NULL ?  0.0 : (float) $row['median'],
-      'mode'     =>        $row['mode']     === NULL ?  0.0 : (float) $row['mode'],
-      'min'      =>        $row['min']      === NULL ?  0.0 : (float) $row['min'],
-      'max'      =>        $row['max']      === NULL ?  0.0 : (float) $row['max'],
-      'exalted'  =>        $row['exalted']  === NULL ?  0.0 : (float) $row['exalted'],
-      'total'    =>        $row['total']    === NULL ?    0 :   (int) $row['total'],
-      'daily'    =>        $row['daily']    === NULL ?    0 :   (int) $row['daily']
+      'id'       => (int)   $row['id_d'],
+      
+      'mean'     => (float) $row['mean'],
+      'median'   => (float) $row['median'],
+      'mode'     => (float) $row['mode'],
+      'min'      => (float) $row['min'],
+      'max'      => (float) $row['max'],
+      'exalted'  => (float) $row['exalted'],
+
+      'total'    => (int)   $row['total'],
+      'daily'    => (int)   $row['daily'],
+      'current'  => (int)   $row['current'],
+      'accepted' => (int)   $row['accepted'],
     );
 
     // Append row to payload
