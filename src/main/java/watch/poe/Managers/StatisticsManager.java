@@ -18,40 +18,37 @@ public class StatisticsManager {
 
     // Definitions of all statistics collectors
     private final Collector[] collectors = {
-            new Collector(StatType.CYCLE_TOTAL,             GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.CALC_PRICES,             GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.UPDATE_COUNTERS,         GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.CALC_EXALT,              GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_CYCLE_TOTAL,        GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_CALC_PRICES,        GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_UPDATE_COUNTERS,    GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_CALC_EXALT,         GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_REPLY_DOWNLOAD,     GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_PARSE_REPLY,        GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_UPLOAD_ACCOUNTS,    GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_RESET_STASHES,      GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_UPLOAD_ENTRIES,     GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.TIME_UPLOAD_USERNAMES,   GroupType.AVG,      TimeFrame.M_1,     60),
 
-            new Collector(StatType.CYCLE_LEAGUES,           GroupType.AVG,      TimeFrame.M_10,    10),
+            new Collector(StatType.TIME_CYCLE_LEAGUES,      GroupType.AVG,      TimeFrame.M_10,    10),
 
-            new Collector(StatType.ADD_HOURLY,              GroupType.AVG,      TimeFrame.M_60,    24),
-            new Collector(StatType.CALC_DAILY,              GroupType.AVG,      TimeFrame.M_60,    24),
-            new Collector(StatType.CALC_CURRENT,            GroupType.AVG,      TimeFrame.M_60,    24),
-            new Collector(StatType.RESET_COUNTERS,          GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.COUNT_API_CALLS,         GroupType.COUNT,    TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_TOTAL_STASHES,     GroupType.SUM,      TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_TOTAL_ITEMS,       GroupType.SUM,      TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_ACCEPTED_ITEMS,    GroupType.SUM,      TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_ACTIVE_ACCOUNTS,   GroupType.SUM,      TimeFrame.M_60,    null),
 
-            new Collector(StatType.REMOVE_OLD_ENTRIES,      GroupType.AVG,      TimeFrame.H_24,    7),
-            new Collector(StatType.ADD_DAILY,               GroupType.AVG,      TimeFrame.H_24,    7),
-            new Collector(StatType.CALC_SPARK,              GroupType.AVG,      TimeFrame.H_24,    7),
-            new Collector(StatType.ACCOUNT_CHANGES,         GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.TIME_ADD_HOURLY,         GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.TIME_CALC_DAILY,         GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.TIME_CALC_CURRENT,       GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.TIME_RESET_COUNTERS,     GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.COUNT_DUPLICATE_JOB,     GroupType.SUM,      TimeFrame.M_60,    24),
+            new Collector(StatType.APP_STARTUP,             GroupType.COUNT,    TimeFrame.M_60,    24),
+            new Collector(StatType.APP_SHUTDOWN,            GroupType.COUNT,    TimeFrame.M_60,    24),
 
-            new Collector(StatType.API_CALLS,               GroupType.COUNT,    TimeFrame.M_60,    null),
-
-            new Collector(StatType.APP_STARTUP,             GroupType.COUNT,    TimeFrame.M_1,     null),
-            new Collector(StatType.APP_SHUTDOWN,            GroupType.COUNT,    TimeFrame.M_1,     null),
-
-            new Collector(StatType.WORKER_DOWNLOAD,         GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.WORKER_PARSE,            GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.WORKER_UPLOAD_ACCOUNTS,  GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.WORKER_RESET_STASHES,    GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.WORKER_UPLOAD_ENTRIES,   GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.WORKER_UPLOAD_USERNAMES, GroupType.AVG,      TimeFrame.M_1,     60),
-
-            new Collector(StatType.WORKER_DUPLICATE_JOB,    GroupType.SUM,      TimeFrame.M_60,    16),
-            new Collector(StatType.TOTAL_STASHES,           GroupType.SUM,      TimeFrame.M_60,    null),
-            new Collector(StatType.TOTAL_ITEMS,             GroupType.SUM,      TimeFrame.M_60,    null),
-            new Collector(StatType.ACCEPTED_ITEMS,          GroupType.SUM,      TimeFrame.M_60,    null),
-            new Collector(StatType.ACTIVE_ACCOUNTS,         GroupType.SUM,      TimeFrame.M_60,    null),
+            new Collector(StatType.TIME_REMOVE_ENTRIES,     GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.TIME_ADD_DAILY,          GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.TIME_CALC_SPARK,         GroupType.AVG,      TimeFrame.H_24,    7),
+            new Collector(StatType.TIME_ACCOUNT_CHANGES,    GroupType.AVG,      TimeFrame.H_24,    7),
     };
 
     public StatisticsManager(Database database) {

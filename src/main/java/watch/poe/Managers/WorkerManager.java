@@ -97,77 +97,77 @@ public class WorkerManager extends Thread {
      */
     private void cycle() {
         // Start cycle timer
-        statisticsManager.startTimer(StatType.CYCLE_TOTAL);
+        statisticsManager.startTimer(StatType.TIME_CYCLE_TOTAL);
 
         if (intervalManager.isBool(TimeFrame.H_24)) {
-            statisticsManager.startTimer(StatType.REMOVE_OLD_ENTRIES);
+            statisticsManager.startTimer(StatType.TIME_REMOVE_ENTRIES);
             database.history.removeOldItemEntries();
-            statisticsManager.clkTimer(StatType.REMOVE_OLD_ENTRIES);
+            statisticsManager.clkTimer(StatType.TIME_REMOVE_ENTRIES);
         }
 
-        statisticsManager.startTimer(StatType.CALC_PRICES);
+        statisticsManager.startTimer(StatType.TIME_CALC_PRICES);
         PriceManager.run();
-        statisticsManager.clkTimer(StatType.CALC_PRICES);
+        statisticsManager.clkTimer(StatType.TIME_CALC_PRICES);
 
-        statisticsManager.startTimer(StatType.UPDATE_COUNTERS);
+        statisticsManager.startTimer(StatType.TIME_UPDATE_COUNTERS);
         database.flag.updateCounters();
-        statisticsManager.clkTimer(StatType.UPDATE_COUNTERS);
+        statisticsManager.clkTimer(StatType.TIME_UPDATE_COUNTERS);
 
-        statisticsManager.startTimer(StatType.CALC_EXALT);
+        statisticsManager.startTimer(StatType.TIME_CALC_EXALT);
         database.calc.calcExalted();
-        statisticsManager.clkTimer(StatType.CALC_EXALT);
+        statisticsManager.clkTimer(StatType.TIME_CALC_EXALT);
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
             database.calc.countActiveAccounts(statisticsManager);
 
-            statisticsManager.startTimer(StatType.ADD_HOURLY);
+            statisticsManager.startTimer(StatType.TIME_ADD_HOURLY);
             database.history.addHourly();
-            statisticsManager.clkTimer(StatType.ADD_HOURLY);
+            statisticsManager.clkTimer(StatType.TIME_ADD_HOURLY);
 
-            statisticsManager.startTimer(StatType.CALC_DAILY);
+            statisticsManager.startTimer(StatType.TIME_CALC_DAILY);
             database.calc.calcDaily();
-            statisticsManager.clkTimer(StatType.CALC_DAILY);
+            statisticsManager.clkTimer(StatType.TIME_CALC_DAILY);
 
-            statisticsManager.startTimer(StatType.CALC_CURRENT);
+            statisticsManager.startTimer(StatType.TIME_CALC_CURRENT);
             database.calc.calcCurrent();
-            statisticsManager.clkTimer(StatType.CALC_CURRENT);
+            statisticsManager.clkTimer(StatType.TIME_CALC_CURRENT);
         }
 
         if (intervalManager.isBool(TimeFrame.H_24)) {
-            statisticsManager.startTimer(StatType.ADD_DAILY);
+            statisticsManager.startTimer(StatType.TIME_ADD_DAILY);
             database.history.addDaily();
-            statisticsManager.clkTimer(StatType.ADD_DAILY);
+            statisticsManager.clkTimer(StatType.TIME_ADD_DAILY);
 
-            statisticsManager.startTimer(StatType.CALC_SPARK);
+            statisticsManager.startTimer(StatType.TIME_CALC_SPARK);
             database.calc.calcSpark();
-            statisticsManager.clkTimer(StatType.CALC_SPARK);
+            statisticsManager.clkTimer(StatType.TIME_CALC_SPARK);
         }
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
-            statisticsManager.startTimer(StatType.RESET_COUNTERS);
+            statisticsManager.startTimer(StatType.TIME_RESET_COUNTERS);
             database.flag.resetCounters();
-            statisticsManager.clkTimer(StatType.RESET_COUNTERS);
+            statisticsManager.clkTimer(StatType.TIME_RESET_COUNTERS);
         }
 
         // End cycle timer
-        statisticsManager.clkTimer(StatType.CYCLE_TOTAL);
+        statisticsManager.clkTimer(StatType.TIME_CYCLE_TOTAL);
 
         // Check league API
         if (intervalManager.isBool(TimeFrame.M_10)) {
-            statisticsManager.startTimer(StatType.CYCLE_LEAGUES);
+            statisticsManager.startTimer(StatType.TIME_CYCLE_LEAGUES);
             leagueManager.cycle();
-            statisticsManager.clkTimer(StatType.CYCLE_LEAGUES);
+            statisticsManager.clkTimer(StatType.TIME_CYCLE_LEAGUES);
         }
 
         // Check if there are matching account name changes
         if (intervalManager.isBool(TimeFrame.H_24)) {
-            statisticsManager.startTimer(StatType.ACCOUNT_CHANGES);
+            statisticsManager.startTimer(StatType.TIME_ACCOUNT_CHANGES);
             accountManager.checkAccountNameChanges();
-            statisticsManager.clkTimer(StatType.ACCOUNT_CHANGES);
+            statisticsManager.clkTimer(StatType.TIME_ACCOUNT_CHANGES);
         }
 
         // Prepare cycle message
-        logger.info(String.format("Cycle finished: %5d ms", statisticsManager.getLast(StatType.CYCLE_TOTAL)));
+        logger.info(String.format("Cycle finished: %5d ms", statisticsManager.getLast(StatType.TIME_CYCLE_TOTAL)));
         logger.info(String.format("Status: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
                 TimeFrame.M_1.getRemaining() / 1000 + 1,
                 TimeFrame.M_10.getRemaining() / 60000 + 1,
@@ -176,22 +176,22 @@ public class WorkerManager extends Thread {
         ));
 
         logger.info(String.format("[%5d][%5d][%5d]",
-                    statisticsManager.getLast(StatType.CALC_PRICES),
-                    statisticsManager.getLast(StatType.UPDATE_COUNTERS),
-                    statisticsManager.getLast(StatType.CALC_EXALT)
+                    statisticsManager.getLast(StatType.TIME_CALC_PRICES),
+                    statisticsManager.getLast(StatType.TIME_UPDATE_COUNTERS),
+                    statisticsManager.getLast(StatType.TIME_CALC_EXALT)
         ));
 
         if (intervalManager.isBool(TimeFrame.M_60)) logger.info(String.format("[%5d][%5d][%5d]",
-                statisticsManager.getLast(StatType.ADD_HOURLY),
-                statisticsManager.getLast(StatType.CALC_DAILY),
-                statisticsManager.getLast(StatType.RESET_COUNTERS)
+                statisticsManager.getLast(StatType.TIME_ADD_HOURLY),
+                statisticsManager.getLast(StatType.TIME_CALC_DAILY),
+                statisticsManager.getLast(StatType.TIME_RESET_COUNTERS)
         ));
 
         if (intervalManager.isBool(TimeFrame.H_24)) logger.info(String.format("[%5d][%5d][%5d][%5d]",
-                statisticsManager.getLast(StatType.REMOVE_OLD_ENTRIES),
-                statisticsManager.getLast(StatType.ADD_DAILY),
-                statisticsManager.getLast(StatType.CALC_SPARK),
-                statisticsManager.getLast(StatType.ACCOUNT_CHANGES)
+                statisticsManager.getLast(StatType.TIME_REMOVE_ENTRIES),
+                statisticsManager.getLast(StatType.TIME_ADD_DAILY),
+                statisticsManager.getLast(StatType.TIME_CALC_SPARK),
+                statisticsManager.getLast(StatType.TIME_ACCOUNT_CHANGES)
         ));
 
         // Upload stats to database

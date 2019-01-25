@@ -33,7 +33,7 @@ public class Calc {
 
                 // Get first and only entry
                 if (resultSet.next()) {
-                    statisticsManager.addValue(StatType.ACTIVE_ACCOUNTS, resultSet.getInt(1));
+                    statisticsManager.addValue(StatType.COUNT_ACTIVE_ACCOUNTS, resultSet.getInt(1));
                 }
             }
 

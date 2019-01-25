@@ -85,7 +85,7 @@ public class Worker extends Thread {
             waitForJob();
 
             String replyString = download();
-            statisticsManager.addValue(StatType.API_CALLS, null);
+            statisticsManager.addValue(StatType.COUNT_API_CALLS, null);
 
             if (replyString != null) {
                 Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
@@ -95,9 +95,9 @@ public class Worker extends Thread {
                 }
 
                 if (reply != null && reply.next_change_id != null) {
-                    statisticsManager.startTimer(StatType.WORKER_PARSE);
+                    statisticsManager.startTimer(StatType.TIME_PARSE_REPLY);
                     parseItems(reply);
-                    statisticsManager.clkTimer(StatType.WORKER_PARSE);
+                    statisticsManager.clkTimer(StatType.TIME_PARSE_REPLY);
                 }
             }
 
@@ -139,7 +139,7 @@ public class Worker extends Thread {
         Worker.lastPullTime = System.currentTimeMillis();
 
         try {
-            statisticsManager.startTimer(StatType.WORKER_DOWNLOAD);
+            statisticsManager.startTimer(StatType.TIME_REPLY_DOWNLOAD);
 
             // Define the request
             URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
@@ -183,7 +183,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.WORKER_DUPLICATE_JOB, 1);
+                            statisticsManager.addValue(StatType.COUNT_DUPLICATE_JOB, 1);
                             return null;
                         }
                     }
@@ -208,7 +208,7 @@ public class Worker extends Thread {
                 logger.error(ex.getMessage(), ex);
             }
 
-            statisticsManager.clkTimer(StatType.WORKER_DOWNLOAD);
+            statisticsManager.clkTimer(StatType.TIME_REPLY_DOWNLOAD);
         }
 
         // Return the downloaded mess of a JSON string
@@ -305,26 +305,26 @@ public class Worker extends Thread {
         }
 
         // Collect some statistics
-        statisticsManager.addValue(StatType.TOTAL_STASHES, reply.stashes.size());
-        statisticsManager.addValue(StatType.TOTAL_ITEMS, totalItemCount);
-        statisticsManager.addValue(StatType.ACCEPTED_ITEMS, items.size());
+        statisticsManager.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
+        statisticsManager.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
+        statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, items.size());
 
         // Shovel everything to db
-        statisticsManager.startTimer(StatType.WORKER_UPLOAD_ACCOUNTS);
+        statisticsManager.startTimer(StatType.TIME_UPLOAD_ACCOUNTS);
         database.upload.uploadAccounts(accounts);
-        statisticsManager.clkTimer(StatType.WORKER_UPLOAD_ACCOUNTS);
+        statisticsManager.clkTimer(StatType.TIME_UPLOAD_ACCOUNTS);
 
-        statisticsManager.startTimer(StatType.WORKER_RESET_STASHES);
+        statisticsManager.startTimer(StatType.TIME_RESET_STASHES);
         database.flag.resetStashReferences(nullStashes);
-        statisticsManager.clkTimer(StatType.WORKER_RESET_STASHES);
+        statisticsManager.clkTimer(StatType.TIME_RESET_STASHES);
 
-        statisticsManager.startTimer(StatType.WORKER_UPLOAD_ENTRIES);
+        statisticsManager.startTimer(StatType.TIME_UPLOAD_ENTRIES);
         database.upload.uploadEntries(items);
-        statisticsManager.clkTimer(StatType.WORKER_UPLOAD_ENTRIES);
+        statisticsManager.clkTimer(StatType.TIME_UPLOAD_ENTRIES);
 
-        statisticsManager.startTimer(StatType.WORKER_UPLOAD_USERNAMES);
+        statisticsManager.startTimer(StatType.TIME_UPLOAD_USERNAMES);
         database.upload.uploadUsernames(usernames);
-        statisticsManager.clkTimer(StatType.WORKER_UPLOAD_USERNAMES);
+        statisticsManager.clkTimer(StatType.TIME_UPLOAD_USERNAMES);
     }
 
     /**
