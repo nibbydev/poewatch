@@ -124,7 +124,7 @@
       </div>
 
       <?php foreach ($leagueData["inactive"] as $element) { ?>
-        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12">
           <div class="card custom-card mb-3">
             <div class="card-header h-100">
               <h4 class="card-title nowrap overflow-hidden mb-0"><?php echo $element["title"] ?></h4>
