@@ -5,13 +5,14 @@ import poe.Item.Variant.VariantType;
 import poe.Item.Variant.Variants;
 import poe.Managers.RelationManager;
 
-public class Item {
-    private RelationManager relationManager;
+import static poe.Item.Branch.*;
 
+public class Item {
     private static final ItemVariant[] variants = Variants.GetVariants();
     private static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
+    private RelationManager relationManager;
     private Mappers.BaseItem base;
-    private String branch;
+    private Branch branch;
     private Key key;
 
     private boolean discard, doNotIndex;
@@ -28,12 +29,12 @@ public class Item {
     // Constructors
     //------------------------------------------------------------------------------------------------------------
 
-    public Item(String branch) {
+    public Item(Branch branch) {
         this.relationManager = null;
         this.branch = branch;
     }
 
-    public Item(RelationManager relationManager, String branch) {
+    public Item(RelationManager relationManager, Branch branch) {
         this.relationManager = relationManager;
         this.branch = branch;
     }
@@ -41,6 +42,51 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
     // Main methods
     //------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Removes any unnecessary fields from the item's icon
+     *
+     * @param icon An item's bloated URL
+     * @return Formatted icon URL
+     */
+    public static String formatIconURL(String icon) {
+        String[] splitURL = icon.split("\\?", 2);
+        String fullIcon = splitURL[0];
+
+        if (splitURL.length > 1) {
+            StringBuilder paramBuilder = new StringBuilder();
+
+            for (String param : splitURL[1].split("&")) {
+                String[] splitParam = param.split("=");
+
+                switch (splitParam[0]) {
+                    case "scale":
+                    case "w":
+                    case "h":
+                    case "mr": // shaped
+                    case "mn": // background
+                    case "mt": // tier
+                    case "relic":
+                        paramBuilder.append("&");
+                        paramBuilder.append(splitParam[0]);
+                        paramBuilder.append("=");
+                        paramBuilder.append(splitParam[1]);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // If there are parameters that should be kept, add them to fullIcon
+            if (paramBuilder.length() > 0) {
+                // Replace the first "&" symbol with "?"
+                paramBuilder.setCharAt(0, '?');
+                fullIcon += paramBuilder.toString();
+            }
+        }
+
+        return fullIcon;
+    }
 
     public void parse(Mappers.BaseItem base) {
         this.base = base;
@@ -67,9 +113,15 @@ public class Item {
         }
 
         switch (branch) {
-            case "enchantment": parseEnchant(); break;
-            case "base":        parseBase();    break;
-            case "default":     parseDefault(); break;
+            case enchantment:
+                parseEnchant();
+                break;
+            case base:
+                parseBase();
+                break;
+            case none:
+                parseDefault();
+                break;
         }
 
         // Form the unique database key
@@ -157,7 +209,7 @@ public class Item {
                     group = "fragment";
                 } else if (iconCategory.equals("scarabs")) {
                     group = "scarab";
-                } else if (base.getProperties() == null){
+                } else if (base.getProperties() == null) {
                     group = "fragment";
                 } else {
                     group = "map";
@@ -210,51 +262,6 @@ public class Item {
         }
     }
 
-    /**
-     * Removes any unnecessary fields from the item's icon
-     *
-     * @param icon An item's bloated URL
-     * @return Formatted icon URL
-     */
-    public static String formatIconURL(String icon) {
-        String[] splitURL = icon.split("\\?", 2);
-        String fullIcon = splitURL[0];
-
-        if (splitURL.length > 1) {
-            StringBuilder paramBuilder = new StringBuilder();
-
-            for (String param : splitURL[1].split("&")) {
-                String[] splitParam = param.split("=");
-
-                switch (splitParam[0]) {
-                    case "scale":
-                    case "w":
-                    case "h":
-                    case "mr": // shaped
-                    case "mn": // background
-                    case "mt": // tier
-                    case "relic":
-                        paramBuilder.append("&");
-                        paramBuilder.append(splitParam[0]);
-                        paramBuilder.append("=");
-                        paramBuilder.append(splitParam[1]);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            // If there are parameters that should be kept, add them to fullIcon
-            if (paramBuilder.length() > 0) {
-                // Replace the first "&" symbol with "?"
-                paramBuilder.setCharAt(0, '?');
-                fullIcon += paramBuilder.toString();
-            }
-        }
-
-        return fullIcon;
-    }
-
     //------------------------------------------------------------------------------------------------------------
     // Default parsing
     //------------------------------------------------------------------------------------------------------------
@@ -287,9 +294,15 @@ public class Item {
         ilvl = null;
 
         switch (category) {
-            case "map":         parseMaps();                break;
-            case "gem":         extractGemData();           break;
-            case "currency":    checkCurrencyBlacklist();   break;
+            case "map":
+                parseMaps();
+                break;
+            case "gem":
+                extractGemData();
+                break;
+            case "currency":
+                checkCurrencyBlacklist();
+                break;
             default:
                 if (frameType < 3) {
                     discard = true;
@@ -425,13 +438,20 @@ public class Item {
 
         // Filter out items that can't have 6 sockets
         switch (group) {
-            case "chest":       break;
-            case "staff":       break;
-            case "twosword":    break;
-            case "twomace":     break;
-            case "twoaxe":      break;
-            case "bow":         break;
-            default:            return;
+            case "chest":
+                break;
+            case "staff":
+                break;
+            case "twosword":
+                break;
+            case "twomace":
+                break;
+            case "twoaxe":
+                break;
+            case "bow":
+                break;
+            default:
+                return;
         }
 
         // This was an error somehow, somewhere
@@ -627,7 +647,7 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     private void parseBase() {
-        if (frameType == 2){
+        if (frameType == 2) {
             discard = true;
             return;
         }
@@ -669,11 +689,11 @@ public class Item {
      */
     private void flattenItemLevel() {
         if (shaper == null && elder == null) {
-            if         (ilvl  < 83) discard = true;
-            else                    ilvl = 84;
+            if (ilvl < 83) discard = true;
+            else ilvl = 84;
         } else {
-            if         (ilvl  < 82) discard = true;
-            else if    (ilvl  > 86) ilvl = 86;
+            if (ilvl < 82) discard = true;
+            else if (ilvl > 86) ilvl = 86;
         }
     }
 

@@ -119,16 +119,16 @@ public class ItemParser {
     private void branchItem() {
         // Branch if item is enchanted
         if (base.getEnchantMods() != null) {
-            items.add(new Item("enchantment"));
+            items.add(new Item(Branch.enchantment));
         }
 
         // Branch if item is a crafting base
         if (base.getFrameType() < 3 && base.getIlvl() >= 68) {
-            items.add(new Item(relationManager, "base"));
+            items.add(new Item(relationManager, Branch.base));
         }
 
         // Branch default
-        items.add(new Item("default"));
+        items.add(new Item(Branch.none));
     }
 
     //------------------------------------------------------------------------------------------------------------
