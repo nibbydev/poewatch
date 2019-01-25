@@ -118,7 +118,7 @@ public class WorkerManager extends Thread {
         statisticsManager.clkTimer(StatType.TIME_CALC_EXALT);
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
-            database.calc.countActiveAccounts(statisticsManager);
+            database.stats.countActiveAccounts(statisticsManager);
 
             statisticsManager.startTimer(StatType.TIME_ADD_HOURLY);
             database.history.addHourly();

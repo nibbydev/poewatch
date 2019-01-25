@@ -42,6 +42,7 @@ public class StatisticsManager {
             new Collector(StatType.TIME_CALC_CURRENT,       GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.TIME_RESET_COUNTERS,     GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.COUNT_DUPLICATE_JOB,     GroupType.SUM,      TimeFrame.M_60,    24),
+
             new Collector(StatType.APP_STARTUP,             GroupType.COUNT,    TimeFrame.M_60,    24),
             new Collector(StatType.APP_SHUTDOWN,            GroupType.COUNT,    TimeFrame.M_60,    24),
 

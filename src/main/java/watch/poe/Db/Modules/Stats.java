@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.Stat.Collector;
 import poe.Managers.Stat.StatType;
+import poe.Managers.StatisticsManager;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -148,6 +149,34 @@ public class Stats {
             return false;
         }
     }
+
+
+    public boolean countActiveAccounts(StatisticsManager statisticsManager) {
+        String query =  "select count(*) from account_accounts where seen > date_sub(now(), interval 1 hour)  ";
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                // Get first and only entry
+                if (resultSet.next()) {
+                    statisticsManager.addValue(StatType.COUNT_ACTIVE_ACCOUNTS, resultSet.getInt(1));
+                }
+            }
+
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+
+        return false;
+    }
+
 
     /**
      * Deletes old stat entries from database

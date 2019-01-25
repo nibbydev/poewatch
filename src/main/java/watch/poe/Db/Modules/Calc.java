@@ -3,12 +3,9 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.Stat.StatType;
-import poe.Managers.StatisticsManager;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class Calc {
     private static Logger logger = LoggerFactory.getLogger(Calc.class);
@@ -16,33 +13,6 @@ public class Calc {
 
     public Calc(Database database) {
         this.database = database;
-    }
-
-    public boolean countActiveAccounts(StatisticsManager statisticsManager) {
-        String query =  "select distinct count(*) from league_accounts " +
-                        "where updated > date_sub(now(), interval 1 hour) ";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return false;
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                // Get first and only entry
-                if (resultSet.next()) {
-                    statisticsManager.addValue(StatType.COUNT_ACTIVE_ACCOUNTS, resultSet.getInt(1));
-                }
-            }
-
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-
-        return false;
     }
 
     public ResultSet getEntryStream() {
