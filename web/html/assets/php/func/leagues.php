@@ -1,14 +1,11 @@
 <?php
-
 function getLeagues() {
   require_once "../details/pdo.php";
 
   $query = "
     SELECT name, display, start, end, active, upcoming, event
-    FROM data_leagues 
-    WHERE id > 2
+    FROM data_leagues
     ORDER BY id DESC
-    LIMIT 10
   ";
 
   $stmt = $pdo->query($query);
@@ -21,24 +18,51 @@ function getLeagues() {
   return $leagues;
 }
 
+function formatTimestamp($time) {
+  if (!$time) {
+    return "Unavailable";
+  }
+
+  return date("j M Y, H:i (\U\TC)", strtotime($time));
+}
+
 function formatLeagueData($leagues) {
-  $formatData = array();
+  $formatData = array(
+    "main" => array(),
+    "other" => array(),
+    "inactive" => array()
+  );
 
-  for ($i = 0; $i < sizeof($leagues); $i++) { 
-    $formatData[$i] = array();
+  foreach($leagues as $league) {
+    // Format payload
+    $payload = array(
+      "title"         => $league["display"] ? $league["display"] : $league["name"],
+      "startDisplay"  => formatTimestamp($league["start"]),
+      "endDisplay"    => formatTimestamp($league["end"]),
+      "start"         => $league["start"],
+      "end"           => $league["end"],
+      "upcoming"      => $league["upcoming"],
+      "cdTitle1"      => $league["upcoming"] ? "Starts in:" : "Elapsed:",
+      "cdTitle2"      => $league["upcoming"] ? "Ends in:" : "Remaining:",
+    );
 
-    if ($leagues[$i]["upcoming"]) {
-      $formatData[$i]["status"] = "<span class='badge badge-light ml-1'>Upcoming</span>";
-    } else if ($leagues[$i]["active"]) {
-      $formatData[$i]["status"] = "<span class='badge custom-badge-green ml-1'>Ongoing</span>";
+    // Format title colors
+    if ($league["active"]) {
+      $payload["title"] = "<span class='custom-text-green'>{$payload["title"]}</span>";
+    } else if ($league["upcoming"]) {
+      $payload["title"] = "<span class='subtext-0'>{$payload["title"]}</span>";
     } else {
-      $formatData[$i]["status"] = "<span class='badge custom-badge-gray ml-1'>Ended</span>";
+      $payload["title"] = "<span class='subtext-0'>{$payload["title"]}</span>";
     }
-  
-    $formatData[$i]["title"] = $leagues[$i]["display"] ? $leagues[$i]["display"] : $leagues[$i]["name"];
-    $formatData[$i]["start"] = $leagues[$i]["start"]   ? date("j M Y, H:i (\U\TC)", strtotime($leagues[$i]["start"])) : "Unavailable";
-    $formatData[$i]["end"]   = $leagues[$i]["end"]     ? date("j M Y, H:i (\U\TC)", strtotime($leagues[$i]["end"]))   : "Unavailable";
-    $formatData[$i]["wrap"]  = $leagues[$i]["active"] || $leagues[$i]["upcoming"] ? "col-md-6 col-12" : "col-xl-4 col-md-6 col-12";
+
+    // Sort to groups
+    if ($league["upcoming"]) {
+      $formatData["other"][] = $payload;
+    } else if ($league["active"]) {
+      $formatData["main"][] = $payload;
+    } else {
+      $formatData["inactive"][] = $payload;
+    }
   }
 
   return $formatData;
