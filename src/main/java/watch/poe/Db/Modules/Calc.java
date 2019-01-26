@@ -36,7 +36,9 @@ public class Calc {
                         "  select id from data_itemData where frame = 5 " +
                         ") as foo4 on le.id_d = foo4.id " +
                         "where le.stash_crc is not null " +
-                        "  and !(foo4.id is not null && le.id_price is not null) " +
+                        "  and !(foo4.id is not null && " +
+                        "    le.id_price is not null && " +
+                        "    le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1)) " +
                         "having price > 0 and price < 96000 " +
                         "order by le.id_l asc, le.id_d asc; ";
 
@@ -72,12 +74,14 @@ public class Calc {
             ) as foo4 on le.id_d = foo4.id
             -- if item is currently in a public stash tab
             where le.stash_crc is not null
-            -- if (is currency) and (is not in chaos), return FALSE, otherwise return TRUE.
-            -- This restrict currency price calculation to only use entries listed in chaos
-            -- to avoid circular dependencies. Eg exalted orbs are listed for divines and
-            -- divines are listed in exalted orbs, causing a circular effect which messes up
-            -- the prices.
-              and !(foo4.id is not null && le.id_price is not null)
+            -- if (is currency) and (is not in chaos) and (is not in exalted), return FALSE,
+            -- otherwise return TRUE. This restrict currency price calculation to only use
+            -- entries listed in chaos to avoid circular dependencies. Eg exalted orbs are
+            -- listed for divines and divines are listed in exalted orbs, causing a circular
+            -- effect which messes up the prices.
+              and !(foo4.id is not null &&
+                le.id_price is not null &&
+                le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1))
             -- Hard-filter out any entries that have ridiculous prices after being converted
             -- to chaos.
             having price > 0 and price < 96000
