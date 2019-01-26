@@ -1,6 +1,7 @@
 <?php 
 $PAGEDATA = array(
   "title" => "PoeWatch",
+  "pageHeader" => null,
   "description" => "A price statistics generation & collection page",
   "jsIncludes" => array(
     "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js",

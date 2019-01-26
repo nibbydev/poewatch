@@ -3,7 +3,8 @@
   require_once "assets/php/templates/body.php"; 
 
   $PAGEDATA["title"] = "Lab - PoeWatch";
-  $PAGEDATA["description"] = "Just the images from poelab.com";
+  $PAGEDATA["description"] = "Just the images from poelab";
+  $PAGEDATA["pageHeader"] = "Labyrinth layouts";
   $PAGEDATA["headerIncludes"][] = "<meta name='referrer' content='no-referrer'/>";
   $PAGEDATA["jsIncludes"][] = "lab.js";
 

@@ -2,6 +2,8 @@
   require_once "assets/php/pageData.php";
   require_once "assets/php/templates/body.php"; 
 
+  $PAGEDATA["pageHeader"] = "PoeWatch";
+
   include "assets/php/templates/header.php";
   include "assets/php/templates/navbar.php";
   include "assets/php/templates/priceNav.php";
@@ -9,9 +11,7 @@
 
 <?php genBodyHeader() ?>
   <div class="card custom-card">
-    <div class="card-header">
-      <h2 class="text-white">PoeWatch</h2>
-    </div>
+    <div class="card-header slim-card-edge"></div>
     <div class="card-body">
       <img src="assets/img/img2.png" class="float-right ml-3 img-fluid">
       <h5>Overview</h5>

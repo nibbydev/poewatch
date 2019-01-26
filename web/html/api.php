@@ -119,9 +119,6 @@
 ?>
 
 <?php genBodyHeader() ?>
-  <div class="col-12 d-flex justify-content-center">
-    <h1 class="display-4 mb-4 mx-auto"><?php echo $PAGEDATA["pageHeader"] ?></h1>
-  </div>
 
 <?php foreach ($APIcolumns as $APIcolumnSide => $APIcolumn) { ?>
   <div class="col-6 p-0 <?php echo $APIcolumnSide === "left" ? "pr-2" : "pl-2" ?>">

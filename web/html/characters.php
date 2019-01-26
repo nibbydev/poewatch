@@ -6,6 +6,7 @@
 
   $PAGEDATA["title"] = "Characters - PoeWatch";
   $PAGEDATA["description"] = "Find users based on character names, account names and more";
+  $PAGEDATA["pageHeader"] = "Character search";
 
   $PAGEDATA["page"] = array(
     "searchString" => isset($_GET["search"]) ? $_GET["search"] : null,
@@ -30,10 +31,7 @@
 ?>
   <div class="card custom-card w-100">
     <div class="card-header">
-      <h2 class="text-white">Characters</h2>
-      <div>
-        Explore <span class='custom-text-green'><?php echo number_format($PAGEDATA["page"]["totalAccs"]) ?></span> account names and <span class='custom-text-green'><?php echo number_format($PAGEDATA["page"]["totalChars"]) ?></span> character names collected from the stash API since <span class='custom-text-green'><?php echo FormatTimestamp("2018-07-14 00:00:00") ?></span>
-      </div>
+      <div>Explore <span class='custom-text-green'><?php echo number_format($PAGEDATA["page"]["totalAccs"]) ?></span> account names and <span class='custom-text-green'><?php echo number_format($PAGEDATA["page"]["totalChars"]) ?></span> character names collected from the stash API since <span class='custom-text-green'><?php echo FormatTimestamp("2018-07-14 00:00:00") ?></span></div>
       <div>Only characters that have listed something through the public stash API will appear here.</div>
     </div>
 

@@ -5,6 +5,8 @@
 
   $PAGEDATA["title"] = "Stats - PoeWatch";
   $PAGEDATA["description"] = "Statistics about the site";
+  $PAGEDATA["pageHeader"] = "Statistics";
+
 
   $PAGEDATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
   $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
@@ -100,9 +102,7 @@
 
 <?php genBodyHeader() ?>
   <div class="card custom-card w-100">
-    <div class="card-header">
-      <h2 class="text-white mb-3">Stats</h2>
-    </div>
+    <div class="card-header slim-card-edge"></div>
 
     <div class="card-body pagination-page" id="main">
       <div class="ct-chart" id="chart-"></div>
