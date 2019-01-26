@@ -239,15 +239,20 @@ public class Item {
             case "accessories":
                 category = "accessory";
                 break;
+
+            case "leaguestones":
+                category = "map";
+                group = "leaguestone";
+                break;
         }
 
         // Override for enchantments
-        if (base.getEnchantMods() != null && branch.equals("enchantment")) {
+        if (base.getEnchantMods() != null && branch.equals(Branch.enchantment)) {
             category = "enchantment";
         }
 
         // Override for item bases
-        if (branch.equals("base")) {
+        if (branch.equals(Branch.base)) {
             // Only collect bases for these categories
             if (!category.equals("accessory") &&
                     !category.equals("armour") &&
