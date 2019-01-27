@@ -13,7 +13,7 @@
   <div class="card custom-card">
     <div class="card-header slim-card-edge"></div>
     <div class="card-body">
-      <img src="assets/img/img2.png" class="float-right ml-3 img-fluid">
+      <img src="assets/img/img2.png" class="float-right img-fluid d-md-block d-none ml-3">
       <h5>Overview</h5>
       <p>PoeWatch is a Path of Exile statistics and price data collection page that's been in the works since 2017. It gathers data over time for various items (such as uniques, gems, currency, you name it) from public trade listings and finds the average prices. The site is actively in development and welcomes any feedback users may have. </p>
       <h5>The general idea</h5>
