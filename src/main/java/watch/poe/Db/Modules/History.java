@@ -55,8 +55,8 @@ public class History {
      */
     public boolean addDaily() {
         String query =  "INSERT INTO league_history_daily " +
-                        "  (id_l, id_d, mean, median, mode, min, max, exalted, total, daily) " +
-                        "SELECT id_l, id_d, mean, median, mode, min, max, exalted, total, daily " +
+                        "  (id_l, id_d, mean, median, mode, min, max, exalted, total, daily, current, accepted) " +
+                        "SELECT id_l, id_d, mean, median, mode, min, max, exalted, total, daily, current, accepted " +
                         "FROM league_items AS i " +
                         "JOIN data_leagues AS l ON i.id_l = l.id " +
                         "WHERE l.active = 1 ";
