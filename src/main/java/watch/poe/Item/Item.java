@@ -1,16 +1,12 @@
 package poe.Item;
 
-import poe.Item.Variant.ItemVariant;
-import poe.Item.Variant.VariantType;
-import poe.Item.Variant.Variants;
 import poe.Managers.RelationManager;
 
-import static poe.Item.Branch.*;
+import java.util.List;
 
 public class Item {
-    private static final ItemVariant[] variants = Variants.GetVariants();
     private static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
-    private RelationManager relationManager;
+    private static RelationManager relationManager;
     private Mappers.BaseItem base;
     private Branch branch;
     private Key key;
@@ -30,12 +26,6 @@ public class Item {
     //------------------------------------------------------------------------------------------------------------
 
     public Item(Branch branch) {
-        this.relationManager = null;
-        this.branch = branch;
-    }
-
-    public Item(RelationManager relationManager, Branch branch) {
-        this.relationManager = relationManager;
         this.branch = branch;
     }
 
@@ -275,13 +265,18 @@ public class Item {
      * Parses item as default
      */
     private void parseDefault() {
+        // Maps can be unidentified, corrupted, and any frame type
+        if (category.equals("map")) {
+            parseMaps();
+        }
+
         if (!identified) {
             discard = true;
             return;
         }
 
-        // TODO: allow magic/rare/unidentified maps
-        if (frameType == 1 || frameType == 2) {
+        // Don't allow any normal/magic/rare items
+        if (frameType == 0 || frameType == 1 || frameType == 2) {
             discard = true;
             return;
         }
@@ -298,21 +293,10 @@ public class Item {
 
         ilvl = null;
 
-        switch (category) {
-            case "map":
-                parseMaps();
-                break;
-            case "gem":
-                extractGemData();
-                break;
-            case "currency":
-                checkCurrencyBlacklist();
-                break;
-            default:
-                if (frameType < 3) {
-                    discard = true;
-                    return;
-                }
+        if (category.equals("gem")) {
+            extractGemData();
+        } else if (category.equals("currency")) {
+            discard = relationManager.isInCurrencyBlacklist(name);
         }
 
         if (discard) {
@@ -321,7 +305,9 @@ public class Item {
 
         extractStackSize();
         extractItemLinks();
-        checkItemVariant();
+
+        // If present, string variation, otherwise null
+        variation = relationManager.findVariant(this);
     }
 
     private void extractStackSize() {
@@ -371,8 +357,30 @@ public class Item {
      */
     private void parseMaps() {
         // "Superior Ashen Wood" = "Ashen Wood"
-        if (name.contains("Superior ")) {
+        if (name.startsWith("Superior ")) {
             name = name.replace("Superior ", "");
+        }
+
+        // Find name for unidentified unique maps
+        if (frameType >= 3 && !identified) {
+            typeLine = name;
+            name = relationManager.findUnidUniqueMapName(name, frameType);
+
+            if (name == null) {
+                discard = true;
+                return;
+            }
+        }
+
+        // Extract name from magic and rare maps
+        if (frameType == 1 || frameType == 2) {
+            name = relationManager.extractMapBaseName(name);
+
+            // Map was not in the list
+            if (name == null) {
+                discard = true;
+                return;
+            }
         }
 
         // Attempt to find map tier from properties
@@ -390,44 +398,15 @@ public class Item {
             }
         }
 
-        // Set frame to 0 for all non-unique
-        if (frameType < 3) frameType = 0;
-    }
-
-    /**
-     * Contains some basic blacklist entries for currency items
-     */
-    private void checkCurrencyBlacklist() {
-        switch (name) {
-            case "Chaos Orb":
-            case "Imprint":
-            case "Scroll Fragment":
-            case "Alteration Shard":
-            case "Binding Shard":
-            case "Horizon Shard":
-            case "Engineer's Shard":
-            case "Chaos Shard":
-            case "Regal Shard":
-            case "Alchemy Shard":
-            case "Transmutation Shard":
-            case "Bestiary Orb":
-            case "Necromancy Net":
-            case "Thaumaturgical Net":
-            case "Reinforced Steel Net":
-            case "Strong Steel Net":
-            case "Simple Steel Net":
-            case "Reinforced Iron Net":
-            case "Strong Iron Net":
-            case "Simple Iron Net":
-            case "Reinforced Rope Net":
-            case "Strong Rope Net":
-            case "Simple Rope Net":
-            case "Unshaping Orb":
-            case "Master Cartographer's Seal":
-            case "Journeyman Cartographer's Seal":
-            case "Apprentice Cartographer's Seal":
-                discard = true;
+        // Set frame to 0 for all non-uniques (and non-relics)
+        if (frameType < 3) {
+            frameType = 0;
         }
+
+        // Null corrupted state for all maps
+        corrupted = null;
+        // Set identified to true as we don't care if the map is identified or not
+        identified = true;
     }
 
     /**
@@ -480,39 +459,6 @@ public class Item {
 
         if (largestLink > 4) {
             links = largestLink;
-        }
-    }
-
-    /**
-     * Check if item has a variant
-     */
-    private void checkItemVariant() {
-        int matches;
-
-        for (ItemVariant itemVariant : variants) {
-            if (!name.equals(itemVariant.name)) {
-                continue;
-            }
-
-            for (VariantType variantType : itemVariant.variantTypes) {
-                // Go though all the item's explicit modifiers and the current variant's mods
-                matches = 0;
-                for (String variantMod : variantType.mods) {
-                    for (String itemMod : base.getExplicitMods()) {
-                        if (itemMod.contains(variantMod)) {
-                            // If one of the item's mods matches one of the variant's mods, increase the match counter
-                            matches++;
-                            break;
-                        }
-                    }
-                }
-
-                // If all the variant's mods were present in the item then this item will take this variant's variation
-                if (matches == variantType.mods.length) {
-                    this.variation = variantType.variation;
-                    return;
-                }
-            }
         }
     }
 
@@ -784,5 +730,13 @@ public class Item {
 
     public Integer getStack() {
         return stack;
+    }
+
+    public List<String> getExplicitMods() {
+        return base.getExplicitMods();
+    }
+
+    public static void setRelationManager(RelationManager relationManager) {
+        Item.relationManager = relationManager;
     }
 }

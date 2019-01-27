@@ -5,6 +5,7 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Item.Item;
 import poe.Managers.*;
 import poe.Item.ItemParser;
 import poe.Managers.IntervalManager;
@@ -71,9 +72,11 @@ public class Main {
                 return;
             }
 
+            ItemParser.setRelationManager(relations);
+            Item.setRelationManager(relations);
+
             accountManager = new AccountManager(database);
             workerManager = new WorkerManager(config, intervalManager, database, statisticsManager, leagueManager, relations, accountManager);
-            ItemParser.setRelationManager(relations);
 
             // Get all distinct stash ids that are in the db
             success = database.init.getStashIds(Worker.getDbStashes());

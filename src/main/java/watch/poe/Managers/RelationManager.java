@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Item;
 import poe.Item.Key;
-import poe.Managers.Relation.BaseItems;
-import poe.Managers.Relation.CategoryEntry;
-import poe.Managers.Relation.CurrencyAliases;
+import poe.Item.Variant.ItemVariant;
+import poe.Item.Variant.VariantType;
+import poe.Item.Variant.Variants;
+import poe.Managers.Relation.*;
 
 import java.util.*;
 
@@ -23,14 +24,13 @@ public class RelationManager {
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
     private final Map<String, CategoryEntry> categories = new HashMap<>();
 
-    private final Map<String, Set<String>> baseItems;
+    private final ItemVariant[] itemVariants = Variants.GetVariants();
+    private final Map<String, Set<String>> baseItems = BaseItems.GenBaseMap();
     private final Map<String, Integer> currencyAliases = new HashMap<>();
 
     public RelationManager(Database db) {
         this.logger = LoggerFactory.getLogger(RelationManager.class);
         this.database = db;
-
-        baseItems = BaseItems.GenBaseMap();
     }
 
     /**
@@ -248,6 +248,73 @@ public class RelationManager {
         }
 
         return null;
+    }
+
+    public String extractMapBaseName(String name) {
+        if (name == null) {
+            return null;
+        }
+
+        return Arrays.stream(BaseMaps.maps)
+                .filter(name::contains)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public boolean isInCurrencyBlacklist(String name) {
+        if (name == null) {
+            return false;
+        }
+
+        return Arrays.stream(CurrencyBlacklist.currency).anyMatch(name::equalsIgnoreCase);
+    }
+
+    public String findVariant(Item item) {
+        int matches;
+
+        ItemVariant itemVariant = Arrays.stream(itemVariants)
+                .filter(i -> i.name.equals(item.getName()))
+                .findFirst()
+                .orElse(null);
+
+        if (itemVariant == null) {
+            return null;
+        }
+
+        for (VariantType variantType : itemVariant.variantTypes) {
+            // Go though all the item's explicit modifiers and the current variant's mods
+            matches = 0;
+
+            for (String variantMod : variantType.mods) {
+                for (String itemMod : item.getExplicitMods()) {
+                    if (itemMod.contains(variantMod)) {
+                        // If one of the item's mods matches one of the variant's mods, increase the match counter
+                        matches++;
+                        break;
+                    }
+                }
+            }
+
+            // If all the variant's mods were present in the item then this item will take this variant's variation
+            if (matches == variantType.mods.length) {
+                return variantType.variation;
+            }
+        }
+
+        return null;
+    }
+
+    public String findUnidUniqueMapName(String type, int frame) {
+        BaseMaps.UniqueBaseMap uniqueBaseMap = Arrays.stream(BaseMaps.uniqueBaseMaps)
+                .filter(i -> i.frame == frame && i.type.equals(type))
+                .findFirst()
+                .orElse(null);
+
+        if (uniqueBaseMap == null) {
+            return null;
+        }
+
+        return uniqueBaseMap.name;
     }
 
     public Map<String, Integer> getCurrencyAliases() {
