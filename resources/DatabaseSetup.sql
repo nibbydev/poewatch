@@ -121,6 +121,8 @@ CREATE TABLE data_itemData (
     FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
     FOREIGN KEY (id_grp) REFERENCES data_groups     (id) ON DELETE CASCADE,
 
+    CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var),
+
     INDEX frame  (frame),
     INDEX name   (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
