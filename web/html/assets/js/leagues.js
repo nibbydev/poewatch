@@ -1,119 +1,98 @@
-$(".league-element").each(function() {
+$(".element-id").each(function() {
   addCountDownTimer(this);
 });
 
+function calcTime(timeString) {
+  if (!timeString) {
+    return {
+      text: "<span class='subtext-0'>Unavailable</span>",
+      distance: -1
+    };
+  }
+
+  const time = new Date(timeString);
+
+  const _second = 1000;
+  const _minute = _second * 60;
+  const _hour = _minute * 60;
+  const _day = _hour * 24;
+
+  var distance = Math.abs(time - new Date());
+  
+  var days     = Math.round(distance / _day);
+  var hours    = Math.round((distance % _day) / _hour);
+  var minutes  = Math.round((distance % _hour) / _minute);
+  var seconds  = Math.round((distance % _minute) / _second);
+  
+  let dDisplay, hDisplay, mDisplay, sDisplay;
+
+  if      (days === 0)  dDisplay = "<span class='subtext-1'>"                + days    + "d</span>";
+  else if (days === 1)  dDisplay = "<span class='custom-text-orange'>"       + days    + "d</span>";
+  else                  dDisplay = "<span class='subtext-0'>"                + days    + "d</span>";
+  
+  if (days === 0) {
+    if      (hours === 0) hDisplay = "<span class='subtext-1'>"              + hours   + "h</span>";
+    else if (hours === 1) hDisplay = "<span class='custom-text-orange'>"     + hours   + "h</span>";
+    else                  hDisplay = "<span class='custom-text-red'>"        + hours   + "h</span>";
+  } else                  hDisplay = "<span class='subtext-0'>"              + hours   + "h</span>";
+
+  if (days === 0 && hours === 0) {
+    if      (minutes ===  0) mDisplay = "<span class='subtext-1'>"           + minutes + "m</span>";
+    else if (minutes ===  1) mDisplay = "<span class='custom-text-orange'>"  + minutes + "m</span>";
+    else                     mDisplay = "<span class='custom-text-red'>"     + minutes + "m</span>";
+  } else                     mDisplay = "<span class='subtext-0'>"           + minutes + "m</span>";
+
+  if (days === 0 && hours === 0 && minutes === 0) {
+    if      (seconds ===  0) sDisplay = "<span class='subtext-1'>"           + seconds + "s</span>";
+    else if (seconds ===  1) sDisplay = "<span class='custom-text-orange'>"  + seconds + "s</span>";
+    else                     sDisplay = "<span class='custom-text-red'>"     + seconds + "s</span>";
+  } else                     sDisplay = "<span class='subtext-0'>"           + seconds + "s</span>";
+
+  return {
+    text: dDisplay + " " + hDisplay + " " + mDisplay + " " + sDisplay,
+    distance: distance
+  };
+}
+
+function calcPercentage(startString, endString) {
+  if (!startString || !endString) {
+    return 0;
+  }
+
+  const now = new Date();
+  const startTime = new Date(startString);
+  const endTime = new Date(endString);
+
+  return startTime < now ? (now - startTime) / (endTime - startTime) * 100 : 0;
+}
+
 function addCountDownTimer(element) {
-  let start = new Date($(".league-start", element).attr("value"));
-  let end = new Date($(".league-end", element).attr("value"));
-
-  let isUpcoming = $(".league-upcoming", element).attr("value") == 1;
-  let isActive = $(".league-active", element).attr("value") == 1;
-
-  var cdText = $(".league-countdown", element);
-  var cdBar = $(".progressbar-bar", element);
-
-  var _second = 1000;
-  var _minute = _second * 60;
-  var _hour = _minute * 60;
-  var _day = _hour * 24;
+  const isUpcoming = $(".element-data-upcoming", element).attr("value") == 1;
+  const start = $(".element-data-start", element).attr("value");
+  const end = $(".element-data-end", element).attr("value");
   var timer;
 
-  var label2 = isUpcoming ? "Starts in" : "Remaining";
-  var label1 = isUpcoming ? "Ends in"   : "Elapsed";
+  const cd1Text = $(".element-cd-id-1-text", element);
+  const cd2Text = $(".element-cd-id-2-text", element);
+  const cdBar = $(".element-cdbar-id", element);
 
   function showRemaining() {
-    var now = new Date();
-    var rDist = end - now;
-    var eDist = now - start;
-    var percentage = start < now ? (now - start) / (end - start) * 100 : 0;
+    var startData = calcTime(start);
+    var endData = calcTime(end);
 
-    if (isUpcoming) {
-      rDist = eDist = percentage = 0;
-      if (start) rDist = start - now;
-      if (end) eDist = end - now;
-    }
-
-    if (rDist < 1000) {
+    if (isUpcoming && start && startData.distance < 1000 || !isUpcoming && end && endData.distance < 1000) {
       clearInterval(timer);
-      cdText.remove();
       return;
     }
 
-    if (isNaN(eDist)) eDist = 0;
-    if (isNaN(rDist)) rDist = 0;
+    cd1Text.html(startData.text);
+    cd2Text.html(endData.text);
 
-    //
-    // Software gore
-    //
-
-    var eDays     = Math.ceil(eDist / _day);
-    var eHours    = Math.ceil((eDist % _day) / _hour);
-    var eMinutes  = Math.ceil((eDist % _hour) / _minute);
-    var eSeconds  = Math.ceil((eDist % _minute) / _second);
-
-    var rDays     = Math.floor(rDist / _day);
-    var rHours    = Math.floor((rDist % _day) / _hour);
-    var rMinutes  = Math.floor((rDist % _hour) / _minute);
-    var rSeconds  = Math.floor((rDist % _minute) / _second);
-    let rDd, rHd, rMd, rSd;
-
-    if      (rDays === 0)  rDd = "<span class='custom-text-gray'>"         + rDays    + "d</span>";
-    else if (rDays === 1)  rDd = "<span class='custom-text-orange'>"       + rDays    + "d</span>";
-    else                   rDd = "<span class='subtext-0'>"                + rDays    + "d</span>";
-    
-    if (rDays === 0) {
-      if      (rHours === 0) rHd = "<span class='custom-text-gray'>"       + rHours   + "h</span>";
-      else if (rHours === 1) rHd = "<span class='custom-text-orange'>"     + rHours   + "h</span>";
-      else                   rHd = "<span class='custom-text-red'>"        + rHours   + "h</span>";
-    } else                   rHd = "<span class='subtext-0'>"              + rHours   + "h</span>";
-
-    if (rDays === 0 && rHours === 0) {
-      if      (rMinutes ===  0) rMd = "<span class='custom-text-gray'>"    + rMinutes + "m</span>";
-      else if (rMinutes ===  1) rMd = "<span class='custom-text-orange'>"  + rMinutes + "m</span>";
-      else                      rMd = "<span class='custom-text-red'>"     + rMinutes + "m</span>";
-    } else                      rMd = "<span class='subtext-0'>"           + rMinutes + "m</span>";
-
-    if (rDays === 0 && rHours === 0 && rMinutes === 0) {
-      if      (rSeconds ===  0) rSd = "<span class='custom-text-gray'>"    + rSeconds + "s</span>";
-      else if (rSeconds ===  1) rSd = "<span class='custom-text-orange'>"  + rSeconds + "s</span>";
-      else                      rSd = "<span class='custom-text-red'>"     + rSeconds + "s</span>";
-    } else                      rSd = "<span class='subtext-0'>"           + rSeconds + "s</span>";
-
-    var template = `
-    <table>
-      <tr>
-        <td class='pr-2'>{{lb1}}:</td>
-        <td class='text-right pr-1 subtext-0'>{{e-d}}d</td>
-        <td class='text-right pr-1 subtext-0'>{{e-h}}h</td>
-        <td class='text-right pr-1 subtext-0'>{{e-m}}m</td>
-        <td class='text-right pr-1 subtext-0'>{{e-s}}s</td>
-      </tr>
-      <tr>
-        <td class='pr-2'>{{lb2}}:</td>
-        <td class='text-right pr-1'>{{r-d}}</td>
-        <td class='text-right pr-1'>{{r-h}}</td>
-        <td class='text-right pr-1'>{{r-m}}</td>
-        <td class='text-right pr-1'>{{r-s}}</td>
-      </tr>
-    </table>
-    `.trim()
-    .replace("{{e-d}}", eDays)
-    .replace("{{e-h}}", eHours)
-    .replace("{{e-m}}", eMinutes)
-    .replace("{{e-s}}", eSeconds)
-    .replace("{{r-d}}", rDd)
-    .replace("{{r-h}}", rHd)
-    .replace("{{r-m}}", rMd)
-    .replace("{{r-s}}", rSd)
-    .replace("{{lb1}}", label1)
-    .replace("{{lb2}}", label2);
-
-    cdText.html(template);
-    cdBar.css("width", percentage+"%");
+    if (!isUpcoming) {
+      cdBar.css("width", calcPercentage(start, end) + "%");
+    }
   }
 
-  if (isActive || isUpcoming) {
-    showRemaining();
-    timer = setInterval(showRemaining, 1000);
-  }
+  showRemaining();
+  timer = setInterval(showRemaining, 1000);
 }

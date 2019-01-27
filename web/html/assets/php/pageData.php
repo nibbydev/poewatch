@@ -1,6 +1,7 @@
 <?php 
 $PAGEDATA = array(
   "title" => "PoeWatch",
+  "pageHeader" => null,
   "description" => "A price statistics generation & collection page",
   "jsIncludes" => array(
     "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js",
@@ -12,6 +13,32 @@ $PAGEDATA = array(
   ),
   "headerIncludes" => array(),
   "footerIncludes" => array(),
+  "navs" => array(
+    array(
+      'name' => 'Front',
+      'href' => '/'
+    ),
+    array(
+      'name' => 'Prices',
+      'href' => '/prices'
+    ),
+    array(
+      'name' => 'API',
+      'href' => '/api'
+    ),
+    array(
+      'name' => 'Leagues',
+      'href' => '/leagues'
+    ),
+    array(
+      'name' => 'Characters',
+      'href' => '/characters'
+    ),
+    array(
+      'name' => 'About',
+      'href' => '/about'
+    )
+  ),
   "priceCategories" => array(
     array(
       "display" => "Accessories",

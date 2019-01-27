@@ -69,19 +69,27 @@ CREATE TABLE data_changeId (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure data_timers
+-- Table structure data_statistics
 --
 
-CREATE TABLE data_timers (
-    `key`   VARCHAR(32)  NOT NULL,
-    type    TINYINT(1)   UNSIGNED DEFAULT NULL,
-    time    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    delay   BIGINT       UNSIGNED NOT NULL,
+CREATE TABLE data_statistics (
+    statType  VARCHAR(32)  NOT NULL,
+    time      TIMESTAMP    NOT NULL,
+    value     INT          DEFAULT NULL,
 
-    CONSTRAINT pk PRIMARY KEY (`key`, time),
+    INDEX statType (statType),
+    INDEX time (time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-    INDEX `key` (`key`),
-    INDEX time  (time)
+--
+-- Table structure data_statisticsTemp
+--
+
+CREATE TABLE data_statistics_tmp (
+    statType    VARCHAR(32)  NOT NULL PRIMARY KEY,
+    created     TIMESTAMP    NOT NULL,
+    sum         BIGINT       DEFAULT NULL,
+    count       INT          NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -99,6 +107,8 @@ CREATE TABLE data_itemData (
     name       VARCHAR(128)  NOT NULL,
     type       VARCHAR(64)   DEFAULT NULL,
     frame      TINYINT(1)    NOT NULL,
+    found      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stack      SMALLINT      DEFAULT NULL,
     tier       TINYINT(1)    UNSIGNED DEFAULT NULL,
     lvl        TINYINT(1)    UNSIGNED DEFAULT NULL,
     quality    TINYINT(1)    UNSIGNED DEFAULT NULL,
@@ -110,6 +120,8 @@ CREATE TABLE data_itemData (
 
     FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
     FOREIGN KEY (id_grp) REFERENCES data_groups     (id) ON DELETE CASCADE,
+
+    CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var),
 
     INDEX frame  (frame),
     INDEX name   (name)
@@ -136,16 +148,31 @@ CREATE TABLE league_items (
     total    INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     daily    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     inc      INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    current  INT(8)         UNSIGNED NOT NULL DEFAULT 0,
+    accepted INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     spark    VARCHAR(128)   DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
-    INDEX volatile (volatile),
     INDEX total    (total),
     INDEX median   (median),
     INDEX inc      (inc)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure league_accounts
+--
+
+CREATE TABLE league_accounts (
+    account_crc  INT            UNSIGNED PRIMARY KEY,
+    updates      INT            UNSIGNED NOT NULL DEFAULT 1,
+
+    discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+
+    INDEX updated (updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -153,21 +180,30 @@ CREATE TABLE league_items (
 --
 
 CREATE TABLE league_entries (
-    id_l       SMALLINT       UNSIGNED NOT NULL,
-    id_d       INT            UNSIGNED NOT NULL,
-    accCrc     INT            UNSIGNED NOT NULL,
-    itmCrc     INT            UNSIGNED NOT NULL,
-    time       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    outlier    BIT(1)         NOT NULL DEFAULT 0,
-    price      DECIMAL(14,8)  UNSIGNED NOT NULL,
-    listings   INT            UNSIGNED NOT NULL DEFAULT 1,
+    id_l         SMALLINT       UNSIGNED NOT NULL,
+    id_d         INT            UNSIGNED NOT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES  data_leagues (id)   ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES  league_items (id_d) ON DELETE CASCADE,
+    account_crc  INT            UNSIGNED NOT NULL,
+    stash_crc    INT            UNSIGNED DEFAULT NULL,
+    item_crc     INT            UNSIGNED NOT NULL,
 
-    CONSTRAINT pk PRIMARY KEY (id_l, id_d, accCrc, itmCrc),
-    INDEX outlier_time (outlier, `time`),
-    INDEX compound_id (id_l, id_d)
+    discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
+
+    id_price     INT            UNSIGNED DEFAULT NULL,
+    price        DECIMAL(14,8)  UNSIGNED NOT NULL,
+
+    FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    FOREIGN KEY (account_crc) REFERENCES league_accounts (account_crc) ON DELETE CASCADE,
+    FOREIGN KEY (id_price) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
+
+    INDEX id_l_d (id_l, id_d),
+    INDEX discovered (discovered),
+    INDEX stash_crc (stash_crc),
+    INDEX updated (updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -178,14 +214,16 @@ CREATE TABLE league_history_daily (
     id_l     SMALLINT       UNSIGNED NOT NULL,
     id_d     INT            UNSIGNED NOT NULL,
     time     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    mean     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    median   DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    mode     DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    min      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    max      DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
-    exalted  DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
-    total    INT(16)        UNSIGNED DEFAULT NULL,
-    daily    INT(8)         UNSIGNED DEFAULT NULL,
+    mean     DECIMAL(14,8)  UNSIGNED NOT NULL,
+    median   DECIMAL(14,8)  UNSIGNED NOT NULL,
+    mode     DECIMAL(14,8)  UNSIGNED NOT NULL,
+    min      DECIMAL(14,8)  UNSIGNED NOT NULL,
+    max      DECIMAL(14,8)  UNSIGNED NOT NULL,
+    exalted  DECIMAL(14,8)  UNSIGNED NOT NULL,
+    total    INT(16)        UNSIGNED NOT NULL,
+    daily    INT(8)         UNSIGNED NOT NULL,
+    current  INT(8)         UNSIGNED NOT NULL,
+    accepted INT(8)         UNSIGNED NOT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
@@ -222,7 +260,7 @@ CREATE TABLE account_accounts (
     id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name   VARCHAR(32)  NOT NULL UNIQUE,
     found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX seen (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -235,7 +273,7 @@ CREATE TABLE account_characters (
     id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name   VARCHAR(32)  NOT NULL UNIQUE,
     found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX seen (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -250,7 +288,7 @@ CREATE TABLE account_relations (
     id_a   BIGINT     UNSIGNED NOT NULL,
     id_c   BIGINT     UNSIGNED NOT NULL,
     found  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues       (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_a) REFERENCES account_accounts   (id) ON DELETE RESTRICT,
@@ -289,9 +327,9 @@ CREATE TABLE web_feedback (
     ip        VARCHAR(15)   NOT NULL,
     contact   VARCHAR(128)  NOT NULL,
     message   TEXT          NOT NULL,
-    
+
     INDEX ip      (ip),
-    INDEX time    (time),
+    INDEX `time`  (`time`),
     INDEX contact (contact)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -377,7 +415,6 @@ VALUES
     (4,     'fossil',     'Fossils'),
     (4,     'resonator',  'Resonators'),
     (4,     'vial',       'Vials'),
-    (4,     'net',        'Nets'),
     (5,     'boots',      'Boots'),
     (5,     'gloves',     'Gloves'),
     (5,     'helmet',     'Helmets'),
@@ -409,8 +446,8 @@ VALUES
     (12,    'helmet',     'Helmets'),
     (12,    'chest',      'Body Armour'),
     (12,    'gloves',     'Gloves'),
-    (12,    'boots',      'Boots');
-    (12,    'onemace,'	  '1H Maces'),
+    (12,    'boots',      'Boots'),
+    (12,    'onemace',	  '1H Maces'),
     (12,    'sceptre',	  'Sceptres'),
     (12,    'bow',	      'Bows'),
     (12,    'wand',	      'Wands'),

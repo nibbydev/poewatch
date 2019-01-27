@@ -6,6 +6,7 @@
 
   $PAGEDATA["title"] = "About - PoeWatch";
   $PAGEDATA["description"] = "Information about the site";
+  $PAGEDATA["pageHeader"] = "About";
   $postStatus = processPOST($pdo);
 
   include "assets/php/templates/header.php";
@@ -16,8 +17,6 @@
 <?php genBodyHeader() ?>
   <div class="card custom-card w-100">
     <div class="card-header">
-      <h2 class="text-white mb-3">About</h2>
-
       <ul class="nav nav-tabs card-header-tabs">
         <li class="nav-item">
           <button class="nav-link pagination-btn cursor-pointer active" value='faq'>FAQ</button>

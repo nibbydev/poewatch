@@ -15,8 +15,8 @@ for (let i = 0; i < labs.length; i++) {
   
   img.attr("src", url_template
     .replace(/{{yyyy}}/g, current.getFullYear())
-    .replace(/{{mm}}/g,   current.getMonth() + 1)
-    .replace(/{{dd}}/g,   current.getDate())
+    .replace(/{{mm}}/g,   (current.getMonth() + 1 <= 9 ? "0" : "") + (current.getMonth() + 1))
+    .replace(/{{dd}}/g,   (current.getDate() <= 9 ? "0" : "") + current.getDate())
     .replace(/{{lab}}/g,  labs[i])
   );
 
@@ -35,8 +35,8 @@ for (let i = 0; i < labs.length; i++) {
 
     event.target.src = url_template
       .replace(/{{yyyy}}/g, previous.getFullYear())
-      .replace(/{{mm}}/g,   previous.getMonth() + 1)
-      .replace(/{{dd}}/g,   previous.getDate())
+      .replace(/{{mm}}/g,   (previous.getMonth() + 1 <= 9 ? "0" : "") + (previous.getMonth() + 1))
+      .replace(/{{dd}}/g,   (previous.getDate() <= 9 ? "0" : "") + previous.getDate())
       .replace(/{{lab}}/g,  labs[i]);
     
     console.log("Trying: " + event.target.src);

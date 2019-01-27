@@ -427,3 +427,43 @@ pre {
 .pw-hover-light:hover {background-color: rgba(255, 255, 255, 0.2) }
 .pw-hover-dark:hover  {background-color: rgba(0, 0, 0, 0.2) }
 
+
+/*------------------------------------------------------------------------------------------------------------
+// unused
+//----------------------------------------------------------------------------------------------------------*/
+
+.pw-callout {
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-width: .25rem;
+  border-radius: .25rem;
+}
+
+.pw-callout a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pw-callout p:last-child {
+  margin-bottom: 0;
+}
+
+.pw-callout+.pw-callout {
+  margin-top: -5px;
+}
+
+.pw-callout .api-data-table {
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+  margin-bottom: -1.25rem;
+
+  padding-left: .5rem;
+  padding-right: .5rem;
+  padding-bottom: .4rem;
+
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}

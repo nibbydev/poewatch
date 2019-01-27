@@ -4,13 +4,13 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.db.Database;
-import poe.manager.account.AccountManager;
-import poe.manager.entry.EntryManager;
-import poe.manager.entry.RawEntry;
-import poe.manager.league.LeagueManager;
-import poe.manager.relation.RelationManager;
-import poe.manager.worker.WorkerManager;
+import poe.Db.Database;
+import poe.Item.Item;
+import poe.Managers.*;
+import poe.Item.ItemParser;
+import poe.Managers.IntervalManager;
+import poe.Worker.Worker;
+import poe.Managers.Stat.StatType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static StatisticsManager statisticsManager;
     private static AccountManager accountManager;
     private static WorkerManager workerManager;
-    private static EntryManager entryManager;
     private static Database database;
-    private static Logger logger = LoggerFactory.getLogger(Main.class);
     private static Config config;
 
     /**
@@ -34,38 +34,62 @@ public class Main {
     public static void main(String[] args) {
         boolean success;
 
+        logger.info("Starting PoeWatch");
+
         try {
+            IntervalManager intervalManager = new IntervalManager();
+
             // Load config
             config = ConfigFactory.load("config");
-            RawEntry.setPrecision(config.getInt("precision.precision"));
 
             // Initialize database connector
             database = new Database(config);
             success = database.connect();
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not connect to database");
+                return;
+            }
+
+            statisticsManager = new StatisticsManager(database);
+            statisticsManager.addValue(StatType.APP_STARTUP, null);
+
+            // Set static DB accessor in honour of spaghetti code
+            PriceManager.setDatabase(database);
 
             // Init league manager
             LeagueManager leagueManager = new LeagueManager(database, config);
             success = leagueManager.cycle();
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not get a list of leagues");
+                return;
+            }
 
             // Get category, item and currency data
             RelationManager relations = new RelationManager(database);
             success = relations.init();
-            if (!success) return;
+            if (!success) {
+                logger.error("Could not get relations");
+                return;
+            }
+
+            ItemParser.setRelationManager(relations);
+            Item.setRelationManager(relations);
 
             accountManager = new AccountManager(database);
-            entryManager = new EntryManager(database, leagueManager, accountManager, relations, config);
-            workerManager = new WorkerManager(entryManager, database, config);
+            workerManager = new WorkerManager(config, intervalManager, database, statisticsManager, leagueManager, relations, accountManager);
 
-            entryManager.setWorkerManager(workerManager);
+            // Get all distinct stash ids that are in the db
+            success = database.init.getStashIds(Worker.getDbStashes());
+            if (!success) {
+                logger.error("Could not get active stash IDs");
+                return;
+            }
 
             // Parse CLI parameters
             success = parseCommandParameters(args);
             if (!success) return;
 
             // Start controllers
-            entryManager.start();
             accountManager.start();
             workerManager.start();
 
@@ -74,7 +98,12 @@ public class Main {
         } finally {
             if (accountManager != null) accountManager.stopController();
             if (workerManager != null) workerManager.stopController();
-            if (entryManager != null) entryManager.stopController();
+
+            if (statisticsManager != null) {
+                statisticsManager.addValue(StatType.APP_SHUTDOWN, null);
+                statisticsManager.upload();
+            }
+
             if (database != null) database.disconnect();
         }
     }
