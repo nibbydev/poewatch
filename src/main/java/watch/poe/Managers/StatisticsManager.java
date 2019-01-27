@@ -28,6 +28,7 @@ public class StatisticsManager {
             new Collector(StatType.TIME_RESET_STASHES,      GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.TIME_UPLOAD_ENTRIES,     GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.TIME_UPLOAD_USERNAMES,   GroupType.AVG,      TimeFrame.M_1,     60),
+            new Collector(StatType.COUNT_REPLY_SIZE,        GroupType.AVG,      TimeFrame.M_1,     60),
 
             new Collector(StatType.TIME_CYCLE_LEAGUES,      GroupType.AVG,      TimeFrame.M_10,    10),
 

@@ -129,7 +129,7 @@ public class Worker extends Thread {
         byte[] byteBuffer = new byte[config.getInt("worker.bufferSize")];
         boolean regexLock = true;
         InputStream stream = null;
-        int byteCount;
+        int byteCount, totalByteCount = 0;
 
         // Sleep for x milliseconds
         while (System.currentTimeMillis() - Worker.lastPullTime < config.getInt("worker.downloadDelay")) {
@@ -156,6 +156,8 @@ public class Worker extends Thread {
             while ((byteCount = stream.read(byteBuffer, 0, config.getInt("worker.bufferSize"))) != -1) {
                 // Check if run flag is lowered
                 if (!flagLocalRun) return null;
+
+                totalByteCount += byteCount;
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
                 if (byteCount != config.getInt("worker.bufferSize")) {
@@ -209,6 +211,7 @@ public class Worker extends Thread {
             }
 
             statisticsManager.clkTimer(StatType.TIME_REPLY_DOWNLOAD);
+            statisticsManager.addValue(StatType.COUNT_REPLY_SIZE, totalByteCount / 1000);
         }
 
         // Return the downloaded mess of a JSON string

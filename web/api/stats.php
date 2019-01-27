@@ -40,6 +40,7 @@ header("Content-Type: application/json");
 
 $types = array(
   "m" => array(
+    "COUNT_REPLY_SIZE",
     "TIME_CYCLE_TOTAL",
     "TIME_CALC_PRICES",
     "TIME_UPDATE_COUNTERS",

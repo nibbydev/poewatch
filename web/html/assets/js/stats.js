@@ -42,6 +42,20 @@ function formatTime(time) {
 }
 
 function parseStats(json) {
+  var labelFreq;
+
+  switch (TYPE) {
+    case "m":
+      labelFreq = 5;
+      break;
+    case "0":
+      labelFreq = 24;
+      break;
+    default:
+      labelFreq = 1;
+      break;
+  }
+
   var chartOptions = {
     height: 250,
     showPoint: true,
@@ -52,7 +66,7 @@ function parseStats(json) {
       showGrid: true,
       showLabel: true,
       labelInterpolationFnc: function skipLabels(value, index) {
-        return index % (TYPE === "m" ? 5 : 1) === 0 ? value : null;
+        return index % labelFreq === 0 ? value : null;
       }
     },
     fullWidth: true,
