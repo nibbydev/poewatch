@@ -147,7 +147,7 @@ public class Upload {
                 "set active = 0 " +
                 "where active = 1 " +
                 "  and end is not null " +
-                "  and end < now()"
+                "  and STR_TO_DATE(end, '%Y-%m-%dT%H:%i:%sZ') < now()"
         };
 
         return database.executeUpdateQueries(queries);
