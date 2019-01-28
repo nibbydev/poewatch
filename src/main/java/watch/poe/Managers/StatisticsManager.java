@@ -30,14 +30,13 @@ public class StatisticsManager {
             new Collector(StatType.TIME_UPLOAD_USERNAMES,   GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.COUNT_REPLY_SIZE,        GroupType.AVG,      TimeFrame.M_1,     60),
 
-            new Collector(StatType.TIME_CYCLE_LEAGUES,      GroupType.AVG,      TimeFrame.M_10,    10),
-
             new Collector(StatType.COUNT_API_CALLS,         GroupType.COUNT,    TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_TOTAL_STASHES,     GroupType.SUM,      TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_TOTAL_ITEMS,       GroupType.SUM,      TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_ACCEPTED_ITEMS,    GroupType.SUM,      TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_ACTIVE_ACCOUNTS,   GroupType.SUM,      TimeFrame.M_60,    null),
 
+            new Collector(StatType.TIME_CYCLE_LEAGUES,      GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.TIME_ADD_HOURLY,         GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.TIME_CALC_DAILY,         GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.TIME_CALC_CURRENT,       GroupType.AVG,      TimeFrame.M_60,    24),

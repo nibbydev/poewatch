@@ -60,7 +60,7 @@ public class Main {
             LeagueManager leagueManager = new LeagueManager(database, config);
             success = leagueManager.cycle();
             if (!success) {
-                logger.error("Could not get a list of leagues");
+                logger.error("Could not get leagues");
                 return;
             }
 

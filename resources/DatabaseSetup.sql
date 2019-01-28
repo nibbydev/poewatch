@@ -361,7 +361,9 @@ VALUES
     (15, 0, 1, 'Incursion Event HC (IRE002)',   'HC Incursion Event'),
     (16, 0, 0, 'Incursion Event (IRE001)',      'Incursion Event'   ),
     (17, 0, 1, 'Hardcore Delve',                'HC Delve'          ),
-    (18, 0, 0, 'Delve',                         'Delve'             );
+    (18, 0, 0, 'Delve',                         'Delve'             ),
+    (19, 0, 1, 'Hardcore Betrayal',             'HC Betrayal'       ),
+    (20, 0, 0, 'Betrayal',                      'Betrayal'          );
 
 --
 -- Base value for data_changeId

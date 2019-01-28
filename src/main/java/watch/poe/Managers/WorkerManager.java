@@ -147,17 +147,14 @@ public class WorkerManager extends Thread {
             statisticsManager.startTimer(StatType.TIME_RESET_COUNTERS);
             database.flag.resetCounters();
             statisticsManager.clkTimer(StatType.TIME_RESET_COUNTERS);
-        }
 
-        // End cycle timer
-        statisticsManager.clkTimer(StatType.TIME_CYCLE_TOTAL);
-
-        // Check league API
-        if (intervalManager.isBool(TimeFrame.M_10)) {
             statisticsManager.startTimer(StatType.TIME_CYCLE_LEAGUES);
             leagueManager.cycle();
             statisticsManager.clkTimer(StatType.TIME_CYCLE_LEAGUES);
         }
+
+        // End cycle timer
+        statisticsManager.clkTimer(StatType.TIME_CYCLE_TOTAL);
 
         // Check if there are matching account name changes
         if (intervalManager.isBool(TimeFrame.H_24)) {

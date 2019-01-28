@@ -4,10 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Key;
-import poe.Managers.League.LeagueEntry;
+import poe.Managers.League.League;
 import poe.Managers.Relation.CategoryEntry;
-import poe.Managers.Stat.Collector;
-import poe.Managers.Stat.StatType;
 
 import java.sql.*;
 import java.util.*;
@@ -26,7 +24,7 @@ public class Init {
      * @param leagueEntries List that will contain LeagueEntry entries
      * @return True on success
      */
-    public boolean getLeagues(List<LeagueEntry> leagueEntries) {
+    public boolean getLeagues(List<League> leagueEntries) {
         String query = "SELECT * FROM data_leagues WHERE active = 1; ";
 
         logger.info("Getting leagues from database");
@@ -43,7 +41,7 @@ public class Init {
                 leagueEntries.clear();
 
                 while (resultSet.next()) {
-                    leagueEntries.add(new LeagueEntry(resultSet));
+                    leagueEntries.add(new League(resultSet));
                 }
             }
 
