@@ -270,17 +270,17 @@ public class Item {
         // Maps can be unidentified, corrupted, and any frame type
         if (category.equals("map")) {
             parseMaps();
-        }
+        } else {
+            if (!identified) {
+                discard = true;
+                return;
+            }
 
-        if (!identified) {
-            discard = true;
-            return;
-        }
-
-        // Don't allow any normal/magic/rare items
-        if (frameType == 0 || frameType == 1 || frameType == 2) {
-            discard = true;
-            return;
+            // Don't allow any normal/magic/rare items
+            if (frameType == 0 || frameType == 1 || frameType == 2) {
+                discard = true;
+                return;
+            }
         }
 
         // Some corrupted relics do not turn into rares and retain their relic frametypes
