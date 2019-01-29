@@ -23,14 +23,15 @@ public class Upload {
     }
 
     public boolean uploadEntries(Set<RawItemEntry> set) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, id_price, price) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  updates = IF(price = VALUES(price), updates, updates + 1)," +
                         "  updated = IF(price = VALUES(price), updated, now())," +
+                        "  stash_crc = VALUES(stash_crc), " +
+                        "  stack = VALUES(stack), " +
                         "  price = VALUES(price), " +
-                        "  id_price = VALUES(id_price), " +
-                        "  stash_crc = VALUES(stash_crc); ";
+                        "  id_price = VALUES(id_price); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -54,11 +55,16 @@ public class Upload {
                     statement.setLong(4, raw.stash_crc);
                     statement.setLong(5, raw.item_crc);
 
-                    if (raw.id_price == null) {
+                    if (raw.stackSize == null) {
                         statement.setNull(6, 0);
-                    } else statement.setInt(6, raw.id_price);
+                    } else statement.setInt(6, raw.stackSize);
 
                     statement.setString(7, priceStr);
+
+                    if (raw.id_price == null) {
+                        statement.setNull(8, 0);
+                    } else statement.setInt(8, raw.id_price);
+
                     statement.addBatch();
                 }
 

@@ -153,9 +153,9 @@ public class Index {
                 statement.setString(4, key.getTypeLine());
                 statement.setInt(5, key.getFrameType());
 
-                if (item.getStack() == null) {
+                if (item.getMaxStackSize() == null) {
                     statement.setNull(6, 0);
-                } else statement.setInt(6, item.getStack());
+                } else statement.setInt(6, item.getMaxStackSize());
 
                 if (key.getTier() == null) {
                     statement.setNull(7, 0);

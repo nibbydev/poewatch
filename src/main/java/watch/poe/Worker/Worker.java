@@ -285,7 +285,7 @@ public class Worker extends Thread {
                     }
 
                     RawItemEntry entry = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc,
-                            itemParser.getIdPrice(), itemParser.getPrice());
+                            itemParser.getIdPrice(), itemParser.getPrice(), item.getStackSize());
                     items.add(entry);
 
                     // Set flag to indicate stash contained at least 1 valid item

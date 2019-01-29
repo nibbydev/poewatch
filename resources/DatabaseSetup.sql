@@ -191,8 +191,9 @@ CREATE TABLE league_entries (
     updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
-    id_price     INT            UNSIGNED DEFAULT NULL,
+    stack        SMALLINT       UNSIGNED DEFAULT NULL,
     price        DECIMAL(14,8)  UNSIGNED NOT NULL,
+    id_price     INT            UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,

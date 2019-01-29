@@ -177,6 +177,10 @@ public class Mappers {
             return stackSize != null;
         }
 
+        public Integer getStackSize() {
+            return stackSize;
+        }
+
         /**
          * Special variable override for when item is chaos
          */

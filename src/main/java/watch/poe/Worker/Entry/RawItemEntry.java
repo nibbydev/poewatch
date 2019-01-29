@@ -4,9 +4,9 @@ public class RawItemEntry {
     public int id_l, id_d;
     public long account_crc, stash_crc, item_crc;
     public double price;
-    public Integer id_price;
+    public Integer id_price, stackSize;
 
-    public RawItemEntry(int id_l, int id_d, long account_crc, long stash_crc, long item_crc, Integer id_price, double price) {
+    public RawItemEntry(int id_l, int id_d, long account_crc, long stash_crc, long item_crc, Integer id_price, double price, Integer stackSize) {
         this.id_l = id_l;
         this.id_d = id_d;
         this.id_price = id_price;
@@ -15,6 +15,7 @@ public class RawItemEntry {
         this.stash_crc = stash_crc;
         this.item_crc = item_crc;
 
+        this.stackSize = stackSize;
         this.price = price;
     }
 

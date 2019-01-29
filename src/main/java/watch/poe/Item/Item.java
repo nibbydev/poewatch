@@ -13,7 +13,8 @@ public class Item {
 
     private boolean discard, doNotIndex;
     private String category, group, variation;
-    private Integer links, level, quality, tier, stack;
+    private Integer links, level, quality, tier;
+    private Integer stackSize, maxStackSize;
 
     // Overrides
     private boolean identified;
@@ -92,6 +93,7 @@ public class Item {
         id = base.getId();
         name = base.getName();
         typeLine = base.getTypeLine();
+        stackSize = base.getStackSize();
 
         // Formats some data for better parsing
         fixBaseData();
@@ -345,9 +347,9 @@ public class Item {
 
         // parse as int
         try {
-            stack = Integer.parseUnsignedInt(stackSizeString.substring(index + 1));
+            maxStackSize = Integer.parseUnsignedInt(stackSizeString.substring(index + 1));
         } catch (NumberFormatException ex) {
-            stack = null;
+            maxStackSize = null;
         }
     }
 
@@ -728,8 +730,8 @@ public class Item {
         return elder;
     }
 
-    public Integer getStack() {
-        return stack;
+    public Integer getMaxStackSize() {
+        return maxStackSize;
     }
 
     public List<String> getExplicitMods() {
@@ -738,5 +740,9 @@ public class Item {
 
     public static void setRelationManager(RelationManager relationManager) {
         Item.relationManager = relationManager;
+    }
+
+    public Integer getStackSize() {
+        return stackSize;
     }
 }
