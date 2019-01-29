@@ -41,6 +41,9 @@ public class LeagueManager {
         if (success) {
             // Remove any SSF leagues from the list
             baseLeagues.removeIf(i -> Arrays.stream(i.getRules()).anyMatch(j -> j.getName().equals("Solo")));
+            // Reverse list of [HC, standard, HC, standard] to [standard, HC, standard, HC] to match database's
+            // ordering
+            Collections.reverse(baseLeagues);
             database.upload.updateLeagues(baseLeagues);
         }
 
