@@ -104,6 +104,7 @@ CREATE TABLE data_itemData (
     id         INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     id_cat     INT           UNSIGNED NOT NULL,
     id_grp     INT           UNSIGNED DEFAULT NULL,
+    reindex    BIT(1)        NOT NULL DEFAULT 0,
     name       VARCHAR(128)  NOT NULL,
     type       VARCHAR(64)   DEFAULT NULL,
     frame      TINYINT(1)    NOT NULL,
@@ -123,8 +124,9 @@ CREATE TABLE data_itemData (
 
     CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var),
 
-    INDEX frame  (frame),
-    INDEX name   (name)
+    INDEX reindex (reindex),
+    INDEX frame   (frame),
+    INDEX name    (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -188,7 +190,7 @@ CREATE TABLE league_entries (
     item_crc     INT            UNSIGNED NOT NULL,
 
     discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
-    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    updated      TIMESTAMP      NOT NULL DEFAULT NOW(),
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
     stack        SMALLINT       UNSIGNED DEFAULT NULL,

@@ -196,4 +196,70 @@ public class Index {
             return null;
         }
     }
+
+    public boolean reindexItemData(int id_cat, int id_grp, int id_d, Item item) {
+        String query =  "update data_itemData set " +
+                        "  id_cat = ?, id_grp = ?, name = ?, type = ?, reindex = 0, " +
+                        "  frame = ?, stack = ?, tier = ?, lvl = ?, quality = ?," +
+                        "  corrupted = ?, links = ?, ilvl = ?, var = ?, icon = ? " +
+                        "where id = ? " +
+                        "limit 1 ";
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
+
+            Key key = item.getKey();
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                statement.setInt(1, id_cat);
+                statement.setInt(2, id_grp);
+                statement.setString(3, key.getName());
+                statement.setString(4, item.getTypeLine());
+                statement.setInt(5, key.getFrameType());
+
+                if (item.getMaxStackSize() == null) {
+                    statement.setNull(6, 0);
+                } else statement.setInt(6, item.getMaxStackSize());
+
+                if (key.getTier() == null) {
+                    statement.setNull(7, 0);
+                } else statement.setInt(7, key.getTier());
+
+                if (key.getLevel() == null) {
+                    statement.setNull(8, 0);
+                } else statement.setInt(8, key.getLevel());
+
+                if (key.getQuality() == null) {
+                    statement.setNull(9, 0);
+                } else statement.setInt(9, key.getQuality());
+
+                if (key.getCorrupted() == null) {
+                    statement.setNull(10, 0);
+                } else statement.setInt(10, key.getCorrupted());
+
+                if (key.getLinks() == null) {
+                    statement.setNull(11, 0);
+                } else statement.setInt(11, key.getLinks());
+
+                if (key.getiLvl() == null) {
+                    statement.setNull(12, 0);
+                } else statement.setInt(12, key.getiLvl());
+
+                statement.setString(13, key.getVariation());
+                statement.setString(14, Item.formatIconURL(item.getIcon()));
+                statement.setInt(15, id_d);
+
+                statement.executeUpdate();
+                database.connection.commit();
+                return true;
+            }
+
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
 }
