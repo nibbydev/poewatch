@@ -32,7 +32,7 @@ function get_league_data($pdo, $id) {
   JOIN data_leagues AS l
     ON l.id = i.id_l
   WHERE i.id_d = ?
-  ORDER BY l.active DESC, if(l.id%2,l.id+1,l.id-1) DESC
+  ORDER BY l.active DESC, l.id DESC
   ";
 
   $stmt = $pdo->prepare($query);
