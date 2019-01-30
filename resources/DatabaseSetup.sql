@@ -194,7 +194,7 @@ CREATE TABLE league_entries (
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
     stack        SMALLINT       UNSIGNED DEFAULT NULL,
-    price        DECIMAL(14,8)  UNSIGNED NOT NULL,
+    price        DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     id_price     INT            UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
@@ -206,7 +206,8 @@ CREATE TABLE league_entries (
     INDEX id_l_d (id_l, id_d),
     INDEX discovered (discovered),
     INDEX stash_crc (stash_crc),
-    INDEX updated (updated)
+    INDEX updated (updated),
+    INDEX price (price),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

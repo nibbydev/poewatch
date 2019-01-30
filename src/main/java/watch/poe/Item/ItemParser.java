@@ -46,12 +46,6 @@ public class ItemParser {
      * Check if the item should be discarded immediately.
      */
     private void basicChecks(Mappers.BaseItem base) {
-        // No price set on item
-        if (base.getNote() == null || base.getNote().equals("")) {
-            discard = true;
-            return;
-        }
-
         // Filter out items posted on the SSF leagues
         if (base.getLeague().contains("SSF")) {
             discard = true;
@@ -74,11 +68,15 @@ public class ItemParser {
      *  Extract price and currency type from item
      */
     private void parseNote(Mappers.BaseItem base) {
+        // No price set on item
+        if (base.getNote() == null || base.getNote().equals("")) {
+            return;
+        }
+
         String[] noteList = base.getNote().split(" ");
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
         if (noteList.length < 3 || !noteList[0].equals("~b/o") && !noteList[0].equals("~price")) {
-            discard = true;
             return;
         }
 
@@ -93,19 +91,19 @@ public class ItemParser {
                 price = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
             }
         } catch (Exception ex) {
-            discard = true;
+            price = null;
             return;
         }
 
         // If the currency type listed is not valid
         if (!relationManager.getCurrencyAliases().containsKey(noteList[2])) {
-            discard = true;
+            price = null;
             return;
         }
 
         // If listed price was something retarded
         if (price < 0.0001 || price > 90000) {
-            discard = true;
+            price = null;
             return;
         }
 

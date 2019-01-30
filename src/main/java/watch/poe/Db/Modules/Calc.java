@@ -22,6 +22,7 @@ public class Calc {
                         "join ( " +
                         "  select distinct id_l, id_d from league_entries " +
                         "  where stash_crc is not null " +
+                        "    and price is not null " +
                         "    and updated > date_sub(now(), interval 65 second) " +
                         ") as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d " +
                         "join ( " +
@@ -36,6 +37,7 @@ public class Calc {
                         "  select id from data_itemData where frame = 5 " +
                         ") as foo4 on le.id_d = foo4.id " +
                         "where le.stash_crc is not null " +
+                        "  and le.price is not null " +
                         "  and !(foo4.id is not null && " +
                         "    le.id_price is not null && " +
                         "    le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1)) " +
@@ -56,6 +58,7 @@ public class Calc {
             join (
               select distinct id_l, id_d from league_entries
               where stash_crc is not null
+                and price is not null
                 and updated > date_sub(now(), interval 65 second)
             ) as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d
             -- get all accounts that have been active in trade recently
@@ -74,6 +77,7 @@ public class Calc {
             ) as foo4 on le.id_d = foo4.id
             -- if item is currently in a public stash tab
             where le.stash_crc is not null
+              and le.price is not null
             -- if (is currency) and (is not in chaos) and (is not in exalted), return FALSE,
             -- otherwise return TRUE. This restrict currency price calculation to only use
             -- entries listed in chaos to avoid circular dependencies. Eg exalted orbs are

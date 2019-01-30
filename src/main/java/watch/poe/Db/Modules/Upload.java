@@ -11,6 +11,7 @@ import poe.Worker.Entry.RawUsernameEntry;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -41,14 +42,6 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (RawItemEntry raw : set) {
-                    // Convert price to string to avoid mysql truncation and rounding errors
-                    String priceStr = Double.toString(raw.price);
-                    int index = priceStr.indexOf('.');
-
-                    if (priceStr.length() - index > 8) {
-                        priceStr = priceStr.substring(0, index + 9);
-                    }
-
                     statement.setInt(1, raw.id_l);
                     statement.setInt(2, raw.id_d);
                     statement.setLong(3, raw.account_crc);
@@ -59,11 +52,17 @@ public class Upload {
                         statement.setNull(6, 0);
                     } else statement.setInt(6, raw.stackSize);
 
-                    statement.setString(7, priceStr);
-
-                    if (raw.id_price == null) {
+                    if (raw.price == null) {
+                        statement.setNull(7, 0);
                         statement.setNull(8, 0);
-                    } else statement.setInt(8, raw.id_price);
+                    } else {
+                        String price = String.format("%.8f", raw.price).replace(',', '.');
+                        statement.setString(7, price);
+
+                        if (raw.id_price == null) {
+                            statement.setNull(8, 0);
+                        } else statement.setInt(8, raw.id_price);
+                    }
 
                     statement.addBatch();
                 }

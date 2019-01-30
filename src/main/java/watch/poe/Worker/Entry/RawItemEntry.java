@@ -3,10 +3,10 @@ package poe.Worker.Entry;
 public class RawItemEntry {
     public int id_l, id_d;
     public long account_crc, stash_crc, item_crc;
-    public double price;
+    public Double price;
     public Integer id_price, stackSize;
 
-    public RawItemEntry(int id_l, int id_d, long account_crc, long stash_crc, long item_crc, Integer id_price, double price, Integer stackSize) {
+    public RawItemEntry(int id_l, int id_d, long account_crc, long stash_crc, long item_crc, Integer stackSize, Integer id_price, Double price) {
         this.id_l = id_l;
         this.id_d = id_d;
         this.id_price = id_price;
