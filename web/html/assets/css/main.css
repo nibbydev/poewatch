@@ -143,13 +143,13 @@ input.form-control,select.form-control {
 
 .btn-outline-dark {
   color: #ddd;
-  border-color: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.2);
   background-color: rgba(0,0,0,.15);
 }
 
 .btn-outline-dark:hover {
   background-color: rgba(0,0,0,.2);
-  border-color: rgba(255,255,255,.2);
+  border-color: rgba(255,255,255,.3);
 }
 
 /* Disable focus borders */ 
@@ -163,7 +163,7 @@ input.form-control,select.form-control {
   border-color: #333;
 }
 
-.form-group input {background-color: #222 !important}
+.form-group input, .btn-group input {background-color: #222 !important}
 option {background-color: #333}
 
 .form-group textarea {
