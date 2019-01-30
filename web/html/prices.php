@@ -207,7 +207,11 @@
       <div class="col-6 col-sm">
         <h4>Group</h4>
         <select class="form-control custom-select" id="search-group">
-          <?php AddGroups($groups) ?>
+          <?php if (sizeof($groups) > 1): ?>
+            <option value='all'>All</option>
+          <?php endif; foreach ($groups as $group): ?>
+            <option value='<?php echo $group['name'] ?>'><?php echo $group['display'] ?></option>
+          <?php endforeach ?>
         </select>
       </div>
       <!--//Group//-->

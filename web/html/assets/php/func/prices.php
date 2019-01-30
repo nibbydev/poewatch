@@ -97,19 +97,9 @@ function GetGroups($pdo, $category) {
   while ($row = $stmt->fetch()) {
     $payload[] = array(
       "name" => $row["name"],
-      "display" => $row["display"]
+      "display" => !$row["display"] ? $row["name"] : $row["display"]
     );
   }
 
   return $payload;
-}
-
-function AddGroups($groups) {
-  if (sizeof($groups) > 1) {
-    echo "<option value='all'>All</option>";
-  }
-
-  foreach ($groups as $group) {
-    echo "<option value='{$group['name']}'>{$group['display']}</option>";
-  }
 }
