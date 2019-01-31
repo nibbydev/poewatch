@@ -97,8 +97,7 @@ public class Index {
      * @return True on success
      */
     public boolean createLeagueItem(int id_l, int id_d) {
-        String query =  "INSERT INTO league_items (id_l, id_d) " +
-                        "VALUES (?, ?) " +
+        String query =  "INSERT INTO league_items (id_l, id_d) VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE id_l = id_l; ";
         try {
             if (database.connection.isClosed()) {
@@ -116,7 +115,6 @@ public class Index {
             return true;
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            System.out.printf("%d -- %d\n", id_l, id_d); // todo:remove
             return false;
         }
     }
@@ -133,7 +131,8 @@ public class Index {
         String query =  "INSERT INTO data_itemData (" +
                         "  id_cat, id_grp, `name`, `type`, frame, stack, " +
                         "  tier, lvl,  quality, corrupted, links, ilvl, var, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE id = id; ; ";
 
         try {
             if (database.connection.isClosed()) {

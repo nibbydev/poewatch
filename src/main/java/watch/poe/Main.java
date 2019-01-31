@@ -41,6 +41,7 @@ public class Main {
 
             // Load config
             config = ConfigFactory.load("config");
+            ItemParser.setConfig(config);
 
             // Initialize database connector
             database = new Database(config);

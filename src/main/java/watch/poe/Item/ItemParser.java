@@ -1,11 +1,13 @@
 package poe.Item;
 
+import com.typesafe.config.Config;
 import poe.Managers.RelationManager;
 
 import java.util.ArrayList;
 
 public class ItemParser {
     private static RelationManager relationManager;
+    private static Config config;
 
     private ArrayList<Item> items = new ArrayList<>();
     private Mappers.BaseItem base;
@@ -70,6 +72,10 @@ public class ItemParser {
     private void parseNote(Mappers.BaseItem base) {
         // No price set on item
         if (base.getNote() == null || base.getNote().equals("")) {
+            if (!config.getBoolean("entry.acceptNullPrice")) {
+                discard = true;
+            }
+
             return;
         }
 
@@ -77,6 +83,10 @@ public class ItemParser {
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
         if (noteList.length < 3 || !noteList[0].equals("~b/o") && !noteList[0].equals("~price")) {
+            if (!config.getBoolean("entry.acceptNullPrice")) {
+                discard = true;
+            }
+
             return;
         }
 
@@ -91,18 +101,29 @@ public class ItemParser {
                 price = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
             }
         } catch (Exception ex) {
-            price = null;
+            if (!config.getBoolean("entry.acceptNullPrice")) {
+                discard = true;
+            }
+
             return;
         }
 
         // If the currency type listed is not valid
         if (!relationManager.getCurrencyAliases().containsKey(noteList[2])) {
+            if (!config.getBoolean("entry.acceptNullPrice")) {
+                discard = true;
+            }
+
             price = null;
             return;
         }
 
         // If listed price was something retarded
         if (price < 0.0001 || price > 90000) {
+            if (!config.getBoolean("entry.acceptNullPrice")) {
+                discard = true;
+            }
+
             price = null;
             return;
         }
@@ -155,5 +176,9 @@ public class ItemParser {
 
     public static void setRelationManager(RelationManager relationManager) {
         ItemParser.relationManager = relationManager;
+    }
+
+    public static void setConfig(Config config) {
+        ItemParser.config = config;
     }
 }

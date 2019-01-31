@@ -27,8 +27,8 @@ public class Upload {
         String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
-                        "  updates = IF(price = VALUES(price), updates, updates + 1)," +
-                        "  updated = IF(price = VALUES(price), updated, now())," +
+                        "  updates = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updates, updates + 1)," +
+                        "  updated = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updated, now())," +
                         "  stash_crc = VALUES(stash_crc), " +
                         "  stack = VALUES(stack), " +
                         "  price = VALUES(price), " +
