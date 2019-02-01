@@ -15,8 +15,7 @@ function check_errors() {
 }
 
 function get_league_data($pdo, $id) {
-  $query = "
-  SELECT 
+  $query = "SELECT 
     i.mean, i.median, i.mode, i.min, i.max, 
     i.exalted, i.total, i.daily, i.current, i.accepted,
     l.id        AS leagueId,
@@ -32,8 +31,7 @@ function get_league_data($pdo, $id) {
   JOIN data_leagues AS l
     ON l.id = i.id_l
   WHERE i.id_d = ?
-  ORDER BY l.active DESC, l.id DESC
-  ";
+  ORDER BY l.active DESC, l.id DESC";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
@@ -42,8 +40,7 @@ function get_league_data($pdo, $id) {
 }
 
 function get_history_entries($pdo, $leagueId, $itemId) {
-  $query = "
-  select * from (
+  $query = "SELECT * from (
     SELECT 
       mean, median, mode, daily, current, accepted,
       DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
@@ -51,8 +48,7 @@ function get_history_entries($pdo, $leagueId, $itemId) {
     WHERE id_l = ? AND id_d = ?
     ORDER BY `time` DESC
     LIMIT 120
-  ) as foo ORDER BY foo.`time` ASC
-  ";
+  ) as foo ORDER BY foo.`time` ASC";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$leagueId, $itemId]);

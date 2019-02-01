@@ -32,7 +32,7 @@ function check_league($pdo, $league) {
 function get_data($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.total, i.daily + i.inc AS daily, i.current, i.accepted,
+    i.total, i.daily, i.current, i.accepted,
     did.name, did.type, did.frame, 
     did.tier, did.lvl, did.quality, did.corrupted, did.stack, 
     did.links, did.ilvl, did.var, did.icon, 

@@ -13,7 +13,7 @@ function check_errors() {
 function get_data($pdo) {
   $query1 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.total, i.daily + i.inc AS daily, i.current, i.accepted
+    i.exalted, i.total, i.daily, i.current, i.accepted
   FROM      league_items AS i 
   JOIN      data_leagues AS l 
     ON      l.id = i.id_l 
@@ -24,7 +24,7 @@ function get_data($pdo) {
 
   $query2 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.total, i.daily + i.inc AS daily, i.current, i.accepted
+    i.exalted, i.total, i.daily, i.current, i.accepted
   FROM      league_items AS i 
   JOIN      data_itemData AS did 
     ON      i.id_d = did.id 
