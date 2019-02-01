@@ -49,7 +49,7 @@ function parseStats(json) {
       labelFreq = 5;
       break;
     case "0":
-      labelFreq = 24;
+      labelFreq = 5;
       break;
     default:
       labelFreq = 1;
@@ -96,8 +96,21 @@ function parseStats(json) {
       series: [json.series[i]]
     }
 
-    var html = "<h3>"+type+"</h3>" + "<hr>"+ "<div class='ct-chart' id='CHART-"+type+"'></div>";
-    $("#main").append(html);
+    var cardTemplate = `
+    <div class="card custom-card w-100 mb-3">
+      <div class="card-header">
+        <h3 class="m-0">{{title}}</h3>
+      </div>
+
+      <div class="card-body">
+        <div class='ct-chart' id='CHART-{{type}}'></div>
+      </div>
+    
+      <div class="card-footer slim-card-edge"></div>
+    </div>
+    `.trim().replace("{{title}}", type).replace("{{type}}", type);
+
+    $("#main").append(cardTemplate);
     new Chartist.Line('#CHART-'+type, data, chartOptions);
   }
 }

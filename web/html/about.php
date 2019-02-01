@@ -22,7 +22,7 @@
           <button class="nav-link pagination-btn cursor-pointer active" value='faq'>FAQ</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link pagination-btn cursor-pointer" value='feedback'>Feedback</button>
+          <button class="nav-link pagination-btn cursor-pointer" value='contact'>Contact</button>
         </li>
         <li class="nav-item">
           <button class="nav-link pagination-btn cursor-pointer" value='legal'>Legal</button>
@@ -45,7 +45,7 @@
       <p>What are the API limitations?<br><span class='custom-text-gray-lo'>Based on fair use. Though it does have a rate limitation of 4 requests per second - 10 second timeout.</span></p>
       <p>Some of the pages don't work with Internet Explorer<br><span class='custom-text-gray-lo'>More like Internet Explorer doesn't work with some of the pages. But seriously, it's an outdated browser. You should upgrade to something newer.</span></p>
     </div>
-    <div class="card-body pagination-page d-none" id='page-feedback'>
+    <div class="card-body pagination-page d-none" id='page-contact'>
       <div>Something's not working? Found a typo? The site is missing an amazing feature?</div>
       <div>Do let me know and I'll see what I can do about it.</div>
       <p>Also, please provide a contact address, eg email/discord tag/reddit username/poe account or similar.</p>

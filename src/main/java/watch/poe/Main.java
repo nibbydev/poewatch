@@ -41,6 +41,7 @@ public class Main {
 
             // Load config
             config = ConfigFactory.load("config");
+            ItemParser.setConfig(config);
 
             // Initialize database connector
             database = new Database(config);
@@ -60,7 +61,7 @@ public class Main {
             LeagueManager leagueManager = new LeagueManager(database, config);
             success = leagueManager.cycle();
             if (!success) {
-                logger.error("Could not get a list of leagues");
+                logger.error("Could not get leagues");
                 return;
             }
 

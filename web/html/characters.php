@@ -66,8 +66,7 @@
           } else if ($PAGEDATA["page"]["searchResults"]) {
             echo "<span class='custom-text-green'>" . sizeof($PAGEDATA["page"]["searchResults"]) . "</span> " .
             "result" . (sizeof($PAGEDATA["page"]["searchResults"]) === 1 ? "" : "s") . " for " .
-            $PAGEDATA["page"]["searchMode"] . " names matching '<span class='custom-text-orange'>" .
-            htmlentities($PAGEDATA["page"]["searchString"]) . "</span>'";
+            "'<span class='custom-text-orange'>" . htmlentities($PAGEDATA["page"]["searchString"]) . "</span>'";
           } else if ($PAGEDATA["page"]["searchString"] && !sizeof($PAGEDATA["page"]["searchResults"])) { 
             echo "<span class='custom-text-red'>Not found!</span>";
           }
@@ -86,31 +85,37 @@
               <th>Has character</th>
               <th>In league</th>
               <th>Last seen</th>
+              <th>Profile</th>
             </tr>
           </thead>
           <tbody>
 <?php foreach ($PAGEDATA["page"]["searchResults"] as $row) { ?>
             <tr>
-              <td><a href='characters?mode=account&search=<?php echo $row["account"] ?>'>
-                <?php 
-                  if ($PAGEDATA["page"]["searchMode"] === "account") {
-                    echo "<span class='custom-text-orange'>{$row["account"]}</span>";
-                  } else {
-                    echo "<span>{$row["account"]}</span>";
-                  }
-                ?>
-              </a></td>
-              <td><a href='characters?mode=character&search=<?php echo $row["character"] ?>'>
-                <?php 
-                  if ($PAGEDATA["page"]["searchMode"] === "character") {
-                    echo "<span class='custom-text-orange'>{$row["character"]}</span>";
-                  } else {
-                    echo "<span>{$row["character"]}</span>";
-                  }
-                ?>
-              </a></td>
+              <td>
+                <a href='characters?mode=account&search=<?php echo $row["account"] ?>'>
+                <?php if ($PAGEDATA["page"]["searchMode"] === "account"): ?>
+                  <span class='custom-text-orange'><?php echo $row["account"] ?></span>
+                <?php else: ?>
+                  <span><?php echo $row["account"] ?></span>
+                <?php endif ?>
+                </a>
+              </td>
+              <td>
+                <a href='characters?mode=character&search=<?php echo $row["character"] ?>'>
+                <?php if ($PAGEDATA["page"]["searchMode"] === "character"): ?>
+                  <span class='custom-text-orange'><?php echo $row["character"] ?></span>
+                <?php else: ?>
+                  <span><?php echo $row["character"] ?></span>
+                <?php endif ?>
+                </a>
+              </td>
               <td><?php echo $row["active"] ? $row["league"] : "Standard  ({$row["league"]})" ?></td>
               <td><?php echo FormatTimestamp($row["seen"]) ?></td>
+              <td>
+                <a href='https://www.pathofexile.com/account/view-profile/<?php echo $row["account"] ?>' target="_blank">
+                  <span class="custom-text-green">(New tab ⬈)</span>
+                </a>
+              </td>
             </tr>
 <?php } ?>
           </tbody>

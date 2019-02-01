@@ -264,7 +264,7 @@ public class Worker extends Thread {
                 // Create an ItemParser instance for every item in the stash, as one item
                 // may branch into multiple db entries. For examples, a Devoto's Devotion with
                 // a Tornado Shot enchantment creates 2 entries.
-                ItemParser itemParser = new ItemParser(baseItem);
+                ItemParser itemParser = new ItemParser(baseItem, stash.stashName);
 
                 // There was something off with the base item, discard it and don'tt create branched items
                 if (itemParser.isDiscard()) {
@@ -285,7 +285,7 @@ public class Worker extends Thread {
                     }
 
                     RawItemEntry entry = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc,
-                            itemParser.getIdPrice(), itemParser.getPrice());
+                            item.getStackSize(), itemParser.getIdPrice(), itemParser.getPrice());
                     items.add(entry);
 
                     // Set flag to indicate stash contained at least 1 valid item

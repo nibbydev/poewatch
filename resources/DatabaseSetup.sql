@@ -104,6 +104,7 @@ CREATE TABLE data_itemData (
     id         INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     id_cat     INT           UNSIGNED NOT NULL,
     id_grp     INT           UNSIGNED DEFAULT NULL,
+    reindex    BIT(1)        NOT NULL DEFAULT 0,
     name       VARCHAR(128)  NOT NULL,
     type       VARCHAR(64)   DEFAULT NULL,
     frame      TINYINT(1)    NOT NULL,
@@ -123,8 +124,9 @@ CREATE TABLE data_itemData (
 
     CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var),
 
-    INDEX frame  (frame),
-    INDEX name   (name)
+    INDEX reindex (reindex),
+    INDEX frame   (frame),
+    INDEX name    (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -147,7 +149,6 @@ CREATE TABLE league_items (
     exalted  DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     total    INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     daily    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
-    inc      INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     current  INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     accepted INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     spark    VARCHAR(128)   DEFAULT NULL,
@@ -157,8 +158,7 @@ CREATE TABLE league_items (
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
     INDEX total    (total),
-    INDEX median   (median),
-    INDEX inc      (inc)
+    INDEX median   (median)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -188,11 +188,12 @@ CREATE TABLE league_entries (
     item_crc     INT            UNSIGNED NOT NULL,
 
     discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
-    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    updated      TIMESTAMP      NOT NULL DEFAULT NOW(),
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
+    stack        SMALLINT       UNSIGNED DEFAULT NULL,
+    price        DECIMAL(14,8)  UNSIGNED DEFAULT NULL,
     id_price     INT            UNSIGNED DEFAULT NULL,
-    price        DECIMAL(14,8)  UNSIGNED NOT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
@@ -203,7 +204,8 @@ CREATE TABLE league_entries (
     INDEX id_l_d (id_l, id_d),
     INDEX discovered (discovered),
     INDEX stash_crc (stash_crc),
-    INDEX updated (updated)
+    INDEX updated (updated),
+    INDEX price (price),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -228,23 +230,6 @@ CREATE TABLE league_history_daily (
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
 
-    INDEX time (time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure league_history_hourly
---
-
-CREATE TABLE league_history_hourly (
-    id_l  SMALLINT   UNSIGNED NOT NULL,
-    id_d  INT        UNSIGNED NOT NULL,
-    time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    inc   INT(8)     UNSIGNED DEFAULT NULL,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
-
-    INDEX ids  (id_l, id_d),
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -324,11 +309,11 @@ CREATE TABLE account_history (
 CREATE TABLE web_feedback (
     id        INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ip        VARCHAR(15)   NOT NULL,
+    ip_crc    INT           UNSIGNED NOT NULL,
     contact   VARCHAR(128)  NOT NULL,
     message   TEXT          NOT NULL,
 
-    INDEX ip      (ip),
+    INDEX ip_crc  (ip_crc),
     INDEX `time`  (`time`),
     INDEX contact (contact)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -361,7 +346,9 @@ VALUES
     (15, 0, 1, 'Incursion Event HC (IRE002)',   'HC Incursion Event'),
     (16, 0, 0, 'Incursion Event (IRE001)',      'Incursion Event'   ),
     (17, 0, 1, 'Hardcore Delve',                'HC Delve'          ),
-    (18, 0, 0, 'Delve',                         'Delve'             );
+    (18, 0, 0, 'Delve',                         'Delve'             ),
+    (19, 0, 1, 'Hardcore Betrayal',             'HC Betrayal'       ),
+    (20, 0, 0, 'Betrayal',                      'Betrayal'          );
 
 --
 -- Base value for data_changeId
@@ -462,24 +449,6 @@ VALUES
     (12,    'twoaxe',	    '2H Axes'),
     (12,    'twomace',	  '2H Maces'),
     (12,    'jewel',	    'Jewels');
-
--- --------------------------------------------------------------------------------------------------------------------
--- Event setup
--- --------------------------------------------------------------------------------------------------------------------
-
---
--- Event configuration remove24
---
-
-DROP EVENT IF EXISTS remove24;
-
-CREATE EVENT remove24
-  ON SCHEDULE EVERY 1 HOUR
-  STARTS '2018-01-01 08:00:03'
-  COMMENT 'Clears out entries older than 24h'
-  DO
-    DELETE FROM league_history_hourly
-    WHERE       time < ADDDATE(NOW(), INTERVAL -25 HOUR);
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- User accounts

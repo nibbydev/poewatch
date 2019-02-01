@@ -22,6 +22,7 @@ public class Calc {
                         "join ( " +
                         "  select distinct id_l, id_d from league_entries " +
                         "  where stash_crc is not null " +
+                        "    and price is not null " +
                         "    and updated > date_sub(now(), interval 65 second) " +
                         ") as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d " +
                         "join ( " +
@@ -36,6 +37,7 @@ public class Calc {
                         "  select id from data_itemData where frame = 5 " +
                         ") as foo4 on le.id_d = foo4.id " +
                         "where le.stash_crc is not null " +
+                        "  and le.price is not null " +
                         "  and !(foo4.id is not null && " +
                         "    le.id_price is not null && " +
                         "    le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1)) " +
@@ -56,6 +58,7 @@ public class Calc {
             join (
               select distinct id_l, id_d from league_entries
               where stash_crc is not null
+                and price is not null
                 and updated > date_sub(now(), interval 65 second)
             ) as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d
             -- get all accounts that have been active in trade recently
@@ -74,6 +77,7 @@ public class Calc {
             ) as foo4 on le.id_d = foo4.id
             -- if item is currently in a public stash tab
             where le.stash_crc is not null
+              and le.price is not null
             -- if (is currency) and (is not in chaos) and (is not in exalted), return FALSE,
             -- otherwise return TRUE. This restrict currency price calculation to only use
             -- entries listed in chaos to avoid circular dependencies. Eg exalted orbs are
@@ -104,7 +108,7 @@ public class Calc {
     }
 
     /**
-     * Calculates exalted price for items in table `league_items` based on exalted prices in same table
+     * Calculates how many of each item there are currently on sale
      *
      * @return True on success
      */
@@ -145,19 +149,19 @@ public class Calc {
     }
 
     /**
-     * Calculates the daily total for items in table `league_items` based on history entries from table `league_history`
+     * Calculates the daily total for items
      *
      * @return True on success
      */
-    public boolean calcDaily() {
-        String query =  "UPDATE league_items AS i  " +
-                        "LEFT JOIN ( " +
-                        "  SELECT id_l, id_d, SUM(inc) AS daily " +
-                        "  FROM league_history_hourly " +
-                        "  WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
-                        "  GROUP BY id_l, id_d " +
-                        ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "SET i.daily = IFNULL(h.daily, 0) ";
+    public boolean calcCounters() {
+        String query =  "update league_items as foo " +
+                        "left join ( " +
+                        "  select id_l, id_d, count(*) as count " +
+                        "  from league_entries " +
+                        "  where discovered > date_sub(now(), interval 1 hour) " +
+                        "  group by id_l, id_d " +
+                        ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
+                        "set foo.daily = ifnull(bar.count, 0), foo.total = foo.total + bar.count ";
 
         return database.executeUpdateQueries(query);
     }

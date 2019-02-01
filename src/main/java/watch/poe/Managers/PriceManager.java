@@ -13,10 +13,10 @@ public class PriceManager {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
     private static Database database;
 
-    private static final double zScoreLower = 2.0;
-    private static final double zScoreUpper = -0.5;
+    private static final double zScoreLower = 2.5;
+    private static final double zScoreUpper = 0.5;
     private static final int trimLower = 5;
-    private static final int trimUpper = 10;
+    private static final int trimUpper = 50;
 
     public static void run() {
         List<Result> results = new ArrayList<>();
@@ -88,6 +88,32 @@ public class PriceManager {
         return true;
     }
 
+    private static List<Double> filterEntries(List<Double> entryList) {
+        // Sort by price ascending
+        entryList.sort(Double::compareTo);
+
+        // Trim the list to remove outliers
+        int lowerTrimBound = entryList.size() * trimLower / 100;
+        int upperTrimBound = entryList.size() * (100 - trimUpper) / 100;
+        List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
+
+        if (tmpTrimmedList.size() < 5) {
+            return tmpTrimmedList;
+        }
+
+        // Find standard deviation and bounds
+        double tmpMean = calcMean(tmpTrimmedList);
+        double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
+        double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
+        double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
+
+        List<Double> tmp = tmpTrimmedList.stream()
+                .filter(i -> i > lowerPredicateBound && i < upperPredicateBound)
+                .collect(Collectors.toList());
+
+        return tmp.size() > 5 ? tmp : tmpTrimmedList;
+    }
+
     private static void calculate(List<Result> results, List<Double> entryList, int id_l, int id_d) {
         // If result list is invalid
         if (results == null) {
@@ -101,45 +127,15 @@ public class PriceManager {
             throw new RuntimeException();
         }
 
-        List<Double> entries;
-        int currentCount = entryList.size();
-
-        if (entryList.size() < 5) {
-            entries = entryList;
-        } else {
-            // Sort by price ascending
-            entryList.sort(Double::compareTo);
-
-            // Trim the list to remove outliers
-            int lowerTrimBound = currentCount * trimLower / 100;
-            int upperTrimBound = currentCount * (100 - trimUpper) / 100;
-            List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
-
-            if (tmpTrimmedList.size() < 10) {
-                entries = tmpTrimmedList;
-            } else {
-                // Find standard deviation and bounds
-                double tmpMean = calcMean(tmpTrimmedList);
-                double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
-                double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
-                double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
-
-                List<Double> tmp = tmpTrimmedList.stream()
-                        .filter(i -> i > lowerPredicateBound)
-                        .filter(i -> i < upperPredicateBound)
-                        .collect(Collectors.toList());
-
-                if (tmp.size() > 5) {
-                    entries = tmp;
-                } else {
-                    entries = tmpTrimmedList;
-                }
-            }
+        if (entryList.size() < 3) {
+            return;
         }
 
+        List<Double> entries = filterEntries(entryList);
+
         // If no entries were left, skip the item
-        if (entries.size() == 0) {
-            logger.warn(String.format("Couldn't find price for id %d in league %d", id_d, id_l));
+        if (entries.isEmpty()) {
+            logger.warn(String.format("Zero remaining entries for %d in %d", id_d, id_l));
             return;
         }
 

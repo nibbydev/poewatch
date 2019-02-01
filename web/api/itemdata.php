@@ -14,7 +14,7 @@ function get_all_data($pdo) {
 
 function get_category_data($pdo, $category) {
   $query = "SELECT 
-    did.id, did.name, did.type, did.frame, 
+    did.id, did.name, did.type, did.frame, did.stack, 
     did.tier, did.lvl, did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`

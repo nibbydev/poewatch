@@ -3,13 +3,15 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.League.LeagueEntry;
+import poe.Managers.League.BaseLeague;
+import poe.Managers.League.League;
 import poe.Managers.PriceManager;
 import poe.Worker.Entry.RawItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -22,14 +24,15 @@ public class Upload {
     }
 
     public boolean uploadEntries(Set<RawItemEntry> set) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, id_price, price) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
-                        "  updates = IF(price = VALUES(price), updates, updates + 1)," +
-                        "  updated = IF(price = VALUES(price), updated, now())," +
+                        "  updates = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updates, updates + 1)," +
+                        "  updated = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updated, now())," +
+                        "  stash_crc = VALUES(stash_crc), " +
+                        "  stack = VALUES(stack), " +
                         "  price = VALUES(price), " +
-                        "  id_price = VALUES(id_price), " +
-                        "  stash_crc = VALUES(stash_crc); ";
+                        "  id_price = VALUES(id_price); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -39,25 +42,28 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (RawItemEntry raw : set) {
-                    // Convert price to string to avoid mysql truncation and rounding errors
-                    String priceStr = Double.toString(raw.price);
-                    int index = priceStr.indexOf('.');
-
-                    if (priceStr.length() - index > 8) {
-                        priceStr = priceStr.substring(0, index + 9);
-                    }
-
                     statement.setInt(1, raw.id_l);
                     statement.setInt(2, raw.id_d);
                     statement.setLong(3, raw.account_crc);
                     statement.setLong(4, raw.stash_crc);
                     statement.setLong(5, raw.item_crc);
 
-                    if (raw.id_price == null) {
+                    if (raw.stackSize == null) {
                         statement.setNull(6, 0);
-                    } else statement.setInt(6, raw.id_price);
+                    } else statement.setInt(6, raw.stackSize);
 
-                    statement.setString(7, priceStr);
+                    if (raw.price == null) {
+                        statement.setNull(7, 0);
+                        statement.setNull(8, 0);
+                    } else {
+                        String price = String.format("%.8f", raw.price).replace(',', '.');
+                        statement.setString(7, price);
+
+                        if (raw.id_price == null) {
+                            statement.setNull(8, 0);
+                        } else statement.setInt(8, raw.id_price);
+                    }
+
                     statement.addBatch();
                 }
 
@@ -139,19 +145,32 @@ public class Upload {
         }
     }
 
+    public boolean updateLeagueStates() {
+        String[] queries = {
+                // League ended
+                "update data_leagues " +
+                "set active = 0 " +
+                "where active = 1 " +
+                "  and end is not null " +
+                "  and STR_TO_DATE(end, '%Y-%m-%dT%H:%i:%sZ') < now()"
+        };
+
+        return database.executeUpdateQueries(queries);
+    }
+
     /**
      * Adds/updates league entries in table `data_leagues`
      *
      * @param leagueEntries List of LeagueEntry objects to upload
      * @return True on success
      */
-    public boolean updateLeagues(List<LeagueEntry> leagueEntries) {
-        String query1 = "insert into data_leagues (`name`) " +
+    public boolean updateLeagues(List<BaseLeague> leagueEntries) {
+        // Create league entry if it does not exist without incrementing the auto_increment value
+        String query1 = "insert into data_leagues (name) " +
                         "select ? from dual " +
-                        "where not exists ( " +
-                        "  select 1 from data_leagues " +
-                        "  where name = ? limit 1);";
+                        "where not exists (select 1 from data_leagues where name = ? limit 1);";
 
+        // Update data for inserted league entry
         String query2 = "UPDATE data_leagues " +
                         "SET    start    = ?, " +
                         "       end      = ?, " +
@@ -171,9 +190,9 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                for (LeagueEntry leagueEntry : leagueEntries) {
-                    statement.setString(1, leagueEntry.getName());
-                    statement.setString(2, leagueEntry.getName());
+                for (BaseLeague league : leagueEntries) {
+                    statement.setString(1, league.getName());
+                    statement.setString(2, league.getName());
                     statement.addBatch();
                 }
 
@@ -181,12 +200,12 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                for (LeagueEntry leagueEntry : leagueEntries) {
-                    statement.setString(1, leagueEntry.getStartAt());
-                    statement.setString(2, leagueEntry.getEndAt());
-                    statement.setInt(3, leagueEntry.isEvent() ? 1 : 0);
-                    statement.setInt(4, leagueEntry.isHardcore() ? 1 : 0);
-                    statement.setString(5, leagueEntry.getName());
+                for (BaseLeague league : leagueEntries) {
+                    statement.setString(1, league.getStartAt());
+                    statement.setString(2, league.getEndAt());
+                    statement.setInt(3, league.isEvent() ? 1 : 0);
+                    statement.setInt(4, league.isHardcore() ? 1 : 0);
+                    statement.setString(5, league.getName());
                     statement.addBatch();
                 }
 

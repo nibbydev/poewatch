@@ -101,15 +101,9 @@
 </style>
 
 <?php genBodyHeader() ?>
-  <div class="card custom-card w-100">
-    <div class="card-header slim-card-edge"></div>
+<div class="col-12 p-0" id="main">
 
-    <div class="card-body pagination-page" id="main">
-      <div class="ct-chart" id="chart-"></div>
-    </div>
-   
-    <div class="card-footer slim-card-edge"></div>
-  </div>
+</div>
 <?php genBodyFooter() ?>
 
 <?php include "assets/php/templates/footer.php" ?>

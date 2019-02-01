@@ -4,10 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Key;
-import poe.Managers.League.LeagueEntry;
+import poe.Managers.League.League;
 import poe.Managers.Relation.CategoryEntry;
-import poe.Managers.Stat.Collector;
-import poe.Managers.Stat.StatType;
 
 import java.sql.*;
 import java.util.*;
@@ -26,7 +24,7 @@ public class Init {
      * @param leagueEntries List that will contain LeagueEntry entries
      * @return True on success
      */
-    public boolean getLeagues(List<LeagueEntry> leagueEntries) {
+    public boolean getLeagues(List<League> leagueEntries) {
         String query = "SELECT * FROM data_leagues WHERE active = 1; ";
 
         logger.info("Getting leagues from database");
@@ -43,7 +41,7 @@ public class Init {
                 leagueEntries.clear();
 
                 while (resultSet.next()) {
-                    leagueEntries.add(new LeagueEntry(resultSet));
+                    leagueEntries.add(new League(resultSet));
                 }
             }
 
@@ -120,7 +118,7 @@ public class Init {
      * @param keyToId Empty map that will contain item Key - item ID relations
      * @return True on success
      */
-    public boolean getItemData(Map<Key, Integer> keyToId) {
+    public boolean getItemData(Map<Key, Integer> keyToId, Set<Integer> reindexSet) {
         String query = "SELECT * FROM data_itemData; ";
 
         logger.info("Getting item data from database");
@@ -131,24 +129,27 @@ public class Init {
                 return false;
             }
 
-            if (keyToId == null) {
-                throw new SQLException("Provided map was null");
+            if (keyToId == null || !keyToId.isEmpty()) {
+                throw new SQLException("Invalid provided map");
             }
-
-            Map<Key, Integer> tmpKeyToId = new HashMap<>();
 
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    tmpKeyToId.put(new Key(resultSet), resultSet.getInt("id"));
+                    keyToId.put(new Key(resultSet), resultSet.getInt("id"));
+
+                    // If entry was marked to be reindexed
+                    if (resultSet.getInt("reindex") == 1) {
+                        int id_d = resultSet.getInt("id");
+
+                        reindexSet.add(id_d);
+                        logger.info(String.format("Item %d queued for reindexing", id_d));
+                    }
                 }
             }
 
-            keyToId.clear();
-            keyToId.putAll(tmpKeyToId);
             logger.info("Got item data from database");
-
             return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);

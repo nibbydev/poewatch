@@ -19,6 +19,7 @@ public class RelationManager {
     private final Logger logger;
     private final Database database;
 
+    private final Set<Integer> reindexSet = new HashSet<>();
     private final Set<Key> inProgress = new HashSet<>();
     private final Map<Key, Integer> itemData = new HashMap<>();
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
@@ -49,7 +50,7 @@ public class RelationManager {
             logger.warn("Database did not contain any category information");
         }
 
-        success = database.init.getItemData(itemData);
+        success = database.init.getItemData(itemData, reindexSet);
         if (!success) {
             logger.error("Failed to query item IDs from database. Shutting down...");
             return false;
@@ -112,14 +113,16 @@ public class RelationManager {
             id_d = itemData.get(item.getKey());
         }
 
-        // DB contains that item data entry
-        if (id_d != null) {
-            // Check if DB has item entry in that specific league
-            synchronized (leagueItems) {
-                Set<Integer> itemSet = leagueItems.get(id_l);
+        // DB contains that item data entry and item is not scheduled for reindexing
+        synchronized (reindexSet) {
+            if (id_d != null && !reindexSet.contains(id_d)) {
+                // Check if DB has item entry in that specific league
+                synchronized (leagueItems) {
+                    Set<Integer> itemSet = leagueItems.get(id_l);
 
-                if (itemSet != null && itemSet.contains(id_d)) {
-                    return id_d;
+                    if (itemSet != null && itemSet.contains(id_d)) {
+                        return id_d;
+                    }
                 }
             }
         }
@@ -142,46 +145,18 @@ public class RelationManager {
         }
 
         // Check if the database contains the item's category and group
-        synchronized (categories) {
-            // Get category entry or null
-            CategoryEntry categoryEntry = categories.get(item.getCategory());
+        CategoryEntry categoryEntry = indexCategory(item);
+        if (categoryEntry == null) {
+            inProgress.remove(item.getKey());
+            return null;
+        }
 
-            // DB didn't contain that category
-            if (categoryEntry == null) {
-                // Attempt to add it
-                id_cat = database.index.createCategory(item.getCategory());
+        id_cat = categoryEntry.getCategoryId();
+        id_grp = indexGroup(categoryEntry, item);
 
-                if (id_cat == null) {
-                    logger.error(String.format("Could not create category for: %s (%s - %s)",
-                            item.getKey(), item.getCategory(), item.getGroup()));
-                    inProgress.remove(item.getKey());
-                    return null;
-                }
-
-                // Create new entry and store it in locally
-                categoryEntry = new CategoryEntry(id_cat);
-                categories.put(item.getCategory(), categoryEntry);
-            } else {
-                id_cat = categoryEntry.getCategoryId();
-            }
-
-            // Check if the category already has that group
-            if (!categoryEntry.hasGroup(item.getGroup())) {
-                // Attempt to add it
-                id_grp = database.index.addGroup(id_cat, item.getGroup());
-
-                if (id_grp == null) {
-                    logger.error(String.format("Could not create group for: %s (%s - %s)",
-                            item.getKey(), item.getCategory(), item.getGroup()));
-                    inProgress.remove(item.getKey());
-                    return null;
-                }
-
-                // Store the group withing the category
-                categoryEntry.addGroup(item.getGroup(), id_grp);
-            } else {
-                id_grp = categoryEntry.getGroupId(item.getGroup());
-            }
+        if (id_grp == null) {
+            inProgress.remove(item.getKey());
+            return null;
         }
 
         // Right, now that we have verified that the item's category and group exist in the database, we can go ahead
@@ -213,13 +188,80 @@ public class RelationManager {
             }
         }
 
+        // If item should be indexed again
+        synchronized (reindexSet) {
+            if (reindexSet.contains(id_d)) {
+                logger.info(String.format("Reindexing item %d", id_d));
+
+                boolean success = database.index.reindexItemData(id_cat, id_grp, id_d, item);
+                if (success) {
+                    reindexSet.remove(id_d);
+                }
+
+                synchronized (itemData) {
+                    Integer finalId_d = id_d;
+                    // Remove key from itemData map
+                    itemData.entrySet().removeIf(i -> i.getValue().equals(finalId_d));
+                }
+            }
+        }
+
         // Add entry to local lookup table
-        itemData.put(item.getKey(), id_d);
+        synchronized (itemData) {
+            itemData.put(item.getKey(), id_d);
+        }
 
         // We've verified the integrity of entries everywhere, remove the item key from the process list and return
         // its id
         inProgress.remove(item.getKey());
         return id_d;
+    }
+
+    private CategoryEntry indexCategory(Item item) {
+        // Check if the database contains the item's category and group
+        synchronized (categories) {
+            // Get category entry or null
+            CategoryEntry categoryEntry = categories.get(item.getCategory());
+
+            // DB didn't contain that category
+            if (categoryEntry == null) {
+                // Attempt to add it
+                Integer id_cat = database.index.createCategory(item.getCategory());
+
+                if (id_cat == null) {
+                    logger.error(String.format("Could not create category for: %s (%s - %s)",
+                            item.getKey(), item.getCategory(), item.getGroup()));
+                    return null;
+                }
+
+                // Create new entry and store it in locally
+                categoryEntry = new CategoryEntry(id_cat);
+                categories.put(item.getCategory(), categoryEntry);
+            }
+
+            return categoryEntry;
+        }
+    }
+
+    private Integer indexGroup(CategoryEntry categoryEntry, Item item) {
+        synchronized (categories) {
+            // Check if the category already has that group
+            if (!categoryEntry.hasGroup(item.getGroup())) {
+                // Attempt to add it
+                Integer id_grp = database.index.addGroup(categoryEntry.getCategoryId(), item.getGroup());
+
+                if (id_grp == null) {
+                    logger.error(String.format("Could not create group for: %s (%s - %s)",
+                            item.getKey(), item.getCategory(), item.getGroup()));
+                    return null;
+                }
+
+                // Store the group withing the category
+                categoryEntry.addGroup(item.getGroup(), id_grp);
+            }
+
+            return categoryEntry.getGroupId(item.getGroup());
+        }
     }
 
     /**

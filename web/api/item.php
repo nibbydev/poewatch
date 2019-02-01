@@ -15,16 +15,9 @@ function check_errors() {
 }
 
 function get_league_data($pdo, $id) {
-  $query = "
-  SELECT 
-    i.mean, 
-    i.median, 
-    i.mode, 
-    i.min, 
-    i.max, 
-    i.exalted, 
-    i.total, 
-    i.daily, 
+  $query = "SELECT 
+    i.mean, i.median, i.mode, i.min, i.max, 
+    i.exalted, i.total, i.daily, i.current, i.accepted,
     l.id        AS leagueId,
     l.active    AS leagueActive, 
     l.upcoming  AS leagueUpcoming, 
@@ -38,8 +31,7 @@ function get_league_data($pdo, $id) {
   JOIN data_leagues AS l
     ON l.id = i.id_l
   WHERE i.id_d = ?
-  ORDER BY l.active DESC, l.id DESC
-  ";
+  ORDER BY l.active DESC, l.id DESC";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
@@ -48,17 +40,15 @@ function get_league_data($pdo, $id) {
 }
 
 function get_history_entries($pdo, $leagueId, $itemId) {
-  $query = "
-  select * from (
+  $query = "SELECT * from (
     SELECT 
-      mean, median, mode, daily, 
+      mean, median, mode, daily, current, accepted,
       DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
     FROM league_history_daily
     WHERE id_l = ? AND id_d = ?
     ORDER BY `time` DESC
     LIMIT 120
-  ) as foo ORDER BY foo.`time` ASC
-  ";
+  ) as foo ORDER BY foo.`time` ASC";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$leagueId, $itemId]);
@@ -103,25 +93,29 @@ function build_history_payload($pdo, $id) {
         'start'       =>        $row['leagueStart'],
         'end'         =>        $row['leagueEnd']
       ),
-      'mean'      =>          $row['mean']      === NULL ? null : (float) $row['mean'],
-      'median'    =>          $row['median']    === NULL ? null : (float) $row['median'],
-      'mode'      =>          $row['mode']      === NULL ? null : (float) $row['mode'],
-      'min'       =>          $row['min']       === NULL ? null : (float) $row['min'],
-      'max'       =>          $row['max']       === NULL ? null : (float) $row['max'],
-      'exalted'   =>          $row['exalted']   === NULL ? null : (float) $row['exalted'],
-      'total'     =>          $row['total']     === NULL ? null :   (int) $row['total'],
-      'daily'     =>          $row['daily']     === NULL ?    0 :   (int) $row['daily'],
+      'mean'      => (float) $row['mean'],
+      'median'    => (float) $row['median'],
+      'mode'      => (float) $row['mode'],
+      'min'       => (float) $row['min'],
+      'max'       => (float) $row['max'],
+      'exalted'   => (float) $row['exalted'],
+      'total'     => (int) $row['total'],
+      'daily'     => (int) $row['daily'],
+      'current'   => (int) $row['current'],
+      'accepted'  => (int) $row['accepted'],
       'history'   => array()
     );
 
     $historyStmt = get_history_entries($pdo, $row['leagueId'], $id);
     while ($historyRow = $historyStmt->fetch()) {
       $tmp['history'][] = array(
-        'time'   =>         $historyRow["time"],
-        'mean'   => (float) $historyRow["mean"],
-        'median' => (float) $historyRow["median"],
-        'mode'   => (float) $historyRow["mode"],
-        'daily'  => (int)   $historyRow["daily"]
+        'time'     =>         $historyRow["time"],
+        'mean'     => (float) $historyRow["mean"],
+        'median'   => (float) $historyRow["median"],
+        'mode'     => (float) $historyRow["mode"],
+        'daily'    => (int)   $historyRow["daily"],
+        'current'  => (int)   $historyRow["current"],
+        'accepted' => (int)   $historyRow["accepted"],
       );
     }
 

@@ -3,8 +3,6 @@ package poe.Managers.League;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Managers.League.Derserializer.BaseLeague;
-import poe.Managers.League.Derserializer.Rule;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,20 +12,19 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class LeagueEntry {
+public class League {
+    private static final Logger logger = LoggerFactory.getLogger(League.class);
     private String name, display, startAt, endAt;
     private boolean event, active, hardcore;
     private int id;
 
-    private static Logger logger = LoggerFactory.getLogger(LeagueEntry.class);
-
-    public LeagueEntry(BaseLeague baseLeague) {
+    public League(BaseLeague baseLeague) {
         name = baseLeague.getName();
         startAt = baseLeague.getStartAt();
         endAt = baseLeague.getEndAt();
         event = baseLeague.isEvent();
 
-        for (Rule rule : baseLeague.getRules()) {
+        for (BaseLeague.Rule rule : baseLeague.getRules()) {
             if (rule.getName().equals("Hardcore")) {
                 hardcore = true;
                 break;
@@ -35,7 +32,7 @@ public class LeagueEntry {
         }
     }
 
-    public LeagueEntry(ResultSet resultSet) throws SQLException {
+    public League(ResultSet resultSet) throws SQLException {
         id = resultSet.getInt("id");
         name = resultSet.getString("name");
         active = resultSet.getInt("active") == 1;
@@ -59,7 +56,7 @@ public class LeagueEntry {
             return 0;
         } else {
             long startDifference = Math.abs(currentDate.getTime() - startDate.getTime());
-            return (int)(startDifference / 86400000);
+            return (int) (startDifference / 86400000);
         }
     }
 
@@ -73,7 +70,7 @@ public class LeagueEntry {
         Date endDate = endAt == null ? null : parseDate(endAt);
 
         if (startDate == null || endDate == null) {
-            return  -1;
+            return -1;
         } else {
             long totalDifference = Math.abs(endDate.getTime() - startDate.getTime());
             return (int) (totalDifference / 86400000);
@@ -93,7 +90,7 @@ public class LeagueEntry {
         try {
             return format.parse(date);
         } catch (ParseException ex) {
-            logger.error(ex.getMessage(),ex);
+            logger.error(ex.getMessage(), ex);
         }
 
         return null;
