@@ -49,7 +49,7 @@ function GetIpPostLimit($pdo, $clientIP) {
   $query = "
     select count(*) as count
     from web_feedback 
-    where ip = ? 
+    where ip_crc = crc32(?) 
     and time > date_sub(now(), interval 1 hour)
   ";
 
@@ -60,7 +60,7 @@ function GetIpPostLimit($pdo, $clientIP) {
 }
 
 function CreateDbEntry($pdo, $contact, $message, $clientIP) {
-  $query = "insert into web_feedback (ip, contact, message) values (?, ?, ?)";
+  $query = "insert into web_feedback (ip_crc, contact, message) values (crc32(?), ?, ?)";
  
   $stmt = $pdo->prepare($query);
   return $stmt->execute([$clientIP, $contact, $message]);

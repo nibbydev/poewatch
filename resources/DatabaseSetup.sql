@@ -309,11 +309,11 @@ CREATE TABLE account_history (
 CREATE TABLE web_feedback (
     id        INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     time      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ip        VARCHAR(15)   NOT NULL,
+    ip_crc    INT           UNSIGNED NOT NULL,
     contact   VARCHAR(128)  NOT NULL,
     message   TEXT          NOT NULL,
 
-    INDEX ip      (ip),
+    INDEX ip_crc  (ip_crc),
     INDEX `time`  (`time`),
     INDEX contact (contact)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
