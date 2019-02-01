@@ -24,7 +24,10 @@ public class Mappers {
      * Stash object
      */
     public class Stash {
-        public String id, accountName, stash, stashType, lastCharacterName, league;
+        @SerializedName("stash")
+        public String stashName;
+
+        public String id, accountName, stashType, lastCharacterName, league;
         public List<BaseItem> items;
 
         @SerializedName("public")

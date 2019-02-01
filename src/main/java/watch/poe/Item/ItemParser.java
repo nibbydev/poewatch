@@ -19,7 +19,7 @@ public class ItemParser {
     // Constructor
     //------------------------------------------------------------------------------------------------------------
 
-    public ItemParser(Mappers.BaseItem base) {
+    public ItemParser(Mappers.BaseItem base, String stashNote) {
         this.base = base;
 
         // Do a few checks on the league, note and etc
@@ -27,7 +27,11 @@ public class ItemParser {
         if (discard) return;
 
         // Extract price and currency type from item if present
-        parseNote(base);
+        parseNote(base.getNote());
+        // If item didn't have valid buyout note, maybe stash does
+        if (price == null) parseNote(stashNote);
+
+        // No price tag found
         if (discard) return;
 
         // Branch item if necessary
@@ -69,24 +73,26 @@ public class ItemParser {
     /**
      *  Extract price and currency type from item
      */
-    private void parseNote(Mappers.BaseItem base) {
+    private void parseNote(String note) {
         // No price set on item
-        if (base.getNote() == null || base.getNote().equals("")) {
-            if (!config.getBoolean("entry.acceptNullPrice")) {
-                discard = true;
+        if (note == null || note.equals("")) {
+            if (config.getBoolean("entry.acceptNullPrice")) {
+                return;
             }
 
+            discard = true;
             return;
         }
 
-        String[] noteList = base.getNote().split(" ");
+        String[] noteList = note.split(" ");
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
         if (noteList.length < 3 || !noteList[0].equals("~b/o") && !noteList[0].equals("~price")) {
-            if (!config.getBoolean("entry.acceptNullPrice")) {
-                discard = true;
+            if (config.getBoolean("entry.acceptNullPrice")) {
+                return;
             }
 
+            discard = true;
             return;
         }
 
@@ -101,35 +107,39 @@ public class ItemParser {
                 price = Double.parseDouble(priceArray[0]) / Double.parseDouble(priceArray[1]);
             }
         } catch (Exception ex) {
-            if (!config.getBoolean("entry.acceptNullPrice")) {
-                discard = true;
+            if (config.getBoolean("entry.acceptNullPrice")) {
+                return;
             }
 
+            discard = true;
             return;
         }
 
         // If the currency type listed is not valid
         if (!relationManager.getCurrencyAliases().containsKey(noteList[2])) {
-            if (!config.getBoolean("entry.acceptNullPrice")) {
-                discard = true;
+            if (config.getBoolean("entry.acceptNullPrice")) {
+                price = null;
+                return;
             }
 
-            price = null;
+            discard = true;
             return;
         }
 
         // If listed price was something retarded
         if (price < 0.0001 || price > 90000) {
-            if (!config.getBoolean("entry.acceptNullPrice")) {
-                discard = true;
+            if (config.getBoolean("entry.acceptNullPrice")) {
+                price = null;
+                return;
             }
 
-            price = null;
+            discard = true;
             return;
         }
 
         // Get id of the currency the item was listed for
         idPrice = relationManager.getCurrencyAliases().get(noteList[2]);
+        return;
     }
 
     /**
