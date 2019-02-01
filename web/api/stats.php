@@ -40,10 +40,9 @@ header("Content-Type: application/json");
 
 $types = array(
   "m" => array(
-    "COUNT_REPLY_SIZE",
     "TIME_CYCLE_TOTAL",
+    "COUNT_REPLY_SIZE",
     "TIME_CALC_PRICES",
-    "TIME_UPDATE_COUNTERS",
     "TIME_CALC_EXALT",
     "TIME_REPLY_DOWNLOAD",
     "TIME_PARSE_REPLY",
@@ -53,10 +52,7 @@ $types = array(
     "TIME_UPLOAD_USERNAMES"
   ),
   "h" => array(
-    "TIME_ADD_HOURLY",
-    "TIME_CALC_DAILY",
-    "TIME_RESET_COUNTERS",
-    "TIME_CALC_CURRENT"
+    "TIME_CALC_COUNTERS"
   ),
   "d" => array(
     "TIME_REMOVE_ENTRIES",
