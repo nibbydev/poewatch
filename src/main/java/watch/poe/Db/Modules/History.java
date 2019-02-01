@@ -32,22 +32,6 @@ public class History {
     }
 
     /**
-     * Copies data from table `league_items` to table `league_history_hourly` every hour
-     * on a rolling basis with a history of 24 hours
-     *
-     * @return True on success
-     */
-    public boolean addHourly() {
-        String query =  "INSERT INTO league_history_hourly (id_l, id_d, inc) " +
-                        "SELECT id_l, id_d, inc " +
-                        "FROM league_items AS i " +
-                        "JOIN data_leagues AS l ON i.id_l = l.id " +
-                        "WHERE l.active = 1 ";
-
-        return database.executeUpdateQueries(query);
-    }
-
-    /**
      * Copies data from table `league_items` to table `league_history_daily` every 24h
      * on a rolling basis
      *

@@ -108,7 +108,7 @@ public class Calc {
     }
 
     /**
-     * Calculates exalted price for items in table `league_items` based on exalted prices in same table
+     * Calculates how many of each item there are currently on sale
      *
      * @return True on success
      */
@@ -149,19 +149,19 @@ public class Calc {
     }
 
     /**
-     * Calculates the daily total for items in table `league_items` based on history entries from table `league_history`
+     * Calculates the daily total for items
      *
      * @return True on success
      */
-    public boolean calcDaily() {
-        String query =  "UPDATE league_items AS i  " +
-                        "LEFT JOIN ( " +
-                        "  SELECT id_l, id_d, SUM(inc) AS daily " +
-                        "  FROM league_history_hourly " +
-                        "  WHERE time > ADDDATE(NOW(), INTERVAL -24 HOUR) " +
-                        "  GROUP BY id_l, id_d " +
-                        ") AS h ON h.id_l = i.id_l AND h.id_d = i.id_d " +
-                        "SET i.daily = IFNULL(h.daily, 0) ";
+    public boolean calcCounters() {
+        String query =  "update league_items as foo " +
+                        "left join ( " +
+                        "  select id_l, id_d, count(*) as count " +
+                        "  from league_entries " +
+                        "  where discovered > date_sub(now(), interval 1 hour) " +
+                        "  group by id_l, id_d " +
+                        ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
+                        "set foo.daily = ifnull(bar.count, 0), foo.total = foo.total + bar.count ";
 
         return database.executeUpdateQueries(query);
     }

@@ -149,7 +149,6 @@ CREATE TABLE league_items (
     exalted  DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     total    INT(16)        UNSIGNED NOT NULL DEFAULT 0,
     daily    INT(8)         UNSIGNED NOT NULL DEFAULT 0,
-    inc      INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     current  INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     accepted INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     spark    VARCHAR(128)   DEFAULT NULL,
@@ -159,8 +158,7 @@ CREATE TABLE league_items (
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
     INDEX total    (total),
-    INDEX median   (median),
-    INDEX inc      (inc)
+    INDEX median   (median)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -232,23 +230,6 @@ CREATE TABLE league_history_daily (
     FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
 
-    INDEX time (time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure league_history_hourly
---
-
-CREATE TABLE league_history_hourly (
-    id_l  SMALLINT   UNSIGNED NOT NULL,
-    id_d  INT        UNSIGNED NOT NULL,
-    time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    inc   INT(8)     UNSIGNED DEFAULT NULL,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
-
-    INDEX ids  (id_l, id_d),
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -468,24 +449,6 @@ VALUES
     (12,    'twoaxe',	    '2H Axes'),
     (12,    'twomace',	  '2H Maces'),
     (12,    'jewel',	    'Jewels');
-
--- --------------------------------------------------------------------------------------------------------------------
--- Event setup
--- --------------------------------------------------------------------------------------------------------------------
-
---
--- Event configuration remove24
---
-
-DROP EVENT IF EXISTS remove24;
-
-CREATE EVENT remove24
-  ON SCHEDULE EVERY 1 HOUR
-  STARTS '2018-01-01 08:00:03'
-  COMMENT 'Clears out entries older than 24h'
-  DO
-    DELETE FROM league_history_hourly
-    WHERE       time < ADDDATE(NOW(), INTERVAL -25 HOUR);
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- User accounts

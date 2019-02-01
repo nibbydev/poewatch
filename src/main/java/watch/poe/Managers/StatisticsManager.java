@@ -20,7 +20,6 @@ public class StatisticsManager {
     private final Collector[] collectors = {
             new Collector(StatType.TIME_CYCLE_TOTAL,        GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.TIME_CALC_PRICES,        GroupType.AVG,      TimeFrame.M_1,     60),
-            new Collector(StatType.TIME_UPDATE_COUNTERS,    GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.TIME_CALC_EXALT,         GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.TIME_REPLY_DOWNLOAD,     GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.TIME_PARSE_REPLY,        GroupType.AVG,      TimeFrame.M_1,     60),
@@ -37,10 +36,8 @@ public class StatisticsManager {
             new Collector(StatType.COUNT_ACTIVE_ACCOUNTS,   GroupType.SUM,      TimeFrame.M_60,    null),
 
             new Collector(StatType.TIME_CYCLE_LEAGUES,      GroupType.AVG,      TimeFrame.M_60,    24),
-            new Collector(StatType.TIME_ADD_HOURLY,         GroupType.AVG,      TimeFrame.M_60,    24),
-            new Collector(StatType.TIME_CALC_DAILY,         GroupType.AVG,      TimeFrame.M_60,    24),
+            new Collector(StatType.TIME_CALC_COUNTERS,      GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.TIME_CALC_CURRENT,       GroupType.AVG,      TimeFrame.M_60,    24),
-            new Collector(StatType.TIME_RESET_COUNTERS,     GroupType.AVG,      TimeFrame.M_60,    24),
             new Collector(StatType.COUNT_DUPLICATE_JOB,     GroupType.SUM,      TimeFrame.M_60,    24),
 
             new Collector(StatType.APP_STARTUP,             GroupType.COUNT,    TimeFrame.M_60,    24),
