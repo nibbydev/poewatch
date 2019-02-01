@@ -161,7 +161,7 @@ public class Calc {
                         "  where discovered > date_sub(now(), interval 1 hour) " +
                         "  group by id_l, id_d " +
                         ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
-                        "set foo.daily = ifnull(bar.count, 0), foo.total = foo.total + bar.count ";
+                        "set foo.daily = ifnull(bar.count, 0), foo.total = foo.total + ifnull(bar.count, 0) ";
 
         return database.executeUpdateQueries(query);
     }
