@@ -205,7 +205,7 @@ CREATE TABLE league_entries (
     INDEX discovered (discovered),
     INDEX stash_crc (stash_crc),
     INDEX updated (updated),
-    INDEX price (price),
+    INDEX price (price)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

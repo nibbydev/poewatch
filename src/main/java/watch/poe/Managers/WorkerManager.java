@@ -122,7 +122,8 @@ public class WorkerManager extends Thread {
             database.stats.countActiveAccounts(statisticsManager);
 
             statisticsManager.startTimer(StatType.TIME_CALC_COUNTERS);
-            database.calc.calcCounters();
+            database.calc.calcDaily();
+            database.calc.calcTotal();
             statisticsManager.clkTimer(StatType.TIME_CALC_COUNTERS);
 
             statisticsManager.startTimer(StatType.TIME_CALC_CURRENT);
