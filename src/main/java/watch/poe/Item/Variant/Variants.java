@@ -181,25 +181,22 @@ public class Variants {
         variantTypes = new VariantType[]{abyssalOneSocket, abyssalTwoSocket};
     }};
 
-    /**
-     * Generates array of all current variations
-     *
-     * @return Array of ItemVariant
-     */
-    public static ItemVariant[] GetVariants() {
-        return new ItemVariant[]{
-                splendour,
-                vinktar,
-                invitation,
-                fostering,
-                guidance,
-                impresence,
-                poacher,
-                shroud,
-                bubonic,
-                tomb,
-                hale,
-                command
-        };
+    private static ItemVariant[] variants = new ItemVariant[]{
+            splendour,
+            vinktar,
+            invitation,
+            fostering,
+            guidance,
+            impresence,
+            poacher,
+            shroud,
+            bubonic,
+            tomb,
+            hale,
+            command
+    };
+
+    public static ItemVariant[] getVariants() {
+        return variants;
     }
 }

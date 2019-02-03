@@ -25,7 +25,6 @@ public class RelationManager {
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
     private final Map<String, CategoryEntry> categories = new HashMap<>();
 
-    private final ItemVariant[] itemVariants = Variants.GetVariants();
     private final Map<String, Set<String>> baseItems = BaseItems.GenBaseMap();
     private final Map<String, Integer> currencyAliases = new HashMap<>();
 
@@ -314,7 +313,7 @@ public class RelationManager {
     public String findVariant(Item item) {
         int matches;
 
-        ItemVariant itemVariant = Arrays.stream(itemVariants)
+        ItemVariant itemVariant = Arrays.stream(Variants.getVariants())
                 .filter(i -> i.name.equals(item.getName()))
                 .findFirst()
                 .orElse(null);
