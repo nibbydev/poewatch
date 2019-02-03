@@ -5,8 +5,7 @@
 
   $PAGEDATA["title"] = "Stats - PoeWatch";
   $PAGEDATA["description"] = "Statistics about the site";
-  $PAGEDATA["pageHeader"] = "Statistics";
-
+  $PAGEDATA["pageHeader"] = "Statistics (WIP)";
 
   $PAGEDATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
   $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";

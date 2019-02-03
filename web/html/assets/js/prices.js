@@ -1286,7 +1286,7 @@ function makeGetRequest() {
   $(".buffering-msg").remove();
 
   let request = $.ajax({
-    url: "https://api.poe.watch/get.php",
+    url: "https://api.poe.watch/get",
     data: {
       league: FILTER.league.name, 
       category: FILTER.category
@@ -1328,7 +1328,7 @@ function timedRequestCallback() {
   console.log("Automatic update");
 
   var request = $.ajax({
-    url: "https://api.poe.watch/get.php",
+    url: "https://api.poe.watch/get",
     data: {
       league: FILTER.league.name, 
       category: FILTER.category

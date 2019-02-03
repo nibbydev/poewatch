@@ -22,21 +22,18 @@ function formatTime(time) {
       coeff = 1000 * 60;
       suffix = "m";
       break;
-    case "0":
-    case "h":
-      coeff = 1000 * 60 * 60;
-      suffix = "h";
-      break;
     case "d":
       coeff = 1000 * 60 * 60 * 24;
       suffix = "d";
       break;
     default:
+      coeff = 1000 * 60 * 60;
+      suffix = "h";
       break;
   }
 
   var diff = Math.abs(new Date(time) - new Date());
-  var val = Math.ceil(diff / coeff);
+  var val = Math.floor(diff / coeff);
 
   return val + suffix + " ago";
 }
@@ -48,11 +45,12 @@ function parseStats(json) {
     case "m":
       labelFreq = 5;
       break;
-    case "0":
-      labelFreq = 5;
+    case "h":
+    case "d":
+      labelFreq = 1;
       break;
     default:
-      labelFreq = 1;
+      labelFreq = Math.ceil(json.labels.length / 16);
       break;
   }
 

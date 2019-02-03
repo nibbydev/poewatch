@@ -68,6 +68,15 @@ $types = array(
     "COUNT_ACCEPTED_ITEMS",
     "COUNT_ACTIVE_ACCOUNTS"
   ),
+
+  "items" => array(
+    "COUNT_TOTAL_ITEMS",
+    "COUNT_ACCEPTED_ITEMS"
+  ),
+
+  "accounts" => array(
+    "COUNT_ACTIVE_ACCOUNTS"
+  ),
 );
 
 if (!isset($_GET["type"]) || !array_key_exists($_GET["type"], $types)) {
