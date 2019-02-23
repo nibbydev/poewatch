@@ -4,14 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.League.BaseLeague;
-import poe.Managers.League.League;
 import poe.Managers.PriceManager;
 import poe.Worker.Entry.RawItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -172,13 +170,14 @@ public class Upload {
 
         // Update data for inserted league entry
         String query2 = "UPDATE data_leagues " +
-                        "SET    start    = ?, " +
-                        "       end      = ?, " +
-                        "       upcoming = 0, " +
-                        "       active   = 1, " +
-                        "       event    = ?, " +
-                        "       hardcore = ? " +
-                        "WHERE  name     = ? " +
+                        "SET    start     = ?, " +
+                        "       end       = ?, " +
+                        "       upcoming  = 0, " +
+                        "       active    = 1, " +
+                        "       event     = ?, " +
+                        "       hardcore  = ?, " +
+                        "       challenge = IF(id > 2, ?, 0) " +
+                        "WHERE  name      = ? " +
                         "LIMIT  1; ";
 
         logger.info("Updating database leagues");
@@ -205,7 +204,8 @@ public class Upload {
                     statement.setString(2, league.getEndAt());
                     statement.setInt(3, league.isEvent() ? 1 : 0);
                     statement.setInt(4, league.isHardcore() ? 1 : 0);
-                    statement.setString(5, league.getName());
+                    statement.setInt(5, league.isEvent() ? 0 : 1);
+                    statement.setString(6, league.getName());
                     statement.addBatch();
                 }
 

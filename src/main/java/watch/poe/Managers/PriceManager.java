@@ -127,11 +127,13 @@ public class PriceManager {
             throw new RuntimeException();
         }
 
-        if (entryList.size() < 3) {
-            return;
-        }
 
-        List<Double> entries = filterEntries(entryList);
+        List<Double> entries;
+        if (entryList.size() > 4) {
+            entries = filterEntries(entryList);
+        } else {
+            entries = entryList;
+        }
 
         // If no entries were left, skip the item
         if (entries.isEmpty()) {

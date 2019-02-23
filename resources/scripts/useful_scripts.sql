@@ -2,7 +2,12 @@
 -- A list of somewhat useful queries for database management
 --
 
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Database migration: create challenge flag in data_leagues
+-- ---------------------------------------------------------------------------------------------------------------------
 
+alter table data_leagues add challenge tinyint(1) unsigned not null default 0 after hardcore;
+update data_leagues set challenge = 1 where id > 2 and event = 0;
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Database migration: move over to CRC32 hashes

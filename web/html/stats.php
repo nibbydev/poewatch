@@ -5,8 +5,7 @@
 
   $PAGEDATA["title"] = "Stats - PoeWatch";
   $PAGEDATA["description"] = "Statistics about the site";
-  $PAGEDATA["pageHeader"] = "Statistics";
-
+  $PAGEDATA["pageHeader"] = "Statistics (WIP)";
 
   $PAGEDATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
   $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
@@ -33,6 +32,11 @@
 .ct-series.ct-series .ct-line {
   stroke: rgb(112, 202, 90);
   stroke-width: .15em;
+}
+
+.ct-series.ct-series .ct-bar {
+  stroke: rgb(112, 202, 90) !important;
+  stroke-width: .3em !important;
 }
 
 /* hide points by default */

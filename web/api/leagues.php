@@ -28,6 +28,7 @@ function parse_data($stmt) {
       'upcoming'  => (bool) $row['upcoming'],
       'active'    => (bool) $row['active'],
       'event'     => (bool) $row['event'],
+      'challenge' => (bool) $row['challenge'],
       'start'     =>        $row['start'],
       'end'       =>        $row['end'],
       'duration'  => array(

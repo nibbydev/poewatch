@@ -108,28 +108,6 @@ public class Calc {
     }
 
     /**
-     * Calculates how many of each item there are currently on sale
-     *
-     * @return True on success
-     */
-    public boolean calcCurrent() {
-        String query =  "update league_items as li " +
-                        "join ( " +
-                        "  select le.id_l, le.id_d, count(*) as count " +
-                        "  from league_entries as le " +
-                        "  join ( " +
-                        "    select distinct account_crc from league_accounts " +
-                        "    where updated > date_sub(now(), interval 6 hour) " +
-                        "  ) as foo2 on le.account_crc = foo2.account_crc " +
-                        "  where le.stash_crc is not null " +
-                        "  group by le.id_l, le.id_d " +
-                        ") as foo1 on foo1.id_l = li.id_l and foo1.id_d = li.id_d " +
-                        "set li.current = foo1.count; ";
-
-        return database.executeUpdateQueries(query);
-    }
-
-    /**
      * Calculates exalted price for items in table `league_items` based on exalted prices in same table
      *
      * @return True on success
@@ -149,11 +127,29 @@ public class Calc {
     }
 
     /**
-     * Calculates the daily total for items
+     * Calculates the daily for items
      *
      * @return True on success
      */
-    public boolean calcCounters() {
+    public boolean calcDaily() {
+        String query =  "update league_items as foo " +
+                        "left join ( " +
+                        "  select id_l, id_d, count(*) as count " +
+                        "  from league_entries " +
+                        "  where discovered > date_sub(now(), interval 24 hour) " +
+                        "  group by id_l, id_d " +
+                        ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
+                        "set foo.daily = ifnull(bar.count, 0) ";
+
+        return database.executeUpdateQueries(query);
+    }
+
+    /**
+     * Calculates the total for items
+     *
+     * @return True on success
+     */
+    public boolean calcTotal() {
         String query =  "update league_items as foo " +
                         "left join ( " +
                         "  select id_l, id_d, count(*) as count " +
@@ -161,7 +157,29 @@ public class Calc {
                         "  where discovered > date_sub(now(), interval 1 hour) " +
                         "  group by id_l, id_d " +
                         ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
-                        "set foo.daily = ifnull(bar.count, 0), foo.total = foo.total + bar.count ";
+                        "set foo.total = foo.total + ifnull(bar.count, 0) ";
+
+        return database.executeUpdateQueries(query);
+    }
+
+    /**
+     * Calculates how many of each item there are currently on sale
+     *
+     * @return True on success
+     */
+    public boolean calcCurrent() {
+        String query =  "update league_items as li " +
+                "join ( " +
+                "  select le.id_l, le.id_d, count(*) as count " +
+                "  from league_entries as le " +
+                "  join ( " +
+                "    select distinct account_crc from league_accounts " +
+                "    where updated > date_sub(now(), interval 6 hour) " +
+                "  ) as foo2 on le.account_crc = foo2.account_crc " +
+                "  where le.stash_crc is not null " +
+                "  group by le.id_l, le.id_d " +
+                ") as foo1 on foo1.id_l = li.id_l and foo1.id_d = li.id_d " +
+                "set li.current = foo1.count; ";
 
         return database.executeUpdateQueries(query);
     }

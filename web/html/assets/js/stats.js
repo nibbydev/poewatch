@@ -15,47 +15,13 @@ $(document).ready(function() {
 }); 
 
 function formatTime(time) {
-  var coeff, suffix;
-
-  switch (TYPE) {
-    case "m":
-      coeff = 1000 * 60;
-      suffix = "m";
-      break;
-    case "0":
-    case "h":
-      coeff = 1000 * 60 * 60;
-      suffix = "h";
-      break;
-    case "d":
-      coeff = 1000 * 60 * 60 * 24;
-      suffix = "d";
-      break;
-    default:
-      break;
-  }
-
   var diff = Math.abs(new Date(time) - new Date());
-  var val = Math.ceil(diff / coeff);
+  var val = Math.floor(diff / 1000 / 60 / 60);
 
-  return val + suffix + " ago";
+  return val.toString();
 }
 
 function parseStats(json) {
-  var labelFreq;
-
-  switch (TYPE) {
-    case "m":
-      labelFreq = 5;
-      break;
-    case "0":
-      labelFreq = 5;
-      break;
-    default:
-      labelFreq = 1;
-      break;
-  }
-
   var chartOptions = {
     height: 250,
     showPoint: true,
@@ -66,7 +32,7 @@ function parseStats(json) {
       showGrid: true,
       showLabel: true,
       labelInterpolationFnc: function skipLabels(value, index) {
-        return index % labelFreq === 0 ? value : null;
+        return index % 16 === 0 ? value + "h" : null;
       }
     },
     fullWidth: true,
@@ -77,7 +43,7 @@ function parseStats(json) {
           x: 0,
           y: -20,
         },
-        template: '{{key}}: {{value}}',
+        template: '{{key}}h ago: {{value}}',
         hideDelay: 500
       })
     ]
@@ -90,10 +56,15 @@ function parseStats(json) {
 
   for (let i = 0; i < json.types.length; i++) {
     const type = json.types[i];
+
+    var series = [];
+    for (let j = 0; j < json.series[i].length; j++) {
+      series.push(json.series[i][j] === null ? 0 : json.series[i][j]);
+    }
     
     var data = {
       labels: labels,
-      series: [json.series[i]]
+      series: [series]
     }
 
     var cardTemplate = `
@@ -111,10 +82,22 @@ function parseStats(json) {
     `.trim().replace("{{title}}", type).replace("{{type}}", type);
 
     $("#main").append(cardTemplate);
-    new Chartist.Line('#CHART-'+type, data, chartOptions);
+
+    switch (type) {
+      case "COUNT_API_ERRORS_READ_TIMEOUT":
+      case "COUNT_API_ERRORS_CONNECT_TIMEOUT":
+      case "COUNT_API_ERRORS_CONNECTION_RESET":
+      case "COUNT_API_ERRORS_5XX":
+      case "COUNT_API_ERRORS_429":
+      case "COUNT_API_ERRORS_DUPLICATE":
+        new Chartist.Bar('#CHART-'+type, data, chartOptions);
+        break;
+      default:
+        new Chartist.Line('#CHART-'+type, data, chartOptions);
+        break;
+    }
   }
 }
-
 
 function parseQueryParam(key) {
   let url = window.location.href;

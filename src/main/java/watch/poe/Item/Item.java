@@ -540,6 +540,7 @@ public class Item {
         icon = enchantment_icon;
         typeLine = null;
         frameType = 0;
+        corrupted = null;
 
         // Attempt to extract the enchantment's name from its modifiers
         extractEnchantName();
