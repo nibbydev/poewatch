@@ -3,36 +3,52 @@ function getStats($pdo, $types) {
   $query = "SELECT * from (
       select DATE_FORMAT(time, '%Y-%m-%dT%TZ') as time, value
       from data_statistics
-      where statType = ?
+      where statType = ? and time >= ?
       order by time desc
-      limit 128
     ) foo
     order by foo.time asc
   ";
 
+  // 2019-02-19T23:00:00Z
+
+  $buffer = array();
   $payload = array(
+    "types" => $types,
     "labels" => array(),
-    "series" => array(),
-    "types" => $types
+    "series" => array()
   );
-  
+
+  $end    = (new DateTime())->modify("+1 hour");
+  $start  = (new DateTime())->modify("-128 hour");
+  $period = new DatePeriod($start, new DateInterval('PT1H'), $end);
+
+  foreach ($period as $day) {
+    $day = $day->format('Y-m-d\TH:00:00\Z');
+    $buffer[$day] = array();
+    $payload["labels"][] = $day;
+  }
+
   foreach ($types as $type) {
     $stmt = $pdo->prepare($query);
-    $stmt->execute([$type]);
-
-    $times = array();
-    $vals = array();
+    $stmt->execute([$type, $start->format('Y-m-d H:00:00')]);
 
     while ($row = $stmt->fetch()) {
-      $times[] = $row["time"];
-      $vals[] = $row["value"];
+      $buffer[$row["time"]][$type] = $row["value"];
     }
+  }
 
-    if (sizeof($payload["labels"]) < sizeof($times)) {
-      $payload["labels"] = $times;
+  foreach ($types as $type) {
+    $typeValues = array();
+    
+    foreach ($buffer as $day => $values) {
+      if (key_exists($type, $values)) {
+        $typeValues[] = $values[$type];
+      } else {
+        $typeValues[] = null;
+      }
     }
     
-    $payload["series"][] = $vals;
+    $payload["series"][] = $typeValues;
   }
 
   return $payload;
@@ -42,42 +58,18 @@ function getStats($pdo, $types) {
 header("Content-Type: application/json");
 
 $types = array(
-  "m" => array(
+  "time" => array(
     "TIME_CYCLE_TOTAL",
-    "COUNT_REPLY_SIZE",
-    "TIME_CALC_PRICES",
-    "TIME_CALC_EXALT",
-    "TIME_REPLY_DOWNLOAD",
-    "TIME_PARSE_REPLY",
-    "TIME_UPLOAD_ACCOUNTS",
-    "TIME_RESET_STASHES",
-    "TIME_UPLOAD_ENTRIES",
-    "TIME_UPLOAD_USERNAMES"
-  ),
-  "h" => array(
-    "TIME_CALC_COUNTERS"
-  ),
-  "d" => array(
-    "TIME_REMOVE_ENTRIES",
-    "TIME_ADD_DAILY",
-    "TIME_CALC_SPARK",
-    "TIME_ACCOUNT_CHANGES"
+    "TIME_API_REPLY_DOWNLOAD",
+    "TIME_PARSE_REPLY"
   ),
 
-  "0" => array(
+  "count" => array(
     "COUNT_API_CALLS",
+    "COUNT_REPLY_SIZE",
     "COUNT_TOTAL_STASHES",
     "COUNT_TOTAL_ITEMS",
     "COUNT_ACCEPTED_ITEMS",
-    "COUNT_ACTIVE_ACCOUNTS"
-  ),
-
-  "items" => array(
-    "COUNT_TOTAL_ITEMS",
-    "COUNT_ACCEPTED_ITEMS"
-  ),
-
-  "accounts" => array(
     "COUNT_ACTIVE_ACCOUNTS"
   ),
 
@@ -87,7 +79,8 @@ $types = array(
     "COUNT_API_ERRORS_CONNECT_TIMEOUT",
     "COUNT_API_ERRORS_CONNECTION_RESET",
     "COUNT_API_ERRORS_5XX",
-    "COUNT_API_ERRORS_429"
+    "COUNT_API_ERRORS_429",
+    "COUNT_API_ERRORS_DUPLICATE"
   ),
 );
 

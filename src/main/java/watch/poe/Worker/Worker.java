@@ -139,7 +139,7 @@ public class Worker extends Thread {
         Worker.lastPullTime = System.currentTimeMillis();
 
         try {
-            statisticsManager.startTimer(StatType.TIME_REPLY_DOWNLOAD);
+            statisticsManager.startTimer(StatType.TIME_API_REPLY_DOWNLOAD);
 
             // Define the request
             URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
@@ -185,7 +185,7 @@ public class Worker extends Thread {
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.COUNT_DUPLICATE_JOB, 1);
+                            statisticsManager.addValue(StatType.COUNT_API_ERRORS_DUPLICATE, 1);
                             return null;
                         }
                     }
@@ -223,7 +223,7 @@ public class Worker extends Thread {
                 logger.error(ex.getMessage(), ex);
             }
 
-            statisticsManager.clkTimer(StatType.TIME_REPLY_DOWNLOAD);
+            statisticsManager.clkTimer(StatType.TIME_API_REPLY_DOWNLOAD);
             statisticsManager.addValue(StatType.COUNT_REPLY_SIZE, totalByteCount / 1000);
         }
 
@@ -326,21 +326,10 @@ public class Worker extends Thread {
         statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, items.size());
 
         // Shovel everything to db
-        statisticsManager.startTimer(StatType.TIME_UPLOAD_ACCOUNTS);
         database.upload.uploadAccounts(accounts);
-        statisticsManager.clkTimer(StatType.TIME_UPLOAD_ACCOUNTS);
-
-        statisticsManager.startTimer(StatType.TIME_RESET_STASHES);
         database.flag.resetStashReferences(nullStashes);
-        statisticsManager.clkTimer(StatType.TIME_RESET_STASHES);
-
-        statisticsManager.startTimer(StatType.TIME_UPLOAD_ENTRIES);
         database.upload.uploadEntries(items);
-        statisticsManager.clkTimer(StatType.TIME_UPLOAD_ENTRIES);
-
-        statisticsManager.startTimer(StatType.TIME_UPLOAD_USERNAMES);
         database.upload.uploadUsernames(usernames);
-        statisticsManager.clkTimer(StatType.TIME_UPLOAD_USERNAMES);
     }
 
     /**

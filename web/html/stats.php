@@ -34,6 +34,11 @@
   stroke-width: .15em;
 }
 
+.ct-series.ct-series .ct-bar {
+  stroke: rgb(112, 202, 90) !important;
+  stroke-width: .3em !important;
+}
+
 /* hide points by default */
 .ct-series.ct-series .ct-point {
   stroke-width: 0;
