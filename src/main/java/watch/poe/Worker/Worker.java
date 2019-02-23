@@ -10,8 +10,8 @@ import poe.Item.ItemParser;
 import poe.Item.Mappers;
 import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
-import poe.Managers.StatisticsManager;
 import poe.Managers.Stat.StatType;
+import poe.Managers.StatisticsManager;
 import poe.Managers.WorkerManager;
 import poe.Worker.Entry.RawItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
@@ -192,6 +192,19 @@ public class Worker extends Thread {
                 }
             }
         } catch (Exception ex) {
+            // Very professional exception logging
+            if (ex.getMessage().contains("Read timed out")) {
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_READ_TIMEOUT, null);
+            } else if (ex.getMessage().contains("connect timed out")) {
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT, null);
+            } else if (ex.getMessage().contains("Connection reset")) {
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECTION_RESET, null);
+            } else if (ex.getMessage().contains("502") || ex.getMessage().contains("503")) {
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_5XX, null);
+            } else if (ex.getMessage().contains("429")) {
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_429, null);
+            }
+
             logger.error("Caught worker download error: " + ex.getMessage());
 
             // Add old changeID to the pool only if a new one hasn't been found

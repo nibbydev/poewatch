@@ -1,10 +1,13 @@
 <?php
 function getStats($pdo, $types) {
-  $query = "
-    select DATE_FORMAT(time, '%Y-%m-%dT%TZ') as time, value
-    from data_statistics
-    where statType = ?
-    order by time asc
+  $query = "SELECT * from (
+      select DATE_FORMAT(time, '%Y-%m-%dT%TZ') as time, value
+      from data_statistics
+      where statType = ?
+      order by time desc
+      limit 128
+    ) foo
+    order by foo.time asc
   ";
 
   $payload = array(
@@ -76,6 +79,15 @@ $types = array(
 
   "accounts" => array(
     "COUNT_ACTIVE_ACCOUNTS"
+  ),
+
+  "error" => array(
+    "COUNT_API_CALLS",
+    "COUNT_API_ERRORS_READ_TIMEOUT",
+    "COUNT_API_ERRORS_CONNECT_TIMEOUT",
+    "COUNT_API_ERRORS_CONNECTION_RESET",
+    "COUNT_API_ERRORS_5XX",
+    "COUNT_API_ERRORS_429"
   ),
 );
 

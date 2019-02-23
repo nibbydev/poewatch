@@ -29,6 +29,12 @@ public class StatisticsManager {
             new Collector(StatType.TIME_UPLOAD_USERNAMES,   GroupType.AVG,      TimeFrame.M_1,     60),
             new Collector(StatType.COUNT_REPLY_SIZE,        GroupType.AVG,      TimeFrame.M_1,     60),
 
+            new Collector(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT,    GroupType.COUNT,    TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_API_ERRORS_READ_TIMEOUT,       GroupType.COUNT,    TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_API_ERRORS_CONNECTION_RESET,   GroupType.COUNT,    TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_API_ERRORS_5XX,                GroupType.COUNT,    TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_API_ERRORS_429,                GroupType.COUNT,    TimeFrame.M_60,    null),
+
             new Collector(StatType.COUNT_API_CALLS,         GroupType.COUNT,    TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_TOTAL_STASHES,     GroupType.SUM,      TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_TOTAL_ITEMS,       GroupType.SUM,      TimeFrame.M_60,    null),
