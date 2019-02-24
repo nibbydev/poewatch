@@ -21,6 +21,7 @@ public class StatisticsManager {
             new Collector(StatType.TIME_CYCLE_TOTAL,                    GroupType.AVG,      TimeFrame.M_60,    null),
             new Collector(StatType.TIME_API_REPLY_DOWNLOAD,             GroupType.AVG,      TimeFrame.M_60,    null),
             new Collector(StatType.TIME_PARSE_REPLY,                    GroupType.AVG,      TimeFrame.M_60,    null),
+            new Collector(StatType.TIME_API_TTFB,                       GroupType.AVG,      TimeFrame.M_60,    null),
 
             new Collector(StatType.COUNT_API_ERRORS_DUPLICATE,          GroupType.SUM,      TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT,    GroupType.COUNT,    TimeFrame.M_60,    null),
@@ -107,8 +108,8 @@ public class StatisticsManager {
 
             // If it didn't exist
             if (statTimer == null) {
-                logger.error("Stat type doesn't exist in current context");
-                throw new RuntimeException();
+                logger.warn("Stat type doesn't exist in current context");
+                return -1;
             }
 
             // Remove the timer

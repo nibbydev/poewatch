@@ -61,7 +61,8 @@ $types = array(
   "time" => array(
     "TIME_CYCLE_TOTAL",
     "TIME_API_REPLY_DOWNLOAD",
-    "TIME_PARSE_REPLY"
+    "TIME_PARSE_REPLY",
+    "TIME_API_TTFB"
   ),
 
   "count" => array(
@@ -75,6 +76,7 @@ $types = array(
 
   "error" => array(
     "COUNT_API_CALLS",
+    "TIME_API_TTFB",
     "COUNT_API_ERRORS_READ_TIMEOUT",
     "COUNT_API_ERRORS_CONNECT_TIMEOUT",
     "COUNT_API_ERRORS_CONNECTION_RESET",

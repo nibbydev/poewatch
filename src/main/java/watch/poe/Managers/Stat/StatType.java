@@ -5,6 +5,7 @@ public enum StatType {
     TIME_PARSE_REPLY,
 
     TIME_API_REPLY_DOWNLOAD,
+    TIME_API_TTFB,
     COUNT_REPLY_SIZE,
     COUNT_API_CALLS,
 
