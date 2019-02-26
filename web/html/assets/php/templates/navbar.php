@@ -12,7 +12,7 @@
       <ul class='navbar-nav mr-auto'>
 <?php foreach($PAGEDATA["navs"] as $element): ?>
         <li class='nav-item'>
-          <a class='nav-link <?php if ($currentPage === $element['href']) {?>active<?php }?>' href='<?php echo $element["href"] ?>'><?php echo $element["name"] ?></a>
+          <a class='nav-link <?php if ($element['href'] === $currentPage) echo "active"?>' href='<?php echo $element["href"] ?>'><?php echo $element["name"] ?></a>
         </li>
 <?php endforeach ?>
       </ul>

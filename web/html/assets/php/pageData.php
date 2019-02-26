@@ -35,6 +35,10 @@ $PAGEDATA = array(
       'href' => '/characters'
     ),
     array(
+      'name' => 'Stats',
+      'href' => '/stats'
+    ),
+    array(
       'name' => 'About',
       'href' => '/about'
     )

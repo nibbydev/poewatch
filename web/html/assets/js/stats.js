@@ -1,18 +1,71 @@
-
-var TYPE = null;
+var statData = {};
+var chartOptions = {
+  height: 250,
+  showPoint: true,
+  lineSmooth: Chartist.Interpolation.cardinal({
+    fillHoles: true,
+  }),
+  axisX: {
+    showGrid: true,
+    showLabel: true,
+    labelInterpolationFnc: function skipLabels(value, index) {
+      return index % 16 === 0 ? value + "h" : null;
+    }
+  },
+  fullWidth: true,
+  plugins: [
+    Chartist.plugins.tooltip2({
+      cssClass: 'chartist-tooltip',
+      offset: {
+        x: 0,
+        y: -20,
+      },
+      template: '{{key}}h ago: {{value}}',
+      hideDelay: 500
+    })
+  ]
+};
 
 $(document).ready(function() {
-  if (TYPE = parseQueryParam('type')) {
-    let request = $.ajax({
-      url: "https://api.poe.watch/stats?type=" + TYPE,
-      type: "GET",
-      async: true,
-      dataTypes: "json"
-    });
-  
-    request.done(parseStats);
+  if (type = parseQueryParam("type")) {
+    request(type);
+  } else {
+    request("count");
   }
+
+  $("button.statSelect").on("click", function(){
+    let $this = $(this);
+    let val = $this.val();
+
+    console.log("Button press: " + val);
+    updateQueryParam("type", val);
+    $("button.statSelect").removeClass("active");
+    $this.addClass("active");
+
+    request(val);
+  });
 }); 
+
+function request(type) {
+  if (!["count", "error", "time"].includes(type)) {
+    return;
+  } 
+  
+  if (type in statData) {
+    parseStats(statData[type]);
+    return;
+  }
+
+  $.ajax({
+    url: "https://api.poe.watch/stats?type=" + type,
+    type: "GET",
+    async: true,
+    dataTypes: "json"
+  }).done(function (json) {
+    statData[type] = json;
+    parseStats(json);
+  });
+}
 
 function formatTime(time) {
   var diff = Math.abs(new Date(time) - new Date());
@@ -22,32 +75,7 @@ function formatTime(time) {
 }
 
 function parseStats(json) {
-  var chartOptions = {
-    height: 250,
-    showPoint: true,
-    lineSmooth: Chartist.Interpolation.cardinal({
-      fillHoles: true,
-    }),
-    axisX: {
-      showGrid: true,
-      showLabel: true,
-      labelInterpolationFnc: function skipLabels(value, index) {
-        return index % 16 === 0 ? value + "h" : null;
-      }
-    },
-    fullWidth: true,
-    plugins: [
-      Chartist.plugins.tooltip2({
-        cssClass: 'chartist-tooltip',
-        offset: {
-          x: 0,
-          y: -20,
-        },
-        template: '{{key}}h ago: {{value}}',
-        hideDelay: 500
-      })
-    ]
-  };
+  $("#main").empty();
 
   var labels = [];
   for (let i = 0; i < json.labels.length; i++) {
@@ -90,10 +118,10 @@ function parseStats(json) {
       case "COUNT_API_ERRORS_5XX":
       case "COUNT_API_ERRORS_429":
       case "COUNT_API_ERRORS_DUPLICATE":
-        new Chartist.Bar('#CHART-'+type, data, chartOptions);
+        new Chartist.Bar("#CHART-" + type, data, chartOptions);
         break;
       default:
-        new Chartist.Line('#CHART-'+type, data, chartOptions);
+        new Chartist.Line("#CHART-" + type, data, chartOptions);
         break;
     }
   }
@@ -101,13 +129,42 @@ function parseStats(json) {
 
 function parseQueryParam(key) {
   let url = window.location.href;
-  key = key.replace(/[\[\]]/g, '\\$&');
+  key = key.replace(/[\[\]]/g, "\\$&");
   
-  var regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)'),
+  var regex = new RegExp("[?&]" + key + "(=([^&#]*)|&|#|$)"),
       results = regex.exec(url);
       
   if (!results   ) return null;
-  if (!results[2]) return   '';
+  if (!results[2]) return "";
 
-  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function updateQueryParam(key, value) {
+  var url = document.location.href;
+  var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
+  var hash;
+
+  if (re.test(url)) {
+    if (typeof value !== 'undefined' && value !== null) {
+      url = url.replace(re, '$1' + key + "=" + value + '$2$3');
+    } else {
+      hash = url.split('#');
+      url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+      
+      if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+        url += '#' + hash[1];
+      }
+    }
+  } else if (typeof value !== 'undefined' && value !== null) {
+    var separator = url.indexOf('?') !== -1 ? '&' : '?';
+    hash = url.split('#');
+    url = hash[0] + separator + key + '=' + value;
+
+    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+      url += '#' + hash[1];
+    }
+  }
+
+  history.replaceState({}, "foo", url);
 }

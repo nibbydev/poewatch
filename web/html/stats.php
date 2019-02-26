@@ -5,12 +5,21 @@
 
   $PAGEDATA["title"] = "Stats - PoeWatch";
   $PAGEDATA["description"] = "Statistics about the site";
-  $PAGEDATA["pageHeader"] = "Statistics (WIP)";
+  $PAGEDATA["pageHeader"] = "Statistics";
 
   $PAGEDATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
   $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
   $PAGEDATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
   $PAGEDATA["jsIncludes"][] = "stats.js";
+
+  $statType = "count";
+  if (isset($_GET['type'])) {
+    if ($_GET['type'] === "error") {
+      $statType = "error";
+    } elseif ($_GET['type'] === "time") {
+      $statType = "time";
+    }
+  }
 
   include "assets/php/templates/header.php";
   include "assets/php/templates/navbar.php";
@@ -105,6 +114,25 @@
 </style>
 
 <?php genBodyHeader() ?>
+
+<div class="col-12 p-0">
+  <div class="card custom-card w-100 mb-3">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-4 d-flex justify-content-center">
+          <button value="count" class="btn btn-block btn-outline-dark <?php if ($statType === "count") echo "active" ?> statSelect">Count</button>
+        </div>
+        <div class="col-4 d-flex justify-content-center">
+          <button value="error" class="btn btn-block btn-outline-dark <?php if ($statType === "error") echo "active" ?> statSelect">Error</button>
+        </div>
+        <div class="col-4 d-flex justify-content-center">
+          <button value="time" class="btn btn-block btn-outline-dark <?php if ($statType === "time") echo "active" ?> statSelect">Time</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="col-12 p-0" id="main">
 
 </div>

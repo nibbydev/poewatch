@@ -75,8 +75,6 @@ $types = array(
   ),
 
   "error" => array(
-    "COUNT_API_CALLS",
-    "TIME_API_TTFB",
     "COUNT_API_ERRORS_READ_TIMEOUT",
     "COUNT_API_ERRORS_CONNECT_TIMEOUT",
     "COUNT_API_ERRORS_CONNECTION_RESET",
