@@ -18,33 +18,6 @@ function createStatusMsg($msg, $status) {
   );
 }
 
-function GenStatusMessage($postStatus) {
-  if (!$postStatus) return;
-
-  $color = $postStatus['status'] === "error" ? "red" : "green";
-  echo "<span class='custom-text-$color'>{$postStatus['message']}</span>";
-}
-
-function GenTextArea($postStatus) {
-  echo "<textarea class='form-control' name='message' placeholder='Type a message' rows='4'>";
-
-  if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['message'])) {
-    echo htmlentities($_POST['message']);
-  }
-
-  echo "</textarea>";
-}
-
-function GenContactField($postStatus) { 
-  echo "<input type='text' class='form-control seamless-input' name='contact' value='";
-
-  if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['contact'])) {
-    echo htmlentities($_POST['contact']);
-  }
-
-  echo "' placeholder='Contact address'>";
-}
-
 function GetIpPostLimit($pdo, $clientIP) {
   $query = "
     select count(*) as count
