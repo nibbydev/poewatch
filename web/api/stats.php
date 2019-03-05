@@ -1,4 +1,11 @@
 <?php
+function getTimeSinceLastRequest($pdo) {
+  $query = "SELECT timediff(now(), time) as diff from data_changeId";
+
+  $stmt = $pdo->query($query);
+  return $stmt->fetch()["diff"];
+}
+
 function getStats($pdo, $types) {
   $query = "SELECT * from (
       select DATE_FORMAT(time, '%Y-%m-%dT%TZ') as time, value
@@ -8,8 +15,6 @@ function getStats($pdo, $types) {
     ) foo
     order by foo.time asc
   ";
-
-  // 2019-02-19T23:00:00Z
 
   $buffer = array();
   $payload = array(
@@ -90,4 +95,5 @@ if (!isset($_GET["type"]) || !array_key_exists($_GET["type"], $types)) {
 
 include_once ( "../details/pdo.php" );
 $payload = getStats($pdo, $types[$_GET["type"]]);
+$payload["query"] = getTimeSinceLastRequest($pdo);
 echo json_encode($payload);
