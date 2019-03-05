@@ -128,6 +128,7 @@ public class Worker extends Thread {
         StringBuilder stringBuilderBuffer = new StringBuilder();
         byte[] byteBuffer = new byte[config.getInt("worker.bufferSize")];
         boolean regexLock = true;
+        boolean gotFirstByte = false;
         InputStream stream = null;
         int byteCount, totalByteCount = 0;
 
@@ -149,11 +150,18 @@ public class Worker extends Thread {
             connection.setReadTimeout(config.getInt("worker.readTimeout"));
             connection.setConnectTimeout(config.getInt("worker.connectTimeout"));
 
+            statisticsManager.startTimer(StatType.TIME_API_TTFB);
+
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes
             while ((byteCount = stream.read(byteBuffer, 0, config.getInt("worker.bufferSize"))) != -1) {
+                if (!gotFirstByte) {
+                    statisticsManager.clkTimer(StatType.TIME_API_TTFB);
+                    gotFirstByte = true;
+                }
+
                 // Check if run flag is lowered
                 if (!flagLocalRun) return null;
 
@@ -223,8 +231,12 @@ public class Worker extends Thread {
                 logger.error(ex.getMessage(), ex);
             }
 
+            if (!gotFirstByte) {
+                statisticsManager.clkTimer(StatType.TIME_API_TTFB);
+            }
+
             statisticsManager.clkTimer(StatType.TIME_API_REPLY_DOWNLOAD);
-            statisticsManager.addValue(StatType.COUNT_REPLY_SIZE, totalByteCount / 1000);
+            statisticsManager.addValue(StatType.COUNT_REPLY_SIZE, totalByteCount);
         }
 
         // Return the downloaded mess of a JSON string
