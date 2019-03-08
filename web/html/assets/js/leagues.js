@@ -19,10 +19,10 @@ function calcTime(timeString) {
 
   var distance = Math.abs(time - new Date());
   
-  var days     = Math.round(distance / _day);
-  var hours    = Math.round((distance % _day) / _hour);
-  var minutes  = Math.round((distance % _hour) / _minute);
-  var seconds  = Math.round((distance % _minute) / _second);
+  var days     = Math.floor(distance / _day);
+  var hours    = Math.floor((distance % _day) / _hour);
+  var minutes  = Math.floor((distance % _hour) / _minute);
+  var seconds  = Math.floor((distance % _minute) / _second);
   
   let dDisplay, hDisplay, mDisplay, sDisplay;
 
