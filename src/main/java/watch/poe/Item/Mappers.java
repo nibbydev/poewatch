@@ -75,7 +75,7 @@ public class Mappers {
 
         private boolean identified;
         private int w, h, x, y, ilvl, frameType;
-        private Boolean corrupted, shaper, elder;
+        private Boolean corrupted, shaper, elder, synthesised;
         private String icon, league, id, name, typeLine, note;
         private Integer stackSize;
 
@@ -182,6 +182,10 @@ public class Mappers {
 
         public Integer getStackSize() {
             return stackSize;
+        }
+
+        public Boolean getSynthesised() {
+            return synthesised;
         }
 
         /**

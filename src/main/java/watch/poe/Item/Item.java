@@ -283,6 +283,10 @@ public class Item {
             }
         }
 
+        if (base.getSynthesised() != null && typeLine != null && typeLine.startsWith("Synthesised ")) {
+            typeLine = typeLine.replace("Synthesised ", "");
+        }
+
         // Some corrupted relics do not turn into rares and retain their relic frametypes
         if (frameType == 9) {
             if (corrupted != null && corrupted) {
