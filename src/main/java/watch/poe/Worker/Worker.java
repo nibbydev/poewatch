@@ -206,7 +206,7 @@ public class Worker extends Thread {
             } else if (ex.getMessage().contains("connect timed out")) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT, null);
             } else if (ex.getMessage().contains("Connection reset")) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECTION_RESET, null);
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONN_RESET, null);
             } else if (ex.getMessage().contains("502") || ex.getMessage().contains("503")) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_5XX, null);
             } else if (ex.getMessage().contains("429")) {

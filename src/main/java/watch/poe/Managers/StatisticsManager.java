@@ -26,7 +26,7 @@ public class StatisticsManager {
             new Collector(StatType.COUNT_API_ERRORS_DUPLICATE,          GroupType.SUM,      TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT,    GroupType.COUNT,    TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_API_ERRORS_READ_TIMEOUT,       GroupType.COUNT,    TimeFrame.M_60,    null),
-            new Collector(StatType.COUNT_API_ERRORS_CONNECTION_RESET,   GroupType.COUNT,    TimeFrame.M_60,    null),
+            new Collector(StatType.COUNT_API_ERRORS_CONN_RESET,         GroupType.COUNT,    TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_API_ERRORS_5XX,                GroupType.COUNT,    TimeFrame.M_60,    null),
             new Collector(StatType.COUNT_API_ERRORS_429,                GroupType.COUNT,    TimeFrame.M_60,    null),
 

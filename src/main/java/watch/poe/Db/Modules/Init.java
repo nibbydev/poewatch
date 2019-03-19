@@ -144,7 +144,7 @@ public class Init {
                         int id_d = resultSet.getInt("id");
 
                         reindexSet.add(id_d);
-                        logger.info(String.format("Item %d queued for reindexing", id_d));
+                        //logger.debug(String.format("Item %d queued for reindexing", id_d));
                     }
                 }
             }
