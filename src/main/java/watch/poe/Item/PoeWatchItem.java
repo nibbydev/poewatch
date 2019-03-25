@@ -1,14 +1,19 @@
 package poe.Item;
 
+import poe.Item.ApiDeserializers.ApiItem;
+import poe.Item.ApiDeserializers.Property;
+import poe.Item.ApiDeserializers.Socket;
+import poe.Item.Parser.BranchType;
+import poe.Item.Parser.Price;
 import poe.Managers.RelationManager;
 
 import java.util.List;
 
-public class Item {
+public class PoeWatchItem {
     private static final String enchantment_icon = "http://web.poecdn.com/image/Art/2DItems/Currency/Enchantment.png?scale=1&w=1&h=1";
     private static RelationManager relationManager;
-    private Mappers.BaseItem base;
-    private Branch branch;
+    private ApiItem apiItem;
+    private BranchType branchType;
     private Key key;
 
     private boolean discard, doNotIndex;
@@ -22,17 +27,19 @@ public class Item {
     private Integer frameType, ilvl;
     private Boolean corrupted, shaper, elder;
 
-    //------------------------------------------------------------------------------------------------------------
-    // Constructors
-    //------------------------------------------------------------------------------------------------------------
 
-    public Item(Branch branch) {
-        this.branch = branch;
+
+
+    //ItemDataEntry data = new ItemDataEntry();
+
+
+
+    public PoeWatchItem(BranchType branchType, ApiItem apiItem) {
+        this.apiItem = apiItem;
+        this.branchType = branchType;
+
+        process();
     }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Main methods
-    //------------------------------------------------------------------------------------------------------------
 
     /**
      * Removes any unnecessary fields from the item's icon
@@ -79,32 +86,15 @@ public class Item {
         return fullIcon;
     }
 
-    public void parse(Mappers.BaseItem base) {
-        this.base = base;
-
-        // Get item data from the base
-        identified = base.isIdentified();
-        ilvl = base.getIlvl();
-        frameType = base.getFrameType();
-        corrupted = base.getCorrupted();
-        shaper = base.getShaper();
-        elder = base.getElder();
-        icon = base.getIcon();
-        id = base.getId();
-        name = base.getName();
-        typeLine = base.getTypeLine();
-        stackSize = base.getStackSize();
-
+    public void process() {
         // Formats some data for better parsing
         fixBaseData();
 
         // Find out the item category and group (eg armour/belt/weapon etc)
         extractCategory();
-        if (discard) {
-            return;
-        }
+        if (discard) return;
 
-        switch (branch) {
+        switch (branchType) {
             case enchantment:
                 parseEnchant();
                 break;
@@ -143,11 +133,11 @@ public class Item {
      * Extracts category strings from the object
      */
     private void extractCategory() {
-        category = base.getCategory().keySet().toArray()[0].toString();
+        category = apiItem.getCategory().keySet().toArray()[0].toString();
 
         // Get first group if present
-        if (base.getCategory().get(category).size() > 0) {
-            group = base.getCategory().get(category).get(0).toLowerCase();
+        if (apiItem.getCategory().get(category).size() > 0) {
+            group = apiItem.getCategory().get(category).get(0).toLowerCase();
         }
 
         // Extract item's category from its icon
@@ -201,7 +191,7 @@ public class Item {
                     group = "fragment";
                 } else if (iconCategory.equals("scarabs")) {
                     group = "scarab";
-                } else if (base.getProperties() == null) {
+                } else if (apiItem.getProperties() == null) {
                     group = "fragment";
                 } else {
                     group = "map";
@@ -239,12 +229,12 @@ public class Item {
         }
 
         // Override for enchantments
-        if (base.getEnchantMods() != null && branch.equals(Branch.enchantment)) {
+        if (apiItem.getEnchantMods() != null && branchType.equals(BranchType.enchantment)) {
             category = "enchantment";
         }
 
         // Override for item bases
-        if (branch.equals(Branch.base)) {
+        if (branchType.equals(BranchType.base)) {
             // Only collect bases for these categories
             if (!category.equals("accessory") &&
                     !category.equals("armour") &&
@@ -283,7 +273,7 @@ public class Item {
             }
         }
 
-        if (base.getSynthesised() != null && typeLine != null && typeLine.startsWith("Synthesised ")) {
+        if (apiItem.getSynthesised() != null && typeLine != null && typeLine.startsWith("Synthesised ")) {
             typeLine = typeLine.replace("Synthesised ", "");
         }
 
@@ -317,7 +307,7 @@ public class Item {
     }
 
     private void extractStackSize() {
-        if (!base.isStackable() || base.getProperties() == null) {
+        if (!apiItem.isStackable() || apiItem.getProperties() == null) {
             return;
         }
 
@@ -332,7 +322,7 @@ public class Item {
          */
 
         // Find first stacks size property
-        Mappers.Property property = base.getProperties().stream()
+        Property property = apiItem.getProperties().stream()
                 .filter(i -> i.name.equals("Stack Size"))
                 .findFirst()
                 .orElse(null);
@@ -390,8 +380,8 @@ public class Item {
         }
 
         // Attempt to find map tier from properties
-        if (base.getProperties() != null) {
-            for (Mappers.Property prop : base.getProperties()) {
+        if (apiItem.getProperties() != null) {
+            for (Property prop : apiItem.getProperties()) {
                 if (prop.name.equals("Map Tier")) {
                     if (!prop.values.isEmpty()) {
                         if (!prop.values.get(0).isEmpty()) {
@@ -445,13 +435,13 @@ public class Item {
         }
 
         // This was an error somehow, somewhere
-        if (base.getSockets() == null) {
+        if (apiItem.getSockets() == null) {
             return;
         }
 
         // Group links together
         Integer[] linkArray = new Integer[]{0, 0, 0, 0, 0, 0};
-        for (Mappers.Socket socket : base.getSockets()) {
+        for (Socket socket : apiItem.getSockets()) {
             linkArray[socket.group]++;
         }
 
@@ -477,7 +467,7 @@ public class Item {
         boolean corrupted = false;
 
         // Attempt to extract lvl and quality from item info
-        for (Mappers.Property prop : base.getProperties()) {
+        for (Property prop : apiItem.getProperties()) {
             if (prop.name.equals("Level")) {
                 lvl = Integer.parseInt(prop.values.get(0).get(0).split(" ")[0]);
             } else if (prop.name.equals("Quality")) {
@@ -534,7 +524,7 @@ public class Item {
      */
     private void parseEnchant() {
         // Precaution
-        if (base.getEnchantMods().size() < 1) {
+        if (apiItem.getEnchantMods().size() < 1) {
             discard = true;
             return;
         }
@@ -555,7 +545,7 @@ public class Item {
      */
     private void extractEnchantName() {
         // Match any negative or positive integer or double
-        name = base.getEnchantMods().get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
+        name = apiItem.getEnchantMods().get(0).replaceAll("[-]?\\d*\\.?\\d+", "#");
 
         // "#% chance to Dodge Spell Damage if you've taken Spell Damage Recently" contains a newline in the middle
         if (name.contains("\n")) {
@@ -563,7 +553,7 @@ public class Item {
         }
 
         // Var contains the enchant value (e.g "var:1-160" or "var:120")
-        String numString = base.getEnchantMods().get(0).replaceAll("[^-.0-9]+", " ").trim();
+        String numString = apiItem.getEnchantMods().get(0).replaceAll("[^-.0-9]+", " ").trim();
         String[] numArray = numString.split(" ");
         flattenEnchantRolls(numArray);
         String numbers = String.join("-", numArray);
@@ -740,11 +730,11 @@ public class Item {
     }
 
     public List<String> getExplicitMods() {
-        return base.getExplicitMods();
+        return apiItem.getExplicitMods();
     }
 
     public static void setRelationManager(RelationManager relationManager) {
-        Item.relationManager = relationManager;
+        PoeWatchItem.relationManager = relationManager;
     }
 
     public Integer getStackSize() {

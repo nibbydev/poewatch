@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.League.BaseLeague;
 import poe.Managers.PriceManager;
-import poe.Worker.Entry.RawItemEntry;
+import poe.Item.Parser.DbItemEntry;
 import poe.Worker.Entry.RawUsernameEntry;
 
 import java.sql.PreparedStatement;
@@ -21,7 +21,7 @@ public class Upload {
         this.database = database;
     }
 
-    public boolean uploadEntries(Set<RawItemEntry> set) {
+    public boolean uploadEntries(Set<DbItemEntry> set) {
         String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
@@ -39,7 +39,7 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (RawItemEntry raw : set) {
+                for (DbItemEntry raw : set) {
                     statement.setInt(1, raw.id_l);
                     statement.setInt(2, raw.id_d);
                     statement.setLong(3, raw.account_crc);

@@ -5,11 +5,11 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.Item;
+import poe.Item.Parser.ItemParser;
+import poe.Item.Parser.Price;
+import poe.Item.PoeWatchItem;
 import poe.Managers.*;
-import poe.Item.ItemParser;
 import poe.Managers.IntervalManager;
-import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
 
 import java.io.BufferedReader;
@@ -20,11 +20,11 @@ import java.util.Arrays;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    private static StatisticsManager statisticsManager;
-    private static AccountManager accountManager;
-    private static WorkerManager workerManager;
-    private static Database database;
-    private static Config config;
+    private static StatisticsManager sm;
+    private static AccountManager am;
+    private static WorkerManager wm;
+    private static Database db;
+    private static Config cnf;
 
     /**
      * App entry point
@@ -40,47 +40,48 @@ public class Main {
             IntervalManager intervalManager = new IntervalManager();
 
             // Load config
-            config = ConfigFactory.load("config");
-            ItemParser.setConfig(config);
+            cnf = ConfigFactory.load("config");
 
             // Initialize database connector
-            database = new Database(config);
-            success = database.connect();
+            db = new Database(cnf);
+            success = db.connect();
             if (!success) {
                 logger.error("Could not connect to database");
                 return;
             }
 
-            statisticsManager = new StatisticsManager(database);
-            statisticsManager.addValue(StatType.APP_STARTUP, null);
+            sm = new StatisticsManager(db);
+            sm.addValue(StatType.APP_STARTUP, null);
 
             // Set static DB accessor in honour of spaghetti code
-            PriceManager.setDatabase(database);
+            PriceManager.setDatabase(db);
 
             // Init league manager
-            LeagueManager leagueManager = new LeagueManager(database, config);
-            success = leagueManager.cycle();
+            LeagueManager lm = new LeagueManager(db, cnf);
+            success = lm.cycle();
             if (!success) {
                 logger.error("Could not get leagues");
                 return;
             }
 
             // Get category, item and currency data
-            RelationManager relations = new RelationManager(database);
-            success = relations.init();
+            RelationManager rm = new RelationManager(db);
+            success = rm.init();
             if (!success) {
                 logger.error("Could not get relations");
                 return;
             }
 
-            ItemParser.setRelationManager(relations);
-            Item.setRelationManager(relations);
+            PoeWatchItem.setRelationManager(rm);
+            Price.setRelationManager(rm);
+            Price.setConfig(cnf);
 
-            accountManager = new AccountManager(database);
-            workerManager = new WorkerManager(config, intervalManager, database, statisticsManager, leagueManager, relations, accountManager);
+            ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
+            am = new AccountManager(db);
+            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, rm, am);
 
             // Get all distinct stash ids that are in the db
-            success = database.init.getStashIds(Worker.getDbStashes());
+            success = db.init.getStashIds(ip.getStashCrcSet());
             if (!success) {
                 logger.error("Could not get active stash IDs");
                 return;
@@ -91,21 +92,21 @@ public class Main {
             if (!success) return;
 
             // Start controllers
-            accountManager.start();
-            workerManager.start();
+            am.start();
+            wm.start();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
-            if (accountManager != null) accountManager.stopController();
-            if (workerManager != null) workerManager.stopController();
+            if (am != null) am.stopController();
+            if (wm != null) wm.stopController();
 
-            if (statisticsManager != null) {
-                statisticsManager.addValue(StatType.APP_SHUTDOWN, null);
-                statisticsManager.upload();
+            if (sm != null) {
+                sm.addValue(StatType.APP_SHUTDOWN, null);
+                sm.upload();
             }
 
-            if (database != null) database.disconnect();
+            if (db != null) db.disconnect();
         }
     }
 
@@ -119,16 +120,16 @@ public class Main {
         ArrayList<String> newArgs = new ArrayList<>(Arrays.asList(args));
 
         if (!newArgs.contains("-workers")) {
-            workerManager.spawnWorkers(config.getInt("worker.defaultCount"));
+            wm.spawnWorkers(cnf.getInt("worker.defaultCount"));
             System.out.println("[INFO] Spawned 3 workers");
         }
 
         if (!newArgs.contains("-id")) {
-            String changeId = database.init.getChangeID();
+            String changeId = db.init.getChangeID();
 
             if (changeId == null) {
                 System.out.println("[ERROR] Local ChangeID not found");
-                changeId = workerManager.getLatestChangeID();
+                changeId = wm.getLatestChangeID();
             }
 
             if (changeId == null) {
@@ -136,7 +137,7 @@ public class Main {
                 return false;
             }
 
-            workerManager.setNextChangeID(changeId);
+            wm.setNextChangeID(changeId);
             System.out.println("[INFO] ChangeID (" + changeId + ") added");
         }
 
@@ -146,12 +147,12 @@ public class Main {
 
             switch (arg) {
                 case "-workers":
-                    workerManager.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
+                    wm.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
                     System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
                     break;
                 case "-id":
                     String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 1);
-                    workerManager.setNextChangeID(changeId);
+                    wm.setNextChangeID(changeId);
                     System.out.println("[INFO] New ChangeID (" + changeId + ") added");
                     break;
                 default:
@@ -231,13 +232,13 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            workerManager.printAllWorkers();
+            wm.printAllWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
-            workerManager.fireWorkers(Integer.parseInt(userInput[2]));
+            wm.fireWorkers(Integer.parseInt(userInput[2]));
         } else if (userInput[1].equalsIgnoreCase("add")) {
             System.out.println("[INFO] Adding " + userInput[2] + " worker..");
-            workerManager.spawnWorkers(Integer.parseInt(userInput[2]));
+            wm.spawnWorkers(Integer.parseInt(userInput[2]));
         } else {
             System.out.println(helpString);
         }
@@ -257,7 +258,7 @@ public class Main {
         switch (userInput[1]) {
             case "run":
                 logger.info("Starting account matching");
-                accountManager.checkAccountNameChanges();
+                am.checkAccountNameChanges();
                 logger.info("Account matching finished");
                 break;
 

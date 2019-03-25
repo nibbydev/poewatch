@@ -1,22 +1,23 @@
-package poe.Worker.Entry;
+package poe.Item.Parser;
 
-public class RawItemEntry {
+public class DbItemEntry {
     public int id_l, id_d;
     public long account_crc, stash_crc, item_crc;
     public Double price;
     public Integer id_price, stackSize;
 
-    public RawItemEntry(int id_l, int id_d, long account_crc, long stash_crc, long item_crc, Integer stackSize, Integer id_price, Double price) {
+    DbItemEntry(int id_l, int id_d, long account_crc, long stash_crc, long item_crc, Integer stackSize, Price price) {
         this.id_l = id_l;
         this.id_d = id_d;
-        this.id_price = id_price;
-
         this.account_crc = account_crc;
         this.stash_crc = stash_crc;
         this.item_crc = item_crc;
-
         this.stackSize = stackSize;
-        this.price = price;
+
+        if (price.hasPrice()) {
+            this.price = price.getPrice();
+            this.id_price = price.getCurrencyId();
+        }
     }
 
     @Override
@@ -25,11 +26,11 @@ public class RawItemEntry {
             return false;
         }
 
-        if (!RawItemEntry.class.isAssignableFrom(obj.getClass())) {
+        if (!DbItemEntry.class.isAssignableFrom(obj.getClass())) {
             return false;
         }
 
-        final RawItemEntry other = (RawItemEntry) obj;
+        final DbItemEntry other = (DbItemEntry) obj;
 
         if (this.id_l != other.id_l) {
             return false;

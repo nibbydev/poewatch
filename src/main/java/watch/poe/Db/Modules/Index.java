@@ -3,7 +3,7 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.Item;
+import poe.Item.PoeWatchItem;
 import poe.Item.Key;
 
 import java.sql.*;
@@ -127,7 +127,7 @@ public class Index {
      * @param groupId  ID of item's group
      * @return ID of created item data entry on success, null on failure
      */
-    public Integer indexItemData(Item item, Integer categoryId, Integer groupId) {
+    public Integer indexItemData(PoeWatchItem item, Integer categoryId, Integer groupId) {
         String query =  "INSERT INTO data_itemData (" +
                         "  id_cat, id_grp, `name`, `type`, frame, stack, " +
                         "  tier, lvl,  quality, corrupted, links, ilvl, var, icon) " +
@@ -181,7 +181,7 @@ public class Index {
                 } else statement.setInt(12, key.getiLvl());
 
                 statement.setString(13, key.getVariation());
-                statement.setString(14, Item.formatIconURL(item.getIcon()));
+                statement.setString(14, PoeWatchItem.formatIconURL(item.getIcon()));
 
                 statement.executeUpdate();
                 database.connection.commit();
@@ -196,7 +196,7 @@ public class Index {
         }
     }
 
-    public boolean reindexItemData(int id_cat, int id_grp, int id_d, Item item) {
+    public boolean reindexItemData(int id_cat, int id_grp, int id_d, PoeWatchItem item) {
         String query =  "update data_itemData set " +
                         "  id_cat = ?, id_grp = ?, name = ?, type = ?, reindex = 0, " +
                         "  frame = ?, stack = ?, tier = ?, lvl = ?, quality = ?," +
@@ -248,7 +248,7 @@ public class Index {
                 } else statement.setInt(12, key.getiLvl());
 
                 statement.setString(13, key.getVariation());
-                statement.setString(14, Item.formatIconURL(item.getIcon()));
+                statement.setString(14, PoeWatchItem.formatIconURL(item.getIcon()));
                 statement.setInt(15, id_d);
 
                 statement.executeUpdate();

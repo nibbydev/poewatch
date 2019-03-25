@@ -5,7 +5,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.Mappers;
+import poe.Item.ApiDeserializers.ChangeID;
 import poe.Managers.Interval.TimeFrame;
 import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
@@ -237,7 +237,7 @@ public class WorkerManager extends Thread {
             String response = new String(input.readAllBytes());
 
             try {
-                return gson.fromJson(response, Mappers.ChangeID.class).get();
+                return gson.fromJson(response, ChangeID.class).get();
             } catch (Exception ex) {
                 logger.error(ex.toString());
             }

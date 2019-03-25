@@ -3,7 +3,7 @@ package poe.Managers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.Item;
+import poe.Item.PoeWatchItem;
 import poe.Item.Key;
 import poe.Item.Variant.ItemVariant;
 import poe.Item.Variant.VariantType;
@@ -104,7 +104,7 @@ public class RelationManager {
         }
     }
 
-    public Integer index(Item item, int id_l) {
+    public Integer index(PoeWatchItem item, int id_l) {
         Integer id_d, id_cat, id_grp;
 
         // Check if item already has been indexed
@@ -216,7 +216,7 @@ public class RelationManager {
         return id_d;
     }
 
-    private CategoryEntry indexCategory(Item item) {
+    private CategoryEntry indexCategory(PoeWatchItem item) {
         // Check if the database contains the item's category and group
         synchronized (categories) {
             // Get category entry or null
@@ -242,7 +242,7 @@ public class RelationManager {
         }
     }
 
-    private Integer indexGroup(CategoryEntry categoryEntry, Item item) {
+    private Integer indexGroup(CategoryEntry categoryEntry, PoeWatchItem item) {
         synchronized (categories) {
             // Check if the category already has that group
             if (!categoryEntry.hasGroup(item.getGroup())) {
@@ -310,7 +310,7 @@ public class RelationManager {
         return Arrays.stream(CurrencyBlacklist.currency).anyMatch(name::equalsIgnoreCase);
     }
 
-    public String findVariant(Item item) {
+    public String findVariant(PoeWatchItem item) {
         int matches;
 
         ItemVariant itemVariant = Arrays.stream(Variants.getVariants())

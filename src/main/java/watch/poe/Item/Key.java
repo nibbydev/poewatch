@@ -12,7 +12,7 @@ public class Key {
     // Loaders
     //------------------------------------------------------------------------------------------------------------
 
-    public Key(Item item) {
+    public Key(PoeWatchItem item) {
         name = item.getName();
         typeLine = item.getTypeLine();
         frameType = item.getFrameType();
