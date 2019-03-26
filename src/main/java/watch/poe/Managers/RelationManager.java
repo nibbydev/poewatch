@@ -3,11 +3,9 @@ package poe.Managers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.PoeWatchItem;
+import poe.Item.Category.GroupEnum;
+import poe.Item.Item;
 import poe.Item.Key;
-import poe.Item.Variant.ItemVariant;
-import poe.Item.Variant.VariantType;
-import poe.Item.Variant.Variants;
 import poe.Managers.Relation.*;
 
 import java.util.*;
@@ -23,9 +21,8 @@ public class RelationManager {
     private final Set<Key> inProgress = new HashSet<>();
     private final Map<Key, Integer> itemData = new HashMap<>();
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
-    private final Map<String, CategoryEntry> categories = new HashMap<>();
 
-    private final Map<String, Set<String>> baseItems = BaseItems.GenBaseMap();
+    private final Map<GroupEnum, Set<String>> baseItems = BaseItems.GenBaseMap();
     private final Map<String, Integer> currencyAliases = new HashMap<>();
 
     public RelationManager(Database db) {
@@ -40,14 +37,6 @@ public class RelationManager {
         boolean success;
 
         logger.info("Initializing relations");
-
-        success = database.init.getCategories(categories);
-        if (!success) {
-            logger.error("Failed to query categories from database. Shutting down...");
-            return false;
-        } else if (categories.isEmpty()) {
-            logger.warn("Database did not contain any category information");
-        }
 
         success = database.init.getItemData(itemData, reindexSet);
         if (!success) {
@@ -104,8 +93,8 @@ public class RelationManager {
         }
     }
 
-    public Integer index(PoeWatchItem item, int id_l) {
-        Integer id_d, id_cat, id_grp;
+    public Integer index(Item item, int id_l) {
+        Integer id_d;
 
         // Check if item already has been indexed
         synchronized (itemData) {
@@ -143,27 +132,9 @@ public class RelationManager {
             return null;
         }
 
-        // Check if the database contains the item's category and group
-        CategoryEntry categoryEntry = indexCategory(item);
-        if (categoryEntry == null) {
-            inProgress.remove(item.getKey());
-            return null;
-        }
-
-        id_cat = categoryEntry.getCategoryId();
-        id_grp = indexGroup(categoryEntry, item);
-
-        if (id_grp == null) {
-            inProgress.remove(item.getKey());
-            return null;
-        }
-
-        // Right, now that we have verified that the item's category and group exist in the database, we can go ahead
-        // and add the item itself to the database
-
         // Add item data to the database and get its id
         if (id_d == null) {
-            id_d = database.index.indexItemData(item, id_cat, id_grp);
+            id_d = database.index.indexItemData(item);
 
             if (id_d == null) {
                 logger.error(String.format("Could not create item data for: %s (%s - %s)",
@@ -192,7 +163,7 @@ public class RelationManager {
             if (reindexSet.contains(id_d)) {
                 logger.info(String.format("Reindexing item %d", id_d));
 
-                boolean success = database.index.reindexItemData(id_cat, id_grp, id_d, item);
+                boolean success = database.index.reindexItemData(id_d, item);
                 if (success) {
                     reindexSet.remove(id_d);
                 }
@@ -216,53 +187,6 @@ public class RelationManager {
         return id_d;
     }
 
-    private CategoryEntry indexCategory(PoeWatchItem item) {
-        // Check if the database contains the item's category and group
-        synchronized (categories) {
-            // Get category entry or null
-            CategoryEntry categoryEntry = categories.get(item.getCategory());
-
-            // DB didn't contain that category
-            if (categoryEntry == null) {
-                // Attempt to add it
-                Integer id_cat = database.index.createCategory(item.getCategory());
-
-                if (id_cat == null) {
-                    logger.error(String.format("Could not create category for: %s (%s - %s)",
-                            item.getKey(), item.getCategory(), item.getGroup()));
-                    return null;
-                }
-
-                // Create new entry and store it in locally
-                categoryEntry = new CategoryEntry(id_cat);
-                categories.put(item.getCategory(), categoryEntry);
-            }
-
-            return categoryEntry;
-        }
-    }
-
-    private Integer indexGroup(CategoryEntry categoryEntry, PoeWatchItem item) {
-        synchronized (categories) {
-            // Check if the category already has that group
-            if (!categoryEntry.hasGroup(item.getGroup())) {
-                // Attempt to add it
-                Integer id_grp = database.index.addGroup(categoryEntry.getCategoryId(), item.getGroup());
-
-                if (id_grp == null) {
-                    logger.error(String.format("Could not create group for: %s (%s - %s)",
-                            item.getKey(), item.getCategory(), item.getGroup()));
-                    return null;
-                }
-
-                // Store the group withing the category
-                categoryEntry.addGroup(item.getGroup(), id_grp);
-            }
-
-            return categoryEntry.getGroupId(item.getGroup());
-        }
-    }
-
     /**
      * Extracts item's base class from its name
      * Eg 'Blasting Corsair Sword of Needling' -> 'Corsair Sword'
@@ -271,7 +195,7 @@ public class RelationManager {
      * @param name Item name
      * @return Extracted name or null on failure
      */
-    public String extractItemBaseName(String group, String name) {
+    public String extractItemBaseName(GroupEnum group, String name) {
         if (name == null) {
             return null;
         }
@@ -308,41 +232,6 @@ public class RelationManager {
         }
 
         return Arrays.stream(CurrencyBlacklist.currency).anyMatch(name::equalsIgnoreCase);
-    }
-
-    public String findVariant(PoeWatchItem item) {
-        int matches;
-
-        ItemVariant itemVariant = Arrays.stream(Variants.getVariants())
-                .filter(i -> i.name.equals(item.getName()))
-                .findFirst()
-                .orElse(null);
-
-        if (itemVariant == null) {
-            return null;
-        }
-
-        for (VariantType variantType : itemVariant.variantTypes) {
-            // Go though all the item's explicit modifiers and the current variant's mods
-            matches = 0;
-
-            for (String variantMod : variantType.mods) {
-                for (String itemMod : item.getExplicitMods()) {
-                    if (itemMod.contains(variantMod)) {
-                        // If one of the item's mods matches one of the variant's mods, increase the match counter
-                        matches++;
-                        break;
-                    }
-                }
-            }
-
-            // If all the variant's mods were present in the item then this item will take this variant's variation
-            if (matches == variantType.mods.length) {
-                return variantType.variation;
-            }
-        }
-
-        return null;
     }
 
     public String findUnidUniqueMapName(String type, int frame) {

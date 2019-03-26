@@ -5,7 +5,10 @@ import poe.Db.Database;
 import poe.Item.ApiDeserializers.ApiItem;
 import poe.Item.ApiDeserializers.Reply;
 import poe.Item.ApiDeserializers.Stash;
-import poe.Item.PoeWatchItem;
+import poe.Item.Branches.BaseBranch;
+import poe.Item.Branches.DefaultBranch;
+import poe.Item.Branches.EnchantBranch;
+import poe.Item.Item;
 import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
 import poe.Managers.Stat.StatType;
@@ -60,7 +63,7 @@ public class ItemParser {
         // Set of account names and items extracted from the API call
         Set<Long> accounts = new HashSet<>();
         Set<Long> nullStashes = new HashSet<>();
-        Set<DbItemEntry> items = new HashSet<>();
+        Set<DbItemEntry> dbItems = new HashSet<>();
         // Separate set for collecting account and character names
         Set<RawUsernameEntry> usernames = new HashSet<>();
         int totalItemCount = 0;
@@ -92,10 +95,9 @@ public class ItemParser {
             boolean hasValidItems = false;
 
             for (ApiItem apiItem : stash.items) {
-
                 // Convert api items to poewatch items
-                ArrayList<PoeWatchItem> poeWatchItems = convertApiItem(apiItem);
-                if (poeWatchItems == null) continue;
+                ArrayList<Item> pwItems = convertApiItem(apiItem);
+                if (pwItems == null) continue;
 
                 // Attempt to determine the price of the item
                 Price price = new Price(apiItem.getNote(), stash.stashName);
@@ -106,14 +108,14 @@ public class ItemParser {
                 }
 
                 // Parse branched items and create objects for db upload
-                for (PoeWatchItem poeWatchItem : poeWatchItems) {
+                for (Item item : pwItems) {
                     // Get item's ID (if missing, index it)
-                    Integer id_d = relationManager.index(poeWatchItem, id_l);
+                    Integer id_d = relationManager.index(item, id_l);
                     if (id_d == null) continue;
 
                     DbItemEntry entry = new DbItemEntry(id_l, id_d, account_crc, stash_crc, calcCrc(apiItem.getId()),
-                            poeWatchItem.getStackSize(), price);
-                    items.add(entry);
+                            item.getStackSize(), price);
+                    dbItems.add(entry);
 
                     // Set flag to indicate the stash contained at least 1 valid item
                     hasValidItems = true;
@@ -135,26 +137,26 @@ public class ItemParser {
         // Collect some statistics
         statisticsManager.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
         statisticsManager.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
-        statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, items.size());
+        statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
 
         // Shovel everything to db
         database.upload.uploadAccounts(accounts);
         database.flag.resetStashReferences(nullStashes);
-        database.upload.uploadEntries(items);
+        database.upload.uploadEntries(dbItems);
         database.upload.uploadUsernames(usernames);
     }
 
 
-    private ArrayList<PoeWatchItem> convertApiItem(ApiItem apiItem) {
+    private ArrayList<Item> convertApiItem(ApiItem apiItem) {
         // Do a few checks on the league, note and etc
         if (checkIfDiscardApiItem(apiItem)) return null;
 
         // Branch item
-        ArrayList<PoeWatchItem> branches = createBranches(apiItem);
+        ArrayList<Item> branches = createBranches(apiItem);
 
         // Process the branches
-        branches.forEach(PoeWatchItem::process);
-        branches.removeIf(PoeWatchItem::isDiscard);
+        branches.forEach(Item::process);
+        branches.removeIf(Item::isDiscard);
 
         return branches;
     }
@@ -181,23 +183,20 @@ public class ItemParser {
     /**
      * Check if item should be branched (i.e there could be more than one database entry from that item)
      */
-    private ArrayList<PoeWatchItem> createBranches(ApiItem apiItem) {
-        ArrayList<PoeWatchItem> branches = new ArrayList<>();
+    private ArrayList<Item> createBranches(ApiItem apiItem) {
+        ArrayList<Item> branches = new ArrayList<>();
 
         // Default item
-        PoeWatchItem item = new PoeWatchItem(BranchType.none, apiItem);
-        branches.add(item);
+        branches.add(new DefaultBranch(apiItem));
 
         // If item is enchanted
         if (apiItem.getEnchantMods() != null) {
-            item = new PoeWatchItem(BranchType.enchantment, apiItem);
-            branches.add(item);
+            branches.add(new EnchantBranch(apiItem));
         }
 
         // If item is a crafting base
         if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68) {
-            item = new PoeWatchItem(BranchType.base, apiItem);
-            branches.add(item);
+            branches.add(new BaseBranch(apiItem));
         }
 
         return branches;

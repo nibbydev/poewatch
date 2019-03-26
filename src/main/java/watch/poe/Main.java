@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Parser.ItemParser;
 import poe.Item.Parser.Price;
-import poe.Item.PoeWatchItem;
+import poe.Item.Item;
 import poe.Managers.*;
 import poe.Managers.IntervalManager;
 import poe.Managers.Stat.StatType;
@@ -72,13 +72,13 @@ public class Main {
                 return;
             }
 
-            PoeWatchItem.setRelationManager(rm);
+            Item.setRelationManager(rm);
             Price.setRelationManager(rm);
             Price.setConfig(cnf);
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
             am = new AccountManager(db);
-            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, rm, am);
+            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, am, ip);
 
             // Get all distinct stash ids that are in the db
             success = db.init.getStashIds(ip.getStashCrcSet());

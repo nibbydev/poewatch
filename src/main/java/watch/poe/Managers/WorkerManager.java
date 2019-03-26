@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.ApiDeserializers.ChangeID;
+import poe.Item.Parser.ItemParser;
 import poe.Managers.Interval.TimeFrame;
 import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
@@ -23,9 +24,9 @@ public class WorkerManager extends Thread {
     private final Config config;
     private final Database database;
     private final LeagueManager leagueManager;
-    private final RelationManager relationManager;
     private final AccountManager accountManager;
     private final StatisticsManager statisticsManager;
+    private final ItemParser itemParser;
 
     private final IntervalManager intervalManager;
     private final Gson gson = new Gson();
@@ -35,12 +36,12 @@ public class WorkerManager extends Thread {
     private volatile boolean readyToExit = false;
     private String nextChangeID;
 
-    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, RelationManager rm, AccountManager am) {
+    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, AccountManager am, ItemParser ip) {
         this.statisticsManager = sm;
-        this.relationManager = rm;
         this.accountManager = am;
         this.leagueManager = lm;
         this.intervalManager = se;
+        this.itemParser = ip;
         this.database = db;
         this.config = cnf;
     }
@@ -181,7 +182,7 @@ public class WorkerManager extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker worker = new Worker(this, statisticsManager, leagueManager, relationManager, database, config, i);
+            Worker worker = new Worker(this, statisticsManager, database, config, i, itemParser);
             worker.start();
 
             // Add worker to local list

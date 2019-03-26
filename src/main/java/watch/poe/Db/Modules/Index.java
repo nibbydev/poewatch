@@ -3,7 +3,7 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.PoeWatchItem;
+import poe.Item.Item;
 import poe.Item.Key;
 
 import java.sql.*;
@@ -14,79 +14,6 @@ public class Index {
 
     public Index(Database database) {
         this.database = database;
-    }
-
-    /**
-     * Creates a category entry in table `data_categories`
-     *
-     * @param categoryName Name of category
-     * @return ID of created category on success, null on failure
-     */
-    public Integer createCategory(String categoryName) {
-        String query1 = "INSERT INTO data_categories (`name`) VALUES (?); ";
-        String query2 = "SELECT id FROM data_categories WHERE `name` = ? LIMIT 1;";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return null;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setString(1, categoryName);
-                statement.executeUpdate();
-            }
-
-            database.connection.commit();
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                statement.setString(1, categoryName);
-                ResultSet resultSet = statement.executeQuery();
-                return resultSet.next() ? resultSet.getInt(1) : null;
-            }
-
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return null;
-        }
-    }
-
-    /**
-     * Creates a group entry in table `data_groups`
-     *
-     * @param categoryId  ID of group's category
-     * @param groupName Name of group
-     * @return ID of created category on success, null on failure
-     */
-    public Integer addGroup(int categoryId, String groupName) {
-        String query1 = "INSERT INTO data_groups (id_cat, `name`) VALUES (?, ?)";
-        String query2 = "SELECT id FROM data_groups WHERE id_cat = ? AND `name` = ? LIMIT 1; ";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return null;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                statement.setInt(1, categoryId);
-                statement.setString(2, groupName);
-                statement.executeUpdate();
-            }
-
-            database.connection.commit();
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                statement.setInt(1, categoryId);
-                statement.setString(2, groupName);
-                ResultSet resultSet = statement.executeQuery();
-                return resultSet.next() ? resultSet.getInt(1) : null;
-            }
-
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return null;
-        }
     }
 
     /**
@@ -123,11 +50,9 @@ public class Index {
      * Creates an item data entry in table `data_itemData`
      *
      * @param item Item object to index
-     * @param categoryId ID of item's category
-     * @param groupId  ID of item's group
      * @return ID of created item data entry on success, null on failure
      */
-    public Integer indexItemData(PoeWatchItem item, Integer categoryId, Integer groupId) {
+    public Integer indexItemData(Item item) {
         String query =  "INSERT INTO data_itemData (" +
                         "  id_cat, id_grp, `name`, `type`, frame, stack, " +
                         "  tier, lvl,  quality, corrupted, links, ilvl, var, icon) " +
@@ -143,10 +68,10 @@ public class Index {
             Key key = item.getKey();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                statement.setInt(1, categoryId);
+                statement.setInt(1, item.getCategory().ordinal());
 
-                if (groupId == null) statement.setNull(2, 0);
-                else statement.setInt(2, groupId);
+                if (item.getGroup() == null) statement.setNull(2, 0);
+                else statement.setInt(2, item.getGroup().ordinal());
 
                 statement.setString(3, key.getName());
                 statement.setString(4, key.getTypeLine());
@@ -170,7 +95,7 @@ public class Index {
 
                 if (key.getCorrupted() == null) {
                     statement.setNull(10, 0);
-                } else statement.setInt(10, key.getCorrupted());
+                } else statement.setBoolean(10, key.getCorrupted());
 
                 if (key.getLinks() == null) {
                     statement.setNull(11, 0);
@@ -181,7 +106,7 @@ public class Index {
                 } else statement.setInt(12, key.getiLvl());
 
                 statement.setString(13, key.getVariation());
-                statement.setString(14, PoeWatchItem.formatIconURL(item.getIcon()));
+                statement.setString(14, item.formatIconURL());
 
                 statement.executeUpdate();
                 database.connection.commit();
@@ -196,7 +121,7 @@ public class Index {
         }
     }
 
-    public boolean reindexItemData(int id_cat, int id_grp, int id_d, PoeWatchItem item) {
+    public boolean reindexItemData(int id_d, Item item) {
         String query =  "update data_itemData set " +
                         "  id_cat = ?, id_grp = ?, name = ?, type = ?, reindex = 0, " +
                         "  frame = ?, stack = ?, tier = ?, lvl = ?, quality = ?," +
@@ -213,10 +138,10 @@ public class Index {
             Key key = item.getKey();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, id_cat);
-                statement.setInt(2, id_grp);
+                statement.setInt(1, item.getCategory().ordinal());
+                statement.setInt(2, item.getGroup().ordinal());
                 statement.setString(3, key.getName());
-                statement.setString(4, item.getTypeLine());
+                statement.setString(4, key.getTypeLine());
                 statement.setInt(5, key.getFrameType());
 
                 if (item.getMaxStackSize() == null) {
@@ -237,7 +162,7 @@ public class Index {
 
                 if (key.getCorrupted() == null) {
                     statement.setNull(10, 0);
-                } else statement.setInt(10, key.getCorrupted());
+                } else statement.setBoolean(10, key.getCorrupted());
 
                 if (key.getLinks() == null) {
                     statement.setNull(11, 0);
@@ -248,7 +173,7 @@ public class Index {
                 } else statement.setInt(12, key.getiLvl());
 
                 statement.setString(13, key.getVariation());
-                statement.setString(14, PoeWatchItem.formatIconURL(item.getIcon()));
+                statement.setString(14, item.formatIconURL());
                 statement.setInt(15, id_d);
 
                 statement.executeUpdate();

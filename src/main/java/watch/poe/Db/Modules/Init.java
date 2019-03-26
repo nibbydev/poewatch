@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Key;
 import poe.Managers.League.League;
-import poe.Managers.Relation.CategoryEntry;
 
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 public class Init {
@@ -50,64 +51,6 @@ public class Init {
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
             logger.error("Could not get leagues from database");
-            return false;
-        }
-    }
-
-    /**
-     * Loads provided Map with category entries from database
-     *
-     * @param categoryRelations Empty map that will contain category - CategoryEntry relations
-     * @return True on success
-     */
-    public boolean getCategories(Map<String, CategoryEntry> categoryRelations) {
-        String query =  "SELECT    dc.name AS categoryName, " +
-                        "          dc.id   AS categoryId, " +
-                        "          GROUP_CONCAT(dg.name) AS groupNames, " +
-                        "          GROUP_CONCAT(dg.id)   AS groupIds " +
-                        "FROM      data_categories AS dc " +
-                        "JOIN      data_groups     AS dg " +
-                        "  ON      dc.id = dg.id_cat " +
-                        "GROUP BY  dc.id; ";
-
-        logger.info("Getting categories from database");
-
-        if (categoryRelations == null) {
-            throw new NullPointerException("Provided map was null");
-        }
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return false;
-            }
-
-            Map<String, CategoryEntry> tmpCategoryRelations = new HashMap<>();
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    String[] groupIds = resultSet.getString("groupIds").split(",");
-                    String[] groupNames = resultSet.getString("groupNames").split(",");
-
-                    CategoryEntry categoryEntry = new CategoryEntry(resultSet.getInt("categoryId"));
-
-                    for (int i = 0; i < groupIds.length; i++) {
-                        categoryEntry.addGroup(groupNames[i], Integer.parseInt(groupIds[i]));
-                    }
-
-                    tmpCategoryRelations.putIfAbsent(resultSet.getString("categoryName"), categoryEntry);
-                }
-            }
-
-            categoryRelations.clear();
-            categoryRelations.putAll(tmpCategoryRelations);
-            logger.info("Got categories from database");
-
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
             return false;
         }
     }
