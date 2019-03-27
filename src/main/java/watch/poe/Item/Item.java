@@ -1,15 +1,19 @@
 package poe.Item;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import poe.Item.ApiDeserializers.ApiItem;
 import poe.Item.Branches.BaseBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Category.CategoryEnum;
 import poe.Item.Category.GroupEnum;
+import poe.Main;
 import poe.Managers.RelationManager;
 
 import java.util.List;
 
 public class Item {
+    private static final Logger logger = LoggerFactory.getLogger(Item.class);
     protected static RelationManager relationManager;
 
     protected ApiItem apiItem;
@@ -97,6 +101,15 @@ public class Item {
 
         // Find out the item's category and group (eg armour/belt/weapon etc)
         findCategory();
+
+        if (!discard && (category == null || group == null)) {
+            String msg = "name:" + name + "|type:" + typeLine + "|frame:" + frameType + "|ilvl:" + itemLevel + "|links:" + links
+                    + "|mapTier:" + mapTier + "|var:" + variation + "|lvl:" + gemLevel + "|qual:" + gemQuality + "|corr:" + gemCorrupted
+                    + "|shaper:" + shaper + "|elder:" + elder + "|enchantBottomRange:" + enchantMin
+                    + "|enchantTopRange:" + enchantMax;
+
+            logger.error("Unknown " + (category == null ? "category" : "group") + " for: " + msg);
+        }
     }
 
     /**
@@ -119,6 +132,8 @@ public class Item {
         }
 
         // Extract item's category from its icon
+        // If icon path is "http://web.poecdn.com/image/Art/2DItems/Armours/Helmets/HarbingerShards/Shard1.png" then
+        // icon category is "HarbingerShards"
         String[] splitItemType = apiItem.getIcon().split("/");
         String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
 
@@ -179,16 +194,24 @@ public class Item {
         if (apiCategory.equals("currency")) {
             category = CategoryEnum.currency;
 
-            if (iconCategory.equals("essence")) {
+            if (iconCategory.equals("currency")) {
+                group = GroupEnum.currency;
+            } else if (iconCategory.equals("essence")) {
                 group = GroupEnum.essence;
-            } else if (iconCategory.equals("piece")) {
+            } else if ("piece".equals(apiGroup)) {
                 group = GroupEnum.piece;
             } else if (name.startsWith("Vial of ")) {
                 group = GroupEnum.vial;
             } else if ("resonator".equals(apiGroup)) { // todo: verify
                 group = GroupEnum.resonator;
-            } else if ("fossil".equals(apiGroup)) { // todo: verify
+            } else if ("fossil".equals(apiGroup)) {
                 group = GroupEnum.fossil;
+            } else if (iconCategory.equals("breach")) {
+                // breach splinters
+                group = GroupEnum.currency;
+            } else if (iconCategory.equals("divination")) {
+                // stacked deck
+                group = GroupEnum.currency;
             }
 
             return;
@@ -284,8 +307,6 @@ public class Item {
                 }
             }
         }
-
-        return;
     }
 
 
