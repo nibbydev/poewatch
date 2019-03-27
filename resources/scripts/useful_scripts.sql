@@ -99,8 +99,19 @@ update data_itemdata set id_grp = 26 where id_grp = 165;
 update data_itemdata set id_grp = 27 where id_grp = 129;
 
 -- weapon
-update data_itemdata set id_grp = id_grp - 102
-where id_grp >= 130 and id_grp <= 142;
+update data_itemdata set id_grp = 28 where id_grp = 130;
+update data_itemdata set id_grp = 29 where id_grp = 131;
+update data_itemdata set id_grp = 30 where id_grp = 132;
+update data_itemdata set id_grp = 31 where id_grp = 133;
+update data_itemdata set id_grp = 32 where id_grp = 134;
+update data_itemdata set id_grp = 33 where id_grp = 135;
+update data_itemdata set id_grp = 34 where id_grp = 136;
+update data_itemdata set id_grp = 35 where id_grp = 137;
+update data_itemdata set id_grp = 36 where id_grp = 138;
+update data_itemdata set id_grp = 37 where id_grp = 139;
+update data_itemdata set id_grp = 38 where id_grp = 140;
+update data_itemdata set id_grp = 39 where id_grp = 141;
+update data_itemdata set id_grp = 40 where id_grp = 142;
 
 -- bases
 update data_itemdata set id_grp = 3 where id_grp = 143;
