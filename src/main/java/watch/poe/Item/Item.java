@@ -23,7 +23,7 @@ public class Item {
     protected CategoryEnum category = null;
     protected GroupEnum group = null;
     protected boolean discard;
-    protected Float enchantBottomRange, enchantTopRange;
+    protected Float enchantMin, enchantMax;
     protected Boolean shaper, elder;
     private Key key;
 
@@ -99,8 +99,10 @@ public class Item {
         findCategory();
     }
 
+    /**
+     * Form the unique database key
+     */
     public void buildKey() {
-        // Form the unique database key
         key = new Key(this);
     }
 
@@ -161,7 +163,7 @@ public class Item {
                 }
             }
 
-            // There was no matching group which means this base is something we don't colelct
+            // There was no matching group which means this base is something we don't collect
             discard = true;
             return;
         }
@@ -183,9 +185,9 @@ public class Item {
                 group = GroupEnum.piece;
             } else if (name.startsWith("Vial of ")) {
                 group = GroupEnum.vial;
-            } else if (apiGroup.equals("resonator")) { // todo: verify
+            } else if ("resonator".equals(apiGroup)) { // todo: verify
                 group = GroupEnum.resonator;
-            } else if (apiGroup.equals("fossil")) { // todo: verify
+            } else if ("fossil".equals(apiGroup)) { // todo: verify
                 group = GroupEnum.fossil;
             }
 
@@ -198,9 +200,9 @@ public class Item {
 
             if (iconCategory.equals("vaalgems")) {
                 group = GroupEnum.vaal;
-            } else if (apiGroup.equals("activegem")) {
+            } else if ("activegem".equals(apiGroup)) {
                 group = GroupEnum.skill;
-            } else if (apiGroup.equals("supportgem")) { // todo: verify
+            } else if ("supportgem".equals(apiGroup)) { // todo: verify
                 group = GroupEnum.support;
             }
 
@@ -231,15 +233,29 @@ public class Item {
             return;
         }
 
-        if (apiCategory.equals("flask")) {
+        if (apiCategory.equals("flasks")) {
             category = CategoryEnum.flask;
             group = GroupEnum.flask;
             return;
         }
 
-        if (apiCategory.equals("jewel")) {
+        if (apiCategory.equals("jewels")) {
             category = CategoryEnum.jewel;
             group = GroupEnum.jewel;
+            return;
+        }
+
+        if (apiCategory.equals("armour")) {
+            category = CategoryEnum.armour;
+
+            // Check all groups and find matching one
+            for (GroupEnum groupEnum : category.getGroups()) {
+                if (groupEnum.getName().equals(apiGroup)) {
+                    group = groupEnum;
+                    return;
+                }
+            }
+
             return;
         }
 
@@ -268,13 +284,14 @@ public class Item {
                 }
             }
         }
+
+        return;
     }
 
 
     //------------------------------------------------------------------------------------------------------------
     // Getters
     //------------------------------------------------------------------------------------------------------------
-
 
     public static void setRelationManager(RelationManager relationManager) {
         Item.relationManager = relationManager;

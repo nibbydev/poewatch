@@ -1,4 +1,4 @@
-package poe.Managers;
+package poe.Worker;
 
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.ApiDeserializers.ChangeID;
 import poe.Item.Parser.ItemParser;
+import poe.Managers.*;
 import poe.Managers.Interval.TimeFrame;
-import poe.Worker.Worker;
 import poe.Managers.Stat.StatType;
 
 import java.io.InputStream;

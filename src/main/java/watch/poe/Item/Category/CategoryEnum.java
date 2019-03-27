@@ -106,4 +106,10 @@ public enum CategoryEnum {
     public String getName() {
         return name;
     }
+
+    public String getDisplay() {
+        return display;
+    }
+
+    public int getId() {return ordinal() + 1;}
 }

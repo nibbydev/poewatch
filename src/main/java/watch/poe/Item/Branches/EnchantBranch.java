@@ -42,8 +42,8 @@ public class EnchantBranch extends Item {
             name = name.replace("\n", " ");
         }
 
-        // Var contains the enchant value (e.g "var:1-160" or "var:120")
         String numString = apiItem.getEnchantMods().get(0).replaceAll("[^-.0-9]+", " ").trim();
+        if ("".equals(numString)) return;
         String[] numArray = numString.split(" ");
 
         // Some enchants have free to vary rolls, flatten them
@@ -51,13 +51,13 @@ public class EnchantBranch extends Item {
 
         // If there's at least 1 roll
         if (numArray.length == 1) {
-            enchantTopRange = enchantBottomRange = Float.parseFloat(numArray[0]);
+            enchantMin = enchantMax = Float.parseFloat(numArray[0]);
         }
 
         // If there are two rolls
         if (numArray.length == 2) {
-            enchantBottomRange = Float.parseFloat(numArray[0]);
-            enchantTopRange = Float.parseFloat(numArray[1]);
+            enchantMin = Float.parseFloat(numArray[0]);
+            enchantMax = Float.parseFloat(numArray[1]);
         }
     }
 

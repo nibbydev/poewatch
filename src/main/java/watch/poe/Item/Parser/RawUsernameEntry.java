@@ -1,4 +1,4 @@
-package poe.Worker.Entry;
+package poe.Item.Parser;
 
 public class RawUsernameEntry {
     public String account, character;

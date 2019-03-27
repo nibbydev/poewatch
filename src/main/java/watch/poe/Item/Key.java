@@ -6,7 +6,7 @@ import java.sql.SQLException;
 public class Key {
     private String name, typeLine, variation;
     private Integer links, level, quality, tier, iLvl;
-    private Float enchantBottomRange, enchantTopRange;
+    private Float enchantMin, enchantMax;
     private Boolean corrupted, shaper, elder;
     private int frameType;
 
@@ -23,8 +23,8 @@ public class Key {
         tier = item.mapTier;
         shaper = item.shaper;
         elder = item.elder;
-        enchantBottomRange = item.enchantBottomRange;
-        enchantTopRange = item.enchantTopRange;
+        enchantMin = item.enchantMin;
+        enchantMax = item.enchantMax;
         variation = item.variation == null ? null : item.variation.getVariation();
 
         level = item.gemLevel;
@@ -67,11 +67,11 @@ public class Key {
         elder = resultSet.getBoolean("elder");
         if (resultSet.wasNull()) elder = null;
 
-        enchantBottomRange = resultSet.getFloat("enchantBottomRange");
-        if (resultSet.wasNull()) enchantBottomRange = null;
+        enchantMin = resultSet.getFloat("enchantMin");
+        if (resultSet.wasNull()) enchantMin = null;
 
-        enchantTopRange = resultSet.getFloat("enchantTopRange");
-        if (resultSet.wasNull()) enchantTopRange = null;
+        enchantMax = resultSet.getFloat("enchantMax");
+        if (resultSet.wasNull()) enchantMax = null;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -124,10 +124,10 @@ public class Key {
         if (this.elder == null ? (other.elder != null) : !this.elder.equals(other.elder)) {
             return false;
         }
-        if (this.enchantTopRange == null ? (other.enchantTopRange != null) : !this.enchantTopRange.equals(other.enchantTopRange)) {
+        if (this.enchantMax == null ? (other.enchantMax != null) : !this.enchantMax.equals(other.enchantMax)) {
             return false;
         }
-        if (this.enchantBottomRange == null ? (other.enchantBottomRange != null) : !this.enchantBottomRange.equals(other.enchantBottomRange)) {
+        if (this.enchantMin == null ? (other.enchantMin != null) : !this.enchantMin.equals(other.enchantMin)) {
             return false;
         }
         return this.iLvl == null ? (other.iLvl == null) : this.iLvl.equals(other.iLvl);
@@ -147,8 +147,8 @@ public class Key {
         hash = 53 * hash + (this.corrupted != null ? this.corrupted.hashCode() : 0);
         hash = 53 * hash + (this.shaper != null ? this.shaper.hashCode() : 0);
         hash = 53 * hash + (this.elder != null ? this.elder.hashCode() : 0);
-        hash = 53 * hash + (this.enchantBottomRange != null ? this.enchantBottomRange.hashCode() : 0);
-        hash = 53 * hash + (this.enchantTopRange != null ? this.enchantTopRange.hashCode() : 0);
+        hash = 53 * hash + (this.enchantMin != null ? this.enchantMin.hashCode() : 0);
+        hash = 53 * hash + (this.enchantMax != null ? this.enchantMax.hashCode() : 0);
         hash = 53 * hash + (this.iLvl != null ? this.iLvl.hashCode() : 0);
         hash = 53 * hash + this.frameType;
 
@@ -159,8 +159,8 @@ public class Key {
     public String toString() {
         return "name:" + name + "|type:" + typeLine + "|frame:" + frameType + "|ilvl:" + iLvl + "|links:" + links
                 + "|tier:" + tier + "|var:" + variation + "|lvl:" + level + "|qual:" + quality + "|corr:" + corrupted
-                + "|shaper:" + shaper + "|elder:" + elder + "|enchantBottomRange:" + enchantBottomRange
-                + "|enchantTopRange:" + enchantTopRange;
+                + "|shaper:" + shaper + "|elder:" + elder + "|enchantBottomRange:" + enchantMin
+                + "|enchantTopRange:" + enchantMax;
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -207,8 +207,8 @@ public class Key {
         return iLvl;
     }
 
-    public Float getEnchantTopRange() {
-        return enchantTopRange;
+    public Float getEnchantMax() {
+        return enchantMax;
     }
 
     public Boolean getShaper() {
@@ -219,7 +219,7 @@ public class Key {
         return elder;
     }
 
-    public Float getEnchantBottomRange() {
-        return enchantBottomRange;
+    public Float getEnchantMin() {
+        return enchantMin;
     }
 }

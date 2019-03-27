@@ -1,5 +1,7 @@
 package poe.Item.Branches;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import poe.Item.ApiDeserializers.ApiItem;
 import poe.Item.ApiDeserializers.Property;
 import poe.Item.ApiDeserializers.Socket;
@@ -8,6 +10,8 @@ import poe.Item.Item;
 import poe.Item.VariantEnum;
 
 public class DefaultBranch extends Item {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     /**
      * Enchantment constructor
      */
@@ -17,6 +21,10 @@ public class DefaultBranch extends Item {
         process();
         if (discard) {
             return;
+        }
+
+        if (category == null) {
+            logger.error("Null category for: " + apiItem.getName() + " " + apiItem.getTypeLine() + " " + apiItem.getFrameType());
         }
 
         parse();

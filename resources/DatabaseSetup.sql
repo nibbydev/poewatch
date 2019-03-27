@@ -32,13 +32,8 @@ CREATE TABLE data_categories (
 
 CREATE TABLE data_groups (
     id       INT          UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_cat   INT          UNSIGNED NOT NULL,
-    name     VARCHAR(32)  NOT NULL,
-    display  VARCHAR(32)  DEFAULT NULL,
-
-    FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
-
-    INDEX name (name)
+    name     VARCHAR(32)  NOT NULL UNIQUE,
+    display  VARCHAR(32)  DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -112,6 +107,10 @@ CREATE TABLE data_itemData (
     found      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     stack      SMALLINT      DEFAULT NULL,
     tier       TINYINT(1)    UNSIGNED DEFAULT NULL,
+    shaper     BIT(1)        DEFAULT NULL,
+    elder      BIT(1)        DEFAULT NULL,
+    enchantMin DECIMAL(4,1)  DEFAULT NULL,
+    enchantMax DECIMAL(4,1)  DEFAULT NULL,
     lvl        TINYINT(1)    UNSIGNED DEFAULT NULL,
     quality    TINYINT(1)    UNSIGNED DEFAULT NULL,
     corrupted  TINYINT(1)    UNSIGNED DEFAULT NULL,
@@ -123,7 +122,7 @@ CREATE TABLE data_itemData (
     FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
     FOREIGN KEY (id_grp) REFERENCES data_groups     (id) ON DELETE CASCADE,
 
-    CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var),
+    CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var, shaper, elder, enchantMin, enchantMax),
 
     INDEX reindex (reindex),
     INDEX frame   (frame),
@@ -349,7 +348,9 @@ VALUES
     (17, 0, 1, 'Hardcore Delve',                'HC Delve'          ),
     (18, 0, 0, 'Delve',                         'Delve'             ),
     (19, 0, 1, 'Hardcore Betrayal',             'HC Betrayal'       ),
-    (20, 0, 0, 'Betrayal',                      'Betrayal'          );
+    (20, 0, 0, 'Betrayal',                      'Betrayal'          ),
+    (21, 0, 1, 'Hardcore Synthesis',            'HC Synthesis'      ),
+    (22, 0, 0, 'Synthesis',                     'Synthesis'         );
 
 --
 -- Base value for data_changeId
@@ -359,97 +360,6 @@ INSERT INTO data_changeId
     (changeId)
 VALUES
     ('0-0-0-0-0');
-
---
--- Base values for data_categories
---
-
-INSERT INTO data_categories
-    (name, display)
-VALUES
-    ('accessory',      'Accessories'),
-    ('armour',         'Armour'),
-    ('card',           'Divination cards'),
-    ('currency',       'Currency'),
-    ('enchantment',    'Enchants'),
-    ('flask',          'Flasks'),
-    ('gem',            'Gems'),
-    ('jewel',          'Jewels'),
-    ('map',            'Maps'),
-    ('prophecy',       'Prophecy'),
-    ('weapon',         'Weapons'),
-    ('base',           'Crafting Bases');
-
---
--- Base values for data_groups
---
-
-INSERT INTO data_groups
-    (id_cat, name, display)
-VALUES
-    (1,     'amulet',     'Amulets'),
-    (1,     'belt',       'Belts'),
-    (1,     'ring',       'Rings'),
-    (2,     'boots',      'Boots'),
-    (2,     'chest',      'Body Armours'),
-    (2,     'gloves',     'Gloves'),
-    (2,     'helmet',     'Helmets'),
-    (2,     'quiver',     'Quivers'),
-    (2,     'shield',     'Shields'),
-    (3,     'card',       'Divination cards'),
-    (4,     'currency',   'Currency'),
-    (4,     'essence',    'Essences'),
-    (4,     'piece',      'Harbinger pieces'),
-    (4,     'fossil',     'Fossils'),
-    (4,     'resonator',  'Resonators'),
-    (4,     'vial',       'Vials'),
-    (5,     'boots',      'Boots'),
-    (5,     'gloves',     'Gloves'),
-    (5,     'helmet',     'Helmets'),
-    (6,     'flask',      'Flasks'),
-    (7,     'skill',      'Skill Gems'),
-    (7,     'support',    'Support Gems'),
-    (7,     'vaal',       'Vaal Gems'),
-    (8,     'jewel',      'Jewels'),
-    (9,     'map',        'Regular Maps'),
-    (9,     'fragment',   'Fragments'),
-    (9,     'unique',     'Unique Maps'),
-    (10,    'prophecy',   'Prophecies'),
-    (11,    'bow',        'Bows'),
-    (11,    'claw',       'Claws'),
-    (11,    'dagger',     'Daggers'),
-    (11,    'oneaxe',     '1H Axes'),
-    (11,    'onemace',    '1H Maces'),
-    (11,    'onesword',   '1H Swords'),
-    (11,    'rod',        'Rods'),
-    (11,    'sceptre',    'Sceptres'),
-    (11,    'staff',      'Staves'),
-    (11,    'twoaxe',     '2H Axes'),
-    (11,    'twomace',    '2H Maces'),
-    (11,    'twosword',   '2H Swords'),
-    (11,    'wand',       'Wands'),
-    (12,    'ring',       'Rings'),
-    (12,    'belt',       'Belts'),
-    (12,    'amulet',     'Amulets'),
-    (12,    'helmet',     'Helmets'),
-    (12,    'chest',      'Body Armour'),
-    (12,    'gloves',     'Gloves'),
-    (12,    'boots',      'Boots'),
-    (12,    'onemace',	  '1H Maces'),
-    (12,    'sceptre',	  'Sceptres'),
-    (12,    'bow',	      'Bows'),
-    (12,    'wand',	      'Wands'),
-    (12,    'onesword',	  '1H Swords'),
-    (12,    'claw',	      'Claws'),
-    (12,    'shield',	    'Shields'),
-    (12,    'dagger',	    'Daggers'),
-    (12,    'twosword',	  '2H Swords'),
-    (12,    'staff',	    'Staves'),
-    (12,    'oneaxe',	    '1H Axes'),
-    (12,    'quiver',	    'Quivers'),
-    (12,    'twoaxe',	    '2H Axes'),
-    (12,    'twomace',	  '2H Maces'),
-    (12,    'jewel',	    'Jewels');
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- User accounts

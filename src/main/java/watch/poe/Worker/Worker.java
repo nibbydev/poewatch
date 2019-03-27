@@ -9,7 +9,6 @@ import poe.Item.ApiDeserializers.Reply;
 import poe.Item.Parser.ItemParser;
 import poe.Managers.Stat.StatType;
 import poe.Managers.StatisticsManager;
-import poe.Managers.WorkerManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,12 +26,12 @@ public class Worker extends Thread {
     private static long lastPullTime;
     private final WorkerManager workerManager;
     private final StatisticsManager statisticsManager;
-    private ItemParser itemParser;
     private final Database database;
     private final Config config;
     private final Gson gson;
     private final Object jobMonitor = new Object();
     private final Object pauseMonitor = new Object();
+    private ItemParser itemParser;
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;

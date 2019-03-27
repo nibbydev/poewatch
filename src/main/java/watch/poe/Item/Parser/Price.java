@@ -1,13 +1,11 @@
 package poe.Item.Parser;
 
-import com.typesafe.config.Config;
 import poe.Managers.RelationManager;
 
 public class Price {
-    private static Config config;
     private static RelationManager relationManager;
     private boolean hasPrice;
-    private int currencyId;
+    private Integer currencyId;
     private double price;
 
     public Price(String itemNote, String stashNote) {
@@ -20,10 +18,6 @@ public class Price {
 
     public static void setRelationManager(RelationManager relationManager) {
         Price.relationManager = relationManager;
-    }
-
-    public static void setConfig(Config config) {
-        Price.config = config;
     }
 
     public double getPrice() {
@@ -45,7 +39,7 @@ public class Price {
             return;
         }
 
-        String[] noteList = buyoutNote.split("\t");
+        String[] noteList = buyoutNote.split("\\s+");
 
         // Make sure note_list has 3 strings (eg ["~b/o", "5.3", "chaos"])
         if (noteList.length < 3 || !noteList[0].equals("~b/o") && !noteList[0].equals("~price")) {
@@ -83,9 +77,7 @@ public class Price {
         hasPrice = true;
     }
 
-    public int getCurrencyId() {
+    public Integer getCurrencyId() {
         return currencyId;
     }
-
-
 }

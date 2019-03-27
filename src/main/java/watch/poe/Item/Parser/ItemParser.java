@@ -13,7 +13,6 @@ import poe.Managers.LeagueManager;
 import poe.Managers.RelationManager;
 import poe.Managers.Stat.StatType;
 import poe.Managers.StatisticsManager;
-import poe.Worker.Entry.RawUsernameEntry;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -64,7 +64,13 @@ public enum VariantEnum {
     }
 
     public static VariantEnum findVariant(Item item) {
+        // Go through all variations
         for (VariantEnum variation : VariantEnum.values()) {
+            // Check if the item name matches
+            if (!item.name.equals(variation.itemName)) {
+                continue;
+            }
+
             // Go though all the item's explicit modifiers and the current variant's mods
             int matches = 0;
 
@@ -85,10 +91,6 @@ public enum VariantEnum {
         }
 
         return null;
-    }
-
-    public String getItemName() {
-        return itemName;
     }
 
     public String getVariation() {

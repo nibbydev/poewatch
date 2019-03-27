@@ -54,9 +54,9 @@ public class Index {
      */
     public Integer indexItemData(Item item) {
         String query =  "INSERT INTO data_itemData (" +
-                        "  id_cat, id_grp, `name`, `type`, frame, stack, " +
-                        "  tier, lvl,  quality, corrupted, links, ilvl, var, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "  id_cat, id_grp, `name`, `type`, frame, stack, tier, shaper, elder, " +
+                        "  enchantMin, enchantMax, lvl, quality, corrupted, links, ilvl, var, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE id = id; ; ";
 
         try {
@@ -68,10 +68,8 @@ public class Index {
             Key key = item.getKey();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                statement.setInt(1, item.getCategory().ordinal());
-
-                if (item.getGroup() == null) statement.setNull(2, 0);
-                else statement.setInt(2, item.getGroup().ordinal());
+                statement.setInt(1, item.getCategory().getId());
+                statement.setInt(2, item.getGroup().getId());
 
                 statement.setString(3, key.getName());
                 statement.setString(4, key.getTypeLine());
@@ -85,28 +83,44 @@ public class Index {
                     statement.setNull(7, 0);
                 } else statement.setInt(7, key.getTier());
 
-                if (key.getLevel() == null) {
+                if (key.getShaper() == null) {
                     statement.setNull(8, 0);
-                } else statement.setInt(8, key.getLevel());
+                } else statement.setBoolean(8, key.getShaper());
+
+                if (key.getElder() == null) {
+                    statement.setNull(9, 0);
+                } else statement.setBoolean(9, key.getElder());
+
+                if (key.getEnchantMin() == null) {
+                    statement.setNull(10, 0);
+                } else statement.setFloat(10, key.getEnchantMin());
+
+                if (key.getEnchantMax() == null) {
+                    statement.setNull(11, 0);
+                } else statement.setFloat(11, key.getEnchantMax());
+
+                if (key.getLevel() == null) {
+                    statement.setNull(12, 0);
+                } else statement.setInt(12, key.getLevel());
 
                 if (key.getQuality() == null) {
-                    statement.setNull(9, 0);
-                } else statement.setInt(9, key.getQuality());
+                    statement.setNull(13, 0);
+                } else statement.setInt(13, key.getQuality());
 
                 if (key.getCorrupted() == null) {
-                    statement.setNull(10, 0);
-                } else statement.setBoolean(10, key.getCorrupted());
+                    statement.setNull(14, 0);
+                } else statement.setBoolean(14, key.getCorrupted());
 
                 if (key.getLinks() == null) {
-                    statement.setNull(11, 0);
-                } else statement.setInt(11, key.getLinks());
+                    statement.setNull(15, 0);
+                } else statement.setInt(15, key.getLinks());
 
                 if (key.getiLvl() == null) {
-                    statement.setNull(12, 0);
-                } else statement.setInt(12, key.getiLvl());
+                    statement.setNull(16, 0);
+                } else statement.setInt(16, key.getiLvl());
 
-                statement.setString(13, key.getVariation());
-                statement.setString(14, item.formatIconURL());
+                statement.setString(17, key.getVariation());
+                statement.setString(18, item.formatIconURL());
 
                 statement.executeUpdate();
                 database.connection.commit();
@@ -121,10 +135,14 @@ public class Index {
         }
     }
 
+    /**
+     * Updates item data entry in database. Only immutable field is the id
+     */
     public boolean reindexItemData(int id_d, Item item) {
         String query =  "update data_itemData set " +
                         "  id_cat = ?, id_grp = ?, name = ?, type = ?, reindex = 0, " +
-                        "  frame = ?, stack = ?, tier = ?, lvl = ?, quality = ?," +
+                        "  frame = ?, stack = ?, tier = ?, shaper = ?, elder = ?," +
+                        "  enchantMin = ?, enchantMax = ?, lvl = ?, quality = ?," +
                         "  corrupted = ?, links = ?, ilvl = ?, var = ?, icon = ? " +
                         "where id = ? " +
                         "limit 1 ";
@@ -138,8 +156,8 @@ public class Index {
             Key key = item.getKey();
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, item.getCategory().ordinal());
-                statement.setInt(2, item.getGroup().ordinal());
+                statement.setInt(1, item.getCategory().getId());
+                statement.setInt(2, item.getGroup().getId());
                 statement.setString(3, key.getName());
                 statement.setString(4, key.getTypeLine());
                 statement.setInt(5, key.getFrameType());
@@ -152,29 +170,45 @@ public class Index {
                     statement.setNull(7, 0);
                 } else statement.setInt(7, key.getTier());
 
-                if (key.getLevel() == null) {
+                if (key.getShaper() == null) {
                     statement.setNull(8, 0);
-                } else statement.setInt(8, key.getLevel());
+                } else statement.setBoolean(8, key.getShaper());
+
+                if (key.getElder() == null) {
+                    statement.setNull(9, 0);
+                } else statement.setBoolean(9, key.getElder());
+
+                if (key.getEnchantMin() == null) {
+                    statement.setNull(10, 0);
+                } else statement.setFloat(10, key.getEnchantMin());
+
+                if (key.getEnchantMax() == null) {
+                    statement.setNull(11, 0);
+                } else statement.setFloat(11, key.getEnchantMax());
+
+                if (key.getLevel() == null) {
+                    statement.setNull(12, 0);
+                } else statement.setInt(12, key.getLevel());
 
                 if (key.getQuality() == null) {
-                    statement.setNull(9, 0);
-                } else statement.setInt(9, key.getQuality());
+                    statement.setNull(13, 0);
+                } else statement.setInt(13, key.getQuality());
 
                 if (key.getCorrupted() == null) {
-                    statement.setNull(10, 0);
-                } else statement.setBoolean(10, key.getCorrupted());
+                    statement.setNull(14, 0);
+                } else statement.setBoolean(14, key.getCorrupted());
 
                 if (key.getLinks() == null) {
-                    statement.setNull(11, 0);
-                } else statement.setInt(11, key.getLinks());
+                    statement.setNull(15, 0);
+                } else statement.setInt(15, key.getLinks());
 
                 if (key.getiLvl() == null) {
-                    statement.setNull(12, 0);
-                } else statement.setInt(12, key.getiLvl());
+                    statement.setNull(16, 0);
+                } else statement.setInt(16, key.getiLvl());
 
-                statement.setString(13, key.getVariation());
-                statement.setString(14, item.formatIconURL());
-                statement.setInt(15, id_d);
+                statement.setString(17, key.getVariation());
+                statement.setString(18, item.formatIconURL());
+                statement.setInt(19, id_d);
 
                 statement.executeUpdate();
                 database.connection.commit();

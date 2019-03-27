@@ -14,7 +14,7 @@ import java.util.*;
  * maps indexes and shorthands to currency names and vice versa
  */
 public class RelationManager {
-    private final Logger logger;
+    private final Logger logger = LoggerFactory.getLogger(RelationManager.class);
     private final Database database;
 
     private final Set<Integer> reindexSet = new HashSet<>();
@@ -26,7 +26,6 @@ public class RelationManager {
     private final Map<String, Integer> currencyAliases = new HashMap<>();
 
     public RelationManager(Database db) {
-        this.logger = LoggerFactory.getLogger(RelationManager.class);
         this.database = db;
     }
 
@@ -37,6 +36,18 @@ public class RelationManager {
         boolean success;
 
         logger.info("Initializing relations");
+
+        success = database.setup.verifyCategories();
+        if (!success) {
+            logger.error("Failed to verify database category integrity. Shutting down...");
+            return false;
+        }
+
+        success = database.setup.verifyGroups();
+        if (!success) {
+            logger.error("Failed to verify database group integrity. Shutting down...");
+            return false;
+        }
 
         success = database.init.getItemData(itemData, reindexSet);
         if (!success) {

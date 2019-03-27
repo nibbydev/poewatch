@@ -11,6 +11,7 @@ import poe.Item.Item;
 import poe.Managers.*;
 import poe.Managers.IntervalManager;
 import poe.Managers.Stat.StatType;
+import poe.Worker.WorkerManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -74,7 +75,6 @@ public class Main {
 
             Item.setRelationManager(rm);
             Price.setRelationManager(rm);
-            Price.setConfig(cnf);
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
             am = new AccountManager(db);
