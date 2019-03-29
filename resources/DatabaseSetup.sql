@@ -107,6 +107,7 @@ CREATE TABLE data_itemData (
     found      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     stack      SMALLINT      DEFAULT NULL,
     tier       TINYINT(1)    UNSIGNED DEFAULT NULL,
+    series     TINYINT(1)    UNSIGNED DEFAULT NULL,
     shaper     BIT(1)        DEFAULT NULL,
     elder      BIT(1)        DEFAULT NULL,
     enchantMin DECIMAL(4,1)  DEFAULT NULL,

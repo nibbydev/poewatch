@@ -182,6 +182,9 @@ public class DefaultBranch extends Item {
             return;
         }
 
+        series = extractMapSeries();
+        if (discard) return;
+
         // Set frame to 0 for all non-uniques (and non-relics)
         if (frameType < 3) {
             frameType = 0;
@@ -294,5 +297,57 @@ public class DefaultBranch extends Item {
     }
 
 
+    /**
+     * Attempt to find the series a map belongs to
+     */
+    private Integer extractMapSeries() {
+        /* Currently the series are as such:
+         http://web.poecdn.com/image/Art/2DItems/Maps/Map45.png?scale=1&w=1&h=1
+         http://web.poecdn.com/image/Art/2DItems/Maps/act4maps/Map76.png?scale=1&w=1&h=1
+         http://web.poecdn.com/image/Art/2DItems/Maps/AtlasMaps/Chimera.png?scale=1&scaleIndex=0&w=1&h=1
+         http://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/New/VaalTempleBase.png?scale=1&w=1&h=1&mn=1&mt=0
+         http://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/New/VaalTempleBase.png?scale=1&w=1&h=1&mn=2&mt=0
+         http://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/New/VaalTempleBase.png?scale=1&w=1&h=1&mn=3&mt=0
+        */
 
+        // Ignore unique and relic maps
+        if (apiItem.getFrameType() > 2) {
+            return null;
+        }
+
+        String[] splitItemType = apiItem.getIcon().split("/");
+        String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
+        int seriesNumber = 0;
+
+        // Attempt to find series number for newer maps
+        try {
+            String[] iconParams = apiItem.getIcon().split("\\?", 2)[1].split("&");
+
+            for (String param : iconParams) {
+                String[] splitParam = param.split("=");
+
+                if (splitParam[0].equals("mn")) {
+                    seriesNumber = Integer.parseInt(splitParam[1]);
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            // If it failed, it failed. Doesn't really matter.
+        }
+
+        if (iconCategory.equalsIgnoreCase("Maps")) {
+            return 0;
+        } else if (iconCategory.equalsIgnoreCase("act4maps")) {
+            return 1;
+        } else if (iconCategory.equalsIgnoreCase("AtlasMaps")) {
+            return 2;
+        } else if (iconCategory.equalsIgnoreCase("New") && seriesNumber > 0) {
+            return seriesNumber + 2;
+        }
+
+        logger.error("Couldn't determine series of map with icon: " + apiItem.getIcon());
+
+        discard = true;
+        return null;
+    }
 }

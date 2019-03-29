@@ -152,6 +152,13 @@ where id_grp > 100;
 ALTER TABLE data_itemdata ADD CONSTRAINT data_itemData_ibfk_2 FOREIGN KEY (id_grp) REFERENCES data_groups(id) ON DELETE CASCADE;
 
 -- ---------------------------------------------------------------------------------------------------------------------
+-- Database migration 29.03.19: add map series field
+-- ---------------------------------------------------------------------------------------------------------------------
+
+alter table data_itemData add series tinyint(1) unsigned default null after tier;
+update data_itemData set reindex = 1 where id_cat = 9;
+
+-- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------------------------------------------------------
 

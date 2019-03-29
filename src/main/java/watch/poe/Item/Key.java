@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 public class Key {
     private String name, typeLine, variation;
-    private Integer links, level, quality, tier, iLvl;
+    private Integer links, level, quality, tier, series, iLvl;
     private Float enchantMin, enchantMax;
     private Boolean corrupted, shaper, elder;
     private int frameType;
@@ -21,6 +21,7 @@ public class Key {
         iLvl = item.itemLevel;
         links = item.links;
         tier = item.mapTier;
+        series = item.series;
         shaper = item.shaper;
         elder = item.elder;
         enchantMin = item.enchantMin;
@@ -51,6 +52,9 @@ public class Key {
 
         tier = resultSet.getInt("tier");
         if (resultSet.wasNull()) tier = null;
+
+        series = resultSet.getInt("series");
+        if (resultSet.wasNull()) series = null;
 
         level = resultSet.getInt("lvl");
         if (resultSet.wasNull()) level = null;
@@ -115,6 +119,9 @@ public class Key {
         if (this.tier == null ? (other.tier != null) : !this.tier.equals(other.tier)) {
             return false;
         }
+        if (this.series == null ? (other.series != null) : !this.series.equals(other.series)) {
+            return false;
+        }
         if (this.corrupted == null ? (other.corrupted != null) : !this.corrupted.equals(other.corrupted)) {
             return false;
         }
@@ -144,6 +151,7 @@ public class Key {
         hash = 53 * hash + (this.level != null ? this.level.hashCode() : 0);
         hash = 53 * hash + (this.quality != null ? this.quality.hashCode() : 0);
         hash = 53 * hash + (this.tier != null ? this.tier.hashCode() : 0);
+        hash = 53 * hash + (this.series != null ? this.series.hashCode() : 0);
         hash = 53 * hash + (this.corrupted != null ? this.corrupted.hashCode() : 0);
         hash = 53 * hash + (this.shaper != null ? this.shaper.hashCode() : 0);
         hash = 53 * hash + (this.elder != null ? this.elder.hashCode() : 0);
@@ -158,7 +166,7 @@ public class Key {
     @Override
     public String toString() {
         return "name:" + name + "|type:" + typeLine + "|frame:" + frameType + "|ilvl:" + iLvl + "|links:" + links
-                + "|tier:" + tier + "|var:" + variation + "|lvl:" + level + "|qual:" + quality + "|corr:" + corrupted
+                + "|tier:" + tier + "|series:" + series + "|var:" + variation + "|lvl:" + level + "|qual:" + quality + "|corr:" + corrupted
                 + "|shaper:" + shaper + "|elder:" + elder + "|enchantBottomRange:" + enchantMin
                 + "|enchantTopRange:" + enchantMax;
     }
@@ -221,5 +229,9 @@ public class Key {
 
     public Float getEnchantMin() {
         return enchantMin;
+    }
+
+    public Integer getSeries() {
+        return series;
     }
 }

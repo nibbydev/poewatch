@@ -17,18 +17,15 @@ public class Item {
     protected static RelationManager relationManager;
 
     protected ApiItem apiItem;
-    protected String name, typeLine;
-    protected Integer links, gemLevel, gemQuality, mapTier, itemLevel;
-    protected Boolean gemCorrupted;
+    protected String name, typeLine, icon;
+    protected Integer links, gemLevel, gemQuality, mapTier, itemLevel, stackSize, maxStackSize, series;
+    protected Boolean gemCorrupted, shaper, elder;
     protected int frameType;
     protected VariantEnum variation;
-    protected Integer stackSize, maxStackSize;
-    protected String icon;
     protected CategoryEnum category = null;
     protected GroupEnum group = null;
     protected boolean discard;
     protected Float enchantMin, enchantMax;
-    protected Boolean shaper, elder;
     private Key key;
 
     public Item() {
