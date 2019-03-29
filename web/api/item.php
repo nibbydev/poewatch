@@ -58,18 +58,17 @@ function get_history_entries($pdo, $leagueId, $itemId) {
 }
 
 function get_item_data($pdo, $id) {
-  $query = "
-  SELECT 
-    d.name, d.type, d.frame, d.icon,
+  $query = "SELECT 
+    d.name, d.type, d.frame, d.icon, d.stack, 
     d.tier, d.lvl, d.quality, d.corrupted, 
-    d.links, d.ilvl, d.var AS variation,
+    d.links, d.ilvl, d.shaper, d.elder, 
+    d.enchantMin, d.enchantMax, d.var AS variation,
     dc.name AS category, dg.name AS `group`
   FROM      data_itemData   AS d
   LEFT JOIN data_categories AS dc ON d.id_cat = dc.id 
   LEFT JOIN data_groups     AS dg ON d.id_grp = dg.id 
   WHERE     d.id = ?
-  LIMIT     1
-  ";
+  LIMIT     1";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
@@ -147,18 +146,43 @@ function build_payload($pdo, $id) {
     'name'      => $itemData['name'],
     'type'      => $itemData['type'],
     'frame'     => $itemData['frame'],
-    'icon'      => $itemData['icon'],
-    'tier'      => $itemData['tier']      === NULL ? null :  (int) $itemData['tier'],
-    'lvl'       => $itemData['lvl']       === NULL ? null :  (int) $itemData['lvl'],
-    'quality'   => $itemData['quality']   === NULL ? null :  (int) $itemData['quality'],
-    'corrupted' => $itemData['corrupted'] === NULL ? null : (bool) $itemData['corrupted'],
-    'links'     => $itemData['links']     === NULL ? null :  (int) $itemData['links'],
-    'ilvl'      => $itemData['ilvl'],
-    'variation' => $itemData['variation'],
     'category'  => $itemData['category'],
     'group'     => $itemData['group'],
+    'tier'      => $itemData['tier']      === NULL ? null :  (int) $itemData['tier'],
+    'stack'     => $itemData['stack']     === NULL ? null :  (int) $itemData['stack'],
+
+    'base'      => null,
+    'enchant'   => null,
+    'gem'       => null,
+    
+    'links'     => $itemData['links']     === NULL ? null :  (int) $itemData['links'],
+    'variation' => $itemData['variation'],
+    'icon'      => $itemData['icon'],
     'data'      => $historyData
   );
+
+  if ($itemData["category"] === "base") {
+    $payload['base'] = array(
+      "shaper" => (bool) $itemData['shaper'],
+      "elder" => (bool) $itemData['elder'],
+      "itemLevel" => $itemData['ilvl'] === null ? null : (int) $itemData['ilvl']
+    );
+  }
+
+  if ($itemData["category"] === "gem") {
+    $payload['gem'] = array(
+      "level" => (int) $itemData['lvl'],
+      "quality" => (int) $itemData['quality'],
+      "corrupted" => (bool) $itemData['corrupted']
+    );
+  }
+
+  if ($itemData["category"] === "enchantment") {
+    $payload['enchant'] = array(
+      "min" => $itemData['enchantMin'] === null ? null : (float) $itemData['enchantMin'],
+      "max" => $itemData['enchantMax'] === null ? null : (float) $itemData['enchantMax']
+    );
+  }
 
   return $payload;
 }
