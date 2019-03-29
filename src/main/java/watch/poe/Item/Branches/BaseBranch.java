@@ -46,6 +46,7 @@ public class BaseBranch extends Item {
 
         // Override frame type for all bases
         frameType = 0;
+        itemLevel = apiItem.getIlvl();
 
         // Flatten ilvl rolls
         if (apiItem.getShaper() == null && apiItem.getElder() == null) {
