@@ -569,7 +569,7 @@ class DetailsModal {
       console.log("History source: remote");
 
       let request = $.ajax({
-        url: "http://api.poewatch/item",
+        url: "https://api.poe.watch/item",
         data: {id: this.current.id},
         type: "GET",
         async: true,
@@ -1348,7 +1348,7 @@ function makeGetRequest() {
   $(".buffering-msg").remove();
 
   let request = $.ajax({
-    url: "http://api.poewatch/get",
+    url: "https://api.poe.watch/get",
     data: {
       league: FILTER.league.name, 
       category: FILTER.category
@@ -1390,7 +1390,7 @@ function timedRequestCallback() {
   console.log("Automatic update");
 
   var request = $.ajax({
-    url: "http://api.poewatch/get",
+    url: "https://api.poe.watch/get",
     data: {
       league: FILTER.league.name, 
       category: FILTER.category
