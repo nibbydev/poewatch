@@ -3,7 +3,7 @@
 function get_data($pdo) {
   $query = "SELECT 
     did.id, did.name, did.type, did.frame, did.stack, 
-    did.tier, did.lvl, did.tier, did.shaper, did.elder, 
+    did.tier, did.lvl, did.tier, did.series, did.shaper, did.elder, 
     did.enchantMin, did.enchantMax ,did.quality, did.corrupted, 
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`
@@ -33,16 +33,23 @@ function parse_data($stmt) {
       'category'  => $row['category'],
       'group'     => $row['group'],
 
-      'tier'      => $row['tier'],
-      'stack'     => $row['stack'],
-
       'base'      => null,
       'enchant'   => null,
       'gem'       => null,
+      'map'       => null,
+
+      'stack'     => $row['stack'],
       'links'     => $row['links'],
       'variation' => $row['var'],
       'icon'      => $row['icon']
     );
+
+    if ($row["category"] === "map") {
+      $tmp['map'] = array(
+        "series" => $row['series'] === null ? null : (int) $row['series'],
+        "tier" => (int) $row['tier']
+      );
+    }
 
     if ($row["category"] === "base") {
       $tmp['base'] = array(

@@ -148,18 +148,25 @@ function build_payload($pdo, $id) {
     'frame'     => $itemData['frame'],
     'category'  => $itemData['category'],
     'group'     => $itemData['group'],
-    'tier'      => $itemData['tier']      === NULL ? null :  (int) $itemData['tier'],
-    'stack'     => $itemData['stack']     === NULL ? null :  (int) $itemData['stack'],
 
     'base'      => null,
     'enchant'   => null,
     'gem'       => null,
-    
+    'map'       => null,
+
+    'stack'     => $itemData['stack']     === NULL ? null :  (int) $itemData['stack'],
     'links'     => $itemData['links']     === NULL ? null :  (int) $itemData['links'],
     'variation' => $itemData['variation'],
     'icon'      => $itemData['icon'],
     'data'      => $historyData
   );
+
+  if ($itemData["category"] === "map") {
+    $payload['map'] = array(
+      "series" => $row['series'] === null ? null : (int) $itemData['series'],
+      "tier" => (int) $row['tier']
+    );
+  }
 
   if ($itemData["category"] === "base") {
     $payload['base'] = array(

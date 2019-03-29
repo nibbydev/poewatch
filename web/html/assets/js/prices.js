@@ -144,7 +144,7 @@ class ItemRow {
   
   buildMapFields() {
     // Don't run if item is not a map
-    if (FILTER.category !== "map") {
+    if (!this.item.map) {
       return "";
     }
 
@@ -154,7 +154,7 @@ class ItemRow {
     </td>
     `.trim();
 
-    return this.item.tier ? template.replace("{{tier}}", this.item.tier) : "<td></td>";
+    return this.item.map.tier ? template.replace("{{tier}}", this.item.map.tier) : "<td></td>";
   }
 
   buildSparkField() {
@@ -694,8 +694,8 @@ class DetailsModal {
       builder += " <span class='badge custom-badge-gray ml-1'>" + item.variation + "</span>";
     } 
     
-    if (item.tier) {
-      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.tier + "</span>";
+    if (item.map && item.map.tier) {
+      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.map.tier + "</span>";
     } 
   
     if (item.itemLevel) {
@@ -1685,8 +1685,8 @@ function checkHideItem(item) {
   } else if (FILTER.category === "map") {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {
-        if (item.tier !== null) return true;
-      } else if (item.tier !== FILTER.tier) return true;
+        if (item.map && item.map.tier !== null) return true;
+      } else if (item.map.tier !== FILTER.tier) return true;
     }
 
   } else if (FILTER.category === "base" && item.base) {

@@ -33,8 +33,8 @@ function get_data($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.total, i.daily, i.current, i.accepted,
-    did.name, did.type, did.frame, 
-    did.tier, did.shaper, did.elder, did.enchantMin, did.enchantMax,
+    did.name, did.type, did.frame, did.tier, did.series,
+    did.shaper, did.elder, did.enchantMin, did.enchantMax,
     did.lvl, did.quality, did.corrupted, did.stack, 
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`,
@@ -84,18 +84,24 @@ function parse_data($stmt, $active) {
       'accepted'      => (int)   $row['accepted'],
       'history'       =>         null,
 
-      'stack'         =>         $row['stack']     === NULL ? null :   (int) $row['stack'],
-      'tier'          =>         $row['tier']      === NULL ? null :   (int) $row['tier'],
-      'links'         =>         $row['links']     === NULL ? null :   (int) $row['links'],
-
       'base'          =>         null,
       'enchant'       =>         null,
       'gem'           =>         null,
+      'map'           =>         null,
 
+      'stack'         =>         $row['stack']     === NULL ? null :   (int) $row['stack'],
+      'links'         =>         $row['links']     === NULL ? null :   (int) $row['links'],
       'variation'     =>         $row['var'],
       'icon'          =>         $row['icon']
     );
     
+    if ($row["category"] === "map") {
+      $tmp['map'] = array(
+        "series" => $row['series'] === null ? null : (int) $row['series'],
+        "tier" => (int) $row['tier']
+      );
+    }
+
     if ($row["category"] === "base") {
       $tmp['base'] = array(
         "shaper" => (bool) $row['shaper'],
