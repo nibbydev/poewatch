@@ -262,11 +262,18 @@ public class DefaultBranch extends Item {
             return;
         }
 
+        // Accept some quality ranges
+        if (quality < 5) {
+            quality = 0;
+        } else if (quality > 17 && quality < 23) {
+            quality = 20;
+        } else if (quality != 23){
+            discard = true;
+            return;
+        }
+
         // Begin the long block that filters out gems based on a number of properties
         if (apiItem.getTypeLine().equals("Empower Support") || apiItem.getTypeLine().equals("Enlighten Support") || apiItem.getTypeLine().equals("Enhance Support")) {
-            if (quality < 10) quality = 0;
-            else quality = 20;
-
             // Quality doesn't matter for lvl 3 and 4
             if (level > 2) {
                 quality = 0;
@@ -276,19 +283,17 @@ public class DefaultBranch extends Item {
                 }
             }
         } else {
-            if (level < 19) level = 1;          // lvl       1 = 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
-            else if (level < 21) level = 20;    // lvl      20 = 19,20
-            // lvl      21 = 21
+            // Accept some level ranges
+            if (level <= 5) {
+                level = 0;
+            } else if (level < 20) {
+                discard = true;
+                return;
+            }
 
-            if (quality < 17) quality = 0;        // quality   0 = 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
-            else if (quality < 22) quality = 20;  // quality  20 = 17,18,19,20,21
-            else quality = 23;                 // quality  23 = 22,23
-
-            // Gets rid of specific gems
-            if (level < 20 && quality > 20) quality = 20;  // lvl:1 quality:23-> lvl:1 quality:20
-
-            if (level > 20 || quality > 20) corrupted = true;
-            else if (apiItem.getTypeLine().contains("Vaal")) corrupted = true;
+            if (level > 20 || quality > 20 || apiItem.getTypeLine().contains("Vaal")) {
+                corrupted = true;
+            }
         }
 
         gemLevel = level;
