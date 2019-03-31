@@ -33,8 +33,9 @@ function get_data($pdo, $league, $category) {
   $query = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
     i.total, i.daily, i.current, i.accepted,
-    did.name, did.type, did.frame, 
-    did.tier, did.lvl, did.quality, did.corrupted, did.stack, 
+    did.name, did.type, did.frame, did.tier, did.series,
+    did.shaper, did.elder, did.enchantMin, did.enchantMax,
+    did.lvl, did.quality, did.corrupted, did.stack, 
     did.links, did.ilvl, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`,
     i.spark AS history
@@ -76,51 +77,66 @@ function parse_data($stmt, $active) {
       'min'           => (float) $row['min'],
       'max'           => (float) $row['max'],
       'exalted'       => (float) $row['exalted'],
-      
+
       'total'         => (int)   $row['total'],
       'daily'         => (int)   $row['daily'],
       'current'       => (int)   $row['current'],
       'accepted'      => (int)   $row['accepted'],
-      'spark'         =>         null,
-      'change'        =>         0.0,
+      'history'       =>         null,
+
+      'base'          =>         null,
+      'enchant'       =>         null,
+      'gem'           =>         null,
+      'map'           =>         null,
 
       'stack'         =>         $row['stack']     === NULL ? null :   (int) $row['stack'],
-      'tier'          =>         $row['tier']      === NULL ? null :   (int) $row['tier'],
-      'lvl'           =>         $row['lvl']       === NULL ? null :   (int) $row['lvl'],
-      'quality'       =>         $row['quality']   === NULL ? null :   (int) $row['quality'],
-      'corrupted'     =>         $row['corrupted'] === NULL ? null :  (bool) $row['corrupted'],
       'links'         =>         $row['links']     === NULL ? null :   (int) $row['links'],
-      'ilvl'          =>         $row['ilvl']      === NULL ? null :   (int) $row['ilvl'],
-      'var'           =>         $row['var'],
+      'variation'     =>         $row['var'],
       'icon'          =>         $row['icon']
     );
+    
+    if ($row["category"] === "map") {
+      $tmp['map'] = array(
+        "series" => $row['series'] === null ? null : (int) $row['series'],
+        "tier" => (int) $row['tier']
+      );
+    }
+
+    if ($row["category"] === "base") {
+      $tmp['base'] = array(
+        "shaper" => (bool) $row['shaper'],
+        "elder" => (bool) $row['elder'],
+        "itemLevel" => $row['ilvl'] === null ? null : (int) $row['ilvl']
+      );
+    }
+
+    if ($row["category"] === "gem") {
+      $tmp['gem'] = array(
+        "level" => (int) $row['lvl'],
+        "quality" => (int) $row['quality'],
+        "corrupted" => (bool) $row['corrupted']
+      );
+    }
+
+    if ($row["category"] === "enchantment") {
+      $tmp['enchant'] = array(
+        "min" => $row['enchantMin'] === null ? null : (float) $row['enchantMin'],
+        "max" => $row['enchantMax'] === null ? null : (float) $row['enchantMax']
+      );
+    }
 
     if ($active) {
       // If there were history entries
       if ( is_null($row['history']) ) {
-        $tmp['spark'] = array(null, null, null, null, null, null, $tmp['mean']);
+        $tmp['history'] = array(null, null, null, null, null, null, $tmp['mean']);
       } else {
         // Convert CSV to array
-        $history = array_reverse(explode(',', $row['history']));
+        $history = array_map('doubleval', array_reverse(explode(',', $row['history'])));
+
         array_push($history, $tmp['mean']);
 
-        // Find total change
-        $lastVal = $history[sizeof($history) - 1];
-        if ($lastVal > 0) {
-          $tmp['change'] = round((1 - ($history[0] / $history[sizeof($history) - 1])) * 100, 4);
-        }
-
-        $firstPrice = $history[0];
-
-        // Calculate each entry's change %-relation to current price
-        for ($i = 0; $i < sizeof($history); $i++) { 
-          if ($history[$i] > 0) {
-            $history[$i] = round((1 - ($firstPrice / $history[$i])) * 100, 4);
-          }
-        }
-
         // Pad missing fields with null
-        $tmp['spark'] = array_pad($history, -7, null);
+        $tmp['history'] = array_pad($history, -7, null);
       }
     }
 

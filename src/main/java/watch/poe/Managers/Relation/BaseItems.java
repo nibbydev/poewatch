@@ -1,11 +1,13 @@
 package poe.Managers.Relation;
 
+import poe.Item.Category.GroupEnum;
+
 import java.util.*;
 
 public class BaseItems {
     private static Base[] bases = new Base[]{
             new Base() {{
-                group = "amulet";
+                group = GroupEnum.amulet;
                 bases = new String[]{
                         "Blue Pearl Amulet",
                         "Marble Amulet",
@@ -24,7 +26,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "chest";
+                group = GroupEnum.chest;
                 bases = new String[]{
                         "Golden Mantle",
                         "Shabby Jerkin",
@@ -134,7 +136,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "boots";
+                group = GroupEnum.boots;
                 bases = new String[]{
                         "Two-Toned Boots",
                         "Two-Toned Boots",
@@ -197,7 +199,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "gloves";
+                group = GroupEnum.gloves;
                 bases = new String[]{
                         "Gripped Gloves",
                         "Fingerless Silk Gloves",
@@ -257,7 +259,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "helmet";
+                group = GroupEnum.helmet;
                 bases = new String[]{
                         "Bone Helmet",
                         "Leather Cap",
@@ -327,7 +329,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "shield";
+                group = GroupEnum.shield;
                 bases = new String[]{
                         "Golden Flame",
                         "Goathide Buckler",
@@ -421,7 +423,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "belt";
+                group = GroupEnum.belt;
                 bases = new String[]{
                         "Rustic Sash",
                         "Chain Belt",
@@ -436,7 +438,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "jewel";
+                group = GroupEnum.jewel;
                 bases = new String[]{
                         "Hypnotic Eye Jewel",
                         "Murderous Eye Jewel",
@@ -449,7 +451,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "quiver";
+                group = GroupEnum.quiver;
                 bases = new String[]{
                         "Cured Quiver",
                         "Fire Arrow Quiver",
@@ -468,7 +470,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "ring";
+                group = GroupEnum.ring;
                 bases = new String[]{
                         "Breach Ring",
                         "Iron Ring",
@@ -493,7 +495,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "claw";
+                group = GroupEnum.claw;
                 bases = new String[]{
                         "Nailed Fist",
                         "Gouger",
@@ -523,7 +525,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "dagger";
+                group = GroupEnum.dagger;
                 bases = new String[]{
                         "Glass Shank",
                         "Butcher Knife",
@@ -553,7 +555,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "oneaxe";
+                group = GroupEnum.oneaxe;
                 bases = new String[]{
                         "Rusted Hatchet",
                         "Tomahawk",
@@ -583,7 +585,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "onemace";
+                group = GroupEnum.onemace;
                 bases = new String[]{
                         "Driftwood Club",
                         "Barbed Club",
@@ -613,7 +615,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "sceptre";
+                group = GroupEnum.sceptre;
                 bases = new String[]{
                         "Driftwood Sceptre",
                         "Sekhem",
@@ -643,7 +645,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "onesword";
+                group = GroupEnum.onesword;
                 bases = new String[]{
                         "Rusted Sword",
                         "Cutlass",
@@ -699,7 +701,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "wand";
+                group = GroupEnum.wand;
                 bases = new String[]{
                         "Driftwood Wand",
                         "Serpent Wand",
@@ -723,13 +725,13 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "rod";
+                group = GroupEnum.rod;
                 bases = new String[]{
                         "Fishing Rod",
                 };
             }},
             new Base() {{
-                group = "bow";
+                group = GroupEnum.bow;
                 bases = new String[]{
                         "Crude Bow",
                         "Decurve Bow",
@@ -759,7 +761,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "staff";
+                group = GroupEnum.staff;
                 bases = new String[]{
                         "Gnarled Branch",
                         "Military Staff",
@@ -786,7 +788,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "twoaxe";
+                group = GroupEnum.twoaxe;
                 bases = new String[]{
                         "Stone Axe",
                         "Headsman Axe",
@@ -813,7 +815,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "twomace";
+                group = GroupEnum.twomace;
                 bases = new String[]{
                         "Driftwood Maul",
                         "Steelhead",
@@ -840,7 +842,7 @@ public class BaseItems {
                 };
             }},
             new Base() {{
-                group = "twosword";
+                group = GroupEnum.twosword;
                 bases = new String[]{
                         "Corroded Blade",
                         "Highland Blade",
@@ -869,8 +871,8 @@ public class BaseItems {
             }}
     };
 
-    public static Map<String, Set<String>> GenBaseMap() {
-        Map<String, Set<String>> tmpMap = new HashMap<>();
+    public static Map<GroupEnum, Set<String>> GenBaseMap() {
+        Map<GroupEnum, Set<String>> tmpMap = new HashMap<>();
 
         for (Base baseObject : bases) {
             Set<String> tmpSet = tmpMap.getOrDefault(baseObject.group, new HashSet<>());
@@ -882,7 +884,7 @@ public class BaseItems {
     }
 
     private static class Base {
-        String group;
+        GroupEnum group;
         String[] bases;
     }
 }

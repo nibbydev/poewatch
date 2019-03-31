@@ -33,14 +33,14 @@ public class BaseLeague {
     }
 
     public static class Rule {
-        private int id;
+        private String id;
         private String name;
 
         public String getName() {
             return name;
         }
 
-        public int getId() {
+        public String getId() {
             return id;
         }
     }

@@ -39,18 +39,19 @@ class ItemRow {
     <td>
       <div class='d-flex align-items-center'>
         <span class='img-container img-container-sm text-center mr-1'><img src="{{icon}}"></span>
-        <span class='cursor-pointer {{color}}'>{{name}}{{type}}</span>{{var}}{{link}}
+        <span class='cursor-pointer {{color}}'>{{name}}{{type}}</span>{{variation}}{{link}}
       </div>
     </td>
     `.trim();
   
     template = template.replace("{{url}}", "https://poe.watch/item?league=" + FILTER.league.name + "&id=" + this.item.id);
   
-    if (FILTER.category === "base") {
-      if (this.item.var === "shaper") {
+    // If item is base
+    if (this.item.base) {
+      if (this.item.base.shaper) {
         this.item.icon += "&shaper=1";
         template = template.replace("{{color}}", "item-shaper");
-      } else if (this.item.var === "elder") {
+      } else if (this.item.base.elder) {
         this.item.icon += "&elder=1";
         template = template.replace("{{color}}", "item-elder");
       }
@@ -60,18 +61,19 @@ class ItemRow {
     this.item.icon = this.item.icon.replace("http://", "https://");
     template = template.replace("{{icon}}", this.item.icon);
 
-    if (this.item.frame === 9) {
-      template = template.replace("{{color}}", "item-foil");
-    } else {
-      template = template.replace("{{color}}", "");
-    }
+    // Foil item coloring
+    template = template.replace("{{color}}", this.item.frame === 9 ? "item-foil" : "");
   
-    if (FILTER.category === "enchantment") {
-      if (this.item.var !== null) {
-        let splitVar = this.item.var.split('-');
-        for (var num in splitVar) {
-          this.item.name = this.item.name.replace("#", splitVar[num]);
-        }
+    // If item is enchantment, insert enchant values for display purposes
+    if (this.item.enchant) {
+      // Min roll
+      if (this.item.name.includes("#") && this.item.enchant.min !== null) {
+        this.item.name = this.item.name.replace("#", this.item.enchant.min);
+      }
+      
+      // Max roll
+      if (this.item.name.includes("#") && this.item.enchant.max !== null) {
+        this.item.name = this.item.name.replace("#", this.item.enchant.max); 
       }
     }
     
@@ -91,11 +93,11 @@ class ItemRow {
       template = template.replace("{{link}}", "");
     }
   
-    if (this.item.var && FILTER.category !== "enchantment") {
-      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.var + "</span>";
-      template = template.replace("{{var}}", tmp);
+    if (this.item.variation) {
+      let tmp = " <span class='badge custom-badge-gray ml-1'>" + this.item.variation + "</span>";
+      template = template.replace("{{variation}}", tmp);
     } else {
-      template = template.replace("{{var}}", "");
+      template = template.replace("{{variation}}", "");
     }
   
     return template;
@@ -103,23 +105,23 @@ class ItemRow {
   
   buildGemFields() {
     // Don't run if item is not a gem
-    if (this.item.frame !== 4) return "";
+    if (!this.item.gem) return "";
   
     let template = `
-    <td><span class='badge custom-badge-block custom-badge-gray'>{{lvl}}</span></td>
+    <td><span class='badge custom-badge-block custom-badge-gray'>{{level}}</span></td>
     <td><span class='badge custom-badge-block custom-badge-gray'>{{quality}}</span></td>
-    <td><span class='badge custom-badge-{{color}}'>{{corr}}</span></td>
+    <td><span class='badge custom-badge-{{color}}'>{{corrupted}}</span></td>
     `.trim();
   
-    template = template.replace("{{lvl}}",      this.item.lvl);
-    template = template.replace("{{quality}}",  this.item.quality);
+    template = template.replace("{{level}}",      this.item.gem.level);
+    template = template.replace("{{quality}}",  this.item.gem.quality);
     
-    if (this.item.corrupted) {
-      template = template.replace("{{color}}",  "red");
-      template = template.replace("{{corr}}",   "✓");
+    if (this.item.gem.corrupted) {
+      template = template.replace("{{color}}",     "red");
+      template = template.replace("{{corrupted}}", "✓");
     } else {
-      template = template.replace("{{color}}",  "green");
-      template = template.replace("{{corr}}",   "✕");
+      template = template.replace("{{color}}",     "green");
+      template = template.replace("{{corrupted}}", "✕");
     }
   
     return template;
@@ -127,13 +129,22 @@ class ItemRow {
   
   buildBaseFields() {
     // Don't run if item is not a gem
-    if (FILTER.category !== "base") return "";
-    return "<td class='nowrap'><span class='badge custom-badge-block custom-badge-gray'>" + this.item.ilvl + "</span></td>";
+    if (!this.item.base) return "";
+
+    let template = `
+    <td class='nowrap'>
+      <span class='badge custom-badge-block custom-badge-gray'>{{itemLevel}}</span>
+    </td>
+    `.trim();
+
+    template = template.replace("{{itemLevel}}", this.item.base.itemLevel);
+
+    return template;
   }
   
   buildMapFields() {
     // Don't run if item is not a map
-    if (FILTER.category !== "map") {
+    if (!this.item.map) {
       return "";
     }
 
@@ -143,11 +154,44 @@ class ItemRow {
     </td>
     `.trim();
 
-    return this.item.tier ? template.replace("{{tier}}", this.item.tier) : "<td></td>";
+    return this.item.map.tier ? template.replace("{{tier}}", this.item.map.tier) : "<td></td>";
   }
 
   buildSparkField() {
-    var spark = this.item.spark ? ItemRow.genSparkSVG(this.sparkOptions, this.item.spark) : "";
+    var template = `
+      <td class='d-none d-md-flex'>{{spark}}</td>
+    `.trim();
+
+    // Count the number of history elements that are not null
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      if (this.item.history[i] !== null) {
+        count++;
+      }
+    }
+
+    // Can't display a sparkline with 1 element
+    if (count < 2) return template.replace("{{spark}}", "");
+
+    // Find first price from the left that is not null
+    let lastPrice = null;
+    for (let i = 0; i < 7; i++) {
+      if (this.item.history[i] !== null) {
+        lastPrice = this.item.history[i];
+        break;
+      }
+    }
+
+    // Calculate each value's change %-relation to current price
+    let changes = [];
+    for (let i = 0; i < 7; i++) { 
+      if (this.item.history[i] > 0) {
+        changes[i] = Math.round((1 - (lastPrice / this.item.history[i])) * 100, 4);
+      }
+    }
+
+    // Generate sparklike html
+    var spark = ItemRow.genSparkSVG(this.sparkOptions, changes);
     return "<td class='d-none d-md-flex'>" + spark + "</td>";
   }
   
@@ -187,16 +231,26 @@ class ItemRow {
     </td>
     `.trim();
   
-    let change = 0;
-  
-    if (this.item.change > 999) {
+    // Find first price from the left that is not null
+    let lastPrice = null;
+    for (let i = 0; i < 7; i++) {
+      if (this.item.history[i] !== null) {
+        lastPrice = this.item.history[i];
+        break;
+      }
+    }
+   
+    // Calculate change %
+    let change = Math.round(100 - lastPrice / this.item.mean * 100);
+
+    // Limit it
+    if (change > 999) {
       change = 999;
-    } else if (this.item.change < -999) {
+    } else if (change < -999) {
       change = -999;
-    } else {
-      change = Math.round(this.item.change); 
     }
 
+    // Pick a color scheme
     if (change >= 100) {
       template = template.replace("{{color}}", "green-ex");
     } else if (change <= -100) {
@@ -605,15 +659,19 @@ class DetailsModal {
   }
 
   buildNameField(item) {
-    // Fix name if item is enchantment
-    if (item.category === "enchantment" && item.var !== null) {
-      let splitVar = item.var.split('-');
-  
-      for (var num in splitVar) {
-        item.name = item.name.replace("#", splitVar[num]);
+    // If item is enchantment, insert enchant values for display purposes
+    if (item.enchant) {
+      // Min roll
+      if (item.name.includes("#") && item.enchant.min !== null) {
+        item.name = item.name.replace("#", item.enchant.min);
+      }
+      
+      // Max roll
+      if (item.name.includes("#") && item.enchant.max !== null) {
+        item.name = item.name.replace("#", item.enchant.max); 
       }
     }
-  
+
     // Begin builder
     let builder = item.name;
   
@@ -623,33 +681,36 @@ class DetailsModal {
   
     if (item.frame === 9) {
       builder = "<span class='item-foil'>" + builder + "</span>";
-    } else if (item.var === "shaper") {
-      builder = "<span class='item-shaper'>" + builder + "</span>";
-    } else if (item.var === "elder") {
-      builder = "<span class='item-elder'>" + builder + "</span>";
+    } else if (item.base) {
+      if (item.base.shaper) {
+        builder = "<span class='item-shaper'>" + builder + "</span>";
+      } else if (item.base.elder) {
+        builder = "<span class='item-elder'>" + builder + "</span>";
+      }
     }
+    
 
-    if (item.var && item.category !== "enchantment") { 
-      builder += " <span class='badge custom-badge-gray ml-1'>" + item.var + "</span>";
+    if (item.variation) { 
+      builder += " <span class='badge custom-badge-gray ml-1'>" + item.variation + "</span>";
     } 
     
-    if (item.tier) {
-      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.tier + "</span>";
+    if (item.map && item.map.tier) {
+      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.map.tier + "</span>";
     } 
   
-    if (item.ilvl) {
-      builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + item.ilvl + "</span>";
+    if (item.itemLevel) {
+      builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + item.itemLevel + "</span>";
     } 
     
     if (item.links) {
       builder += " <span class='badge custom-badge-gray ml-1'>" + item.links + " Link</span>";
     }
   
-    if (item.frame === 4) {
-      builder += "<span class='badge custom-badge-gray ml-1'>Lvl " + item.lvl + "</span>";
-      builder += "<span class='badge custom-badge-gray ml-1'>Quality " + item.quality + "</span>";
+    if (item.gem) {
+      builder += "<span class='badge custom-badge-gray ml-1'>Lvl " + item.gem.level + "</span>";
+      builder += "<span class='badge custom-badge-gray ml-1'>" + item.gem.quality + " quality</span>";
   
-      if (item.corrupted) {
+      if (item.gem.corrupted) {
         builder += "<span class='badge custom-badge-red ml-1'>Corrupted</span>";
       }
     }
@@ -660,10 +721,12 @@ class DetailsModal {
   formatIcon(item) {
     var icon = item.icon.replace("http://", "https://");
   
-    if (item.var === "shaper") {
-      icon += "&shaper=1";
-    } else if (item.var === "elder") {
-      icon += "&elder=1";
+    if (item.base) {
+      if (item.base.shaper) {
+        icon += "&shaper=1";
+      } else if (item.base.elder) {
+        icon += "&elder=1";
+      }
     }
   
     // Flaks have no params
@@ -693,7 +756,6 @@ class DetailsModal {
 
     return icon;
   }
-
 
   createLeagueSelector(leagues) {
     let builder = "";
@@ -1256,7 +1318,7 @@ function defineListeners() {
       updateQueryParam("sortby", null);
       updateQueryParam("sortorder", null);
       console.log("Sorting: default");
-      FILTER.sortFunction = sort_priceDesc;
+      FILTER.sortFunction = getSortFunc(null, "descending");
       sortResults();
       return;
     }
@@ -1358,76 +1420,66 @@ function timedRequestCallback() {
 function getSortFunc(col, order) {
   switch (col) {
     case "change":
-      return order === "descending" ? sort_changeDesc : sort_changeAsc;
+      return order === "descending" 
+      ? (a, b) => {
+        if (a.change > b.change) return -1;
+        if (a.change < b.change) return 1;
+        return 0;
+      } 
+      : (a, b) => {
+        if (a.change < b.change) return -1;
+        if (a.change > b.change) return 1;
+        return 0;
+      };
     case "daily":
-      return order === "descending" ? sort_dailyDesc  : sort_dailyAsc;
+      return order === "descending" 
+      ? (a, b) => {
+        if (a.daily > b.daily) return -1;
+        if (a.daily < b.daily) return 1;
+        return 0;  
+      }
+      : (a, b) => {
+        if (a.daily < b.daily) return -1;
+        if (a.daily > b.daily) return 1;
+        return 0;
+      };
     case "total":
-      return order === "descending" ? sort_totalDesc  : sort_totalAsc;
+      return order === "descending" 
+      ? (a, b) => {
+        if (a.total > b.total) return -1;
+        if (a.total < b.total) return 1;
+        return 0;
+      }  
+      : (a, b) => {
+        if (a.total < b.total) return -1;
+        if (a.total > b.total) return 1;
+        return 0;
+      };
     case "item":
-      return order === "descending" ? sort_itemDesc   : sort_itemAsc;
+      return order === "descending" 
+      ? (a, b) => {
+        if (a.name > b.name) return -1;
+        if (a.name < b.name) return 1;
+        return 0;
+      }   
+      : (a, b) => {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+      };
     default:
-      return order === "descending" ? sort_priceDesc  : sort_priceAsc;
+      return order === "descending" 
+      ? (a, b) => {
+        if (a.mean > b.mean) return -1;
+        if (a.mean < b.mean) return 1;
+        return 0;
+      }  
+      : (a, b) => {
+        if (a.mean < b.mean) return -1;
+        if (a.mean > b.mean) return 1;
+        return 0;
+      }
   }
-}
-
-function sort_priceDesc(a, b) {
-  if (a.mean > b.mean) return -1;
-  if (a.mean < b.mean) return 1;
-  return 0;
-}
-
-function sort_priceAsc(a, b) {
-  if (a.mean < b.mean) return -1;
-  if (a.mean > b.mean) return 1;
-  return 0;
-}
-
-function sort_dailyDesc(a, b) {
-  if (a.daily > b.daily) return -1;
-  if (a.daily < b.daily) return 1;
-  return 0;
-}
-
-function sort_dailyAsc(a, b) {
-  if (a.daily < b.daily) return -1;
-  if (a.daily > b.daily) return 1;
-  return 0;
-}
-
-function sort_totalDesc(a, b) {
-  if (a.total > b.total) return -1;
-  if (a.total < b.total) return 1;
-  return 0;
-}
-
-function sort_totalAsc(a, b) {
-  if (a.total < b.total) return -1;
-  if (a.total > b.total) return 1;
-  return 0;
-}
-
-function sort_changeDesc(a, b) {
-  if (a.change > b.change) return -1;
-  if (a.change < b.change) return 1;
-  return 0;
-}
-
-function sort_changeAsc(a, b) {
-  if (a.change < b.change) return -1;
-  if (a.change > b.change) return 1;
-  return 0;
-}
-
-function sort_itemDesc(a, b) {
-  if (a.name > b.name) return -1;
-  if (a.name < b.name) return 1;
-  return 0;
-}
-
-function sort_itemAsc(a, b) {
-  if (a.name < b.name) return -1;
-  if (a.name > b.name) return 1;
-  return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -1625,33 +1677,35 @@ function checkHideItem(item) {
   }
 
   // Sort gems, I guess
-  if (FILTER.category === "gem") {
-    if (FILTER.gemLvl !== null && item.lvl != FILTER.gemLvl) return true;
-    if (FILTER.gemQuality !== null && item.quality != FILTER.gemQuality) return true;
-    if (FILTER.gemCorrupted !== null && item.corrupted != FILTER.gemCorrupted) return true;
+  if (FILTER.category === "gem" && item.gem) {
+    if (FILTER.gemLvl !== null && item.gem.level != FILTER.gemLvl) return true;
+    if (FILTER.gemQuality !== null && item.gem.quality != FILTER.gemQuality) return true;
+    if (FILTER.gemCorrupted !== null && item.gem.corrupted != FILTER.gemCorrupted) return true;
 
   } else if (FILTER.category === "map") {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {
-        if (item.tier !== null) return true;
-      } else if (item.tier !== FILTER.tier) return true;
+        if (item.map && item.map.tier !== null) return true;
+      } else if (item.map.tier !== FILTER.tier) return true;
     }
 
-  } else if (FILTER.category === "base") {
+  } else if (FILTER.category === "base" && item.base) {
     // Check base influence
     if (FILTER.influence !== null) {
       if (FILTER.influence === "none") {
-        if (item.var !== null) return true;
+        if (item.base.shaper || item.base.elder) return true;
       } else if (FILTER.influence === "either") {
-        if (item.var === null) return true;
-      } else if (item.var !== FILTER.influence) {
+        if (!item.base.shaper && !item.base.elder) return true;
+      } else if (FILTER.influence === "shaper" && !item.base.shaper) {
+        return true;
+      } else if (FILTER.influence === "elder" && !item.base.elder) {
         return true;
       }
     }
 
     // Check base ilvl
-    if (item.ilvl !== null && FILTER.ilvl !== null) {
-      if (item.ilvl != FILTER.ilvl) {
+    if (item.base.itemLevel !== null && FILTER.ilvl !== null) {
+      if (item.base.itemLevel != FILTER.ilvl) {
         return true;
       }
     }

@@ -86,8 +86,13 @@ function AddTableHeaders($category) {
 
 function GetGroups($pdo, $category) {
   $query = "
-  SELECT name, display FROM data_groups
-  WHERE id_cat = (SELECT id FROM data_categories WHERE name = ? LIMIT 1)
+  SELECT dg.name, dg.display 
+  FROM data_groups as dg
+  join (
+    select DISTINCT id_grp 
+    from data_itemdata 
+    where id_cat = (SELECT id FROM data_categories WHERE name = ? LIMIT 1)
+  ) as grps on dg.id = grps.id_grp
   ";
 
   $stmt = $pdo->prepare($query);

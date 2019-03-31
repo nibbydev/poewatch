@@ -5,45 +5,33 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.Item;
-import poe.Item.ItemParser;
-import poe.Item.Mappers;
-import poe.Managers.LeagueManager;
-import poe.Managers.RelationManager;
+import poe.Item.ApiDeserializers.Reply;
+import poe.Item.Parser.ItemParser;
 import poe.Managers.Stat.StatType;
 import poe.Managers.StatisticsManager;
-import poe.Managers.WorkerManager;
-import poe.Worker.Entry.RawItemEntry;
-import poe.Worker.Entry.RawUsernameEntry;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.CRC32;
 
 /**
  * Downloads and processes a batch of data downloaded from the PoE API. Runs in a separate thread.
  */
 public class Worker extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(Worker.class);
-    private static final Set<Long> DbStashes = new HashSet<>(100000);
-    private static final Pattern pattern = Pattern.compile("\\d*-\\d*-\\d*-\\d*-\\d*");
-    private static final CRC32 crc = new CRC32();
+    private static final Pattern changeIdPattern = Pattern.compile("\\d+(-\\d+){4}");
     private static long lastPullTime;
     private final WorkerManager workerManager;
-    private final LeagueManager leagueManager;
-    private final RelationManager relationManager;
     private final StatisticsManager statisticsManager;
     private final Database database;
     private final Config config;
     private final Gson gson;
     private final Object jobMonitor = new Object();
     private final Object pauseMonitor = new Object();
+    private ItemParser itemParser;
     private volatile boolean flagLocalRun = true;
     private volatile boolean readyToExit = false;
     private String job;
@@ -51,11 +39,10 @@ public class Worker extends Thread {
     private boolean pauseFlag = false;
     private boolean isPaused = false;
 
-    public Worker(WorkerManager wm, StatisticsManager sm, LeagueManager lm, RelationManager rm, Database db, Config cnf, int id) {
+    public Worker(WorkerManager wm, StatisticsManager sm, Database db, Config cnf, int id, ItemParser ip) {
+        this.itemParser = ip;
         this.workerManager = wm;
         this.statisticsManager = sm;
-        this.leagueManager = lm;
-        this.relationManager = rm;
         this.database = db;
         this.config = cnf;
         this.workerId = id;
@@ -63,19 +50,6 @@ public class Worker extends Thread {
         gson = new Gson();
     }
 
-    private static long calcCrc(String str) {
-        if (str == null) {
-            return 0;
-        } else {
-            crc.reset();
-            crc.update(str.getBytes());
-            return crc.getValue();
-        }
-    }
-
-    public static Set<Long> getDbStashes() {
-        return DbStashes;
-    }
 
     /**
      * Contains main loop. Checks for new jobs and processes them
@@ -88,7 +62,7 @@ public class Worker extends Thread {
             statisticsManager.addValue(StatType.COUNT_API_CALLS, null);
 
             if (replyString != null) {
-                Mappers.APIReply reply = gson.fromJson(replyString, Mappers.APIReply.class);
+                Reply reply = gson.fromJson(replyString, Reply.class);
 
                 if (pauseFlag) {
                     pauseWorker();
@@ -96,7 +70,7 @@ public class Worker extends Thread {
 
                 if (reply != null && reply.next_change_id != null) {
                     statisticsManager.startTimer(StatType.TIME_PARSE_REPLY);
-                    parseItems(reply);
+                    itemParser.processApiReply(reply);
                     statisticsManager.clkTimer(StatType.TIME_PARSE_REPLY);
                 }
             }
@@ -180,7 +154,7 @@ public class Worker extends Thread {
 
                 // Try to find new job number using regex
                 if (regexLock) {
-                    Matcher matcher = pattern.matcher(stringBuilderBuffer.toString());
+                    Matcher matcher = changeIdPattern.matcher(stringBuilderBuffer.toString());
 
                     if (matcher.find()) {
                         regexLock = false;
@@ -206,7 +180,7 @@ public class Worker extends Thread {
             } else if (ex.getMessage().contains("connect timed out")) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT, null);
             } else if (ex.getMessage().contains("Connection reset")) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECTION_RESET, null);
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONN_RESET, null);
             } else if (ex.getMessage().contains("502") || ex.getMessage().contains("503")) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_5XX, null);
             } else if (ex.getMessage().contains("429")) {
@@ -241,107 +215,6 @@ public class Worker extends Thread {
 
         // Return the downloaded mess of a JSON string
         return stringBuilderBuffer.toString();
-    }
-
-    /**
-     * Adds entries to the databases
-     *
-     * @param reply APIReply object that a worker has downloaded and deserialized
-     */
-    private void parseItems(Mappers.APIReply reply) {
-        // Set of account names and items extracted from the API call
-        Set<Long> accounts = new HashSet<>();
-        Set<Long> nullStashes = new HashSet<>();
-        Set<RawItemEntry> items = new HashSet<>();
-        // Separate set for collecting account and character names
-        Set<RawUsernameEntry> usernames = new HashSet<>();
-        int totalItemCount = 0;
-
-        for (Mappers.Stash stash : reply.stashes) {
-            totalItemCount += stash.items.size();
-
-            // Get league ID. If it's an unknown ID, skip this stash
-            Integer id_l = leagueManager.getLeagueId(stash.league);
-            if (id_l == null) {
-                continue;
-            }
-
-            // Calculate CRCs
-            long account_crc = calcCrc(stash.accountName);
-            long stash_crc = calcCrc(stash.id);
-
-            // If the stash is in use somewhere in the database
-            synchronized (DbStashes) {
-                if (DbStashes.contains(stash_crc)) {
-                    nullStashes.add(stash_crc);
-                }
-            }
-
-            if (stash.accountName == null || !stash.isPublic) {
-                continue;
-            }
-
-            boolean hasValidItems = false;
-
-            for (Mappers.BaseItem baseItem : stash.items) {
-                long item_crc = calcCrc(baseItem.getId());
-
-                // Create an ItemParser instance for every item in the stash, as one item
-                // may branch into multiple db entries. For examples, a Devoto's Devotion with
-                // a Tornado Shot enchantment creates 2 entries.
-                ItemParser itemParser = new ItemParser(baseItem, stash.stashName);
-
-                // There was something off with the base item, discard it and don'tt create branched items
-                if (itemParser.isDiscard()) {
-                    continue;
-                }
-
-                // Parse branched items and create objects for db upload
-                for (Item item : itemParser.getBranchedItems()) {
-                    // Check if this specific branched item should be discarded
-                    if (item.isDiscard()) {
-                        continue;
-                    }
-
-                    // Get item's ID (if missing, index it)
-                    Integer id_d = relationManager.index(item, id_l);
-                    if (id_d == null) {
-                        continue;
-                    }
-
-                    RawItemEntry entry = new RawItemEntry(id_l, id_d, account_crc, stash_crc, item_crc,
-                            item.getStackSize(), itemParser.getIdPrice(), itemParser.getPrice());
-                    items.add(entry);
-
-                    // Set flag to indicate stash contained at least 1 valid item
-                    if (!hasValidItems) {
-                        hasValidItems = true;
-                    }
-                }
-            }
-
-            // If stash contained at least 1 valid item, save the account
-            if (hasValidItems) {
-                DbStashes.add(stash_crc);
-                accounts.add(account_crc);
-            }
-
-            // As this is a completely separate service, collect all character and account names separately
-            if (stash.lastCharacterName != null) {
-                usernames.add(new RawUsernameEntry(stash.accountName, stash.lastCharacterName, id_l));
-            }
-        }
-
-        // Collect some statistics
-        statisticsManager.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
-        statisticsManager.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
-        statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, items.size());
-
-        // Shovel everything to db
-        database.upload.uploadAccounts(accounts);
-        database.flag.resetStashReferences(nullStashes);
-        database.upload.uploadEntries(items);
-        database.upload.uploadUsernames(usernames);
     }
 
     /**
@@ -393,13 +266,6 @@ public class Worker extends Thread {
         isPaused = false;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
-    //------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Notifies local monitor
-     */
     private void wakeLocalMonitor() {
         synchronized (jobMonitor) {
             jobMonitor.notify();
