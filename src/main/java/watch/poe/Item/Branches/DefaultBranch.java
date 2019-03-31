@@ -285,7 +285,7 @@ public class DefaultBranch extends Item {
         } else {
             // Accept some level ranges
             if (level <= 5) {
-                level = 0;
+                level = 1;
             } else if (level < 20) {
                 discard = true;
                 return;
