@@ -275,13 +275,7 @@ public class DefaultBranch extends Item {
         // Begin the long block that filters out gems based on a number of properties
         if (apiItem.getTypeLine().equals("Empower Support") || apiItem.getTypeLine().equals("Enlighten Support") || apiItem.getTypeLine().equals("Enhance Support")) {
             // Quality doesn't matter for lvl 3 and 4
-            if (level > 2) {
-                quality = 0;
-
-                if (apiItem.getCorrupted() != null) {
-                    corrupted = apiItem.getCorrupted();
-                }
-            }
+            if (level > 2) quality = 0;
         } else {
             // Accept some level ranges
             if (level <= 5) {
@@ -290,10 +284,10 @@ public class DefaultBranch extends Item {
                 discard = true;
                 return;
             }
+        }
 
-            if (level > 20 || quality > 20 || apiItem.getTypeLine().contains("Vaal")) {
-                corrupted = true;
-            }
+        if (apiItem.getCorrupted() != null) {
+            corrupted = apiItem.getCorrupted();
         }
 
         gemLevel = level;
