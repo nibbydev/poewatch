@@ -90,7 +90,7 @@ function GetGroups($pdo, $category) {
   FROM data_groups as dg
   join (
     select DISTINCT id_grp 
-    from data_itemdata 
+    from data_itemData 
     where id_cat = (SELECT id FROM data_categories WHERE name = ? LIMIT 1)
   ) as grps on dg.id = grps.id_grp
   ";
