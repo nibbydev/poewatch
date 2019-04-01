@@ -3,9 +3,9 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Db.Bundles.EntryBundle;
-import poe.Db.Bundles.IdBundle;
-import poe.Db.Bundles.PriceBundle;
+import poe.Managers.Price.Bundles.EntryBundle;
+import poe.Managers.Price.Bundles.IdBundle;
+import poe.Managers.Price.Bundles.PriceBundle;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,11 +28,11 @@ public class Calc {
      * @return
      */
     public ArrayList<IdBundle> getNewItemIdBundles() {
-        String query = "select distinct id_l, id_d " +
-                "from league_entries " +
-                "where stash_crc is not null " +
-                "  and price is not null " +
-                "  and updated > date_sub(now(), interval 61 second) ";
+        String query =  "select distinct id_l, id_d " +
+                        "from league_entries " +
+                        "where stash_crc is not null " +
+                        "  and price is not null " +
+                        "  and updated > date_sub(now(), interval 10 minute) ";
 
         try {
             if (database.connection.isClosed()) {

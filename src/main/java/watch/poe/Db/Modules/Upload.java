@@ -6,7 +6,7 @@ import poe.Db.Database;
 import poe.Managers.League.BaseLeague;
 import poe.Item.Parser.DbItemEntry;
 import poe.Item.Parser.RawUsernameEntry;
-import poe.Db.Bundles.ResultBundle;
+import poe.Managers.Price.Bundles.ResultBundle;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

@@ -1,4 +1,4 @@
-package poe.Db.Bundles;
+package poe.Managers.Price.Bundles;
 
 public class IdBundle {
     private int leagueId, itemId;
