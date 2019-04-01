@@ -24,6 +24,7 @@ public class Main {
     private static StatisticsManager sm;
     private static AccountManager am;
     private static WorkerManager wm;
+    private static PriceManager pm;
     private static Database db;
     private static Config cnf;
 
@@ -54,8 +55,8 @@ public class Main {
             sm = new StatisticsManager(db);
             sm.addValue(StatType.APP_STARTUP, null);
 
-            // Set static DB accessor in honour of spaghetti code
-            PriceManager.setDatabase(db);
+            // Instantiate a price manager
+            pm = new PriceManager(db);
 
             // Init league manager
             LeagueManager lm = new LeagueManager(db, cnf);
@@ -78,7 +79,7 @@ public class Main {
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
             am = new AccountManager(db);
-            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, am, ip);
+            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, am, ip, pm);
 
             // Get all distinct stash ids that are in the db
             success = db.init.getStashIds(ip.getStashCrcSet());
@@ -94,12 +95,14 @@ public class Main {
             // Start controllers
             am.start();
             wm.start();
+            pm.start();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
             if (am != null) am.stopController();
             if (wm != null) wm.stopController();
+            if (pm != null) pm.stopController();
 
             if (sm != null) {
                 sm.addValue(StatType.APP_SHUTDOWN, null);

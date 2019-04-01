@@ -7,23 +7,143 @@ import poe.Db.Bundles.EntryBundle;
 import poe.Db.Bundles.IdBundle;
 import poe.Db.Bundles.PriceBundle;
 import poe.Db.Bundles.ResultBundle;
+import poe.Managers.Interval.TimeFrame;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PriceManager {
+public class PriceManager extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
     private static final double zScoreLower = 2.5;
     private static final double zScoreUpper = 0.5;
     private static final int trimLower = 5;
     private static final int trimUpper = 50;
-    private static Database database;
 
-    public static void run() {
-        logger.info("Calculating prices");
+    private volatile boolean run = true;
+    private volatile boolean inProgress = false;
+    private volatile boolean readyToExit = false;
+    private final Database database;
+    private List<IdBundle> idBundles;
+    private List<PriceBundle> priceBundles;
+    private final List<ResultBundle> resultBundles = new ArrayList<>(4000);
+    private final Object queueMonitor = new Object();
+    private final Object cycleMonitor = new Object();
+    private int msPerIteration = 0;
+
+    public PriceManager(Database database) {
+        this.database = database;
+    }
+
+    public void run() {
+        while (run) {
+            synchronized (queueMonitor) {
+                try {
+                    queueMonitor.wait();
+                } catch (InterruptedException ex) {
+                    continue;
+                }
+            }
+
+            if (idBundles == null || idBundles.isEmpty()) {
+                continue;
+            }
+
+            inProgress = true;
+            long iterationDelay;
+
+            Iterator<IdBundle> idBundleIterator = idBundles.iterator();
+            while (run && idBundleIterator.hasNext()) {
+                iterationDelay = System.currentTimeMillis();
+                IdBundle idBundle = idBundleIterator.next();
+
+                // Query entries from the database for this item
+                List<EntryBundle> entryBundles = database.calc.getEntryBundles(idBundle);
+
+                if (entryBundles.isEmpty()) {
+                    System.out.printf("Empty entry bundle %d %d\n", idBundle.getLeagueId(), idBundle.getItemId());
+                    continue;
+                }
+
+                // Convert all entry prices to chaos for this item
+                convertToChaos(idBundle, entryBundles, priceBundles);
+
+                // Calculate the prices for this item
+                ResultBundle rb = calculate(idBundle, entryBundles);
+                if (rb == null) continue;
+                resultBundles.add(rb);
+
+                long sleepTime = msPerIteration - System.currentTimeMillis() - iterationDelay;
+                if (sleepTime > 0) {
+                    try {
+                        Thread.sleep(sleepTime);
+                    } catch (InterruptedException ex) {
+                        logger.error(ex.toString());
+                    }
+                }
+            }
+
+            logger.info("Finished cycle");
+            inProgress = false;
+            synchronized (cycleMonitor) {
+                cycleMonitor.notify();
+            }
+        }
+
+        readyToExit = true;
+    }
+
+    public void stopController() {
+        run = false;
+
+        logger.info("Stopping controller");
+
+        // Wait until run() function is ready to exit
+        while (!readyToExit) try {
+            Thread.sleep(50);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+
+        logger.info("Controller stopped");
+    }
+
+
+
+
+
+    public void startCycle() {
+        if (inProgress) {
+            logger.warn("Caught up with previous price cycle");
+            logger.info("Waiting for previous cycle to finish...");
+            msPerIteration = 0;
+        }
+
+        // Wait until last cycle is done
+        while (run && inProgress) {
+            synchronized (cycleMonitor) {
+                try {
+                    cycleMonitor.wait();
+                } catch (InterruptedException ex) {
+                    logger.error(ex.toString());
+                }
+            }
+        }
+
+        if (!run) {
+            return;
+        }
+
+        // If there are any results to upload
+        if (!resultBundles.isEmpty()) {
+            database.upload.updateItems(resultBundles);
+            resultBundles.clear();
+            logger.info("Price cycle finished");
+        }
+
+        logger.info("Starting price calculation cycle");
 
         // Get list of items that need to have their prices recalculated
-        List<IdBundle> idBundles = database.calc.getNewItemIdBundles();
+        idBundles = database.calc.getNewItemIdBundles();
         if (idBundles == null) {
             logger.warn("Could not get ids for price calculation");
             throw new RuntimeException();
@@ -33,37 +153,26 @@ public class PriceManager {
         }
 
         // Get fresh currency rates
-        List<PriceBundle> priceBundles = database.calc.getPriceBundles();
+        priceBundles = database.calc.getPriceBundles();
         if (priceBundles == null) {
             logger.warn("Could not get currency rates for price calculation");
             throw new RuntimeException();
         }
 
-        List<ResultBundle> resultBundles = new ArrayList<>();
-        // Loop through each item type per league
-        for (IdBundle idBundle : idBundles) {
-            // Query entries from the database for this item
-            List<EntryBundle> entryBundles = database.calc.getEntryBundles(idBundle);
 
-            if (entryBundles.isEmpty()) {
-                System.out.printf("Empty entry bundle %d %d\n", idBundle.getLeagueId(), idBundle.getItemId());
-                continue;
-            }
-
-            // Convert all entry prices to chaos for this item
-            convertToChaos(idBundle, entryBundles, priceBundles);
-
-            // Calculate the prices for this item
-            ResultBundle rb = calculate(idBundle, entryBundles);
-            if (rb == null) continue;
-
-            resultBundles.add(rb);
+        msPerIteration = (int) TimeFrame.M_1.getRemaining() / idBundles.size();
+        synchronized (queueMonitor) {
+            queueMonitor.notify();
         }
 
-        // Update entries in database
-        database.upload.updateItems(resultBundles);
-        logger.info("Prices calculated");
+        logger.info(String.format("Queued %d items for price calculation with delay %d", idBundles.size(), msPerIteration));
     }
+
+
+
+
+
+
 
 
     private static void convertToChaos(IdBundle idBundle, List<EntryBundle> entryBundles, List<PriceBundle> priceBundles) {
@@ -252,9 +361,4 @@ public class PriceManager {
 
         return tmp;
     }
-
-    public static void setDatabase(Database database) {
-        PriceManager.database = database;
-    }
-
 }
