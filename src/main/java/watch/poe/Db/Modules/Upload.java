@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Managers.League.BaseLeague;
-import poe.Managers.PriceManager;
 import poe.Item.Parser.DbItemEntry;
 import poe.Item.Parser.RawUsernameEntry;
+import poe.Db.Bundles.ResultBundle;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -76,7 +76,7 @@ public class Upload {
         }
     }
 
-    public boolean updateItems(List<PriceManager.Result> results) {
+    public boolean updateItems(List<ResultBundle> results) {
         String query =  "update league_items " +
                         "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
                         "where id_l = ? and id_d = ? " +
@@ -89,15 +89,15 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (PriceManager.Result result : results) {
-                    statement.setDouble(1, result.mean);
-                    statement.setDouble(2, result.median);
-                    statement.setDouble(3, result.mode);
-                    statement.setDouble(4, result.min);
-                    statement.setDouble(5, result.max);
-                    statement.setDouble(6, result.accepted);
-                    statement.setInt(7, result.id_l);
-                    statement.setInt(8, result.id_d);
+                for (ResultBundle result : results) {
+                    statement.setDouble(1, result.getMean());
+                    statement.setDouble(2, result.getMedian());
+                    statement.setDouble(3, result.getMode());
+                    statement.setDouble(4, result.getMin());
+                    statement.setDouble(5, result.getMax());
+                    statement.setDouble(6, result.getAccepted());
+                    statement.setInt(7, result.getIdBundle().getLeagueId());
+                    statement.setInt(8, result.getIdBundle().getItemId());
 
                     statement.addBatch();
                 }

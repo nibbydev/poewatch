@@ -2,161 +2,151 @@ package poe.Managers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Db.Database;
+import poe.Db.*;
+import poe.Db.Bundles.EntryBundle;
+import poe.Db.Bundles.IdBundle;
+import poe.Db.Bundles.PriceBundle;
+import poe.Db.Bundles.ResultBundle;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PriceManager {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
-    private static Database database;
-
     private static final double zScoreLower = 2.5;
     private static final double zScoreUpper = 0.5;
     private static final int trimLower = 5;
     private static final int trimUpper = 50;
+    private static Database database;
 
     public static void run() {
-        List<Result> results = new ArrayList<>();
         logger.info("Calculating prices");
 
-        // Get entries from database
-        ResultSet resultSet = database.calc.getEntryStream();
-        if (resultSet == null) {
-            logger.warn("Could not get entries for price calculation");
+        // Get list of items that need to have their prices recalculated
+        List<IdBundle> idBundles = database.calc.getNewItemIdBundles();
+        if (idBundles == null) {
+            logger.warn("Could not get ids for price calculation");
             throw new RuntimeException();
-        }
-
-        if (!streamEntries(resultSet, results)) {
-            logger.warn("Could not calculate prices");
+        } else if (idBundles.isEmpty()) {
+            logger.warn("Id bundle list was empty");
             return;
         }
 
-        // Close the connection
-        try {
-            resultSet.close();
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            logger.error("Could not close ResultSet");
+        // Get fresh currency rates
+        List<PriceBundle> priceBundles = database.calc.getPriceBundles();
+        if (priceBundles == null) {
+            logger.warn("Could not get currency rates for price calculation");
+            throw new RuntimeException();
+        }
+
+        List<ResultBundle> resultBundles = new ArrayList<>();
+        // Loop through each item type per league
+        for (IdBundle idBundle : idBundles) {
+            // Query entries from the database for this item
+            List<EntryBundle> entryBundles = database.calc.getEntryBundles(idBundle);
+
+            if (entryBundles.isEmpty()) {
+                System.out.printf("Empty entry bundle %d %d\n", idBundle.getLeagueId(), idBundle.getItemId());
+                continue;
+            }
+
+            // Convert all entry prices to chaos for this item
+            convertToChaos(idBundle, entryBundles, priceBundles);
+
+            // Calculate the prices for this item
+            ResultBundle rb = calculate(idBundle, entryBundles);
+            if (rb == null) continue;
+
+            resultBundles.add(rb);
         }
 
         // Update entries in database
-        database.upload.updateItems(results);
+        database.upload.updateItems(resultBundles);
         logger.info("Prices calculated");
     }
 
-    private static boolean streamEntries(ResultSet resultSet, List<Result> results) {
-        // If result map is invalid
-        if (resultSet == null || results == null || !results.isEmpty()) {
-            logger.error("Null/non-empty reference passed");
-            return false;
-        }
 
-        try {
-            // Get first entry
-            if (!resultSet.next()) {
-                logger.warn("No entries found for price calculation");
-                return false;
+    private static void convertToChaos(IdBundle idBundle, List<EntryBundle> entryBundles, List<PriceBundle> priceBundles) {
+        Iterator<EntryBundle> entryBundleIterator = entryBundles.iterator();
+        while (entryBundleIterator.hasNext()) {
+            EntryBundle entryBundle = entryBundleIterator.next();
+
+            // Already in chaos
+            if (entryBundle.getCurrencyId() == null) continue;
+
+            // Find matching price bundle
+            PriceBundle priceBundle = priceBundles.stream()
+                    .filter(t -> t.getLeagueId() == idBundle.getLeagueId())
+                    .filter(t -> entryBundle.getCurrencyId().equals(t.getItemId()))
+                    .findFirst()
+                    .orElse(null);
+
+            // No match, remove entry
+            if (priceBundle == null) {
+                entryBundleIterator.remove();
+                continue;
             }
 
-            int id_l = resultSet.getInt("id_l");
-            int id_d = resultSet.getInt("id_d");
-            List<Double> entryList = new ArrayList<>();
-
-            do {
-                // If league or item changed
-                if (id_l != resultSet.getInt("id_l") || id_d != resultSet.getInt("id_d")) {
-                    calculate(results, entryList, id_l, id_d);
-                    entryList = new ArrayList<>();
-
-                    id_l = resultSet.getInt("id_l");
-                    id_d = resultSet.getInt("id_d");
-                }
-
-                entryList.add(resultSet.getDouble("price"));
-            } while (resultSet.next());
-
-            // Add last values
-            calculate(results, entryList, id_l, id_d);
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
+            entryBundle.setCurrencyId(null);
+            entryBundle.setPrice(entryBundle.getPrice() * priceBundle.getMean());
         }
-
-        return true;
     }
 
-    private static List<Double> filterEntries(List<Double> entryList) {
+    private static ResultBundle calculate(IdBundle idBundle, List<EntryBundle> entryBundles) {
+        entryBundles = filterEntries(entryBundles);
+
+        // If no entries were left, skip the item
+        if (entryBundles.isEmpty()) {
+            logger.warn(String.format("Zero remaining entries for %d in %d", idBundle.getLeagueId(), idBundle.getItemId()));
+            return null;
+        }
+
+        ResultBundle result = new ResultBundle(
+                idBundle,
+                calcMean(entryBundles),
+                calcMedian(entryBundles),
+                calcMode(entryBundles),
+                calcMin(entryBundles),
+                calcMax(entryBundles),
+                entryBundles.size()
+        );
+
+        // A problem with the algorithm that i've not bothered to fix
+        if (result.getMode() == 0) {
+            result.setMode(result.getMedian());
+        }
+
+        return result;
+    }
+
+    private static List<EntryBundle> filterEntries(List<EntryBundle> entryBundles) {
         // Sort by price ascending
-        entryList.sort(Double::compareTo);
+        entryBundles.sort(Comparator.comparingDouble(EntryBundle::getPrice));
 
         // Trim the list to remove outliers
-        int lowerTrimBound = entryList.size() * trimLower / 100;
-        int upperTrimBound = entryList.size() * (100 - trimUpper) / 100;
-        List<Double> tmpTrimmedList = entryList.subList(lowerTrimBound, upperTrimBound);
+        int lowerTrimBound = entryBundles.size() * trimLower / 100;
+        int upperTrimBound = entryBundles.size() * (100 - trimUpper) / 100;
+        List<EntryBundle> trimmedBundles = entryBundles.subList(lowerTrimBound, upperTrimBound);
 
-        if (tmpTrimmedList.size() < 5) {
-            return tmpTrimmedList;
+        if (trimmedBundles.size() < 5) {
+            return entryBundles;
         }
 
         // Find standard deviation and bounds
-        double tmpMean = calcMean(tmpTrimmedList);
-        double tmpStdDev = calcStdDev(tmpTrimmedList, tmpMean);
+        double tmpMean = calcMean(trimmedBundles);
+        double tmpStdDev = calcStdDev(trimmedBundles, tmpMean);
         double lowerPredicateBound = tmpMean - zScoreLower * tmpStdDev;
         double upperPredicateBound = tmpMean + zScoreUpper * tmpStdDev;
 
-        List<Double> tmp = tmpTrimmedList.stream()
-                .filter(i -> i > lowerPredicateBound && i < upperPredicateBound)
+        List<EntryBundle> doubleTrimmedBundles = trimmedBundles.stream()
+                .filter(t -> t.getPrice() > lowerPredicateBound)
+                .filter(t -> t.getPrice() < upperPredicateBound)
                 .collect(Collectors.toList());
 
-        return tmp.size() > 5 ? tmp : tmpTrimmedList;
+        return doubleTrimmedBundles.size() > 5 ? doubleTrimmedBundles : trimmedBundles;
     }
 
-    private static void calculate(List<Result> results, List<Double> entryList, int id_l, int id_d) {
-        // If result list is invalid
-        if (results == null) {
-            logger.error("Null result list passed");
-            throw new RuntimeException();
-        }
-
-        // If entry list is invalid
-        if (entryList == null || entryList.isEmpty()) {
-            logger.error("Null/empty entryList passed");
-            throw new RuntimeException();
-        }
-
-
-        List<Double> entries;
-        if (entryList.size() > 4) {
-            entries = filterEntries(entryList);
-        } else {
-            entries = entryList;
-        }
-
-        // If no entries were left, skip the item
-        if (entries.isEmpty()) {
-            logger.warn(String.format("Zero remaining entries for %d in %d", id_d, id_l));
-            return;
-        }
-
-        Result result = new Result(id_l, id_d);
-        result.mean = calcMean(entries);
-        result.median = calcMedian(entries);
-        result.mode = calcMode(entries);
-        result.min = calcMin(entries);
-        result.max = calcMax(entries);
-        result.accepted = entries.size();
-
-        if (result.mode == 0) {
-            result.mode = result.median;
-        }
-
-        results.add(result);
-    }
-
-    private static double calcMean(List<Double> list) {
+    private static double calcMean(List<EntryBundle> list) {
         if (list == null || list.isEmpty()) {
             logger.warn("Null/empty list passed to mean");
             return 0;
@@ -164,8 +154,8 @@ public class PriceManager {
 
         double sum = 0;
 
-        for (Double entry : list) {
-            sum += entry;
+        for (EntryBundle entry : list) {
+            sum += entry.getPrice();
         }
 
         return sum / list.size();
@@ -178,7 +168,7 @@ public class PriceManager {
      * @param mean Mean of the list
      * @return Standard deviation of the sample
      */
-    private static double calcStdDev(List<Double> list, double mean) {
+    private static double calcStdDev(List<EntryBundle> list, double mean) {
         if (list == null || list.isEmpty()) {
             logger.warn("Null/empty list passed to standard deviation");
             return 0;
@@ -186,58 +176,58 @@ public class PriceManager {
 
         double sum = 0;
 
-        for (Double entry : list) {
-            sum += Math.pow((entry - mean), 2);
+        for (EntryBundle entry : list) {
+            sum += Math.pow((entry.getPrice() - mean), 2);
         }
 
         return Math.sqrt(sum / (list.size() - 1));
     }
 
-    private static double calcMedian(List<Double> list) {
+    private static double calcMedian(List<EntryBundle> list) {
         if (list == null || list.isEmpty()) {
             logger.warn("Null/empty list passed to median");
             return 0;
         }
 
-        list.sort(Double::compareTo);
-        return list.get((list.size() - 1) / 2);
+        list.sort(Comparator.comparingDouble(EntryBundle::getPrice));
+        return list.get((list.size() - 1) / 2).getPrice();
     }
 
-    private static double calcMin(List<Double> list) {
+    private static double calcMin(List<EntryBundle> list) {
         if (list == null || list.isEmpty()) {
             logger.warn("Null/empty list passed to min");
             return 0;
         }
 
-        double min = list.get(0);
+        double min = list.get(0).getPrice();
 
-        for (Double entry : list) {
-            if (entry < min) {
-                min = entry;
+        for (EntryBundle entry : list) {
+            if (entry.getPrice() < min) {
+                min = entry.getPrice();
             }
         }
 
         return min;
     }
 
-    private static double calcMax(List<Double> list) {
+    private static double calcMax(List<EntryBundle> list) {
         if (list == null || list.isEmpty()) {
             logger.warn("Null/empty list passed to max");
             return 0;
         }
 
-        double max = list.get(0);
+        double max = list.get(0).getPrice();
 
-        for (Double entry : list) {
-            if (entry > max) {
-                max = entry;
+        for (EntryBundle entry : list) {
+            if (entry.getPrice() > max) {
+                max = entry.getPrice();
             }
         }
 
         return max;
     }
 
-    private static double calcMode(List<Double> list) {
+    private static double calcMode(List<EntryBundle> list) {
         if (list == null || list.isEmpty()) {
             logger.warn("Null/empty list passed to mode");
             return 0;
@@ -246,17 +236,17 @@ public class PriceManager {
         HashMap<Double, Integer> map = new HashMap<>();
         double max = 1, tmp = 0;
 
-        for (Double entry : list) {
-            if (map.get(entry) != null) {
-                int count = map.get(entry);
-                map.put(entry, ++count);
+        for (EntryBundle entry : list) {
+            if (map.get(entry.getPrice()) != null) {
+                int count = map.get(entry.getPrice());
+                map.put(entry.getPrice(), ++count);
 
                 if (count > max) {
                     max = count;
-                    tmp = entry;
+                    tmp = entry.getPrice();
                 }
             } else {
-                map.put(entry, 1);
+                map.put(entry.getPrice(), 1);
             }
         }
 
@@ -267,14 +257,4 @@ public class PriceManager {
         PriceManager.database = database;
     }
 
-    public static class Result {
-        public int id_l, id_d;
-        public double mean, median, mode, min, max;
-        public int accepted;
-
-        public Result(int id_l, int id_d) {
-            this.id_l = id_l;
-            this.id_d = id_d;
-        }
-    }
 }
