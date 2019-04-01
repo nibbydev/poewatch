@@ -163,8 +163,8 @@ function build_payload($pdo, $id) {
 
   if ($itemData["category"] === "map") {
     $payload['map'] = array(
-      "series" => $row['series'] === null ? null : (int) $itemData['series'],
-      "tier" => (int) $row['tier']
+      "series" => $itemData['series'] === null ? null : (int) $itemData['series'],
+      "tier" => (int) $itemData['tier']
     );
   }
 
