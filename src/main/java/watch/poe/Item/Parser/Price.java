@@ -60,6 +60,11 @@ public class Price {
             return;
         }
 
+        // An error somewhere
+        if (Double.isNaN(price)) {
+            return;
+        }
+
         // Is the listed currency valid?
         if (!relationManager.getCurrencyAliases().containsKey(noteList[2])) {
             return;
