@@ -72,7 +72,7 @@ public class PriceManager extends Thread {
                 if (rb == null) continue;
                 resultBundles.add(rb);
 
-                long sleepTime = msPerIteration - System.currentTimeMillis() - iterationDelay;
+                long sleepTime = msPerIteration - (System.currentTimeMillis() - iterationDelay);
                 if (sleepTime > 0) {
                     try {
                         Thread.sleep(sleepTime);
@@ -159,8 +159,7 @@ public class PriceManager extends Thread {
             throw new RuntimeException();
         }
 
-
-        msPerIteration = (int) TimeFrame.M_1.getRemaining() / idBundles.size();
+        msPerIteration = (int) TimeFrame.M_10.getRemaining() / idBundles.size();
         synchronized (queueMonitor) {
             queueMonitor.notify();
         }

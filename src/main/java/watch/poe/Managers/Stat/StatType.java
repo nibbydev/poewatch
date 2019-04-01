@@ -1,7 +1,6 @@
 package poe.Managers.Stat;
 
 public enum StatType {
-    TIME_CYCLE_TOTAL,
     TIME_PARSE_REPLY,
 
     TIME_API_REPLY_DOWNLOAD,

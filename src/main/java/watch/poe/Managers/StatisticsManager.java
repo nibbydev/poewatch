@@ -18,7 +18,6 @@ public class StatisticsManager {
 
     // Definitions of all statistics collectors
     private final Collector[] collectors = {
-            new Collector(StatType.TIME_CYCLE_TOTAL,                    GroupType.AVG,      TimeFrame.M_60,    null),
             new Collector(StatType.TIME_API_REPLY_DOWNLOAD,             GroupType.AVG,      TimeFrame.M_60,    null),
             new Collector(StatType.TIME_PARSE_REPLY,                    GroupType.AVG,      TimeFrame.M_60,    null),
             new Collector(StatType.TIME_API_TTFB,                       GroupType.AVG,      TimeFrame.M_60,    null),

@@ -64,10 +64,8 @@ public class WorkerManager extends Thread {
             intervalManager.checkFlagStates();
 
             // If cycle should be initiated
-            if (intervalManager.isBool(TimeFrame.M_1)) {
-                setWorkerSleepState(true, true);
+            if (intervalManager.isBool(TimeFrame.M_10)) {
                 cycle();
-                setWorkerSleepState(false, true);
             }
 
             // While there's a job that needs to be given out
@@ -99,15 +97,12 @@ public class WorkerManager extends Thread {
      * Minutely cycle init
      */
     private void cycle() {
-        // Start cycle timer
-        statisticsManager.startTimer(StatType.TIME_CYCLE_TOTAL);
-
-        priceManager.startCycle();
-        database.calc.calcExalted();
-
         if (intervalManager.isBool(TimeFrame.H_24) && config.getBoolean("entry.removeOldEntries")) {
             database.history.removeOldItemEntries();
         }
+
+        priceManager.startCycle();
+        database.calc.calcExalted();
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
             leagueManager.cycle();
@@ -123,11 +118,7 @@ public class WorkerManager extends Thread {
             accountManager.checkAccountNameChanges();
         }
 
-        // End cycle timer
-        statisticsManager.clkTimer(StatType.TIME_CYCLE_TOTAL);
-
         // Prepare cycle message
-        logger.info(String.format("Cycle finished: %5d ms", statisticsManager.getLast(StatType.TIME_CYCLE_TOTAL)));
         logger.info(String.format("Status: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
                 TimeFrame.M_1.getRemaining() / 1000 + 1,
                 TimeFrame.M_10.getRemaining() / 60000 + 1,
