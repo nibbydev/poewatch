@@ -32,7 +32,7 @@ public class Calc {
                         "from league_entries " +
                         "where stash_crc is not null " +
                         "  and price is not null " +
-                        "  and updated > date_sub(now(), interval 10 minute) ";
+                        "  and discovered > date_sub(now(), interval 10 minute) ";
 
         try {
             if (database.connection.isClosed()) {

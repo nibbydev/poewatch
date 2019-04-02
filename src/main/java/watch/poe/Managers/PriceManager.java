@@ -23,9 +23,9 @@ public class PriceManager extends Thread {
     private volatile boolean run = true;
     private volatile boolean inProgress = false;
     private volatile boolean readyToExit = false;
+    private volatile boolean sleepPerIteration = true;
     private List<IdBundle> idBundles;
     private List<PriceBundle> priceBundles;
-    private int msPerIteration = 0;
 
     public PriceManager(Database database) {
         this.database = database;
@@ -47,11 +47,10 @@ public class PriceManager extends Thread {
 
             inProgress = true;
             long iterationDelay;
+            int iterationIndex = 0;
 
-            Iterator<IdBundle> idBundleIterator = idBundles.iterator();
-            while (run && idBundleIterator.hasNext()) {
+            for (IdBundle idBundle : idBundles) {
                 iterationDelay = System.currentTimeMillis();
-                IdBundle idBundle = idBundleIterator.next();
 
                 // Query entries from the database for this item
                 List<EntryBundle> entryBundles = database.calc.getEntryBundles(idBundle);
@@ -69,8 +68,16 @@ public class PriceManager extends Thread {
                 if (rb == null) continue;
                 resultBundles.add(rb);
 
-                long sleepTime = msPerIteration - (System.currentTimeMillis() - iterationDelay);
-                if (sleepTime > 0) {
+                // Calculate how long this iteration took and how long we should sleep until the next one
+                long normMsPerIteration = TimeFrame.M_10.getRemaining() / (idBundles.size() - iterationIndex++);
+                long sleepTime = normMsPerIteration - (System.currentTimeMillis() - iterationDelay);
+
+                System.out.printf("[%2d|%5d] %3d\\%3d ms - %4d\\%4d - remain %3d s\n",
+                    idBundle.getLeagueId(), idBundle.getItemId(),
+                    sleepTime > 0 ? sleepTime : 0, normMsPerIteration, iterationIndex,
+                    idBundles.size(), TimeFrame.M_10.getRemaining() / 1000);
+
+                if (sleepPerIteration && sleepTime > 0) {
                     try {
                         Thread.sleep(sleepTime);
                     } catch (InterruptedException ex) {
@@ -93,9 +100,7 @@ public class PriceManager extends Thread {
         logger.info("Stopping controller");
 
         run = false;
-        synchronized (queueMonitor) {
-            queueMonitor.notify();
-        }
+        sleepPerIteration = false;
 
         while (!readyToExit) try {
             Thread.sleep(50);
@@ -109,7 +114,7 @@ public class PriceManager extends Thread {
     public void startCycle() {
         if (inProgress) {
             logger.warn("Waiting for previous cycle to finish");
-            msPerIteration = 0;
+            sleepPerIteration = false;
         }
 
         // Wait until last cycle is done
@@ -152,11 +157,12 @@ public class PriceManager extends Thread {
             throw new RuntimeException();
         }
 
-        msPerIteration = (int) TimeFrame.M_10.getRemaining() / idBundles.size();
         synchronized (queueMonitor) {
             queueMonitor.notify();
         }
 
-        logger.info(String.format("Queued %d items for price calculation with delay %d", idBundles.size(), msPerIteration));
+        sleepPerIteration = true;
+        long delay = TimeFrame.M_10.getRemaining() / idBundles.size();
+        logger.info(String.format("Queued %d items for price calculation with delay ~%d", idBundles.size(), delay));
     }
 }
