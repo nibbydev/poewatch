@@ -66,7 +66,7 @@
 <?php elseif ($pageView === "faq"): ?>
     <div class="card-body pagination-page">
       <p>Where do you get the prices?<br><span class='custom-text-gray-lo'>The official stash API over from pathofexile.com. Prices are automatically generated from the items players publicly list for sale.</span></p>
-      <p>How up to date are the prices?<br><span class='custom-text-gray-lo'>All prices are recalculated within 60 second intervals. Prices on the website are always the most recent unless stated otherwise.</span></p>
+      <p>How up to date are the prices?<br><span class='custom-text-gray-lo'>Prices are recalculated within 10 minutes intervals. Prices on the website are always the most recent unless stated otherwise.</span></p>
       <p>What do the 'change', 'daily' and 'total' columns mean?<br><span class='custom-text-gray-lo'>Change refers to how much the price has changed when comparing the price right now and 7 days ago. Daily means how many of that item is listed every 24 hours. Total is the total number of times the item has been listed during that league.</span></p>
       <p>The currency page is cluttered with too many different items.<br><span class='custom-text-gray-lo'>Use the Group search option to filter based on Currency, Essences and other groups.</span></p>
       <p>How do you acquire account and character names?<br><span class='custom-text-gray-lo'>Through the stash API. Meaning that if a player has listed an item in a public stash tab, that character is recorded.</span></p>

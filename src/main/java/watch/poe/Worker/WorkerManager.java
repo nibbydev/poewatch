@@ -24,6 +24,7 @@ public class WorkerManager extends Thread {
     private final Config config;
     private final Database database;
     private final LeagueManager leagueManager;
+    private final PriceManager priceManager;
     private final AccountManager accountManager;
     private final StatisticsManager statisticsManager;
     private final ItemParser itemParser;
@@ -36,11 +37,12 @@ public class WorkerManager extends Thread {
     private volatile boolean readyToExit = false;
     private String nextChangeID;
 
-    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, AccountManager am, ItemParser ip) {
+    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, AccountManager am, ItemParser ip, PriceManager pm) {
         this.statisticsManager = sm;
         this.accountManager = am;
         this.leagueManager = lm;
         this.intervalManager = se;
+        this.priceManager = pm;
         this.itemParser = ip;
         this.database = db;
         this.config = cnf;
@@ -62,10 +64,8 @@ public class WorkerManager extends Thread {
             intervalManager.checkFlagStates();
 
             // If cycle should be initiated
-            if (intervalManager.isBool(TimeFrame.M_1)) {
-                setWorkerSleepState(true, true);
+            if (intervalManager.isBool(TimeFrame.M_10)) {
                 cycle();
-                setWorkerSleepState(false, true);
             }
 
             // While there's a job that needs to be given out
@@ -97,14 +97,11 @@ public class WorkerManager extends Thread {
      * Minutely cycle init
      */
     private void cycle() {
-        // Start cycle timer
-        statisticsManager.startTimer(StatType.TIME_CYCLE_TOTAL);
-
         if (intervalManager.isBool(TimeFrame.H_24) && config.getBoolean("entry.removeOldEntries")) {
             database.history.removeOldItemEntries();
         }
 
-        PriceManager.run();
+        priceManager.startCycle();
         database.calc.calcExalted();
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
@@ -121,11 +118,7 @@ public class WorkerManager extends Thread {
             accountManager.checkAccountNameChanges();
         }
 
-        // End cycle timer
-        statisticsManager.clkTimer(StatType.TIME_CYCLE_TOTAL);
-
         // Prepare cycle message
-        logger.info(String.format("Cycle finished: %5d ms", statisticsManager.getLast(StatType.TIME_CYCLE_TOTAL)));
         logger.info(String.format("Status: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
                 TimeFrame.M_1.getRemaining() / 1000 + 1,
                 TimeFrame.M_10.getRemaining() / 60000 + 1,

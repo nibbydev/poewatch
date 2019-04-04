@@ -249,7 +249,15 @@ public class Stats {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    StatType statType = StatType.valueOf(resultSet.getString("statType"));
+                    String key = resultSet.getString("statType");
+                    StatType statType;
+
+                    try {
+                        statType = StatType.valueOf(resultSet.getString("statType"));
+                    } catch (IllegalArgumentException ex) {
+                        logger.error(String.format("Could not parse stat '%s'", key));
+                        continue;
+                    }
 
                     // Find first collector
                     Collector collector = Arrays.stream(collectors)

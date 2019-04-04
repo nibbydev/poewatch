@@ -1,5 +1,4 @@
 <?php
-
 function get_data($pdo) {
   $query = "SELECT 
     did.id, did.name, did.type, did.frame, did.stack, 

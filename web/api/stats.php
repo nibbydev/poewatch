@@ -64,7 +64,6 @@ header("Content-Type: application/json");
 
 $types = array(
   "time" => array(
-    "TIME_CYCLE_TOTAL",
     "TIME_API_REPLY_DOWNLOAD",
     "TIME_PARSE_REPLY",
     "TIME_API_TTFB"
