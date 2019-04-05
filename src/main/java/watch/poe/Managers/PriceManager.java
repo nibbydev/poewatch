@@ -10,14 +10,11 @@ import poe.Managers.Price.Bundles.PriceBundle;
 import poe.Managers.Price.Bundles.ResultBundle;
 import poe.Managers.Price.Calculation;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class PriceManager extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
     private final Database database;
-    private final List<ResultBundle> resultBundles = new ArrayList<>(4000);
     private final Object queueMonitor = new Object();
     private final Object cycleMonitor = new Object();
     private volatile boolean run = true;
@@ -66,16 +63,18 @@ public class PriceManager extends Thread {
                 // Calculate the prices for this item
                 ResultBundle rb = Calculation.calculateResult(idBundle, entryBundles);
                 if (rb == null) continue;
-                resultBundles.add(rb);
+
+                // Update item entry in database
+                database.upload.updateItem(rb);
 
                 // Calculate how long this iteration took and how long we should sleep until the next one
                 long normMsPerIteration = TimeFrame.M_10.getRemaining() / (idBundles.size() - iterationIndex++);
                 long sleepTime = normMsPerIteration - (System.currentTimeMillis() - iterationDelay);
 
                 System.out.printf("[%2d|%5d] %3d\\%3d ms - %4d\\%4d - remain %3d s\n",
-                    idBundle.getLeagueId(), idBundle.getItemId(),
-                    sleepTime > 0 ? sleepTime : 0, normMsPerIteration, iterationIndex,
-                    idBundles.size(), TimeFrame.M_10.getRemaining() / 1000);
+                        idBundle.getLeagueId(), idBundle.getItemId(),
+                        sleepTime > 0 ? sleepTime : 0, normMsPerIteration, iterationIndex,
+                        idBundles.size(), TimeFrame.M_10.getRemaining() / 1000);
 
                 if (sleepPerIteration && sleepTime > 0) {
                     try {
@@ -130,12 +129,6 @@ public class PriceManager extends Thread {
 
         if (!run) {
             return;
-        }
-
-        // If there are any results to upload
-        if (!resultBundles.isEmpty()) {
-            database.upload.updateItems(resultBundles);
-            resultBundles.clear();
         }
 
         logger.info("Starting price calculation cycle");

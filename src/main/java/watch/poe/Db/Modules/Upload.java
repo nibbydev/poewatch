@@ -3,9 +3,9 @@ package poe.Db.Modules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Managers.League.BaseLeague;
 import poe.Item.Parser.DbItemEntry;
 import poe.Item.Parser.RawUsernameEntry;
+import poe.Managers.League.BaseLeague;
 import poe.Managers.Price.Bundles.ResultBundle;
 
 import java.sql.PreparedStatement;
@@ -22,15 +22,15 @@ public class Upload {
     }
 
     public boolean uploadEntries(Set<DbItemEntry> set) {
-        String query =  "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "  updates = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updates, updates + 1)," +
-                        "  updated = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updated, now())," +
-                        "  stash_crc = VALUES(stash_crc), " +
-                        "  stack = VALUES(stack), " +
-                        "  price = VALUES(price), " +
-                        "  id_price = VALUES(id_price); ";
+        String query = "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE " +
+                "  updates = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updates, updates + 1)," +
+                "  updated = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updated, now())," +
+                "  stash_crc = VALUES(stash_crc), " +
+                "  stack = VALUES(stack), " +
+                "  price = VALUES(price), " +
+                "  id_price = VALUES(id_price); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -76,11 +76,11 @@ public class Upload {
         }
     }
 
-    public boolean updateItems(List<ResultBundle> results) {
-        String query =  "update league_items " +
-                        "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
-                        "where id_l = ? and id_d = ? " +
-                        "limit 1; ";
+    public boolean updateItem(ResultBundle result) {
+        String query = "update league_items " +
+                "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
+                "where id_l = ? and id_d = ? " +
+                "limit 1; ";
 
         try {
             if (database.connection.isClosed()) {
@@ -89,20 +89,15 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (ResultBundle result : results) {
-                    statement.setDouble(1, result.getMean());
-                    statement.setDouble(2, result.getMedian());
-                    statement.setDouble(3, result.getMode());
-                    statement.setDouble(4, result.getMin());
-                    statement.setDouble(5, result.getMax());
-                    statement.setDouble(6, result.getAccepted());
-                    statement.setInt(7, result.getIdBundle().getLeagueId());
-                    statement.setInt(8, result.getIdBundle().getItemId());
-
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
+                statement.setDouble(1, result.getMean());
+                statement.setDouble(2, result.getMedian());
+                statement.setDouble(3, result.getMode());
+                statement.setDouble(4, result.getMin());
+                statement.setDouble(5, result.getMax());
+                statement.setDouble(6, result.getAccepted());
+                statement.setInt(7, result.getIdBundle().getLeagueId());
+                statement.setInt(8, result.getIdBundle().getItemId());
+                statement.execute();
             }
 
             database.connection.commit();
@@ -114,11 +109,11 @@ public class Upload {
     }
 
     public boolean uploadAccounts(Set<Long> set) {
-        String query =  "INSERT INTO league_accounts (account_crc) " +
-                        "VALUES (?) " +
-                        "ON DUPLICATE KEY UPDATE " +
-                        "  updates = updates + 1, " +
-                        "  updated = now(); ";
+        String query = "INSERT INTO league_accounts (account_crc) " +
+                "VALUES (?) " +
+                "ON DUPLICATE KEY UPDATE " +
+                "  updates = updates + 1, " +
+                "  updated = now(); ";
 
         try {
             if (database.connection.isClosed()) {
@@ -147,10 +142,10 @@ public class Upload {
         String[] queries = {
                 // League ended
                 "update data_leagues " +
-                "set active = 0 " +
-                "where active = 1 " +
-                "  and end is not null " +
-                "  and STR_TO_DATE(end, '%Y-%m-%dT%H:%i:%sZ') < now()"
+                        "set active = 0 " +
+                        "where active = 1 " +
+                        "  and end is not null " +
+                        "  and STR_TO_DATE(end, '%Y-%m-%dT%H:%i:%sZ') < now()"
         };
 
         return database.executeUpdateQueries(queries);
@@ -165,20 +160,20 @@ public class Upload {
     public boolean updateLeagues(List<BaseLeague> leagueEntries) {
         // Create league entry if it does not exist without incrementing the auto_increment value
         String query1 = "insert into data_leagues (name) " +
-                        "select ? from dual " +
-                        "where not exists (select 1 from data_leagues where name = ? limit 1);";
+                "select ? from dual " +
+                "where not exists (select 1 from data_leagues where name = ? limit 1);";
 
         // Update data for inserted league entry
         String query2 = "UPDATE data_leagues " +
-                        "SET    start     = ?, " +
-                        "       end       = ?, " +
-                        "       upcoming  = 0, " +
-                        "       active    = 1, " +
-                        "       event     = ?, " +
-                        "       hardcore  = ?, " +
-                        "       challenge = IF(id > 2, ?, 0) " +
-                        "WHERE  name      = ? " +
-                        "LIMIT  1; ";
+                "SET    start     = ?, " +
+                "       end       = ?, " +
+                "       upcoming  = 0, " +
+                "       active    = 1, " +
+                "       event     = ?, " +
+                "       hardcore  = ?, " +
+                "       challenge = IF(id > 2, ?, 0) " +
+                "WHERE  name      = ? " +
+                "LIMIT  1; ";
 
         logger.info("Updating database leagues");
 
@@ -261,10 +256,10 @@ public class Upload {
         String query2 = "INSERT INTO account_characters (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
 
         String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
-                        "SELECT ?, " +
-                        "  (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
-                        "  (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
-                        "ON DUPLICATE KEY UPDATE seen = NOW(); ";
+                "SELECT ?, " +
+                "  (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
+                "  (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
+                "ON DUPLICATE KEY UPDATE seen = NOW(); ";
 
         try {
             if (database.connection.isClosed()) {
