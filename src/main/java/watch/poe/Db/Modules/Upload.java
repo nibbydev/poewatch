@@ -21,6 +21,12 @@ public class Upload {
         this.database = database;
     }
 
+    /**
+     * Uploads item entries to the database
+     *
+     * @param set Valid set of item entries
+     * @return True on success
+     */
     public boolean uploadEntries(Set<DbItemEntry> set) {
         String query = "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
@@ -76,6 +82,12 @@ public class Upload {
         }
     }
 
+    /**
+     * Updates an item entry's prices in the database
+     *
+     * @param result Valid price bundle
+     * @return True on success
+     */
     public boolean updateItem(ResultBundle result) {
         String query = "update league_items " +
                 "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
@@ -108,6 +120,12 @@ public class Upload {
         }
     }
 
+    /**
+     * Uploads account hashes to database
+     *
+     * @param set Set of hashes
+     * @return True on success
+     */
     public boolean uploadAccounts(Set<Long> set) {
         String query = "INSERT INTO league_accounts (account_crc) " +
                 "VALUES (?) " +
@@ -138,17 +156,19 @@ public class Upload {
         }
     }
 
+    /**
+     * Flags ended leagues
+     *
+     * @return True on success
+     */
     public boolean updateLeagueStates() {
-        String[] queries = {
-                // League ended
-                "update data_leagues " +
-                        "set active = 0 " +
-                        "where active = 1 " +
-                        "  and end is not null " +
-                        "  and STR_TO_DATE(end, '%Y-%m-%dT%H:%i:%sZ') < now()"
-        };
+        String query = "update data_leagues " +
+                "set active = 0 " +
+                "where active = 1 " +
+                "  and end is not null " +
+                "  and STR_TO_DATE(end, '%Y-%m-%dT%H:%i:%sZ') < now()";
 
-        return database.executeUpdateQueries(queries);
+        return database.executeUpdateQueries(query);
     }
 
     /**

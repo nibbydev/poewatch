@@ -10,6 +10,7 @@ import poe.Managers.Price.Bundles.PriceBundle;
 import poe.Managers.Price.Bundles.ResultBundle;
 import poe.Managers.Price.Calculation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PriceManager extends Thread {
@@ -21,8 +22,8 @@ public class PriceManager extends Thread {
     private volatile boolean inProgress = false;
     private volatile boolean readyToExit = false;
     private volatile boolean sleepPerIteration = true;
-    private List<IdBundle> idBundles;
-    private List<PriceBundle> priceBundles;
+    private final List<IdBundle> idBundles = new ArrayList<>();
+    private final List<PriceBundle> priceBundles = new ArrayList<>();
 
     public PriceManager(Database database) {
         this.database = database;
@@ -38,7 +39,7 @@ public class PriceManager extends Thread {
                 }
             }
 
-            if (idBundles == null || idBundles.isEmpty()) {
+            if (idBundles.isEmpty()) {
                 continue;
             }
 
@@ -50,9 +51,11 @@ public class PriceManager extends Thread {
                 iterationDelay = System.currentTimeMillis();
 
                 // Query entries from the database for this item
-                List<EntryBundle> entryBundles = database.calc.getEntryBundles(idBundle);
-
-                if (entryBundles.isEmpty()) {
+                List<EntryBundle> entryBundles = new ArrayList<>();
+                boolean success = database.calc.getEntryBundles(entryBundles, idBundle);
+                if (!success) {
+                    return;
+                } else if (entryBundles.isEmpty()) {
                     System.out.printf("Empty entry bundle %d %d\n", idBundle.getLeagueId(), idBundle.getItemId());
                     continue;
                 }
@@ -134,20 +137,28 @@ public class PriceManager extends Thread {
         logger.info("Starting price calculation cycle");
 
         // Get list of items that need to have their prices recalculated
-        idBundles = database.calc.getNewItemIdBundles();
-        if (idBundles == null) {
-            logger.warn("Could not get ids for price calculation");
-            throw new RuntimeException();
-        } else if (idBundles.isEmpty()) {
-            logger.warn("Id bundle list was empty");
-            return;
+        synchronized (idBundles) {
+            idBundles.clear();
+
+            boolean success = database.calc.getNewItemIdBundles(idBundles);
+            if (!success) {
+                logger.error("Could not get ids for price calculation");
+                return;
+            } else if (idBundles.isEmpty()) {
+                logger.warn("Id bundle list was empty");
+                return;
+            }
         }
 
         // Get fresh currency rates
-        priceBundles = database.calc.getPriceBundles();
-        if (priceBundles == null) {
-            logger.warn("Could not get currency rates for price calculation");
-            throw new RuntimeException();
+        synchronized (priceBundles) {
+            priceBundles.clear();
+
+            boolean success = database.calc.getPriceBundles(priceBundles);
+            if (!success) {
+                logger.error("Could not get currency rates for price calculation");
+                return;
+            }
         }
 
         synchronized (queueMonitor) {

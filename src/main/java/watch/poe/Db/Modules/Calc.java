@@ -25,63 +25,62 @@ public class Calc {
     /**
      * Queries a list of league+item pairs that need to have their prices recalculated
      *
-     * @return
+     * @return True on success
      */
-    public ArrayList<IdBundle> getNewItemIdBundles() {
-        String query =  "select distinct id_l, id_d " +
-                        "from league_entries " +
-                        "where stash_crc is not null " +
-                        "  and price is not null " +
-                        "  and discovered > date_sub(now(), interval 10 minute) ";
+    public boolean getNewItemIdBundles(List<IdBundle> idBundles) {
+        if (idBundles == null || !idBundles.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+
+        String query = "select distinct id_l, id_d " +
+                "from league_entries " +
+                "where stash_crc is not null " +
+                "  and price is not null " +
+                "  and discovered > date_sub(now(), interval 10 minute) ";
 
         try {
             if (database.connection.isClosed()) {
                 logger.error("Database connection was closed");
-                return null;
+                return false;
             }
 
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
 
-                ArrayList<IdBundle> idBundles = new ArrayList<>();
-
                 while (resultSet.next()) {
                     idBundles.add(new IdBundle(resultSet.getInt(1), resultSet.getInt(2)));
                 }
-
-                return idBundles;
             }
 
+            return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
-            return null;
+            return false;
         }
     }
 
     /**
      * Queries currency rates from the database
      *
-     * @return
+     * @return True on success
      */
-    public ArrayList<PriceBundle> getPriceBundles() {
-        String query =  "select li.id_l, li.id_d, li.mean " +
-                        "from league_items as li " +
-                        "join data_itemData as did on li.id_d = did.id " +
-                        "where did.id_cat = 4 " +
-                        "  and did.id_grp = 11 " +
-                        "  and did.frame = 5 " +
-                        "  and li.mean > 0 ";
+    public boolean getPriceBundles(List<PriceBundle> priceBundles) {
+        String query = "select li.id_l, li.id_d, li.mean " +
+                "from league_items as li " +
+                "join data_itemData as did on li.id_d = did.id " +
+                "where did.id_cat = 4 " +
+                "  and did.id_grp = 11 " +
+                "  and did.frame = 5 " +
+                "  and li.mean > 0 ";
 
         try {
             if (database.connection.isClosed()) {
                 logger.error("Database connection was closed");
-                return null;
+                return false;
             }
 
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
-
-                ArrayList<PriceBundle> priceBundles = new ArrayList<>();
 
                 while (resultSet.next()) {
                     priceBundles.add(new PriceBundle(
@@ -90,46 +89,42 @@ public class Calc {
                             resultSet.getDouble(3)
                     ));
                 }
-
-                return priceBundles;
             }
 
+            return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
-            return null;
+            return false;
         }
     }
 
     /**
      * Queries entries for the specified item
      *
-     * @param idBundle
-     * @return
+     * @return True on success
      */
-    public List<EntryBundle> getEntryBundles(IdBundle idBundle) {
-        String query =  "select le.price, le.id_price " +
-                        "from league_entries as le " +
-                        "join ( " +
-                        "  select distinct account_crc from league_accounts " +
-                        "  where updated > date_sub(now(), interval 1 hour) " +
-                        ") as foo2 on le.account_crc = foo2.account_crc " +
-                        "where le.id_l = ? " +
-                        "  and le.id_d = ? " +
-                        "  and le.stash_crc is not null " +
-                        "  and le.price is not null ";
+    public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle) {
+        String query = "select le.price, le.id_price " +
+                "from league_entries as le " +
+                "join ( " +
+                "  select distinct account_crc from league_accounts " +
+                "  where updated > date_sub(now(), interval 1 hour) " +
+                ") as foo2 on le.account_crc = foo2.account_crc " +
+                "where le.id_l = ? " +
+                "  and le.id_d = ? " +
+                "  and le.stash_crc is not null " +
+                "  and le.price is not null ";
 
         try {
             if (database.connection.isClosed()) {
                 logger.error("Database connection was closed");
-                return null;
+                return false;
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 statement.setInt(1, idBundle.getLeagueId());
                 statement.setInt(2, idBundle.getItemId());
                 ResultSet resultSet = statement.executeQuery();
-
-                List<EntryBundle> entryBundles = new ArrayList<>();
 
                 while (resultSet.next()) {
                     EntryBundle eb = new EntryBundle(resultSet.getDouble(1));
@@ -138,175 +133,12 @@ public class Calc {
                     if (resultSet.wasNull()) eb.setCurrencyId(null);
                     entryBundles.add(eb);
                 }
-
-                return entryBundles;
             }
 
+            return true;
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
-            return null;
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-
-    public ResultSet getEntryStream() {
-        String query =  "select le.id_l, le.id_d, " +
-                        "  truncate(le.price * ifnull(foo3.val, 1.0), 8) as price " +
-                        "from league_entries as le " +
-                        "join ( " +
-                        "  select distinct id_l, id_d from league_entries " +
-                        "  where stash_crc is not null " +
-                        "    and price is not null " +
-                        "    and updated > date_sub(now(), interval 65 second) " +
-                        ") as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d " +
-                        "join ( " +
-                        "  select distinct account_crc from league_accounts " +
-                        "  where updated > date_sub(now(), interval 6 hour) " +
-                        ") as foo2 on le.account_crc = foo2.account_crc " +
-                        "left join ( " +
-                        "  select id_l, id_d, mean as val from league_items " +
-                        "  where mean > 0 " +
-                        ") as foo3 on le.id_l = foo3.id_l and le.id_price = foo3.id_d " +
-                        "left join ( " +
-                        "  select id from data_itemData where frame = 5 " +
-                        ") as foo4 on le.id_d = foo4.id " +
-                        "where le.stash_crc is not null " +
-                        "  and le.price is not null " +
-                        "  and !(foo4.id is not null && " +
-                        "    le.id_price is not null && " +
-                        "    le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1)) " +
-                        "having price > 0 and price < 96000 " +
-                        "order by le.id_l asc, le.id_d asc; ";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return null;
-            }
-
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                ArrayList<IdBundle> idBundles = new ArrayList<>();
-
-                while (resultSet.next()) {
-                    idBundles.add(new IdBundle(resultSet.getInt(1), resultSet.getInt(2)));
-                }
-
-                return idBundles;
-            }
-
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return null;
-        }
-    }
-
-
-*/
-
-
-    public ResultSet getEntryStream() {
-        String query =  "select le.id_l, le.id_d, " +
-                        "  truncate(le.price * ifnull(foo3.val, 1.0), 8) as price " +
-                        "from league_entries as le " +
-                        "join ( " +
-                        "  select distinct id_l, id_d from league_entries " +
-                        "  where stash_crc is not null " +
-                        "    and price is not null " +
-                        "    and updated > date_sub(now(), interval 65 second) " +
-                        ") as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d " +
-                        "join ( " +
-                        "  select distinct account_crc from league_accounts " +
-                        "  where updated > date_sub(now(), interval 6 hour) " +
-                        ") as foo2 on le.account_crc = foo2.account_crc " +
-                        "left join ( " +
-                        "  select id_l, id_d, mean as val from league_items " +
-                        "  where mean > 0 " +
-                        ") as foo3 on le.id_l = foo3.id_l and le.id_price = foo3.id_d " +
-                        "left join ( " +
-                        "  select id from data_itemData where frame = 5 " +
-                        ") as foo4 on le.id_d = foo4.id " +
-                        "where le.stash_crc is not null " +
-                        "  and le.price is not null " +
-                        "  and !(foo4.id is not null && " +
-                        "    le.id_price is not null && " +
-                        "    le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1)) " +
-                        "having price > 0 and price < 96000 " +
-                        "order by le.id_l asc, le.id_d asc; ";
-
-        /*
-        Here's the query somewhat explained. Might not match 1:1 due to fixes/changes.
-        Warning: not for the faint of heart.
-
-            -- Select leagueID, itemID and price from every valid entry.
-            -- When buyout note is in chaos, `foo3.val` is null. Otherwise
-            -- it's the mean chaos value of the currency used
-            select le.id_l, le.id_d,
-              truncate(le.price * ifnull(foo3.val, 1.0), 8) as price
-            from league_entries as le
-            -- get all items that have had entries added since last calculation cycle
-            join (
-              select distinct id_l, id_d from league_entries
-              where stash_crc is not null
-                and price is not null
-                and updated > date_sub(now(), interval 65 second)
-            ) as foo1 on le.id_l = foo1.id_l and le.id_d = foo1.id_d
-            -- get all accounts that have been active in trade recently
-            join (
-              select distinct account_crc from league_accounts
-              where updated > date_sub(now(), interval 6 hour)
-            ) as foo2 on le.account_crc = foo2.account_crc
-            -- get currency prices in chaos
-            left join (
-              select id_l, id_d, mean as val from league_items
-              where mean > 0
-            ) as foo3 on le.id_l = foo3.id_l and le.id_price = foo3.id_d
-            -- get all itemIDs that are currency
-            left join (
-              select id from data_itemData where frame = 5
-            ) as foo4 on le.id_d = foo4.id
-            -- if item is currently in a public stash tab
-            where le.stash_crc is not null
-              and le.price is not null
-            -- if (is currency) and (is not in chaos) and (is not in exalted), return FALSE,
-            -- otherwise return TRUE. This restrict currency price calculation to only use
-            -- entries listed in chaos to avoid circular dependencies. Eg exalted orbs are
-            -- listed for divines and divines are listed in exalted orbs, causing a circular
-            -- effect which messes up the prices.
-              and !(foo4.id is not null &&
-                le.id_price is not null &&
-                le.id_price != (select id from data_itemData where name = 'Exalted Orb' limit 1))
-            -- Hard-filter out any entries that have ridiculous prices after being converted
-            -- to chaos.
-            having price > 0 and price < 96000
-            order by le.id_l asc, le.id_d asc;
-         */
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return null;
-            }
-
-            // Return open connection
-            return database.connection.createStatement().executeQuery(query);
-
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return null;
+            return false;
         }
     }
 
