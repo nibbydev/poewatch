@@ -61,7 +61,7 @@ function get_item_data($pdo, $id) {
   $query = "SELECT 
     d.name, d.type, d.frame, d.icon, d.stack, 
     d.tier, d.lvl, d.quality, d.corrupted, 
-    d.links, d.ilvl, d.shaper, d.elder, 
+    d.links, d.ilvl, d.series, d.shaper, d.elder, 
     d.enchantMin, d.enchantMax, d.var AS variation,
     dc.name AS category, dg.name AS `group`
   FROM      data_itemData   AS d

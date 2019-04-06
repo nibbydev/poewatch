@@ -4,13 +4,15 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Modules.*;
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 public class Database {
     private static Logger logger = LoggerFactory.getLogger(Database.class);
-    public Config config;
-
     public History history = new History(this);
     public Account account = new Account(this);
     public Upload upload = new Upload(this);
@@ -20,8 +22,8 @@ public class Database {
     public Init init = new Init(this);
     public Calc calc = new Calc(this);
     public Setup setup = new Setup(this);
-
     public Connection connection;
+    private Config config;
 
     public Database(Config config) {
         this.config = config;

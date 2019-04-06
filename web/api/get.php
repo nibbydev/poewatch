@@ -83,6 +83,7 @@ function parse_data($stmt, $active) {
       'current'       => (int)   $row['current'],
       'accepted'      => (int)   $row['accepted'],
       'history'       =>         null,
+      'change'        =>         0.0,
 
       'base'          =>         null,
       'enchant'       =>         null,
@@ -132,8 +133,12 @@ function parse_data($stmt, $active) {
       } else {
         // Convert CSV to array
         $history = array_map('doubleval', array_reverse(explode(',', $row['history'])));
-
         array_push($history, $tmp['mean']);
+
+        // Calculate change %
+        if ($tmp['mean']) {
+          $tmp['change'] = round((1 - $history[0] / $tmp['mean']) * 100, 2);
+        }
 
         // Pad missing fields with null
         $tmp['history'] = array_pad($history, -7, null);
