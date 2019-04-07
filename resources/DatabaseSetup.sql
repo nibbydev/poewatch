@@ -78,7 +78,7 @@ CREATE TABLE data_statistics (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure data_statisticsTemp
+-- Table structure data_statistics_tmp
 --
 
 CREATE TABLE data_statistics_tmp (
@@ -141,7 +141,8 @@ CREATE TABLE data_itemData (
 CREATE TABLE league_items (
     id_l     SMALLINT       UNSIGNED NOT NULL,
     id_d     INT            UNSIGNED NOT NULL,
-    time     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    found    TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     mean     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     median   DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
     mode     DECIMAL(14,8)  UNSIGNED NOT NULL DEFAULT 0.0,
@@ -170,10 +171,10 @@ CREATE TABLE league_accounts (
     account_crc  INT            UNSIGNED PRIMARY KEY,
     updates      INT            UNSIGNED NOT NULL DEFAULT 1,
 
-    discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
-    updated      TIMESTAMP      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    found        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    INDEX updated (updated)
+    INDEX seen (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -188,8 +189,8 @@ CREATE TABLE league_entries (
     stash_crc    INT            UNSIGNED DEFAULT NULL,
     item_crc     INT            UNSIGNED NOT NULL,
 
-    discovered   TIMESTAMP      NOT NULL DEFAULT NOW(),
-    updated      TIMESTAMP      NOT NULL DEFAULT NOW(),
+    found        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
     stack        SMALLINT       UNSIGNED DEFAULT NULL,
@@ -203,9 +204,9 @@ CREATE TABLE league_entries (
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
 
     INDEX id_l_d (id_l, id_d),
-    INDEX discovered (discovered),
+    INDEX found (found),
     INDEX stash_crc (stash_crc),
-    INDEX updated (updated),
+    INDEX seen (seen),
     INDEX price (price)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

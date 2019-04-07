@@ -26,7 +26,7 @@ public class History {
     public boolean removeOldItemEntries() {
         String query =  "delete from league_entries " +
                         "where stash_crc is null " +
-                        "and updated < subdate(now(), interval 7 day); ";
+                        "and seen < subdate(now(), interval 7 day); ";
 
         return database.executeUpdateQueries(query);
     }
