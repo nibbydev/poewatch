@@ -51,7 +51,13 @@ public enum VariantEnum {
     negator_2s("Hale Negator", "2 sockets", "Has 2 Abyssal Sockets"),
 
     command_1s("Command of the Pit", "1 socket", "Has 1 Abyssal Socket"),
-    command_2s("Command of the Pit", "2 sockets", "Has 2 Abyssal Sockets");
+    command_2s("Command of the Pit", "2 sockets", "Has 2 Abyssal Sockets"),
+
+    prophecy_master_zana("A Master Seeks Help", "zana", "You will find Zana"),
+    prophecy_master_einar("A Master Seeks Help", "einar", "You will find Einar"),
+    prophecy_master_jun("A Master Seeks Help", "jun", "You will find Jun"),
+    prophecy_master_niko("A Master Seeks Help", "niko", "You will find Niko"),
+    prophecy_master_alva("A Master Seeks Help", "alva", "You will find Alva");
 
     private String itemName;
     private String variation;
@@ -69,6 +75,15 @@ public enum VariantEnum {
             // Check if the item name matches
             if (!item.name.equals(variation.itemName)) {
                 continue;
+            }
+
+            // Bit of spaghetti for prophecies
+            if (item.frameType == 8) {
+                if (item.apiItem.getProphecyText().contains(variation.itemMods[0])) {
+                    return variation;
+                } else {
+                    continue;
+                }
             }
 
             // Go though all the item's explicit modifiers and the current variant's mods
