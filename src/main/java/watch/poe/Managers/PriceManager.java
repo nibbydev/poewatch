@@ -104,6 +104,10 @@ public class PriceManager extends Thread {
         run = false;
         sleepPerIteration = false;
 
+        synchronized (queueMonitor) {
+            queueMonitor.notify();
+        }
+
         while (!readyToExit) try {
             Thread.sleep(50);
         } catch (InterruptedException ex) {

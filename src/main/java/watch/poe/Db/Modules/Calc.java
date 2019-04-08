@@ -36,7 +36,7 @@ public class Calc {
                 "from league_entries " +
                 "where stash_crc is not null " +
                 "  and price is not null " +
-                "  and discovered > date_sub(now(), interval 10 minute) ";
+                "  and found > date_sub(now(), interval 10 minute) ";
 
         try {
             if (database.connection.isClosed()) {
@@ -108,7 +108,7 @@ public class Calc {
                 "from league_entries as le " +
                 "join ( " +
                 "  select distinct account_crc from league_accounts " +
-                "  where updated > date_sub(now(), interval 1 hour) " +
+                "  where seen > date_sub(now(), interval 1 hour) " +
                 ") as foo2 on le.account_crc = foo2.account_crc " +
                 "where le.id_l = ? " +
                 "  and le.id_d = ? " +
@@ -171,7 +171,7 @@ public class Calc {
                 "left join ( " +
                 "  select id_l, id_d, count(*) as count " +
                 "  from league_entries " +
-                "  where discovered > date_sub(now(), interval 24 hour) " +
+                "  where found > date_sub(now(), interval 24 hour) " +
                 "  group by id_l, id_d " +
                 ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
                 "set foo.daily = ifnull(bar.count, 0) ";
@@ -189,7 +189,7 @@ public class Calc {
                 "left join ( " +
                 "  select id_l, id_d, count(*) as count " +
                 "  from league_entries " +
-                "  where discovered > date_sub(now(), interval 1 hour) " +
+                "  where found > date_sub(now(), interval 1 hour) " +
                 "  group by id_l, id_d " +
                 ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
                 "set foo.total = foo.total + ifnull(bar.count, 0) ";
@@ -209,7 +209,7 @@ public class Calc {
                 "  from league_entries as le " +
                 "  join ( " +
                 "    select distinct account_crc from league_accounts " +
-                "    where updated > date_sub(now(), interval 6 hour) " +
+                "    where seen > date_sub(now(), interval 6 hour) " +
                 "  ) as foo2 on le.account_crc = foo2.account_crc " +
                 "  where le.stash_crc is not null " +
                 "  group by le.id_l, le.id_d " +

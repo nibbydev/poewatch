@@ -159,6 +159,20 @@ alter table data_itemData add series tinyint(1) unsigned default null after tier
 update data_itemData set reindex = 1 where id_cat = 9;
 
 -- ---------------------------------------------------------------------------------------------------------------------
+-- Database migration 07.04.19: add seen timestamp, rename (discovered, updated)
+-- ---------------------------------------------------------------------------------------------------------------------
+
+alter table league_items change time found TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+alter table league_items add seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP after found;
+alter table data_itemData add seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP after found;
+
+alter table league_entries change discovered found TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+alter table league_entries change updated seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+alter table league_accounts change discovered found TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+alter table league_accounts change updated seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -170,7 +184,7 @@ join (
   order by data_itemData.id desc
 ) as tmp on tmp.name = did.name and tmp.type = did.type and tmp.frame = did.frame
 where did.var is null
-order by id desc
+order by id desc;
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Development
@@ -183,7 +197,7 @@ order by id desc
 -- get ids that have been added in the past cycle
 select distinct id_l, id_d
 from league_entries
-where time > date_sub(now(), interval 60 second)
+where time > date_sub(now(), interval 60 second);
 
 -- get trimming medians for all items
 select id_l, id_d,
@@ -192,7 +206,7 @@ select id_l, id_d,
   median(price) * 1.2 as maxMed
 from league_entries
 group by id_l, id_d
-having median > 0
+having median > 0;
 
 -- get trimming medians of items that have new entries in the past cycle
 select e1.id_l, e1.id_d,
@@ -207,7 +221,7 @@ join (
   where time > date_sub(now(), interval 60 second)
 ) as e2 on e2.id_l = e1.id_l and e2.id_d = e1.id_d
 group by e1.id_l, e1.id_d
-having median > 0
+having median > 0;
 
 -- update outlier state for items that have new entries in the past cycle
 update league_entries as e4
@@ -226,4 +240,4 @@ join (
   group by e1.id_l, e1.id_d
   having median(e1.price) > 0
 ) as e3 on e4.id_l = e3.id_l and e4.id_d = e3.id_d
-set e4.outlier = IF(e4.price between e3.minMed and e3.maxMed, 0, 1)
+set e4.outlier = IF(e4.price between e3.minMed and e3.maxMed, 0, 1);

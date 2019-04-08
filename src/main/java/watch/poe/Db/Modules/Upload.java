@@ -31,8 +31,8 @@ public class Upload {
         String query = "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
-                "  updates = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updates, updates + 1)," +
-                "  updated = IF(price = VALUES(price) | stack = VALUES(stack) | id_price = VALUES(id_price), updated, now())," +
+                "  updates = IF(price = VALUES(price) & stack = VALUES(stack) & id_price = VALUES(id_price), updates, updates + 1)," +
+                "  seen    = IF(price = VALUES(price) & stack = VALUES(stack) & id_price = VALUES(id_price), seen, now())," +
                 "  stash_crc = VALUES(stash_crc), " +
                 "  stack = VALUES(stack), " +
                 "  price = VALUES(price), " +
@@ -130,8 +130,7 @@ public class Upload {
         String query = "INSERT INTO league_accounts (account_crc) " +
                 "VALUES (?) " +
                 "ON DUPLICATE KEY UPDATE " +
-                "  updates = updates + 1, " +
-                "  updated = now(); ";
+                "  updates = updates + 1 ";
 
         try {
             if (database.connection.isClosed()) {

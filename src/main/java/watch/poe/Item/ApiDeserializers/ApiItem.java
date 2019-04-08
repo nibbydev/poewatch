@@ -14,6 +14,7 @@ public class ApiItem {
     private Boolean corrupted, shaper, elder, synthesised;
     private String icon, league, id, name, typeLine, note;
     private Integer stackSize;
+    private String prophecyText;
 
     @SerializedName(value = "raceReward", alternate = {"seaRaceReward", "cisRaceReward", "thRaceReward", "RaceReward"})
     private Object raceReward;
@@ -107,5 +108,9 @@ public class ApiItem {
 
     public Boolean isRaceReward() {
         return raceReward == null ? null : true;
+    }
+
+    public String getProphecyText() {
+        return prophecyText;
     }
 }
