@@ -54,7 +54,7 @@ public enum VariantEnum {
     command_2s("Command of the Pit", "2 sockets", "Has 2 Abyssal Sockets"),
 
     prophecy_master_zana("A Master Seeks Help", "zana", "You will find Zana"),
-    prophecy_master_einar("A Master Seeks Help", "einar", "You will find Einar"),
+    prophecy_master_einar("A Master Seeks Help", "einhar", "You will find Einhar"),
     prophecy_master_jun("A Master Seeks Help", "jun", "You will find Jun"),
     prophecy_master_niko("A Master Seeks Help", "niko", "You will find Niko"),
     prophecy_master_alva("A Master Seeks Help", "alva", "You will find Alva");
