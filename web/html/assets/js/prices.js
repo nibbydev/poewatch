@@ -546,8 +546,8 @@ class DetailsModal {
   }
 
   onRowClick(event) {
-    var target = $(event.currentTarget);
-    var id = parseInt(target.attr('value'));
+    let target = $(event.currentTarget);
+    let id = parseInt(target.attr('value'));
 
     // If user clicked on a different row
     if (isNaN(id)) return;
@@ -612,19 +612,19 @@ class DetailsModal {
 
   updateContent() {
     // Format league data
-    var currentHistory = this.getPayload();
-    var currentFrmtHistory = this.formatHistory(currentHistory);
+    let currentHistory = this.getPayload();
+    let currentFormatHistory = this.formatHistory(currentHistory);
 
-    var data = {
-      labels: currentFrmtHistory.keys,
+    let data = {
+      labels: currentFormatHistory.keys,
       series: []
     };
 
     switch (this.current.dataset) {
-      case 1: data.series[0] = currentFrmtHistory.vals.mean;   break;
-      case 2: data.series[0] = currentFrmtHistory.vals.median; break;
-      case 3: data.series[0] = currentFrmtHistory.vals.mode;   break;
-      case 4: data.series[0] = currentFrmtHistory.vals.daily;  break;
+      case 1: data.series[0] = currentFormatHistory.vals.mean;   break;
+      case 2: data.series[0] = currentFormatHistory.vals.median; break;
+      case 3: data.series[0] = currentFormatHistory.vals.mode;   break;
+      case 4: data.series[0] = currentFormatHistory.vals.daily;  break;
     }
 
     this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
@@ -719,7 +719,7 @@ class DetailsModal {
   }
 
   formatIcon(item) {
-    var icon = item.icon.replace("http://", "https://");
+    let icon = item.icon.replace("http://", "https://");
   
     if (item.base) {
       if (item.base.shaper) {
@@ -879,14 +879,12 @@ class DetailsModal {
   
     // Bloat using 'null's the amount of days that should not have a tooltip
     if (startEmptyPadding) {
-      let date = new Date(startDate);
-
       for (let i = 0; i < startEmptyPadding; i++) {
-        vals.mean.push(0);
-        vals.median.push(0);
-        vals.mode.push(0);
-        vals.daily.push(0);
-        keys.push(this.formatDate(date.addDays(i)));
+        vals.mean.push(null);
+        vals.median.push(null);
+        vals.mode.push(null);
+        vals.daily.push(null);
+        keys.push("");
       }
     }
     

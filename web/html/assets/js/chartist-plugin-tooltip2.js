@@ -142,6 +142,7 @@
                     var pointElements = chart.container.querySelectorAll('.' + chart.options.classNames.point + '[x1="' + closestPointOnX + '"]');
                     var pointElement;
 
+
                     if (pointElements.length <= 1) {
                         pointElement = pointElements[0];
                     } else {
@@ -202,11 +203,10 @@
                         return;
                     }
 
+                    // Since I use nulls to populate the array and this plugin does not account for
+                    // nulls, manually find the first index of the element that is not null
+                    valueIndex += seriesData.findIndex(t => t !== null);
                     value = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
-
-                    if (!value) {
-                        return;
-                    }
 
                     if (options.valueTransformFunction) {
                         value = options.valueTransformFunction.call(chart, value);
