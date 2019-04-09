@@ -128,7 +128,8 @@
                   <label class="btn btn-outline-success btn-md p-0 px-1 active"><input type="radio" name="dataset" value="1">Mean</label>
                   <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="2">Median</label>
                   <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="3">Mode</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="4">Daily</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="4">Listed daily</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="5">On sale</label>
                 </div>
               </div>
             </div>

@@ -625,6 +625,7 @@ class DetailsModal {
       case 2: data.series[0] = currentFormatHistory.vals.median; break;
       case 3: data.series[0] = currentFormatHistory.vals.mode;   break;
       case 4: data.series[0] = currentFormatHistory.vals.daily;  break;
+      case 5: data.series[0] = currentFormatHistory.vals.current;break;
     }
 
     this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
@@ -635,6 +636,7 @@ class DetailsModal {
     $("#modal-mode",     this.modal).html( formatNum(currentHistory.mode)   );
     $("#modal-total",    this.modal).html( formatNum(currentHistory.total)  );
     $("#modal-daily",    this.modal).html( formatNum(currentHistory.daily)  );
+    $("#modal-current",  this.modal).html( formatNum(currentHistory.current)  );
     $("#modal-exalted",  this.modal).html( formatNum(currentHistory.exalted));
   }
 
@@ -801,7 +803,8 @@ class DetailsModal {
       mean:   [],
       median: [],
       mode:   [],
-      daily:  []
+      daily:  [],
+      current: [],
     };
   
     const msInDay = 86400000;
@@ -884,6 +887,7 @@ class DetailsModal {
         vals.median.push(null);
         vals.mode.push(null);
         vals.daily.push(null);
+        vals.current.push(null);
         keys.push("");
       }
     }
@@ -897,6 +901,7 @@ class DetailsModal {
         vals.median.push(0);
         vals.mode.push(0);
         vals.daily.push(0);
+        vals.current.push(0);
         keys.push(this.formatDate(date.addDays(i)));
       }
     }
@@ -910,6 +915,7 @@ class DetailsModal {
       vals.median.push(Math.round(entry.median * 100) / 100);
       vals.mode.push(Math.round(entry.mode * 100) / 100);
       vals.daily.push(entry.daily);
+      vals.current.push(entry.current);
       keys.push(this.formatDate(entry.time));
   
       // Check if there are any missing entries between the current one and the next one
@@ -930,6 +936,7 @@ class DetailsModal {
           vals.median.push(0);
           vals.mode.push(0);
           vals.daily.push(0);
+          vals.current.push(0);
           keys.push(this.formatDate(currentDate.addDays(i + 1)));
         }
       }
@@ -945,6 +952,7 @@ class DetailsModal {
         vals.median.push(0);
         vals.mode.push(0);
         vals.daily.push(0);
+        vals.current.push(0);
         keys.push(this.formatDate(date.addDays(i)));
       }
     }
@@ -955,6 +963,7 @@ class DetailsModal {
       vals.median.push(Math.round(leaguePayload.median * 100) / 100);
       vals.mode.push(Math.round(leaguePayload.mode * 100) / 100);
       vals.daily.push(leaguePayload.daily);
+      vals.current.push(leaguePayload.current);
       keys.push("Now");
     }
   
