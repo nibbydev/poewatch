@@ -162,6 +162,8 @@ class ItemRow {
       <td class='d-none d-md-flex'>{{spark}}</td>
     `.trim();
 
+    if (!this.item.history) return template.replace("{{spark}}", "");
+
     // Count the number of history elements that are not null
     let count = 0;
     for (let i = 0; i < 7; i++) {
@@ -230,18 +232,8 @@ class ItemRow {
       </span>
     </td>
     `.trim();
-  
-    // Find first price from the left that is not null
-    let lastPrice = null;
-    for (let i = 0; i < 7; i++) {
-      if (this.item.history[i] !== null) {
-        lastPrice = this.item.history[i];
-        break;
-      }
-    }
-   
-    // Calculate change %
-    let change = Math.round(100 - lastPrice / this.item.mean * 100);
+
+    let change = this.item.change;
 
     // Limit it
     if (change > 999) {
