@@ -233,7 +233,7 @@ class ItemRow {
     </td>
     `.trim();
 
-    let change = this.item.change;
+    let change = Math.round(this.item.change);
 
     // Limit it
     if (change > 999) {
