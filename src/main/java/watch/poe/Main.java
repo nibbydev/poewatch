@@ -79,7 +79,7 @@ public class Main {
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
             am = new AccountManager(db);
-            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, am, ip, pm);
+            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, am, ip);
 
             // Get all distinct stash ids that are in the db
             success = db.init.getStashIds(ip.getStashCrcSet());

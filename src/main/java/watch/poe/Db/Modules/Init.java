@@ -9,6 +9,7 @@ import poe.Managers.League.League;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.*;
 
 public class Init {
@@ -177,6 +178,12 @@ public class Init {
         return null;
     }
 
+    /**
+     * Gets a list of stash IDs from the database that have been active lately
+     *
+     * @param set Empty set that will be filled with active stash ids
+     * @return True on success
+     */
     public boolean getStashIds(Set<Long> set) {
         String query = "SELECT DISTINCT stash_crc FROM league_entries WHERE stash_crc IS NOT NULL; ";
 
@@ -202,5 +209,36 @@ public class Init {
             logger.error(ex.getMessage(), ex);
             return false;
         }
+    }
+
+    /**
+     * Returns the time of the last price calculation
+     *
+     * @return Expected Timestamp or null
+     */
+    public Timestamp getLastItemTime() {
+        String query =  "SELECT seen " +
+                        "FROM league_items " +
+                        "order by seen DESC " +
+                        "limit 1";
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return null;
+            }
+
+            try (Statement statement = database.connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
+
+                if (resultSet.next()) {
+                    return resultSet.getTimestamp(1);
+                }
+            }
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+
+        return null;
     }
 }

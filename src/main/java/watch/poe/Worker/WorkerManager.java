@@ -9,7 +9,6 @@ import poe.Item.ApiDeserializers.ChangeID;
 import poe.Item.Parser.ItemParser;
 import poe.Managers.*;
 import poe.Managers.Interval.TimeFrame;
-import poe.Managers.Stat.StatType;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -24,7 +23,6 @@ public class WorkerManager extends Thread {
     private final Config config;
     private final Database database;
     private final LeagueManager leagueManager;
-    private final PriceManager priceManager;
     private final AccountManager accountManager;
     private final StatisticsManager statisticsManager;
     private final ItemParser itemParser;
@@ -37,12 +35,11 @@ public class WorkerManager extends Thread {
     private volatile boolean readyToExit = false;
     private String nextChangeID;
 
-    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, AccountManager am, ItemParser ip, PriceManager pm) {
+    public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, AccountManager am, ItemParser ip) {
         this.statisticsManager = sm;
         this.accountManager = am;
         this.leagueManager = lm;
         this.intervalManager = se;
-        this.priceManager = pm;
         this.itemParser = ip;
         this.database = db;
         this.config = cnf;
@@ -101,7 +98,6 @@ public class WorkerManager extends Thread {
             database.history.removeOldItemEntries();
         }
 
-        priceManager.startCycle();
         database.calc.calcExalted();
 
         if (intervalManager.isBool(TimeFrame.M_60)) {
