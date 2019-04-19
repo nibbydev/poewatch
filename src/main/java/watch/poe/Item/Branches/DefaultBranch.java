@@ -267,7 +267,7 @@ public class DefaultBranch extends Item {
             quality = 0;
         } else if (quality > 17 && quality < 23) {
             quality = 20;
-        } else if (quality != 23){
+        } else if (quality != 23) {
             discard = true;
             return;
         }
@@ -295,6 +295,12 @@ public class DefaultBranch extends Item {
 
         if (apiItem.getCorrupted() != null) {
             corrupted = apiItem.getCorrupted();
+        }
+
+        // Api bug?
+        if (!corrupted && (level > 20 || quality > 20)) {
+            discard = true;
+            return;
         }
 
         gemLevel = level;
