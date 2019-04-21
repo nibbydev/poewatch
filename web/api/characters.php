@@ -1,30 +1,36 @@
 <?php
 function error($code, $msg) {
   http_response_code($code);
-  die( json_encode( array("error" => $msg) ) );
+  die(json_encode(array("error" => $msg)));
 }
 
 function check_errors() {
-  if ( !isset($_GET["account"]) )    {
+  if (!isset($_GET["account"]) || !$_GET["account"]) {
     error(400, "Missing account");
+  }
+
+  if (strlen($_GET["account"]) > 32) {
+    error(400, "Parameter too long");
+  }
+
+  if (strlen($_GET["account"]) < 3) {
+    error(400, "Parameter too short");
   }
 }
 
-function get_characters_by_account($pdo, $name) { 
+function get_characters_by_account($pdo, $name) {
   $query = "
   SELECT 
-    characters.name AS name, 
+    ac.name AS `character`, 
     l.name AS league, 
-    DATE_FORMAT(relations.found, '%Y-%m-%dT%TZ') AS found,
-    DATE_FORMAT(relations.seen, '%Y-%m-%dT%TZ') AS seen
-  FROM account_relations AS relations
-  JOIN account_characters AS characters 
-    ON relations.id_c = characters.id
-  JOIN data_leagues AS l 
-    ON relations.id_l = l.id
-  WHERE id_a = (SELECT id FROM account_accounts WHERE name = ? LIMIT 1)
-  ORDER BY seen DESC
-  LIMIT 128
+    DATE_FORMAT(ac.found, '%Y-%m-%dT%TZ') AS found,
+    DATE_FORMAT(ac.seen, '%Y-%m-%dT%TZ') AS seen
+  from account_characters as ac
+  join data_leagues as l 
+    on ac.id_l = l.id
+  where id_a = (select id from account_accounts where name = ? limit 1)
+  order by seen desc
+  limit 128
   ";
 
   $stmt = $pdo->prepare($query);
@@ -37,16 +43,7 @@ function parse_data($stmt) {
   $payload = array();
 
   while ($row = $stmt->fetch()) {
-    // Form a temporary row array
-    $tmp = array(
-      'character' => $row['name'],
-      'found'     => $row['found'],
-      'seen'      => $row['seen'],
-      'league'    => $row['league']
-    );
-
-    // Append row to payload
-    $payload[] = $tmp;
+    $payload[] = $row;
   }
 
   return $payload;
@@ -59,10 +56,10 @@ header("Content-Type: application/json");
 check_errors();
 
 // Connect to database
-include_once ( "../details/pdo.php" );
+include_once("../details/pdo.php");
 
 $stmt = get_characters_by_account($pdo, $_GET["account"]);
 $data = parse_data($stmt);
 
 // Display generated data
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);
+echo json_encode($data);

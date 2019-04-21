@@ -14,7 +14,6 @@
     
     "totalAccs" => 0,
     "totalChars" => 0,
-    "totalRels" => 0,
     
     "errorMsg" => null,
     "searchResults" => array()

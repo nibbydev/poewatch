@@ -3,174 +3,24 @@
 --
 
 -- ---------------------------------------------------------------------------------------------------------------------
--- Database migration: create challenge flag in data_leagues
+-- Database migration: simplify account tables
 -- ---------------------------------------------------------------------------------------------------------------------
 
-alter table data_leagues add challenge tinyint(1) unsigned not null default 0 after hardcore;
-update data_leagues set challenge = 1 where id > 2 and event = 0;
+alter table account_characters add column id_a BIGINT UNSIGNED NOT NULL after id;
+alter table account_characters add column id_l SMALLINT UNSIGNED NOT NULL after id;
 
--- ---------------------------------------------------------------------------------------------------------------------
--- Database migration: move over to CRC32 hashes
--- ---------------------------------------------------------------------------------------------------------------------
+update account_characters as ac
+  join account_relations as ar
+  on ac.id = ar.id_c
+set ac.id_l = ar.id_l, ac.id_a = ar.id_a;
 
--- Add crc columns
-alter table league_entries add accCrc int unsigned not null after id_d;
-alter table league_entries add itmCrc int unsigned not null after accCrc;
+delete from account_characters where id_a = 0 or id_l = 0;
 
--- Add values to crc columns
-update league_entries set accCrc = CRC32(account);
-update league_entries set itmCrc = CRC32(id_item) where id_item != "";
+ALTER TABLE account_characters ADD CONSTRAINT fk_id_l FOREIGN KEY (id_l) REFERENCES data_leagues(id) ON DELETE CASCADE;
+ALTER TABLE account_characters ADD CONSTRAINT fk_id_a FOREIGN KEY (id_a) REFERENCES account_accounts(id) ON DELETE CASCADE;
 
--- Recreate primary key
-alter table league_entries drop primary key;
-alter table league_entries add primary key(id_l, id_d, accCrc, itmCrc);
-
--- Drop redundant columns
-alter table league_entries drop column account;
-alter table league_entries drop column id_item;
-
--- ---------------------------------------------------------------------------------------------------------------------
--- Database migration 27.03.19: add shaper/elder/enchantMin/enchantMax fields
--- ---------------------------------------------------------------------------------------------------------------------
-
--- create new data fields
-alter table data_itemData add shaper bit(1) default null after tier;
-alter table data_itemData add elder bit(1) default null after shaper;
-alter table data_itemData add enchantMin decimal(4,1) default null after elder;
-alter table data_itemData add enchantMax decimal(4,1) default null after enchantMin;
-
--- move shaper/elder to new fields
-update data_itemData set shaper = 1, var = null where var = "shaper";
-update data_itemData set elder = 1, var = null where var = "elder";
-
--- move enchant values with decimal points to new fields
-update data_itemData set enchantMin = var, enchantMax = var, var = null where id_cat = 5 and var like "%.%";
-
--- move enchant values with negative values to new fields
-update data_itemData set enchantMin = var, enchantMax = var, var = null where id_cat = 5 and var like "-%";
-
--- move enchant values with ranges to new fields
-update data_itemData set
-  enchantMin = substring_index(var, '-', 1),
-  enchantMax = substring_index(var, '-', -1),
-  var = null
-where id_cat = 5 and var like "%-%";
-
--- move enchant values that are just regular numbers to new fields
-update data_itemData set enchantMin = var, enchantMax = var, var = null where id_cat = 5 and var is not null;
-
--- recreate the unique constraint
-alter table data_itemData drop index idx_unique;
-alter table data_itemData add constraint idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var, shaper, elder, enchantMin, enchantMax);
-
--- ---------------------------------------------------------------------------------------------------------------------
--- Database migration 27.03.19: redirect group ids
--- ---------------------------------------------------------------------------------------------------------------------
-
-alter table data_itemData drop foreign key data_itemData_ibfk_2;
-alter table data_groups drop foreign key data_groups_ibfk_1;
-alter table data_groups drop column id_cat;
-truncate table data_groups;
-update data_itemData set id_grp = id_grp + 100;
-
--- enchantments
-update data_itemData set id_grp = 4 where id_grp = 118;
-update data_itemData set id_grp = 6 where id_grp = 119;
-update data_itemData set id_grp = 7 where id_grp = 120;
-
--- flask
-update data_itemData set id_grp = 18 where id_grp = 121;
-
--- gem
-update data_itemData set id_grp = 19 where id_grp = 122;
-update data_itemData set id_grp = 20 where id_grp = 123;
-update data_itemData set id_grp = 21 where id_grp = 124;
-
--- jewel
-update data_itemData set id_grp = 22 where id_grp = 125;
-
--- map
-update data_itemData set id_grp = 23 where id_grp = 126;
-update data_itemData set id_grp = 24 where id_grp = 127;
-update data_itemData set id_grp = 25 where id_grp = 128;
-update data_itemData set id_grp = 26 where id_grp = 165;
-
--- prophecy
-update data_itemData set id_grp = 27 where id_grp = 129;
-
--- weapon
-update data_itemData set id_grp = 28 where id_grp = 130;
-update data_itemData set id_grp = 29 where id_grp = 131;
-update data_itemData set id_grp = 30 where id_grp = 132;
-update data_itemData set id_grp = 31 where id_grp = 133;
-update data_itemData set id_grp = 32 where id_grp = 134;
-update data_itemData set id_grp = 33 where id_grp = 135;
-update data_itemData set id_grp = 34 where id_grp = 136;
-update data_itemData set id_grp = 35 where id_grp = 137;
-update data_itemData set id_grp = 36 where id_grp = 138;
-update data_itemData set id_grp = 37 where id_grp = 139;
-update data_itemData set id_grp = 38 where id_grp = 140;
-update data_itemData set id_grp = 39 where id_grp = 141;
-update data_itemData set id_grp = 40 where id_grp = 142;
-
--- bases
-update data_itemData set id_grp = 3 where id_grp = 143;
-update data_itemData set id_grp = 2 where id_grp = 144;
-update data_itemData set id_grp = 1 where id_grp = 145;
-update data_itemData set id_grp = 7 where id_grp = 146;
-update data_itemData set id_grp = 5 where id_grp = 147;
-update data_itemData set id_grp = 6 where id_grp = 148;
-update data_itemData set id_grp = 4 where id_grp = 149;
-update data_itemData set id_grp = 32 where id_grp = 150;
-update data_itemData set id_grp = 35 where id_grp = 151;
-update data_itemData set id_grp = 28 where id_grp = 152;
-update data_itemData set id_grp = 40 where id_grp = 153;
-update data_itemData set id_grp = 33 where id_grp = 154;
-update data_itemData set id_grp = 29 where id_grp = 155;
-update data_itemData set id_grp = 9 where id_grp = 156;
-update data_itemData set id_grp = 30 where id_grp = 157;
-update data_itemData set id_grp = 39 where id_grp = 158;
-update data_itemData set id_grp = 36 where id_grp = 159;
-update data_itemData set id_grp = 31 where id_grp = 160;
-update data_itemData set id_grp = 8 where id_grp = 161;
-update data_itemData set id_grp = 37 where id_grp = 162;
-update data_itemData set id_grp = 38 where id_grp = 163;
-update data_itemData set id_grp = 22 where id_grp = 164;
-update data_itemData set id_grp = 34 where id_grp = 167;
-
--- net
-update data_itemData set id_grp = 17 where id_grp = 117;
-
--- leaguestone
-delete from data_itemData where id_grp = 166;
-
--- the rest
-update data_itemData set id_grp = id_grp - 100
-where id_grp > 100;
-
--- recreate foreign key
-ALTER TABLE data_itemData ADD CONSTRAINT data_itemData_ibfk_2 FOREIGN KEY (id_grp) REFERENCES data_groups(id) ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------------------------------------------------
--- Database migration 29.03.19: add map series field
--- ---------------------------------------------------------------------------------------------------------------------
-
-alter table data_itemData add series tinyint(1) unsigned default null after tier;
-update data_itemData set reindex = 1 where id_cat = 9;
-
--- ---------------------------------------------------------------------------------------------------------------------
--- Database migration 07.04.19: add seen timestamp, rename (discovered, updated)
--- ---------------------------------------------------------------------------------------------------------------------
-
-alter table league_items change time found TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
-alter table league_items add seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP after found;
-alter table data_itemData add seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP after found;
-
-alter table league_entries change discovered found TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
-alter table league_entries change updated seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-
-alter table league_accounts change discovered found TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
-alter table league_accounts change updated seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+drop table account_relations;
+drop table account_history;
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Utility

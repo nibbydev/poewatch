@@ -5,11 +5,10 @@ import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
+import poe.Item.Item;
 import poe.Item.Parser.ItemParser;
 import poe.Item.Parser.Price;
-import poe.Item.Item;
 import poe.Managers.*;
-import poe.Managers.IntervalManager;
 import poe.Managers.Stat.StatType;
 import poe.Worker.WorkerManager;
 
@@ -22,7 +21,6 @@ import java.util.Arrays;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static StatisticsManager sm;
-    private static AccountManager am;
     private static WorkerManager wm;
     private static PriceManager pm;
     private static Database db;
@@ -78,8 +76,7 @@ public class Main {
             Price.setRelationManager(rm);
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
-            am = new AccountManager(db);
-            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, am, ip, pm);
+            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, ip);
 
             // Get all distinct stash ids that are in the db
             success = db.init.getStashIds(ip.getStashCrcSet());
@@ -93,14 +90,12 @@ public class Main {
             if (!success) return;
 
             // Start controllers
-            am.start();
             wm.start();
             pm.start();
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
-            if (am != null) am.stopController();
             if (wm != null) wm.stopController();
             if (pm != null) pm.stopController();
 
@@ -200,9 +195,6 @@ public class Main {
                     case "about":
                         commandAbout();
                         break;
-                    case "acc":
-                        commandAcc(userInput);
-                        break;
                     default:
                         logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]));
                         break;
@@ -251,23 +243,9 @@ public class Main {
      * Prints about page
      */
     private static void commandAbout() {
-        String about = "PoeWatch (http://poe.watch)\n"
+        String about = "PoeWatch (https://poe.watch)\n"
                 + "Made by: Siegrest\n"
                 + "Licenced under AGPL-3.0, 2018\n";
         System.out.println(about);
-    }
-
-    private static void commandAcc(String[] userInput) {
-        switch (userInput[1]) {
-            case "run":
-                logger.info("Starting account matching");
-                am.checkAccountNameChanges();
-                logger.info("Account matching finished");
-                break;
-
-            default:
-                logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[1]));
-                break;
-        }
     }
 }

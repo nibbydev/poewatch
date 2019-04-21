@@ -7,10 +7,7 @@ import poe.Managers.Price.Bundles.EntryBundle;
 import poe.Managers.Price.Bundles.IdBundle;
 import poe.Managers.Price.Bundles.PriceBundle;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,16 +24,16 @@ public class Calc {
      *
      * @return True on success
      */
-    public boolean getNewItemIdBundles(List<IdBundle> idBundles) {
+    public boolean getNewIdBundles(List<IdBundle> idBundles, Timestamp since) {
         if (idBundles == null || !idBundles.isEmpty()) {
-            throw new IllegalArgumentException();
+            throw new RuntimeException("Invalid list provided");
         }
 
-        String query = "select distinct id_l, id_d " +
-                "from league_entries " +
-                "where stash_crc is not null " +
-                "  and price is not null " +
-                "  and found > date_sub(now(), interval 10 minute) ";
+        String query =  "select distinct id_l, id_d " +
+                        "from league_entries " +
+                        "where stash_crc is not null " +
+                        "  and price is not null " +
+                        "  and seen > ? ";
 
         try {
             if (database.connection.isClosed()) {
@@ -44,8 +41,9 @@ public class Calc {
                 return false;
             }
 
-            try (Statement statement = database.connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                statement.setTimestamp(1, since);
+                ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
                     idBundles.add(new IdBundle(resultSet.getInt(1), resultSet.getInt(2)));
@@ -58,6 +56,7 @@ public class Calc {
             return false;
         }
     }
+
 
     /**
      * Queries currency rates from the database

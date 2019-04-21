@@ -67,7 +67,7 @@
       array(
         "href" => "https://api.poe.watch/get?league=Standard&category=flask",
         "name" => "get",
-        "desc" => "Returns price and item data for specified league and category. Items are listed in decreasing order from most expensive to least expensive. Updated every minute. Capitalization does not matter for request fields.",
+        "desc" => "Returns price and item data for specified league and category. Items are listed in decreasing order from most expensive to least expensive. Updated every 10 minutes. Capitalization does not matter for request fields.",
         "params" => array(
           array(
             "param" => "league",
