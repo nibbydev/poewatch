@@ -42,23 +42,26 @@ function GetTotalCounts($pdo) {
   FROM    information_schema.TABLES 
   WHERE   table_schema = 'pw'
     AND  (table_name = 'account_characters'
-    OR    table_name = 'account_accounts'
-    OR    table_name = 'account_relations')
+    OR    table_name = 'account_accounts')
   ";
 
   $stmt = $pdo->query($query);
   
   while ($row = $stmt->fetch()) {
     switch ($row['TABLE_NAME']) {
-      case 'account_characters': $PAGEDATA["page"]["totalChars"] = $row["TABLE_ROWS"]; break;
-      case 'account_accounts': $PAGEDATA["page"]["totalAccs"] = $row["TABLE_ROWS"]; break;
-      case 'account_relations': $PAGEDATA["page"]["totalRels"] = $row["TABLE_ROWS"]; break;
-      default:  break;
+      case 'account_characters':
+        $PAGEDATA["page"]["totalChars"] = $row["TABLE_ROWS"];
+        break;
+
+      case 'account_accounts':
+        $PAGEDATA["page"]["totalAccs"] = $row["TABLE_ROWS"];
+        break;
+
+      default:
+        break;
     }
   }
 }
-
-
 
 
 //------------------------------------------------------------------------------------------------------------
@@ -92,22 +95,21 @@ function CharacterSearch($pdo) {
   global $PAGEDATA;
 
   $query = "
-    SELECT   
-      a.name AS account,
-      c.name AS `character`,
-      l.display AS league,
-      l.active AS active,
-      r.seen
-    FROM (
-      SELECT *
-      FROM account_accounts 
-      WHERE name LIKE ? ESCAPE '=' 
-    ) AS a
-    JOIN     account_relations  AS r ON r.id_a = a.id
-    JOIN     account_characters AS c ON r.id_c = c.id
-    JOIN     data_leagues       AS l ON r.id_l = l.id
-    ORDER BY r.seen DESC, c.name DESC
-    LIMIT 128
+    select   
+      a.name as account,
+      c.name as `character`,
+      l.display as league,
+      l.active as active,
+      c.seen
+    from (
+      select *
+      from account_accounts 
+      where name like ? escape '=' 
+    ) as a
+    join     account_characters as c on c.id_a = a.id
+    join     data_leagues       as l on c.id_l = l.id
+    order by c.seen desc, c.name desc
+    limit 128
   ";
 
   $stmt = $pdo->prepare($query);
@@ -123,21 +125,21 @@ function AccountSearch($pdo) {
   global $PAGEDATA;
 
   $query = "
-    SELECT   
-      a.name AS account,
-      c.name AS `character`,
-      l.display AS league,
-      l.active AS active,
-      r.seen
-    FROM (
-      SELECT *
-      FROM   account_characters 
-      WHERE  name LIKE ? ESCAPE '='
-    ) AS c
-    JOIN     account_relations  AS r ON r.id_c = c.id
-    JOIN     account_accounts   AS a ON r.id_a = a.id
-    JOIN     data_leagues       AS l ON r.id_l = l.id
-    ORDER BY r.seen DESC, c.name DESC
+    select   
+      a.name as account,
+      c.name as `character`,
+      l.display as league,
+      l.active as active,
+      c.seen
+    from (
+      select *
+      from account_characters 
+      where name like ? escape '=' 
+    ) as c
+    join     account_accounts as a on c.id_a = a.id
+    join     data_leagues     as l on c.id_l = l.id
+    order by c.seen desc, c.name desc
+    limit 128
   ";
 
   $stmt = $pdo->prepare($query);

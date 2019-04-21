@@ -14,7 +14,6 @@ import java.util.List;
 public class Database {
     private static Logger logger = LoggerFactory.getLogger(Database.class);
     public History history = new History(this);
-    public Account account = new Account(this);
     public Upload upload = new Upload(this);
     public Index index = new Index(this);
     public Stats stats = new Stats(this);

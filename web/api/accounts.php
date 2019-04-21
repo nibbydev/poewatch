@@ -1,52 +1,39 @@
 <?php
 function error($code, $msg) {
   http_response_code($code);
-  die( json_encode( array("error" => $msg) ) );
+  die(json_encode(array("error" => $msg)));
 }
 
 function check_errors() {
-  if ( !isset($_GET["character"]) )    {
-    error(400, "Missing character");
+  if (!isset($_GET["character"]) || !$_GET["character"]) {
+    error(400, "Missing account");
+  }
+
+  if (strlen($_GET["character"]) > 32) {
+    error(400, "Parameter too long");
+  }
+
+  if (strlen($_GET["character"]) < 3) {
+    error(400, "Parameter too short");
   }
 }
 
 function get_accounts_by_character($pdo, $name) { 
   $query = "
-  SELECT 
-    accounts.name AS name, 
-    l.name AS league, 
-    DATE_FORMAT(relations.found, '%Y-%m-%dT%TZ') AS found,
-    DATE_FORMAT(relations.seen, '%Y-%m-%dT%TZ') AS seen
-  FROM account_relations AS relations
-  JOIN account_accounts AS accounts 
-    ON relations.id_a = accounts.id
-  JOIN data_leagues AS l 
-    ON relations.id_l = l.id
-  WHERE id_c = (SELECT id FROM account_characters WHERE name = ? LIMIT 1)
-  ORDER BY seen DESC
-  LIMIT 128
+  select name, 
+    DATE_FORMAT(found, '%Y-%m-%dT%TZ') AS found,
+    DATE_FORMAT(seen, '%Y-%m-%dT%TZ') AS seen
+  from account_accounts
+  where id = (select id_a from account_characters where name = ? limit 1)
+  limit 1
   ";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$name]);
 
-  return $stmt;
-}
-
-function parse_data($stmt) {
   $payload = array();
-
   while ($row = $stmt->fetch()) {
-    // Form a temporary row array
-    $tmp = array(
-      'account' => $row['name'],
-      'found'   => $row['found'],
-      'seen'    => $row['seen'],
-      'league'  => $row['league']
-    );
-
-    // Append row to payload
-    $payload[] = $tmp;
+    $payload[] = $row;
   }
 
   return $payload;
@@ -61,8 +48,7 @@ check_errors();
 // Connect to database
 include_once ( "../details/pdo.php" );
 
-$stmt = get_accounts_by_character($pdo, $_GET["character"]);
-$data = parse_data($stmt);
+$data = get_accounts_by_character($pdo, $_GET["character"]);
 
 // Display generated data
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);
+echo json_encode($data);

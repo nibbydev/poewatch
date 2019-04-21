@@ -271,14 +271,10 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadUsernames(Set<RawUsernameEntry> usernameSet) {
-        String query1 = "INSERT INTO account_accounts   (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
-        String query2 = "INSERT INTO account_characters (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = NOW(); ";
-
-        String query3 = "INSERT INTO account_relations (id_l, id_a, id_c) " +
-                "SELECT ?, " +
-                "  (SELECT id FROM account_accounts   WHERE name = ? LIMIT 1), " +
-                "  (SELECT id FROM account_characters WHERE name = ? LIMIT 1) " +
-                "ON DUPLICATE KEY UPDATE seen = NOW(); ";
+        String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE id = id";
+        String query2 = "INSERT INTO account_characters (id_l, name, id_a) " +
+                        "select ?, ?, (select id from account_accounts where name = ? limit 1) " +
+                        "ON DUPLICATE KEY UPDATE id = id";
 
         try {
             if (database.connection.isClosed()) {
@@ -306,22 +302,9 @@ public class Upload {
                 counter = 0;
 
                 for (RawUsernameEntry rawUsernameEntry : usernameSet) {
-                    statement.setString(1, rawUsernameEntry.character);
-                    statement.addBatch();
-
-                    if (++counter % 500 == 0) statement.executeBatch();
-                }
-
-                statement.executeBatch();
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query3)) {
-                counter = 0;
-
-                for (RawUsernameEntry rawUsernameEntry : usernameSet) {
                     statement.setInt(1, rawUsernameEntry.league);
-                    statement.setString(2, rawUsernameEntry.account);
-                    statement.setString(3, rawUsernameEntry.character);
+                    statement.setString(2, rawUsernameEntry.character);
+                    statement.setString(3, rawUsernameEntry.account);
                     statement.addBatch();
 
                     if (++counter % 500 == 0) statement.executeBatch();

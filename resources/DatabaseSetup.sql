@@ -190,7 +190,7 @@ CREATE TABLE league_entries (
     item_crc     INT            UNSIGNED NOT NULL,
 
     found        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    seen         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
     stack        SMALLINT       UNSIGNED DEFAULT NULL,
@@ -203,11 +203,9 @@ CREATE TABLE league_entries (
     FOREIGN KEY (id_price) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
 
-    INDEX id_l_d (id_l, id_d),
-    INDEX found (found),
-    INDEX stash_crc (stash_crc),
     INDEX seen (seen),
-    INDEX price (price)
+    INDEX found (found),
+    INDEX del (stash_crc, seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -245,6 +243,7 @@ CREATE TABLE league_history_daily (
 
 CREATE TABLE account_accounts (
     id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+
     name   VARCHAR(32)  NOT NULL UNIQUE,
     found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -258,47 +257,18 @@ CREATE TABLE account_accounts (
 
 CREATE TABLE account_characters (
     id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id_l   SMALLINT     UNSIGNED NOT NULL,
+    id_a   BIGINT       UNSIGNED NOT NULL,
+
     name   VARCHAR(32)  NOT NULL UNIQUE,
     found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
+    FOREIGN KEY (id_l) REFERENCES data_leagues     (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_a) REFERENCES account_accounts (id) ON DELETE CASCADE,
+
     INDEX seen (seen)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Table structure account_relations
---
-
-CREATE TABLE account_relations (
-    id     BIGINT     UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_l   SMALLINT   UNSIGNED NOT NULL,
-    id_a   BIGINT     UNSIGNED NOT NULL,
-    id_c   BIGINT     UNSIGNED NOT NULL,
-    found  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues       (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_a) REFERENCES account_accounts   (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_c) REFERENCES account_characters (id) ON DELETE RESTRICT,
-    CONSTRAINT `unique` UNIQUE (id_a, id_c),
-
-    INDEX seen (seen)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure account_history
---
-
-CREATE TABLE account_history (
-    id_old  BIGINT     UNSIGNED NOT NULL,
-    id_new  BIGINT     UNSIGNED NOT NULL,
-    moved   TINYINT    UNSIGNED NOT NULL DEFAULT 1,
-    found   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (id_old) REFERENCES account_accounts (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_new) REFERENCES account_accounts (id) ON DELETE RESTRICT,
-    CONSTRAINT `unique` UNIQUE (id_old, id_new)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Web tables
