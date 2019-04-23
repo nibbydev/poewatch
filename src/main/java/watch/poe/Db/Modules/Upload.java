@@ -271,7 +271,7 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadUsernames(Set<RawUsernameEntry> usernameSet) {
-        String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE id = id";
+        String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = VALUES(seen) ";
         String query2 = "INSERT INTO account_characters (id_l, name, id_a) " +
                         "select ?, ?, (select id from account_accounts where name = ? limit 1) " +
                         "ON DUPLICATE KEY UPDATE id = id";
