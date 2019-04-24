@@ -12,15 +12,14 @@ import poe.Managers.*;
 import poe.Managers.Stat.StatType;
 import poe.Worker.WorkerManager;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static StatisticsManager sm;
+    private static IntervalManager im;
     private static WorkerManager wm;
     private static PriceManager pm;
     private static Database db;
@@ -34,13 +33,14 @@ public class Main {
     public static void main(String[] args) {
         boolean success;
 
-        logger.info("Starting PoeWatch");
+        logger.info("Starting PoeWatch client");
 
         try {
-            IntervalManager intervalManager = new IntervalManager();
+            im = new IntervalManager();
 
-            // Load config
-            cnf = ConfigFactory.load("config");
+            if (!loadConfig()) {
+                return;
+            }
 
             // Initialize database connector
             db = new Database(cnf);
@@ -76,7 +76,7 @@ public class Main {
             Price.setRelationManager(rm);
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
-            wm = new WorkerManager(cnf, intervalManager, db, sm, lm, ip);
+            wm = new WorkerManager(cnf, im, db, sm, lm, ip);
 
             // Get all distinct stash ids that are in the db
             success = db.init.getStashIds(ip.getStashCrcSet());
@@ -205,10 +205,6 @@ public class Main {
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Command loop controllers
-    //------------------------------------------------------------------------------------------------------------
-
     /**
      * Holds commands that have something to do with worker operation
      *
@@ -247,5 +243,62 @@ public class Main {
                 + "Made by: Siegrest\n"
                 + "Licenced under AGPL-3.0, 2018\n";
         System.out.println(about);
+    }
+
+    /**
+     * Attempts to load the config or create it if it does not exist
+     */
+    private static boolean loadConfig() {
+        File confFile = new File("config.conf");
+
+        if (!confFile.exists() || !confFile.isFile()) {
+            logger.warn("Could not find config");
+            String path = "";
+
+            try {
+                path = exportResource("/config.conf");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                logger.error("Could not create config");
+            }
+
+            logger.info("Config '" + path + "' has been created");
+            return false;
+        }
+
+        cnf = ConfigFactory.parseFile(confFile);
+        return true;
+    }
+
+    /**
+     * Export a resource embedded into a Jar file to the local file path.
+     *
+     * @param resourceName ie.: "/SmartLibrary.dll"
+     * @return The path to the exported resource
+     */
+    static private String exportResource(String resourceName) throws Exception {
+        String jarFolder;
+
+        try (InputStream stream = Main.class.getResourceAsStream(resourceName)) {
+            if (stream == null) {
+                throw new Exception("Cannot get resource \"" + resourceName + "\" from Jar file.");
+            }
+
+            byte[] buffer = new byte[4096];
+            int readBytes;
+
+            jarFolder = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath())
+                    .getParentFile()
+                    .getPath()
+                    .replace('\\', '/');
+
+            try (OutputStream resStreamOut = new FileOutputStream(jarFolder + resourceName)) {
+                while ((readBytes = stream.read(buffer)) > 0) {
+                    resStreamOut.write(buffer, 0, readBytes);
+                }
+            }
+        }
+
+        return jarFolder + resourceName;
     }
 }
