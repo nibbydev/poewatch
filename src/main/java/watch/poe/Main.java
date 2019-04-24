@@ -54,7 +54,7 @@ public class Main {
             sm.addValue(StatType.APP_STARTUP, null);
 
             // Instantiate a price manager
-            pm = new PriceManager(db);
+            pm = new PriceManager(db, cnf);
 
             // Init league manager
             LeagueManager lm = new LeagueManager(db, cnf);
