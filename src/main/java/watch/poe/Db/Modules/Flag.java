@@ -18,7 +18,9 @@ public class Flag {
 
     public boolean resetStashReferences(Set<Long> set) {
         String query =  "update league_entries " +
-                        "set stash_crc = NULL " +
+                        "set " +
+                        "  stash_crc = NULL, " +
+                        "  seen = now() " +
                         "where stash_crc = ?; ";
         try {
             if (database.connection.isClosed()) {
