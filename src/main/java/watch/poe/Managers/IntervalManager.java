@@ -7,9 +7,15 @@ import poe.Managers.Interval.TimeFrame;
 
 import java.util.Arrays;
 
+/**
+ * Deals with delays, intervals and precise timings.
+ */
 public class IntervalManager {
     private static Logger logger = LoggerFactory.getLogger(IntervalManager.class);
 
+    /**
+     * Currently available intervals
+     */
     private final Interval[] intervals = {
             new Interval(TimeFrame.M_1),
             new Interval(TimeFrame.M_10),
@@ -50,7 +56,7 @@ public class IntervalManager {
     }
 
     /**
-     * Returns the flag related to the provided Timeframe
+     * Returns the flag related to the provided time frame
      *
      * @param timeFrame
      * @return
@@ -62,7 +68,7 @@ public class IntervalManager {
                 .orElse(null);
 
         if (interval == null) {
-            logger.error("Attempting to access non-existent timeframe");
+            logger.error("Attempting to access non-existent time frame");
             throw new RuntimeException();
         }
 
