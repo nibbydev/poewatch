@@ -33,7 +33,7 @@ public class Calc {
                         "from league_entries " +
                         "where stash_crc is not null " +
                         "  and price is not null " +
-                        "  and seen > ? ";
+                        "  and updated > ? ";
 
         try {
             if (database.connection.isClosed()) {
@@ -170,7 +170,7 @@ public class Calc {
                 "left join ( " +
                 "  select id_l, id_d, count(*) as count " +
                 "  from league_entries " +
-                "  where found > date_sub(now(), interval 24 hour) " +
+                "  where discovered > date_sub(now(), interval 24 hour) " +
                 "  group by id_l, id_d " +
                 ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
                 "set foo.daily = ifnull(bar.count, 0) ";
@@ -188,7 +188,7 @@ public class Calc {
                 "left join ( " +
                 "  select id_l, id_d, count(*) as count " +
                 "  from league_entries " +
-                "  where found > date_sub(now(), interval 1 hour) " +
+                "  where discovered > date_sub(now(), interval 1 hour) " +
                 "  group by id_l, id_d " +
                 ") as bar on foo.id_l = bar.id_l and foo.id_d = bar.id_d " +
                 "set foo.total = foo.total + ifnull(bar.count, 0) ";
