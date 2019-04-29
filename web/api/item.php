@@ -68,8 +68,11 @@ function get_item_data($pdo, $id) {
 function get_history_data($pdo, $id) {
   $query = "select 
     i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
-    i.total, i.daily, i.current, i.accepted, i.id_l,
-    l.name
+    i.total, i.daily, i.current, i.accepted,
+    DATE_FORMAT(l.start, '%Y-%m-%dT%H:00:00Z') as leagueStart,
+    DATE_FORMAT(l.end, '%Y-%m-%dT%H:00:00Z') as leagueEnd,
+    l.name as leagueName, l.active as leagueActive, l.id as leagueId,
+    l.display as leagueDisplay
   from league_items as i
   join data_leagues as l
     on l.id = i.id_l
@@ -83,18 +86,22 @@ function get_history_data($pdo, $id) {
   // loop through leagues
   while ($row = $stmt->fetch()) {
     $payload[] = [
-      'id'        => (int)    $row['id_l'],
-      'name'      =>          $row['name'],
-      'mean'      => (float)  $row['mean'],
-      'median'    => (float)  $row['median'],
-      'mode'      => (float)  $row['mode'],
-      'min'       => (float)  $row['min'],
-      'max'       => (float)  $row['max'],
-      'exalted'   => (float)  $row['exalted'],
-      'total'     => (int)    $row['total'],
-      'daily'     => (int)    $row['daily'],
-      'current'   => (int)    $row['current'],
-      'accepted'  => (int)    $row['accepted']
+      'id'          => (int)    $row['leagueId'],
+      'name'        =>          $row['leagueName'],
+      'display'     =>          $row['leagueDisplay'],
+      'active'      => (bool)   $row['leagueActive'],
+      'start'       =>          $row['leagueStart'],
+      'end'         =>          $row['leagueEnd'],
+      'mean'        => (float)  $row['mean'],
+      'median'      => (float)  $row['median'],
+      'mode'        => (float)  $row['mode'],
+      'min'         => (float)  $row['min'],
+      'max'         => (float)  $row['max'],
+      'exalted'     => (float)  $row['exalted'],
+      'total'       => (int)    $row['total'],
+      'daily'       => (int)    $row['daily'],
+      'current'     => (int)    $row['current'],
+      'accepted'    => (int)    $row['accepted']
     ];
   }
 
