@@ -19,7 +19,7 @@ function get_item_data($pdo, $id) {
     d.id, d.name, d.type, d.frame, d.icon, d.stack, 
     d.tier, d.lvl, d.quality, d.corrupted, 
     d.links, d.ilvl, d.series, d.shaper, d.elder, 
-    d.enchantMin, d.enchantMax, d.var as variation,
+    d.enchantMin, d.enchantMax, d.var,
     dc.name as category, dg.name as `group`
   from      data_itemData   as d
   left join data_categories as dc on d.id_cat = dc.id 
@@ -78,12 +78,11 @@ function get_history_data($pdo, $id) {
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
-
   $payload = [];
 
   // loop through leagues
   while ($row = $stmt->fetch()) {
-    $tmp = [
+    $payload[] = [
       'id'        => (int)    $row['id_l'],
       'name'      =>          $row['name'],
       'mean'      => (float)  $row['mean'],
@@ -95,37 +94,8 @@ function get_history_data($pdo, $id) {
       'total'     => (int)    $row['total'],
       'daily'     => (int)    $row['daily'],
       'current'   => (int)    $row['current'],
-      'accepted'  => (int)    $row['accepted'],
-      'history'   => []
+      'accepted'  => (int)    $row['accepted']
     ];
-
-    // get history for each league
-    $query2 = "
-    select * from (
-      select mean, median, mode, daily, current, accepted,
-        DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as time
-      from league_history_daily
-      where id_l = ? and id_d = ?
-      order by time desc
-      limit 120
-    ) as foo order by foo.time asc";
-
-    $stmt2 = $pdo->prepare($query2);
-    $stmt2->execute([$row['id_l'], $id]);
-
-    while ($row2 = $stmt2->fetch()) {
-      $tmp['history'][] = [
-        'time'     =>         $row2["time"],
-        'mean'     => (float) $row2["mean"],
-        'median'   => (float) $row2["median"],
-        'mode'     => (float) $row2["mode"],
-        'daily'    => (int)   $row2["daily"],
-        'current'  => (int)   $row2["current"],
-        'accepted' => (int)   $row2["accepted"]
-      ];
-    }
-
-    $payload[] = $tmp;
   }
 
   return $payload;
@@ -141,6 +111,7 @@ function build_payload($pdo, $id) {
 
   return $payload;
 }
+
 
 header("Content-Type: application/json");
 check_errors();
