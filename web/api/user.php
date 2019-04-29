@@ -43,12 +43,13 @@ function check_errors()
  * @param $pdo PDO Open database connection
  * @param $league string League name, case-insensitive
  * @param $account string Account name, case-sensitive
+ * @param $onlyPriced bool Filter out entries without a price
  * @return array containing the aggregated items and prices
  */
-function get_data($pdo, $league, $account)
+function get_data($pdo, $league, $account, $onlyPriced)
 {
-  $query = "
-  select le.id_d as id, did2.name as name,
+  $query = "select 
+    le.id_d as id,
     ifnull(sum(le.stack), 1) + count(*) - 1 as count, 
     date_format(min(le.discovered), '%Y-%m-%dT%TZ') as discovered, 
     date_format(max(le.updated), '%Y-%m-%dT%TZ') as updated, 
@@ -57,24 +58,21 @@ function get_data($pdo, $league, $account)
     group_concat(if(le.price is null, null, round(ifnull(li.mean, 1) * le.price, 2))) as chaos
   from league_entries as le
   left join data_itemData as did1 on le.id_price = did1.id
-  left join data_itemData as did2 on le.id_d = did2.id
   left join league_items as li on le.id_l = li.id_l and le.id_price = li.id_d
   join data_leagues as dl on dl.id = le.id_l
   where dl.name = ?
     and le.account_crc = crc32(?)
     and le.stash_crc is not null
-  group by le.id_d
-  ";
+    and (le.price is not null or ?)
+  group by le.id_d";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$league, $account]);
+  $stmt->execute([$league, $account, $onlyPriced ? 0 : 1]);
   $payload = [];
 
   while ($row = $stmt->fetch()) {
-    // Base array
     $tmp = [
-      'id' => $row['id'],
-      'name (temporary)' => $row['name'],
+      'id' => (int) $row['id'],
       'discovered' => $row['discovered'],
       'updated' => $row['updated'],
       'count' => (int)$row['count'],
@@ -131,5 +129,7 @@ function get_data($pdo, $league, $account)
 header("Content-Type: application/json");
 check_errors();
 include_once("../details/pdo.php");
-$payload = get_data($pdo, $_GET["league"], $_GET["account"]);
+
+$onlyPriced = isset($_GET["onlyPriced"]) ? true : false;
+$payload = get_data($pdo, $_GET["league"], $_GET["account"], $onlyPriced);
 echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
