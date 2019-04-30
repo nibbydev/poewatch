@@ -1057,24 +1057,28 @@ function parseQueryParams() {
   }
 
   if ((tmp = parseQueryParam('group'))) {
-    FILTER.group = tmp;
     $('#search-group').val(tmp);
+    FILTER.group = tmp;
   }
 
   if ((tmp = parseQueryParam('search'))) {
+    $("#search-searchbar").val(tmp);
     FILTER.search = tmp;
   }
 
   if (parseQueryParam('confidence')) {
+    $('#radio-confidence input[value="true"]').click();
     FILTER.showLowConfidence = true;
   }
 
   if ((tmp = parseQueryParam('rarity'))) {
+    $(`#radio-rarity input[value="${tmp}"]`).click();
     if      (tmp === "unique") FILTER.rarity =    3;
     else if (tmp ===  "relic") FILTER.rarity =    9;
   }
 
   if ((tmp = parseQueryParam('links'))) {
+    $(`#radio-links input[value="${tmp}"]`).click();
     if (tmp ===  "all") FILTER.links = -1;
     else FILTER.links = parseInt(tmp);
   }
@@ -1086,6 +1090,7 @@ function parseQueryParams() {
   }
 
   if ((tmp = parseQueryParam('corrupted'))) {
+    $(`#radio-corrupted input[value="${tmp}"]`).click();
     FILTER.gemCorrupted = tmp === "true";
   }
 
