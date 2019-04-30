@@ -490,8 +490,12 @@ class ItemRow {
  */
 class DetailsModal {
   constructor() {
-    this.dataSets = {};
     this.modal = $("#modal-details");
+
+    // Contains all requested item data & history on current page
+    this.dataSets = {};
+
+    // Contains up to date league and item information
     this.current = {
       id: null,
       league: null,
@@ -499,13 +503,13 @@ class DetailsModal {
       dataset: 1
     };
 
-    // League select event listener
+    // League select listener
     $("#modal-leagues", this.modal).change(function(){
       MODAL.current.league = $(":selected", this).val();
       MODAL.getHistory();
     });
   
-    // Dataset radio event listener
+    // Dataset radio listener
     $("#modal-radio", this.modal).change(function(){
       const val = $("input[name=dataset]:checked", this).val();
       MODAL.current.dataset = parseInt(val);
@@ -603,12 +607,10 @@ class DetailsModal {
    */
   getHistory() {
     // Check if the data already exists
-    if (this.dataSets[this.current.id].leagues) {
-      if (this.dataSets[this.current.id].leagues[this.current.league]) {
-        console.log('History from local');
-        MODAL.updateContent();
-        return;
-      }
+    if (this.checkLeagueHistoryExists()) {
+      console.log('History from local');
+      MODAL.updateContent();
+      return;
     }
 
     // Prep request
@@ -625,7 +627,7 @@ class DetailsModal {
 
     request.done(function(payload) {
       // Find associated league
-      let league = DetailsModal.getCurrentItemLeague();
+      let league = MODAL.getCurrentItemLeague();
 
       league.history = payload;
       MODAL.updateContent();
@@ -633,7 +635,7 @@ class DetailsModal {
   }
 
   updateContent() {
-    let league = DetailsModal.getCurrentItemLeague();
+    let league = this.getCurrentItemLeague();
     let currentFormatHistory = DetailsModal.formatHistory(league);
 
     let data = {
@@ -959,16 +961,38 @@ class DetailsModal {
     return null;
   }
 
-  static getCurrentItemLeague() {
-    let item = MODAL.dataSets[MODAL.current.id];
+  /**
+   * Returns the current league object of the current item
+   *
+   * @returns {null|*} League object or null if does not exist
+   */
+  getCurrentItemLeague() {
+    let item = this.dataSets[this.current.id];
 
     for (let i = 0; i < item.leagues.length; i++) {
-      if (item.leagues[i].name === MODAL.current.league) {
+      if (item.leagues[i].name === this.current.league) {
         return item.leagues[i];
       }
     }
 
     return null;
+  }
+
+  /**
+   * Check whether a specific league's data has been downloaded for the current item
+   *
+   * @returns {boolean} True if exists, false if not
+   */
+  checkLeagueHistoryExists() {
+    const leagues = this.dataSets[this.current.id].leagues;
+
+    for (let i = 0; i < leagues.length; i++) {
+      if (leagues[i].name === this.current.league && leagues[i].history !== undefined) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 
