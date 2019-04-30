@@ -1655,19 +1655,19 @@ function checkHideItem(item) {
   }
 
   // Sort gems, I guess
-  if (FILTER.category  === 'gem' === item.category) {
+  if (FILTER.category === 'gem' && item.category === 'gem') {
     if (FILTER.gemLvl !== null && item.gemLevel !== FILTER.gemLvl) return true;
     if (FILTER.gemQuality !== null && item.gemQuality !== FILTER.gemQuality) return true;
     if (FILTER.gemCorrupted !== null && item.gemIsCorrupted !== FILTER.gemCorrupted) return true;
 
-  } else if (FILTER.category  === 'map' === item.category) {
+  } else if (FILTER.category === 'map' && item.category === 'map') {
     if (FILTER.tier !== null) {
       if (FILTER.tier === 0) {
         if (item.mapTier !== null) return true;
       } else if (item.mapTier !== FILTER.tier) return true;
     }
 
-  } else if (FILTER.category  === 'base' === item.category) {
+  } else if (FILTER.category === 'base' && item.category === 'base') {
     // Check base influence
     if (FILTER.influence !== null) {
       if (FILTER.influence === "none") {
