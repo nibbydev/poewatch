@@ -20,7 +20,7 @@ function check_errors() {
 
 function get_accounts_by_character($pdo, $name) { 
   $query = "
-  select name, 
+  select name AS `account`, 
     DATE_FORMAT(found, '%Y-%m-%dT%TZ') AS found,
     DATE_FORMAT(seen, '%Y-%m-%dT%TZ') AS seen
   from account_accounts
