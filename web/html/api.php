@@ -6,6 +6,7 @@ $PAGEDATA["title"] = "API - PoeWatch";
 $PAGEDATA["pageHeader"] = "API Resources";
 $PAGEDATA["description"] = "Resources for developers";
 
+// page data
 $APIcolumns = [
   // id api
   [
@@ -32,7 +33,8 @@ $APIcolumns = [
   [
     "href" => "https://api.poe.watch/leagues",
     "name" => "leagues",
-    "desc" => "List of current leagues. Entries are sorted such that event leagues appear first, followed by the challenge leagues and then the permanent leagues. SSF and private leagues are omitted.",
+    "desc" => "List of current leagues. Entries are sorted such that event leagues appear first, 
+      followed by the challenge leagues and then the permanent leagues. SSF and private leagues are omitted.",
     "request" => null,
     "reply" => [
       [
@@ -256,7 +258,8 @@ $APIcolumns = [
   [
     "href" => "https://api.poe.watch/characters?account=novynn",
     "name" => "characters",
-    "desc" => "Get player character names found through the stash API. If a player has listed an item in a public stash tab, that character name is recorded.",
+    "desc" => "Get player character names found through the stash API. 
+      If a player has listed an item in a public stash tab, that character name is recorded.",
     "request" => [
       [
         "param" => "account",
@@ -295,7 +298,8 @@ $APIcolumns = [
   [
     "href" => "https://api.poe.watch/accounts?character=quillhitman",
     "name" => "accounts",
-    "desc" => "Get player account names found through the stash API. If a player has listed an item in a public stash tab, that account name is recorded.",
+    "desc" => "Get player account names found through the stash API. 
+      If a player has listed an item in a public stash tab, that account name is recorded.",
     "request" => [
       [
         "param" => "character",
@@ -352,7 +356,7 @@ $APIcolumns = [
       [
         "param" => "groups",
         "condition" => null,
-        "type" => "list",
+        "type" => "list (group)",
         "desc" => "List of groups associated with the category. Named separately from categories."
       ],
     ]
@@ -361,7 +365,9 @@ $APIcolumns = [
   [
     "href" => "https://api.poe.watch/get?league=Standard&category=flask",
     "name" => "get",
-    "desc" => "Returns price and item data for specified league and category. Items are listed in decreasing order from most expensive to least expensive. Updated every 10 minutes. Capitalization does not matter for request fields.",
+    "desc" => "Returns price and item data for specified league and category. 
+      Items are listed in decreasing order from most expensive to least expensive. 
+      Updated every 10 minutes. Capitalization does not matter for request fields.",
     "request" => [
       [
         "param" => "league",
@@ -396,7 +402,7 @@ $APIcolumns = [
       [
         "param" => "history",
         "condition" => null,
-        "type" => "list | float",
+        "type" => "list (float)",
         "desc" => "Mean prices from last 7 days. Last element is current mean."
       ]
     ]
@@ -428,7 +434,6 @@ $APIcolumns = [
       ]
     ]
   ],
-
   // item history api
   [
     "href" => "https://api.poe.watch/itemhistory?id=142&league=Synthesis",
@@ -491,12 +496,12 @@ $APIcolumns = [
       ],
     ]
   ],
-
   // compact api
   [
     "href" => "https://api.poe.watch/compact?league=Standard",
     "name" => "compact",
-    "desc" => "Return price data (id, mean, median, mode, min, max, total, daily, exalted) of all items of the provided active league. IDs can be found in itemdata API described above.",
+    "desc" => "Return price data (id, mean, median, mode, min, max, total, daily, exalted) 
+      of all items of the provided active league. IDs can be found in itemdata API described above.",
     "request" => [
       [
         "param" => "league",
@@ -573,12 +578,13 @@ $APIcolumns = [
       ],
     ]
   ],
-
   // user api
   [
     "href" => "https://api.poe.watch/user?league=Standard&account=Novynn",
     "name" => "user",
-    "desc" => "Returns all listings for an account",
+    "desc" => "Get all listings for an account, including the time listed, last updated, 
+      how many are listed and how many are priced. Allows filtering out items without a 
+      price. Only tracks items that are available through the itemdata api.",
     "request" => [
       [
         "param" => "league",
@@ -624,12 +630,11 @@ $APIcolumns = [
       [
         "param" => "buyout",
         "condition" => null,
-        "type" => "list",
+        "type" => "list (buyout)",
         "desc" => "Price listings for the item"
       ],
     ]
   ],
-
 ];
 
 include "assets/php/templates/header.php";
@@ -670,7 +675,7 @@ include "assets/php/templates/priceNav.php";
               <?php foreach ($API["request"] as $apiReply) { ?>
                 <tr>
                   <td><?php echo $apiReply["param"] ?></td>
-                  <td><?php echo $apiReply["required"] ? "<span class='badge custom-badge-green'>✓</span>" : "<span class='badge custom-badge-red'>✕</span>" ?></td>
+                  <td><?php echo $apiReply["required"] ? "Yes" : "No" ?></td>
                   <td><?php echo $apiReply["desc"] ?></td>
                 </tr>
               <?php } ?>
@@ -707,12 +712,10 @@ include "assets/php/templates/priceNav.php";
           </div>
         </div>
       <?php } ?>
-
       <div class="card-footer slim-card-edge"></div>
     </div>
   </div>
 <?php } ?>
-
 
 <?php genBodyFooter() ?>
 <?php include "assets/php/templates/footer.php" ?>
