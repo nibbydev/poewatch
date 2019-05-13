@@ -21,6 +21,7 @@ public class PriceManager extends Thread {
 
     private volatile boolean run = true;
     private volatile boolean readyToExit = false;
+    private long lastCycleTime = 0;
 
     public PriceManager(Database db, Config cnf) {
         this.database = db;
@@ -40,6 +41,18 @@ public class PriceManager extends Thread {
 
         // Main loop of the thread
         while (run) {
+            // Minimal delay before starting cycle
+            if (lastCycleTime + config.getInt("calculation.minCycleInterval") > System.currentTimeMillis()) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+
+                continue;
+            }
+
+            lastCycleTime = System.currentTimeMillis();
             logger.info("Fetching latest currency rates");
 
             // Grab newest currency ratios from the database
