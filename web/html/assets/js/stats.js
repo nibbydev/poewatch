@@ -1,5 +1,9 @@
-var statData = {};
-var chartOptions = {
+/*
+ * Handles displaying/loading statistical data
+ */
+
+const statData = {};
+const chartOptions = {
   height: 250,
   showPoint: true,
   lineSmooth: Chartist.Interpolation.cardinal({
@@ -25,10 +29,13 @@ var chartOptions = {
     })
   ]
 };
+const API_URL = "https://api.poe.watch/";
 
 $(document).ready(function() {
-  if (type = parseQueryParam("type")) {
-    request(type);
+  let tmp;
+
+  if ((tmp = parseQueryParam("type"))) {
+    request(tmp);
   } else {
     request("count");
   }
@@ -39,6 +46,7 @@ $(document).ready(function() {
 
     console.log("Button press: " + val);
     updateQueryParam("type", val);
+
     $("button.statSelect").removeClass("active");
     $this.addClass("active");
 
@@ -57,7 +65,7 @@ function request(type) {
   }
 
   $.ajax({
-    url: "https://api.poe.watch/stats?type=" + type,
+    url: API_URL + "stats?type=" + type,
     type: "GET",
     async: true,
     dataTypes: "json"
@@ -68,16 +76,17 @@ function request(type) {
 }
 
 function formatTime(time) {
-  var diff = Math.abs(new Date(time) - new Date());
-  var val = Math.floor(diff / 1000 / 60 / 60);
+  const diff = Math.abs(new Date(time) - new Date());
+  const val = Math.floor(diff / 1000 / 60 / 60);
 
   return val.toString();
 }
 
 function parseStats(json) {
-  $("#main").empty();
+  const main = $("#main");
+  main.empty();
 
-  var labels = [];
+  const labels = [];
   for (let i = 0; i < json.labels.length; i++) {
     labels.push(formatTime(json.labels[i]));
   }
@@ -85,31 +94,31 @@ function parseStats(json) {
   for (let i = 0; i < json.types.length; i++) {
     const type = json.types[i];
 
-    var series = [];
+    const series = [];
     for (let j = 0; j < json.series[i].length; j++) {
       series.push(json.series[i][j] === null ? 0 : json.series[i][j]);
     }
-    
-    var data = {
+
+    const data = {
       labels: labels,
       series: [series]
-    }
+    };
 
-    var cardTemplate = `
+    const cardTemplate = `
     <div class="card custom-card w-100 mb-3">
       <div class="card-header">
-        <h3 class="m-0">{{title}}</h3>
+        <h3 class="m-0">${type}</h3>
       </div>
 
       <div class="card-body">
-        <div class='ct-chart' id='CHART-{{type}}'></div>
+        <div class='ct-chart' id='CHART-${type}'></div>
       </div>
     
       <div class="card-footer slim-card-edge"></div>
     </div>
-    `.trim().replace("{{title}}", type).replace("{{type}}", type);
+    `.trim();
 
-    $("#main").append(cardTemplate);
+    main.append(cardTemplate);
 
     switch (type) {
       case "COUNT_API_ERRORS_READ_TIMEOUT":

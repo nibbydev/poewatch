@@ -23,6 +23,13 @@ drop table account_relations;
 drop table account_history;
 
 -- ---------------------------------------------------------------------------------------------------------------------
+-- Database migration: rename league entries columns
+-- ---------------------------------------------------------------------------------------------------------------------
+
+alter table league_entries change found discovered TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+alter table league_entries change seen updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- ---------------------------------------------------------------------------------------------------------------------
 -- Utility
 -- ---------------------------------------------------------------------------------------------------------------------
 

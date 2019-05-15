@@ -189,8 +189,8 @@ CREATE TABLE league_entries (
     stash_crc    INT            UNSIGNED DEFAULT NULL,
     item_crc     INT            UNSIGNED NOT NULL,
 
-    found        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    discovered   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updates      SMALLINT       UNSIGNED NOT NULL DEFAULT 1,
 
     stack        SMALLINT       UNSIGNED DEFAULT NULL,
@@ -203,9 +203,10 @@ CREATE TABLE league_entries (
     FOREIGN KEY (id_price) REFERENCES data_itemData (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
 
-    INDEX seen (seen),
-    INDEX found (found),
-    INDEX del (stash_crc, seen)
+    INDEX discovered (discovered),
+    INDEX updated (updated),
+    INDEX account_crc (account_crc),
+    INDEX del (stash_crc, updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------

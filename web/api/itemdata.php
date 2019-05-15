@@ -10,84 +10,49 @@ function get_data($pdo) {
   LEFT JOIN data_categories AS dc ON dc.id = did.id_cat
   LEFT JOIN data_groups     AS dg ON dg.id = did.id_grp";
 
-  if ( isset($_GET["category"]) ) {
-    $query .= " WHERE dc.name = ?";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([$_GET["category"]]);
-    return $stmt;
-  } else {
-    return $pdo->query($query);
-  }
+  return $pdo->query($query);
 }
 
 function parse_data($stmt) {
-  $payload = array();
+  $payload = [];
 
   while ($row = $stmt->fetch()) {
-    $tmp = array(
-      'id'        => $row['id'],
-      'name'      => $row['name'],
-      'type'      => $row['type'],
-      'frame'     => $row['frame'],
-      'category'  => $row['category'],
-      'group'     => $row['group'],
+    $itemData = [
+      'id'              => (int)  $row['id'],
+      'name'            =>        $row['name'],
+      'type'            =>        $row['type'],
+      'category'        =>        $row['category'],
+      'group'           =>        $row['group'],
+      'frame'           => (int)  $row['frame'],
 
-      'base'      => null,
-      'enchant'   => null,
-      'gem'       => null,
-      'map'       => null,
+      'mapSeries'       =>        $row['series']     === null ? null : (int)    $row['series'],
+      'mapTier'         =>        $row['tier']       === null ? null : (int)    $row['tier'],
+      'baseIsShaper'    =>        $row['shaper']     === null ? null : (bool)   $row['shaper'],
+      'baseIsElder'     =>        $row['elder']      === null ? null : (bool)   $row['elder'],
+      'baseItemLevel'   =>        $row['ilvl']       === null ? null : (int)    $row['ilvl'],
+      'gemLevel'        =>        $row['lvl']        === null ? null : (int)    $row['lvl'],
+      'gemQuality'      =>        $row['quality']    === null ? null : (int)    $row['quality'],
+      'gemIsCorrupted'  =>        $row['corrupted']  === null ? null : (bool)   $row['corrupted'],
+      'enchantMin'      =>        $row['enchantMin'] === null ? null : (float)  $row['enchantMin'],
+      'enchantMax'      =>        $row['enchantMax'] === null ? null : (float)  $row['enchantMax'],
+      'stackSize'       =>        $row['stack']      === null ? null : (int)    $row['stack'],
+      'linkCount'       =>        $row['links']      === null ? null : (int)    $row['links'],
 
-      'stack'     => $row['stack'],
-      'links'     => $row['links'],
-      'variation' => $row['var'],
-      'icon'      => $row['icon']
-    );
+      'variation'       =>        $row['var'],
+      'icon'            =>        $row['icon']
+    ];
 
-    if ($row["category"] === "map") {
-      $tmp['map'] = array(
-        "series" => $row['series'] === null ? null : (int) $row['series'],
-        "tier" => (int) $row['tier']
-      );
-    }
-
-    if ($row["category"] === "base") {
-      $tmp['base'] = array(
-        "shaper" => (bool) $row['shaper'],
-        "elder" => (bool) $row['elder'],
-        "itemLevel" => $row['ilvl'] === null ? null : (int) $row['ilvl']
-      );
-    }
-
-    if ($row["category"] === "gem") {
-      $tmp['gem'] = array(
-        "level" => (int) $row['lvl'],
-        "quality" => (int) $row['quality'],
-        "corrupted" => (bool) $row['corrupted']
-      );
-    }
-
-    if ($row["category"] === "enchantment") {
-      $tmp['enchant'] = array(
-        "min" => $row['enchantMin'] === null ? null : (float) $row['enchantMin'],
-        "max" => $row['enchantMax'] === null ? null : (float) $row['enchantMax']
-      );
-    }
-    
-    $payload[] = $tmp;
+    // Filter out null values
+    $payload[] = array_filter($itemData, function($value) {
+      return $value !== null;
+    });
   }
 
   return $payload;
 }
 
-// Define content type
 header("Content-Type: application/json");
-
-// Connect to database
 include_once ( "../details/pdo.php" );
 
-// Get item entries
-$stmt = get_data($pdo);
-$payload = parse_data($stmt);
-
-// Display generated data
-echo json_encode($payload);
+$payload = parse_data(get_data($pdo));
+echo json_encode($payload, JSON_PRETTY_PRINT);

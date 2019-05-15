@@ -238,34 +238,16 @@ footer {
 //----------------------------------------------------------------------------------------------------------*/
 
 .api-data-table {
-  background-color: transparent;
-  color: #aaa;
-}
-
-.api-data-table a {
-  color: #aaa;
-}
-
-.api-data-table thead {
-  color: #ddd;
-}
-
-.api-data-table.card {
-  border: 1px solid rgba(255,255,255,.05);
+  border-top: 1px solid rgba(0,0,0,.05);
   background-color: rgba(0,0,0,.1);
 }
 
-.api-data-table table {
-  margin-bottom: 0;
+.api-data-table .table thead th {
+  border: none;
 }
 
 .api-data-table .table td {
-  border-top: 0;
-}
-
-.api-data-table .table thead th {
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  border-top: transparent;
+  border-top: 1px solid rgba(255,255,255,.1);
 }
 
 /*------------------------------------------------------------------------------------------------------------

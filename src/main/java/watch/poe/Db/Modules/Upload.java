@@ -31,8 +31,8 @@ public class Upload {
         String query = "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
-                "  updates = IF(price = VALUES(price) & stack = VALUES(stack) & id_price = VALUES(id_price), updates, updates + 1)," +
-                "  seen    = IF(price = VALUES(price) & stack = VALUES(stack) & id_price = VALUES(id_price), seen, now())," +
+                "  updates = IF(price <=> VALUES(price) && stack <=> VALUES(stack) && id_price <=> VALUES(id_price), updates, updates + 1)," +
+                "  updated = IF(price <=> VALUES(price) && stack <=> VALUES(stack) && id_price <=> VALUES(id_price), updated, now())," +
                 "  stash_crc = VALUES(stash_crc), " +
                 "  stack = VALUES(stack), " +
                 "  price = VALUES(price), " +
@@ -271,7 +271,7 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadUsernames(Set<RawUsernameEntry> usernameSet) {
-        String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE id = id";
+        String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = VALUES(seen) ";
         String query2 = "INSERT INTO account_characters (id_l, name, id_a) " +
                         "select ?, ?, (select id from account_accounts where name = ? limit 1) " +
                         "ON DUPLICATE KEY UPDATE id = id";

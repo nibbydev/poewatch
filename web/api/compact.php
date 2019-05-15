@@ -1,16 +1,16 @@
 <?php
 function error($code, $msg) {
   http_response_code($code);
-  die( json_encode( array("error" => $msg) ) );
+  die(json_encode(array("error" => $msg)));
 }
 
 function check_errors() {
-  if ( !isset($_GET["league"]) )    {
+  if (!isset($_GET["league"])) {
     error(400, "Missing league");
   }
 }
 
-function get_data($pdo) {
+function get_data($pdo, $league) {
   $query1 = "SELECT 
     i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
     i.exalted, i.total, i.daily, i.current, i.accepted
@@ -22,29 +22,8 @@ function get_data($pdo) {
     AND     i.total  > 1 
   ORDER BY  id ASC";
 
-  $query2 = "SELECT 
-    i.id_d, i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.total, i.daily, i.current, i.accepted
-  FROM      league_items AS i 
-  JOIN      data_itemData AS did 
-    ON      i.id_d = did.id 
-  JOIN      data_leagues AS l 
-    ON      l.id = i.id_l 
-  JOIN      data_categories AS dc 
-    ON      did.id_cat = dc.id 
-  WHERE     l.name   = ?
-    AND     dc.name  = ?
-    AND     l.active = 1 
-    AND     i.total  > 1 
-  ORDER BY  i.id_d ASC";
-
-  if (isset($_GET["category"])) {
-    $stmt = $pdo->prepare($query2);
-    $stmt->execute([$_GET["league"], $_GET["category"]]);
-  } else {
-    $stmt = $pdo->prepare($query1);
-    $stmt->execute([$_GET["league"]]);
-  }
+  $stmt = $pdo->prepare($query1);
+  $stmt->execute([$league]);
 
   return $stmt;
 }
@@ -55,19 +34,19 @@ function parse_data($stmt) {
   while ($row = $stmt->fetch()) {
     // Form a temporary row array
     $tmp = array(
-      'id'       => (int)   $row['id_d'],
-      
-      'mean'     => (float) $row['mean'],
-      'median'   => (float) $row['median'],
-      'mode'     => (float) $row['mode'],
-      'min'      => (float) $row['min'],
-      'max'      => (float) $row['max'],
-      'exalted'  => (float) $row['exalted'],
+      'id' => (int)$row['id_d'],
 
-      'total'    => (int)   $row['total'],
-      'daily'    => (int)   $row['daily'],
-      'current'  => (int)   $row['current'],
-      'accepted' => (int)   $row['accepted'],
+      'mean' => (float)$row['mean'],
+      'median' => (float)$row['median'],
+      'mode' => (float)$row['mode'],
+      'min' => (float)$row['min'],
+      'max' => (float)$row['max'],
+      'exalted' => (float)$row['exalted'],
+
+      'total' => (int)$row['total'],
+      'daily' => (int)$row['daily'],
+      'current' => (int)$row['current'],
+      'accepted' => (int)$row['accepted'],
     );
 
     // Append row to payload
@@ -77,23 +56,13 @@ function parse_data($stmt) {
   return $payload;
 }
 
-// Define content type
+
 header("Content-Type: application/json");
-
-// Check parameter errors
 check_errors();
-
-// Connect to database
-include_once ( "../details/pdo.php" );
+include_once("../details/pdo.php");
 
 // Get database entries
-$stmt = get_data($pdo);
-
-// If no results with provided id
-if ($stmt->rowCount() === 0) {
-  error(400, "No results");
-}
-
+$stmt = get_data($pdo, $_GET["league"]);
 $data = parse_data($stmt);
 
 // Display generated data

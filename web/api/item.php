@@ -14,113 +14,95 @@ function check_errors() {
   }
 }
 
-function get_league_data($pdo, $id) {
-  $query = "SELECT 
-    i.mean, i.median, i.mode, i.min, i.max, 
-    i.exalted, i.total, i.daily, i.current, i.accepted,
-    l.id        AS leagueId,
-    l.active    AS leagueActive, 
-    l.upcoming  AS leagueUpcoming, 
-    l.event     AS leagueEvent, 
-    l.hardcore  AS leagueHardcore, 
-    l.challenge AS leagueChallenge, 
-    l.name      AS leagueName, 
-    l.display   AS leagueDisplay, 
-    l.start     AS leagueStart,
-    l.end       AS leagueEnd
-  FROM league_items AS i
-  JOIN data_leagues AS l
-    ON l.id = i.id_l
-  WHERE i.id_d = ?
-  ORDER BY l.active DESC, l.id DESC";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$id]);
-
-  return $stmt;
-}
-
-function get_history_entries($pdo, $leagueId, $itemId) {
-  $query = "SELECT * from (
-    SELECT 
-      mean, median, mode, daily, current, accepted,
-      DATE_FORMAT(time, '%Y-%m-%dT%H:00:00Z') as `time`
-    FROM league_history_daily
-    WHERE id_l = ? AND id_d = ?
-    ORDER BY `time` DESC
-    LIMIT 120
-  ) as foo ORDER BY foo.`time` ASC";
-
-  $stmt = $pdo->prepare($query);
-  $stmt->execute([$leagueId, $itemId]);
-
-  return $stmt;
-}
-
 function get_item_data($pdo, $id) {
-  $query = "SELECT 
-    d.name, d.type, d.frame, d.icon, d.stack, 
+  $query = "select 
+    d.id, d.name, d.type, d.frame, d.icon, d.stack, 
     d.tier, d.lvl, d.quality, d.corrupted, 
     d.links, d.ilvl, d.series, d.shaper, d.elder, 
-    d.enchantMin, d.enchantMax, d.var AS variation,
-    dc.name AS category, dg.name AS `group`
-  FROM      data_itemData   AS d
-  LEFT JOIN data_categories AS dc ON d.id_cat = dc.id 
-  LEFT JOIN data_groups     AS dg ON d.id_grp = dg.id 
-  WHERE     d.id = ?
-  LIMIT     1";
+    d.enchantMin, d.enchantMax, d.var,
+    dc.name as category, dg.name as `group`
+  from      data_itemData   as d
+  left join data_categories as dc on d.id_cat = dc.id 
+  left join data_groups     as dg on d.id_grp = dg.id 
+  where     d.id = ?
+  limit     1";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$id]);
 
-  return $stmt;
+  if ($row = $stmt->fetch()) {
+    $payload = [
+      'id'              => (int)  $row['id'],
+      'name'            =>        $row['name'],
+      'type'            =>        $row['type'],
+      'category'        =>        $row['category'],
+      'group'           =>        $row['group'],
+      'frame'           => (int)  $row['frame'],
+
+      'mapSeries'       =>        $row['series']     === null ? null : (int)    $row['series'],
+      'mapTier'         =>        $row['tier']       === null ? null : (int)    $row['tier'],
+      'baseIsShaper'    =>        $row['shaper']     === null ? null : (bool)   $row['shaper'],
+      'baseIsElder'     =>        $row['elder']      === null ? null : (bool)   $row['elder'],
+      'baseItemLevel'   =>        $row['ilvl']       === null ? null : (int)    $row['ilvl'],
+      'gemLevel'        =>        $row['lvl']        === null ? null : (int)    $row['lvl'],
+      'gemQuality'      =>        $row['quality']    === null ? null : (int)    $row['quality'],
+      'gemIsCorrupted'  =>        $row['corrupted']  === null ? null : (bool)   $row['corrupted'],
+      'enchantMin'      =>        $row['enchantMin'] === null ? null : (float)  $row['enchantMin'],
+      'enchantMax'      =>        $row['enchantMax'] === null ? null : (float)  $row['enchantMax'],
+      'stackSize'       =>        $row['stack']      === null ? null : (int)    $row['stack'],
+      'linkCount'       =>        $row['links']      === null ? null : (int)    $row['links'],
+
+      'variation'       =>        $row['var'],
+      'icon'            =>        $row['icon']
+    ];
+
+    // Filter out null values
+    return array_filter($payload, function($value) {
+      return $value !== null;
+    });
+  }
+
+  return null;
 }
 
-function build_history_payload($pdo, $id) {
-  $payload = array();
+function get_history_data($pdo, $id) {
+  $query = "select 
+    i.mean, i.median, i.mode, i.min, i.max, i.exalted, 
+    i.total, i.daily, i.current, i.accepted,
+    DATE_FORMAT(l.start, '%Y-%m-%dT%H:00:00Z') as leagueStart,
+    DATE_FORMAT(l.end, '%Y-%m-%dT%H:00:00Z') as leagueEnd,
+    l.name as leagueName, l.active as leagueActive, l.id as leagueId,
+    l.display as leagueDisplay
+  from league_items as i
+  join data_leagues as l
+    on l.id = i.id_l
+  where i.id_d = ?
+  order by l.active desc, l.id desc";
 
-  $stmt = get_league_data($pdo, $id);
+  $stmt = $pdo->prepare($query);
+  $stmt->execute([$id]);
+  $payload = [];
+
+  // loop through leagues
   while ($row = $stmt->fetch()) {
-    $tmp = array(
-      'league'        => array(
-        'id'          => (int)  $row['leagueId'],
-        'active'      => (bool) $row['leagueActive'],
-        'upcoming'    => (bool) $row['leagueUpcoming'],
-        'event'       => (bool) $row['leagueEvent'],
-        'hardcore'    => (bool) $row['leagueHardcore'],
-        'challenge'   => (bool) $row['leagueChallenge'],
-        'name'        =>        $row['leagueName'],
-        'display'     =>        $row['leagueDisplay'],
-        'start'       =>        $row['leagueStart'],
-        'end'         =>        $row['leagueEnd']
-      ),
-      'mean'      => (float) $row['mean'],
-      'median'    => (float) $row['median'],
-      'mode'      => (float) $row['mode'],
-      'min'       => (float) $row['min'],
-      'max'       => (float) $row['max'],
-      'exalted'   => (float) $row['exalted'],
-      'total'     => (int) $row['total'],
-      'daily'     => (int) $row['daily'],
-      'current'   => (int) $row['current'],
-      'accepted'  => (int) $row['accepted'],
-      'history'   => array()
-    );
-
-    $historyStmt = get_history_entries($pdo, $row['leagueId'], $id);
-    while ($historyRow = $historyStmt->fetch()) {
-      $tmp['history'][] = array(
-        'time'     =>         $historyRow["time"],
-        'mean'     => (float) $historyRow["mean"],
-        'median'   => (float) $historyRow["median"],
-        'mode'     => (float) $historyRow["mode"],
-        'daily'    => (int)   $historyRow["daily"],
-        'current'  => (int)   $historyRow["current"],
-        'accepted' => (int)   $historyRow["accepted"],
-      );
-    }
-
-    $payload[] = $tmp;
+    $payload[] = [
+      'id'          => (int)    $row['leagueId'],
+      'name'        =>          $row['leagueName'],
+      'display'     =>          $row['leagueDisplay'],
+      'active'      => (bool)   $row['leagueActive'],
+      'start'       =>          $row['leagueStart'],
+      'end'         =>          $row['leagueEnd'],
+      'mean'        => (float)  $row['mean'],
+      'median'      => (float)  $row['median'],
+      'mode'        => (float)  $row['mode'],
+      'min'         => (float)  $row['min'],
+      'max'         => (float)  $row['max'],
+      'exalted'     => (float)  $row['exalted'],
+      'total'       => (int)    $row['total'],
+      'daily'       => (int)    $row['daily'],
+      'current'     => (int)    $row['current'],
+      'accepted'    => (int)    $row['accepted']
+    ];
   }
 
   return $payload;
@@ -128,81 +110,18 @@ function build_history_payload($pdo, $id) {
 
 function build_payload($pdo, $id) {
   // Get item's name, frame, icon, etc.
-  $itemDataStmt = get_item_data($pdo, $id);
+  $payload = get_item_data($pdo, $id);
 
   // If there is no item with the provided id
-  if ($itemDataStmt->rowCount() === 0) {
-    error(400, "Invalid id");
-  }
-
-  // Get the one item data row
-  $itemData = $itemDataStmt->fetch();
-
-  // Get prices on a per-league basis
-  $historyData = build_history_payload($pdo, $id);
-
-  // Form payload with predefined fields
-  $payload = array(
-    'name'      => $itemData['name'],
-    'type'      => $itemData['type'],
-    'frame'     => $itemData['frame'],
-    'category'  => $itemData['category'],
-    'group'     => $itemData['group'],
-
-    'base'      => null,
-    'enchant'   => null,
-    'gem'       => null,
-    'map'       => null,
-
-    'stack'     => $itemData['stack']     === NULL ? null :  (int) $itemData['stack'],
-    'links'     => $itemData['links']     === NULL ? null :  (int) $itemData['links'],
-    'variation' => $itemData['variation'],
-    'icon'      => $itemData['icon'],
-    'data'      => $historyData
-  );
-
-  if ($itemData["category"] === "map") {
-    $payload['map'] = array(
-      "series" => $itemData['series'] === null ? null : (int) $itemData['series'],
-      "tier" => (int) $itemData['tier']
-    );
-  }
-
-  if ($itemData["category"] === "base") {
-    $payload['base'] = array(
-      "shaper" => (bool) $itemData['shaper'],
-      "elder" => (bool) $itemData['elder'],
-      "itemLevel" => $itemData['ilvl'] === null ? null : (int) $itemData['ilvl']
-    );
-  }
-
-  if ($itemData["category"] === "gem") {
-    $payload['gem'] = array(
-      "level" => (int) $itemData['lvl'],
-      "quality" => (int) $itemData['quality'],
-      "corrupted" => (bool) $itemData['corrupted']
-    );
-  }
-
-  if ($itemData["category"] === "enchantment") {
-    $payload['enchant'] = array(
-      "min" => $itemData['enchantMin'] === null ? null : (float) $itemData['enchantMin'],
-      "max" => $itemData['enchantMax'] === null ? null : (float) $itemData['enchantMax']
-    );
-  }
+  if (!$payload) error(400, "Invalid id");
+  $payload['leagues'] = get_history_data($pdo, $id);
 
   return $payload;
 }
 
-// Define content type
+
 header("Content-Type: application/json");
-
 check_errors();
-
 include_once ( "../details/pdo.php" );
-
-// Form the payload
 $payload = build_payload($pdo, $_GET["id"]);
-
-// Display generated data
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);

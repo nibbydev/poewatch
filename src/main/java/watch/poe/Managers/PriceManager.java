@@ -1,5 +1,6 @@
 package poe.Managers;
 
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
@@ -16,13 +17,15 @@ import java.util.List;
 public class PriceManager extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
     private final Database database;
+    private final Config config;
 
     private volatile boolean run = true;
     private volatile boolean readyToExit = false;
-    private static final int CALC_DELAY = 50;
+    private long lastCycleTime = 0;
 
-    public PriceManager(Database database) {
-        this.database = database;
+    public PriceManager(Database db, Config cnf) {
+        this.database = db;
+        this.config = cnf;
     }
 
     /**
@@ -38,6 +41,18 @@ public class PriceManager extends Thread {
 
         // Main loop of the thread
         while (run) {
+            // Minimal delay before starting cycle
+            if (lastCycleTime + config.getInt("calculation.minCycleInterval") > System.currentTimeMillis()) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+
+                continue;
+            }
+
+            lastCycleTime = System.currentTimeMillis();
             logger.info("Fetching latest currency rates");
 
             // Grab newest currency ratios from the database
@@ -48,7 +63,7 @@ public class PriceManager extends Thread {
                 logger.error("Could not get currency rates for price calculation");
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(config.getInt("calculation.currencyRetryDelay"));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
@@ -64,7 +79,7 @@ public class PriceManager extends Thread {
                 logger.error("Could not get ids for price calculation");
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(config.getInt("calculation.itemRetryDelay"));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
@@ -74,7 +89,7 @@ public class PriceManager extends Thread {
                 logger.warn("Id bundle list was empty");
 
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(config.getInt("calculation.itemRetryDelay"));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
@@ -135,7 +150,7 @@ public class PriceManager extends Thread {
                     idBundles.get(i).getLeagueId(), idBundles.get(i).getItemId(), i, idBundles.size());
 
             try {
-                Thread.sleep(CALC_DELAY);
+                Thread.sleep(config.getInt("calculation.itemDelay"));
             } catch (InterruptedException ex) {
                 logger.error(ex.toString());
             }
