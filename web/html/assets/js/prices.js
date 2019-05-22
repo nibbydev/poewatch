@@ -3,8 +3,7 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
-// Eh for development, i guess?
-const API_URL = "https://api.poe.watch/";
+const API_URL = 'https://api.poe.watch';
 const SPARK_LINE_OPTIONS = {
   pad_y: 2,
   width: 60,
@@ -560,7 +559,7 @@ class DetailsModal {
       console.log("History source: remote");
 
       let request = $.ajax({
-        url: API_URL + "item",
+        url: `${API_URL}/item`,
         data: {id: this.current.id},
         type: "GET",
         async: true,
@@ -615,7 +614,7 @@ class DetailsModal {
 
     // Prep request
     let request = $.ajax({
-      url: API_URL + "itemhistory",
+      url: `${API_URL}/itemhistory`,
       data: {
         league: this.current.league,
         id: this.current.id
@@ -999,8 +998,8 @@ class DetailsModal {
 // Default item search filter options
 let FILTER = {
   league: SERVICE_leagues[0],
-  category: null,
-  group: "all",
+  category: 'currency',
+  group: 'all',
   showLowConfidence: false,
   links: null,
   rarity: null,
@@ -1021,7 +1020,6 @@ let MODAL = new DetailsModal();
 
 $(document).ready(function() {
   parseQueryParams();
-
   makeGetRequest();
   defineListeners();
 }); 
@@ -1030,153 +1028,203 @@ $(document).ready(function() {
 // Data prep
 //------------------------------------------------------------------------------------------------------------
 
+/**
+ * Loads and processes query parameters on initial page load
+ */
 function parseQueryParams() {
-  // Reusable variable to hold query param values
-  let tmp;
+  // All defined query parameters
+  const params = [
+    'league',
+    'category',
+    'group',
+    'search',
+    'confidence',
+    'rarity',
+    'links',
+    'tier',
+    'corrupted',
+    'lvl',
+    'quality',
+    'ilvl',
+    'influence'
+  ];
 
-  // If there is a league param
-  if ((tmp = parseQueryParam('league'))) {
-    // Get data associated with the league
-    let leagueData = getServiceLeague(tmp);
+  // Get and process values for all query parameters
+  params.forEach(a => processParam(a));
 
-    // If it's valid
-    if (leagueData) {
-      FILTER.league = leagueData;
-      $("#search-league").val(leagueData.name);
+  // Overwrite league query param to fix capitalization
+  updateQueryParam('league', FILTER.league.name);
+
+  // Since sorting relies on two separate params,
+  // it's defined in a separate function
+  processSortParam();
+}
+
+/**
+ * Collection of parse actions for each defined query parameter
+ *
+ * @param param Valid query parameter
+ */
+function processParam(param) {
+  const val = parseQueryParam(param);
+  if (val === null) return;
+
+  switch (param) {
+    case 'league': {
+      // Get data associated with the league
+      FILTER.league = SERVICE_leagues.find(league => league.name === val);
+      // Set selector value
+      $('#search-league').val(FILTER.league.name);
+
+      break;
     }
-  }
+    case 'category': {
+      FILTER.category = val;
+      break;
+    }
+    case 'group': {
+      $('#search-group').val(val);
+      FILTER.group = val;
 
-  // Overwrite league query param with a correct value
-  updateQueryParam("league", FILTER.league.name);
+      break;
+    }
+    case 'search': {
+      $('#search-searchbar').val(val);
+      FILTER.search = val;
 
-  if ((tmp = parseQueryParam('category'))) {
-    FILTER.category = tmp;
-  } else {
-    FILTER.category = "currency";
-    updateQueryParam("category", FILTER.category);
-  }
-
-  if ((tmp = parseQueryParam('group'))) {
-    $('#search-group').val(tmp);
-    FILTER.group = tmp;
-  }
-
-  if ((tmp = parseQueryParam('search'))) {
-    $("#search-searchbar").val(tmp);
-    FILTER.search = tmp;
-  }
-
-  if (parseQueryParam('confidence')) {
-    $('#radio-confidence input[value="true"]').click();
-    FILTER.showLowConfidence = true;
-  }
-
-  if ((tmp = parseQueryParam('rarity'))) {
-    $(`#radio-rarity input[value="${tmp}"]`).click();
-    if      (tmp === "unique") FILTER.rarity =    3;
-    else if (tmp ===  "relic") FILTER.rarity =    9;
-  }
-
-  if ((tmp = parseQueryParam('links'))) {
-    $(`#radio-links input[value="${tmp}"]`).click();
-    if (tmp ===  "all") FILTER.links = -1;
-    else FILTER.links = parseInt(tmp);
-  }
-
-  if ((tmp = parseQueryParam('tier'))) {
-    $('#select-tier').val(tmp);
-    if (tmp === "none") FILTER.tier = 0;
-    else FILTER.tier = parseInt(tmp);
-  }
-
-  if ((tmp = parseQueryParam('corrupted'))) {
-    $(`#radio-corrupted input[value="${tmp}"]`).click();
-    FILTER.gemCorrupted = tmp === "true";
-  }
-
-  if ((tmp = parseQueryParam('lvl'))) {
-    $('#select-level').val(tmp);
-    FILTER.gemLvl = parseInt(tmp);
-  }
-
-  if ((tmp = parseQueryParam('quality'))) {
-    $('#select-quality').val(tmp);
-    FILTER.gemQuality = parseInt(tmp);
-  }
-
-  if ((tmp = parseQueryParam('ilvl'))) {
-    $('#select-ilvl').val(tmp);
-    FILTER.ilvl = parseInt(tmp);
-  }
-
-  if ((tmp = parseQueryParam('influence'))) {
-    $('#select-influence').val(tmp);
-    FILTER.influence = tmp;
-  }
-
-  let tmpCol, tmpOrder;
-
-  if ((tmpCol = parseQueryParam('sortby'))) {
-    let element = null;
-
-    // Find column that matches the provided param
-    $(".sort-column").each(function() {
-      if (this.innerHTML.toLowerCase() === tmpCol) {
-        element = this;
-      }
-    });
-
-    // If there was no match then clear the browser's query params
-    if (!element) {
-      updateQueryParam("sortby", null);
-      updateQueryParam("sortorder", null);
-      return;
+      break;
     }
 
-    // Get column name
-    let col = element.innerHTML.toLowerCase();
+    case 'confidence': {
+      $(`#radio-confidence input[value='true']`).click();
+      FILTER.showLowConfidence = true;
 
-    // If there was a sort order query param as well
-    if ((tmpOrder = parseQueryParam('sortorder'))) {
-      let order = null;
-      let color;
+      break;
+    }
+    case 'rarity': {
+      $(`#radio-rarity input[value="${val}"]`).click();
 
-      // Only two options
-      if (tmpOrder === "descending") {
-        order = "descending";
-        color = "custom-text-green";
-      } else if (tmpOrder === "ascending") {
-        order = "ascending";
-        color = "custom-text-red";
+      if (val === "unique") {
+        FILTER.rarity = 3;
+      } else if (val === "relic") {
+        FILTER.rarity = 9;
       }
 
-      // If user provided a third option, count that as invalid and
-      // clear the browser's query params
-      if (!order) {
-        updateQueryParam("sortby", null);
-        updateQueryParam("sortorder", null);
-        return;
+      break;
+    }
+    case 'links': {
+      $(`#radio-links input[value="${val}"]`).click();
+
+      if (val === "all") {
+        FILTER.links = -1;
+      } else {
+        FILTER.links = parseInt(val);
       }
 
-      // User-provided params were a-ok, set the sort function and
-      // add indication which col is being sorted
-      console.log("Sorting: " + col + " " + order);
-      FILTER.sortFunction = getSortFunc(col, order);
-      $(element).addClass(color);
+      break;
+    }
+    case 'tier': {
+      $('#select-tier').val(val);
+
+      if (val === "none") {
+        FILTER.tier = 0;
+      } else{
+        FILTER.tier = parseInt(val);
+      }
+
+      break;
+    }
+    case 'corrupted': {
+      $(`#radio-corrupted input[value='${val}']`).click();
+      FILTER.gemCorrupted = (val === "true");
+
+      break;
+    }
+    case 'lvl': {
+      $('#select-level').val(val);
+      FILTER.gemLvl = parseInt(val);
+      break;
+    }
+    case 'quality': {
+      $('#select-quality').val(val);
+      FILTER.gemQuality = parseInt(val);
+      break;
+    }
+    case 'ilvl': {
+      $('#select-ilvl').val(val);
+      FILTER.ilvl = parseInt(val);
+      break;
+    }
+    case 'influence': {
+      $('#select-influence').val(val);
+      FILTER.influence = val;
+      break;
     }
   }
 }
 
+/**
+ * Find sorting function based on query param
+ */
+function processSortParam() {
+  // Reset function to clear query parameters
+  const reset = () => {
+    updateQueryParam('sortby', null);
+    updateQueryParam('sortorder', null);
+  };
+
+  const tmpColName = parseQueryParam('sortby');
+  const tmpOrder = parseQueryParam('sortorder');
+
+  // The column the user is trying to sort by
+  let column = null;
+
+  // Find column that matches the provided param
+  $(".sort-column").each(function() {
+    if (this.innerHTML.toLowerCase() === tmpColName) {
+      column = this;
+    }
+  });
+
+  // No matching column
+  if (!column) {
+    reset();
+    return;
+  }
+
+  // Only two options for ordering
+  if (tmpOrder === 'ascending') {
+    $(column).addClass('custom-text-red');
+  } else if (tmpOrder === 'descending') {
+    $(column).addClass('custom-text-green');
+  } else {
+    reset();
+    return;
+  }
+
+  // Get the column name
+  const colName = column.innerHTML.toLowerCase();
+  console.log(`Sorting: ${colName} ${tmpOrder}`);
+
+  // Set the sort function
+  FILTER.sortFunction = getSortFunc(colName, tmpOrder);
+}
+
+
 function defineListeners() {
   // League
   $("#search-league").on("change", function(){
-    let tmp = getServiceLeague($(":selected", this).val());
-    if (!tmp) return;
-    
-    FILTER.league = tmp;
-    console.log("Selected league: " + FILTER.league.name);
-    updateQueryParam("league", FILTER.league.name);
-    makeGetRequest();
+    // Get league name from selector
+    let tmp = $(":selected", this).val();
+    // Get data associated with the league
+    const leagueData = SERVICE_leagues.find(league => league.name === tmp);
+
+    if (leagueData) {
+      FILTER.league = leagueData;
+      console.log("Selected league: " + FILTER.league.name);
+      updateQueryParam("league", FILTER.league.name);
+      makeGetRequest();
+    }
   });
 
   // Group
@@ -1359,7 +1407,7 @@ function makeGetRequest() {
   ITEMS = [];
 
   let request = $.ajax({
-    url: API_URL + "get",
+    url: `${API_URL}/get`,
     data: {
       league: FILTER.league.name, 
       category: FILTER.category
