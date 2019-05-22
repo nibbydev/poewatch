@@ -1017,6 +1017,70 @@ let FILTER = {
 let ITEMS = [];
 // Singular modal to display item specifics on
 let MODAL = new DetailsModal();
+// Functions for sorting columns. There's probably
+// a better way to do this
+const SORT_FUNCTIONS = {
+  change: {
+    ascending: (a, b) => {
+      if (a.change < b.change) return -1;
+      if (a.change > b.change) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.change > b.change) return -1;
+      if (a.change < b.change) return 1;
+      return 0;
+    }
+  },
+  daily: {
+    ascending: (a, b) => {
+      if (a.daily < b.daily) return -1;
+      if (a.daily > b.daily) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.daily > b.daily) return -1;
+      if (a.daily < b.daily) return 1;
+      return 0;
+    }
+  },
+  total: {
+    ascending: (a, b) => {
+      if (a.total < b.total) return -1;
+      if (a.total > b.total) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.total > b.total) return -1;
+      if (a.total < b.total) return 1;
+      return 0;
+    }
+  },
+  item: {
+    ascending: (a, b) => {
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.name > b.name) return -1;
+      if (a.name < b.name) return 1;
+      return 0;
+    }
+  },
+  default: {
+    ascending: (a, b) => {
+      if (a.mean < b.mean) return -1;
+      if (a.mean > b.mean) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.mean > b.mean) return -1;
+      if (a.mean < b.mean) return 1;
+      return 0;
+    }
+  }
+};
 
 $(document).ready(function() {
   parseQueryParams();
@@ -1209,6 +1273,7 @@ function processSortParam() {
   // Set the sort function
   FILTER.sortFunction = getSortFunc(colName, tmpOrder);
 }
+
 
 
 function defineListeners() {
@@ -1443,72 +1508,26 @@ function makeGetRequest() {
   });
 }
 
+
 /**
- * Sorting by column
+ * Get sort function that matches provided params
+ *
+ * @param col Column name to sort
+ * @param order Sort ordering
+ * @returns {*} Comparator function with two arguments
  */
 function getSortFunc(col, order) {
-  switch (col) {
-    case "change":
-      return order === "descending" 
-      ? (a, b) => {
-        if (a.change > b.change) return -1;
-        if (a.change < b.change) return 1;
-        return 0;
-      } 
-      : (a, b) => {
-        if (a.change < b.change) return -1;
-        if (a.change > b.change) return 1;
-        return 0;
-      };
-    case "daily":
-      return order === "descending" 
-      ? (a, b) => {
-        if (a.daily > b.daily) return -1;
-        if (a.daily < b.daily) return 1;
-        return 0;  
-      }
-      : (a, b) => {
-        if (a.daily < b.daily) return -1;
-        if (a.daily > b.daily) return 1;
-        return 0;
-      };
-    case "total":
-      return order === "descending" 
-      ? (a, b) => {
-        if (a.total > b.total) return -1;
-        if (a.total < b.total) return 1;
-        return 0;
-      }  
-      : (a, b) => {
-        if (a.total < b.total) return -1;
-        if (a.total > b.total) return 1;
-        return 0;
-      };
-    case "item":
-      return order === "descending" 
-      ? (a, b) => {
-        if (a.name > b.name) return -1;
-        if (a.name < b.name) return 1;
-        return 0;
-      }   
-      : (a, b) => {
-        if (a.name < b.name) return -1;
-        if (a.name > b.name) return 1;
-        return 0;
-      };
-    default:
-      return order === "descending" 
-      ? (a, b) => {
-        if (a.mean > b.mean) return -1;
-        if (a.mean < b.mean) return 1;
-        return 0;
-      }  
-      : (a, b) => {
-        if (a.mean < b.mean) return -1;
-        if (a.mean > b.mean) return 1;
-        return 0;
-      }
+  // If the sort function exists
+  if (SORT_FUNCTIONS[col]) {
+    if (SORT_FUNCTIONS[col][order]) {
+      return SORT_FUNCTIONS[col][order];
+    }
   }
+
+  // Otherwise return default
+  return SORT_FUNCTIONS['default'][order]
+    ? SORT_FUNCTIONS['default'][order]
+    : SORT_FUNCTIONS['default']['descending'];
 }
 
 //------------------------------------------------------------------------------------------------------------
