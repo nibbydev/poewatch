@@ -1274,186 +1274,249 @@ function processSortParam() {
   FILTER.sortFunction = getSortFunc(colName, tmpOrder);
 }
 
-
-
+/**
+ * Creates event listeners for various elements on the site
+ */
 function defineListeners() {
-  // League
-  $("#search-league").on("change", function(){
-    // Get league name from selector
-    let tmp = $(":selected", this).val();
-    // Get data associated with the league
-    const leagueData = SERVICE_leagues.find(league => league.name === tmp);
+  $('#search-league').on('change', genericListener);
+  $('#search-group').on('change', genericListener);
+  $('#button-showAll').on('click', genericListener);
+  $('#search-searchbar').on('input', genericListener);
+  $('#radio-confidence').on('change', genericListener);
+  $('#radio-rarity').on('change', genericListener);
+  $('#radio-links').on('change', genericListener);
+  $('#select-tier').on('change', genericListener);
+  $('#select-level').on('change', genericListener);
+  $('#select-quality').on('change', genericListener);
+  $('#radio-corrupted').on('change', genericListener);
+  $('#select-ilvl').on('change', genericListener);
+  $('#select-influence').on('change', genericListener);
 
-    if (leagueData) {
-      FILTER.league = leagueData;
-      console.log("Selected league: " + FILTER.league.name);
-      updateQueryParam("league", FILTER.league.name);
-      makeGetRequest();
-    }
-  });
+  // Model display
+  $('#searchResults > tbody').delegate('tr', 'click', e => MODAL.onRowClick(e));
+  // Sort byy columns
+  $('.sort-column').on('click', sortListener);
+}
 
-  // Group
-  $("#search-group").change(function(){
-    FILTER.group = $(this).find(":selected").val();
-    console.log("Selected group: " + FILTER.group);
-    updateQueryParam("group", FILTER.group);
-    sortResults();
-  });
+/**
+ * Handles most common events
+ *
+ * @param e Event data
+ */
+function genericListener(e) {
+  switch (e.currentTarget.id) {
+    case 'search-league': {
+      updateQueryParam('league', e.target.value);
 
-  // Load all button
-  $("#button-showAll").on("click", function(){
-    console.log("Button press: show all");
-    $(this).hide();
-    FILTER.parseAmount = -1;
-    sortResults();
-  });
+      // Get data associated with the league
+      const leagueData = SERVICE_leagues.find(league => league.name === e.target.value);
+      if (leagueData) {
+        FILTER.league = leagueData;
+        console.log(`Selected league: ${FILTER.league.name}`);
 
-  // Searchbar
-  $("#search-searchbar").on("input", function(){
-    FILTER.search = $(this).val().toLowerCase().trim();
-    console.log("Search: " + FILTER.search);
-    updateQueryParam("search", FILTER.search);
-    sortResults();
-  });
+        makeGetRequest();
+      }
 
-  // Low confidence
-  $("#radio-confidence").on("change", function(){
-    let option = $("input:checked", this).val() === "true";
-    console.log("Show low daily: " + option);
-    FILTER.showLowConfidence = option;
-    updateQueryParam("confidence", option);
-    sortResults();
-  });
-
-  // Rarity
-  $("#radio-rarity").on("change", function(){
-    FILTER.rarity = $(":checked", this).val();
-    console.log("Rarity filter: " + FILTER.rarity);
-    updateQueryParam("rarity", FILTER.rarity);
-
-    if      (FILTER.rarity ===    "all") FILTER.rarity = null;
-    else if (FILTER.rarity === "unique") FILTER.rarity =    3;
-    else if (FILTER.rarity ===  "relic") FILTER.rarity =    9;
-    
-    sortResults();
-  });
-  
-  // Item links
-  $("#radio-links").on("change", function(){
-    FILTER.links = $(":checked", this).val();
-    console.log("Link filter: " + FILTER.links);
-    updateQueryParam("links", FILTER.links);
-    if      (FILTER.links === "none") FILTER.links = null;
-    else if (FILTER.links ===  "all") FILTER.links = -1;
-    else FILTER.links = parseInt(FILTER.links);
-    sortResults();
-  });
-
-  // Map tier
-  $("#select-tier").on("change", function(){
-    FILTER.tier = $(":selected", this).val();
-    console.log("Map tier filter: " + FILTER.tier);
-    updateQueryParam("tier", FILTER.tier);
-    if (FILTER.tier === "all") FILTER.tier = null;
-    else if (FILTER.tier === "none") FILTER.tier = 0;
-    else FILTER.tier = parseInt(FILTER.tier);
-    sortResults();
-  });
-
-  // Gem level
-  $("#select-level").on("change", function(){
-    FILTER.gemLvl = $(":selected", this).val();
-    console.log("Gem lvl filter: " + FILTER.gemLvl);
-    if (FILTER.gemLvl === "all") FILTER.gemLvl = null;
-    else FILTER.gemLvl = parseInt(FILTER.gemLvl);
-    updateQueryParam("lvl", FILTER.gemLvl);
-    sortResults();
-  });
-
-  // Gem quality
-  $("#select-quality").on("change", function(){
-    FILTER.gemQuality = $(":selected", this).val();
-    console.log("Gem quality filter: " + FILTER.gemQuality);
-    if (FILTER.gemQuality === "all") FILTER.gemQuality = null;
-    else FILTER.gemQuality = parseInt(FILTER.gemQuality);
-    updateQueryParam("quality", FILTER.gemQuality);
-    sortResults();
-  });
-
-  // Gem corrupted
-  $("#radio-corrupted").on("change", function(){
-    FILTER.gemCorrupted = $(":checked", this).val();
-    console.log("Gem corruption filter: " + FILTER.gemCorrupted);
-    if (FILTER.gemCorrupted === "all") FILTER.gemCorrupted = null;
-    else FILTER.gemCorrupted = FILTER.gemCorrupted === "true";
-    updateQueryParam("corrupted", FILTER.gemCorrupted);
-    sortResults();
-  });
-
-  // Base iLvl
-  $("#select-ilvl").on("change", function(){
-    let ilvl = $(":selected", this).val();
-    console.log("Base iLvl filter: " + ilvl);
-    FILTER.ilvl = ilvl === "all" ? null : parseInt(ilvl);
-    updateQueryParam("ilvl", ilvl);
-    sortResults();
-  });
-
-  // Base influence
-  $("#select-influence").on("change", function(){
-    FILTER.influence = $(":selected", this).val();
-    console.log("Influence filter: " + FILTER.influence);
-    if (FILTER.influence == "all") FILTER.influence = null; 
-    updateQueryParam("influence", FILTER.influence);
-    sortResults();
-  });
-
-  // Expand row
-  $("#searchResults > tbody").delegate("tr", "click", function(event) {
-    MODAL.onRowClick(event);
-  });
-
-  // Sort
-  $(".sort-column").on("click", function(){
-    // Get col name
-    let col = $(this)[0].innerHTML.toLowerCase();
-    // Get order tag, if present
-    let order = $(this).attr("order");
-    let color = null;
-
-    // Remove all data from all sort columns
-    $(".sort-column")
-      .attr("class", "sort-column")
-      .attr("order", null);
-
-    // Toggle descriptions and orders
-    if (!order) {
-      order = "descending";
-      color = "custom-text-green";
-    } else if (order === "descending") {
-      order = "ascending";
-      color = "custom-text-red";
-    } else if (order === "ascending") {
-      updateQueryParam("sortby", null);
-      updateQueryParam("sortorder", null);
-      console.log("Sorting: default");
-      FILTER.sortFunction = getSortFunc(null, "descending");
-      sortResults();
+      // No need to sort here
       return;
     }
+    case 'search-group': {
+      updateQueryParam('group', FILTER.group);
 
-    updateQueryParam("sortby", col);
-    updateQueryParam("sortorder", order);
+      FILTER.group = e.target.value;
+      console.log(`Selected group: ${FILTER.group}`);
 
-    // Set clicked col's data
-    $(this).attr("order", order);
-    $(this).addClass(color);
+      break;
+    }
+    case 'button-showAll': {
+      console.log('Button press: show all');
 
-    console.log("Sorting: " + col + " " + order);
-    FILTER.sortFunction = getSortFunc(col, order);
+      $(e.target).hide();
+      FILTER.parseAmount = -1;
 
+      break;
+    }
+    case 'search-searchbar': {
+      updateQueryParam('search', FILTER.search);
+
+      FILTER.search = e.target.value.toLowerCase().trim();
+      console.log(`Search: ${FILTER.search}`);
+
+      break;
+    }
+    case 'radio-confidence': {
+      FILTER.showLowConfidence = (e.target.value === 'true');
+      updateQueryParam('confidence', FILTER.showLowConfidence);
+
+      console.log(`Show low daily: ${FILTER.showLowConfidence}`);
+
+      break;
+    }
+    case 'radio-rarity': {
+      console.log(`Rarity filter: ${e.target.value}`);
+      updateQueryParam('rarity', e.target.value);
+
+      switch (e.target.value) {
+        case 'all':
+          FILTER.rarity = null;
+          break;
+        case 'unique':
+          FILTER.rarity = 3;
+          break;
+        case 'relic':
+          FILTER.rarity = 9;
+          break;
+        default:
+          FILTER.rarity = null;
+          break;
+      }
+
+      break;
+    }
+    case 'radio-links': {
+      updateQueryParam('links', e.target.value);
+      console.log(`Link filter: ${e.target.value}`);
+
+      switch (e.target.value) {
+        case 'none':
+          FILTER.links = null;
+          break;
+        case 'all':
+          FILTER.links = -1;
+          break;
+        default:
+          FILTER.links = parseInt(e.target.value);
+          break;
+      }
+
+      break;
+    }
+    case 'select-tier': {
+      updateQueryParam("tier", e.target.value);
+      console.log(`Map tier filter: ${e.target.value}`);
+
+      switch (e.target.value) {
+        case 'all':
+          FILTER.tier = null;
+          break;
+        case 'none':
+          FILTER.tier = 0;
+          break;
+        default:
+          FILTER.tier = parseInt(e.target.value);
+          break;
+      }
+
+      break;
+    }
+    case 'select-level': {
+      updateQueryParam('lvl', e.target.value);
+      console.log(`Gem lvl filter: ${e.target.value}`);
+
+      if (e.target.value === 'all') {
+        FILTER.gemLvl = null;
+      } else {
+        FILTER.gemLvl = parseInt(e.target.value);
+      }
+
+      break;
+    }
+    case 'select-quality': {
+      updateQueryParam('quality', e.target.value);
+      console.log(`Gem quality filter: ${e.target.value}`);
+
+      if (e.target.value === 'all') {
+        FILTER.gemQuality = null;
+      } else {
+        FILTER.gemQuality = parseInt(e.target.value);
+      }
+
+      break;
+    }
+    case 'radio-corrupted': {
+      updateQueryParam('corrupted', e.target.value);
+      console.log(`Gem corruption filter: ${e.target.value}`);
+
+      if (e.target.value === 'all') {
+        FILTER.gemCorrupted = null;
+      } else {
+        FILTER.gemCorrupted = (e.target.value === 'true');
+      }
+
+      break;
+    }
+    case 'select-ilvl': {
+      updateQueryParam('ilvl', e.target.value);
+      console.log(`Base iLvl filter: ${e.target.value}`);
+
+      if (e.target.value === 'all') {
+        FILTER.ilvl = null;
+      } else {
+        FILTER.ilvl = parseInt(e.target.value);
+      }
+
+      break;
+    }
+    case 'select-influence': {
+      updateQueryParam('influence', e.target.value);
+      console.log(`Influence filter: ${e.target.value}`);
+
+      if (e.target.value === 'all') {
+        FILTER.influence = null;
+      } else {
+        FILTER.influence = e.target.value;
+      }
+
+      break;
+    }
+  }
+
+  sortResults();
+}
+
+/**
+ * Handles sorting events
+ *
+ * @param e Event data
+ */
+function sortListener(e) {
+  const colName = e.target.innerHTML.toLowerCase();
+  const target = $(e.target);
+  let order = e.target.attributes.order ? e.target.attributes.order.value : null;
+  let color = null;
+
+  // Remove all data from all sort columns
+  target.attr('class', 'sort-column')
+    .attr('order', null);
+
+  // Toggle descriptions and orders
+  if (!order) {
+    order = 'descending';
+    color = 'custom-text-green';
+  } else if (order === 'descending') {
+    order = 'ascending';
+    color = 'custom-text-red';
+  } else if (order === "ascending") {
+    updateQueryParam('sortby', null);
+    updateQueryParam('sortorder', null);
+
+    console.log('Sorting: default');
+    FILTER.sortFunction = getSortFunc();
     sortResults();
-  });
+
+    return;
+  }
+
+  updateQueryParam('sortby', colName);
+  updateQueryParam('sortorder', order);
+
+  // Set clicked col's data
+  target.addClass(color).attr('order', order);
+
+  console.log(`Sorting: ${colName} ${order}`);
+  FILTER.sortFunction = getSortFunc(colName, order);
+
+  sortResults();
 }
 
 /**
@@ -1507,7 +1570,6 @@ function makeGetRequest() {
     buffering.after(msg);
   });
 }
-
 
 /**
  * Get sort function that matches provided params
