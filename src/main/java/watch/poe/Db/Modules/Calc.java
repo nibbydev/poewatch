@@ -26,7 +26,7 @@ public class Calc {
      * @param since Timestamp of last query
      * @return True on success
      */
-    public boolean getNewIdBundles(List<IdBundle> idBundles, Timestamp since) {
+    public boolean getIdBundles(List<IdBundle> idBundles, Timestamp since) {
         if (idBundles == null || !idBundles.isEmpty()) {
             throw new RuntimeException("Invalid list provided");
         }

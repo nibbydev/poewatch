@@ -22,6 +22,7 @@ public class PriceManager extends Thread {
     private volatile boolean run = true;
     private volatile boolean readyToExit = false;
     private long lastCycleTime = 0;
+    private Timestamp cycleStart;
 
     public PriceManager(Database db, Config cnf) {
         this.database = db;
@@ -33,7 +34,7 @@ public class PriceManager extends Thread {
      */
     public void run() {
         // Get the time of the last calculation on program start
-        Timestamp cycleStart = database.init.getLastItemTime();
+        cycleStart = database.init.getLastItemTime();
         if (cycleStart == null) {
             // Database contained no items
             cycleStart = new Timestamp(0);
@@ -71,9 +72,11 @@ public class PriceManager extends Thread {
                 continue;
             }
 
+            logger.info("Fetching id bundles");
+
             // Get ID bundles from database
             List<IdBundle> idBundles = new ArrayList<>();
-            success = database.calc.getNewIdBundles(idBundles, cycleStart);
+            success = database.calc.getIdBundles(idBundles, cycleStart);
 
             if (!success) {
                 logger.error("Could not get ids for price calculation");
@@ -172,5 +175,12 @@ public class PriceManager extends Thread {
         }
 
         logger.info("Controller stopped");
+    }
+
+    /**
+     * Resets the last cycle timestamp, allowing all item to have their prices calculated
+     */
+    public void resetCycleStamp() {
+        cycleStart = new Timestamp(0);
     }
 }
