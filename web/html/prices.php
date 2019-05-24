@@ -1,35 +1,36 @@
-<?php 
-  require_once "assets/php/pageData.php";
-  require_once "../details/pdo.php";
-  require_once "assets/php/func/prices.php"; 
-  require_once "assets/php/templates/priceForms.php"; 
-  require_once "assets/php/templates/body.php"; 
+<?php
+require_once "assets/php/pageData.php";
+require_once "../details/pdo.php";
+require_once "assets/php/func/prices.php";
+require_once "assets/php/templates/priceForms.php";
+require_once "assets/php/templates/body.php";
 
-  $PAGEDATA["title"] = "Prices - PoeWatch";
-  $PAGEDATA["description"] = "Discover the average price of almost any item";
-  $PAGEDATA["cssIncludes"][] = "prices.css";
-  $PAGEDATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
-  $PAGEDATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
-  $PAGEDATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
-  $PAGEDATA["jsIncludes"][] = "prices.js";
-  
-  // Get list of leagues that have items
-  $leagueList = GetItemLeagues($pdo);
-  // Get all available categories
-  $categories = GetCategories($pdo);
-  // Check if query string contains valid params
-  CheckQueryParams($leagueList, $categories);
-  // Get valid category or default
-  $category = isset($_GET["category"]) ? $_GET["category"] : "currency";
-  // Get all groups that category
-  $groups = GetGroups($pdo, $category);
+$PAGE_DATA["title"] = "Prices - PoeWatch";
+$PAGE_DATA["description"] = "Discover the average price of almost any item";
+$PAGE_DATA["cssIncludes"][] = "prices.css";
+$PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
+$PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
+$PAGE_DATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
+$PAGE_DATA["jsIncludes"][] = "prices.js";
 
-  include "assets/php/templates/header.php";
-  include "assets/php/templates/navbar.php";
-  include "assets/php/templates/priceNav.php";
+// Get list of leagues that have items
+$leagueList = GetItemLeagues($pdo);
+// Get all available categories
+$categories = GetCategories($pdo);
+// Check if query string contains valid params
+CheckQueryParams($leagueList, $categories);
+// Get valid category or default
+$category = isset($_GET["category"]) ? $_GET["category"] : "currency";
+// Get all groups that category
+$groups = GetGroups($pdo, $category);
+
+include "assets/php/templates/header.php";
+include "assets/php/templates/navbar.php";
+include "assets/php/templates/priceNav.php";
 ?>
 
-<div id="modal-details" class="modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+<div id="modal-details" class="modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+     aria-hidden="true">
   <div class="modal-dialog pw-modal-lg" role="document">
 
     <div class="modal-content w-100">
@@ -42,7 +43,8 @@
             <h4 id="modal-name" target="_blank"></h4>
           </div>
 
-          <div class="col-12 col-sm-4 d-flex align-items-center p-0 ml-3 ml-sm-0 justify-content-start justify-content-sm-end">
+          <div
+            class="col-12 col-sm-4 d-flex align-items-center p-0 ml-3 ml-sm-0 justify-content-start justify-content-sm-end">
             <select class="form-control form-control-sm w-auto mr-2" id="modal-leagues"></select>
           </div>
         </div>
@@ -63,33 +65,36 @@
             <div class="col-12 col-sm-6 mb-2 mb-sm-0 d-flex">
               <table class="table table-sm details-table table-striped p-0">
                 <tbody>
-                  <tr>
-                    <td class="nowrap w-100">Mean</td>
-                    <td class="nowrap">
+                <tr>
+                  <td class="nowrap w-100">Mean</td>
+                  <td class="nowrap">
                       <span class="img-container img-container-xs text-center mr-1">
-                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                        <img
+                          src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
                       </span>
-                      <span id="modal-mean"></span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="nowrap w-100">Median</td>
-                    <td class="nowrap">
+                    <span id="modal-mean"></span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="nowrap w-100">Median</td>
+                  <td class="nowrap">
                       <span class="img-container img-container-xs text-center mr-1">
-                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                        <img
+                          src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
                       </span>
-                      <span id="modal-median"></span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="nowrap w-100">Mode</td>
-                    <td class="nowrap">
+                    <span id="modal-median"></span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="nowrap w-100">Mode</td>
+                  <td class="nowrap">
                       <span class="img-container img-container-xs text-center mr-1">
-                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                        <img
+                          src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
                       </span>
-                      <span id="modal-mode"></span>
-                    </td>
-                  </tr>
+                    <span id="modal-mode"></span>
+                  </td>
+                </tr>
                 </tbody>
               </table>
             </div>
@@ -97,23 +102,24 @@
             <div class="col-12 col-sm-6 mt-2 mt-sm-0 d-flex">
               <table class="table table-sm details-table table-striped p-0">
                 <tbody>
-                  <tr>
-                    <td class="nowrap pw-100">Total amount listed</td>
-                    <td class="nowrap"><span id="modal-total"></span></td>
-                  </tr>
-                  <tr>
-                    <td class="nowrap w-100">Listed every 24h</td>
-                    <td class="nowrap"><span id="modal-daily"></span></td>
-                  </tr>
-                  <tr>
-                    <td class="nowrap w-100">Price in exalted</td>
-                    <td class="nowrap">
+                <tr>
+                  <td class="nowrap pw-100">Total amount listed</td>
+                  <td class="nowrap"><span id="modal-total"></span></td>
+                </tr>
+                <tr>
+                  <td class="nowrap w-100">Listed every 24h</td>
+                  <td class="nowrap"><span id="modal-daily"></span></td>
+                </tr>
+                <tr>
+                  <td class="nowrap w-100">Price in exalted</td>
+                  <td class="nowrap">
                       <span class="img-container img-container-xs text-center mr-1">
-                        <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+                        <img
+                          src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
                       </span>
-                      <span id="modal-exalted"></span>
-                    </td>
-                  </tr>
+                    <span id="modal-exalted"></span>
+                  </td>
+                </tr>
                 </tbody>
               </table>
             </div>
@@ -125,11 +131,14 @@
               <div class="ct-chart"></div>
               <div class="d-flex justify-content-center">
                 <div class="btn-group btn-group-toggle mt-2" data-toggle="buttons" id="modal-radio">
-                  <label class="btn btn-outline-success btn-md p-0 px-1 active"><input type="radio" name="dataset" value="1">Mean</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1 active"><input type="radio" name="dataset"
+                                                                                       value="1">Mean</label>
                   <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="2">Median</label>
                   <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="3">Mode</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="4">Listed daily</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="5">On sale</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="4">Listed
+                    daily</label>
+                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="5">On
+                    sale</label>
                 </div>
               </div>
             </div>
@@ -139,116 +148,117 @@
 
       <div class="modal-footer slim-card-edge"></div>
     </div>
-    
+
   </div>
 </div>
 
 <?php genBodyHeader() ?>
-  <!-- Search forms -->
-  <div class="col-12 p-0 mb-3">
-    <div class='d-flex flex-wrap'>
-      <?php 
-        switch ($category) {
-          case "gem":
-            corruptedForm();
-            levelForm();
-            qualityForm();
-            break;
-          case "armour":
-          case "weapon":
-            linksForm();
-            rarityForm();
-            break;
-          case "map":
-            tierForm();
-            rarityForm();
-            break;
-          case "base":
-            itemLevelForm();
-            influenceForm();
-            break;
-          case "flask":
-          case "accessory":
-          case "jewel":
-            rarityForm();
-            break;
-          default:
-            break;
-        }
-      ?>
-    </div>
-
-    <div class='row'>
-      <!-- League -->
-      <div class="col-6 col-sm">
-        <h4 class="nowrap">League</h4>
-        <select class="form-control custom-select" id="search-league">
-          <?php foreach ($leagueList as $league): ?>
-          <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● "; echo $league['display'] ? $league['display'] : $league['name'] ?></option>
-          <?php endforeach ?>
-        </select>
-      </div>
-      <!--//League//-->
-
-      <!-- Confidence -->
-      <div class="col-6 col-sm">
-        <h4 class="nowrap">Low daily</h4>
-        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-          <label class="btn btn-outline-dark active">
-            <input type="radio" name="confidence" value="false" checked>Hide
-          </label>
-          <label class="btn btn-outline-dark">
-            <input type="radio" name="confidence" value="true">Show
-          </label>
-        </div>
-      </div>
-      <!--//Confidence//-->
-
-      <!-- Group -->
-      <div class="col-6 col-sm">
-        <h4>Group</h4>
-        <select class="form-control custom-select" id="search-group">
-          <?php if (sizeof($groups) > 1): ?>
-            <option value='all'>All</option>
-          <?php endif; foreach ($groups as $group): ?>
-            <option value='<?php echo $group['name'] ?>'><?php echo $group['display'] ?></option>
-          <?php endforeach ?>
-        </select>
-      </div>
-      <!--//Group//-->
-
-      <!-- Search -->
-      <div class="col-6 col-sm">
-        <h4>Search</h4>
-        <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-      </div>
-      <!--//Search//-->
-    </div>
-  </div>
-  <!--//Search forms//-->
-
-  <div class='col-12 p-0'>
-    <div class="card custom-card">
-      <div class="card-header slim-card-edge"></div>
-      <div class="card-body d-flex flex-column p-2">
-        <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
-          <thead>
-            <tr>
-          
-              <?php AddTableHeaders($category) ?>
-          
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <div class="buffering align-self-center mb-2" id="buffering-main"></div>
-        <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
-      </div>
-      <div class="card-footer slim-card-edge"></div>
-    </div>
+<!-- Search forms -->
+<div class="col-12 p-0 mb-3">
+  <div class='d-flex flex-wrap'>
+    <?php
+    switch ($category) {
+      case "gem":
+        corruptedForm();
+        levelForm();
+        qualityForm();
+        break;
+      case "armour":
+      case "weapon":
+        linksForm();
+        rarityForm();
+        break;
+      case "map":
+        tierForm();
+        rarityForm();
+        break;
+      case "base":
+        itemLevelForm();
+        influenceForm();
+        break;
+      case "flask":
+      case "accessory":
+      case "jewel":
+        rarityForm();
+        break;
+      default:
+        break;
+    }
+    ?>
   </div>
 
-  
+  <div class='row'>
+    <!-- League -->
+    <div class="col-6 col-sm">
+      <h4 class="nowrap">League</h4>
+      <select class="form-control custom-select" id="search-league">
+        <?php foreach ($leagueList as $league): ?>
+          <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● ";
+            echo $league['display'] ? $league['display'] : $league['name'] ?></option>
+        <?php endforeach ?>
+      </select>
+    </div>
+    <!--//League//-->
+
+    <!-- Confidence -->
+    <div class="col-6 col-sm">
+      <h4 class="nowrap">Low daily</h4>
+      <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+        <label class="btn btn-outline-dark active">
+          <input type="radio" name="confidence" value="false" checked>Hide
+        </label>
+        <label class="btn btn-outline-dark">
+          <input type="radio" name="confidence" value="true">Show
+        </label>
+      </div>
+    </div>
+    <!--//Confidence//-->
+
+    <!-- Group -->
+    <div class="col-6 col-sm">
+      <h4>Group</h4>
+      <select class="form-control custom-select" id="search-group">
+        <?php if (sizeof($groups) > 1): ?>
+          <option value='all'>All</option>
+        <?php endif;
+        foreach ($groups as $group): ?>
+          <option value='<?php echo $group['name'] ?>'><?php echo $group['display'] ?></option>
+        <?php endforeach ?>
+      </select>
+    </div>
+    <!--//Group//-->
+
+    <!-- Search -->
+    <div class="col-6 col-sm">
+      <h4>Search</h4>
+      <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+    </div>
+    <!--//Search//-->
+  </div>
+</div>
+<!--//Search forms//-->
+
+<div class='col-12 p-0'>
+  <div class="card custom-card">
+    <div class="card-header slim-card-edge"></div>
+    <div class="card-body d-flex flex-column p-2">
+      <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
+        <thead>
+        <tr>
+
+          <?php AddTableHeaders($category) ?>
+
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="buffering align-self-center mb-2" id="buffering-main"></div>
+      <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
+    </div>
+    <div class="card-footer slim-card-edge"></div>
+  </div>
+</div>
+
 
 <?php genBodyFooter() ?>
 

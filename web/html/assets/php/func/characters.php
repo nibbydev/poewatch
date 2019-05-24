@@ -1,7 +1,7 @@
 <?php
 // Check for errors in user-provided parameters
 function CheckQueryParamErrors() {
-  global $PAGEDATA;
+  global $PAGE_DATA;
 
   // Was not a search
   if (empty($_GET)) {
@@ -9,33 +9,33 @@ function CheckQueryParamErrors() {
   }
 
   // Mode was not in list of accepted modes
-  if (!in_array($PAGEDATA["page"]["searchMode"], array("account", "character"))) {
-    $PAGEDATA["page"]["errorMsg"] = "Invalid mode";
+  if (!in_array($PAGE_DATA["page"]["searchMode"], array("account", "character"))) {
+    $PAGE_DATA["page"]["errorMsg"] = "Invalid mode";
     return;
   }
 
   // Search string not provided
-  if ($PAGEDATA["page"]["searchString"] === null) {
-    $PAGEDATA["page"]["errorMsg"] = "No username defined";
+  if ($PAGE_DATA["page"]["searchString"] === null) {
+    $PAGE_DATA["page"]["errorMsg"] = "No username defined";
     return;
   }
 
   // Search string too short
-  if (strlen($PAGEDATA["page"]["searchString"]) < 3) {
-    $PAGEDATA["page"]["errorMsg"] = "Search string too short";
+  if (strlen($PAGE_DATA["page"]["searchString"]) < 3) {
+    $PAGE_DATA["page"]["errorMsg"] = "Search string too short";
     return;
   }
 
   // Search string too long
-  if (strlen($PAGEDATA["page"]["searchString"]) > 42) {
-    $PAGEDATA["page"]["errorMsg"] = "Search string too long";
+  if (strlen($PAGE_DATA["page"]["searchString"]) > 42) {
+    $PAGE_DATA["page"]["errorMsg"] = "Search string too long";
     return;
   }
 }
 
 // Get table sizes
 function GetTotalCounts($pdo) {
-  global $PAGEDATA;
+  global $PAGE_DATA;
 
   $query = "
   SELECT  TABLE_NAME, TABLE_ROWS 
@@ -50,11 +50,11 @@ function GetTotalCounts($pdo) {
   while ($row = $stmt->fetch()) {
     switch ($row['TABLE_NAME']) {
       case 'account_characters':
-        $PAGEDATA["page"]["totalChars"] = $row["TABLE_ROWS"];
+        $PAGE_DATA["page"]["totalChars"] = $row["TABLE_ROWS"];
         break;
 
       case 'account_accounts':
-        $PAGEDATA["page"]["totalAccs"] = $row["TABLE_ROWS"];
+        $PAGE_DATA["page"]["totalAccs"] = $row["TABLE_ROWS"];
         break;
 
       default:
@@ -70,15 +70,15 @@ function GetTotalCounts($pdo) {
 
 // Pick a function based on mode
 function MakeSearch($pdo) {
-  global $PAGEDATA;
+  global $PAGE_DATA;
   
-  if ($PAGEDATA["page"]["errorMsg"] || 
-    $PAGEDATA["page"]["searchString"] === null || 
-    $PAGEDATA["page"]["searchMode"] === null) {
+  if ($PAGE_DATA["page"]["errorMsg"] || 
+    $PAGE_DATA["page"]["searchString"] === null || 
+    $PAGE_DATA["page"]["searchMode"] === null) {
     return;
   }
   
-  switch ($PAGEDATA["page"]["searchMode"]) {
+  switch ($PAGE_DATA["page"]["searchMode"]) {
     case 'account': 
       CharacterSearch($pdo);
       return;
@@ -92,7 +92,7 @@ function MakeSearch($pdo) {
 
 // Search for characters based on account name
 function CharacterSearch($pdo) {
-  global $PAGEDATA;
+  global $PAGE_DATA;
 
   $query = "
     select   
@@ -113,16 +113,16 @@ function CharacterSearch($pdo) {
   ";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([likeEscape($PAGEDATA["page"]["searchString"])]);
+  $stmt->execute([likeEscape($PAGE_DATA["page"]["searchString"])]);
 
   while ($row = $stmt->fetch()) {
-    $PAGEDATA["page"]["searchResults"][] = $row;
+    $PAGE_DATA["page"]["searchResults"][] = $row;
   }
 }
 
 // Search for accounts based on character name
 function AccountSearch($pdo) {
-  global $PAGEDATA;
+  global $PAGE_DATA;
 
   $query = "
     select   
@@ -143,10 +143,10 @@ function AccountSearch($pdo) {
   ";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([likeEscape($PAGEDATA["page"]["searchString"])]);
+  $stmt->execute([likeEscape($PAGE_DATA["page"]["searchString"])]);
 
   while ($row = $stmt->fetch()) {
-    $PAGEDATA["page"]["searchResults"][] = $row;
+    $PAGE_DATA["page"]["searchResults"][] = $row;
   }
 }
 

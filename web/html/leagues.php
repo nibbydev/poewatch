@@ -1,21 +1,20 @@
-<?php 
-  require_once "assets/php/pageData.php";
-  require_once "assets/php/func/leagues.php";
-  require_once "assets/php/templates/body.php"; 
+<?php
+require_once "assets/php/pageData.php";
+require_once "assets/php/func/leagues.php";
+require_once "assets/php/templates/body.php";
 
-  $PAGEDATA["title"] = "Leagues - PoeWatch";
-  $PAGEDATA["description"] = "Countdowns for active and upcoming leagues";
-  $PAGEDATA["jsIncludes"][] = "leagues.js";
-  
-  $leagueList = getLeagues();
-  $leagueData = formatLeagueData($leagueList);
+$PAGE_DATA["title"] = "Leagues - PoeWatch";
+$PAGE_DATA["description"] = "Countdowns for active and upcoming leagues";
+$PAGE_DATA["jsIncludes"][] = "leagues.js";
 
-  include "assets/php/templates/header.php";
-  include "assets/php/templates/navbar.php";
-  include "assets/php/templates/priceNav.php";
+$leagueList = getLeagues();
+$leagueData = formatLeagueData($leagueList);
+
+include "assets/php/templates/header.php";
+include "assets/php/templates/navbar.php";
+include "assets/php/templates/priceNav.php";
+genBodyHeader();
 ?>
-
-<?php genBodyHeader(false) ?>
 <div class="col p-0">
   <?php if ($leagueData["main"]) { ?>
     <div class="row">
@@ -59,7 +58,9 @@
 
             </div>
             <div class="card-footer progressbar-box border-0 p-0" style="height: 1.25rem;">
-              <div class="element-cdbar-id progress-bar-striped progress-bar-animated custom-badge-green rounded-bottom h-100" style="width: 0px;"></div>
+              <div
+                class="element-cdbar-id progress-bar-striped progress-bar-animated custom-badge-green rounded-bottom h-100"
+                style="width: 0px;"></div>
             </div>
           </div>
         </div>
@@ -109,14 +110,16 @@
 
             </div>
             <div class="card-footer progressbar-box border-0 p-0" style="height: 1.25rem;">
-              <div class="element-cdbar-id progress-bar-striped progress-bar-animated custom-badge-green rounded-bottom h-100" style="width: 0px;"></div>
+              <div
+                class="element-cdbar-id progress-bar-striped progress-bar-animated custom-badge-green rounded-bottom h-100"
+                style="width: 0px;"></div>
             </div>
           </div>
         </div>
       <?php } ?>
     </div>
   <?php } ?>
-    
+
   <?php if ($leagueData["inactive"]) { ?>
     <div class="row">
       <div class="col-12 d-flex align-content-center">
@@ -151,5 +154,7 @@
     </div>
   <?php } ?>
 </div>
-<?php genBodyFooter(false) ?>
-<?php include "assets/php/templates/footer.php" ?>
+<?php
+genBodyFooter();
+include "assets/php/templates/footer.php"
+?>

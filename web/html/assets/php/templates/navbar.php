@@ -10,7 +10,7 @@
     </button>
     <div class='collapse navbar-collapse' id='navbarNavDropdown'>
       <ul class='navbar-nav mr-auto'>
-<?php foreach($PAGEDATA["navs"] as $element): ?>
+<?php foreach($PAGE_DATA["navs"] as $element): ?>
         <li class='nav-item'>
           <a class='nav-link <?php if ($element['href'] === $currentPage) echo "active"?>' href='<?php echo $element["href"] ?>'><?php echo $element["name"] ?></a>
         </li>

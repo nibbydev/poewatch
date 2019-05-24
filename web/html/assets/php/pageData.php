@@ -1,5 +1,5 @@
 <?php 
-$PAGEDATA = array(
+$PAGE_DATA = array(
   "title" => "PoeWatch",
   "pageHeader" => null,
   "description" => "A price statistics generation & collection page",

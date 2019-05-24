@@ -1,48 +1,51 @@
-<?php 
-  require_once "assets/php/pageData.php";
-  require_once "assets/php/templates/body.php"; 
-  require_once "assets/php/func/feedback.php";
-  require_once "../details/pdo.php";
+<?php
+require_once "assets/php/pageData.php";
+require_once "assets/php/templates/body.php";
+require_once "assets/php/func/feedback.php";
+require_once "../details/pdo.php";
 
-  $PAGEDATA["title"] = "About - PoeWatch";
-  $PAGEDATA["description"] = "Information about the site";
-  $PAGEDATA["pageHeader"] = "About";
-  $postStatus = processPOST($pdo);
+$PAGE_DATA["title"] = "About - PoeWatch";
+$PAGE_DATA["description"] = "Information about the site";
+$PAGE_DATA["pageHeader"] = "About";
+$postStatus = processPOST($pdo);
 
-  include "assets/php/templates/header.php";
-  include "assets/php/templates/navbar.php";
-  include "assets/php/templates/priceNav.php";
+include "assets/php/templates/header.php";
+include "assets/php/templates/navbar.php";
+include "assets/php/templates/priceNav.php";
+genBodyHeader();
 ?>
-
-<?php genBodyHeader() ?>
 
 <div class="col-12 mb-4">
   <div class="card custom-card w-100">
     <div class="card-header">Contact</div>
 
     <div class="card-body">
-        <p>
-          Something's not working? Found a typo? The site is missing an amazing feature?
-          Do let me know and I'll see what I can do about it. Also, please provide some
-          sort of contact address. Discord tag is generally preferred, reddit username
-          works too, poe account if you're really disconnected from society. For updates
-          and general questions feel free to join the server at
-          <a class="custom-text-green" href="https://discord.gg/YTt2AdG">https://discord.gg/YTt2AdG</a>.
-        </p>
+      <p>
+        Something's not working? Found a typo? The site is missing an amazing feature?
+        Do let me know and I'll see what I can do about it. Also, please provide some
+        sort of contact address. Discord tag is generally preferred, reddit username
+        works too, poe account if you're really disconnected from society. For updates
+        and general questions feel free to join the server at
+        <a class="custom-text-green" href="https://discord.gg/YTt2AdG">https://discord.gg/YTt2AdG</a>.
+      </p>
 
-        <form method="POST">
-          <div class="form-group">
-            <textarea class='form-control' name='message' placeholder='Type a message' rows='4'><?php if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['message'])) echo htmlentities($_POST['message']) ?></textarea>
-          </div>
-          <div class="btn-group float-right">
-            <input type='text' class='form-control seamless-input' name='contact' value='<?php if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['contact'])) echo htmlentities($_POST['contact']) ?>' placeholder='Contact address'>
-            <button type="submit" class="btn btn-outline-dark">Send</button>
-          </div>
-        </form>
+      <form method="POST">
+        <div class="form-group">
+          <textarea class='form-control' name='message' placeholder='Type a message'
+                    rows='4'><?php if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['message'])) echo htmlentities($_POST['message']) ?></textarea>
+        </div>
+        <div class="btn-group float-right">
+          <input type='text' class='form-control seamless-input' name='contact'
+                 value='<?php if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['contact'])) echo htmlentities($_POST['contact']) ?>'
+                 placeholder='Contact address'>
+          <button type="submit" class="btn btn-outline-dark">Send</button>
+        </div>
+      </form>
 
-        <?php if ($postStatus): ?>
-          <span class='custom-text-<?php echo $postStatus['status'] === "error" ? "red" : "green" ?>'><?php echo $postStatus['message'] ?></span>
-        <?php endif ?>
+      <?php if ($postStatus): ?>
+        <span
+          class='custom-text-<?php echo $postStatus['status'] === "error" ? "red" : "green" ?>'><?php echo $postStatus['message'] ?></span>
+      <?php endif ?>
     </div>
 
     <div class="card-footer slim-card-edge"></div>
@@ -143,6 +146,7 @@
   </div>
 </div>
 
-<?php genBodyFooter() ?>
-
-<?php include "assets/php/templates/footer.php" ?>
+<?php
+genBodyFooter();
+include "assets/php/templates/footer.php"
+?>
