@@ -136,10 +136,10 @@ public class PriceManager extends Thread {
             }
 
             // Convert all entry prices to chaos for this item
-            Calculation.convertToChaos(idBundles.get(i), entryBundles, priceBundles);
+            List<Double> prices = Calculation.convertToChaos(idBundles.get(i), entryBundles, priceBundles);
 
             // Calculate the prices for this item
-            ResultBundle rb = Calculation.calculateResult(idBundles.get(i), entryBundles);
+            ResultBundle rb = Calculation.calculateResult(idBundles.get(i), prices);
             if (rb == null) continue;
 
             // Update item in database

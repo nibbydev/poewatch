@@ -89,7 +89,7 @@ public class Upload {
      * @return True on success
      */
     public boolean updateItem(ResultBundle result) {
-        String query = "update league_items " +
+        String query = "update ignore league_items " +
                 "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
                 "where id_l = ? and id_d = ? " +
                 "limit 1; ";
