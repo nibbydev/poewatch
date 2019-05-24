@@ -129,16 +129,36 @@ public class WorkerManager extends Thread {
      * Stops all active Workers and this object's process
      */
     public void stopController() {
+        logger.info("Stopping controller");
+
         flagRun = false;
 
-        // Loop though every worker and call stop method
+        // Request worker shutdowns
         for (Worker worker : workerList) {
-            logger.info("Stopping worker (" + worker.getWorkerId() + ")");
-            worker.stopWorker();
-            logger.info("Worker (" + worker.getWorkerId() + ") stopped");
+            logger.info(String.format("Stopping worker (%d)", worker.getWorkerId()));
+            worker.requestStop();
         }
 
-        logger.info("Stopping controller");
+        // Wait until all are stopped
+        while (true) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            boolean allStopped = true;
+            for (Worker worker : workerList) {
+                if (!worker.isReadyToExit()) {
+                    allStopped = false;
+                    break;
+                }
+            }
+
+            if (allStopped) {
+                break;
+            }
+        }
 
         // Wait until run() function is ready to exit
         while (!readyToExit) try {
@@ -198,7 +218,7 @@ public class WorkerManager extends Thread {
         // Loop through removal
         for (int i = lastWorkerIndex; i > lastWorkerIndex - workerCount; i--) {
             lastWorker = workerList.get(i);
-            lastWorker.stopWorker();
+            lastWorker.requestStop();
             workerList.remove(lastWorker);
         }
     }

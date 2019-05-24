@@ -78,19 +78,16 @@ public class Worker extends Thread {
             job = null;
         }
 
+        logger.info(String.format("Worker (%d) stopped", workerId));
         readyToExit = true;
     }
 
     /**
-     * Stops current worker's process
+     * Requests the worker to stop
      */
-    public void stopWorker() {
+    public void requestStop() {
         flagLocalRun = false;
-
-        while (!readyToExit) {
-            wakeLocalMonitor();
-            sleepFor(50);
-        }
+        wakeLocalMonitor();
     }
 
     /**
@@ -291,5 +288,9 @@ public class Worker extends Thread {
 
     public void setPauseFlag(boolean pauseFlag) {
         this.pauseFlag = pauseFlag;
+    }
+
+    public boolean isReadyToExit() {
+        return readyToExit;
     }
 }
