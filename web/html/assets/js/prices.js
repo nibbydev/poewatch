@@ -17,9 +17,7 @@ const MODAL_CHART_OPTIONS = {
   axisX: {
     showGrid: true,
     showLabel: true,
-    labelInterpolationFnc: function skipLabels(value, index) {
-      return index % 7  === 0 ? value : null;
-    }
+    labelInterpolationFnc: (value, index) => (index % 7 === 0 ? value : null)
   },
   fullWidth: true,
   plugins: [
@@ -997,7 +995,11 @@ class DetailsModal {
 
 // Default item search filter options
 let FILTER = {
-  league: SERVICE_leagues[0],
+  league: {
+    'name': 'Standard',
+    'display': 'Standard',
+    'active': 1
+  },
   category: 'currency',
   group: 'all',
   showLowConfidence: false,
@@ -1083,6 +1085,9 @@ const SORT_FUNCTIONS = {
 };
 
 $(document).ready(function() {
+  // Overwrite standard league with current challenge league
+  FILTER.league = SERVICE_leagues[0];
+
   parseQueryParams();
   makeGetRequest();
   defineListeners();
