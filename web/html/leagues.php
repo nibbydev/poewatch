@@ -1,4 +1,5 @@
 <?php
+require_once "../details/pdo.php";
 require_once "assets/php/pageData.php";
 require_once "assets/php/func/leagues.php";
 require_once "assets/php/templates/body.php";
@@ -7,8 +8,7 @@ $PAGE_DATA["title"] = "Leagues - PoeWatch";
 $PAGE_DATA["description"] = "Countdowns for active and upcoming leagues";
 $PAGE_DATA["jsIncludes"][] = "leagues.js";
 
-$leagueList = getLeagues();
-$leagueData = formatLeagueData($leagueList);
+$leagueData = getLeagueData($pdo);
 
 include "assets/php/templates/header.php";
 include "assets/php/templates/navbar.php";
@@ -16,13 +16,13 @@ include "assets/php/templates/priceNav.php";
 genBodyHeader();
 ?>
 <div class="col p-0">
-  <?php if ($leagueData["main"]) { ?>
+  <?php if ($leagueData["upcoming"]) { ?>
     <div class="row">
       <div class="col-12 d-flex align-content-center">
-        <h1 class="display-4 mb-4 mx-auto">Active leagues</h1>
+        <h1 class="display-4 mb-4 mx-auto">Upcoming leagues</h1>
       </div>
 
-      <?php foreach ($leagueData["main"] as $element) { ?>
+      <?php foreach ($leagueData["upcoming"] as $element) { ?>
         <div class="col-sm-6 col-12">
           <div class="card custom-card element-id mb-3">
             <div class="card-header h-100">
@@ -68,13 +68,13 @@ genBodyHeader();
     </div>
   <?php } ?>
 
-  <?php if ($leagueData["other"]) { ?>
+  <?php if ($leagueData["main"]) { ?>
     <div class="row">
       <div class="col-12 d-flex align-content-center">
-        <h1 class="display-4 mb-4 mx-auto">Other leagues</h1>
+        <h1 class="display-4 mb-4 mx-auto">Active leagues</h1>
       </div>
 
-      <?php foreach ($leagueData["other"] as $element) { ?>
+      <?php foreach ($leagueData["main"] as $element) { ?>
         <div class="col-sm-6 col-12">
           <div class="card custom-card element-id mb-3">
             <div class="card-header h-100">
