@@ -38,7 +38,7 @@ const MODAL_CHART_OPTIONS = {
  * One item row on the page
  */
 class ItemRow {
-  constructor (item) {
+  constructor(item) {
     this.item = item;
 
     // Build row elements
@@ -71,7 +71,7 @@ class ItemRow {
         color = "item-shaper";
       } else if (this.item.baseIsElder) {
         icon += "&elder=1";
-        color= "item-elder";
+        color = "item-elder";
       }
     }
 
@@ -86,7 +86,7 @@ class ItemRow {
       if (this.item.name.includes("#") && this.item.enchantMin !== undefined) {
         name = this.item.name.replace("#", this.item.enchantMin);
       }
-      
+
       // Max roll
       if (this.item.name.includes("#") && this.item.enchantMax !== undefined) {
         name = this.item.name.replace("#", this.item.enchantMax);
@@ -117,7 +117,7 @@ class ItemRow {
       </div>
     </td>`.trim();
   }
-  
+
   buildGemFields() {
     // Don't run if item is not a gem
     if (this.item.category !== 'gem') {
@@ -133,7 +133,7 @@ class ItemRow {
       color = 'green';
       corrupted = '✕';
     }
-  
+
     return `
     <td>
         <span class='badge custom-badge-block custom-badge-gray'>${this.item.gemLevel}</span>
@@ -145,7 +145,7 @@ class ItemRow {
         <span class='badge custom-badge-${color}'>${corrupted}</span>
     </td>`.trim();
   }
-  
+
   buildBaseFields() {
     // Don't run if item is not a base
     if (this.item.category !== 'base') {
@@ -157,7 +157,7 @@ class ItemRow {
       <span class='badge custom-badge-block custom-badge-gray'>${this.item.baseItemLevel}</span>
     </td>`.trim();
   }
-  
+
   buildMapFields() {
     // Don't run if item is not a map
     if (this.item.category !== 'map') {
@@ -181,7 +181,7 @@ class ItemRow {
      */
     function buildSpark(history) {
       // If there is no history (eg old leagues)
-      if (!history){
+      if (!history) {
         return null;
       }
 
@@ -224,7 +224,7 @@ class ItemRow {
     // Return as template
     return `<td class='d-none d-md-flex'>${spark || ''}</td>`;
   }
-  
+
   buildPriceFields() {
     const chaos = ItemRow.roundPrice(this.item.mean);
     const exalt = ItemRow.roundPrice(this.item.exalted);
@@ -248,7 +248,7 @@ class ItemRow {
       </div>
     </td>`.trim();
   }
-  
+
   buildChangeField() {
     let change = Math.round(this.item.change);
     let color;
@@ -279,7 +279,7 @@ class ItemRow {
         <span class='badge custom-badge-block custom-badge-${color}'>${change}%</span>
     </td>`.trim();
   }
-  
+
   buildDailyField() {
     let color;
 
@@ -296,7 +296,7 @@ class ItemRow {
     } else {
       color = "gray";
     }
-  
+
     return `
     <td>
       <span class='badge custom-badge-block custom-badge-${color}'>
@@ -320,14 +320,14 @@ class ItemRow {
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       return parts.join(".");
     };
-  
+
     return numberWithCommas(Math.round(price * 100) / 100);
   }
 
   static genSparkSVG(options, elements) {
     let maxElement = Math.max(...elements);
     let minElement = Math.min(...elements);
-  
+
     // If there has been no change in the past week
     if (maxElement === minElement && minElement === 0) {
       maxElement = 1;
@@ -335,19 +335,19 @@ class ItemRow {
 
     // Find step sizes in pixels
     let stepX = options.width / (elements.length - 1);
-    let stepY = (options.height - options.pad_y*2) / (maxElement - minElement);
-  
+    let stepY = (options.height - options.pad_y * 2) / (maxElement - minElement);
+
     // Create point array
     let pointBuilder = ["M "];
     for (let i = 0; i < elements.length; i++) {
       if (elements[i] !== null) {
         let x = stepX * i;
-        let y = (options.height - elements[i]*stepY + minElement*stepY - options.pad_y/2).toFixed(3);
-  
+        let y = (options.height - elements[i] * stepY + minElement * stepY - options.pad_y / 2).toFixed(3);
+
         pointBuilder.push(x, " ", y, " L ");
       }
     }
-  
+
     // Remove trailing zero
     pointBuilder.pop();
     const points = ItemRow.roundSVGPathCorners(pointBuilder.join(""), options);
@@ -363,11 +363,11 @@ class ItemRow {
   static roundSVGPathCorners(pathString, options) {
     function moveTowardsFractional(movingPoint, targetPoint, fraction) {
       return {
-        x: parseFloat(movingPoint.x + (targetPoint.x - movingPoint.x)*fraction).toFixed(3),
-        y: parseFloat(movingPoint.y + (targetPoint.y - movingPoint.y)*fraction).toFixed(3)
+        x: parseFloat(movingPoint.x + (targetPoint.x - movingPoint.x) * fraction).toFixed(3),
+        y: parseFloat(movingPoint.y + (targetPoint.y - movingPoint.y) * fraction).toFixed(3)
       };
     }
-    
+
     // Adjusts the ending position of a command
     function adjustCommand(cmd, newPoint) {
       if (cmd.length > 2) {
@@ -375,7 +375,7 @@ class ItemRow {
         cmd[cmd.length - 1] = newPoint.y;
       }
     }
-    
+
     // Gives an {x, y} object for a command's ending position
     function pointForCommand(cmd) {
       return {
@@ -383,11 +383,11 @@ class ItemRow {
         y: parseFloat(cmd[cmd.length - 1]),
       };
     }
-    
+
     // Split apart the path, handing concatonated letters and numbers
     var pathParts = pathString
       .split(/[,\s]/)
-      .reduce(function(parts, part){
+      .reduce(function (parts, part) {
         var match = part.match("([a-zA-Z])(.+)");
         if (match) {
           parts.push(match[1]);
@@ -395,68 +395,68 @@ class ItemRow {
         } else {
           parts.push(part);
         }
-        
+
         return parts;
       }, []);
-    
+
     // Group the commands with their arguments for easier handling
-    var commands = pathParts.reduce(function(commands, part) {
+    var commands = pathParts.reduce(function (commands, part) {
       if (parseFloat(part) == part && commands.length) {
         commands[commands.length - 1].push(part);
       } else {
         commands.push([part]);
       }
-      
+
       return commands;
     }, []);
-    
+
     // The resulting commands, also grouped
     var resultCommands = [];
-    
+
     if (commands.length > 1) {
       var startPoint = pointForCommand(commands[0]);
-      
+
       // Handle the close path case with a "virtual" closing line
       var virtualCloseLine = null;
       if (commands[commands.length - 1][0] == "Z" && commands[0].length > 2) {
         virtualCloseLine = ["L", startPoint.x, startPoint.y];
         commands[commands.length - 1] = virtualCloseLine;
       }
-      
+
       // We always use the first command (but it may be mutated)
       resultCommands.push(commands[0]);
-      
-      for (var cmdIndex=1; cmdIndex < commands.length; cmdIndex++) {
+
+      for (var cmdIndex = 1; cmdIndex < commands.length; cmdIndex++) {
         var prevCmd = resultCommands[resultCommands.length - 1];
-        
+
         var curCmd = commands[cmdIndex];
-        
+
         // Handle closing case
         var nextCmd = (curCmd == virtualCloseLine)
           ? commands[1]
           : commands[cmdIndex + 1];
-        
+
         // Nasty logic to decide if this path is a candidite.
         if (nextCmd && prevCmd && (prevCmd.length > 2) && curCmd[0] == "L" && nextCmd.length > 2 && nextCmd[0] == "L") {
           // Calc the points we're dealing with
           var prevPoint = pointForCommand(prevCmd);
           var curPoint = pointForCommand(curCmd);
           var nextPoint = pointForCommand(nextCmd);
-          
+
           // The start and end of the cuve are just our point moved towards the previous and next points, respectivly
           var curveStart = moveTowardsFractional(curPoint, prevCmd.origPoint || prevPoint, options.radius);
           var curveEnd = moveTowardsFractional(curPoint, nextCmd.origPoint || nextPoint, options.radius);
-          
+
           // Adjust the current command and add it
           adjustCommand(curCmd, curveStart);
           curCmd.origPoint = curPoint;
           resultCommands.push(curCmd);
-          
+
           // The curve control points are halfway between the start/end of the curve and
           // the original point
           var startControl = moveTowardsFractional(curveStart, curPoint, .5);
           var endControl = moveTowardsFractional(curPoint, curveEnd, .5);
-    
+
           // Create the curve 
           var curveCmd = ["C", startControl.x, startControl.y, endControl.x, endControl.y, curveEnd.x, curveEnd.y];
           // Save the original point for fractional calculations
@@ -467,18 +467,20 @@ class ItemRow {
           resultCommands.push(curCmd);
         }
       }
-      
+
       // Fix up the starting point and restore the close path if the path was orignally closed
       if (virtualCloseLine) {
-        var newStartPoint = pointForCommand(resultCommands[resultCommands.length-1]);
+        var newStartPoint = pointForCommand(resultCommands[resultCommands.length - 1]);
         resultCommands.push(["Z"]);
         adjustCommand(resultCommands[0], newStartPoint);
       }
     } else {
       resultCommands = commands;
     }
-    
-    return resultCommands.reduce(function(str, c){ return str + c.join(" ") + " "; }, "");
+
+    return resultCommands.reduce(function (str, c) {
+      return str + c.join(" ") + " ";
+    }, "");
   }
 }
 
@@ -500,14 +502,18 @@ class DetailsModal {
       dataset: 1
     };
 
+    this.defineListeners();
+  }
+
+  defineListeners() {
     // League select listener
-    $("#modal-leagues", this.modal).change(function(){
+    $("#modal-leagues", this.modal).change(function () {
       MODAL.current.league = $(":selected", this).val();
       MODAL.getHistory();
     });
-  
+
     // Dataset radio listener
-    $("#modal-radio", this.modal).change(function(){
+    $("#modal-radio", this.modal).change(function () {
       const val = $("input[name=dataset]:checked", this).val();
       MODAL.current.dataset = parseInt(val);
       MODAL.updateContent();
@@ -563,8 +569,8 @@ class DetailsModal {
         async: true,
         dataTypes: "json"
       });
-    
-      request.done(function(payload) {
+
+      request.done(function (payload) {
         MODAL.dataSets[MODAL.current.id] = payload;
         MODAL.setContent();
       });
@@ -589,7 +595,7 @@ class DetailsModal {
     let leagues = DetailsModal.getLeagues(item);
     this.current.league = leagues[0].name;
 
-    // Add leagues as selector options
+    // Add leagues as dropdown options
     this.createLeagueSelector(leagues);
 
     // Get history data for the current league
@@ -622,7 +628,7 @@ class DetailsModal {
       dataTypes: "json"
     });
 
-    request.done(function(payload) {
+    request.done(function (payload) {
       // Find associated league
       let league = MODAL.getCurrentItemLeague();
 
@@ -631,6 +637,9 @@ class DetailsModal {
     });
   }
 
+  /**
+   * Updates the modal data (names/prices/charts)
+   */
   updateContent() {
     let league = this.getCurrentItemLeague();
     let currentFormatHistory = DetailsModal.formatHistory(league);
@@ -641,26 +650,36 @@ class DetailsModal {
     };
 
     switch (this.current.dataset) {
-      case 1: data.series[0] = currentFormatHistory.vals.mean;   break;
-      case 2: data.series[0] = currentFormatHistory.vals.median; break;
-      case 3: data.series[0] = currentFormatHistory.vals.mode;   break;
-      case 4: data.series[0] = currentFormatHistory.vals.daily;  break;
-      case 5: data.series[0] = currentFormatHistory.vals.current;break;
+      case 1:
+        data.series[0] = currentFormatHistory.vals.mean;
+        break;
+      case 2:
+        data.series[0] = currentFormatHistory.vals.median;
+        break;
+      case 3:
+        data.series[0] = currentFormatHistory.vals.mode;
+        break;
+      case 4:
+        data.series[0] = currentFormatHistory.vals.daily;
+        break;
+      case 5:
+        data.series[0] = currentFormatHistory.vals.current;
+        break;
     }
 
     this.current.chart = new Chartist.Line('.ct-chart', data, MODAL_CHART_OPTIONS);
 
     // Update modal table
-    $("#modal-mean",     this.modal).html( formatNum(league.mean)   );
-    $("#modal-median",   this.modal).html( formatNum(league.median) );
-    $("#modal-mode",     this.modal).html( formatNum(league.mode)   );
-    $("#modal-total",    this.modal).html( formatNum(league.total)  );
-    $("#modal-daily",    this.modal).html( formatNum(league.daily)  );
-    $("#modal-current",  this.modal).html( formatNum(league.current)  );
-    $("#modal-exalted",  this.modal).html( formatNum(league.exalted));
+    $("#modal-mean", this.modal).html(formatNum(league.mean));
+    $("#modal-median", this.modal).html(formatNum(league.median));
+    $("#modal-mode", this.modal).html(formatNum(league.mode));
+    $("#modal-total", this.modal).html(formatNum(league.total));
+    $("#modal-daily", this.modal).html(formatNum(league.daily));
+    $("#modal-current", this.modal).html(formatNum(league.current));
+    $("#modal-exalted", this.modal).html(formatNum(league.exalted));
   }
 
-  setBufferVisibility(visible) { 
+  setBufferVisibility(visible) {
     if (visible) {
       $("#modal-body-buffer", this.modal).removeClass("d-none").addClass("d-flex");
       $("#modal-body-content", this.modal).addClass("d-none").removeClass("d-flex");
@@ -670,28 +689,46 @@ class DetailsModal {
     }
   }
 
+  /**
+   * Builds league selector options for the modal
+   *
+   * @param leagues List of current leagues for the item
+   */
   createLeagueSelector(leagues) {
-    let builder = "";
-  
+    let builder = '';
+
+    // Loop through all leagues
     for (let i = 0; i < leagues.length; i++) {
-      let display = leagues[i].active ? leagues[i].display : "● " + leagues[i].display;
+      let display = leagues[i].display ? leagues[i].display : leagues[i].name;
+
+      if (leagues[i].active) {
+        display = '● ' + display;
+      }
+
       builder += `<option value='${leagues[i].name}'>${display}</option>`;
     }
-  
-    $("#modal-leagues", this.modal).html(builder);
+
+    // Add to dropdown
+    $('#modal-leagues', this.modal).html(builder);
   }
 
+  /**
+   * Creates a formatted card title for the modal
+   *
+   * @param item Item JSON
+   * @returns {string} Generated HTML
+   */
   static buildNameField(item) {
     // If item is enchantment, insert enchant values for display purposes
     if (item.category === 'enchant') {
       // Min roll
-      if (item.name.includes("#") && item.enchantMin !== null) {
-        item.name = item.name.replace("#", item.enchantMin);
+      if (item.name.includes('#') && item.enchantMin !== null) {
+        item.name = item.name.replace('#', item.enchantMin);
       }
 
       // Max roll
-      if (item.name.includes("#") && item.enchantMax !== null) {
-        item.name = item.name.replace("#", item.enchantMax);
+      if (item.name.includes('#') && item.enchantMax !== null) {
+        item.name = item.name.replace('#', item.enchantMax);
       }
     }
 
@@ -699,33 +736,33 @@ class DetailsModal {
     let builder = item.name;
 
     if (item.type) {
-      builder += "<span class='subtext-1'>, " + item.type + "</span>";;
+      builder += `<span class='subtext-1'>, ${item.type}</span>`;
     }
 
     if (item.frame === 9) {
-      builder = "<span class='item-foil'>" + builder + "</span>";
+      builder = `<span class='item-foil'>${builder}</span>`;
     } else if (item.category === 'base') {
       if (item.baseIsShaper) {
-        builder = "<span class='item-shaper'>" + builder + "</span>";
+        builder = `<span class='item-shaper'>${builder}</span>`;
       } else if (item.baseIsElder) {
-        builder = "<span class='item-elder'>" + builder + "</span>";
+        builder = `<span class='item-elder'>${builder}</span>`;
       }
     }
 
     if (item.variation) {
-      builder += " <span class='badge custom-badge-gray ml-1'>" + item.variation + "</span>";
+      builder += ` <span class='badge custom-badge-gray ml-1'>${item.variation}</span>`;
     }
 
     if (item.category === 'map' && item.mapTier) {
-      builder += " <span class='badge custom-badge-gray ml-1'>Tier " + item.mapTier + "</span>";
+      builder += ` <span class='badge custom-badge-gray ml-1'>Tier ${item.mapTier}</span>`;
     }
 
     if (item.baseItemLevel) {
-      builder += " <span class='badge custom-badge-gray ml-1'>iLvl " + item.itemLevel + "</span>";
+      builder += ` <span class='badge custom-badge-gray ml-1'>iLvl ${item.itemLevel}</span>`;
     }
 
     if (item.linkCount) {
-      builder += " <span class='badge custom-badge-gray ml-1'>" + item.linkCount + " Link</span>";
+      builder += ` <span class='badge custom-badge-gray ml-1'>${item.linkCount} Link</span>`;
     }
 
     if (item.category === 'gem') {
@@ -741,10 +778,10 @@ class DetailsModal {
   }
 
   /**
-   * Given the complete item api json, returns list of leagues for that item
+   * Given the complete item JSON, returns list of leagues for that item
    *
-   * @param item
-   * @returns {Array}
+   * @param item Item JSON
+   * @returns {Array} Leagues for that item
    */
   static getLeagues(item) {
     let leagues = [];
@@ -756,48 +793,60 @@ class DetailsModal {
         active: item.leagues[i].active
       });
     }
-  
+
     return leagues;
   }
 
+  /**
+   * Right, so the input data is essentially JSON objects of date and prices.
+   * But the data we need for the graphs should meet a couple conditions:
+   *  1. If league has lasted n days (out of total m days), then the last
+   *     m-n entries should be null
+   *  2. If there is missing data from the start of the league, it should be
+   *     padded with nulls
+   *  2. If there are gaps in the data (missing days), it should be padded
+   *     with nulls
+   *  3. If there is missing data after the league has ended, it should be
+   *     padded with nulls
+   */
   static formatHistory(league) {
     let keys = [];
     let vals = {
-      mean:   [],
+      mean: [],
       median: [],
-      mode:   [],
-      daily:  [],
+      mode: [],
+      daily: [],
       current: [],
     };
-  
+
     const msInDay = 86400000;
     let firstDate = null, lastDate = null;
     let totalDays = null, elapDays = null;
-    let startDate = null, endDate  = null;
+    let startDate = null, endDate = null;
     let daysMissingStart = 0, daysMissingEnd = 0;
     let startEmptyPadding = 0;
-  
+
     // If there are any history entries for this league, find the first and last date
     if (league.history.length) {
       firstDate = new Date(league.history[0].time);
       lastDate = new Date(league.history[league.history.length - 1].time);
     }
-  
+
     // League should always have a start date
     if (league.start) {
       startDate = new Date(league.start);
     }
-  
+
     // Permanent leagues don't have an end date
     if (league.end) {
       endDate = new Date(league.end);
     }
-  
+
     // Find duration for non-permanent leagues
     if (startDate && endDate) {
       let diff = Math.abs(endDate.getTime() - startDate.getTime());
       totalDays = Math.floor(diff / msInDay);
-      
+
       if (league.active) {
         let diff = Math.abs(new Date().getTime() - startDate.getTime());
         elapDays = Math.floor(diff / msInDay);
@@ -805,15 +854,15 @@ class DetailsModal {
         elapDays = totalDays;
       }
     }
-  
+
     // Find how many days worth of data is missing from the league start
     if (league.id > 2) {
       if (firstDate && startDate) {
         let diff = Math.abs(firstDate.getTime() - startDate.getTime());
         daysMissingStart = Math.floor(diff / msInDay);
       }
-    } 
-  
+    }
+
     // Find how many days worth of data is missing from the league end, if league has ended
     if (league.active) {
       // League is active, compare time of last entry to right now
@@ -828,7 +877,7 @@ class DetailsModal {
         daysMissingEnd = Math.floor(diff / msInDay);
       }
     }
-  
+
     // Find number of ticks the graph should be padded with empty entries on the left
     if (league.id > 2) {
       if (totalDays !== null && elapDays !== null) {
@@ -837,12 +886,12 @@ class DetailsModal {
     } else {
       startEmptyPadding = 120 - league.history.length;
     }
-  
-  
+
+
     // Right, now that we have all the dates, durations and counts we can start 
     // building the actual payload
-  
-  
+
+
     // Bloat using 'null's the amount of days that should not have a tooltip
     if (startEmptyPadding) {
       for (let i = 0; i < startEmptyPadding; i++) {
@@ -854,11 +903,11 @@ class DetailsModal {
         keys.push("");
       }
     }
-    
+
     // If entries are missing before the first entry, fill with "No data"
     if (daysMissingStart) {
       let date = new Date(startDate);
-  
+
       for (let i = 0; i < daysMissingStart; i++) {
         vals.mean.push(0);
         vals.median.push(0);
@@ -868,11 +917,11 @@ class DetailsModal {
         keys.push(DetailsModal.formatDate(date.addDays(i)));
       }
     }
-  
+
     // Add actual history data
     for (let i = 0; i < league.history.length; i++) {
       const entry = league.history[i];
-  
+
       // Add current entry values
       vals.mean.push(Math.round(entry.mean * 100) / 100);
       vals.median.push(Math.round(entry.median * 100) / 100);
@@ -880,19 +929,19 @@ class DetailsModal {
       vals.daily.push(entry.daily);
       vals.current.push(entry.current);
       keys.push(DetailsModal.formatDate(entry.time));
-  
+
       // Check if there are any missing entries between the current one and the next one
       if (i + 1 < league.history.length) {
         const nextEntry = league.history[i + 1];
-  
+
         // Get dates
         let currentDate = new Date(entry.time);
         let nextDate = new Date(nextEntry.time);
-  
+
         // Get difference in days between entries
         let timeDiff = Math.abs(nextDate.getTime() - currentDate.getTime());
-        let diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)) - 1; 
-  
+        let diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)) - 1;
+
         // Fill missing days with "No data" (if any)
         for (let i = 0; i < diffDays; i++) {
           vals.mean.push(0);
@@ -904,12 +953,12 @@ class DetailsModal {
         }
       }
     }
-  
+
     // If entries are missing after the first entry, fill with "No data"
     if (daysMissingEnd && lastDate) {
       let date = new Date(lastDate);
       date.setDate(date.getDate() + 1);
-  
+
       for (let i = 0; i < daysMissingEnd; i++) {
         vals.mean.push(0);
         vals.median.push(0);
@@ -919,7 +968,7 @@ class DetailsModal {
         keys.push(DetailsModal.formatDate(date.addDays(i)));
       }
     }
-  
+
     // Add current values
     if (league.active) {
       vals.mean.push(Math.round(league.mean * 100) / 100);
@@ -929,7 +978,7 @@ class DetailsModal {
       vals.current.push(league.current);
       keys.push("Now");
     }
-  
+
     // Return generated data
     return {
       'keys': keys,
@@ -937,12 +986,15 @@ class DetailsModal {
     }
   }
 
+  /**
+   * Given a date, returns a display string
+   */
   static formatDate(date) {
     const MONTH_NAMES = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
-  
+
     let s = new Date(date);
 
     return s.getDate() + " " + MONTH_NAMES[s.getMonth()];
@@ -1084,14 +1136,14 @@ const SORT_FUNCTIONS = {
   }
 };
 
-$(document).ready(function() {
+$(document).ready(function () {
   // Overwrite standard league with current challenge league
   FILTER.league = SERVICE_leagues[0];
 
   parseQueryParams();
   makeGetRequest();
   defineListeners();
-}); 
+});
 
 //------------------------------------------------------------------------------------------------------------
 // Data prep
@@ -1197,7 +1249,7 @@ function processParam(param) {
 
       if (val === "none") {
         FILTER.tier = 0;
-      } else{
+      } else {
         FILTER.tier = parseInt(val);
       }
 
@@ -1249,7 +1301,7 @@ function processSortParam() {
   let column = null;
 
   // Find column that matches the provided param
-  $(".sort-column").each(function() {
+  $(".sort-column").each(function () {
     if (this.innerHTML.toLowerCase() === tmpColName) {
       column = this;
     }
@@ -1542,7 +1594,7 @@ function makeGetRequest() {
   let request = $.ajax({
     url: `${API_URL}/get`,
     data: {
-      league: FILTER.league.name, 
+      league: FILTER.league.name,
       category: FILTER.category
     },
     type: "GET",
@@ -1550,7 +1602,7 @@ function makeGetRequest() {
     dataTypes: "json"
   });
 
-  request.done(function(json) {
+  request.done(function (json) {
     console.log("Got " + json.length + " items from request");
     $("#buffering-main").hide();
     $(".buffering-msg").remove();
@@ -1559,7 +1611,7 @@ function makeGetRequest() {
     sortResults();
   });
 
-  request.fail(function(response) {
+  request.fail(function (response) {
     $(".buffering-msg").remove();
 
     let buffering = $("#buffering-main");
@@ -1614,47 +1666,58 @@ function formatNum(num) {
 }
 
 function updateQueryParam(key, value) {
-  switch (key) {
-    case "confidence": value = value === false        ? null : value;   break;
-    case "search":     value = value === ""           ? null : value;   break;
-    case "rarity":     value = value === "all"        ? null : value;   break;
-    case "corrupted":  value = value === "all"        ? null : value;   break;
-    case "quality":    value = value === "all"        ? null : value;   break;
-    case "lvl":        value = value === "all"        ? null : value;   break;
-    case "links":      value = value === "none"       ? null : value;   break;
-    case "group":      value = value === "all"        ? null : value;   break;
-    case "tier":       value = value === "all"        ? null : value;   break;
-    case "influence":  value = value === "all"        ? null : value;   break;
-    default:           break;
-  }
-  
-  let url = document.location.href;
-  let re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
-  let hash;
+  function update(key, value) {
+    let url = document.location.href;
+    let re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
+    let hash;
 
-  if (re.test(url)) {
-    if (typeof value !== 'undefined' && value !== null) {
-      url = url.replace(re, '$1' + key + "=" + value + '$2$3');
-    } else {
+    if (re.test(url)) {
+      if (typeof value !== 'undefined' && value !== null) {
+        url = url.replace(re, '$1' + key + "=" + value + '$2$3');
+      } else {
+        hash = url.split('#');
+        url = hash[0].replace(re, '$1$3').replace(/([&?])$/, '');
+
+        if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+          url += '#' + hash[1];
+        }
+      }
+    } else if (typeof value !== 'undefined' && value !== null) {
+      let separator = url.indexOf('?') !== -1 ? '&' : '?';
+
       hash = url.split('#');
-      url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
-      
+      url = hash[0] + separator + key + '=' + value;
+
       if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
         url += '#' + hash[1];
       }
     }
-  } else if (typeof value !== 'undefined' && value !== null) {
-    let separator = url.indexOf('?') !== -1 ? '&' : '?';
 
-    hash = url.split('#');
-    url = hash[0] + separator + key + '=' + value;
-
-    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
-      url += '#' + hash[1];
-    }
+    history.replaceState({}, "foo", url);
   }
 
-  history.replaceState({}, "foo", url);
+  switch (key) {
+    case 'confidence':
+      value = value === false ? null : value;
+      break;
+    case 'search':
+      value = value === '' ? null : value;
+      break;
+    case 'rarity':
+    case 'corrupted':
+    case 'quality':
+    case 'lvl':
+    case 'group':
+    case 'tier':
+    case 'influence':
+      value = value === 'all' ? null : value;
+      break;
+    case 'links':
+      value = value === 'none' ? null : value;
+      break;
+  }
+
+  update(key, value);
 }
 
 function parseQueryParam(key) {
@@ -1663,7 +1726,7 @@ function parseQueryParam(key) {
 
   let regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)');
   let results = regex.exec(url);
-      
+
   if (!results) return null;
   if (!results[2]) return '';
 
@@ -1673,27 +1736,11 @@ function parseQueryParam(key) {
 /**
  * Extension method for Date to add days
  */
-Date.prototype.addDays = function(days) {
+Date.prototype.addDays = function (days) {
   let date = new Date(this.valueOf());
   date.setDate(date.getDate() + days);
   return date;
 };
-
-/**
- * Provided a league name, returns league data from before
- *
- * @param league Valid league name
- * @returns {null|*} League data if exists, null otherwise
- */
-function getServiceLeague(league) {
-  for (let i = 0; i < SERVICE_leagues.length; i++) {
-    if (SERVICE_leagues[i].name === league) {
-      return SERVICE_leagues[i];
-    }
-  }
-
-  return null;
-}
 
 function sortResults() {
   // Empty the table
@@ -1717,9 +1764,9 @@ function sortResults() {
     matches++;
 
     // Stop if specified item limit has been reached
-    if ( FILTER.parseAmount < 0 || count < FILTER.parseAmount ) {
+    if (FILTER.parseAmount < 0 || count < FILTER.parseAmount) {
       // If item has not been parsed, parse it 
-      if ( !('tableData' in item) ) {
+      if (!('tableData' in item)) {
         item.tableData = new ItemRow(item);
       }
 
