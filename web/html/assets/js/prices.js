@@ -135,26 +135,26 @@ class ItemRow {
     }
 
     return `
-    <td>
-        <span class='badge custom-badge-block custom-badge-gray'>${this.item.gemLevel}</span>
+    <td class='text-center p-0'>
+        <span class='badge p-0 custom-text-gray-lo'>${this.item.gemLevel}</span>
     </td>
-    <td>
-        <span class='badge custom-badge-block custom-badge-gray'>${this.item.gemQuality}</span>
+    <td class='text-center p-0'>
+        <span class='badge p-0 custom-text-gray-lo'>${this.item.gemQuality}</span>
     </td>
-    <td>
-        <span class='badge custom-badge-${color}'>${corrupted}</span>
+    <td class='text-center p-0'>
+        <span class='badge p-0 custom-text-${color}'>${corrupted}</span>
     </td>`.trim();
   }
 
   buildBaseFields() {
     // Don't run if item is not a base
     if (this.item.category !== 'base') {
-      return "";
+      return '';
     }
 
     return `
-    <td class='nowrap'>
-      <span class='badge custom-badge-block custom-badge-gray'>${this.item.baseItemLevel}</span>
+    <td class='text-center p-0'>
+      <span class='badge p-0 custom-text-gray-lo'>${this.item.baseItemLevel}</span>
     </td>`.trim();
   }
 
@@ -166,10 +166,10 @@ class ItemRow {
 
     let tier;
     if (this.item.mapTier !== null) {
-      tier = `<span class='badge custom-badge-block custom-badge-gray'>${this.item.mapTier}</span>`;
+      tier = `<span class='badge p-0 custom-text-gray-lo'>${this.item.mapTier}</span>`;
     }
 
-    return `<td class='nowrap'>${tier || ''}</td>`;
+    return `<td class='text-center p-0'>${tier || ''}</td>`;
   }
 
   buildSparkField() {
