@@ -578,11 +578,11 @@ $APIColumns = [
       ],
     ]
   ],
-  // user api
+  // listings api
   [
-    "href" => "https://api.poe.watch/user?league=Standard&account=Novynn",
-    "name" => "user",
-    "desc" => "Get all listings for an account, including the time listed, last updated, 
+    "href" => "https://api.poe.watch/listings?league=Standard&account=Novynn",
+    "name" => "listings",
+    "desc" => "Get all item listings for an account, including the time listed, last updated, 
       how many are listed and how many are priced. Allows filtering out items without a 
       price. Only tracks items that are available through the itemdata api.",
     "request" => [
