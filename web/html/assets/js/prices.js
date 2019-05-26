@@ -50,6 +50,7 @@ class ItemRow {
       this.buildSparkField(),
       this.buildPriceFields(),
       this.buildChangeField(),
+      this.buildNowField(),
       this.buildDailyField(),
       this.buildTotalField()
     ].join("");
@@ -283,6 +284,31 @@ class ItemRow {
     return `
     <td class='text-center p-0'>
         <span class='badge p-0 custom-text-${color}'>${change}%</span>
+    </td>`.trim();
+  }
+
+  buildNowField() {
+    let color;
+
+    if (FILTER.league.active) {
+      if (this.item.current >= 20) {
+        color = "gray-lo";
+      } else if (this.item.current >= 10) {
+        color = "orange";
+      } else if (this.item.current >= 5) {
+        color = "red";
+      } else if (this.item.current >= 0) {
+        color = "red-ex";
+      }
+    } else {
+      color = "gray-lo";
+    }
+
+    return `
+    <td class='text-center p-0'>
+      <span class='badge p-0 custom-text-${color}'>
+        ${this.item.current}
+      </span>
     </td>`.trim();
   }
 
@@ -1089,6 +1115,18 @@ const SORT_FUNCTIONS = {
     descending: (a, b) => {
       if (a.change > b.change) return -1;
       if (a.change < b.change) return 1;
+      return 0;
+    }
+  },
+  now: {
+    ascending: (a, b) => {
+      if (a.current < b.current) return -1;
+      if (a.current > b.current) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.current > b.current) return -1;
+      if (a.current < b.current) return 1;
       return 0;
     }
   },
