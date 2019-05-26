@@ -758,7 +758,7 @@ class DetailsModal {
     }
 
     if (item.baseItemLevel) {
-      builder += ` <span class='badge custom-badge-gray ml-1'>iLvl ${item.itemLevel}</span>`;
+      builder += ` <span class='badge custom-badge-gray ml-1'>iLvl ${item.baseItemLevel}</span>`;
     }
 
     if (item.linkCount) {
