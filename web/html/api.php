@@ -604,10 +604,10 @@ $APIColumns = [
     ],
     "reply" => [
       [
-        "param" => "id",
+        "param" => "...",
         "condition" => null,
-        "type" => "uint",
-        "desc" => "ID of item"
+        "type" => "...",
+        "desc" => "< all parameters exactly from itemdata api >"
       ],
       [
         "param" => "discovered",

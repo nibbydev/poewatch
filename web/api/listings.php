@@ -55,11 +55,15 @@ function get_data($pdo, $league, $account, $onlyPriced)
     date_format(max(le.updated), '%Y-%m-%dT%TZ') as updated, 
     group_concat(round(le.price, 2)) as price,
     group_concat(if(le.price is null, null, ifnull(did1.name, 'Chaos Orb'))) as currency,
-    group_concat(if(le.price is null, null, round(ifnull(li.mean, 1) * le.price, 2))) as chaos
+    group_concat(if(le.price is null, null, round(ifnull(li.mean, 1) * le.price, 2))) as chaos,
+    did.*, dc.name AS category, dg.name AS `group`
   from league_entries as le
   left join data_itemData as did1 on le.id_price = did1.id
   left join league_items as li on le.id_l = li.id_l and le.id_price = li.id_d
   join data_leagues as dl on dl.id = le.id_l
+  join data_itemData as did on le.id_d = did.id
+  left join data_categories as dc on dc.id = did.id_cat
+  left join data_groups as dg on dg.id = did.id_grp
   where dl.name = ?
     and le.account_crc = crc32(?)
     and le.stash_crc is not null
@@ -71,13 +75,44 @@ function get_data($pdo, $league, $account, $onlyPriced)
   $payload = [];
 
   while ($row = $stmt->fetch()) {
+    $itemData = [
+      'id'              => (int)  $row['id'],
+      'name'            =>        $row['name'],
+      'type'            =>        $row['type'],
+      'category'        =>        $row['category'],
+      'group'           =>        $row['group'],
+      'frame'           => (int)  $row['frame'],
+
+      'mapSeries'       =>        $row['series']     === null ? null : (int)    $row['series'],
+      'mapTier'         =>        $row['tier']       === null ? null : (int)    $row['tier'],
+      'baseIsShaper'    =>        $row['shaper']     === null ? null : (bool)   $row['shaper'],
+      'baseIsElder'     =>        $row['elder']      === null ? null : (bool)   $row['elder'],
+      'baseItemLevel'   =>        $row['ilvl']       === null ? null : (int)    $row['ilvl'],
+      'gemLevel'        =>        $row['lvl']        === null ? null : (int)    $row['lvl'],
+      'gemQuality'      =>        $row['quality']    === null ? null : (int)    $row['quality'],
+      'gemIsCorrupted'  =>        $row['corrupted']  === null ? null : (bool)   $row['corrupted'],
+      'enchantMin'      =>        $row['enchantMin'] === null ? null : (float)  $row['enchantMin'],
+      'enchantMax'      =>        $row['enchantMax'] === null ? null : (float)  $row['enchantMax'],
+      'stackSize'       =>        $row['stack']      === null ? null : (int)    $row['stack'],
+      'linkCount'       =>        $row['links']      === null ? null : (int)    $row['links'],
+
+      'variation'       =>        $row['var'],
+      'icon'            =>        $row['icon']
+    ];
+
+    // Filter out null values
+    $itemData = array_filter($itemData, function($value) {
+      return $value !== null;
+    });
+
     $tmp = [
-      'id' => (int) $row['id'],
       'discovered' => $row['discovered'],
       'updated' => $row['updated'],
       'count' => (int)$row['count'],
       'buyout' => []
     ];
+
+    $tmp = array_merge($itemData, $tmp);
 
     // If there's a price set
     if ($row['price']) {
