@@ -232,16 +232,16 @@ class ItemRow {
 
     return `
     <td>
-      <div class='pricebox'>
-        <span class='img-container img-container-sm text-center mr-1'>
+      <div class='pricebox badge p-0'>
+        <span class='img-container img-container-xs text-center mr-1'>
           <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
         </span>
         ${chaos}
       </div>
     </td>
     <td class='d-none d-md-flex'>
-      <div class='pricebox ${hideExalted}'>
-        <span class='img-container img-container-sm text-center mr-1'>
+      <div class='pricebox badge p-0 ${hideExalted}'>
+        <span class='img-container img-container-xs text-center mr-1'>
           <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
         </span>
         ${exalt}
@@ -271,12 +271,16 @@ class ItemRow {
     } else if (change <= -15) {
       color = "red-lo";
     } else {
-      color = "gray";
+      color = "gray-lo";
+    }
+
+    if (change > 0) {
+      change = '+' + change;
     }
 
     return `
-    <td>
-        <span class='badge custom-badge-block custom-badge-${color}'>${change}%</span>
+    <td class='text-center p-0'>
+        <span class='badge p-0 custom-text-${color}'>${change}%</span>
     </td>`.trim();
   }
 
@@ -285,21 +289,21 @@ class ItemRow {
 
     if (FILTER.league.active) {
       if (this.item.daily >= 20) {
-        color = "gray";
+        color = "gray-lo";
       } else if (this.item.daily >= 10) {
-        color = "orange-lo";
+        color = "orange";
       } else if (this.item.daily >= 5) {
-        color = "red-lo";
-      } else if (this.item.daily >= 0) {
         color = "red";
+      } else if (this.item.daily >= 0) {
+        color = "red-ex";
       }
     } else {
-      color = "gray";
+      color = "gray-lo";
     }
 
     return `
-    <td>
-      <span class='badge custom-badge-block custom-badge-${color}'>
+    <td class='text-center p-0'>
+      <span class='badge p-0 custom-text-${color}'>
         ${this.item.daily}
       </span>
     </td>`.trim();
@@ -307,8 +311,8 @@ class ItemRow {
 
   buildTotalField() {
     return `
-    <td>
-      <span class='badge custom-badge-block custom-badge-gray'>
+    <td class='text-center p-0'>
+      <span class='badge p-0 custom-text-gray-lo'>
         ${this.item.total}
       </span>
     </td>`.trim();

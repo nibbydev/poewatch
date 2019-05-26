@@ -30,14 +30,8 @@ a:hover {color: #bbb}
   white-space: nowrap;
   justify-content: center;
   text-align: center !important;
-  min-width: 35px;
-  max-width: 35px;
-  min-height: 35px;
-  max-height: 35px;
 }
 .img-container img {
-  max-height: 35px;
-  max-width: 35px;
   vertical-align: middle;
 }
 
@@ -85,14 +79,14 @@ a:hover {color: #bbb}
 /* SM image containers */
 
 .img-container-sm {
-  min-width: 35px;
-  max-width: 35px;
-  min-height: 35px;
-  max-height: 35px;
+  min-width: 32px;
+  max-width: 32px;
+  min-height: 32px;
+  max-height: 32px;
 }
 .img-container-sm img {
-  max-height: 32px;
-  max-width: 32px;
+  max-height: 30px;
+  max-width: 30px;
 }
 
 /* XS image containers */
@@ -102,7 +96,6 @@ a:hover {color: #bbb}
   max-width: 26px;
   min-height: 26px;
   max-height: 26px;
-  display: inline-block;
 }
 .img-container-xs img {
   max-height: 26px;
@@ -316,15 +309,21 @@ footer {
 /*
 // Text
 */
+.custom-text-red-ex     {color: #ca3737}
+.custom-text-red        {color: #ca5a5a}
+.custom-text-red-lo     {color: #c09292}
 
-.custom-text-red        {color: rgb(202, 90, 90)}
-.custom-text-red-lo     {color: rgb(192, 146, 146)}
-.custom-text-orange     {color: rgb(202, 163, 90)}
-.custom-text-orange-lo  {color: rgb(192, 185, 146)}
-.custom-text-green      {color: rgb(112, 202, 90)}
-.custom-text-green-lo   {color: rgb(155, 192, 146)}
-.custom-text-gray       {color: rgb(100, 100, 100)}
-.custom-text-gray-lo    {color: rgb(161, 161, 161)}
+.custom-text-orange-ex  {color: #caa125}
+.custom-text-orange     {color: #caa35a}
+.custom-text-orange-lo  {color: #c0b992}
+
+.custom-text-green-ex   {color: #55c938}
+.custom-text-green      {color: #70ca5a}
+.custom-text-green-lo   {color: #9bc092}
+
+.custom-text-gray       {color: #646464}
+.custom-text-gray-lo    {color: #a1a1a1}
+
 .paragraph-text         {color: #bbb}
 
 .color-patron {color: rgb(249, 108, 84) !important}

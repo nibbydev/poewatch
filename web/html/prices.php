@@ -68,7 +68,7 @@ include "assets/php/templates/priceNav.php";
                 <tr>
                   <td class="nowrap w-100">Mean</td>
                   <td class="nowrap">
-                      <span class="img-container img-container-xs text-center mr-1">
+                      <span class="img-container img-container-xs d-inline-block text-center mr-1">
                         <img
                           src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
                       </span>
@@ -78,7 +78,7 @@ include "assets/php/templates/priceNav.php";
                 <tr>
                   <td class="nowrap w-100">Median</td>
                   <td class="nowrap">
-                      <span class="img-container img-container-xs text-center mr-1">
+                      <span class="img-container img-container-xs d-inline-block text-center mr-1">
                         <img
                           src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
                       </span>
@@ -88,10 +88,10 @@ include "assets/php/templates/priceNav.php";
                 <tr>
                   <td class="nowrap w-100">Mode</td>
                   <td class="nowrap">
-                      <span class="img-container img-container-xs text-center mr-1">
-                        <img
-                          src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
-                      </span>
+                    <span class="img-container img-container-xs d-inline-block text-center mr-1">
+                      <img
+                        src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&amp;w=1&amp;h=1">
+                    </span>
                     <span id="modal-mode"></span>
                   </td>
                 </tr>
@@ -113,10 +113,10 @@ include "assets/php/templates/priceNav.php";
                 <tr>
                   <td class="nowrap w-100">Price in exalted</td>
                   <td class="nowrap">
-                      <span class="img-container img-container-xs text-center mr-1">
-                        <img
-                          src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
-                      </span>
+                    <span class="img-container img-container-xs d-inline-block text-center mr-1">
+                      <img
+                        src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&amp;w=1&amp;h=1">
+                    </span>
                     <span id="modal-exalted"></span>
                   </td>
                 </tr>
