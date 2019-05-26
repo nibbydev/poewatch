@@ -82,14 +82,16 @@ class ItemRow {
 
     // If item is enchantment, insert enchant values to name
     if (this.item.category === 'enchantment') {
+      name = this.item.name;
+
       // Min roll
-      if (this.item.name.includes("#") && this.item.enchantMin !== undefined) {
-        name = this.item.name.replace("#", this.item.enchantMin);
+      if (name.includes("#") && this.item.enchantMin !== undefined) {
+        name = name.replace("#", `<span class='custom-text-green'>${this.item.enchantMin}</span>`);
       }
 
       // Max roll
-      if (this.item.name.includes("#") && this.item.enchantMax !== undefined) {
-        name = this.item.name.replace("#", this.item.enchantMax);
+      if (name.includes("#") && this.item.enchantMax !== undefined) {
+        name = name.replace("#", `<span class='custom-text-green'>${this.item.enchantMax}</span>`);
       }
     }
 
