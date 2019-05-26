@@ -19,3 +19,44 @@ from data_itemData as did
 ) as tmp on tmp.name = did.name and tmp.type = did.type and tmp.frame = did.frame
 where did.var is null
 order by id desc;
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Delete old entries
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- drop foreign keys
+alter table league_entries
+    drop foreign key fk_id_price,
+    drop foreign key league_entries_ibfk_1,
+    drop foreign key league_entries_ibfk_2;
+
+-- drop indices
+alter table league_entries
+    drop index fk_id_price,
+    drop index updated,
+    drop index discovered,
+    drop index account_crc,
+    drop index id_d,
+    algorithm = inplace;
+
+-- optionally drop primary key as well
+alter table league_entries drop PRIMARY KEY;
+
+-- delete rows
+delete
+from league_entries
+where stash_crc is null
+  and updated < subdate(now(), interval 7 day);
+
+-- recreate indices
+alter table league_entries
+    add PRIMARY KEY (id_l, id_d, account_crc, item_crc),
+    add index account_crc (account_crc),
+    add index discovered (discovered),
+    add index updated (updated);
+
+-- recreate foreign keys
+alter table league_entries
+    add foreign key (id_l) references data_leagues (id),
+    add foreign key (id_d) references data_itemData (id),
+    add foreign key (id_price) references data_itemData (id);
