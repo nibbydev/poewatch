@@ -180,8 +180,8 @@ function fillTable(items) {
   for (let i = 0; i < items.length; i++) {
     const name = formatName(items[i]),
       properties = formatProperties(items[i]);
-    let price = '';
 
+    let price = '';
     if (items[i].buyout.length > 0) {
       price = items[i].buyout[0].price + " " + items[i].buyout[0].currency
     }
@@ -192,23 +192,21 @@ function fillTable(items) {
       <div class="img-container img-container-xs text-center mr-1">
         <img src="${items[i].icon}" alt="...">
       </div>
-      <div>${name}</div>
+      <div class="mr-1 custom-text-gray-lo">${name}</div>
+      <span class="badge custom-text-gray p-0">${properties}</span>
     </div>
   </td>
   <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${properties}</span>
+    <span class="badge p-0">${items[i].count}</span>
   </td>
   <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${items[i].count}</span>
+    <span class="badge p-0">${price}</span>
   </td>
   <td class="text-nowrap custom-text-gray-lo">
     <span class="badge p-0">${timeSince(items[i].discovered)}</span>
   </td>
   <td class="text-nowrap custom-text-gray-lo">
     <span class="badge p-0">${timeSince(items[i].updated)}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${price}</span>
   </td>
 </tr>`;
 
@@ -292,20 +290,20 @@ function formatProperties(item) {
   }
 
   if (item.linkCount) {
-    builder += `${item.linkCount} links, `;
+    builder += `Links ${item.linkCount}, `;
   }
 
   if (item.category === 'gem') {
-    builder += `Lvl ${item.gemLevel}, `;
-    builder += `${item.gemQuality} quality, `;
+    builder += `Level ${item.gemLevel}, `;
+    builder += `Quality ${item.gemQuality}, `;
 
     if (item.gemIsCorrupted) {
-      builder += "<span class='custom-text-red'>Corrupted</span>, ";
+      builder += "Corrupted, ";
     }
   }
 
   if (builder) {
-    builder = builder.substring(0, builder.length - 2);
+    builder = `(${builder.substring(0, builder.length - 2)})`;
   }
 
   return builder;

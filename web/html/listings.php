@@ -49,11 +49,10 @@ genBodyHeader();
       <thead>
       <tr>
         <th title="Item title" class="w-100">Item</th>
-        <th>Properties</th>
         <th>Count</th>
+        <th>Price</th>
         <th>Found</th>
         <th>Updated</th>
-        <th>Price</th>
       </tr>
       </thead>
 
