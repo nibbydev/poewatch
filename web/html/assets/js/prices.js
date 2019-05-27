@@ -757,7 +757,7 @@ class DetailsModal {
    */
   static buildNameField(item) {
     // If item is enchantment, insert enchant values for display purposes
-    if (item.category === 'enchant') {
+    if (item.category === 'enchantment') {
       // Min roll
       if (item.name.includes('#') && item.enchantMin !== null) {
         item.name = item.name.replace('#', item.enchantMin);
