@@ -1,10 +1,3 @@
-const API_URL = 'https://api.poe.watch';
-const SEARCH = {
-  account: null,
-  league: null,
-  results: {}
-};
-
 /**
  * Table row
  */
@@ -243,10 +236,158 @@ class QueryAccessor {
 
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
   }
-
-
 }
 
+/**
+ * Row sorting
+ */
+class Sorter {
+  static SORT_FUNCTIONS = {
+    found: {
+      ascending: (a, b) => {
+        if (a.discovered < b.discovered) return -1;
+        if (a.discovered > b.discovered) return 1;
+        return 0;
+      },
+      descending: (a, b) => {
+        if (a.discovered > b.discovered) return -1;
+        if (a.discovered < b.discovered) return 1;
+        return 0;
+      }
+    },
+    default: {
+      ascending: (a, b) => {
+        if (a.updated < b.updated) return -1;
+        if (a.updated > b.updated) return 1;
+        return 0;
+      },
+      descending: (a, b) => {
+        if (a.updated > b.updated) return -1;
+        if (a.updated < b.updated) return 1;
+        return 0;
+      }
+    },
+    price: {
+      ascending: (a, b) => {
+        if (a.buyout.length === 0 && b.buyout.length > 0) return 1;
+        if (b.buyout.length === 0 && a.buyout.length > 0) return -1;
+        if (a.buyout.length === 0 && b.buyout.length === 0) return 0;
+        if (a.buyout[0].chaos > b.buyout[0].chaos) return -1;
+        if (a.buyout[0].chaos < b.buyout[0].chaos) return 1;
+        return 0;
+      },
+      descending: (a, b) => {
+        if (a.buyout.length === 0 && b.buyout.length > 0) return -1;
+        if (b.buyout.length === 0 && a.buyout.length > 0) return 1;
+        if (a.buyout.length === 0 && b.buyout.length === 0) return 0;
+        if (a.buyout[0].chaos > b.buyout[0].chaos) return 1;
+        if (a.buyout[0].chaos < b.buyout[0].chaos) return -1;
+        return 0;
+      }
+    },
+    count: {
+      ascending: (a, b) => {
+        if (a.count < b.count) return -1;
+        if (a.count > b.count) return 1;
+        return 0;
+      },
+      descending: (a, b) => {
+        if (a.count > b.count) return -1;
+        if (a.count < b.count) return 1;
+        return 0;
+      }
+    },
+    item: {
+      ascending: (a, b) => {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+      },
+      descending: (a, b) => {
+        if (a.name > b.name) return -1;
+        if (a.name < b.name) return 1;
+        return 0;
+      }
+    }
+  };
+
+  /**
+   * Handles sorting events
+   *
+   * @param e Event data
+   */
+  static sortListener(e) {
+    const colName = e.target.innerHTML.toLowerCase();
+    const target = $(e.target);
+    let order = e.target.attributes.order ? e.target.attributes.order.value : null;
+    let color = null;
+
+    // Remove all data from all sort columns
+    $('.sort-column').attr('class', 'sort-column').attr('order', null);
+
+    target.attr('class', 'sort-column')
+      .attr('order', null);
+
+    // Toggle descriptions and orders
+    if (!order) {
+      order = 'descending';
+      color = 'custom-text-green';
+    } else if (order === 'descending') {
+      order = 'ascending';
+      color = 'custom-text-red';
+    } else if (order === "ascending") {
+      console.log('Sorting: default');
+      SEARCH.sortFunction = Sorter.getSortFunc();
+      Sorter.sortResults();
+
+      return;
+    }
+
+    // Set clicked col's data
+    target.addClass(color).attr('order', order);
+
+    console.log(`Sorting: ${colName} ${order}`);
+    SEARCH.sortFunction = Sorter.getSortFunc(colName, order);
+
+    Sorter.sortResults();
+  }
+
+  static sortResults() {
+    const json = SEARCH.results[SEARCH.league + SEARCH.account];
+    json.sort(SEARCH.sortFunction);
+    fillTable(json);
+  }
+
+  /**
+   * Get sort function that matches provided params
+   *
+   * @param col Column name to sort
+   * @param order Sort ordering
+   * @returns {*} Comparator function with two arguments
+   */
+  static getSortFunc(col, order) {
+    // If the sort function exists
+    if (Sorter.SORT_FUNCTIONS[col]) {
+      if (Sorter.SORT_FUNCTIONS[col][order]) {
+        return Sorter.SORT_FUNCTIONS[col][order];
+      }
+    }
+
+    // Otherwise return default
+    return Sorter.SORT_FUNCTIONS.default[order]
+      ? Sorter.SORT_FUNCTIONS.default[order]
+      : Sorter.SORT_FUNCTIONS.default.descending;
+  }
+}
+
+
+const API_URL = 'https://api.poe.watch';
+const SEARCH = {
+  account: null,
+  league: null,
+  results: {},
+  sortFunction: Sorter.getSortFunc()
+};
 
 $(document).ready(function () {
   defineListeners();
@@ -324,7 +465,10 @@ function defineListeners() {
     console.log('League: ' + SEARCH.league);
     QueryAccessor.updateQueryParam('league', SEARCH.league);
   });
+
+  $('.sort-column').on('click', Sorter.sortListener);
 }
+
 
 /**
  * Loads and processes query parameters on initial page load
@@ -385,12 +529,7 @@ function makeGetRequest(league, account) {
     $('#search-results').removeClass('d-none');
 
     // Sort descending
-    json.sort((a, b) => {
-      if (a.updated < b.updated) return 1;
-      if (a.updated > b.updated) return -1;
-      return 0;
-    });
-
+    json.sort(SEARCH.sortFunction);
     fillTable(json);
     spinner.addClass('d-none');
   });
@@ -418,8 +557,11 @@ function fillTable(items) {
 
   let tableRows = [];
   for (let i = 0; i < items.length; i++) {
-    const row = new Row(items[i]);
-    tableRows.push(row.buildRow());
+    if (!items[i].html) {
+      items[i].html = new Row(items[i]).buildRow();
+    }
+
+    tableRows.push(items[i].html);
   }
 
   table.html(tableRows.join(''));
