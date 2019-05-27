@@ -136,25 +136,27 @@ public class Main {
             }
 
             wm.setNextChangeID(changeId);
-            System.out.println("[INFO] ChangeID (" + changeId + ") added");
+            System.out.printf("[INFO] ChangeID (%s) added%n", changeId);
         }
 
         for (String arg : newArgs) {
-            if (!arg.startsWith("-"))
-                continue;
+            if (!arg.startsWith("-")) continue;
+            arg = arg.substring(1);
 
             switch (arg) {
-                case "-workers":
+                case "workers":
                     wm.spawnWorkers(Integer.parseInt(newArgs.get(newArgs.lastIndexOf(arg) + 1)));
-                    System.out.println("[INFO] Spawned " + newArgs.get(newArgs.lastIndexOf(arg) + 1) + " workers");
+                    System.out.printf("[INFO] Spawned %s workers%n", newArgs.get(newArgs.lastIndexOf(arg) + 1));
                     break;
-                case "-id":
+
+                case "id":
                     String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 1);
                     wm.setNextChangeID(changeId);
-                    System.out.println("[INFO] New ChangeID (" + changeId + ") added");
+                    System.out.printf("[INFO] New ChangeID (%s) added%n", changeId);
                     break;
+
                 default:
-                    System.out.println("[ERROR] Unknown CLI parameter: " + arg);
+                    System.out.printf("[ERROR] Unknown CLI parameter: %s%n", arg);
                     break;
             }
         }
@@ -186,15 +188,24 @@ public class Main {
                     case "help":
                         System.out.println(helpString);
                         break;
+
                     case "exit":
                         System.out.println("[INFO] Shutting down..");
                         return;
+
                     case "worker":
                         commandWorker(userInput);
                         break;
+
                     case "about":
                         commandAbout();
                         break;
+
+                    case "calculateAll":
+                        pm.resetCycleStamp();
+                        logger.info("Cycle timestamp reset");
+                        break;
+
                     default:
                         logger.info(String.format("Unknown command: '%s'. Use 'help'.", userInput[0]));
                         break;

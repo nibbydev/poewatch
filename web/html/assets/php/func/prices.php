@@ -67,21 +67,22 @@ function AddTableHeaders($category) {
   echo "<th class='w-100'><span class='sort-column'>Item</span></th>";
 
   if ( $category === "gem" ) {
-    echo "<th>Lvl</th>";
-    echo "<th>Qual</th>";
-    echo "<th>Corr</th>";
+    echo "<th title='Gem level'>Lvl</th>";
+    echo "<th title='Gem quality'>Qual</th>";
+    echo "<th title='Is the gem corrupted'>Corr</th>";
   } else if ( $category === "base" ) {
-    echo "<th>iLvl</th>";
+    echo "<th title='Item level'>iLvl</th>";
   } else if ( $category === "map" ) {
-    echo "<th>Tier</th>";
+    echo "<th title='Map tier'>Tier</th>";
   }
   
-  echo "<th class='d-none d-md-block'><span class='sort-column'>Spark</span></th>";
+  echo "<th class='d-none d-md-block'>Spark</th>";
   echo "<th><span class='sort-column'>Chaos</span></th>";
   echo "<th class='d-none d-md-block'><span class='sort-column'>Exalted</span></th>";
-  echo "<th><span class='sort-column'>Change</span></th>";
-  echo "<th><span class='sort-column'>Daily</span></th>";
-  echo "<th><span class='sort-column'>Total</span></th>";
+  echo "<th><span class='sort-column' title='Price compared to 7d ago'>Change</span></th>";
+  echo "<th><span class='sort-column' title='Number of items currently on sale'>Now</span></th>";
+  echo "<th><span class='sort-column' title='Number of items listed every 24h'>Daily</span></th>";
+  echo "<th><span class='sort-column' title='Total number of items listed'>Total</span></th>";
 }
 
 function GetGroups($pdo, $category) {

@@ -2,12 +2,12 @@
 require_once "assets/php/pageData.php";
 require_once "assets/php/templates/body.php";
 
-$PAGEDATA["title"] = "API - PoeWatch";
-$PAGEDATA["pageHeader"] = "API Resources";
-$PAGEDATA["description"] = "Resources for developers";
+$PAGE_DATA["title"] = "API - PoeWatch";
+$PAGE_DATA["pageHeader"] = "API Resources";
+$PAGE_DATA["description"] = "Resources for developers";
 
 // page data
-$APIcolumns = [
+$APIColumns = [
   // id api
   [
     "href" => "https://api.poe.watch/id",
@@ -578,11 +578,11 @@ $APIcolumns = [
       ],
     ]
   ],
-  // user api
+  // listings api
   [
-    "href" => "https://api.poe.watch/user?league=Standard&account=Novynn",
-    "name" => "user",
-    "desc" => "Get all listings for an account, including the time listed, last updated, 
+    "href" => "https://api.poe.watch/listings?league=Standard&account=Novynn",
+    "name" => "listings",
+    "desc" => "Get all item listings for an account, including the time listed, last updated, 
       how many are listed and how many are priced. Allows filtering out items without a 
       price. Only tracks items that are available through the itemdata api.",
     "request" => [
@@ -604,10 +604,10 @@ $APIcolumns = [
     ],
     "reply" => [
       [
-        "param" => "id",
+        "param" => "...",
         "condition" => null,
-        "type" => "uint",
-        "desc" => "ID of item"
+        "type" => "...",
+        "desc" => "< all parameters exactly from itemdata api >"
       ],
       [
         "param" => "discovered",
@@ -640,11 +640,9 @@ $APIcolumns = [
 include "assets/php/templates/header.php";
 include "assets/php/templates/navbar.php";
 include "assets/php/templates/priceNav.php";
+genBodyHeader();
 ?>
-
-<?php genBodyHeader() ?>
-
-<?php foreach ($APIcolumns as $API) { ?>
+<?php foreach ($APIColumns as $API) { ?>
   <div class="col-12">
     <div class="card custom-card mb-3">
       <div class="card-header">
@@ -717,5 +715,7 @@ include "assets/php/templates/priceNav.php";
   </div>
 <?php } ?>
 
-<?php genBodyFooter() ?>
-<?php include "assets/php/templates/footer.php" ?>
+<?php
+genBodyFooter();
+include "assets/php/templates/footer.php"
+?>

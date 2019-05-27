@@ -8,6 +8,11 @@ public class EntryBundle {
         this.price = price;
     }
 
+    public EntryBundle(Integer currencyId, double price) {
+        this.currencyId = currencyId;
+        this.price = price;
+    }
+
     public Integer getCurrencyId() {
         return currencyId;
     }

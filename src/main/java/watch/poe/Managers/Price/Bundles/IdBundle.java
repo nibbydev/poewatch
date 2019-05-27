@@ -1,11 +1,10 @@
 package poe.Managers.Price.Bundles;
 
 public class IdBundle {
-    private int leagueId, itemId;
+    private int leagueId, itemId, daily;
+    private double price;
 
-    public IdBundle(int leagueId, int itemId) {
-        this.leagueId = leagueId;
-        this.itemId = itemId;
+    public IdBundle() {
     }
 
     public int getLeagueId() {
@@ -22,5 +21,21 @@ public class IdBundle {
 
     public void setItemId(int itemId) {
         this.itemId = itemId;
+    }
+
+    public int getDaily() {
+        return daily;
+    }
+
+    public void setDaily(int daily) {
+        this.daily = daily;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 }

@@ -89,7 +89,7 @@ public class Upload {
      * @return True on success
      */
     public boolean updateItem(ResultBundle result) {
-        String query = "update league_items " +
+        String query = "update ignore league_items " +
                 "set mean = ?, median = ?, mode = ?, `min` = ?, `max` = ?, accepted = ? " +
                 "where id_l = ? and id_d = ? " +
                 "limit 1; ";
@@ -184,9 +184,7 @@ public class Upload {
 
         // Update data for inserted league entry
         String query2 = "UPDATE data_leagues " +
-                "SET    start     = ?, " +
-                "       end       = ?, " +
-                "       upcoming  = 0, " +
+                "SET    upcoming  = 0, " +
                 "       active    = 1, " +
                 "       event     = ?, " +
                 "       hardcore  = ?, " +
@@ -214,12 +212,10 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
                 for (BaseLeague league : leagueEntries) {
-                    statement.setString(1, league.getStartAt());
-                    statement.setString(2, league.getEndAt());
-                    statement.setInt(3, league.isEvent() ? 1 : 0);
-                    statement.setInt(4, league.isHardcore() ? 1 : 0);
-                    statement.setInt(5, league.isEvent() ? 0 : 1);
-                    statement.setString(6, league.getName());
+                    statement.setInt(1, league.isEvent() ? 1 : 0);
+                    statement.setInt(2, league.isHardcore() ? 1 : 0);
+                    statement.setInt(3, league.isEvent() ? 0 : 1);
+                    statement.setString(4, league.getName());
                     statement.addBatch();
                 }
 
@@ -273,8 +269,8 @@ public class Upload {
     public boolean uploadUsernames(Set<RawUsernameEntry> usernameSet) {
         String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = VALUES(seen) ";
         String query2 = "INSERT INTO account_characters (id_l, name, id_a) " +
-                        "select ?, ?, (select id from account_accounts where name = ? limit 1) " +
-                        "ON DUPLICATE KEY UPDATE id = id";
+                "select ?, ?, (select id from account_accounts where name = ? limit 1) " +
+                "ON DUPLICATE KEY UPDATE id = id";
 
         try {
             if (database.connection.isClosed()) {

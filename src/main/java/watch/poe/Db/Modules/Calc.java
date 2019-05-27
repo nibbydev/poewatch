@@ -22,18 +22,24 @@ public class Calc {
     /**
      * Queries a list of league+item pairs that need to have their prices recalculated
      *
+     * @param idBundles Empty list to be filled
+     * @param since Timestamp of last query
      * @return True on success
      */
-    public boolean getNewIdBundles(List<IdBundle> idBundles, Timestamp since) {
+    public boolean getIdBundles(List<IdBundle> idBundles, Timestamp since) {
         if (idBundles == null || !idBundles.isEmpty()) {
             throw new RuntimeException("Invalid list provided");
         }
 
-        String query =  "select distinct id_l, id_d " +
-                        "from league_entries " +
-                        "where stash_crc is not null " +
-                        "  and price is not null " +
-                        "  and updated > ? ";
+        String query =  "select b.id_l, b.id_d, li.mean, li.daily " +
+                        "from league_items as li " +
+                        "join ( " +
+                        "  select distinct id_l, id_d " +
+                        "  from league_entries " +
+                        "  where stash_crc is not null " +
+                        "    and price is not null " +
+                        "    and updated > ? " +
+                        ") as b on li.id_l = b.id_l and li.id_d = b.id_d;";
 
         try {
             if (database.connection.isClosed()) {
@@ -46,7 +52,14 @@ public class Calc {
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
-                    idBundles.add(new IdBundle(resultSet.getInt(1), resultSet.getInt(2)));
+                    IdBundle ib = new IdBundle();
+
+                    ib.setLeagueId(resultSet.getInt(1));
+                    ib.setItemId(resultSet.getInt(2));
+                    ib.setPrice(resultSet.getDouble(3));
+                    ib.setDaily(resultSet.getInt(4));
+
+                    idBundles.add(ib);
                 }
             }
 
@@ -107,7 +120,7 @@ public class Calc {
                 "from league_entries as le " +
                 "join ( " +
                 "  select distinct account_crc from league_accounts " +
-                "  where seen > date_sub(now(), interval 1 hour) " +
+                "  where seen > date_sub(now(), interval 8 hour) " +
                 ") as foo2 on le.account_crc = foo2.account_crc " +
                 "where le.id_l = ? " +
                 "  and le.id_d = ? " +
@@ -127,10 +140,12 @@ public class Calc {
 
                 while (resultSet.next()) {
                     EntryBundle eb = new EntryBundle(resultSet.getDouble(1));
+                    entryBundles.add(eb);
 
                     eb.setCurrencyId(resultSet.getInt(2));
-                    if (resultSet.wasNull()) eb.setCurrencyId(null);
-                    entryBundles.add(eb);
+                    if (resultSet.wasNull()) {
+                        eb.setCurrencyId(null);
+                    }
                 }
             }
 
