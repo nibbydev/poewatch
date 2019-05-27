@@ -158,8 +158,10 @@ class Row {
       <div class="img-container img-container-xs text-center mr-1">
         <img src="${this.item.icon}" alt="...">
       </div>
-      <div class="mr-1 custom-text-gray-lo">${this.name}</div>
-      <span class="badge custom-text-gray p-0">${this.properties}</span>
+      <div>
+        <span class="custom-text-gray-lo">${this.name}</span>
+        <span class="badge custom-text-gray p-0">${this.properties}</span>
+      </div>
     </div>
   </td>
   <td class="text-nowrap custom-text-gray-lo text-center">
@@ -242,75 +244,6 @@ class QueryAccessor {
  * Row sorting
  */
 class Sorter {
-  static SORT_FUNCTIONS = {
-    found: {
-      ascending: (a, b) => {
-        if (a.discovered < b.discovered) return -1;
-        if (a.discovered > b.discovered) return 1;
-        return 0;
-      },
-      descending: (a, b) => {
-        if (a.discovered > b.discovered) return -1;
-        if (a.discovered < b.discovered) return 1;
-        return 0;
-      }
-    },
-    default: {
-      ascending: (a, b) => {
-        if (a.updated < b.updated) return -1;
-        if (a.updated > b.updated) return 1;
-        return 0;
-      },
-      descending: (a, b) => {
-        if (a.updated > b.updated) return -1;
-        if (a.updated < b.updated) return 1;
-        return 0;
-      }
-    },
-    price: {
-      ascending: (a, b) => {
-        if (a.buyout.length === 0 && b.buyout.length > 0) return 1;
-        if (b.buyout.length === 0 && a.buyout.length > 0) return -1;
-        if (a.buyout.length === 0 && b.buyout.length === 0) return 0;
-        if (a.buyout[0].chaos > b.buyout[0].chaos) return -1;
-        if (a.buyout[0].chaos < b.buyout[0].chaos) return 1;
-        return 0;
-      },
-      descending: (a, b) => {
-        if (a.buyout.length === 0 && b.buyout.length > 0) return -1;
-        if (b.buyout.length === 0 && a.buyout.length > 0) return 1;
-        if (a.buyout.length === 0 && b.buyout.length === 0) return 0;
-        if (a.buyout[0].chaos > b.buyout[0].chaos) return 1;
-        if (a.buyout[0].chaos < b.buyout[0].chaos) return -1;
-        return 0;
-      }
-    },
-    count: {
-      ascending: (a, b) => {
-        if (a.count < b.count) return -1;
-        if (a.count > b.count) return 1;
-        return 0;
-      },
-      descending: (a, b) => {
-        if (a.count > b.count) return -1;
-        if (a.count < b.count) return 1;
-        return 0;
-      }
-    },
-    item: {
-      ascending: (a, b) => {
-        if (a.name < b.name) return -1;
-        if (a.name > b.name) return 1;
-        return 0;
-      },
-      descending: (a, b) => {
-        if (a.name > b.name) return -1;
-        if (a.name < b.name) return 1;
-        return 0;
-      }
-    }
-  };
-
   /**
    * Handles sorting events
    *
@@ -380,6 +313,74 @@ class Sorter {
   }
 }
 
+Sorter.SORT_FUNCTIONS = {
+  found: {
+    ascending: (a, b) => {
+      if (a.discovered < b.discovered) return -1;
+      if (a.discovered > b.discovered) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.discovered > b.discovered) return -1;
+      if (a.discovered < b.discovered) return 1;
+      return 0;
+    }
+  },
+  default: {
+    ascending: (a, b) => {
+      if (a.updated < b.updated) return -1;
+      if (a.updated > b.updated) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.updated > b.updated) return -1;
+      if (a.updated < b.updated) return 1;
+      return 0;
+    }
+  },
+  price: {
+    ascending: (a, b) => {
+      if (a.buyout.length === 0 && b.buyout.length > 0) return 1;
+      if (b.buyout.length === 0 && a.buyout.length > 0) return -1;
+      if (a.buyout.length === 0 && b.buyout.length === 0) return 0;
+      if (a.buyout[0].chaos > b.buyout[0].chaos) return -1;
+      if (a.buyout[0].chaos < b.buyout[0].chaos) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.buyout.length === 0 && b.buyout.length > 0) return -1;
+      if (b.buyout.length === 0 && a.buyout.length > 0) return 1;
+      if (a.buyout.length === 0 && b.buyout.length === 0) return 0;
+      if (a.buyout[0].chaos > b.buyout[0].chaos) return 1;
+      if (a.buyout[0].chaos < b.buyout[0].chaos) return -1;
+      return 0;
+    }
+  },
+  count: {
+    ascending: (a, b) => {
+      if (a.count < b.count) return -1;
+      if (a.count > b.count) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.count > b.count) return -1;
+      if (a.count < b.count) return 1;
+      return 0;
+    }
+  },
+  item: {
+    ascending: (a, b) => {
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    },
+    descending: (a, b) => {
+      if (a.name > b.name) return -1;
+      if (a.name < b.name) return 1;
+      return 0;
+    }
+  }
+};
 
 const API_URL = 'https://api.poe.watch';
 const SEARCH = {
