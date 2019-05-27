@@ -6,6 +6,7 @@ require_once "assets/php/templates/priceForms.php";
 require_once "assets/php/templates/body.php";
 
 $PAGE_DATA["title"] = "Prices - PoeWatch";
+$PAGE_DATA["pageHeader"] = "Item prices";
 $PAGE_DATA["description"] = "Discover the average price of almost any item";
 $PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
 $PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
@@ -152,95 +153,99 @@ include "assets/php/templates/priceNav.php";
 </div>
 
 <?php genBodyHeader() ?>
-<!-- Search forms -->
-<div class="col-12 p-0 mb-3">
-  <div class='d-flex flex-wrap'>
-    <?php
-    switch ($category) {
-      case "gem":
-        corruptedForm();
-        levelForm();
-        qualityForm();
-        break;
-      case "armour":
-      case "weapon":
-        linksForm();
-        rarityForm();
-        break;
-      case "map":
-        tierForm();
-        rarityForm();
-        break;
-      case "base":
-        itemLevelForm();
-        influenceForm();
-        break;
-      case "flask":
-      case "accessory":
-      case "jewel":
-        rarityForm();
-        break;
-      default:
-        break;
-    }
-    ?>
-  </div>
-
-  <div class='row'>
-    <!-- League -->
-    <div class="col-6 col-sm">
-      <h4 class="nowrap">League</h4>
-      <select class="form-control custom-select" id="search-league">
-        <?php foreach ($leagueList as $league): ?>
-          <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● ";
-            echo $league['display'] ? $league['display'] : $league['name'] ?></option>
-        <?php endforeach ?>
-      </select>
-    </div>
-    <!--//League//-->
-
-    <!-- Confidence -->
-    <div class="col-6 col-sm">
-      <h4 class="nowrap">Low daily</h4>
-      <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
-        <label class="btn btn-outline-dark active">
-          <input type="radio" name="confidence" value="false" checked>Hide
-        </label>
-        <label class="btn btn-outline-dark">
-          <input type="radio" name="confidence" value="true">Show
-        </label>
-      </div>
-    </div>
-    <!--//Confidence//-->
-
-    <!-- Group -->
-    <div class="col-6 col-sm">
-      <h4>Group</h4>
-      <select class="form-control custom-select" id="search-group">
-        <?php if (sizeof($groups) > 1): ?>
-          <option value='all'>All</option>
-        <?php endif;
-        foreach ($groups as $group): ?>
-          <option value='<?php echo $group['name'] ?>'><?php echo $group['display'] ?></option>
-        <?php endforeach ?>
-      </select>
-    </div>
-    <!--//Group//-->
-
-    <!-- Search -->
-    <div class="col-6 col-sm">
-      <h4>Search</h4>
-      <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
-    </div>
-    <!--//Search//-->
-  </div>
-</div>
-<!--//Search forms//-->
 
 <div class='col-12 p-0'>
   <div class="card custom-card">
     <div class="card-header slim-card-edge"></div>
     <div class="card-body d-flex flex-column p-2">
+
+      <!-- Search forms -->
+      <div class="px-2">
+        <div class='d-flex flex-wrap'>
+          <?php
+          switch ($category) {
+            case "gem":
+              corruptedForm();
+              levelForm();
+              qualityForm();
+              break;
+            case "armour":
+            case "weapon":
+              linksForm();
+              rarityForm();
+              break;
+            case "map":
+              tierForm();
+              rarityForm();
+              break;
+            case "base":
+              itemLevelForm();
+              influenceForm();
+              break;
+            case "flask":
+            case "accessory":
+            case "jewel":
+              rarityForm();
+              break;
+            default:
+              break;
+          }
+          ?>
+        </div>
+
+        <div class='row'>
+          <!-- League -->
+          <div class="col-6 col-sm">
+            <h4 class="nowrap">League</h4>
+            <select class="form-control custom-select" id="search-league">
+              <?php foreach ($leagueList as $league): ?>
+                <option value="<?php echo $league["name"] ?>"><?php if (!$league["active"]) echo "● ";
+                  echo $league['display'] ? $league['display'] : $league['name'] ?></option>
+              <?php endforeach ?>
+            </select>
+          </div>
+          <!--//League//-->
+
+          <!-- Confidence -->
+          <div class="col-6 col-sm">
+            <h4 class="nowrap">Low daily</h4>
+            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="radio-confidence">
+              <label class="btn btn-outline-dark active">
+                <input type="radio" name="confidence" value="false" checked>Hide
+              </label>
+              <label class="btn btn-outline-dark">
+                <input type="radio" name="confidence" value="true">Show
+              </label>
+            </div>
+          </div>
+          <!--//Confidence//-->
+
+          <!-- Group -->
+          <div class="col-6 col-sm">
+            <h4>Group</h4>
+            <select class="form-control custom-select" id="search-group">
+              <?php if (sizeof($groups) > 1): ?>
+                <option value='all'>All</option>
+              <?php endif;
+              foreach ($groups as $group): ?>
+                <option value='<?php echo $group['name'] ?>'><?php echo $group['display'] ?></option>
+              <?php endforeach ?>
+            </select>
+          </div>
+          <!--//Group//-->
+
+          <!-- Search -->
+          <div class="col-6 col-sm">
+            <h4>Search</h4>
+            <input type="text" class="form-control" id="search-searchbar" placeholder="Search">
+          </div>
+          <!--//Search//-->
+        </div>
+      </div>
+      <!--//Search forms//-->
+
+      <hr class="w-100">
+
       <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
         <thead>
         <tr>

@@ -13,7 +13,7 @@ body {
   margin-bottom: 70px;
 }
 
-hr {border-color: rgba(0,0,0,.4) !important}
+hr {border-color: rgba(0,0,0,.2) !important}
 
 a {color: #ddd}
 a:hover {color: #bbb}
