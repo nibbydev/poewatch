@@ -35,6 +35,10 @@ $PAGE_DATA = [
       'href' => '/characters'
     ],
     [
+      'name' => 'Listings',
+      'href' => '/listings'
+    ],
+    [
       'name' => 'Stats',
       'href' => '/stats'
     ],
