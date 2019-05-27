@@ -112,6 +112,13 @@ function makeGetRequest(league, account) {
 
     $('#search-results').removeClass('d-none');
 
+    // Sort descending
+    json.sort((a , b) => {
+      if (a.updated < b.updated) return 1;
+      if (a.updated > b.updated) return -1;
+      return 0;
+    });
+
     fillTable(json);
     hideSpinner();
   });
