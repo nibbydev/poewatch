@@ -74,7 +74,7 @@ class ItemRow {
         icon += "&elder=1";
         color = "item-elder";
       }
-    }
+    } else color = '';
 
     // If color was not set and item is foil
     if (!color && this.item.frame === 9) {
@@ -115,8 +115,8 @@ class ItemRow {
     return `
     <td>
       <div class='d-flex align-items-center'>
-        <span class='img-container img-container-sm text-center mr-1'><img src="${this.item.icon}"></span>
-        <span class='cursor-pointer ${color}'>${name || this.item.name}${type}</span>${variation}${links}
+        <div class='img-container img-container-sm text-center mr-1'><img src="${this.item.icon}"></div>
+        <div class='cursor-pointer ${color}'>${name || this.item.name}${type}</div>${variation}${links}
       </div>
     </td>`.trim();
   }
@@ -570,8 +570,13 @@ class DetailsModal {
   }
 
   onRowClick(event) {
-    let target = $(event.currentTarget);
-    let id = parseInt(target.attr('value'));
+    console.log(event)
+    if (event.target.localName !== 'span') {
+      return;
+    }
+
+    const target = $(event.currentTarget);
+    const id = parseInt(target.attr('value'));
 
     // If user clicked on a different row
     if (!id) {
@@ -1394,7 +1399,7 @@ function defineListeners() {
   $('#select-influence').on('change', genericListener);
 
   // Model display
-  $('#searchResults > tbody').delegate('tr', 'click', e => MODAL.onRowClick(e));
+  $('#searchResults > tbody tr span').on('click', e => MODAL.onRowClick(e));
   // Sort byy columns
   $('.sort-column').on('click', sortListener);
 }
@@ -1432,7 +1437,7 @@ function genericListener(e) {
     case 'button-showAll': {
       console.log('Button press: show all');
 
-      $(e.target).hide();
+      $(e.target).addClass('d-none');
       FILTER.parseAmount = -1;
 
       break;
@@ -1626,10 +1631,8 @@ function sortListener(e) {
 function makeGetRequest() {
   // Empty previous data
   $("#searchResults tbody").empty();
-  // Show buffering symbol
   $("#buffering-main").show();
-  // Hide 'show all' button
-  $("#button-showAll").hide();
+  $("#button-showAll").addClass('d-none');
   // Hide status message
   $(".buffering-msg").remove();
   // Clear current items
@@ -1830,9 +1833,9 @@ function sortResults() {
   let loadAllBtn = $("#button-showAll");
   if (FILTER.parseAmount > 0 && matches > FILTER.parseAmount) {
     loadAllBtn.text("Show all (" + (matches - FILTER.parseAmount) + " items)");
-    loadAllBtn.show();
+    loadAllBtn.removeClass('d-none');
   } else {
-    loadAllBtn.hide();
+    loadAllBtn.addClass('d-none');
   }
 }
 

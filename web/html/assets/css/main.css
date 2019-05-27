@@ -129,7 +129,7 @@ a:hover {color: #bbb}
 //----------------------------------------------------------------------------------------------------------*/
 
 input.form-control,select.form-control {
-  background-color: rgba(0,0,0,.1) !important;
+  background-color: rgba(0,0,0,.3) !important;
   border: 1px solid rgba(255,255,255,.15) !important;
   color: #ddd !important;
 }
@@ -156,7 +156,11 @@ input.form-control,select.form-control {
   border-color: #333;
 }
 
-.form-group input, .btn-group input {background-color: #222 !important}
+.form-group input,
+.form-group select,
+.btn-group input {
+  background-color: rgba(0,0,0,.3) !important;
+}
 option {background-color: #333}
 
 .form-group textarea {
@@ -217,7 +221,6 @@ footer {
      -moz-appearance: button;
 }
 
-
 /*------------------------------------------------------------------------------------------------------------
 // Sidebar
 //----------------------------------------------------------------------------------------------------------*/
@@ -229,6 +232,36 @@ footer {
 /*------------------------------------------------------------------------------------------------------------
 // Table formatting
 //----------------------------------------------------------------------------------------------------------*/
+
+
+/* Styling for central table */
+.price-table,
+.price-table > thead > tr > th,
+.price-table > tbody > tr > td {
+  border: 0;
+  vertical-align: middle;
+  padding: 0 5px 0 2px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.price-table > tbody > tr:hover {
+  background-color: #222;
+}
+
+.price-table > thead > tr > th.fixedSizeCol {
+  min-width: 60px;
+}
+
+/* Small details table */
+.details-table,
+.details-table > tbody > tr > td {
+  border: 0;
+  vertical-align: middle;
+  padding: 2px 2px 2px 4px;
+  background-color: transparent !important;
+  margin-bottom: 0;
+}
 
 .api-data-table {
   border-top: 1px solid rgba(0,0,0,.05);
@@ -333,6 +366,12 @@ pre {
   background-color: rgba(255,255,255,.1);
 }
 
+/* Navbar highlights */
+.pw-highlight {background-color: rgba(255, 255, 255, 0.1) }
+.pw-hover-light:hover {background-color: rgba(255, 255, 255, 0.2) }
+.pw-hover-dark:hover  {background-color: rgba(0, 0, 0, 0.2) }
+
+
 /*------------------------------------------------------------------------------------------------------------
 // Other
 //----------------------------------------------------------------------------------------------------------*/
@@ -369,82 +408,104 @@ pre {
 }
 
 /*------------------------------------------------------------------------------------------------------------
-// Buffering
+// Graphs and sparklines
 //----------------------------------------------------------------------------------------------------------*/
 
-.buffering {
+.sparkline-green {stroke: #4c9b4c}
+.sparkline-red {stroke: #d12b33}
+.sparkline-orange {stroke: #e36023}
+.sparkline {fill: none}
+
+.pricebox {
+  display: flex;
+  align-items: center;
+}
+
+.pricebox .sparkline {padding: 0 5px 0 0}
+.chart-large {height: 250px}
+.chart-small {height: 110px}
+
+canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* graph grid */
+.ct-grids line {
+  stroke: rgba(255,255,255,.2);
+}
+
+/* graph labels*/
+.ct-labels span {
+  color: rgba(255,255,255,.5);
+}
+
+/* graph line */
+.ct-series.ct-series-a .ct-line {
+  stroke: rgb(112, 202, 90);
+  stroke-width: .15em;
+}
+
+/* hide points by default */
+.ct-series.ct-series-a .ct-point {
+  stroke-width: 0;
+  stroke: rgb(112, 202, 90);
+}
+
+.chartist-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1100;
   display: inline-block;
-  width: 32px;
-  height: 32px;
+  padding: .2em .8em;
+  visibility: hidden;
+  transform: translateY(3em);
+  opacity: 0;
+  border-radius: 0.25em;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-in-out;
+  color: rgba(0, 0, 0, 0.9);
 }
 
-.buffering:after {
-  content: " ";
-  display: block;
-  width: 32px;
-  height: 32px;
-  margin: 1px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  border-color: #ccc transparent #ccc transparent;
-  animation: buffering 1.2s linear infinite;
+.chartist-tooltip:not([hidden]) {
+  margin: 0;
+  visibility: visible;;
+  transform: none;
+  opacity: 1;
 }
 
-@keyframes buffering {
-  0%   {transform: rotate(0deg)}
-  100% {transform: rotate(360deg)}
-}
-
-/*------------------------------------------------------------------------------------------------------------
-// Size restrictions
-//----------------------------------------------------------------------------------------------------------*/
-
-.mh-item-largeCol {max-height: 120px}
-
-.mw-item-dTable {max-width: 260px}
-
-
-.pw-highlight {background-color: rgba(255, 255, 255, 0.1) }
-.pw-hover-light:hover {background-color: rgba(255, 255, 255, 0.2) }
-.pw-hover-dark:hover  {background-color: rgba(0, 0, 0, 0.2) }
-
-
-/*------------------------------------------------------------------------------------------------------------
-// unused
-//----------------------------------------------------------------------------------------------------------*/
-
-.pw-callout {
-  padding: 1.25rem;
-  margin-top: 1.25rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-left-color: rgba(255, 255, 255, 0.4);
-  background-color: rgba(255, 255, 255, 0.1);
-  border-left-width: .25rem;
-  border-radius: .25rem;
-}
-
-.pw-callout a {
+/* Tooltip arrow */
+.chartist-tooltip::before {
+  content: '\25BC';
+  position: absolute;
+  left: calc(50% - .5em);
+  top: 100%;
+  z-index: -1;
+  font-size: 1.3em;
+  line-height: .5em;
+  font-family: Arial, sans-serif;
   color: rgba(255, 255, 255, 0.9);
+  transform: scaleY(0.7);
+  text-shadow: 0 0.25em 0.35em rgba(0, 0, 0, 0.1);
 }
 
-.pw-callout p:last-child {
-  margin-bottom: 0;
+.chartist-tooltip--left::before {
+  left: 0.75em;
 }
 
-.pw-callout+.pw-callout {
-  margin-top: -5px;
+.chartist-tooltip--right::before {
+  left: auto;
+  right: 0.75em;
 }
 
-.pw-callout .api-data-table {
-  margin-left: -1.25rem;
-  margin-right: -1.25rem;
-  margin-bottom: -1.25rem;
+/* Adds a small point transition (line charts) when the point is active */
+.ct-point {
+  transition: all 0.2s ease-in-out;
+}
 
-  padding-left: .5rem;
-  padding-right: .5rem;
-  padding-bottom: .4rem;
-
-  background-color: rgba(0, 0, 0, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+/* Increased specificity intended to overwrite the default chartist style */
+.ct-chart-line.ct-chart-line .ct-point--hover {
+  stroke-width: .5em;
 }

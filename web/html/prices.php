@@ -7,7 +7,6 @@ require_once "assets/php/templates/body.php";
 
 $PAGE_DATA["title"] = "Prices - PoeWatch";
 $PAGE_DATA["description"] = "Discover the average price of almost any item";
-$PAGE_DATA["cssIncludes"][] = "prices.css";
 $PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
 $PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
 $PAGE_DATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
@@ -252,8 +251,10 @@ include "assets/php/templates/priceNav.php";
         </thead>
         <tbody></tbody>
       </table>
-      <div class="buffering align-self-center mb-2" id="buffering-main"></div>
-      <button type="button" class="btn btn-block btn-outline-dark mt-2" id="button-showAll">Show all</button>
+      <div class="align-self-center mb-2" id="buffering-main">
+        <div class="spinner-border"></div>
+      </div>
+      <button type="button" class="btn btn-block btn-outline-dark d-none mt-2" id="button-showAll">Show all</button>
     </div>
     <div class="card-footer slim-card-edge"></div>
   </div>
