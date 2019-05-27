@@ -287,8 +287,12 @@ footer {
 
 /* Different colors for different items */
 .item-foil {color: #4c9b4c}
-.item-shaper {color:rgb(170, 175, 221)}
-.item-elder {color: rgb(194, 170, 221)}
+.item-currency {color: #9c7e38}
+.item-unique {color: #af6025}
+.item-prophecy {color: #9c60a6}
+.item-gem,
+.item-shaper {color: #aaafdd}
+.item-elder {color: #c2aadd}
 
 /*------------------------------------------------------------------------------------------------------------
 // Colors

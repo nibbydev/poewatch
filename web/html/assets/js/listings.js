@@ -226,13 +226,24 @@ function formatName(item) {
 
   // Begin builder
   let builder = item.name;
+  if (item.frame === 3) {
+    builder = `<span class='item-unique'>${item.name}</span>`;
+  }
 
   if (item.type) {
     builder += `<span class='subtext-1'>, ${item.type}</span>`;
   }
 
-  if (item.frame === 9) {
+  if (item.frame === 3) {
+    builder = `<span class='item-unique'>${builder}</span>`;
+  } else if (item.frame === 9) {
     builder = `<span class='item-foil'>${builder}</span>`;
+  } else if (item.frame === 8) {
+    builder = `<span class='item-prophecy'>${builder}</span>`;
+  } else if (item.frame === 4) {
+    builder = `<span class='item-gem'>${builder}</span>`;
+  } else if (item.frame === 5) {
+    builder = `<span class='item-currency'>${builder}</span>`;
   } else if (item.category === 'base') {
     if (item.baseIsShaper) {
       builder = `<span class='item-shaper'>${builder}</span>`;
