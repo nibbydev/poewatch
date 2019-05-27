@@ -116,7 +116,7 @@ class ItemRow {
     <td>
       <div class='d-flex align-items-center'>
         <div class='img-container img-container-sm text-center mr-1'><img src="${this.item.icon}"></div>
-        <div class='cursor-pointer ${color}'>${name || this.item.name}${type}</div>${variation}${links}
+        <a class='cursor-pointer ${color}'>${name || this.item.name}${type}</a>${variation}${links}
       </div>
     </td>`.trim();
   }
@@ -570,12 +570,11 @@ class DetailsModal {
   }
 
   onRowClick(event) {
-    console.log(event)
-    if (event.target.localName !== 'span') {
+    if (event.target.localName !== "a") {
       return;
     }
 
-    const target = $(event.currentTarget);
+    const target = $(event.target.closest('tr'));
     const id = parseInt(target.attr('value'));
 
     // If user clicked on a different row
@@ -1399,7 +1398,7 @@ function defineListeners() {
   $('#select-influence').on('change', genericListener);
 
   // Model display
-  $('#searchResults > tbody tr span').on('click', e => MODAL.onRowClick(e));
+  $('#searchResults').on('click', e => MODAL.onRowClick(e));
   // Sort byy columns
   $('.sort-column').on('click', sortListener);
 }
