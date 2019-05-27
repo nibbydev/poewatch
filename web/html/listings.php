@@ -44,6 +44,9 @@ genBodyHeader();
       <div id="search-status" class="d-none">Status messages can go here</div>
     </div>
 
+    <div class="d-flex justify-content-center mb-2">
+      <div id="spinner" class="spinner-border d-none"></div>
+    </div>
 
     <table class="table price-table table-striped table-hover mb-0 table-responsive d-none" id="search-results">
       <thead>
@@ -59,12 +62,6 @@ genBodyHeader();
       <tbody></tbody>
 
     </table>
-
-    <div class="d-flex justify-content-center mb-2">
-      <div id="spinner" class="spinner-border d-none"></div>
-    </div>
-
-
   </div>
 
 
