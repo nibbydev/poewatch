@@ -8,16 +8,13 @@ $PAGE_DATA["title"] = "Characters - PoeWatch";
 $PAGE_DATA["description"] = "Find users based on character names, account names and more";
 $PAGE_DATA["pageHeader"] = "Character search";
 
-$PAGE_DATA["page"] = array(
-  "searchString" => isset($_GET["search"]) ? $_GET["search"] : null,
-  "searchMode" => isset($_GET["mode"]) ? $_GET["mode"] : null,
-
-  "totalAccs" => 0,
-  "totalChars" => 0,
-
-  "errorMsg" => null,
-  "searchResults" => array()
-);
+// Page local data
+$PAGE_DATA["page"]["searchString"] = isset($_GET["search"]) ? $_GET["search"] : null;
+$PAGE_DATA["page"]["searchMode"] = isset($_GET["mode"]) ? $_GET["mode"] : null;
+$PAGE_DATA["page"]["totalAccs"] = 0;
+$PAGE_DATA["page"]["totalChars"] = 0;
+$PAGE_DATA["page"]["errorMsg"] = null;
+$PAGE_DATA["page"]["searchResults"] = [];
 
 CheckQueryParamErrors();
 GetTotalCounts($pdo);
@@ -30,12 +27,13 @@ genBodyHeader();
 ?>
 <div class="card custom-card w-100">
   <div class="card-header">
-    <div>Explore <span class='custom-text-green'><?php echo number_format($PAGE_DATA["page"]["totalAccs"]) ?></span>
-      account names and <span
-        class='custom-text-green'><?php echo number_format($PAGE_DATA["page"]["totalChars"]) ?></span> character names
-      collected from the stash API since <span
-        class='custom-text-green'><?php echo FormatTimestamp("2018-07-14 00:00:00") ?></span></div>
-    <div>Only characters that have listed something through the public stash API will appear here.</div>
+    <div>Explore
+      <span class='custom-text-green'><?php echo number_format($PAGE_DATA["page"]["totalAccs"]) ?></span>
+      account names and <span class='custom-text-green'><?php echo number_format($PAGE_DATA["page"]["totalChars"]) ?></span>
+      character names collected from the stash API since <span class='custom-text-green'>
+      <?php echo FormatTimestamp("2018-07-14 00:00:00") ?></span>. Only characters that have listed something through
+      the public stash API will appear here. This is also available as an API.
+    </div>
   </div>
 
   <!-- Main card body -->
