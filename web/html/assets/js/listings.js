@@ -1,13 +1,258 @@
-const defaultLeague = $('#search-league')[0].children[0].value;
-const spinner = $('#spinner');
-const showSpinner = () => spinner.removeClass('d-none');
-const hideSpinner = () => spinner.addClass('d-none');
 const API_URL = 'https://api.poe.watch';
 const SEARCH = {
   account: null,
   league: null,
   results: {}
 };
+
+/**
+ * Table row
+ */
+class Row {
+  constructor(item) {
+    this.item = item;
+
+    this.name = this.formatName();
+    this.properties = this.formatProperties();
+    this.price = this.formatPrice();
+  }
+
+  /**
+   * Creates formatted title for the item
+   *
+   * @returns {string}
+   */
+  formatName() {
+    // If item is enchantment, insert enchant values for display purposes
+    if (this.item.category === 'enchantment') {
+      // Min roll
+      if (this.item.name.includes('#') && this.item.enchantMin !== null) {
+        this.item.name = this.item.name.replace('#', this.item.enchantMin);
+      }
+
+      // Max roll
+      if (this.item.name.includes('#') && this.item.enchantMax !== null) {
+        this.item.name = this.item.name.replace('#', this.item.enchantMax);
+      }
+    }
+
+    // Begin builder
+    let builder = this.item.name;
+    if (this.item.frame === 3) {
+      builder = `<span class='item-unique'>${this.item.name}</span>`;
+    }
+
+    if (this.item.type) {
+      builder += `<span class='subtext-1'>, ${this.item.type}</span>`;
+    }
+
+    if (this.item.frame === 3) {
+      builder = `<span class='item-unique'>${builder}</span>`;
+    } else if (this.item.frame === 9) {
+      builder = `<span class='item-foil'>${builder}</span>`;
+    } else if (this.item.frame === 8) {
+      builder = `<span class='item-prophecy'>${builder}</span>`;
+    } else if (this.item.frame === 4) {
+      builder = `<span class='item-gem'>${builder}</span>`;
+    } else if (this.item.frame === 5) {
+      builder = `<span class='item-currency'>${builder}</span>`;
+    } else if (this.item.category === 'base') {
+      if (this.item.baseIsShaper) {
+        builder = `<span class='item-shaper'>${builder}</span>`;
+      } else if (this.item.baseIsElder) {
+        builder = `<span class='item-elder'>${builder}</span>`;
+      }
+    }
+
+    return builder;
+  }
+
+  /**
+   * Creates formatted properties for the item
+   *
+   * @returns {string}
+   */
+  formatProperties() {
+    // Begin builder
+    let builder = '';
+
+    if (this.item.variation) {
+      builder += `${this.item.variation}, `;
+    }
+
+    if (this.item.category === 'map' && this.item.mapTier) {
+      builder += `Tier ${this.item.mapTier}, `;
+    }
+
+    if (this.item.baseItemLevel) {
+      builder += `iLvl ${this.item.baseItemLevel}, `;
+    }
+
+    if (this.item.linkCount) {
+      builder += `Links ${this.item.linkCount}, `;
+    }
+
+    if (this.item.category === 'gem') {
+      builder += `Level ${this.item.gemLevel}, `;
+      builder += `Quality ${this.item.gemQuality}, `;
+
+      if (this.item.gemIsCorrupted) {
+        builder += "Corrupted, ";
+      }
+    }
+
+    if (builder) {
+      builder = `(${builder.substring(0, builder.length - 2)})`;
+    }
+
+    return builder;
+  }
+
+  /**
+   * Formats price string for the row
+   *
+   * @returns {string}
+   */
+  formatPrice() {
+    if (this.item.buyout.length > 0) {
+      return this.item.buyout[0].price + " " + this.item.buyout[0].currency;
+    }
+
+    return '';
+  }
+
+  /**
+   * Formats a timestamp string
+   *
+   * @param timeStamp
+   * @returns {string}
+   */
+  static timeSince(timeStamp) {
+    timeStamp = new Date(timeStamp);
+
+    let now = new Date(),
+      secondsPast = (now.getTime() - timeStamp.getTime()) / 1000;
+
+    if (secondsPast < 60) {
+      return parseInt(secondsPast) + 's';
+    }
+
+    if (secondsPast < 3600) {
+      return parseInt(secondsPast / 60) + 'm';
+    }
+
+    if (secondsPast <= 86400) {
+      return parseInt(secondsPast / 3600) + 'h';
+    }
+
+    if (secondsPast > 86400) {
+      let day = timeStamp.getDate();
+      let month = timeStamp.toDateString().match(/ [a-zA-Z]*/)[0].replace(" ", "");
+      let year = timeStamp.getFullYear() == now.getFullYear() ? "" : " " + timeStamp.getFullYear();
+      return day + " " + month + year;
+    }
+  }
+
+  /**
+   * Builds the table row for the item
+   *
+   * @returns {string}
+   */
+  buildRow() {
+    return `<tr>
+  <td>
+    <div class="d-flex align-items-center">
+      <div class="img-container img-container-xs text-center mr-1">
+        <img src="${this.item.icon}" alt="...">
+      </div>
+      <div class="mr-1 custom-text-gray-lo">${this.name}</div>
+      <span class="badge custom-text-gray p-0">${this.properties}</span>
+    </div>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo text-center">
+    <span class="badge p-0">${this.item.count}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${this.price}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${Row.timeSince(this.item.discovered)}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${Row.timeSince(this.item.updated)}</span>
+  </td>
+</tr>`
+  }
+}
+
+/**
+ * Deals with handling and writing query parameters
+ */
+class QueryAccessor {
+  /**
+   * Set query param
+   *
+   * @param key
+   * @param value
+   */
+  static updateQueryParam(key, value) {
+    let url = document.location.href;
+    let re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
+    let hash;
+
+    if (re.test(url)) {
+      if (typeof value !== 'undefined' && value !== null) {
+        url = url.replace(re, '$1' + key + "=" + value + '$2$3');
+      } else {
+        hash = url.split('#');
+        url = hash[0].replace(re, '$1$3').replace(/([&?])$/, '');
+
+        if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+          url += '#' + hash[1];
+        }
+      }
+    } else if (typeof value !== 'undefined' && value !== null) {
+      let separator = url.indexOf('?') !== -1 ? '&' : '?';
+
+      hash = url.split('#');
+      url = hash[0] + separator + key + '=' + value;
+
+      if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+        url += '#' + hash[1];
+      }
+    }
+
+    history.replaceState({}, "foo", url);
+  }
+
+  /**
+   * Read query param
+   *
+   * @param key
+   * @returns {string|null}
+   */
+  static parseQueryParam(key) {
+    let url = window.location.href;
+    key = key.replace(/[\[\]]/g, '\\$&');
+
+    let regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)');
+    let results = regex.exec(url);
+
+    if (!results) return null;
+    if (!results[2]) return '';
+
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+
+
+}
+
+
+$(document).ready(function () {
+  defineListeners();
+  parseQueryParams();
+});
+
 
 /**
  * Shows (or hides) a status message
@@ -43,11 +288,11 @@ function defineListeners() {
       console.log('Username cleared');
     }
 
-    updateQueryParam('account', SEARCH.account);
+    QueryAccessor.updateQueryParam('account', SEARCH.account);
   });
 
   $('#search-btn').on('click', function (e) {
-    updateQueryParam('league', SEARCH.league);
+    QueryAccessor.updateQueryParam('league', SEARCH.league);
 
     if (!SEARCH.account) {
       statusMsg('Enter an account name', true);
@@ -77,8 +322,34 @@ function defineListeners() {
   $('#search-league').on('change', function (e) {
     SEARCH.league = e.target.value;
     console.log('League: ' + SEARCH.league);
-    updateQueryParam('league', SEARCH.league);
+    QueryAccessor.updateQueryParam('league', SEARCH.league);
   });
+}
+
+/**
+ * Loads and processes query parameters on initial page load
+ */
+function parseQueryParams() {
+  const league = QueryAccessor.parseQueryParam('league');
+  if (league) {
+    SEARCH.league = league;
+    $('#search-league').val(league);
+  } else {
+    // Get default option from league selector
+    SEARCH.league = $('#search-league>option').val();
+  }
+
+  const account = QueryAccessor.parseQueryParam('account');
+  if (account) {
+    $('#search-input').val(account);
+    SEARCH.account = account;
+  }
+
+  // Run the request if both a league
+  // and account name were provided
+  if (SEARCH.league && SEARCH.account) {
+    makeGetRequest(SEARCH.league, SEARCH.account);
+  }
 }
 
 /**
@@ -88,7 +359,8 @@ function defineListeners() {
  * @param account
  */
 function makeGetRequest(league, account) {
-  showSpinner();
+  const spinner = $('#spinner');
+  spinner.removeClass('d-none');
 
   let request = $.ajax({
     url: `${API_URL}/listings`,
@@ -113,14 +385,14 @@ function makeGetRequest(league, account) {
     $('#search-results').removeClass('d-none');
 
     // Sort descending
-    json.sort((a , b) => {
+    json.sort((a, b) => {
       if (a.updated < b.updated) return 1;
       if (a.updated > b.updated) return -1;
       return 0;
     });
 
     fillTable(json);
-    hideSpinner();
+    spinner.addClass('d-none');
   });
 
   request.fail(function (response) {
@@ -128,40 +400,8 @@ function makeGetRequest(league, account) {
     SEARCH.results[account] = null;
 
     statusMsg(response.responseJSON.error);
-    hideSpinner();
+    spinner.addClass('d-none');
   });
-}
-
-/**
- * Formats a timestamp string
- *
- * @param timeStamp
- * @returns {string}
- */
-function timeSince(timeStamp) {
-  timeStamp = new Date(timeStamp);
-
-  let now = new Date(),
-    secondsPast = (now.getTime() - timeStamp.getTime()) / 1000;
-
-  if (secondsPast < 60) {
-    return parseInt(secondsPast) + 's';
-  }
-
-  if (secondsPast < 3600) {
-    return parseInt(secondsPast / 60) + 'm';
-  }
-
-  if (secondsPast <= 86400) {
-    return parseInt(secondsPast / 3600) + 'h';
-  }
-
-  if (secondsPast > 86400) {
-    let day = timeStamp.getDate();
-    let month = timeStamp.toDateString().match(/ [a-zA-Z]*/)[0].replace(" ", "");
-    let year = timeStamp.getFullYear() == now.getFullYear() ? "" : " " + timeStamp.getFullYear();
-    return day + " " + month + year;
-  }
 }
 
 /**
@@ -178,200 +418,9 @@ function fillTable(items) {
 
   let tableRows = [];
   for (let i = 0; i < items.length; i++) {
-    const name = formatName(items[i]),
-      properties = formatProperties(items[i]);
-
-    let price = '';
-    if (items[i].buyout.length > 0) {
-      price = items[i].buyout[0].price + " " + items[i].buyout[0].currency
-    }
-
-    let row = `<tr>
-  <td>
-    <div class="d-flex align-items-center">
-      <div class="img-container img-container-xs text-center mr-1">
-        <img src="${items[i].icon}" alt="...">
-      </div>
-      <div class="mr-1 custom-text-gray-lo">${name}</div>
-      <span class="badge custom-text-gray p-0">${properties}</span>
-    </div>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${items[i].count}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${price}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(items[i].discovered)}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(items[i].updated)}</span>
-  </td>
-</tr>`;
-
-    tableRows.push(row);
+    const row = new Row(items[i]);
+    tableRows.push(row.buildRow());
   }
 
   table.html(tableRows.join(''));
 }
-
-/**
- * Creates formatted title for the item
- *
- * @param item
- * @returns {string}
- */
-function formatName(item) {
-  // If item is enchantment, insert enchant values for display purposes
-  if (item.category === 'enchantment') {
-    // Min roll
-    if (item.name.includes('#') && item.enchantMin !== null) {
-      item.name = item.name.replace('#', item.enchantMin);
-    }
-
-    // Max roll
-    if (item.name.includes('#') && item.enchantMax !== null) {
-      item.name = item.name.replace('#', item.enchantMax);
-    }
-  }
-
-  // Begin builder
-  let builder = item.name;
-  if (item.frame === 3) {
-    builder = `<span class='item-unique'>${item.name}</span>`;
-  }
-
-  if (item.type) {
-    builder += `<span class='subtext-1'>, ${item.type}</span>`;
-  }
-
-  if (item.frame === 3) {
-    builder = `<span class='item-unique'>${builder}</span>`;
-  } else if (item.frame === 9) {
-    builder = `<span class='item-foil'>${builder}</span>`;
-  } else if (item.frame === 8) {
-    builder = `<span class='item-prophecy'>${builder}</span>`;
-  } else if (item.frame === 4) {
-    builder = `<span class='item-gem'>${builder}</span>`;
-  } else if (item.frame === 5) {
-    builder = `<span class='item-currency'>${builder}</span>`;
-  } else if (item.category === 'base') {
-    if (item.baseIsShaper) {
-      builder = `<span class='item-shaper'>${builder}</span>`;
-    } else if (item.baseIsElder) {
-      builder = `<span class='item-elder'>${builder}</span>`;
-    }
-  }
-
-  return builder;
-}
-
-/**
- * Creates formatted properties for the item
- *
- * @param item
- * @returns {string}
- */
-function formatProperties(item) {
-  // Begin builder
-  let builder = '';
-
-  if (item.variation) {
-    builder += `${item.variation}, `;
-  }
-
-  if (item.category === 'map' && item.mapTier) {
-    builder += `Tier ${item.mapTier}, `;
-  }
-
-  if (item.baseItemLevel) {
-    builder += `iLvl ${item.baseItemLevel}, `;
-  }
-
-  if (item.linkCount) {
-    builder += `Links ${item.linkCount}, `;
-  }
-
-  if (item.category === 'gem') {
-    builder += `Level ${item.gemLevel}, `;
-    builder += `Quality ${item.gemQuality}, `;
-
-    if (item.gemIsCorrupted) {
-      builder += "Corrupted, ";
-    }
-  }
-
-  if (builder) {
-    builder = `(${builder.substring(0, builder.length - 2)})`;
-  }
-
-  return builder;
-}
-
-function updateQueryParam(key, value) {
-  let url = document.location.href;
-  let re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
-  let hash;
-
-  if (re.test(url)) {
-    if (typeof value !== 'undefined' && value !== null) {
-      url = url.replace(re, '$1' + key + "=" + value + '$2$3');
-    } else {
-      hash = url.split('#');
-      url = hash[0].replace(re, '$1$3').replace(/([&?])$/, '');
-
-      if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
-        url += '#' + hash[1];
-      }
-    }
-  } else if (typeof value !== 'undefined' && value !== null) {
-    let separator = url.indexOf('?') !== -1 ? '&' : '?';
-
-    hash = url.split('#');
-    url = hash[0] + separator + key + '=' + value;
-
-    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
-      url += '#' + hash[1];
-    }
-  }
-
-  history.replaceState({}, "foo", url);
-}
-
-function parseQueryParam(key) {
-  let url = window.location.href;
-  key = key.replace(/[\[\]]/g, '\\$&');
-
-  let regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)');
-  let results = regex.exec(url);
-
-  if (!results) return null;
-  if (!results[2]) return '';
-
-  return decodeURIComponent(results[2].replace(/\+/g, ' '));
-}
-
-$(document).ready(function () {
-  defineListeners();
-
-  const league = parseQueryParam('league');
-  if (league) {
-    SEARCH.league = league;
-    $('#search-league').val(league);
-  } else {
-    SEARCH.league = defaultLeague;
-  }
-
-  const account = parseQueryParam('account');
-  if (account) {
-    $('#search-input').val(account);
-    SEARCH.account = account;
-  }
-
-  if (SEARCH.league && SEARCH.account) {
-    makeGetRequest(SEARCH.league, SEARCH.account);
-  }
-});
-
-

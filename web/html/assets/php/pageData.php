@@ -35,7 +35,7 @@ $PAGE_DATA = [
       'href' => '/characters'
     ],
     [
-      'name' => 'Listings',
+      'name' => 'Listings <span class="badge custom-badge-green">New</span>',
       'href' => '/listings'
     ],
     [

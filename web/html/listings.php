@@ -51,11 +51,21 @@ genBodyHeader();
     <table class="table price-table table-striped table-hover mb-0 table-responsive d-none" id="search-results">
       <thead>
       <tr>
-        <th title="Item title" class="w-100">Item</th>
-        <th>Count</th>
-        <th>Price</th>
-        <th>Found</th>
-        <th>Updated</th>
+        <th title="Item title" class="w-100">
+          <div class='sort-column'>Item</div>
+        </th>
+        <th title="Nr of items for sale">
+          <div class='sort-column'>Count</div>
+        </th>
+        <th title="First buyout price of the item">
+          <div class='sort-column'>Price</div>
+        </th>
+        <th title="When the item was first found">
+          <div class='sort-column'>Found</div>
+        </th>
+        <th title="When the item was last changed">
+          <div class='sort-column'>Updated</div>
+        </th>
       </tr>
       </thead>
 
