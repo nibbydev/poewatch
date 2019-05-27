@@ -19,8 +19,9 @@ genBodyHeader();
 ?>
 <div class="card custom-card w-100">
   <div class="card-header">
-    Type in a <span class='custom-text-green'>case sensitive</span> account name and click search.
-    Will return all items the user has on sale. This is also available as an API.
+    Find all items on sale from a user. Type in a <span class='custom-text-green'>case sensitive</span> account name
+    and click search. Note that only items tracked by the site are returned. This means most rare/magic/normal items
+    are excluded. This is also available as an API.
   </div>
 
 

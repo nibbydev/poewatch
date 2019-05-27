@@ -1,3 +1,4 @@
+const defaultLeague = $('#search-league')[0].children[0].value;
 const spinner = $('#spinner');
 const showSpinner = () => spinner.removeClass('d-none');
 const hideSpinner = () => spinner.addClass('d-none');
@@ -41,12 +42,12 @@ function defineListeners() {
       SEARCH.account = null;
       console.log('Username cleared');
     }
+
+    updateQueryParam('account', SEARCH.account);
   });
 
   $('#search-btn').on('click', function (e) {
-    if (!SEARCH.league) {
-      SEARCH.league = $('#search-league')[0].children[0].value
-    }
+    updateQueryParam('league', SEARCH.league);
 
     if (!SEARCH.account) {
       statusMsg('Enter an account name', true);
@@ -70,13 +71,13 @@ function defineListeners() {
     }
 
     statusMsg();
-    showSpinner();
     makeGetRequest(SEARCH.league, SEARCH.account);
   });
 
   $('#search-league').on('change', function (e) {
     SEARCH.league = e.target.value;
     console.log('League: ' + SEARCH.league);
+    updateQueryParam('league', SEARCH.league);
   });
 }
 
@@ -87,6 +88,8 @@ function defineListeners() {
  * @param account
  */
 function makeGetRequest(league, account) {
+  showSpinner();
+
   let request = $.ajax({
     url: `${API_URL}/listings`,
     data: {
@@ -161,8 +164,12 @@ function timeSince(timeStamp) {
  */
 function fillTable(items) {
   const table = $('#search-results > tbody');
-  let tableRows = [];
 
+  if (!items) {
+    table.html();
+  }
+
+  let tableRows = [];
   for (let i = 0; i < items.length; i++) {
     const name = formatName(items[i]),
       properties = formatProperties(items[i]);
@@ -297,5 +304,69 @@ function formatProperties(item) {
   return builder;
 }
 
+function updateQueryParam(key, value) {
+  let url = document.location.href;
+  let re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
+  let hash;
 
-defineListeners();
+  if (re.test(url)) {
+    if (typeof value !== 'undefined' && value !== null) {
+      url = url.replace(re, '$1' + key + "=" + value + '$2$3');
+    } else {
+      hash = url.split('#');
+      url = hash[0].replace(re, '$1$3').replace(/([&?])$/, '');
+
+      if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+        url += '#' + hash[1];
+      }
+    }
+  } else if (typeof value !== 'undefined' && value !== null) {
+    let separator = url.indexOf('?') !== -1 ? '&' : '?';
+
+    hash = url.split('#');
+    url = hash[0] + separator + key + '=' + value;
+
+    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+      url += '#' + hash[1];
+    }
+  }
+
+  history.replaceState({}, "foo", url);
+}
+
+function parseQueryParam(key) {
+  let url = window.location.href;
+  key = key.replace(/[\[\]]/g, '\\$&');
+
+  let regex = new RegExp('[?&]' + key + '(=([^&#]*)|&|#|$)');
+  let results = regex.exec(url);
+
+  if (!results) return null;
+  if (!results[2]) return '';
+
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+$(document).ready(function () {
+  defineListeners();
+
+  const league = parseQueryParam('league');
+  if (league) {
+    SEARCH.league = league;
+    $('#search-league').val(league);
+  } else {
+    SEARCH.league = defaultLeague;
+  }
+
+  const account = parseQueryParam('account');
+  if (account) {
+    $('#search-input').val(account);
+    SEARCH.account = account;
+  }
+
+  if (SEARCH.league && SEARCH.account) {
+    makeGetRequest(SEARCH.league, SEARCH.account);
+  }
+});
+
+
