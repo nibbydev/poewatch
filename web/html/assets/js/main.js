@@ -2454,11 +2454,10 @@ class PricesPage {
       }
     };
     // Create a sorter for the page
-    this.sorter = new Sorter(sortFunctions, this.sortResults);
+    this.sorter = new Sorter(sortFunctions, () => this.sortResults());
 
     // Overwrite standard league with current challenge league
     this.filter.league = SERVICE_leagues[0];
-
 
     this.parseQueryParams();
     this.defineListeners();
@@ -2491,7 +2490,7 @@ class PricesPage {
     params.forEach(a => this.processParam(a));
 
     // Overwrite league query param to fix capitalization
-    this.updateQueryParam('league', this.filter.league.name);
+    this.queryParamFilter('league', this.filter.league.name);
   }
 
   /**
@@ -2600,7 +2599,7 @@ class PricesPage {
     }
   }
 
-  updateQueryParam(key, value) {
+  queryParamFilter(key, value) {
     switch (key) {
       case 'confidence':
         value = value === false ? null : value;
@@ -2646,7 +2645,7 @@ class PricesPage {
     // Model display
     $('#searchResults').on('click', e => this.modal.onRowClick(e));
     // Sort by columns
-    $('.sort-column').on('click', this.sorter.sortCallback);
+    $('.sort-column').on('click', e => this.sorter.sortListener(e));
   }
 
   /**
@@ -2884,10 +2883,7 @@ class PricesPage {
     $('tbody', table).empty();
 
     let count = 0, matches = 0;
-
-    if (this.sorter.sortFunction) {
-      this.items.sort(this.sorter.sortFunction);
-    }
+    this.items.sort(this.sorter.sortFunction);
 
     for (let i = 0; i < this.items.length; i++) {
       const item = this.items[i];

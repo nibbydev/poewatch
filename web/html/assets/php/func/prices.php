@@ -78,7 +78,7 @@ function AddTableHeaders($category) {
   
   echo "<th class='d-none d-md-block'>Spark</th>";
   echo "<th><span class='sort-column'>Chaos</span></th>";
-  echo "<th class='d-none d-md-block'><span class='sort-column'>Exalted</span></th>";
+  echo "<th class='d-none d-md-block'>Exalted</th>";
   echo "<th><span class='sort-column' title='Price compared to 7d ago'>Change</span></th>";
   echo "<th><span class='sort-column' title='Number of items currently on sale'>Now</span></th>";
   echo "<th><span class='sort-column' title='Number of items listed every 24h'>Daily</span></th>";
