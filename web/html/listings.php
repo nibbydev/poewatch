@@ -52,19 +52,19 @@ genBodyHeader();
       <thead>
       <tr>
         <th title="Item title" class="w-100">
-          <div class='sort-column'>Item</div>
+          <span class='sort-column'>Item</span>
         </th>
         <th title="Nr of items for sale">
-          <div class='sort-column'>Count</div>
+          <span class='sort-column'>Count</span>
         </th>
         <th title="First buyout price of the item">
-          <div class='sort-column'>Price</div>
+          <span class='sort-column'>Price</span>
         </th>
         <th title="When the item was first found">
-          <div class='sort-column'>Found</div>
+          <span class='sort-column'>Found</span>
         </th>
         <th title="When the item was last changed">
-          <div class='sort-column'>Updated</div>
+          <span class='sort-column'>Updated</span>
         </th>
       </tr>
       </thead>

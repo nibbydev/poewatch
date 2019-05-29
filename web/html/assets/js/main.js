@@ -179,7 +179,7 @@ class Sorter {
     target.addClass(color).attr('order', order);
     console.log(`Sorting: ${colName} ${order}`);
 
-    this.sortFunction = getSortFunc(colName, order);
+    this.sortFunction = this.getSortFunc(colName, order);
     this.sortCallback();
   }
 
@@ -524,8 +524,8 @@ class ListingPage {
         }
       }
     };
-    // Create a sorter for the page todo: sort callback missing
-    this.sorter = new Sorter(sortFunctions);
+    // Create a sorter for the page
+    this.sorter = new Sorter(sortFunctions, () => this.sortEntries());
 
     // Load data from user-provided query parameters
     this.parseQueryParams();
@@ -611,7 +611,7 @@ class ListingPage {
       QueryAccessor.updateQueryParam('league', this.search.league);
     });
 
-    $('.sort-column').on('click', this.sorter.sortListener);
+    $('.sort-column').on('click', e => this.sorter.sortListener(e));
   }
 
   /**
@@ -659,6 +659,15 @@ class ListingPage {
       statusMsg(response.responseJSON.error);
       spinner.addClass('d-none');
     });
+  }
+
+  /**
+   * Sort and load items
+   */
+  sortEntries() {
+    const json = this.search.results[this.search.league + this.search.account];
+    json.sort(this.sorter.sortFunction);
+    this.fillTable(json);
   }
 
   /**
