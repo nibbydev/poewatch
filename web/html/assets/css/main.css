@@ -137,7 +137,13 @@ input.form-control,select.form-control {
 .btn-outline-dark {
   color: #ddd;
   border-color: rgba(255,255,255,.2);
-  background-color: rgba(0,0,0,.15);
+  background-color: rgba(0,0,0,.3);
+}
+
+.btn-outline-light {
+  color: #ddd;
+  border-color: rgba(255,255,255,.2);
+  background-color: rgba(255,255,255,.05);
 }
 
 .btn-outline-dark:hover {
@@ -150,10 +156,11 @@ input.form-control,select.form-control {
   box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0);
 }
 
-.btn-outline-dark:not(:disabled):not(.disabled):active, .btn-outline-dark:not(:disabled):not(.disabled).active,
+.btn-outline-dark:not(:disabled):not(.disabled):active,
+.btn-outline-dark:not(:disabled):not(.disabled).active,
 .show > .btn-outline-dark.dropdown-toggle {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: #333;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255,255,255, .1);
 }
 
 .form-group input,

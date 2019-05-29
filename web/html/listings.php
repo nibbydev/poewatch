@@ -38,7 +38,7 @@ genBodyHeader();
         <input type="text" class="form-control seamless-input" name="search" placeholder="Account name"
                value="<?php if (isset($_GET["account"])) echo htmlentities($_GET["account"]) ?>"
                id="search-input">
-        <button type="button" id="search-btn" class="btn btn-outline-dark">Search</button>
+        <button type="button" id="search-btn" class="btn btn-outline-light">Search</button>
       </div>
 
       <div id="search-status" class="d-none">Status messages can go here</div>
