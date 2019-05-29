@@ -11,7 +11,7 @@ $PAGE_DATA["description"] = "Discover the average price of almost any item";
 $PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
 $PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
 $PAGE_DATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
-$PAGE_DATA["jsIncludes"][] = "prices.js";
+$PAGE_DATA["jsIncludes"][] = "main.js";
 
 // Get list of leagues that have items
 $leagueList = GetItemLeagues($pdo);

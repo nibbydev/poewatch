@@ -10,7 +10,7 @@ $PAGE_DATA["pageHeader"] = "Statistics";
 $PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
 $PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
 $PAGE_DATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
-$PAGE_DATA["jsIncludes"][] = "stats.js";
+$PAGE_DATA["jsIncludes"][] = "main.js";
 
 $statType = "count";
 if (isset($_GET['type'])) {

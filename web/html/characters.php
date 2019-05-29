@@ -7,7 +7,7 @@ require_once "assets/php/templates/body.php";
 $PAGE_DATA["title"] = "Characters - PoeWatch";
 $PAGE_DATA["description"] = "Find users based on character names, account names and more";
 $PAGE_DATA["pageHeader"] = "Character search";
-$PAGE_DATA["jsIncludes"][] = "characters.js";
+$PAGE_DATA["jsIncludes"][] = "main.js";
 
 // Page local data
 $counts = GetTotalCounts($pdo);

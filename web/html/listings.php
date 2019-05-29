@@ -7,7 +7,7 @@ require_once "assets/php/func/leagues.php";
 $PAGE_DATA["title"] = "Listings - PoeWatch";
 $PAGE_DATA["description"] = "Find items sold by users";
 $PAGE_DATA["pageHeader"] = "Item listings";
-$PAGE_DATA["jsIncludes"][] = "listings.js";
+$PAGE_DATA["jsIncludes"][] = "main.js";
 
 // Page-local data
 $PAGE_DATA["page"]["leagues"] = getLeagues($pdo);
