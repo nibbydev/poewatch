@@ -1120,40 +1120,127 @@ class StatsPage {
 
     this.type = null;
 
-    // Defines which stats should be grouped up under one chart
-    this.chartGroups = {
-      count: [
-        [
-          'COUNT_API_CALLS'
-        ], [
-          'COUNT_TOTAL_ITEMS',
-          'COUNT_ACCEPTED_ITEMS'
-        ], [
-          'COUNT_TOTAL_STASHES',
-          'COUNT_ACTIVE_ACCOUNTS',
-        ], [
-          'COUNT_REPLY_SIZE'
+    // Define which stats should be grouped up under one chart
+    this.structureData = [
+      {
+        page: 'count',
+        groups: [
+          {
+            name: 'Group 1',
+            type: 'line',
+            members: [
+              {
+                type: 'COUNT_API_CALLS',
+                name: 'API call count',
+                description: 'Nr of API calls per hour'
+              }
+            ]
+          },{
+            name: 'Group 2',
+            type: 'line',
+            members: [
+              {
+                type: 'COUNT_TOTAL_ITEMS',
+                name: 'Total item count',
+                description: null
+              },{
+                type: 'COUNT_ACCEPTED_ITEMS',
+                name: 'Nr of accepted items',
+                description: null
+              }
+            ]
+          },{
+            name: 'Group 3',
+            type: 'line',
+            members: [
+              {
+                type: 'COUNT_TOTAL_STASHES',
+                name: null,
+                description: null
+              },{
+                type: 'COUNT_ACTIVE_ACCOUNTS',
+                name: null,
+                description: null
+              }
+            ]
+          },{
+            name: 'Group 4',
+            type: 'line',
+            members: [
+              {
+                type: 'COUNT_REPLY_SIZE',
+                name: null,
+                description: null
+              }
+            ]
+          }
+        ],
+      },{
+        page: 'error',
+        groups: [
+          {
+            name: 'Group 1',
+            type: 'bar',
+            members: [
+              {
+                type: 'COUNT_API_ERRORS_READ_TIMEOUT',
+                name: null,
+                description: null
+              },{
+                type: 'COUNT_API_ERRORS_CONNECT_TIMEOUT',
+                name: null,
+                description: null
+              },{
+                type: 'COUNT_API_ERRORS_CONNECTION_RESET',
+                name: null,
+                description: null
+              },{
+                type: 'COUNT_API_ERRORS_5XX',
+                name: null,
+                description: null
+              },{
+                type: 'COUNT_API_ERRORS_429',
+                name: null,
+                description: null
+              }
+            ]
+          },{
+            name: 'Group 2',
+            type: 'bar',
+            members: [
+              {
+                type: 'COUNT_API_ERRORS_DUPLICATE',
+                name: null,
+                description: null
+              }
+            ]
+          }
+        ],
+      },{
+        page: 'time',
+        groups: [
+          {
+            name: 'Group 1',
+            type: 'line',
+            members: [
+              {
+                type: 'TIME_API_REPLY_DOWNLOAD',
+                name: null,
+                description: null
+              },{
+                type: 'TIME_PARSE_REPLY',
+                name: null,
+                description: null
+              },{
+                type: 'TIME_API_TTFB',
+                name: null,
+                description: null
+              }
+            ]
+          }
         ]
-      ],
-      error: [
-        [
-          'COUNT_API_ERRORS_READ_TIMEOUT',
-          'COUNT_API_ERRORS_CONNECT_TIMEOUT',
-          'COUNT_API_ERRORS_CONNECTION_RESET',
-          'COUNT_API_ERRORS_5XX',
-          'COUNT_API_ERRORS_429'
-        ], [
-          'COUNT_API_ERRORS_DUPLICATE'
-        ]
-      ],
-      time: [
-        [
-          'TIME_API_REPLY_DOWNLOAD',
-          'TIME_PARSE_REPLY',
-          'TIME_API_TTFB'
-        ]
-      ]
-    };
+      }
+    ];
 
     // Load data from user-provided query parameters
     this.parseQueryParams();
@@ -1242,16 +1329,16 @@ class StatsPage {
     main.empty();
 
     // Find which group this stat belongs to
-    const statGroups = this.chartGroups[this.type];
+    const structureGroups = this.structureData.find(t => t.page === this.type).groups;
 
     // Loop though each group
-    for (let i = 0; i < statGroups.length; i++) {
-      const statGroup = statGroups[i];
+    for (let i = 0; i < structureGroups.length; i++) {
+      const structureGroup = structureGroups[i];
 
       const payload = {
         series: [],
         labels: [],
-        titles: statGroup
+        titles: [] // todo: add titles here
       };
 
       // Create labels
@@ -1260,11 +1347,12 @@ class StatsPage {
       }
 
       // Loop though each stat type in the group
-      for (let j = 0; j < statGroup.length; j++) {
-        const statName = statGroup[j];
+      for (let j = 0; j < structureGroup.members.length; j++) {
+        const structureMember = structureGroup.members[j];
+        payload.titles.push(structureMember.type);
 
         // Find index of the series in the JSON
-        const seriesIndex = json.types.indexOf(statName);
+        const seriesIndex = json.types.indexOf(structureMember.type);
         const seriesData = json.series[seriesIndex];
 
         // Define an array at that index
@@ -1277,26 +1365,32 @@ class StatsPage {
         }
       }
 
-      // Create the card that will contain the chart and add it to the page
-      main.append(StatsPage.genChartHtml(statGroup, i));
+      // DOM id for chart
+      const chartId = `CHART-${i}`;
 
-      // Depending on the stat, create either bar or line charts
-      if (this.type === 'error') new Chartist.Bar(`#CHART-${i}`, payload, this.chartOptions);
-      else new Chartist.Line(`#CHART-${i}`, payload, this.chartOptions);
+      // Create the card that will contain the chart and add it to the page
+      main.append(StatsPage.genChartHtml(chartId, structureGroup));
+
+      // Depending on the chart type, create either bar or line charts
+      if (structureGroup.type === 'line') {
+        new Chartist.Line(`#${chartId}`, payload, this.chartOptions);
+      } else if (structureGroup.type === 'bar') {
+        new Chartist.Bar(`#${chartId}`, payload, this.chartOptions);
+      }
     }
   }
 
   /**
    * Generates a chart container
    *
-   * @param titles List of titles for container
-   * @param id ID for the chart
+   * @param chartId DOM id of chart
+   * @param structureGroup Stat structure group information
    * @returns {string}
    */
-  static genChartHtml(titles, id) {
+  static genChartHtml(chartId, structureGroup) {
     let title = '';
-    for (let i = 0; i < titles.length; i++) {
-      title += `<span class="badge mr-2">${titles[i]}</span>`
+    for (let i = 0; i < structureGroup.members.length; i++) {
+      title += `<span class="badge mr-2">${structureGroup.members[i].type}</span>`
     }
 
     return `
@@ -1306,7 +1400,7 @@ class StatsPage {
       </div>
     
       <div class="card-body">
-        <div class='ct-chart' id='CHART-${id}'></div>
+        <div class='ct-chart' id='${chartId}'></div>
       </div>
     
       <div class="card-footer slim-card-edge"></div>
@@ -1329,13 +1423,15 @@ class StatsPage {
 
       seriesBuilder += `
       <tr>
-        <td class="p-0 pr-2"><span class="ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
-        <td class="p-0"><span class="custom-text-gray-lo">${displayVal}</span></td>
+        <td class="p-0 pr-2"><span class="badge ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
+        <td class="p-0"><span class="badge custom-text-gray-lo">${displayVal}</span></td>
       </tr>`;
     }
 
     return `<div>
-  <h6 class=" mb-0">${data.labels[valueIndex]} hours ago</h6>
+  <div class="text-center">
+    <h6 class=" mb-0">${data.labels[valueIndex]} hours ago</h6>
+  </div>
   <table>
     <tbody>
       ${seriesBuilder}
