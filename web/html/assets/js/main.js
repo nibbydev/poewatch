@@ -1120,6 +1120,41 @@ class StatsPage {
 
     this.type = null;
 
+    // Defines which stats should be grouped up under one chart
+    this.chartGroups = {
+      count: [
+        [
+          'COUNT_API_CALLS'
+        ], [
+          'COUNT_TOTAL_ITEMS',
+          'COUNT_ACCEPTED_ITEMS'
+        ], [
+          'COUNT_TOTAL_STASHES',
+          'COUNT_ACTIVE_ACCOUNTS',
+        ], [
+          'COUNT_REPLY_SIZE'
+        ]
+      ],
+      error: [
+        [
+          'COUNT_API_ERRORS_READ_TIMEOUT',
+          'COUNT_API_ERRORS_CONNECT_TIMEOUT',
+          'COUNT_API_ERRORS_CONNECTION_RESET',
+          'COUNT_API_ERRORS_5XX',
+          'COUNT_API_ERRORS_429'
+        ], [
+          'COUNT_API_ERRORS_DUPLICATE'
+        ]
+      ],
+      time: [
+        [
+          'TIME_API_REPLY_DOWNLOAD',
+          'TIME_PARSE_REPLY',
+          'TIME_API_TTFB'
+        ]
+      ]
+    };
+
     // Load data from user-provided query parameters
     this.parseQueryParams();
     // Set up event listeners
@@ -1148,13 +1183,15 @@ class StatsPage {
    */
   defineListeners() {
     $('button.statSelect').on('click', e => {
-      console.log(`Button press: ${e.target.value}`);
-      QueryAccessor.updateQueryParam('type', e.target.value);
+      this.type = e.target.value;
+
+      console.log(`Button press: ${this.type}`);
+      QueryAccessor.updateQueryParam('type', this.type);
 
       $('button.statSelect').removeClass('active');
       $(e.target).addClass('active');
 
-      this.makeGetRequest(e.target.value);
+      this.makeGetRequest(this.type);
     });
   }
 
@@ -1200,62 +1237,80 @@ class StatsPage {
    * @param json Stats JSON from the API
    */
   fillPage(json) {
-    const main = $('#main');
     // Empty any previous charts
+    const main = $('#main');
     main.empty();
 
-    // Get labels
-    const labels = [];
-    for (let i = 0; i < json.labels.length; i++) {
-      labels.push(toHoursAgo(json.labels[i]));
-    }
+    // Find which group this stat belongs to
+    const statGroups = this.chartGroups[this.type];
 
-    // Loop though each different stat
-    for (let i = 0; i < json.types.length; i++) {
-      const type = json.types[i];
+    // Loop though each group
+    for (let i = 0; i < statGroups.length; i++) {
+      const statGroup = statGroups[i];
 
-      // Grab the data
-      const series = [];
-      for (let j = 0; j < json.series[i].length; j++) {
-        const val = json.series[i][j] === null ? 0 : json.series[i][j];
-        series.push(val);
-      }
-
-      // Format for Chartist
-      const data = {
-        labels: labels,
-        series: [series]
+      const payload = {
+        series: [],
+        labels: [],
+        titles: statGroup
       };
 
-      // Define the card that will contain the chart and add it to the page
-      main.append(`
-<div class="card custom-card w-100 mb-3">
-  <div class="card-header">
-    <h3 class="m-0">${type}</h3>
-  </div>
+      // Create labels
+      for (let j = 0; j < json.labels.length; j++) {
+        payload.labels[j] = toHoursAgo(json.labels[j]);
+      }
 
-  <div class="card-body">
-    <div class='ct-chart' id='CHART-${type}'></div>
-  </div>
+      // Loop though each stat type in the group
+      for (let j = 0; j < statGroup.length; j++) {
+        const statName = statGroup[j];
 
-  <div class="card-footer slim-card-edge"></div>
-</div>`);
+        // Find index of the series in the JSON
+        const seriesIndex = json.types.indexOf(statName);
+        const seriesData = json.series[seriesIndex];
+
+        // Define an array at that index
+        payload.series[j] = [];
+
+        // Add the stat data to the payload
+        for (let k = 0; k < seriesData.length; k++) {
+          const val = seriesData[k] === null ? 0 : seriesData[k];
+          payload.series[j].push(val);
+        }
+      }
+
+      // Create the card that will contain the chart and add it to the page
+      main.append(StatsPage.genChartHtml(statGroup, i));
 
       // Depending on the stat, create either bar or line charts
-      switch (type) {
-        case 'COUNT_API_ERRORS_READ_TIMEOUT':
-        case 'COUNT_API_ERRORS_CONNECT_TIMEOUT':
-        case 'COUNT_API_ERRORS_CONNECTION_RESET':
-        case 'COUNT_API_ERRORS_5XX':
-        case 'COUNT_API_ERRORS_429':
-        case 'COUNT_API_ERRORS_DUPLICATE':
-          new Chartist.Bar(`#CHART-${type}`, data, this.chartOptions);
-          break;
-        default:
-          new Chartist.Line(`#CHART-${type}`, data, this.chartOptions);
-          break;
-      }
+      if (this.type === 'error') new Chartist.Bar(`#CHART-${i}`, payload, this.chartOptions);
+      else new Chartist.Line(`#CHART-${i}`, payload, this.chartOptions);
     }
+  }
+
+  /**
+   * Generates a chart container
+   *
+   * @param titles List of titles for container
+   * @param id ID for the chart
+   * @returns {string}
+   */
+  static genChartHtml(titles, id) {
+    let title = '';
+    for (let i = 0; i < titles.length; i++) {
+      title += `<span class="badge mr-2">${titles[i]}</span>`
+    }
+
+    return `
+    <div class="card custom-card w-100 mb-3">
+      <div class="card-header">
+        ${title}
+      </div>
+    
+      <div class="card-body">
+        <div class='ct-chart' id='CHART-${id}'></div>
+      </div>
+    
+      <div class="card-footer slim-card-edge"></div>
+    </div>`
   }
 
   /**
@@ -1269,18 +1324,18 @@ class StatsPage {
   static templateFunction(data, seriesIndex, valueIndex) {
     let seriesBuilder = '';
     for (let i = 0; i < data.series.length; i++) {
-      const title = data.labels[valueIndex] + ' hours ago';
       const seriesCode = String.fromCharCode(65 + i).toLowerCase();
       const displayVal = roundPrice(data.series[i][valueIndex]);
 
       seriesBuilder += `
       <tr>
-        <td class="p-0 pr-2"><span class="ct-series-${seriesCode}-text">${title}:</span></td>
+        <td class="p-0 pr-2"><span class="ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
         <td class="p-0"><span class="custom-text-gray-lo">${displayVal}</span></td>
       </tr>`;
     }
 
     return `<div>
+  <h6 class=" mb-0">${data.labels[valueIndex]} hours ago</h6>
   <table>
     <tbody>
       ${seriesBuilder}

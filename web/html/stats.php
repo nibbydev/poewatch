@@ -30,7 +30,7 @@ include "assets/php/templates/priceNav.php";
   /* hide chart points */
   .ct-point {stroke-width: 0 !important}
   /* bar width to disable overlap */
-  .ct-bar {stroke-width: .1em !important}
+  .ct-bar {stroke-width: .25em !important}
 </style>
 
 <?php genBodyHeader() ?>
