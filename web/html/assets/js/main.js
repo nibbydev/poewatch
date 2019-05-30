@@ -1899,6 +1899,10 @@ class DetailsModal {
         showLabel: true,
         labelInterpolationFnc: (value, index) => index % 7 === 0 ? value : null
       },
+      axisY: {
+        showLabel: false,
+        offset: 0
+      },
       fullWidth: true,
       plugins: [
         Chartist.plugins.tooltip2({
@@ -1907,9 +1911,9 @@ class DetailsModal {
             x: 0,
             y: -20,
           },
-          template: '{{key}}: {{value}}',
           hideDelay: 500,
-          valueTransformFunction: (num) => num === null ? 'Unavailable' : roundPrice(num)
+          valueTransformFunction: (num) => num === 0 ? 'Unavailable' : roundPrice(num),
+          templateFunction: DetailsModal.templateFunction
         })
       ]
     };
@@ -2129,25 +2133,19 @@ class DetailsModal {
     // Create Chartist data payload
     const data = {
       labels: history.keys,
-      series: []
+      series: [],
+      titles: []
     };
 
     // Set series
     switch (this.current.dataset) {
       case 1:
-        data.series[0] = history.vals.mean;
-        break;
-      case 2:
-        data.series[0] = history.vals.median;
-        break;
-      case 3:
-        data.series[0] = history.vals.mode;
+        data.series = [history.vals.mean, history.vals.median, history.vals.mode];
+        data.titles = ['Mean', 'Median', 'Mode'];
         break;
       case 4:
-        data.series[0] = history.vals.daily;
-        break;
-      case 5:
-        data.series[0] = history.vals.current;
+        data.series = [history.vals.daily, history.vals.current];
+        data.titles = ['Daily', 'Current'];
         break;
     }
 
@@ -2430,6 +2428,37 @@ class DetailsModal {
       'keys': keys,
       'vals': vals
     }
+  }
+
+  /**
+   * Tooltip template creator
+   *
+   * @param data Chartist data
+   * @param seriesIndex Index of the currently highlighted series
+   * @param valueIndex Index of the currently highlighted value
+   * @returns {string} Generated tooltip HTML
+   */
+  static templateFunction(data, seriesIndex, valueIndex) {
+    let seriesBuilder = '';
+    for (let i = 0; i < data.series.length; i++) {
+      const seriesCode = String.fromCharCode(65 + i).toLowerCase();
+      const displayVal = data.series[i][valueIndex] === 0 ? 'Unavailable' : data.series[i][valueIndex];
+
+      seriesBuilder += `
+      <tr>
+        <td class="p-0 pr-2"><span class="ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
+        <td class="p-0"><span class="custom-text-gray-lo">${displayVal}</span></td>
+      </tr>`;
+    }
+
+    return `<div>
+  <h6 class=" mb-0">${data.labels[valueIndex]}</h6>
+  <table>
+    <tbody>
+      ${seriesBuilder}
+    </tbody>
+  </table>
+</div>`;
   }
 }
 

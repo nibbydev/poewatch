@@ -457,21 +457,26 @@ canvas {
   stroke: #70ca5a;
 }
 
+/* series text colors */
+.ct-series-a-text {color: #70ca5a}
+.ct-series-b-text {color: #f05b4f}
+.ct-series-c-text {color: #f4c63d}
+
 .chartist-tooltip {
   position: absolute;
   left: 0;
   top: 0;
   z-index: 1100;
   display: inline-block;
-  padding: .2em .8em;
+  padding: .2em .4em;
   visibility: hidden;
   transform: translateY(3em);
   opacity: 0;
   border-radius: 0.25em;
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(25,25,25,0.9);
   box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease-in-out;
-  color: rgba(0, 0, 0, 0.9);
 }
 
 .chartist-tooltip:not([hidden]) {
@@ -488,10 +493,9 @@ canvas {
   left: calc(50% - .5em);
   top: 100%;
   z-index: -1;
-  font-size: 1.3em;
-  line-height: .5em;
+  font-size: 1em;
   font-family: Arial, sans-serif;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(25,25,25,0.9);
   transform: scaleY(0.7);
   text-shadow: 0 0.25em 0.35em rgba(0, 0, 0, 0.1);
 }

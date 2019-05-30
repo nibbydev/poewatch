@@ -169,51 +169,37 @@
                  * @param Element triggerElement
                  */
                 function showTooltip(triggerElement) {
-                    var meta;
-                    var value;
-                    var textMarkup = options.template;
-                    var seriesName;
-                    var seriesGroups;
-                    var seriesIndex;
-                    var valueGroup;
-                    var valueIndex;
-                    var itemData;
-
-                    var seriesData;
-
                     clearTimeout(hideDelayTimer);
 
                     if (!triggerElement) {
                         return;
                     }
 
-                    seriesName = triggerElement.parentNode.getAttribute('ct:series-name');
-                    seriesGroups = Array.prototype.slice.call(triggerElement.parentNode.parentNode.children);
-                    seriesIndex = options.dataDrawnReversed ? seriesGroups.reverse().indexOf(triggerElement.parentNode) : seriesGroups.indexOf(triggerElement.parentNode);
+                    const seriesGroups = Array.prototype.slice.call(triggerElement.parentNode.parentNode.children);
+                    const seriesIndex = options.dataDrawnReversed ? seriesGroups.reverse().indexOf(triggerElement.parentNode) : seriesGroups.indexOf(triggerElement.parentNode);
 
-                    valueGroup = Array.prototype.slice.call(triggerElement.parentNode.querySelectorAll('.' + getDefaultTriggerClass()));
-                    valueIndex = valueGroup.indexOf(triggerElement);
+                    // All nodes as an array of DOM elements (excludes nulls)
+                    const valueGroup = Array.prototype.slice.call(triggerElement.parentNode.querySelectorAll('.' + getDefaultTriggerClass()));
+                    // Index of the node the user is hovering (excludes nulls)
+                    let valueIndex = valueGroup.indexOf(triggerElement);
 
-                    // clone the series array
-                    seriesData = chart.data.series.slice(0);
+                    // Clone the series array
+                    let seriesData = chart.data.series.slice(0);
                     seriesData = chart.options.reverseData ? seriesData.reverse()[seriesIndex] : seriesData[seriesIndex];
                     seriesData = (!Array.isArray(seriesData) && typeof seriesData == 'object' && seriesData.data) ? seriesData.data : seriesData;
-                    
-                    if (!seriesData) {
-                        return;
-                    }
+                    if (!seriesData) return;
 
-                    // Since I use nulls to populate the array and this plugin does not account for
-                    // nulls, manually find the first index of the element that is not null
+                    // Since nulls are used to populate the array and this plugin does not account for nulls,
+                    // manually find the first index of the element that is not null
                     valueIndex += seriesData.findIndex(t => t !== null);
-                    value = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
+                    let value = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
 
                     if (options.valueTransformFunction) {
                         value = options.valueTransformFunction.call(chart, value);
                     }
 
                     // Remove the hover class and the aria-describedby attribute from the currently active triggers
-                    var activeTriggerElements = chart.container.querySelectorAll('.' + hoverClass);
+                    let activeTriggerElements = chart.container.querySelectorAll('.' + hoverClass);
                     Array.prototype.forEach.call(activeTriggerElements, function(activeTriggerElement) {
                         activeTriggerElement.classList.remove(hoverClass);
                         activeTriggerElement.removeAttribute('aria-describedby');
@@ -221,16 +207,15 @@
 
                     // add hover class to the current active trigger
                     triggerElement.classList.add(hoverClass);
-
                     triggerElement.setAttribute('aria-describedby', options.id);
 
-                    // value
-                    textMarkup = textMarkup.replace(new RegExp('{{value}}', 'gi'), value);
+                    // If user has defined a template function
+                    if (options.templateFunction) {
+                        tooltipElement.innerHTML = options.templateFunction(chart.data, seriesIndex, valueIndex);
+                    } else {
+                        tooltipElement.innerHTML = chart.data.labels[valueIndex] + ': ' + value;
+                    }
 
-                    // key
-                    textMarkup = textMarkup.replace(new RegExp('{{key}}', 'gi'), chart.data.labels[valueIndex] || '');
-
-                    tooltipElement.innerHTML = textMarkup;
                     tooltipElement.removeAttribute('hidden');
                     setTooltipPosition(triggerElement);
                 }
