@@ -121,7 +121,23 @@ include "assets/php/templates/priceNav.php";
           <hr>
           <div class="row m-0">
             <div class="col">
-              <h4>Past data</h4>
+              <div class="d-flex flex-row">
+                <h4 class="mr-2">Past data</h4>
+                <a class="cursor-pointer badge custom-text-gray-lo" data-toggle="collapse" data-target="#modal-info">(?)</a>
+              </div>
+
+              <div class="collapse" id="modal-info">
+                <div>
+                  Mean, median and mode are all ways of calculating an average:
+                  <ul class="mb-0">
+                    <li>Mean being the sum divided by the number of elements</li>
+                    <li>Median is the center-most element (of a sorted list)</li>
+                    <li>Mode is the most common element in the list</li>
+                  </ul>
+                  Colors do not carry any significant meaning aside from telling the lines apart.
+                </div>
+              </div>
+
               <div class="ct-chart"></div>
               <div class="d-flex justify-content-center">
                 <div class="btn-group btn-group-toggle mt-2" data-toggle="buttons" id="modal-radio">
