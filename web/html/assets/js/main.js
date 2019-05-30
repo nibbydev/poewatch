@@ -1921,8 +1921,7 @@ class DetailsModal {
 
     // Dataset radio listener
     $('#modal-radio', this.modal).change(e => {
-      const val = $('input[name=dataset]:checked', this).val();
-      this.current.dataset = parseInt(val);
+      this.current.dataset = parseInt(e.target.value);
       this.updateContent();
     });
   }
