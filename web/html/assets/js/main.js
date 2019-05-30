@@ -1100,6 +1100,10 @@ class StatsPage {
           return index % 16 === 0 ? value + 'h' : null;
         }
       },
+      axisY: {
+        showLabel: false,
+          offset: 0
+      },
       fullWidth: true,
       plugins: [
         Chartist.plugins.tooltip2({
@@ -1108,11 +1112,13 @@ class StatsPage {
             x: 0,
             y: -20,
           },
-          template: '{{key}}h ago: {{value}}',
+          templateFunction: StatsPage.templateFunction,
           hideDelay: 500
         })
       ]
     };
+
+    this.type = null;
 
     // Load data from user-provided query parameters
     this.parseQueryParams();
@@ -1120,7 +1126,7 @@ class StatsPage {
     this.defineListeners();
 
     // Make initial request
-    this.makeGetRequest(type);
+    this.makeGetRequest(this.type);
   }
 
   /**
@@ -1133,6 +1139,8 @@ class StatsPage {
       type = 'count';
       QueryAccessor.updateQueryParam('type', type);
     }
+
+    this.type = type;
   }
 
   /**
@@ -1209,7 +1217,8 @@ class StatsPage {
       // Grab the data
       const series = [];
       for (let j = 0; j < json.series[i].length; j++) {
-        series.push(json.series[i][j] === null ? 0 : json.series[i][j]);
+        const val = json.series[i][j] === null ? 0 : json.series[i][j];
+        series.push(val);
       }
 
       // Format for Chartist
@@ -1247,6 +1256,37 @@ class StatsPage {
           break;
       }
     }
+  }
+
+  /**
+   * Tooltip template creator
+   *
+   * @param data Chartist data
+   * @param seriesIndex Index of the currently highlighted series
+   * @param valueIndex Index of the currently highlighted value
+   * @returns {string} Generated tooltip HTML
+   */
+  static templateFunction(data, seriesIndex, valueIndex) {
+    let seriesBuilder = '';
+    for (let i = 0; i < data.series.length; i++) {
+      const title = data.labels[valueIndex] + ' hours ago';
+      const seriesCode = String.fromCharCode(65 + i).toLowerCase();
+      const displayVal = roundPrice(data.series[i][valueIndex]);
+
+      seriesBuilder += `
+      <tr>
+        <td class="p-0 pr-2"><span class="ct-series-${seriesCode}-text">${title}:</span></td>
+        <td class="p-0"><span class="custom-text-gray-lo">${displayVal}</span></td>
+      </tr>`;
+    }
+
+    return `<div>
+  <table>
+    <tbody>
+      ${seriesBuilder}
+    </tbody>
+  </table>
+</div>`;
   }
 }
 

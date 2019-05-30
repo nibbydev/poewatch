@@ -453,7 +453,8 @@ canvas {
 
 /* a-series color override */
 .ct-series.ct-series-a .ct-point,
-.ct-series.ct-series-a .ct-line {
+.ct-series.ct-series-a .ct-line,
+.ct-series.ct-series-a .ct-bar {
   stroke: #70ca5a;
 }
 
