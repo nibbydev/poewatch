@@ -442,25 +442,19 @@ canvas {
 }
 
 /* graph grid */
-.ct-grids line {
-  stroke: rgba(255,255,255,.2);
-}
-
+.ct-grids line {stroke: rgba(255,255,255,.2)}
 /* graph labels*/
-.ct-labels span {
-  color: rgba(255,255,255,.5);
-}
+.ct-labels span {color: rgba(255,255,255,.5)}
 
-/* graph line */
+/* line thickness */
+.ct-line {stroke-width: .15em !important}
+/* point size */
+.ct-point {stroke-width: 5px !important}
+
+/* a-series color override */
+.ct-series.ct-series-a .ct-point,
 .ct-series.ct-series-a .ct-line {
-  stroke: rgb(112, 202, 90);
-  stroke-width: .15em;
-}
-
-/* hide points by default */
-.ct-series.ct-series-a .ct-point {
-  stroke-width: 0;
-  stroke: rgb(112, 202, 90);
+  stroke: #70ca5a;
 }
 
 .chartist-tooltip {

@@ -300,6 +300,23 @@ function roundPrice(price) {
   return numberWithCommas(Math.round(price * 100) / 100);
 }
 
+/**
+ * Format a timestamp string to eg '16 May' or '9 Jan'
+ *
+ * @param timeStamp ISO 8601 UTC TZ format timestamp string
+ * @returns {string} Display date
+ */
+function formatDate(timeStamp) {
+  const MONTH_NAMES = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  let s = new Date(timeStamp);
+
+  return `${s.getDate()} ${MONTH_NAMES[s.getMonth()]}`;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 //
 // Page functionality
@@ -1868,8 +1885,11 @@ class ItemRow {
  * Item details modal for prices
  */
 class DetailsModal {
-  constructor(pricesPage) {
-    this.pricesPage = pricesPage;
+  /**
+   * Initial configuration for the modal
+   */
+  constructor() {
+    // Chart options
     this.chartOptions = {
       height: 250,
       showPoint: true,
@@ -1877,7 +1897,7 @@ class DetailsModal {
       axisX: {
         showGrid: true,
         showLabel: true,
-        labelInterpolationFnc: (value, index) => (index % 7 === 0 ? value : null)
+        labelInterpolationFnc: (value, index) => index % 7 === 0 ? value : null
       },
       fullWidth: true,
       plugins: [
@@ -1889,16 +1909,14 @@ class DetailsModal {
           },
           template: '{{key}}: {{value}}',
           hideDelay: 500,
-          valueTransformFunction: (num) => {
-            return num === null ? 'Unavailable' : roundPrice(num);
-          }
+          valueTransformFunction: (num) => num === null ? 'Unavailable' : roundPrice(num)
         })
       ]
     };
-
+    // The modal we'll be targeting
     this.modal = $('#modal-details');
 
-    // Contains all requested item data & history on current page
+    // Contains all requested item data & history on current prices page
     this.dataSets = {};
 
     // Contains up to date league and item information
@@ -1909,135 +1927,133 @@ class DetailsModal {
       dataset: 1
     };
 
+    // Create event listeners
     this.defineListeners();
   }
 
+  /**
+   * Create event listeners
+   */
   defineListeners() {
     // League select listener
-    $('#modal-leagues', this.modal).change(e => {
+    $('#modal-leagues').change(e => {
+      // Set league field
       this.current.league = e.target.value;
-      this.getHistory();
+
+      // Get current item
+      const itemObj = this.dataSets[this.current.id];
+      // Find matching league
+      const leagueObj = itemObj.leagues.find(l => l.name === this.current.league);
+
+      // If the user already made a request for this league's history
+      if (leagueObj.history) {
+        console.log('Loaded history from memory');
+        this.updateContent(itemObj);
+        this.createChart(itemObj);
+      } else {
+        console.log('History from API');
+        this.makeHistoryGetRequest(this.current.league, this.current.id);
+      }
     });
 
     // Dataset radio listener
-    $('#modal-radio', this.modal).change(e => {
+    $('#modal-radio').change(e => {
+      // Set dataset index
       this.current.dataset = parseInt(e.target.value);
-      this.updateContent();
+      // Recreate chart with new dataset
+      this.createChart(this.dataSets[this.current.id]);
     });
   }
 
-  resetData() {
-    // Clear leagues from selector
-    $('#modal-leagues', this.modal).find('option').remove();
-
-    // Dataset selection
-    let $radios = $('#modal-radio').children();
-    $radios.prop('checked', false).removeClass('active');
-    $radios.first().prop('checked', true).addClass('active');
-
-    this.current = {
-      id: null,
-      league: null,
-      chart: null,
-      dataset: 1
-    }
-  }
-
-  onRowClick(event) {
-    if (event.target.localName !== 'a') {
+  /**
+   * Event handler for prices page item row clicks
+   *
+   * @param e Event data
+   */
+  onRowClick(e) {
+    // Only run if user clicked on the name of the item
+    if (e.target.localName !== 'a') {
       return;
     }
 
-    const target = $(event.target.closest('tr'));
+    // Get item id from row
+    const target = $(e.target.closest('tr'));
     const id = parseInt(target.attr('value'));
+    console.log(`Clicked on row id: ${id}`);
 
-    // If user clicked on a different row
-    if (!id) {
-      return;
-    }
+    // If there was no id then ite was probably some other row
+    if (!id) return;
 
-    // Reset anything left by previous modal
+    // Reset any data left on previous modal
     this.resetData();
-
     this.current.id = id;
-    console.log(`Clicked on row id: ${this.current.id}`);
+    this.current.chart = null;
+    this.current.dataset = 1;
 
-    // Show buffer and hide content
-    this.setBufferVisibility(true);
+    // Get item
+    const itemObj = this.dataSets[id];
 
-    // Load history data
-    if (this.current.id in this.dataSets) {
-      console.log('History source: local');
-      this.setContent();
+    // If the item already exists
+    if (itemObj) {
+      console.log('Loading item from memory');
+      this.current.league = itemObj.leagues[0].name;
+      this.updateContent(itemObj);
+      this.createChart(itemObj);
     } else {
-      console.log('History source: remote');
-
-      let request = $.ajax({
-        url: `${PAGE_DATA.apiUrl}/item`,
-        data: {id: this.current.id},
-        type: 'GET',
-        async: true,
-        dataTypes: 'json'
-      });
-
-      request.done(payload => {
-        this.dataSets[this.current.id] = payload;
-        this.setContent();
-      });
+      console.log('Loading item from API');
+      this.makeItemGetRequest(id);
     }
-
-    // Find item entry from initial get request
-    let item = null;
-    for (let i = 0; i < this.pricesPage.items.length; i++) {
-      if (this.pricesPage.items[i].id === this.current.id) {
-        item = this.pricesPage.items[i];
-        break;
-      }
-    }
-
-    // Set modal's icon and name while request might still be processing
-    $('#modal-icon', this.modal).attr("src", item.icon);
-    $('#modal-name', this.modal).html(DetailsModal.buildNameField(item));
 
     // Open the modal
     this.modal.modal('show');
   }
 
-  setContent() {
-    // Get item user clicked on
-    let item = this.dataSets[this.current.id];
+  /**
+   * Remove any data left from the previous modal
+   */
+  resetData() {
+    // Clear leagues from selector
+    $('#modal-leagues').find('option').remove();
 
-    // Get list of leagues for the item
-    let leagues = DetailsModal.getLeagues(item);
-    this.current.league = leagues[0].name;
-
-    // Add leagues as dropdown options
-    this.createLeagueSelector(leagues);
-
-    // Get history data for the current league
-    this.getHistory();
-
-    // Hide buffer and show content
-    this.setBufferVisibility(false);
+    // Dataset selection
+    let radioOptions = $('#modal-radio').children();
+    radioOptions.prop('checked', false).removeClass('active');
+    radioOptions.first().prop('checked', true).addClass('active');
   }
 
   /**
-   * Requests history data for current league or gets it from memory
+   * Send GET request to item api
+   *
+   * @param id Item ID
    */
-  getHistory() {
-    // Check if the data already exists
-    if (this.checkLeagueHistoryExists()) {
-      console.log('History from local');
-      this.updateContent();
-      return;
-    }
+  makeItemGetRequest(id) {
+    const request = $.ajax({
+      url: `${PAGE_DATA.apiUrl}/item`,
+      data: {id: id},
+      type: 'GET',
+      async: true,
+      dataTypes: 'json'
+    });
 
-    // Prep request
-    let request = $.ajax({
+    request.done(itemObj => {
+      this.dataSets[id] = itemObj;
+      this.setContent(itemObj);
+      this.makeHistoryGetRequest(this.current.league, this.current.id);
+    });
+  }
+
+  /**
+   * Send GET request to itemhistory api
+   *
+   * @param league Item league
+   * @param id Item ID
+   */
+  makeHistoryGetRequest(league, id) {
+    const request = $.ajax({
       url: `${PAGE_DATA.apiUrl}/itemhistory`,
       data: {
-        league: this.current.league,
-        id: this.current.id
+        league: league,
+        id: id
       },
       type: 'GET',
       async: true,
@@ -2045,91 +2061,125 @@ class DetailsModal {
     });
 
     request.done(payload => {
-      // Find associated league
-      let league = this.getCurrentItemLeague();
+      // Get current item
+      const itemObj = this.dataSets[id];
+      // Get current league from item
+      const leagueObj = itemObj.leagues.find(l => l.name === league);
 
-      league.history = payload;
-      this.updateContent();
+      // Create parameter 'history' and store the history there
+      leagueObj.history = payload;
+
+      // Update modal content
+      this.updateContent(itemObj);
+      this.createChart(itemObj);
     });
   }
 
   /**
-   * Updates the modal data (names/prices/charts)
+   * Sets initial modal content
+   *
+   * @param itemObj API json
    */
-  updateContent() {
-    let league = this.getCurrentItemLeague();
-    let currentFormatHistory = DetailsModal.formatHistory(league);
+  setContent(itemObj) {
+    // Set modal's icon and name
+    $('#modal-icon').attr('src', itemObj.icon);
+    $('#modal-name').html(DetailsModal.buildNameField(itemObj));
 
-    let data = {
-      labels: currentFormatHistory.keys,
+    // Create league selector options
+    DetailsModal.createLeagueSelector(itemObj);
+
+    // Set first league as default option
+    this.current.league = itemObj.leagues[0].name;
+
+    // Update modal table
+    this.updateContent(itemObj);
+  }
+
+  /**
+   * Updates existing modal content
+   *
+   * @param itemObj API json
+   */
+  updateContent(itemObj) {
+    // Find matching league
+    const leagueObj = itemObj.leagues.find(l => l.name === this.current.league);
+
+    // Update modal table
+    $('#modal-mean', this.modal).html(roundPrice(leagueObj.mean));
+    $('#modal-median', this.modal).html(roundPrice(leagueObj.median));
+    $('#modal-mode', this.modal).html(roundPrice(leagueObj.mode));
+    $('#modal-total', this.modal).html(roundPrice(leagueObj.total));
+    $('#modal-daily', this.modal).html(roundPrice(leagueObj.daily));
+    $('#modal-current', this.modal).html(roundPrice(leagueObj.current));
+    $('#modal-exalted', this.modal).html(roundPrice(leagueObj.exalted));
+  }
+
+  /**
+   * Creates a chart for the model
+   *
+   * @param itemObj API json
+   */
+  createChart(itemObj) {
+    // Get current league from item
+    const leagueObj = itemObj.leagues.find(l => l.name === this.current.league);
+
+    // Format the history entries
+    const history = DetailsModal.formatHistory(leagueObj);
+
+    // Create Chartist data payload
+    const data = {
+      labels: history.keys,
       series: []
     };
 
+    // Set series
     switch (this.current.dataset) {
       case 1:
-        data.series[0] = currentFormatHistory.vals.mean;
+        data.series[0] = history.vals.mean;
         break;
       case 2:
-        data.series[0] = currentFormatHistory.vals.median;
+        data.series[0] = history.vals.median;
         break;
       case 3:
-        data.series[0] = currentFormatHistory.vals.mode;
+        data.series[0] = history.vals.mode;
         break;
       case 4:
-        data.series[0] = currentFormatHistory.vals.daily;
+        data.series[0] = history.vals.daily;
         break;
       case 5:
-        data.series[0] = currentFormatHistory.vals.current;
+        data.series[0] = history.vals.current;
         break;
     }
 
     this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
-
-    // Update modal table
-    $('#modal-mean', this.modal).html(roundPrice(league.mean));
-    $('#modal-median', this.modal).html(roundPrice(league.median));
-    $('#modal-mode', this.modal).html(roundPrice(league.mode));
-    $('#modal-total', this.modal).html(roundPrice(league.total));
-    $('#modal-daily', this.modal).html(roundPrice(league.daily));
-    $('#modal-current', this.modal).html(roundPrice(league.current));
-    $('#modal-exalted', this.modal).html(roundPrice(league.exalted));
-  }
-
-  setBufferVisibility(visible) {
-    if (visible) {
-      $('#modal-body-buffer', this.modal).removeClass('d-none').addClass('d-flex');
-      $('#modal-body-content', this.modal).addClass('d-none').removeClass('d-flex');
-    } else {
-      $('#modal-body-buffer', this.modal).addClass('d-none').removeClass('d-flex');
-      $('#modal-body-content', this.modal).removeClass('d-none').addClass('d-flex');
-    }
   }
 
   /**
    * Builds league selector options for the modal
    *
-   * @param leagues List of current leagues for the item
+   * @param item Complete item json
    */
-  createLeagueSelector(leagues) {
+  static createLeagueSelector(item) {
     let builder = '';
 
     // Loop through all leagues
-    for (let i = 0; i < leagues.length; i++) {
-      let display = leagues[i].display ? leagues[i].display : leagues[i].name;
+    for (let i = 0; i < item.leagues.length; i++) {
+      let display = item.leagues[i].display ? item.leagues[i].display : item.leagues[i].name;
 
-      if (!leagues[i].active) {
+      if (!item.leagues[i].active) {
         display = '● ' + display;
       }
 
-      builder += `<option value='${leagues[i].name}'>${display}</option>`;
+      builder += `<option value='${item.leagues[i].name}'>${display}</option>`;
     }
 
     // Add to dropdown
-    $('#modal-leagues', this.modal).html(builder);
+    $('#modal-leagues').html(builder);
   }
 
   /**
    * Creates a formatted card title for the modal
+   * todo: use ListingRow's name builder
    *
    * @param item Item JSON
    * @returns {string} Generated HTML
@@ -2191,26 +2241,6 @@ class DetailsModal {
     }
 
     return builder;
-  }
-
-  /**
-   * Given the complete item JSON, returns list of leagues for that item
-   *
-   * @param item Item JSON
-   * @returns {Array} Leagues for that item
-   */
-  static getLeagues(item) {
-    let leagues = [];
-
-    for (let i = 0; i < item.leagues.length; i++) {
-      leagues.push({
-        name: item.leagues[i].name,
-        display: item.leagues[i].display,
-        active: item.leagues[i].active
-      });
-    }
-
-    return leagues;
   }
 
   /**
@@ -2330,7 +2360,7 @@ class DetailsModal {
         vals.mode.push(0);
         vals.daily.push(0);
         vals.current.push(0);
-        keys.push(DetailsModal.formatDate(date.addDays(i)));
+        keys.push(formatDate(date.addDays(i)));
       }
     }
 
@@ -2344,7 +2374,7 @@ class DetailsModal {
       vals.mode.push(Math.round(entry.mode * 100) / 100);
       vals.daily.push(entry.daily);
       vals.current.push(entry.current);
-      keys.push(DetailsModal.formatDate(entry.time));
+      keys.push(formatDate(entry.time));
 
       // Check if there are any missing entries between the current one and the next one
       if (i + 1 < league.history.length) {
@@ -2365,7 +2395,7 @@ class DetailsModal {
           vals.mode.push(0);
           vals.daily.push(0);
           vals.current.push(0);
-          keys.push(DetailsModal.formatDate(currentDate.addDays(i + 1)));
+          keys.push(formatDate(currentDate.addDays(i + 1)));
         }
       }
     }
@@ -2381,7 +2411,7 @@ class DetailsModal {
         vals.mode.push(0);
         vals.daily.push(0);
         vals.current.push(0);
-        keys.push(DetailsModal.formatDate(date.addDays(i)));
+        keys.push(formatDate(date.addDays(i)));
       }
     }
 
@@ -2400,54 +2430,6 @@ class DetailsModal {
       'keys': keys,
       'vals': vals
     }
-  }
-
-  /**
-   * Given a date, returns a display string
-   */
-  static formatDate(date) {
-    const MONTH_NAMES = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-
-    let s = new Date(date);
-
-    return `${s.getDate()} ${MONTH_NAMES[s.getMonth()]}`;
-  }
-
-  /**
-   * Returns the current league object of the current item
-   *
-   * @returns {null|*} League object or null if does not exist
-   */
-  getCurrentItemLeague() {
-    let item = this.dataSets[this.current.id];
-
-    for (let i = 0; i < item.leagues.length; i++) {
-      if (item.leagues[i].name === this.current.league) {
-        return item.leagues[i];
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Check whether a specific league's data has been downloaded for the current item
-   *
-   * @returns {boolean} True if exists, false if not
-   */
-  checkLeagueHistoryExists() {
-    const leagues = this.dataSets[this.current.id].leagues;
-
-    for (let i = 0; i < leagues.length; i++) {
-      if (leagues[i].name === this.current.league && leagues[i].history !== undefined) {
-        return true;
-      }
-    }
-
-    return false;
   }
 }
 
@@ -2481,8 +2463,7 @@ class PricesPage {
     // List of items displayed on the current page
     this.items = [];
     // Singular modal to display item specifics on
-    this.modal = new DetailsModal(this);
-
+    this.modal = new DetailsModal();
 
     // Define sort functions for this page
     const sortFunctions = {
@@ -2771,7 +2752,7 @@ class PricesPage {
           self.filter.league = leagueData;
           console.log(`Selected league: ${self.filter.league.name}`);
 
-          self.makeGetRequest();
+          self.makeItemGetRequest();
         }
 
         // No need to sort here
