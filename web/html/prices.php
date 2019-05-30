@@ -53,12 +53,6 @@ include "assets/php/templates/priceNav.php";
         </button>
       </div>
 
-      <div id="modal-body-buffer" class="modal-body d-flex justify-content-center">
-        <div class="row m-0">
-          <div class="buffering" id="buffering-modal"></div>
-        </div>
-      </div>
-
       <div id="modal-body-content" class="modal-body">
         <div class="container-fluid p-0">
           <div class="row m-0">
