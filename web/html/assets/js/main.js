@@ -2781,7 +2781,7 @@ class PricesPage {
           self.filter.league = leagueData;
           console.log(`Selected league: ${self.filter.league.name}`);
 
-          self.makeItemGetRequest();
+          self.makeGetRequest();
         }
 
         // No need to sort here
