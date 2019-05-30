@@ -260,29 +260,44 @@ function statusMsg(msg, isError) {
 
 /**
  * Extension method for Date to add days
+ *
+ * @param days Nr or days to add (negative to redact)
+ * @returns {Date} New date
  */
 Date.prototype.addDays = function (days) {
   let date = new Date(this.valueOf());
   date.setDate(date.getDate() + days);
+
   return date;
 };
 
 /**
- * Format a decimal point number. Eg '21233213.5364' => '21,233,213.53'
+ * Format timestamp to hours ago. Eh '2019-06-03T22:00:00Z' -> '6'
  *
- * @param num Any numeric
+ * @param time ISO 8601 UTC TZ format timestamp string
+ * @returns {string} Hour count as string
+ */
+function toHoursAgo(time) {
+  const diff = Math.abs(new Date(time) - new Date());
+  const val = Math.floor(diff / 1000 / 60 / 60);
+
+  return val.toString();
+}
+
+/**
+ * Convert item price to readable format. Eg '21233213.5364' => '21,233,213.53'
+ *
+ * @param price Any numeric price
  * @returns {string} Display string
  */
-function formatNum(num) {
+function roundPrice(price) {
   const numberWithCommas = (x) => {
     let parts = x.toString().split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return parts.join('.');
   };
 
-  if (num === null) {
-    return 'Unavailable';
-  } else return numberWithCommas(Math.round(num * 100) / 100);
+  return numberWithCommas(Math.round(price * 100) / 100);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -1054,7 +1069,7 @@ class StatsPage {
    * Initial configuration for the page
    */
   constructor() {
-    this.statData = {};
+    this.data = {};
     this.chartOptions = {
       height: 250,
       showPoint: true,
@@ -1087,8 +1102,13 @@ class StatsPage {
     // Set up event listeners
     this.defineListeners();
 
+    // Make initial request
+    this.makeGetRequest(type);
   }
 
+  /**
+   * Load and processes query parameters on initial page load
+   */
   parseQueryParams() {
     let type = QueryAccessor.parseQueryParam('type');
 
@@ -1096,10 +1116,11 @@ class StatsPage {
       type = 'count';
       QueryAccessor.updateQueryParam('type', type);
     }
-
-    this.makeGetRequest(type);
   }
 
+  /**
+   * Create listener events
+   */
   defineListeners() {
     $('button.statSelect').on('click', e => {
       console.log(`Button press: ${e.target.value}`);
@@ -1112,13 +1133,21 @@ class StatsPage {
     });
   }
 
+  /**
+   * Make request to API
+   *
+   * @param type One of the three stat types
+   */
   makeGetRequest(type) {
+    // Permit only the defined types
     if (!['count', 'error', 'time'].includes(type)) {
+      console.log(`Invalid type '${type}' provided`);
       return;
     }
 
-    if (type in this.statData) {
-      this.fillPage(this.statData[type]);
+    // If a request has already been made for the current type
+    if (type in this.data) {
+      this.fillPage(this.data[type]);
       return;
     }
 
@@ -1131,7 +1160,7 @@ class StatsPage {
     });
 
     request.done(json => {
-      this.statData[type] = json;
+      this.data[type] = json;
       this.fillPage(json);
     });
 
@@ -1140,44 +1169,53 @@ class StatsPage {
     });
   }
 
+  /**
+   * Create graphs for the page
+   *
+   * @param json Stats JSON from the API
+   */
   fillPage(json) {
     const main = $('#main');
+    // Empty any previous charts
     main.empty();
 
+    // Get labels
     const labels = [];
     for (let i = 0; i < json.labels.length; i++) {
-      labels.push(StatsPage.formatTime(json.labels[i]));
+      labels.push(toHoursAgo(json.labels[i]));
     }
 
+    // Loop though each different stat
     for (let i = 0; i < json.types.length; i++) {
       const type = json.types[i];
 
+      // Grab the data
       const series = [];
       for (let j = 0; j < json.series[i].length; j++) {
         series.push(json.series[i][j] === null ? 0 : json.series[i][j]);
       }
 
+      // Format for Chartist
       const data = {
         labels: labels,
         series: [series]
       };
 
-      const cardTemplate = `
-    <div class="card custom-card w-100 mb-3">
-      <div class="card-header">
-        <h3 class="m-0">${type}</h3>
-      </div>
+      // Define the card that will contain the chart and add it to the page
+      main.append(`
+<div class="card custom-card w-100 mb-3">
+  <div class="card-header">
+    <h3 class="m-0">${type}</h3>
+  </div>
 
-      <div class="card-body">
-        <div class='ct-chart' id='CHART-${type}'></div>
-      </div>
-    
-      <div class="card-footer slim-card-edge"></div>
-    </div>
-    `.trim();
+  <div class="card-body">
+    <div class='ct-chart' id='CHART-${type}'></div>
+  </div>
 
-      main.append(cardTemplate);
+  <div class="card-footer slim-card-edge"></div>
+</div>`);
 
+      // Depending on the stat, create either bar or line charts
       switch (type) {
         case 'COUNT_API_ERRORS_READ_TIMEOUT':
         case 'COUNT_API_ERRORS_CONNECT_TIMEOUT':
@@ -1193,96 +1231,377 @@ class StatsPage {
       }
     }
   }
-
-  static formatTime(time) {
-    const diff = Math.abs(new Date(time) - new Date());
-    const val = Math.floor(diff / 1000 / 60 / 60);
-
-    return val.toString();
-  }
 }
 
 /**
  * Logic for lab
  */
 class LabPage {
+  /**
+   * Initial configuration for the page
+   */
   constructor() {
     this.urlTemplate = 'https://www.poelab.com/wp-content/uploads/{{yyyy}}/{{mm}}/{{yyyy}}-{{mm}}-{{dd}}_{{lab}}.jpg';
     this.labs = ['uber', 'merciless', 'cruel', 'normal'];
     this.tryCount = {};
 
+    // Current date for current lab
+    this.current = new Date();
+    // Previous date in case current layout is not
+    // out yet (or there's some timezone gimmicks going on)
+    this.previous = this.current.addDays(-1);
+
+
+    // Find images
     this.setup();
   }
 
+  /**
+   * Prep the image frames
+   */
   setup() {
-    const current = new Date();
-    const previous = new Date();
-
-    previous.setDate(previous.getDate() - 1);
-
+    // Loop though lab difficulties
     for (let i = 0; i < this.labs.length; i++) {
-      const img = $(`#pw-lab-${this.labs[i]} img`);
+      // Format a display date for the card title
+      const displayDate = `${this.current.getDate()}/${this.current.getMonth() + 1}/${this.current.getFullYear()}`;
+      // Set the card title
+      $(`#pw-lab-${this.labs[i]}-status`)
+        .html(`<span class='custom-text-green'>${displayDate}</span>`);
 
-      const statusDiv = $(`#pw-lab-${this.labs[i]}-status`);
-      const date = `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`;
-      statusDiv.html(`<span class='custom-text-green'>${date}</span>`);
+      // Get correct numeric values
+      const y = this.current.getFullYear();
+      const m = (this.current.getMonth() + 1 <= 9 ? '0' : '') + (this.current.getMonth() + 1);
+      const d = (this.current.getDate() <= 9 ? '0' : '') + this.current.getDate();
 
-      img.attr('src', this.urlTemplate
-        .replace(/{{yyyy}}/g, current.getFullYear())
-        .replace(/{{mm}}/g, (current.getMonth() + 1 <= 9 ? '0' : '') + (current.getMonth() + 1))
-        .replace(/{{dd}}/g, (current.getDate() <= 9 ? '0' : '') + current.getDate())
-        .replace(/{{lab}}/g, this.labs[i])
-      );
+      // Format the image url
+      const imgUrl = this.urlTemplate
+        .replace(/{{yyyy}}/g, y)
+        .replace(/{{mm}}/g, m)
+        .replace(/{{dd}}/g, d)
+        .replace(/{{lab}}/g, this.labs[i]);
 
-      img.on('error', e => this.imgOnError(e, i));
-      img.on('load', e => this.imgOnLoad(e, i));
+      // Set the image source and event handlers
+      $(`#pw-lab-${this.labs[i]} img`)
+        .attr('src', imgUrl)
+        .on('error', e => this.imgOnError(e, i))
+        .on('load', e => this.imgOnLoad(e, i));
     }
   }
 
+  /**
+   * Event when image loads
+   *
+   * @param e Event data
+   * @param i Image nr
+   */
   imgOnLoad(e, i) {
     console.log(`Loaded ${this.labs[i]}: ${e.target.src}`);
     e.target.parentElement.href = e.target.src;
   }
 
+  /**
+   * Event when image does not load. Attempt with previous date
+   *
+   * @param e Event data
+   * @param i Image nr
+   */
   imgOnError(e, i) {
     console.log(`Error loading ${this.labs[i]}: ${e.target.src}`);
 
-    const statusDiv = $(`#pw-lab-${this.labs[i]}-status`);
-    const date = `${previous.getDate()}/${previous.getMonth() + 1}/${previous.getFullYear()}`;
-
-    if (this.tryCount[this.labs[i]] === undefined) {
-      this.tryCount[this.labs[i]] = true;
-      statusDiv.html(`<span class='custom-text-red'>${date}</span>`);
-    } else {
+    // Do not allow more than two attempts at loading the image (with today's and yesterday's dates)
+    if (this.tryCount[this.labs[i]] !== undefined) {
       console.log(`Exceeded maximum retry count for: ${this.labs[i]}`);
       return;
     }
 
+    // Mark that this image already failed to load once and that it would not run again
+    this.tryCount[this.labs[i]] = true;
+
+    // Format a display date for the card title
+    const displayDate = `${this.previous.getDate()}/${this.previous.getMonth() + 1}/${this.previous.getFullYear()}`;
+    // Set the card title
+    $(`#pw-lab-${this.labs[i]}-status`).html(`<span class='custom-text-red'>${displayDate}</span>`);
+
+    // Get correct numeric values
+    const y = this.previous.getFullYear();
+    const m = (this.previous.getMonth() + 1 <= 9 ? '0' : '') + (this.previous.getMonth() + 1);
+    const d = (this.previous.getDate() <= 9 ? '0' : '') + this.previous.getDate();
+
+    // Format the image url
     e.target.src = this.urlTemplate
-      .replace(/{{yyyy}}/g, previous.getFullYear())
-      .replace(/{{mm}}/g, (previous.getMonth() + 1 <= 9 ? '0' : '') + (previous.getMonth() + 1))
-      .replace(/{{dd}}/g, (previous.getDate() <= 9 ? '0' : '') + previous.getDate())
+      .replace(/{{yyyy}}/g, y)
+      .replace(/{{mm}}/g, m)
+      .replace(/{{dd}}/g, d)
       .replace(/{{lab}}/g, this.labs[i]);
 
     console.log(`Trying: ${e.target.src}`);
   }
+}
 
+/**
+ * Sparkline for items rows in prices
+ */
+class SparkLine {
+  /**
+   * Initial configuration for the page
+   *
+   * @param history List of item prices
+   */
+  constructor(history) {
+    this.options = {
+      pad_y: 2,
+      width: 60,
+      height: 30,
+      radius: 0.2 // or null for disabled rounding
+    };
+
+    // Convert prices to acceptable format for the sparkline
+    this.elements = SparkLine.formatSparkData(history);
+  }
+
+  /**
+   * Build the sparkline container
+   *
+   * @returns {string|null} Container HTML or null for invalid input data
+   */
+  buildSparkContainer() {
+    if (!this.elements) {
+      return null;
+    }
+
+    const path = this.buildPath();
+    const roundPath = this.roundPathCorners(path);
+
+    return `
+    <svg width="${this.options.width}" height="${this.options.height}" class="ct-chart-line">
+      <g class="ct-series ct-series-a">
+        <path d="${roundPath}" class="ct-line" />
+      </g>
+    </svg>`.trim();
+  }
+
+  /**
+   * Build a SVG path based on given list of elements
+   *
+   * @returns {string} SVG path
+   */
+  buildPath() {
+    let maxElement = Math.max(...this.elements);
+    let minElement = Math.min(...this.elements);
+
+    // If there has been no change in the past week
+    if (maxElement === minElement && minElement === 0) {
+      maxElement = 1;
+    }
+
+    // Find step sizes in pixels
+    let stepX = this.options.width / (this.elements.length - 1);
+    let stepY = (this.options.height - this.options.pad_y * 2) / (maxElement - minElement);
+
+    // Create point array
+    let pointBuilder = 'M ';
+    for (let i = 0; i < this.elements.length; i++) {
+      if (this.elements[i] !== null) {
+        let x = stepX * i;
+        let y = (this.options.height - this.elements[i] * stepY + minElement * stepY - this.options.pad_y / 2).toFixed(3);
+
+        pointBuilder += x + ' ' + y + ' L ';
+      }
+    }
+
+    // Remove trailing character and return
+    return pointBuilder.substring(0, pointBuilder.length - 2);
+  }
+
+  /**
+   * Round an SVG path
+   *
+   * @param pathString Valid SVG path string
+   * @returns {string} Rounded SVG path
+   */
+  roundPathCorners(pathString) {
+    if (!this.options.radius) {
+      return pathString;
+    }
+
+    function moveTowardsFractional(movingPoint, targetPoint, fraction) {
+      return {
+        x: parseFloat(movingPoint.x + (targetPoint.x - movingPoint.x) * fraction).toFixed(3),
+        y: parseFloat(movingPoint.y + (targetPoint.y - movingPoint.y) * fraction).toFixed(3)
+      };
+    }
+
+    // Adjusts the ending position of a command
+    function adjustCommand(cmd, newPoint) {
+      if (cmd.length > 2) {
+        cmd[cmd.length - 2] = newPoint.x;
+        cmd[cmd.length - 1] = newPoint.y;
+      }
+    }
+
+    // Gives an {x, y} object for a command's ending position
+    function pointForCommand(cmd) {
+      return {
+        x: parseFloat(cmd[cmd.length - 2]),
+        y: parseFloat(cmd[cmd.length - 1]),
+      };
+    }
+
+    // Split apart the path, handing concatenated letters and numbers
+    var pathParts = pathString
+      .split(/[,\s]/)
+      .reduce(function (parts, part) {
+        var match = part.match('([a-zA-Z])(.+)');
+        if (match) {
+          parts.push(match[1]);
+          parts.push(match[2]);
+        } else {
+          parts.push(part);
+        }
+
+        return parts;
+      }, []);
+
+    // Group the commands with their arguments for easier handling
+    var commands = pathParts.reduce(function (commands, part) {
+      if (parseFloat(part) == part && commands.length) {
+        commands[commands.length - 1].push(part);
+      } else {
+        commands.push([part]);
+      }
+
+      return commands;
+    }, []);
+
+    // The resulting commands, also grouped
+    var resultCommands = [];
+
+    if (commands.length > 1) {
+      var startPoint = pointForCommand(commands[0]);
+
+      // Handle the close path case with a "virtual" closing line
+      var virtualCloseLine = null;
+      if (commands[commands.length - 1][0] === 'Z' && commands[0].length > 2) {
+        virtualCloseLine = ['L', startPoint.x, startPoint.y];
+        commands[commands.length - 1] = virtualCloseLine;
+      }
+
+      // We always use the first command (but it may be mutated)
+      resultCommands.push(commands[0]);
+
+      for (var cmdIndex = 1; cmdIndex < commands.length; cmdIndex++) {
+        var prevCmd = resultCommands[resultCommands.length - 1];
+
+        var curCmd = commands[cmdIndex];
+
+        // Handle closing case
+        var nextCmd = (curCmd === virtualCloseLine)
+          ? commands[1]
+          : commands[cmdIndex + 1];
+
+        // Nasty logic to decide if this path is a candidite.
+        if (nextCmd && prevCmd && (prevCmd.length > 2) && curCmd[0] === 'L' && nextCmd.length > 2 && nextCmd[0] === 'L') {
+          // Calc the points we're dealing with
+          var prevPoint = pointForCommand(prevCmd);
+          var curPoint = pointForCommand(curCmd);
+          var nextPoint = pointForCommand(nextCmd);
+
+          // The start and end of the cuve are just our point moved towards the previous and next points, respectivly
+          var curveStart = moveTowardsFractional(curPoint, prevCmd.origPoint || prevPoint, this.options.radius);
+          var curveEnd = moveTowardsFractional(curPoint, nextCmd.origPoint || nextPoint, this.options.radius);
+
+          // Adjust the current command and add it
+          adjustCommand(curCmd, curveStart);
+          curCmd.origPoint = curPoint;
+          resultCommands.push(curCmd);
+
+          // The curve control points are halfway between the start/end of the curve and
+          // the original point
+          var startControl = moveTowardsFractional(curveStart, curPoint, .5);
+          var endControl = moveTowardsFractional(curPoint, curveEnd, .5);
+
+          // Create the curve
+          var curveCmd = ['C', startControl.x, startControl.y, endControl.x, endControl.y, curveEnd.x, curveEnd.y];
+          // Save the original point for fractional calculations
+          curveCmd.origPoint = curPoint;
+          resultCommands.push(curveCmd);
+        } else {
+          // Pass through commands that don't qualify
+          resultCommands.push(curCmd);
+        }
+      }
+
+      // Fix up the starting point and restore the close path if the path was orignally closed
+      if (virtualCloseLine) {
+        var newStartPoint = pointForCommand(resultCommands[resultCommands.length - 1]);
+        resultCommands.push(['Z']);
+        adjustCommand(resultCommands[0], newStartPoint);
+      }
+    } else {
+      resultCommands = commands;
+    }
+
+    return resultCommands.reduce(function (str, c) {
+      return str + c.join(' ') + ' ';
+    }, '');
+  }
+
+  /**
+   * Convert an item's history of prices to a list of percentage differences
+   *
+   * @param history List of item prices
+   * @returns {null|Array} Valid spark input data
+   */
+  static formatSparkData(history) {
+    // If there is no history (eg old leagues)
+    if (!history) {
+      return null;
+    }
+
+    // Count the number of elements that are not null
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      if (history[i] !== null) {
+        count++;
+      }
+    }
+
+    // Can't display a sparkline with 1 value
+    if (count < 2) {
+      return null;
+    }
+
+    // Find first price from the left that is not null
+    let lastPrice = null;
+    for (let i = 0; i < 7; i++) {
+      if (history[i] !== null) {
+        lastPrice = history[i];
+        break;
+      }
+    }
+
+    // Calculate each value's change %-relation to current price
+    let changes = [];
+    for (let i = 0; i < 7; i++) {
+      if (history[i] > 0) {
+        changes[i] = Math.round((1 - (lastPrice / history[i])) * 100);
+      }
+    }
+
+    return changes;
+  };
 }
 
 /**
  * Item row for prices
  */
 class ItemRow {
+  /**
+   * Initial configuration for the row
+   */
   constructor(leagueIsActive, item) {
     this.leagueIsActive = leagueIsActive;
     this.item = item;
-
-    this.sparkLineOptions = {
-      pad_y: 2,
-      width: 60,
-      height: 30,
-      radius: 0.2
-    };
 
     // Build row elements
     let rowData = [
@@ -1358,7 +1677,7 @@ class ItemRow {
     return `
     <td>
       <div class='d-flex align-items-center'>
-        <div class='img-container img-container-sm text-center mr-1'><img src="${this.item.icon}"></div>
+        <div class='img-container img-container-sm text-center mr-1'><img src="${icon}" alt="..."></div>
         <a class='cursor-pointer ${color}'>${name || this.item.name}${type}</a>${variation}${links}
       </div>
     </td>`.trim();
@@ -1419,68 +1738,23 @@ class ItemRow {
   }
 
   buildSparkField() {
-    /**
-     * Inner-function to stop execution halfway
-     *
-     * @param history Valid history array
-     * @returns {null}
-     */
-    const buildSpark = history => {
-      // If there is no history (eg old leagues)
-      if (!history) {
-        return null;
-      }
-
-      // Count the number of elements that are not null
-      let count = 0;
-      for (let i = 0; i < 7; i++) {
-        if (history[i] !== null) {
-          count++;
-        }
-      }
-
-      // Can't display a sparkline with 1 value
-      if (count < 2) {
-        return null;
-      }
-
-      // Find first price from the left that is not null
-      let lastPrice = null;
-      for (let i = 0; i < 7; i++) {
-        if (history[i] !== null) {
-          lastPrice = history[i];
-          break;
-        }
-      }
-
-      // Calculate each value's change %-relation to current price
-      let changes = [];
-      for (let i = 0; i < 7; i++) {
-        if (history[i] > 0) {
-          changes[i] = Math.round((1 - (lastPrice / history[i])) * 100);
-        }
-      }
-
-      // Generate sparkline html
-      return ItemRow.genSparkSVG(this.sparkLineOptions, changes);
-    }
-
-    let spark = buildSpark(this.item.history);
+    const spark = new SparkLine(this.item.history);
+    const sparkContainer = spark.buildSparkContainer();
 
     // Return as template
-    return `<td class='d-none d-md-flex'>${spark || ''}</td>`;
+    return `<td class='d-none d-md-flex'>${sparkContainer || ''}</td>`;
   }
 
   buildPriceFields() {
-    const chaos = ItemRow.roundPrice(this.item.mean);
-    const exalt = ItemRow.roundPrice(this.item.exalted);
+    const chaos = roundPrice(this.item.mean);
+    const exalt = roundPrice(this.item.exalted);
     const hideExalted = this.item.exalted < 1 ? 'd-none' : '';
 
     return `
     <td>
       <div class='pricebox badge p-0'>
         <span class='img-container img-container-xs text-center mr-1'>
-          <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1">
+          <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1" alt="...">
         </span>
         ${chaos}
       </div>
@@ -1488,7 +1762,7 @@ class ItemRow {
     <td class='d-none d-md-flex'>
       <div class='pricebox badge p-0 ${hideExalted}'>
         <span class='img-container img-container-xs text-center mr-1'>
-          <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1">
+          <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1" alt="...">
         </span>
         ${exalt}
       </div>
@@ -1588,175 +1862,6 @@ class ItemRow {
       </span>
     </td>`.trim();
   }
-
-  static roundPrice(price) {
-    const numberWithCommas = (x) => {
-      let parts = x.toString().split('.');
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      return parts.join('.');
-    };
-
-    return numberWithCommas(Math.round(price * 100) / 100);
-  }
-
-  static genSparkSVG(options, elements) {
-    let maxElement = Math.max(...elements);
-    let minElement = Math.min(...elements);
-
-    // If there has been no change in the past week
-    if (maxElement === minElement && minElement === 0) {
-      maxElement = 1;
-    }
-
-    // Find step sizes in pixels
-    let stepX = options.width / (elements.length - 1);
-    let stepY = (options.height - options.pad_y * 2) / (maxElement - minElement);
-
-    // Create point array
-    let pointBuilder = ['M '];
-    for (let i = 0; i < elements.length; i++) {
-      if (elements[i] !== null) {
-        let x = stepX * i;
-        let y = (options.height - elements[i] * stepY + minElement * stepY - options.pad_y / 2).toFixed(3);
-
-        pointBuilder.push(x, ' ', y, ' L ');
-      }
-    }
-
-    // Remove trailing zero
-    pointBuilder.pop();
-    const points = ItemRow.roundSVGPathCorners(pointBuilder.join(''), options);
-
-    return `
-    <svg width="${options.width}" height="${options.height}" class="ct-chart-line">
-      <g class="ct-series ct-series-a">
-        <path d="${points}" class="ct-line" />
-      </g>
-    </svg>`.trim();
-  }
-
-  static roundSVGPathCorners(pathString, options) {
-    function moveTowardsFractional(movingPoint, targetPoint, fraction) {
-      return {
-        x: parseFloat(movingPoint.x + (targetPoint.x - movingPoint.x) * fraction).toFixed(3),
-        y: parseFloat(movingPoint.y + (targetPoint.y - movingPoint.y) * fraction).toFixed(3)
-      };
-    }
-
-    // Adjusts the ending position of a command
-    function adjustCommand(cmd, newPoint) {
-      if (cmd.length > 2) {
-        cmd[cmd.length - 2] = newPoint.x;
-        cmd[cmd.length - 1] = newPoint.y;
-      }
-    }
-
-    // Gives an {x, y} object for a command's ending position
-    function pointForCommand(cmd) {
-      return {
-        x: parseFloat(cmd[cmd.length - 2]),
-        y: parseFloat(cmd[cmd.length - 1]),
-      };
-    }
-
-    // Split apart the path, handing concatonated letters and numbers
-    var pathParts = pathString
-      .split(/[,\s]/)
-      .reduce(function (parts, part) {
-        var match = part.match('([a-zA-Z])(.+)');
-        if (match) {
-          parts.push(match[1]);
-          parts.push(match[2]);
-        } else {
-          parts.push(part);
-        }
-
-        return parts;
-      }, []);
-
-    // Group the commands with their arguments for easier handling
-    var commands = pathParts.reduce(function (commands, part) {
-      if (parseFloat(part) == part && commands.length) {
-        commands[commands.length - 1].push(part);
-      } else {
-        commands.push([part]);
-      }
-
-      return commands;
-    }, []);
-
-    // The resulting commands, also grouped
-    var resultCommands = [];
-
-    if (commands.length > 1) {
-      var startPoint = pointForCommand(commands[0]);
-
-      // Handle the close path case with a "virtual" closing line
-      var virtualCloseLine = null;
-      if (commands[commands.length - 1][0] === 'Z' && commands[0].length > 2) {
-        virtualCloseLine = ['L', startPoint.x, startPoint.y];
-        commands[commands.length - 1] = virtualCloseLine;
-      }
-
-      // We always use the first command (but it may be mutated)
-      resultCommands.push(commands[0]);
-
-      for (var cmdIndex = 1; cmdIndex < commands.length; cmdIndex++) {
-        var prevCmd = resultCommands[resultCommands.length - 1];
-
-        var curCmd = commands[cmdIndex];
-
-        // Handle closing case
-        var nextCmd = (curCmd === virtualCloseLine)
-          ? commands[1]
-          : commands[cmdIndex + 1];
-
-        // Nasty logic to decide if this path is a candidite.
-        if (nextCmd && prevCmd && (prevCmd.length > 2) && curCmd[0] === 'L' && nextCmd.length > 2 && nextCmd[0] === 'L') {
-          // Calc the points we're dealing with
-          var prevPoint = pointForCommand(prevCmd);
-          var curPoint = pointForCommand(curCmd);
-          var nextPoint = pointForCommand(nextCmd);
-
-          // The start and end of the cuve are just our point moved towards the previous and next points, respectivly
-          var curveStart = moveTowardsFractional(curPoint, prevCmd.origPoint || prevPoint, options.radius);
-          var curveEnd = moveTowardsFractional(curPoint, nextCmd.origPoint || nextPoint, options.radius);
-
-          // Adjust the current command and add it
-          adjustCommand(curCmd, curveStart);
-          curCmd.origPoint = curPoint;
-          resultCommands.push(curCmd);
-
-          // The curve control points are halfway between the start/end of the curve and
-          // the original point
-          var startControl = moveTowardsFractional(curveStart, curPoint, .5);
-          var endControl = moveTowardsFractional(curPoint, curveEnd, .5);
-
-          // Create the curve
-          var curveCmd = ['C', startControl.x, startControl.y, endControl.x, endControl.y, curveEnd.x, curveEnd.y];
-          // Save the original point for fractional calculations
-          curveCmd.origPoint = curPoint;
-          resultCommands.push(curveCmd);
-        } else {
-          // Pass through commands that don't qualify
-          resultCommands.push(curCmd);
-        }
-      }
-
-      // Fix up the starting point and restore the close path if the path was orignally closed
-      if (virtualCloseLine) {
-        var newStartPoint = pointForCommand(resultCommands[resultCommands.length - 1]);
-        resultCommands.push(['Z']);
-        adjustCommand(resultCommands[0], newStartPoint);
-      }
-    } else {
-      resultCommands = commands;
-    }
-
-    return resultCommands.reduce(function (str, c) {
-      return str + c.join(' ') + ' ';
-    }, '');
-  }
 }
 
 /**
@@ -1784,7 +1889,9 @@ class DetailsModal {
           },
           template: '{{key}}: {{value}}',
           hideDelay: 500,
-          valueTransformFunction: formatNum
+          valueTransformFunction: (num) => {
+            return num === null ? 'Unavailable' : roundPrice(num);
+          }
         })
       ]
     };
@@ -1980,13 +2087,13 @@ class DetailsModal {
     this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
 
     // Update modal table
-    $('#modal-mean', this.modal).html(formatNum(league.mean));
-    $('#modal-median', this.modal).html(formatNum(league.median));
-    $('#modal-mode', this.modal).html(formatNum(league.mode));
-    $('#modal-total', this.modal).html(formatNum(league.total));
-    $('#modal-daily', this.modal).html(formatNum(league.daily));
-    $('#modal-current', this.modal).html(formatNum(league.current));
-    $('#modal-exalted', this.modal).html(formatNum(league.exalted));
+    $('#modal-mean', this.modal).html(roundPrice(league.mean));
+    $('#modal-median', this.modal).html(roundPrice(league.median));
+    $('#modal-mode', this.modal).html(roundPrice(league.mode));
+    $('#modal-total', this.modal).html(roundPrice(league.total));
+    $('#modal-daily', this.modal).html(roundPrice(league.daily));
+    $('#modal-current', this.modal).html(roundPrice(league.current));
+    $('#modal-exalted', this.modal).html(roundPrice(league.exalted));
   }
 
   setBufferVisibility(visible) {
