@@ -2001,7 +2001,7 @@ class DetailsModal {
     if (itemObj) {
       console.log('Loading item from memory');
       this.current.league = itemObj.leagues[0].name;
-      this.updateContent(itemObj);
+      this.setContent(itemObj);
       this.createChart(itemObj);
     } else {
       console.log('Loading item from API');
