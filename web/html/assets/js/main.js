@@ -1189,16 +1189,6 @@ class StatsPage {
             type: 'line',
             members: [
               {
-                type: 'COUNT_API_CALLS',
-                name: 'API call count',
-                description: 'Nr of API calls per hour'
-              }
-            ]
-          },{
-            name: 'Group 2',
-            type: 'line',
-            members: [
-              {
                 type: 'COUNT_TOTAL_ITEMS',
                 name: 'Total item count',
                 description: null
@@ -1206,10 +1196,14 @@ class StatsPage {
                 type: 'COUNT_ACCEPTED_ITEMS',
                 name: 'Nr of accepted items',
                 description: null
+              },              {
+                type: 'COUNT_REPLY_SIZE',
+                name: null,
+                description: null
               }
             ]
           },{
-            name: 'Group 3',
+            name: 'Group 2',
             type: 'line',
             members: [
               {
@@ -1223,13 +1217,13 @@ class StatsPage {
               }
             ]
           },{
-            name: 'Group 4',
+            name: 'Group 3',
             type: 'line',
             members: [
               {
-                type: 'COUNT_REPLY_SIZE',
-                name: null,
-                description: null
+                type: 'COUNT_API_CALLS',
+                name: 'API call count',
+                description: 'Nr of API calls per hour'
               }
             ]
           }
@@ -1254,20 +1248,14 @@ class StatsPage {
                 name: null,
                 description: null
               },{
+                type: 'COUNT_API_ERRORS_429',
+                name: null,
+                description: null
+              },{
                 type: 'COUNT_API_ERRORS_5XX',
                 name: null,
                 description: null
               },{
-                type: 'COUNT_API_ERRORS_429',
-                name: null,
-                description: null
-              }
-            ]
-          },{
-            name: 'Group 2',
-            type: 'bar',
-            members: [
-              {
                 type: 'COUNT_API_ERRORS_DUPLICATE',
                 name: null,
                 description: null
