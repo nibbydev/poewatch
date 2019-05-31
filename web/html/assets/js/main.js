@@ -2531,18 +2531,6 @@ class DetailsModal {
     // building the actual payload
 
 
-    // Bloat using 'null's the amount of days that should not have a tooltip
-    if (startEmptyPadding) {
-      for (let i = 0; i < startEmptyPadding; i++) {
-        vals.mean.push(null);
-        vals.median.push(null);
-        vals.mode.push(null);
-        vals.daily.push(null);
-        vals.current.push(null);
-        keys.push('');
-      }
-    }
-
     // If entries are missing before the first entry, fill with "No data"
     if (daysMissingStart) {
       let date = new Date(startDate);
@@ -2616,6 +2604,19 @@ class DetailsModal {
       vals.daily.push(league.daily);
       vals.current.push(league.current);
       keys.push('Now');
+    }
+
+    // Bloat using 'null's the amount of days that should not have a tooltip.
+    // Or in other words the number of days left in the league
+    if (startEmptyPadding) {
+      for (let i = 0; i < startEmptyPadding; i++) {
+        vals.mean.push(null);
+        vals.median.push(null);
+        vals.mode.push(null);
+        vals.daily.push(null);
+        vals.current.push(null);
+        keys.push('');
+      }
     }
 
     // Return generated data
