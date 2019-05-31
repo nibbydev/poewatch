@@ -512,7 +512,7 @@ class ListingPage {
     this.nameBuilder = new ItemNameBuilder({
       clickable: false,
       img: true,
-      size: 'sm'
+      size: 'xs'
     });
 
     // Define sort functions for this page
@@ -1190,16 +1190,16 @@ class StatsPage {
             members: [
               {
                 type: 'COUNT_TOTAL_ITEMS',
-                name: 'Total item count',
-                description: null
+                name: 'Total items',
+                description: 'Total nr of items listed per hour'
               },{
                 type: 'COUNT_ACCEPTED_ITEMS',
-                name: 'Nr of accepted items',
-                description: null
+                name: 'Accepted items',
+                description: 'Nr of items listed per hour that have been accepted for price calculation'
               },              {
                 type: 'COUNT_REPLY_SIZE',
-                name: null,
-                description: null
+                name: 'API reply size',
+                description: 'Stash API reply size in bytes'
               }
             ]
           },{
@@ -1208,12 +1208,12 @@ class StatsPage {
             members: [
               {
                 type: 'COUNT_TOTAL_STASHES',
-                name: null,
-                description: null
+                name: 'Total stashes',
+                description: 'Total nr of stashes found in the past one hour'
               },{
                 type: 'COUNT_ACTIVE_ACCOUNTS',
-                name: null,
-                description: null
+                name: 'Active accounts',
+                description: 'Nr of accounts that have listed something for sale in the past one hour'
               }
             ]
           },{
@@ -1222,8 +1222,8 @@ class StatsPage {
             members: [
               {
                 type: 'COUNT_API_CALLS',
-                name: 'API call count',
-                description: 'Nr of API calls per hour'
+                name: 'API calls',
+                description: 'Nr of stash API calls per hour'
               }
             ]
           }
@@ -1237,28 +1237,28 @@ class StatsPage {
             members: [
               {
                 type: 'COUNT_API_ERRORS_READ_TIMEOUT',
-                name: null,
-                description: null
+                name: 'Read timeouts',
+                description: 'Nr of read timeouts in the past hour'
               },{
                 type: 'COUNT_API_ERRORS_CONNECT_TIMEOUT',
-                name: null,
-                description: null
+                name: 'Connect timeouts',
+                description: 'Nr of connection timeouts in the past hour'
               },{
                 type: 'COUNT_API_ERRORS_CONNECTION_RESET',
-                name: null,
-                description: null
+                name: 'Connection resets',
+                description: 'Nr of reset connections in the past hour'
               },{
                 type: 'COUNT_API_ERRORS_429',
-                name: null,
-                description: null
+                name: '400 errors',
+                description: 'Nr of HTTP 4xx errors in the past hour'
               },{
                 type: 'COUNT_API_ERRORS_5XX',
-                name: null,
-                description: null
+                name: '500 errors',
+                description: 'Nr of HTTP 5xx errors in the past hour'
               },{
                 type: 'COUNT_API_ERRORS_DUPLICATE',
-                name: null,
-                description: null
+                name: 'Duplicate requests',
+                description: 'Nr of duplicate requests in the past hour (higher means closer to the peak of the river)'
               }
             ]
           }
@@ -1272,16 +1272,16 @@ class StatsPage {
             members: [
               {
                 type: 'TIME_API_REPLY_DOWNLOAD',
-                name: null,
-                description: null
+                name: 'API download',
+                description: 'Stash API reply download time in milliseconds'
               },{
                 type: 'TIME_PARSE_REPLY',
-                name: null,
-                description: null
+                name: 'API process',
+                description: 'Stash API reply processing time in milliseconds'
               },{
                 type: 'TIME_API_TTFB',
-                name: null,
-                description: null
+                name: 'TTFB',
+                description: 'Stash API reply TTFB in milliseconds'
               }
             ]
           }
@@ -1385,7 +1385,7 @@ class StatsPage {
       const payload = {
         series: [],
         labels: [],
-        titles: [] // todo: add titles here
+        titles: []
       };
 
       // Create labels
@@ -1396,7 +1396,7 @@ class StatsPage {
       // Loop though each stat type in the group
       for (let j = 0; j < structureGroup.members.length; j++) {
         const structureMember = structureGroup.members[j];
-        payload.titles.push(structureMember.type);
+        payload.titles.push(structureMember.name);
 
         // Find index of the series in the JSON
         const seriesIndex = json.types.indexOf(structureMember.type);
@@ -1437,14 +1437,16 @@ class StatsPage {
   static genChartHtml(chartId, structureGroup) {
     let title = '';
     for (let i = 0; i < structureGroup.members.length; i++) {
-      title += `<span class="badge mr-2">${structureGroup.members[i].type}</span>`
+      title += `
+      <div>
+        <span class="badge p-0">${structureGroup.members[i].name}</span>
+        <span class="badge p-0 custom-text-gray"> - ${structureGroup.members[i].description}</span>
+      </div>`;
     }
 
     return `
     <div class="card custom-card w-100 mb-3">
-      <div class="card-header">
-        ${title}
-      </div>
+      <div class="card-header">${title}</div>
     
       <div class="card-body">
         <div class='ct-chart' id='${chartId}'></div>
@@ -1465,13 +1467,14 @@ class StatsPage {
   static templateFunction(data, seriesIndex, valueIndex) {
     let seriesBuilder = '';
     for (let i = 0; i < data.series.length; i++) {
+      // code as in 'a' or 'b' or etc
       const seriesCode = String.fromCharCode(65 + i).toLowerCase();
       const displayVal = roundPrice(data.series[i][valueIndex]);
 
       seriesBuilder += `
       <tr>
-        <td class="p-0 pr-2"><span class="badge ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
-        <td class="p-0"><span class="badge custom-text-gray-lo">${displayVal}</span></td>
+        <td class="p-0 pr-2"><span class="badge p-0 ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
+        <td class="p-0"><span class="badge p-0 custom-text-gray-lo">${displayVal}</span></td>
       </tr>`;
     }
 
