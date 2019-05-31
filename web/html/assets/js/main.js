@@ -2269,7 +2269,7 @@ class DetailsModal {
         break;
       case 4:
         data.series = [history.vals.daily, history.vals.current];
-        data.titles = ['Daily', 'Current'];
+        data.titles = ['Daily', 'Now'];
         break;
     }
 

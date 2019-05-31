@@ -119,7 +119,7 @@ include "assets/php/templates/priceNav.php";
           <div class="row m-0">
             <div class="col">
               <div class="d-flex flex-row">
-                <h4 class="mr-2">Past data</h4>
+                <h4>Past data</h4>
                 <a class="cursor-pointer badge custom-text-gray-lo" data-toggle="collapse"
                    data-target="#modal-info">(?)</a>
               </div>
@@ -128,9 +128,14 @@ include "assets/php/templates/priceNav.php";
                 <div>
                   Mean, median and mode are all ways of calculating an average:
                   <ul class="mb-0">
-                    <li>Mean being the sum divided by the number of elements</li>
-                    <li>Median is the center-most element (of a sorted list)</li>
-                    <li>Mode is the most common element in the list</li>
+                    <li><span class="badge p-0 custom-text-green">Mean</span> being the sum divided by the number of elements</li>
+                    <li><span class="badge p-0 custom-text-green">Median</span> is the center-most element (of a sorted list)</li>
+                    <li><span class="badge p-0 custom-text-green">Mode</span> is the most common element in the list</li>
+                  </ul>
+                  Counts are defined as follows:
+                  <ul class="mb-0">
+                    <li><span class="badge p-0 custom-text-green">Daily</span> is number of items listed in the past 24h</li>
+                    <li><span class="badge p-0 custom-text-green">Now</span> is the number of items currently on sale</li>
                   </ul>
                   Colors do not carry any significant meaning aside from telling the lines apart.
                 </div>
