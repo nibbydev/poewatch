@@ -206,6 +206,177 @@ class Sorter {
 }
 
 /**
+ * Item name building
+ */
+class ItemNameBuilder {
+  constructor(options) {
+    this.options = {
+      // true/false should the item name be clickable?
+      clickable: options.clickable || false,
+      // true/false show item icon?
+      img: options.img || true,
+      // one of bootstrap's size constraints, sets image container size
+      size: options.size || 'sm'
+    };
+
+    if (!['xs', 'sm', 'md', 'lg', 'xl'].includes(this.options.size)) {
+      throw 'Unknown size';
+    }
+  }
+
+  /**
+   * Creates formatted title for the item
+   *
+   * @param item
+   * @returns {string}
+   */
+  static formatName(item) {
+    // If item is enchantment, insert enchant values for display purposes
+    if (item.category === 'enchantment') {
+      // Min roll
+      if (item.name.includes('#') && item.enchantMin !== null) {
+        item.name = item.name.replace('#', item.enchantMin);
+      }
+
+      // Max roll
+      if (item.name.includes('#') && item.enchantMax !== null) {
+        item.name = item.name.replace('#', item.enchantMax);
+      }
+    }
+
+    // Begin builder
+    let builder = item.name;
+
+    if (item.type) {
+      builder += ', ';
+
+      if (item.frame === 3) {
+        builder += `<span class='item-unique-secondary'>${item.type}</span>`;
+      } else if (item.frame === 9) {
+        builder += `<span class='item-foil-secondary'>${item.type}</span>`;
+      } else {
+        builder += `<span class='custom-text-gray-lo'>${item.type}</span>`;
+      }
+    }
+
+    if (item.frame === 3) {
+      builder = `<span class='item-unique'>${builder}</span>`;
+    } else if (item.frame === 9) {
+      builder = `<span class='item-foil'>${builder}</span>`;
+    } else if (item.frame === 8) {
+      builder = `<span class='item-prophecy'>${builder}</span>`;
+    } else if (item.frame === 4) {
+      builder = `<span class='item-gem'>${builder}</span>`;
+    } else if (item.frame === 5) {
+      builder = `<span class='item-currency'>${builder}</span>`;
+    } else if (item.category === 'base') {
+      if (item.baseIsShaper) {
+        builder = `<span class='item-shaper'>${builder}</span>`;
+      } else if (item.baseIsElder) {
+        builder = `<span class='item-elder'>${builder}</span>`;
+      }
+    }
+
+    return builder;
+  }
+
+  /**
+   * Creates formatted properties for the item
+   *
+   * @param item
+   * @returns {string}
+   */
+  static formatProperties(item) {
+    // Begin builder
+    let builder = '';
+
+    if (item.variation) {
+      builder += `${item.variation}, `;
+    }
+
+    if (item.category === 'map' && item.mapTier) {
+      builder += `Tier ${item.mapTier}, `;
+    }
+
+    if (item.baseItemLevel) {
+      builder += `iLvl ${item.baseItemLevel}, `;
+    }
+
+    if (item.linkCount) {
+      builder += `Links ${item.linkCount}, `;
+    }
+
+    if (item.category === 'gem') {
+      builder += `Level ${item.gemLevel}, `;
+      builder += `Quality ${item.gemQuality}, `;
+
+      if (item.gemIsCorrupted) {
+        builder += 'Corrupted, ';
+      }
+    }
+
+    if (builder) {
+      builder = `(${builder.substring(0, builder.length - 2)})`;
+    }
+
+    return builder;
+  }
+
+  /**
+   * Formats the icon
+   *
+   * @param item
+   * @returns {string}
+   */
+  static formatIconUrl(item) {
+    // Use TLS for icons for that sweet, sweet secure site badge
+    let icon = item.icon.replace('http://', 'https://');
+
+    // If item is base
+    if (item.category === 'base') {
+      if (item.baseIsShaper) {
+        icon += '&shaper=1';
+      } else if (item.baseIsElder) {
+        icon += '&elder=1';
+      }
+    }
+
+    return icon;
+  }
+
+  /**
+   * Builds the element the item
+   *
+   * @returns {string}
+   */
+  build(item) {
+    const name = ItemNameBuilder.formatName(item);
+    const properties = ItemNameBuilder.formatProperties(item);
+
+    let imgContainer;
+    if (this.options.img) {
+      const icon = ItemNameBuilder.formatIconUrl(item);
+
+      imgContainer = `
+        <div class="img-container img-container-${this.options.size} text-center mr-1">
+          <img src="${icon}" alt="...">
+        </div>`;
+    }
+
+    const clickable = this.options.clickable ? 'open-modal cursor-pointer' : '';
+
+    return `
+    <div class="d-flex align-items-center">
+      ${imgContainer || ''}
+      <div>
+        <span class="custom-text-gray-lo ${clickable}">${name}</span>
+        <span class="badge custom-text-gray p-0">${properties}</span>
+      </div>
+    </div>`
+  }
+}
+
+/**
  * Format a timestamp string to eg '16h' or '9 Jan' or '12 Sep 2017'
  *
  * @param timeStamp ISO 8601 UTC TZ format timestamp string
@@ -324,156 +495,6 @@ function formatDate(timeStamp) {
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
- * Table row for listings
- */
-class ListingRow {
-  constructor(item) {
-    this.item = item;
-
-    this.name = this.formatName();
-    this.properties = this.formatProperties();
-    this.price = this.formatPrice();
-  }
-
-  /**
-   * Creates formatted title for the item
-   *
-   * @returns {string}
-   */
-  formatName() {
-    // If item is enchantment, insert enchant values for display purposes
-    if (this.item.category === 'enchantment') {
-      // Min roll
-      if (this.item.name.includes('#') && this.item.enchantMin !== null) {
-        this.item.name = this.item.name.replace('#', this.item.enchantMin);
-      }
-
-      // Max roll
-      if (this.item.name.includes('#') && this.item.enchantMax !== null) {
-        this.item.name = this.item.name.replace('#', this.item.enchantMax);
-      }
-    }
-
-    // Begin builder
-    let builder = this.item.name;
-    if (this.item.frame === 3) {
-      builder = `<span class='item-unique'>${this.item.name}</span>`;
-    }
-
-    if (this.item.type) {
-      builder += `<span class='subtext-1'>, ${this.item.type}</span>`;
-    }
-
-    if (this.item.frame === 3) {
-      builder = `<span class='item-unique'>${builder}</span>`;
-    } else if (this.item.frame === 9) {
-      builder = `<span class='item-foil'>${builder}</span>`;
-    } else if (this.item.frame === 8) {
-      builder = `<span class='item-prophecy'>${builder}</span>`;
-    } else if (this.item.frame === 4) {
-      builder = `<span class='item-gem'>${builder}</span>`;
-    } else if (this.item.frame === 5) {
-      builder = `<span class='item-currency'>${builder}</span>`;
-    } else if (this.item.category === 'base') {
-      if (this.item.baseIsShaper) {
-        builder = `<span class='item-shaper'>${builder}</span>`;
-      } else if (this.item.baseIsElder) {
-        builder = `<span class='item-elder'>${builder}</span>`;
-      }
-    }
-
-    return builder;
-  }
-
-  /**
-   * Creates formatted properties for the item
-   *
-   * @returns {string}
-   */
-  formatProperties() {
-    // Begin builder
-    let builder = '';
-
-    if (this.item.variation) {
-      builder += `${this.item.variation}, `;
-    }
-
-    if (this.item.category === 'map' && this.item.mapTier) {
-      builder += `Tier ${this.item.mapTier}, `;
-    }
-
-    if (this.item.baseItemLevel) {
-      builder += `iLvl ${this.item.baseItemLevel}, `;
-    }
-
-    if (this.item.linkCount) {
-      builder += `Links ${this.item.linkCount}, `;
-    }
-
-    if (this.item.category === 'gem') {
-      builder += `Level ${this.item.gemLevel}, `;
-      builder += `Quality ${this.item.gemQuality}, `;
-
-      if (this.item.gemIsCorrupted) {
-        builder += 'Corrupted, ';
-      }
-    }
-
-    if (builder) {
-      builder = `(${builder.substring(0, builder.length - 2)})`;
-    }
-
-    return builder;
-  }
-
-  /**
-   * Formats price string for the row
-   *
-   * @returns {string}
-   */
-  formatPrice() {
-    if (this.item.buyout.length > 0) {
-      return `${this.item.buyout[0].price} ${this.item.buyout[0].currency}`;
-    }
-
-    return '';
-  }
-
-  /**
-   * Builds the table row for the item
-   *
-   * @returns {string}
-   */
-  buildRow() {
-    return `<tr>
-  <td>
-    <div class="d-flex align-items-center">
-      <div class="img-container img-container-xs text-center mr-1">
-        <img src="${this.item.icon}" alt="...">
-      </div>
-      <div>
-        <span class="custom-text-gray-lo">${this.name}</span>
-        <span class="badge custom-text-gray p-0">${this.properties}</span>
-      </div>
-    </div>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo text-center">
-    <span class="badge p-0">${this.item.count}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${this.price}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(this.item.discovered)}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(this.item.updated)}</span>
-  </td>
-</tr>`
-  }
-}
-
-/**
  * Logic for listings
  */
 class ListingPage {
@@ -486,6 +507,13 @@ class ListingPage {
       league: null,
       results: {}
     };
+
+    // Configure an item name builder for this page
+    this.nameBuilder = new ItemNameBuilder({
+      clickable: false,
+      img: true,
+      size: 'sm'
+    });
 
     // Define sort functions for this page
     const sortFunctions = {
@@ -717,13 +745,44 @@ class ListingPage {
     let tableRows = [];
     for (let i = 0; i < items.length; i++) {
       if (!items[i].html) {
-        items[i].html = new ListingRow(items[i]).buildRow();
+        items[i].html = this.buildRow(items[i]);
       }
 
       tableRows.push(items[i].html);
     }
 
     table.html(tableRows.join(''));
+  }
+
+  /**
+   * Builds the table row for the item
+   *
+   * @param item
+   * @returns {string}
+   */
+  buildRow(item) {
+    const display = this.nameBuilder.build(item);
+
+    let price;
+    if (item.buyout.length > 0) {
+      price = `${item.buyout[0].price} ${item.buyout[0].currency}`;
+    }
+
+    return `<tr>
+  <td>${display}</td>
+  <td class="text-nowrap custom-text-gray-lo text-center">
+    <span class="badge p-0">${item.count}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${price || ''}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${timeSince(item.discovered)}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${timeSince(item.updated)}</span>
+  </td>
+</tr>`
   }
 }
 
@@ -1807,16 +1866,13 @@ class ItemRow {
   /**
    * Initial configuration for the row
    */
-  constructor(leagueIsActive, item) {
+  constructor(nameBuilder, item, leagueIsActive) {
     this.leagueIsActive = leagueIsActive;
     this.item = item;
 
     // Build row elements
     let rowData = [
-      this.buildNameField(),
-      this.buildGemFields(),
-      this.buildBaseFields(),
-      this.buildMapFields(),
+      `<td>${nameBuilder.build(item)}</td>`,
       this.buildSparkField(),
       this.buildPriceFields(),
       this.buildChangeField(),
@@ -1825,124 +1881,8 @@ class ItemRow {
       this.buildTotalField()
     ].join('');
 
+
     this.row = `<tr value=${item.id}>${rowData}</tr>`;
-  }
-
-  buildNameField() {
-    let color, type, variation, links, icon, name;
-
-    // Use TLS for icons for that sweet, sweet secure site badge
-    icon = this.item.icon.replace('http://', 'https://');
-
-    // If item is base
-    if (this.item.category === 'base') {
-      // Shaper or elder
-      if (this.item.baseIsShaper) {
-        icon += '&shaper=1';
-        color = 'item-shaper';
-      } else if (this.item.baseIsElder) {
-        icon += '&elder=1';
-        color = 'item-elder';
-      }
-    } else color = '';
-
-    // If color was not set and item is foil
-    if (!color && this.item.frame === 9) {
-      color = 'item-foil';
-    }
-
-    // If item is enchantment, insert enchant values to name
-    if (this.item.category === 'enchantment') {
-      name = this.item.name;
-
-      // Min roll
-      if (name.includes('#') && this.item.enchantMin !== undefined) {
-        name = name.replace('#', `<span class='custom-text-green'>${this.item.enchantMin}</span>`);
-      }
-
-      // Max roll
-      if (name.includes('#') && this.item.enchantMax !== undefined) {
-        name = name.replace('#', `<span class='custom-text-green'>${this.item.enchantMax}</span>`);
-      }
-    }
-
-    // If item has a base type
-    if (this.item.type) {
-      type = ` <span class='subtext-1'>${this.item.type}</span>`;
-    } else type = '';
-
-    // If item has links
-    if (this.item.linkCount) {
-      links = ` <span class='badge custom-badge-gray ml-1'>${this.item.linkCount} link</span>`;
-    } else links = '';
-
-    // If item has a variation
-    if (this.item.variation) {
-      variation = ` <span class='badge custom-badge-gray ml-1'>${this.item.variation}</span>`;
-    } else variation = '';
-
-    // Create the name container
-    return `
-    <td>
-      <div class='d-flex align-items-center'>
-        <div class='img-container img-container-sm text-center mr-1'><img src="${icon}" alt="..."></div>
-        <a class='cursor-pointer ${color}'>${name || this.item.name}${type}</a>${variation}${links}
-      </div>
-    </td>`.trim();
-  }
-
-  buildGemFields() {
-    // Don't run if item is not a gem
-    if (this.item.category !== 'gem') {
-      return '';
-    }
-
-    let color, corrupted;
-
-    if (this.item.gemIsCorrupted) {
-      color = 'red';
-      corrupted = '✓';
-    } else {
-      color = 'green';
-      corrupted = '✕';
-    }
-
-    return `
-    <td class='text-center p-0'>
-        <span class='badge p-0 custom-text-gray-lo'>${this.item.gemLevel}</span>
-    </td>
-    <td class='text-center p-0'>
-        <span class='badge p-0 custom-text-gray-lo'>${this.item.gemQuality}</span>
-    </td>
-    <td class='text-center p-0'>
-        <span class='badge p-0 custom-text-${color}'>${corrupted}</span>
-    </td>`.trim();
-  }
-
-  buildBaseFields() {
-    // Don't run if item is not a base
-    if (this.item.category !== 'base') {
-      return '';
-    }
-
-    return `
-    <td class='text-center p-0'>
-      <span class='badge p-0 custom-text-gray-lo'>${this.item.baseItemLevel}</span>
-    </td>`.trim();
-  }
-
-  buildMapFields() {
-    // Don't run if item is not a map
-    if (this.item.category !== 'map') {
-      return '';
-    }
-
-    let tier;
-    if (this.item.mapTier !== null) {
-      tier = `<span class='badge p-0 custom-text-gray-lo'>${this.item.mapTier}</span>`;
-    }
-
-    return `<td class='text-center p-0'>${tier || ''}</td>`;
   }
 
   buildSparkField() {
@@ -2115,6 +2055,13 @@ class DetailsModal {
     // The modal we'll be targeting
     this.modal = $('#modal-details');
 
+    // Configure an item name builder for the page
+    this.nameBuilder = new ItemNameBuilder({
+      clickable: false,
+      img: true,
+      size: 'lg'
+    });
+
     // Contains all requested item data & history on current prices page
     this.dataSets = {};
 
@@ -2170,11 +2117,6 @@ class DetailsModal {
    * @param e Event data
    */
   onRowClick(e) {
-    // Only run if user clicked on the name of the item
-    if (e.target.localName !== 'a') {
-      return;
-    }
-
     // Get item id from row
     const target = $(e.target.closest('tr'));
     const id = parseInt(target.attr('value'));
@@ -2281,8 +2223,7 @@ class DetailsModal {
    */
   setContent(itemObj) {
     // Set modal's icon and name
-    $('#modal-icon').attr('src', itemObj.icon);
-    $('#modal-name').html(DetailsModal.buildNameField(itemObj));
+    $('#modal-name').html(this.nameBuilder.build(itemObj));
 
     // Create league selector options
     DetailsModal.createLeagueSelector(itemObj);
@@ -2368,72 +2309,6 @@ class DetailsModal {
 
     // Add to dropdown
     $('#modal-leagues').html(builder);
-  }
-
-  /**
-   * Creates a formatted card title for the modal
-   * todo: use ListingRow's name builder
-   *
-   * @param item Item JSON
-   * @returns {string} Generated HTML
-   */
-  static buildNameField(item) {
-    // If item is enchantment, insert enchant values for display purposes
-    if (item.category === 'enchantment') {
-      // Min roll
-      if (item.name.includes('#') && item.enchantMin !== null) {
-        item.name = item.name.replace('#', item.enchantMin);
-      }
-
-      // Max roll
-      if (item.name.includes('#') && item.enchantMax !== null) {
-        item.name = item.name.replace('#', item.enchantMax);
-      }
-    }
-
-    // Begin builder
-    let builder = item.name;
-
-    if (item.type) {
-      builder += `<span class='subtext-1'>, ${item.type}</span>`;
-    }
-
-    if (item.frame === 9) {
-      builder = `<span class='item-foil'>${builder}</span>`;
-    } else if (item.category === 'base') {
-      if (item.baseIsShaper) {
-        builder = `<span class='item-shaper'>${builder}</span>`;
-      } else if (item.baseIsElder) {
-        builder = `<span class='item-elder'>${builder}</span>`;
-      }
-    }
-
-    if (item.variation) {
-      builder += ` <span class='badge custom-badge-gray ml-1'>${item.variation}</span>`;
-    }
-
-    if (item.category === 'map' && item.mapTier) {
-      builder += ` <span class='badge custom-badge-gray ml-1'>Tier ${item.mapTier}</span>`;
-    }
-
-    if (item.baseItemLevel) {
-      builder += ` <span class='badge custom-badge-gray ml-1'>iLvl ${item.baseItemLevel}</span>`;
-    }
-
-    if (item.linkCount) {
-      builder += ` <span class='badge custom-badge-gray ml-1'>${item.linkCount} Link</span>`;
-    }
-
-    if (item.category === 'gem') {
-      builder += `<span class='badge custom-badge-gray ml-1'>Lvl ${item.gemLevel}</span>`;
-      builder += `<span class='badge custom-badge-gray ml-1'>${item.gemQuality} quality</span>`;
-
-      if (item.gemIsCorrupted) {
-        builder += "<span class='badge custom-badge-red ml-1'>Corrupted</span>";
-      }
-    }
-
-    return builder;
   }
 
   /**
@@ -2696,6 +2571,13 @@ class PricesPage {
       parseAmount: 150
     };
 
+    // Configure an item name builder for the page
+    this.nameBuilder = new ItemNameBuilder({
+      clickable: true,
+      img: true,
+      size: 'sm'
+    });
+
     // List of items displayed on the current page
     this.items = [];
     // Singular modal to display item specifics on
@@ -2777,7 +2659,7 @@ class PricesPage {
       }
     };
     // Create a sorter for the page
-    this.sorter = new Sorter(sortFunctions, () => this.sortResults());
+    this.sorter = new Sorter(sortFunctions, () => this.fillTable());
 
     // Overwrite standard league with current challenge league
     this.filter.league = SERVICE_leagues[0];
@@ -2966,7 +2848,7 @@ class PricesPage {
     $('#select-influence').on('change', e => this.genericListener(this, e));
 
     // Model display
-    $('#searchResults').on('click', e => this.modal.onRowClick(e));
+    $('#searchResults').on('click', '.open-modal', e => this.modal.onRowClick(e));
     // Sort by columns
     $('.sort-column').on('click', e => this.sorter.sortListener(e));
   }
@@ -3145,7 +3027,7 @@ class PricesPage {
       }
     }
 
-    self.sortResults();
+    self.fillTable();
   }
 
   /**
@@ -3179,7 +3061,7 @@ class PricesPage {
       $('.buffering-msg').remove();
 
       this.items = json;
-      this.sortResults();
+      this.fillTable();
     });
 
     request.fail(response => {
@@ -3200,7 +3082,7 @@ class PricesPage {
   }
 
 
-  sortResults() {
+  fillTable() {
     // Empty the table
     let table = $('#searchResults');
     $('tbody', table).empty();
@@ -3222,7 +3104,7 @@ class PricesPage {
       if (this.filter.parseAmount < 0 || count < this.filter.parseAmount) {
         // If item has not been parsed, parse it
         if (!item.tableData) {
-          item.tableData = new ItemRow(this.filter.league.active, item);
+          item.tableData = new ItemRow(this.nameBuilder, item, this.filter.league.active);
         }
 
         // Append generated table data to buffer

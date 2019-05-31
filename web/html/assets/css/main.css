@@ -301,6 +301,9 @@ footer {
 .item-shaper {color: #aaafdd}
 .item-elder {color: #c2aadd}
 
+.item-unique-secondary {color: #7d5f47}
+.item-foil-secondary {color: #46694a}
+
 /*------------------------------------------------------------------------------------------------------------
 // Colors
 //----------------------------------------------------------------------------------------------------------*/
@@ -487,7 +490,6 @@ canvas {
   border: 1px solid rgba(255,255,255,.35);
   background: rgba(25,25,25,0.9);
   box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease-in-out;
 }
 
 .chartist-tooltip:not([hidden]) {

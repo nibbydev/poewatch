@@ -37,10 +37,7 @@ include "assets/php/templates/priceNav.php";
       <div class="modal-header d-flex align-items-center">
         <div class="row d-flex justify-content-between w-100 m-0">
           <div class="col-12 col-sm-8 d-flex align-items-center p-0 mb-3 mb-sm-0">
-            <span class="img-container img-container-lg text-center mr-1">
-              <img id="modal-icon">
-            </span>
-            <h4 id="modal-name" target="_blank"></h4>
+            <h4 id="modal-name" class="mb-0"></h4>
           </div>
 
           <div
@@ -123,7 +120,8 @@ include "assets/php/templates/priceNav.php";
             <div class="col">
               <div class="d-flex flex-row">
                 <h4 class="mr-2">Past data</h4>
-                <a class="cursor-pointer badge custom-text-gray-lo" data-toggle="collapse" data-target="#modal-info">(?)</a>
+                <a class="cursor-pointer badge custom-text-gray-lo" data-toggle="collapse"
+                   data-target="#modal-info">(?)</a>
               </div>
 
               <div class="collapse" id="modal-info">
@@ -147,7 +145,7 @@ include "assets/php/templates/priceNav.php";
                   </label>
                   <label class="btn btn-outline-dark p-0 px-1">
                     <input type="radio" name="dataset" value="4">
-                  <span>Counts</span>
+                    <span>Counts</span>
                   </label>
                 </div>
               </div>
@@ -259,9 +257,14 @@ include "assets/php/templates/priceNav.php";
       <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
         <thead>
         <tr>
-
-          <?php AddTableHeaders($category) ?>
-
+          <th class="w-100"><span class="sort-column">Item</span></th>
+          <th class="d-none d-md-block">Spark</th>
+          <th><span class="sort-column">Chaos</span></th>
+          <th class="d-none d-md-block">Exalted</th>
+          <th><span class="sort-column" title="Price compared to 7d ago">Change</span></th>
+          <th><span class="sort-column" title="Number of items currently on sale">Now</span></th>
+          <th><span class="sort-column" title="Number of items listed every 24h">Daily</span></th>
+          <th><span class="sort-column" title="Total number of items listed">Total</span></th>
         </tr>
         </thead>
         <tbody></tbody>

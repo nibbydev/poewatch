@@ -13,7 +13,7 @@ function GetItemLeagues($pdo) {
 
   $stmt = $pdo->query($query);
   $payload = array();
-  
+
   while ($row = $stmt->fetch()) {
     $payload[] = $row;
   }
@@ -25,7 +25,7 @@ function GetItemLeagues($pdo) {
 function GetCategories($pdo) {
   $query = "SELECT `name` FROM data_categories";
   $stmt = $pdo->query($query);
-  
+
   $payload = array();
   while ($row = $stmt->fetch()) {
     $payload[] = $row['name'];
@@ -39,7 +39,7 @@ function CheckQueryParams($leagues, $categories) {
   // Check if user-provided league param is valid
   if (isset($_GET['league'])) {
     $found = false;
-    
+
     foreach ($leagues as $league) {
       if ($league['name'] === $_GET['league']) {
         $found = true;
@@ -60,29 +60,6 @@ function CheckQueryParams($leagues, $categories) {
       exit();
     }
   }
-}
-
-// Add table headers based on category
-function AddTableHeaders($category) {
-  echo "<th class='w-100'><span class='sort-column'>Item</span></th>";
-
-  if ( $category === "gem" ) {
-    echo "<th title='Gem level'>Lvl</th>";
-    echo "<th title='Gem quality'>Qual</th>";
-    echo "<th title='Is the gem corrupted'>Corr</th>";
-  } else if ( $category === "base" ) {
-    echo "<th title='Item level'>iLvl</th>";
-  } else if ( $category === "map" ) {
-    echo "<th title='Map tier'>Tier</th>";
-  }
-  
-  echo "<th class='d-none d-md-block'>Spark</th>";
-  echo "<th><span class='sort-column'>Chaos</span></th>";
-  echo "<th class='d-none d-md-block'>Exalted</th>";
-  echo "<th><span class='sort-column' title='Price compared to 7d ago'>Change</span></th>";
-  echo "<th><span class='sort-column' title='Number of items currently on sale'>Now</span></th>";
-  echo "<th><span class='sort-column' title='Number of items listed every 24h'>Daily</span></th>";
-  echo "<th><span class='sort-column' title='Total number of items listed'>Total</span></th>";
 }
 
 function GetGroups($pdo, $category) {
