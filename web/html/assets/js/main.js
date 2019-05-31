@@ -2088,7 +2088,11 @@ class DetailsModal {
       axisX: {
         showGrid: true,
         showLabel: true,
-        labelInterpolationFnc: (value, index) => index % 7 === 0 ? value : null
+        labelInterpolationFnc: (value, index, labels) => {
+          if (labels.length > 70) return index % 7 === 0 ? value : null;
+          else if (labels.length > 20) return index % 2 === 0 ? value : null;
+          else return value;
+        }
       },
       axisY: {
         showLabel: false,
