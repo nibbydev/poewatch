@@ -150,7 +150,7 @@ public class Main {
                     break;
 
                 case "id":
-                    String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 1);
+                    String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 2);
                     wm.setNextChangeID(changeId);
                     System.out.printf("[INFO] New ChangeID (%s) added%n", changeId);
                     break;
