@@ -2642,13 +2642,24 @@ class DetailsModal {
 
       seriesBuilder += `
       <tr>
-        <td class="p-0 pr-2"><span class="ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
-        <td class="p-0"><span class="custom-text-gray-lo">${displayVal}</span></td>
+        <td class="p-0 pr-2"><span class="badge p-0 ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
+        <td class="p-0"><span class="badge p-0 custom-text-gray-lo">${displayVal}</span></td>
       </tr>`;
     }
 
+    let secondaryTitle;
+    if (valueIndex === 0) {
+      secondaryTitle = 'league start';
+    } else if (valueIndex === data.labels.length) {
+      secondaryTitle = 'league end';
+    } else {
+      secondaryTitle = 'week ' + (Math.floor(valueIndex / 7) + 1);
+    }
+
+    const title = `${data.labels[valueIndex]} <span class="badge p-0">(${secondaryTitle})</span>`;
+
     return `<div>
-  <h6 class=" mb-0">${data.labels[valueIndex]}</h6>
+  <h6 class=" mb-0">${title}</h6>
   <table>
     <tbody>
       ${seriesBuilder}
