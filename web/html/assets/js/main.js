@@ -44,6 +44,10 @@ $(document).ready(() => {
       new StatsPage();
       return;
 
+    case 'about':
+      new AboutPage();
+      return;
+
     default:
       return;
   }
@@ -858,29 +862,7 @@ class CharactersPage {
 
     $('#search-btn').on('click', e => {
       QueryAccessor.updateQueryParam('mode', this.search.mode);
-
-      if (!this.search.search) {
-        statusMsg('Enter an account name', true);
-        return;
-      } else if (this.search.search.length < 3) {
-        statusMsg('Name is too short', true);
-        return;
-      } else if (this.search.search.length > 64) {
-        statusMsg('Name is too long', true);
-        return;
-      }
-
-      // If same search has already been made
-      const json = this.search.results[this.search.mode + this.search.search];
-      if (json !== undefined) {
-        statusMsg(`Loaded ${json.length} entries from memory`);
-        this.fillTable(json);
-
-        return;
-      }
-
-      statusMsg();
-      this.makeGetRequest(this.search.mode, this.search.search);
+      this.checkMakeRequest(this.search.mode, this.search.search);
     });
 
     $('#search-mode').on('change', e => {
@@ -3274,3 +3256,96 @@ class PricesPage {
   }
 }
 
+/**
+ * Logic for about
+ */
+class AboutPage{
+  /**
+   * Initial page configuration
+   */
+  constructor() {
+    // Set up event listeners
+    this.defineListeners();
+  }
+
+  /**
+   * Creates listener events
+   */
+  defineListeners() {
+    $('#post-submit').on('click', e => {
+      console.log('Post');
+
+      const contact = $('#post-contact').val();
+      const message = $('#post-message').val();
+
+      this.checkMakeRequest(contact, message);
+    });
+  }
+
+  /**
+   * Checks params and makes call to API
+   *
+   * @param contact
+   * @param message
+   */
+  checkMakeRequest(contact, message) {
+    // Check contact
+    if (!contact) {
+      statusMsg('Enter a contact address', true);
+      return;
+    } else if (contact.length < 4) {
+      statusMsg('Contact address is too short', true);
+      return;
+    } else if (contact.length > 128) {
+      statusMsg('Contact address is too long', true);
+      return;
+    }
+
+    // Check message
+    if (!message) {
+      statusMsg('Enter a message', true);
+      return;
+    } else if (message.length < 16) {
+      statusMsg('Message is too short', true);
+      return;
+    } else if (message.length > 2048) {
+      statusMsg('Message is too long', true);
+      return;
+    }
+
+    // Clear status msg
+    statusMsg();
+
+    // Make request
+    this.makeGetRequest(contact, message);
+  }
+
+  /**
+   * Makes request to api
+   *
+   * @param contact
+   * @param message
+   */
+  makeGetRequest(contact, message) {
+    const request = $.ajax({
+      url: `${PAGE_DATA.apiUrl}/feedback`,
+      data: {
+        message: message,
+        contact: contact
+      },
+      type: 'POST',
+      async: true,
+      dataType: 'json'
+    });
+
+    request.done(response => {
+      console.log(response);
+      statusMsg(`Message posted`);
+    });
+
+    request.fail(response => {
+      console.log(response);
+      statusMsg(response.responseJSON.error, true);
+    });
+  }
+}
