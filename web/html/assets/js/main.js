@@ -9,6 +9,8 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
+//todo: about page in JS
+
 // Global page data container
 const PAGE_DATA = {
   currentPage: getCurrentPage(),
@@ -209,6 +211,11 @@ class Sorter {
  * Item name building
  */
 class ItemNameBuilder {
+  /**
+   * Initial configuration for the builder
+   *
+   * @param options Array of options, see below for information
+   */
   constructor(options) {
     this.options = {
       // true/false should the item name be clickable?
@@ -220,8 +227,39 @@ class ItemNameBuilder {
     };
 
     if (!['xs', 'sm', 'md', 'lg', 'xl'].includes(this.options.size)) {
-      throw 'Unknown size';
+      throw `Unknown size '${this.options.size}' provided. Use one of Bootstrap' constraints`;
     }
+  }
+
+  /**
+   * Builds the element the item
+   *
+   * @returns {string} Generated HTML container and fields
+   */
+  build(item) {
+    const name = ItemNameBuilder.formatName(item);
+    const properties = ItemNameBuilder.formatProperties(item);
+
+    let imgContainer;
+    if (this.options.img) {
+      const icon = ItemNameBuilder.formatIconUrl(item);
+
+      imgContainer = `
+        <div class="img-container img-container-${this.options.size} text-center mr-1">
+          <img src="${icon}" alt="...">
+        </div>`;
+    }
+
+    const clickable = this.options.clickable ? 'open-modal cursor-pointer' : '';
+
+    return `
+    <div class="d-flex align-items-center">
+      ${imgContainer || ''}
+      <div>
+        <span class="custom-text-gray-lo ${clickable}">${name}</span>
+        <span class="badge custom-text-gray p-0">${properties}</span>
+      </div>
+    </div>`
   }
 
   /**
@@ -342,37 +380,6 @@ class ItemNameBuilder {
     }
 
     return icon;
-  }
-
-  /**
-   * Builds the element the item
-   *
-   * @returns {string}
-   */
-  build(item) {
-    const name = ItemNameBuilder.formatName(item);
-    const properties = ItemNameBuilder.formatProperties(item);
-
-    let imgContainer;
-    if (this.options.img) {
-      const icon = ItemNameBuilder.formatIconUrl(item);
-
-      imgContainer = `
-        <div class="img-container img-container-${this.options.size} text-center mr-1">
-          <img src="${icon}" alt="...">
-        </div>`;
-    }
-
-    const clickable = this.options.clickable ? 'open-modal cursor-pointer' : '';
-
-    return `
-    <div class="d-flex align-items-center">
-      ${imgContainer || ''}
-      <div>
-        <span class="custom-text-gray-lo ${clickable}">${name}</span>
-        <span class="badge custom-text-gray p-0">${properties}</span>
-      </div>
-    </div>`
   }
 }
 
@@ -787,59 +794,9 @@ class ListingPage {
 }
 
 /**
- * Table row for characters
- */
-class UserRow {
-  constructor(user, mode, search) {
-    this.user = user;
-
-    this.search = search;
-    this.mode = mode;
-  }
-
-  /**
-   * Builds the table row for a user entry
-   *
-   * @returns {string} Row HTML
-   */
-  buildRow() {
-    // get correct name depending on the mode
-    const account = this.mode === 'account' ? this.search : this.user.account;
-    const character = this.mode === 'character' ? this.search : this.user.character;
-
-    const accountDisplay = this.mode === 'account'
-      ? `<span class="custom-text-orange">${account}</span>`
-      : `<span>${account}</span>`;
-    const characterDisplay = this.mode === 'character'
-      ? `<span class="custom-text-orange">${character}</span>`
-      : `<span>${character}</span>`;
-
-    // build the table row
-    return `<tr>
-  <td class="text-nowrap">
-    <a href='characters?mode=account&search=${account}'>
-      <span class="custom-text-gray-lo">${accountDisplay}</span>
-    </a>
-    <a class="custom-text-gray" href='https://www.pathofexile.com/account/view-profile/${account}' target="_blank">⬈</a>
-  </td>
-  <td>
-    <a href='characters?mode=character&search=${character}'>
-      <span class="custom-text-gray-lo">${characterDisplay}</span>
-    </a>
-  </td>
-  <td class="badge">${this.user.league ? this.user.league : '-'}</td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(this.user.found)}</span>
-  </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(this.user.seen)}</span>
-  </td>
-</tr>`;
-  }
-}
-
-/**
  * Logic for characters
+ *
+ * todo: add sorter support
  */
 class CharactersPage {
   /**
@@ -859,7 +816,7 @@ class CharactersPage {
 
     // Run the request if both a mode and search string were provided
     if (this.search.mode && this.search.search) {
-      this.makeGetRequest(this.search.mode, this.search.search);
+      this.checkMakeRequest(this.search.mode, this.search.search);
     }
   }
 
@@ -931,6 +888,70 @@ class CharactersPage {
       console.log('Mode: ' + this.search.mode);
       QueryAccessor.updateQueryParam('mode', this.search.mode);
     });
+
+    $('#search-results tbody').on('click', 'tr', e => {
+      // Only run on elements with meta property
+      if (!e.target.attributes.meta) return;
+
+      // Read data from row
+      this.search.mode = e.target.attributes.meta.value;
+      this.search.search = e.target.innerHTML;
+
+      console.log(`Searching for entries using ${this.search.mode} ${this.search.search}`);
+
+      // Update query params
+      QueryAccessor.updateQueryParam('mode', this.search.mode);
+      QueryAccessor.updateQueryParam('search', this.search.search);
+
+      // Update input fields
+      $(`#search-mode input[value="${this.search.mode}"]`).click();
+      $('#search-input').val(this.search.search);
+
+      this.checkMakeRequest(this.search.mode, this.search.search);
+    })
+  }
+
+  /**
+   * Checks params and either makes call to API or loads data from memory
+   *
+   * @param mode
+   * @param search
+   */
+  checkMakeRequest(mode, search) {
+    // Check search
+    if (!search) {
+      statusMsg('Enter an account name', true);
+      return;
+    } else if (search.length < 3) {
+      statusMsg('Name is too short', true);
+      return;
+    } else if (search.length > 64) {
+      statusMsg('Name is too long', true);
+      return;
+    }
+
+    // Check mode
+    if (!mode) {
+      statusMsg('No mode defined', true);
+      return;
+    } else if (!['account', 'character'].includes(mode)) {
+      statusMsg('Invalid mode', true);
+      return;
+    }
+
+    // If same search has already been made
+    const json = this.search.results[mode + search];
+    if (json !== undefined) {
+      statusMsg(`Loaded ${json.length} entries from memory`);
+      this.fillTable(json);
+
+      return;
+    }
+
+    // Clear status msg
+    statusMsg();
+    // Make request
+    this.makeGetRequest(mode, search);
   }
 
   /**
@@ -943,12 +964,11 @@ class CharactersPage {
     const spinner = $('#spinner');
     spinner.removeClass('d-none');
 
-    const endpoint = mode === 'account' ? 'characters' : 'accounts';
     const payload = {};
     payload[mode] = search;
 
     const request = $.ajax({
-      url: `${PAGE_DATA.apiUrl}/${endpoint}`,
+      url: `${PAGE_DATA.apiUrl}/${mode === 'account' ? 'characters' : 'accounts'}`,
       data: payload,
       type: 'GET',
       async: true,
@@ -959,15 +979,15 @@ class CharactersPage {
       this.search.results[mode + search] = json;
 
       if (json.length === 0) {
-        statusMsg(`No characters found`, true);
+        statusMsg(`No characters found`);
       } else {
         statusMsg(`Found ${json.length} characters`);
       }
 
       $('#search-results').removeClass('d-none');
+      spinner.addClass('d-none');
 
       this.fillTable(json);
-      spinner.addClass('d-none');
     });
 
     request.fail(response => {
@@ -996,8 +1016,7 @@ class CharactersPage {
     for (let i = 0; i < users.length; i++) {
       // If the row hasn't been processed yet
       if (!users[i].html) {
-        const user = new UserRow(users[i], this.search.mode, this.search.search);
-        users[i].html = user.buildRow();
+        users[i].html = this.buildRow(users[i]);
       }
 
       // add to builder
@@ -1005,6 +1024,43 @@ class CharactersPage {
     }
 
     table.html(builder);
+  }
+
+  /**
+   * Builds the table row for a user entry
+   *
+   * @param user
+   * @returns {string} Row HTML
+   */
+  buildRow(user) {
+    // get correct name depending on the mode
+    const account = this.search.mode === 'account' ? this.search.search : user.account;
+    const character = this.search.mode === 'character' ? this.search.search : user.character;
+
+    const accountDisplay = this.search.mode === 'account'
+      ? `<span meta="account" class="custom-text-orange">${account}</span>`
+      : `<span meta="account">${account}</span>`;
+    const characterDisplay = this.search.mode === 'character'
+      ? `<span meta="character" class="custom-text-orange">${character}</span>`
+      : `<span meta="character">${character}</span>`;
+
+    // build the table row
+    return `<tr>
+  <td class="text-nowrap">
+    <span class="cursor-pointer custom-text-gray-lo">${accountDisplay}</span>
+    <a class="custom-text-gray" href='https://www.pathofexile.com/account/view-profile/${account}' target="_blank">⬈</a>
+  </td>
+  <td>
+    <span class="cursor-pointer custom-text-gray-lo">${characterDisplay}</span>
+  </td>
+  <td class="badge">${user.league ? user.league : '-'}</td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${timeSince(user.found)}</span>
+  </td>
+  <td class="text-nowrap custom-text-gray-lo">
+    <span class="badge p-0">${timeSince(user.seen)}</span>
+  </td>
+</tr>`;
   }
 }
 
@@ -1161,7 +1217,7 @@ class StatsPage {
       },
       axisY: {
         showLabel: false,
-          offset: 0
+        offset: 0
       },
       fullWidth: true,
       plugins: [
@@ -1192,17 +1248,17 @@ class StatsPage {
                 type: 'COUNT_TOTAL_ITEMS',
                 name: 'Total items',
                 description: 'Total nr of items listed per hour'
-              },{
+              }, {
                 type: 'COUNT_ACCEPTED_ITEMS',
                 name: 'Accepted items',
                 description: 'Nr of items listed per hour that have been accepted for price calculation'
-              },              {
+              }, {
                 type: 'COUNT_REPLY_SIZE',
                 name: 'API reply size',
                 description: 'Stash API reply size in bytes'
               }
             ]
-          },{
+          }, {
             name: 'Group 2',
             type: 'line',
             members: [
@@ -1210,13 +1266,13 @@ class StatsPage {
                 type: 'COUNT_TOTAL_STASHES',
                 name: 'Total stashes',
                 description: 'Total nr of stashes found in the past one hour'
-              },{
+              }, {
                 type: 'COUNT_ACTIVE_ACCOUNTS',
                 name: 'Active accounts',
                 description: 'Nr of accounts that have listed something for sale in the past one hour'
               }
             ]
-          },{
+          }, {
             name: 'Group 3',
             type: 'line',
             members: [
@@ -1228,7 +1284,7 @@ class StatsPage {
             ]
           }
         ],
-      },{
+      }, {
         page: 'error',
         groups: [
           {
@@ -1239,23 +1295,23 @@ class StatsPage {
                 type: 'COUNT_API_ERRORS_READ_TIMEOUT',
                 name: 'Read timeouts',
                 description: 'Nr of read timeouts in the past hour'
-              },{
+              }, {
                 type: 'COUNT_API_ERRORS_CONNECT_TIMEOUT',
                 name: 'Connect timeouts',
                 description: 'Nr of connection timeouts in the past hour'
-              },{
+              }, {
                 type: 'COUNT_API_ERRORS_CONNECTION_RESET',
                 name: 'Connection resets',
                 description: 'Nr of reset connections in the past hour'
-              },{
+              }, {
                 type: 'COUNT_API_ERRORS_429',
                 name: '400 errors',
                 description: 'Nr of HTTP 4xx errors in the past hour'
-              },{
+              }, {
                 type: 'COUNT_API_ERRORS_5XX',
                 name: '500 errors',
                 description: 'Nr of HTTP 5xx errors in the past hour'
-              },{
+              }, {
                 type: 'COUNT_API_ERRORS_DUPLICATE',
                 name: 'Duplicate requests',
                 description: 'Nr of duplicate requests in the past hour (higher means closer to the peak of the river)'
@@ -1263,7 +1319,7 @@ class StatsPage {
             ]
           }
         ],
-      },{
+      }, {
         page: 'time',
         groups: [
           {
@@ -1274,11 +1330,11 @@ class StatsPage {
                 type: 'TIME_API_REPLY_DOWNLOAD',
                 name: 'API download',
                 description: 'Stash API reply download time in milliseconds'
-              },{
+              }, {
                 type: 'TIME_PARSE_REPLY',
                 name: 'API process',
                 description: 'Stash API reply processing time in milliseconds'
-              },{
+              }, {
                 type: 'TIME_API_TTFB',
                 name: 'TTFB',
                 description: 'Stash API reply TTFB in milliseconds'
@@ -2005,6 +2061,8 @@ class ItemRow {
 
 /**
  * Item details modal for prices
+ *
+ * todo: obtain league (and set selector) to league selected in prices page
  */
 class DetailsModal {
   /**
@@ -2562,6 +2620,10 @@ class PricesPage {
       parseAmount: 150
     };
 
+    // Overwrite standard league with current challenge league
+    // (It's like this for the sake of clarity)
+    this.filter.league = SERVICE_leagues[0];
+
     // Configure an item name builder for the page
     this.nameBuilder = new ItemNameBuilder({
       clickable: true,
@@ -2652,14 +2714,10 @@ class PricesPage {
     // Create a sorter for the page
     this.sorter = new Sorter(sortFunctions, () => this.fillTable());
 
-    // Overwrite standard league with current challenge league
-    this.filter.league = SERVICE_leagues[0];
-
     this.parseQueryParams();
     this.defineListeners();
     this.makeGetRequest();
   }
-
 
   /**
    * Loads and processes query parameters on initial page load
@@ -2795,6 +2853,13 @@ class PricesPage {
     }
   }
 
+  /**
+   * Sets values to null on certain keys
+   * todo: rewrite code to remove this function
+   *
+   * @param key
+   * @param value
+   */
   queryParamFilter(key, value) {
     switch (key) {
       case 'confidence':
@@ -3072,7 +3137,9 @@ class PricesPage {
     });
   }
 
-
+  /**
+   * Fills prices page table with entries
+   */
   fillTable() {
     // Empty the table
     let table = $('#searchResults');

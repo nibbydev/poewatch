@@ -401,7 +401,9 @@ pre {
 }
 
 .sort-column,
-.cursor-pointer { cursor: pointer; }
+.cursor-pointer {cursor: pointer}
+.sort-column:hover,
+.cursor-pointer:hover {text-decoration: underline}
 
 /*------------------------------------------------------------------------------------------------------------
 // Manual Bootstrap
