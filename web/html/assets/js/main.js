@@ -2043,14 +2043,12 @@ class ItemRow {
 
 /**
  * Item details modal for prices
- *
- * todo: obtain league (and set selector) to league selected in prices page
  */
 class DetailsModal {
   /**
    * Initial configuration for the modal
    */
-  constructor() {
+  constructor(defaultLeague) {
     // Chart options
     this.chartOptions = {
       height: 250,
@@ -2092,6 +2090,9 @@ class DetailsModal {
       img: true,
       size: 'lg'
     });
+
+    // Store the default league of the current page
+    this.defaultLeague = defaultLeague;
 
     // Contains all requested item data & history on current prices page
     this.dataSets = {};
@@ -2159,8 +2160,6 @@ class DetailsModal {
     // Reset any data left on previous modal
     this.resetData();
     this.current.id = id;
-    this.current.chart = null;
-    this.current.dataset = 1;
 
     // Get item
     const itemObj = this.dataSets[id];
@@ -2168,7 +2167,6 @@ class DetailsModal {
     // If the item already exists
     if (itemObj) {
       console.log('Loading item from memory');
-      this.current.league = itemObj.leagues[0].name;
       this.setContent(itemObj);
       this.createChart(itemObj);
     } else {
@@ -2186,6 +2184,11 @@ class DetailsModal {
   resetData() {
     // Clear leagues from selector
     $('#modal-leagues').find('option').remove();
+
+    this.dataSets = {};
+    this.current.chart = null;
+    this.current.dataset = 1;
+    this.current.league = this.defaultLeague;
 
     // Dataset selection
     let radioOptions = $('#modal-radio').children();
@@ -2257,10 +2260,7 @@ class DetailsModal {
     $('#modal-name').html(this.nameBuilder.build(itemObj));
 
     // Create league selector options
-    DetailsModal.createLeagueSelector(itemObj);
-
-    // Set first league as default option
-    this.current.league = itemObj.leagues[0].name;
+    this.createLeagueSelector(itemObj);
 
     // Update modal table
     this.updateContent(itemObj);
@@ -2324,7 +2324,7 @@ class DetailsModal {
    *
    * @param item Complete item json
    */
-  static createLeagueSelector(item) {
+  createLeagueSelector(item) {
     let builder = '';
 
     // Loop through all leagues
@@ -2339,7 +2339,7 @@ class DetailsModal {
     }
 
     // Add to dropdown
-    $('#modal-leagues').html(builder);
+    $('#modal-leagues').html(builder).val(this.current.league);
   }
 
   /**
@@ -2616,7 +2616,7 @@ class PricesPage {
     // List of items displayed on the current page
     this.items = [];
     // Singular modal to display item specifics on
-    this.modal = new DetailsModal();
+    this.modal = new DetailsModal(this.filter.league.name);
 
     // Define sort functions for this page
     const sortFunctions = {
@@ -2744,6 +2744,8 @@ class PricesPage {
         this.filter.league = SERVICE_leagues.find(league => league.name === val);
         // Set selector value
         $('#search-league').val(this.filter.league.name);
+        // Set modal default value
+        this.modal.defaultLeague = this.filter.league.name;
 
         break;
       }
@@ -2907,6 +2909,7 @@ class PricesPage {
         if (leagueData) {
           self.filter.league = leagueData;
           console.log(`Selected league: ${self.filter.league.name}`);
+          this.modal.defaultLeague = self.filter.league.name;
 
           self.makeGetRequest();
         }
