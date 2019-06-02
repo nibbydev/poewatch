@@ -373,7 +373,8 @@ footer {
 
 .paragraph-text         {color: #bbb}
 
-.color-patron {color: rgb(249, 108, 84) !important}
+.pw-subtext-1 {font-size: 75%}
+.pw-subtext-2 {font-size: 85%}
 
 pre {
   color: inherit;
@@ -402,8 +403,6 @@ pre {
 
 .sort-column,
 .cursor-pointer {cursor: pointer}
-.sort-column:hover,
-.cursor-pointer:hover {text-decoration: underline}
 
 /*------------------------------------------------------------------------------------------------------------
 // Manual Bootstrap

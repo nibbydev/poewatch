@@ -9,8 +9,6 @@
   already here, it can't hurt to take a look at http://youmightnotneedjquery.com/
 */
 
-//todo: about page in JS
-
 // Global page data container
 const PAGE_DATA = {
   currentPage: getCurrentPage(),
@@ -261,7 +259,7 @@ class ItemNameBuilder {
       ${imgContainer || ''}
       <div>
         <span class="custom-text-gray-lo ${clickable}">${name}</span>
-        <span class="badge custom-text-gray p-0">${properties}</span>
+        <span class="pw-subtext-1 custom-text-gray p-0">${properties}</span>
       </div>
     </div>`
   }
@@ -779,19 +777,19 @@ class ListingPage {
       price = `${item.buyout[0].price} ${item.buyout[0].currency}`;
     }
 
-    return `<tr>
+    return `<tr class="custom-text-gray-lo">
   <td>${display}</td>
-  <td class="text-nowrap custom-text-gray-lo text-center">
-    <span class="badge p-0">${item.count}</span>
+  <td class="text-nowrap">
+    <span class="pw-subtext-1">${item.count}</span>
   </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${price || ''}</span>
+  <td class="text-nowrap">
+    <span class="pw-subtext-1">${price || ''}</span>
   </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(item.discovered)}</span>
+  <td class="text-nowrap">
+    <span class="pw-subtext-1">${timeSince(item.discovered)}</span>
   </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(item.updated)}</span>
+  <td class="text-nowrap">
+    <span class="pw-subtext-1">${timeSince(item.updated)}</span>
   </td>
 </tr>`
   }
@@ -1027,20 +1025,22 @@ class CharactersPage {
       : `<span meta="character">${character}</span>`;
 
     // build the table row
-    return `<tr>
+    return `<tr class="custom-text-gray-l">
   <td class="text-nowrap">
-    <span class="cursor-pointer custom-text-gray-lo">${accountDisplay}</span>
+    <span class="cursor-pointer">${accountDisplay}</span>
     <a class="custom-text-gray" href='https://www.pathofexile.com/account/view-profile/${account}' target="_blank">⬈</a>
   </td>
-  <td>
-    <span class="cursor-pointer custom-text-gray-lo">${characterDisplay}</span>
+  <td class="text-nowrap cursor-pointer">
+    ${characterDisplay}
   </td>
-  <td class="badge">${user.league ? user.league : '-'}</td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(user.found)}</span>
+  <td class="text-nowrap">
+    ${user.league ? user.league : '-'}
   </td>
-  <td class="text-nowrap custom-text-gray-lo">
-    <span class="badge p-0">${timeSince(user.seen)}</span>
+  <td class="text-nowrap pw-subtext-1">
+    ${timeSince(user.found)}
+  </td>
+  <td class="text-nowrap pw-subtext-1">
+    ${timeSince(user.seen)}
   </td>
 </tr>`;
   }
@@ -1477,8 +1477,8 @@ class StatsPage {
     for (let i = 0; i < structureGroup.members.length; i++) {
       title += `
       <div>
-        <span class="badge p-0">${structureGroup.members[i].name}</span>
-        <span class="badge p-0 custom-text-gray"> - ${structureGroup.members[i].description}</span>
+        <span class="pw-subtext-1 font-weight-bold">${structureGroup.members[i].name}</span>
+        <span class="pw-subtext-1 custom-text-gray"> - ${structureGroup.members[i].description}</span>
       </div>`;
     }
 
@@ -1511,14 +1511,14 @@ class StatsPage {
 
       seriesBuilder += `
       <tr>
-        <td class="p-0 pr-2"><span class="badge p-0 ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
-        <td class="p-0"><span class="badge p-0 custom-text-gray-lo">${displayVal}</span></td>
+        <td class="p-0 pr-2"><span class="pw-subtext-1 ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
+        <td class="p-0"><span class="pw-subtext-1 custom-text-gray-lo">${displayVal}</span></td>
       </tr>`;
     }
 
     return `<div>
   <div class="text-center">
-    <h6 class=" mb-0">${data.labels[valueIndex]} hours ago</h6>
+    <h6 class="mb-0">${data.labels[valueIndex]} hours ago</h6>
   </div>
   <table>
     <tbody>
@@ -1929,7 +1929,7 @@ class ItemRow {
 
     return `
     <td>
-      <div class='pricebox badge p-0'>
+      <div class='pricebox pw-subtext-1 font-weight-bold'>
         <span class='img-container img-container-xs text-center mr-1'>
           <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyRerollRare.png?scale=1&w=1&h=1" alt="...">
         </span>
@@ -1937,7 +1937,7 @@ class ItemRow {
       </div>
     </td>
     <td class='d-none d-md-flex'>
-      <div class='pricebox badge p-0 ${hideExalted}'>
+      <div class='pricebox pw-subtext-1 font-weight-bold ${hideExalted}'>
         <span class='img-container img-container-xs text-center mr-1'>
           <img src="https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyAddModToRare.png?scale=1&w=1&h=1" alt="...">
         </span>
@@ -1977,7 +1977,7 @@ class ItemRow {
 
     return `
     <td class='text-center p-0'>
-        <span class='badge p-0 custom-text-${color}'>${change}%</span>
+        <span class='pw-subtext-1 custom-text-${color}'>${change}%</span>
     </td>`.trim();
   }
 
@@ -2000,7 +2000,7 @@ class ItemRow {
 
     return `
     <td class='text-center p-0'>
-      <span class='badge p-0 custom-text-${color}'>
+      <span class='pw-subtext-1 custom-text-${color}'>
         ${this.item.current}
       </span>
     </td>`.trim();
@@ -2025,7 +2025,7 @@ class ItemRow {
 
     return `
     <td class='text-center p-0'>
-      <span class='badge p-0 custom-text-${color}'>
+      <span class='pw-subtext-1 custom-text-${color}'>
         ${this.item.daily}
       </span>
     </td>`.trim();
@@ -2034,7 +2034,7 @@ class ItemRow {
   buildTotalField() {
     return `
     <td class='text-center p-0'>
-      <span class='badge p-0 custom-text-gray-lo'>
+      <span class='pw-subtext-1 custom-text-gray-lo'>
         ${this.item.total}
       </span>
     </td>`.trim();
@@ -2548,8 +2548,8 @@ class DetailsModal {
 
       seriesBuilder += `
       <tr>
-        <td class="p-0 pr-2"><span class="badge p-0 ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
-        <td class="p-0"><span class="badge p-0 custom-text-gray-lo">${displayVal}</span></td>
+        <td class="p-0 pr-2"><span class="pw-subtext-1 font-weight-bold ct-series-${seriesCode}-text">${data.titles[i]}</span></td>
+        <td class="p-0"><span class="pw-subtext-1 custom-text-gray-lo">${displayVal}</span></td>
       </tr>`;
     }
 
@@ -2562,10 +2562,10 @@ class DetailsModal {
       secondaryTitle = 'week ' + (Math.floor(valueIndex / 7) + 1);
     }
 
-    const title = `${data.labels[valueIndex]} <span class="badge p-0">(${secondaryTitle})</span>`;
+    const title = `${data.labels[valueIndex]} <span class="pw-subtext-1">(${secondaryTitle})</span>`;
 
     return `<div>
-  <h6 class=" mb-0">${title}</h6>
+  <h6 class="mb-0">${title}</h6>
   <table>
     <tbody>
       ${seriesBuilder}
