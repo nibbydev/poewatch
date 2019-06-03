@@ -1977,7 +1977,7 @@ class ItemRow {
 
     return `
     <td class='text-center p-0'>
-        <span class='pw-subtext-1 custom-text-${color}'>${change}%</span>
+        <span class='pw-subtext-1 font-weight-bold custom-text-${color}'>${change}%</span>
     </td>`.trim();
   }
 
@@ -2000,7 +2000,7 @@ class ItemRow {
 
     return `
     <td class='text-center p-0'>
-      <span class='pw-subtext-1 custom-text-${color}'>
+      <span class='pw-subtext-1 font-weight-bold custom-text-${color}'>
         ${this.item.current}
       </span>
     </td>`.trim();
@@ -2025,7 +2025,7 @@ class ItemRow {
 
     return `
     <td class='text-center p-0'>
-      <span class='pw-subtext-1 custom-text-${color}'>
+      <span class='pw-subtext-1 font-weight-bold custom-text-${color}'>
         ${this.item.daily}
       </span>
     </td>`.trim();
@@ -2034,7 +2034,7 @@ class ItemRow {
   buildTotalField() {
     return `
     <td class='text-center p-0'>
-      <span class='pw-subtext-1 custom-text-gray-lo'>
+      <span class='pw-subtext-1 font-weight-bold custom-text-gray-lo'>
         ${this.item.total}
       </span>
     </td>`.trim();
