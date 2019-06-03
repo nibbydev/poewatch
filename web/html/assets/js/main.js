@@ -2043,6 +2043,8 @@ class ItemRow {
 
 /**
  * Item details modal for prices
+ *
+ * todo: update chart data instead of recreating
  */
 class DetailsModal {
   /**
@@ -2184,6 +2186,10 @@ class DetailsModal {
   resetData() {
     // Clear leagues from selector
     $('#modal-leagues').find('option').remove();
+    // Remove old chart
+    $('.ct-chart').empty();
+    // Show spinner
+    $('#spinner').removeClass('d-none');
 
     this.dataSets = {};
     this.current.chart = null;
@@ -2316,6 +2322,9 @@ class DetailsModal {
         break;
     }
 
+    // Hide spinner
+    $('#spinner').addClass('d-none');
+    // Create chart
     this.current.chart = new Chartist.Line('.ct-chart', data, this.chartOptions);
   }
 

@@ -141,6 +141,10 @@ include "assets/php/templates/priceNav.php";
                 </div>
               </div>
 
+              <div class="d-flex justify-content-center mb-2">
+                <div id="spinner" class="spinner-border d-none"></div>
+              </div>
+
               <div class="ct-chart"></div>
               <div class="d-flex justify-content-center">
                 <div class="btn-group btn-group-toggle mt-2" data-toggle="buttons" id="modal-radio">
