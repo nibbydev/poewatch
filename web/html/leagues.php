@@ -6,7 +6,6 @@ require_once "assets/php/templates/body.php";
 
 $PAGE_DATA["title"] = "Leagues - PoeWatch";
 $PAGE_DATA["description"] = "Countdowns for active and upcoming leagues";
-$PAGE_DATA["jsIncludes"][] = "main.js";
 
 $leagueData = getLeagueData($pdo);
 

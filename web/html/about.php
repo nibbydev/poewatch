@@ -6,7 +6,6 @@ require_once "../details/pdo.php";
 $PAGE_DATA["title"] = "About - PoeWatch";
 $PAGE_DATA["description"] = "Information about the site";
 $PAGE_DATA["pageHeader"] = "About";
-$PAGE_DATA["jsIncludes"][] = "main.js";
 
 include "assets/php/templates/header.php";
 include "assets/php/templates/navbar.php";
