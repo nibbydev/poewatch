@@ -1,7 +1,6 @@
 <?php function genBodyHeader() { ?>
 <div class='container-fluid d-flex justify-content-center p-0'>
   <div class='row body-boundaries w-100 p-3'>
-
     <div class='col-2 d-none d-xl-block pl-0'>
       <div class='row m-0'>
         <div class="card w-100 custom-card">
@@ -12,10 +11,10 @@
             foreach ($PAGE_DATA["priceCategories"] as $category) {
               $highlight = isset($_GET["category"]) && $_GET["category"] === $category['name']; ?>
               <a
-                class="d-flex align-items-center p-1 pw-hover-light <?php if ($highlight) echo "pw-highlight" ?> rounded"
+                class="d-flex align-items-center p-1 pw-hover-light text-decoration-none <?php if ($highlight) echo "pw-highlight" ?> rounded"
                 href="<?php echo $category["href"] ?>" title="<?php echo $category["display"] ?>">
                 <div class="img-container-sm d-flex justify-content-center align-items-center mr-1">
-                  <img class="img-fluid" src="<?php echo $category["icon"] ?>">
+                  <img class="img-fluid" src="<?php echo $category["icon"] ?>" alt="...">
                 </div>
                 <span class="nowrap"><?php echo $category["display"] ?></span>
               </a>
@@ -37,9 +36,7 @@
 
         <?php } ?>
 
-
-
-        <?php function genBodyFooter() { ?>
+<?php function genBodyFooter() { ?>
       </div>
     </div>
   </div>
