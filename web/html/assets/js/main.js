@@ -331,32 +331,41 @@ class ItemNameBuilder {
     let builder = '';
 
     if (item.variation) {
-      builder += `${item.variation}, `;
+      builder += item.variation + ', ';
     }
 
     if (item.category === 'map' && item.mapTier) {
-      builder += `Tier ${item.mapTier}, `;
+      builder += 'tier ' + item.mapTier + ', ';
     }
 
-    if (item.baseItemLevel) {
-      builder += `iLvl ${item.baseItemLevel}, `;
-    }
-
-    if (item.linkCount) {
-      builder += `Links ${item.linkCount}, `;
-    }
-
-    if (item.category === 'gem') {
-      builder += `Level ${item.gemLevel}, `;
-      builder += `Quality ${item.gemQuality}, `;
-
-      if (item.gemIsCorrupted) {
-        builder += 'Corrupted, ';
+    if (item.category === 'base') {
+      if (item.baseIsShaper) {
+        builder += 'shaper, ';
+      } else if (item.baseIsElder) {
+        builder += 'elder, ';
       }
     }
 
+    if (item.baseItemLevel) {
+      builder += 'iLvl ' + item.baseItemLevel + ', ';
+    }
+
+    if (item.linkCount) {
+      builder += 'links ' + item.linkCount + ', ';
+    }
+
+    if (item.category === 'gem') {
+      builder += 'level ' + item.gemLevel + ', ';
+      builder += 'quality ' + item.gemQuality + ', ';
+
+      if (item.gemIsCorrupted) {
+        builder += 'corrupted, ';
+      }
+    }
+
+    // If the item had properties, remove trailing comma+space and wrap in brackets
     if (builder) {
-      builder = `(${builder.substring(0, builder.length - 2)})`;
+      builder = '(' + builder.substring(0, builder.length - 2) + ')';
     }
 
     return builder;
