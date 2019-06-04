@@ -7,7 +7,6 @@ require_once "assets/php/func/leagues.php";
 $PAGE_DATA["title"] = "Listings - PoeWatch";
 $PAGE_DATA["description"] = "Find items sold by users";
 $PAGE_DATA["pageHeader"] = "Item listings";
-$PAGE_DATA["jsIncludes"][] = "listings.js";
 
 // Page-local data
 $PAGE_DATA["page"]["leagues"] = getLeagues($pdo);
@@ -38,7 +37,7 @@ genBodyHeader();
         <input type="text" class="form-control seamless-input" name="search" placeholder="Account name"
                value="<?php if (isset($_GET["account"])) echo htmlentities($_GET["account"]) ?>"
                id="search-input">
-        <button type="button" id="search-btn" class="btn btn-outline-dark">Search</button>
+        <button type="button" id="search-btn" class="btn btn-outline-light">Search</button>
       </div>
 
       <div id="search-status" class="d-none">Status messages can go here</div>
@@ -52,19 +51,19 @@ genBodyHeader();
       <thead>
       <tr>
         <th title="Item title" class="w-100">
-          <div class='sort-column'>Item</div>
+          <span class='sort-column'>Item</span>
         </th>
         <th title="Nr of items for sale">
-          <div class='sort-column'>Count</div>
+          <span class='sort-column'>Count</span>
         </th>
         <th title="First buyout price of the item">
-          <div class='sort-column'>Price</div>
+          <span class='sort-column'>Price</span>
         </th>
         <th title="When the item was first found">
-          <div class='sort-column'>Found</div>
+          <span class='sort-column'>Found</span>
         </th>
         <th title="When the item was last changed">
-          <div class='sort-column'>Updated</div>
+          <span class='sort-column'>Updated</span>
         </th>
       </tr>
       </thead>

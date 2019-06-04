@@ -5,11 +5,12 @@ $PAGE_DATA = [
   "description" => "A price statistics generation & collection page",
   "jsIncludes" => [
     "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js",
-    "https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js",
+    "main.js?04062019"
   ],
   "cssIncludes" => [
     "https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css",
-    "main.css"
+    "main.css?04062019"
   ],
   "headerIncludes" => [],
   "footerIncludes" => [],

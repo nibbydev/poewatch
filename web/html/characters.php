@@ -9,16 +9,9 @@ $PAGE_DATA["description"] = "Find users based on character names, account names 
 $PAGE_DATA["pageHeader"] = "Character search";
 
 // Page local data
-$PAGE_DATA["page"]["searchString"] = isset($_GET["search"]) ? $_GET["search"] : null;
-$PAGE_DATA["page"]["searchMode"] = isset($_GET["mode"]) ? $_GET["mode"] : null;
-$PAGE_DATA["page"]["totalAccs"] = 0;
-$PAGE_DATA["page"]["totalChars"] = 0;
-$PAGE_DATA["page"]["errorMsg"] = null;
-$PAGE_DATA["page"]["searchResults"] = [];
-
-CheckQueryParamErrors();
-GetTotalCounts($pdo);
-MakeSearch($pdo);
+$counts = GetTotalCounts($pdo);
+$PAGE_DATA["page"]["totalAccs"] = $counts["totalAccs"];
+$PAGE_DATA["page"]["totalChars"] = $counts["totalChars"];
 
 include "assets/php/templates/header.php";
 include "assets/php/templates/navbar.php";
@@ -38,98 +31,51 @@ genBodyHeader();
 
   <!-- Main card body -->
   <div class="card-body">
-    <!-- Search form -->
-    <form method="GET">
-      <!-- Mode -->
-      <div class="row">
-        <div class="col">
-          <div class="btn-group btn-group-toggle mr-3 mb-3" data-toggle="buttons">
-            <label
-              class="btn btn-outline-dark<?php if ($PAGE_DATA["page"]["searchMode"] === "account" || !$PAGE_DATA["page"]["searchMode"]) echo " active" ?>">
-              <input type="radio" name="mode"
-                     value="account"<?php if ($PAGE_DATA["page"]["searchMode"] === "account" || !$PAGE_DATA["page"]["searchMode"]) echo " checked" ?>>
-              <a>Account</a>
-            </label>
-            <label
-              class="btn btn-outline-dark<?php if ($PAGE_DATA["page"]["searchMode"] === "character") echo " active" ?>">
-              <input type="radio" name="mode"
-                     value="character" <?php if ($PAGE_DATA["page"]["searchMode"] === "character") echo " checked" ?>>
-              <a>Character</a>
-            </label>
-          </div>
 
-          <div class="btn-group mb-3">
-            <input type="text" class="form-control seamless-input" name="search" placeholder="Name"
-                   value="<?php if ($PAGE_DATA["page"]["searchString"]) echo htmlentities($_GET["search"]) ?>">
-            <button type="submit" class="btn btn-outline-dark">Search</button>
-          </div>
-        </div>
+    <!-- Search input -->
+    <div class="d-flex align-items-center mb-3">
+      <div class="btn-group btn-group-toggle mr-3" data-toggle="buttons" id="search-mode">
+        <label class="btn btn-outline-dark active">
+          <input type="radio" name="mode" value="account" checked>
+          <a>Account</a>
+        </label>
+        <label class="btn btn-outline-dark">
+          <input type="radio" name="mode" value="character">
+          <a>Character</a>
+        </label>
       </div>
-      <!--/Mode/-->
-      <?php
-      if ($PAGE_DATA["page"]["errorMsg"]) {
-        echo "<span class='custom-text-red'>Error: " . $PAGE_DATA["page"]["errorMsg"] . "</span>";
-      } else if ($PAGE_DATA["page"]["searchResults"]) {
-        echo "<span class='custom-text-green'>" . sizeof($PAGE_DATA["page"]["searchResults"]) . "</span> " .
-          "result" . (sizeof($PAGE_DATA["page"]["searchResults"]) === 1 ? "" : "s") . " for " .
-          "'<span class='custom-text-orange'>" . htmlentities($PAGE_DATA["page"]["searchString"]) . "</span>'";
-      } else if ($PAGE_DATA["page"]["searchString"] && !sizeof($PAGE_DATA["page"]["searchResults"])) {
-        echo "<span class='custom-text-red'>Not found!</span>";
-      }
-      ?>
-    </form>
-    <!--/Search form/-->
 
-    <?php if ($PAGE_DATA["page"]["searchResults"]) { ?>
-      <hr>
-      <!-- Content card -->
-      <div class='card api-data-table'>
-        <table class='table table-striped table-hover mb-0'>
-          <thead>
-          <tr>
-            <th>Account</th>
-            <th>Has character</th>
-            <th>In league</th>
-            <th>Last seen</th>
-            <th>Profile</th>
-          </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($PAGE_DATA["page"]["searchResults"] as $row) { ?>
-            <tr>
-              <td>
-                <a href='characters?mode=account&search=<?php echo $row["account"] ?>'>
-                  <?php if ($PAGE_DATA["page"]["searchMode"] === "account"): ?>
-                    <span class='custom-text-orange'><?php echo $row["account"] ?></span>
-                  <?php else: ?>
-                    <span><?php echo $row["account"] ?></span>
-                  <?php endif ?>
-                </a>
-              </td>
-              <td>
-                <a href='characters?mode=character&search=<?php echo $row["character"] ?>'>
-                  <?php if ($PAGE_DATA["page"]["searchMode"] === "character"): ?>
-                    <span class='custom-text-orange'><?php echo $row["character"] ?></span>
-                  <?php else: ?>
-                    <span><?php echo $row["character"] ?></span>
-                  <?php endif ?>
-                </a>
-              </td>
-              <td><?php echo $row["active"] ? $row["league"] : "Standard  ({$row["league"]})" ?></td>
-              <td><?php echo FormatTimestamp($row["seen"]) ?></td>
-              <td>
-                <a href='https://www.pathofexile.com/account/view-profile/<?php echo $row["account"] ?>'
-                   target="_blank">
-                  <span class="custom-text-green">(New tab ⬈)</span>
-                </a>
-              </td>
-            </tr>
-          <?php } ?>
-          </tbody>
-        </table>
+      <div class="btn-group mr-3">
+        <input type="text" class="form-control seamless-input" name="search" placeholder="Name" id="search-input">
+        <button type="button" id="search-btn" class="btn btn-outline-light">Search</button>
       </div>
-      <!--/Content card/-->
-    <?php } ?>
+
+      <div id="search-status" class="d-none">Status messages can go here</div>
+    </div>
+    <!--/Search input/-->
+
+    <!-- Spinner thingy -->
+    <div class="d-flex justify-content-center mb-2">
+      <div id="spinner" class="spinner-border d-none"></div>
+    </div>
+    <!--/Spinner thingy/-->
+
+    <!-- Main table -->
+    <table class="table price-table table-striped table-hover mb-0 table-responsive d-none" id="search-results">
+      <thead>
+      <tr>
+        <th class="text-nowrap pr-2" title="Account name of the user">Account</th>
+        <th class="text-nowrap w-100" title="Character name of the user">Has character</th>
+        <th class="text-nowrap pr-2" title="First found in what league">In league</th>
+        <th class="text-nowrap pr-2" title="Time first seen">First found</th>
+        <th class="text-nowrap" title="Time last seen">Last seen</th>
+      </tr>
+      </thead>
+
+      <tbody class="custom-text-gray-lo"></tbody>
+
+    </table>
+    <!--/Main table/-->
   </div>
   <!--/Main card body/-->
 

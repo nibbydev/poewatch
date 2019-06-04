@@ -1,13 +1,11 @@
 <?php
 require_once "assets/php/pageData.php";
 require_once "assets/php/templates/body.php";
-require_once "assets/php/func/feedback.php";
 require_once "../details/pdo.php";
 
 $PAGE_DATA["title"] = "About - PoeWatch";
 $PAGE_DATA["description"] = "Information about the site";
 $PAGE_DATA["pageHeader"] = "About";
-$postStatus = processPOST($pdo);
 
 include "assets/php/templates/header.php";
 include "assets/php/templates/navbar.php";
@@ -29,23 +27,17 @@ genBodyHeader();
         <a class="custom-text-green" href="https://discord.gg/YTt2AdG">https://discord.gg/YTt2AdG</a>.
       </p>
 
-      <form method="POST">
+      <div>
         <div class="form-group">
-          <textarea class='form-control' name='message' placeholder='Type a message'
-                    rows='4'><?php if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['message'])) echo htmlentities($_POST['message']) ?></textarea>
+          <textarea class='form-control' id='post-message' placeholder='Type a message' rows='4'></textarea>
         </div>
         <div class="btn-group float-right">
-          <input type='text' class='form-control seamless-input' name='contact'
-                 value='<?php if ($postStatus && $postStatus['status'] === 'error' && isset($_POST['contact'])) echo htmlentities($_POST['contact']) ?>'
-                 placeholder='Contact address'>
-          <button type="submit" class="btn btn-outline-dark">Send</button>
+          <input type='text' class='form-control seamless-input' id='post-contact' placeholder='Contact address'>
+          <button id='post-submit' class="btn btn-outline-dark">Send</button>
         </div>
-      </form>
+      </div>
 
-      <?php if ($postStatus): ?>
-        <span
-          class='custom-text-<?php echo $postStatus['status'] === "error" ? "red" : "green" ?>'><?php echo $postStatus['message'] ?></span>
-      <?php endif ?>
+      <div id="search-status" class="d-none">Status messages can go here</div>
     </div>
 
     <div class="card-footer slim-card-edge"></div>

@@ -6,7 +6,6 @@ $PAGE_DATA["title"] = "Lab - PoeWatch";
 $PAGE_DATA["description"] = "Just the images from poelab";
 $PAGE_DATA["pageHeader"] = "Labyrinth layouts";
 $PAGE_DATA["headerIncludes"][] = "<meta name='referrer' content='no-referrer'/>";
-$PAGE_DATA["jsIncludes"][] = "lab.js";
 
 include "assets/php/templates/header.php";
 include "assets/php/templates/navbar.php";

@@ -221,10 +221,6 @@ public class Calc {
                 "join ( " +
                 "  select le.id_l, le.id_d, count(*) as count " +
                 "  from league_entries as le " +
-                "  join ( " +
-                "    select distinct account_crc from league_accounts " +
-                "    where seen > date_sub(now(), interval 6 hour) " +
-                "  ) as foo2 on le.account_crc = foo2.account_crc " +
                 "  where le.stash_crc is not null " +
                 "  group by le.id_l, le.id_d " +
                 ") as foo1 on foo1.id_l = li.id_l and foo1.id_d = li.id_d " +

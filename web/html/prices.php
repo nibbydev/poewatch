@@ -11,7 +11,6 @@ $PAGE_DATA["description"] = "Discover the average price of almost any item";
 $PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css";
 $PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
 $PAGE_DATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
-$PAGE_DATA["jsIncludes"][] = "prices.js";
 
 // Get list of leagues that have items
 $leagueList = GetItemLeagues($pdo);
@@ -37,10 +36,7 @@ include "assets/php/templates/priceNav.php";
       <div class="modal-header d-flex align-items-center">
         <div class="row d-flex justify-content-between w-100 m-0">
           <div class="col-12 col-sm-8 d-flex align-items-center p-0 mb-3 mb-sm-0">
-            <span class="img-container img-container-lg text-center mr-1">
-              <img id="modal-icon">
-            </span>
-            <h4 id="modal-name" target="_blank"></h4>
+            <h4 id="modal-name" class="mb-0"></h4>
           </div>
 
           <div
@@ -51,12 +47,6 @@ include "assets/php/templates/priceNav.php";
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
-      </div>
-
-      <div id="modal-body-buffer" class="modal-body d-flex justify-content-center">
-        <div class="row m-0">
-          <div class="buffering" id="buffering-modal"></div>
-        </div>
       </div>
 
       <div id="modal-body-content" class="modal-body">
@@ -127,18 +117,44 @@ include "assets/php/templates/priceNav.php";
           <hr>
           <div class="row m-0">
             <div class="col">
-              <h4>Past data</h4>
+              <div class="d-flex flex-row">
+                <h4>Past data</h4>
+                <a class="cursor-pointer badge custom-text-gray-lo" data-toggle="collapse"
+                   data-target="#modal-info">(?)</a>
+              </div>
+
+              <div class="collapse" id="modal-info">
+                <div>
+                  Mean, median and mode are all ways of calculating an average:
+                  <ul class="mb-0">
+                    <li><span class="pw-subtext-1 custom-text-green">Mean</span> being the sum divided by the number of elements</li>
+                    <li><span class="pw-subtext-1 custom-text-green">Median</span> is the center-most element (of a sorted list)</li>
+                    <li><span class="pw-subtext-1 custom-text-green">Mode</span> is the most common element in the list</li>
+                  </ul>
+                  Counts are defined as follows:
+                  <ul class="mb-0">
+                    <li><span class="pw-subtext-1 custom-text-green">Daily</span> is number of items listed in the past 24h</li>
+                    <li><span class="pw-subtext-1 custom-text-green">Now</span> is the number of items currently on sale</li>
+                  </ul>
+                  Colors do not carry any significant meaning aside from telling the lines apart.
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-center mb-2">
+                <div id="spinner" class="spinner-border d-none"></div>
+              </div>
+
               <div class="ct-chart"></div>
               <div class="d-flex justify-content-center">
                 <div class="btn-group btn-group-toggle mt-2" data-toggle="buttons" id="modal-radio">
-                  <label class="btn btn-outline-success btn-md p-0 px-1 active"><input type="radio" name="dataset"
-                                                                                       value="1">Mean</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="2">Median</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="3">Mode</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="4">Listed
-                    daily</label>
-                  <label class="btn btn-outline-success btn-md p-0 px-1"><input type="radio" name="dataset" value="5">On
-                    sale</label>
+                  <label class="btn btn-outline-dark p-0 px-1 active">
+                    <input type="radio" name="dataset" value="1">
+                    <span>Prices</span>
+                  </label>
+                  <label class="btn btn-outline-dark p-0 px-1">
+                    <input type="radio" name="dataset" value="4">
+                    <span>Counts</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -249,9 +265,14 @@ include "assets/php/templates/priceNav.php";
       <table class="table price-table table-striped table-hover mb-0 table-responsive" id="searchResults">
         <thead>
         <tr>
-
-          <?php AddTableHeaders($category) ?>
-
+          <th class="w-100"><span class="sort-column">Item</span></th>
+          <th class="d-none d-md-block">Spark</th>
+          <th><span class="sort-column">Chaos</span></th>
+          <th class="d-none d-md-block">Exalted</th>
+          <th><span class="sort-column" title="Price compared to 7d ago">Change</span></th>
+          <th><span class="sort-column" title="Number of items currently on sale">Now</span></th>
+          <th><span class="sort-column" title="Number of items listed every 24h">Daily</span></th>
+          <th><span class="sort-column" title="Total number of items listed">Total</span></th>
         </tr>
         </thead>
         <tbody></tbody>

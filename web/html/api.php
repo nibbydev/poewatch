@@ -367,7 +367,8 @@ $APIColumns = [
     "name" => "get",
     "desc" => "Returns price and item data for specified league and category. 
       Items are listed in decreasing order from most expensive to least expensive. 
-      Updated every 10 minutes. Capitalization does not matter for request fields.",
+      Request fields are case-insensitive. It's advisable to use a singular request 
+      to the compact API, rather than multiple requests to this API.",
     "request" => [
       [
         "param" => "league",
@@ -405,6 +406,88 @@ $APIColumns = [
         "type" => "list (float)",
         "desc" => "Mean prices from last 7 days. Last element is current mean."
       ]
+    ]
+  ],
+  // compact api
+  [
+    "href" => "https://api.poe.watch/compact?league=Standard",
+    "name" => "compact",
+    "desc" => "Return price data (id, mean, median, mode, min, max, total, daily, exalted) 
+      of all items of the provided active league. IDs can be found in itemdata API described above.",
+    "request" => [
+      [
+        "param" => "league",
+        "required" => true,
+        "desc" => "Valid league name"
+      ]
+    ],
+    "reply" => [
+      [
+        "param" => "id",
+        "condition" => null,
+        "type" => "uint",
+        "desc" => "Unique id of the item (see itemdata api)"
+      ],
+      [
+        "param" => "mean",
+        "condition" => null,
+        "type" => "float",
+        "desc" => "Mean average price"
+      ],
+      [
+        "param" => "median",
+        "condition" => null,
+        "type" => "float",
+        "desc" => "Median average price"
+      ],
+      [
+        "param" => "mode",
+        "condition" => null,
+        "type" => "float",
+        "desc" => "Mode average price"
+      ],
+      [
+        "param" => "min",
+        "condition" => null,
+        "type" => "float",
+        "desc" => "Min accepted average price"
+      ],
+      [
+        "param" => "max",
+        "condition" => null,
+        "type" => "float",
+        "desc" => "Max accepted average price"
+      ],
+      [
+        "param" => "exalted",
+        "condition" => null,
+        "type" => "float",
+        "desc" => "Mean price in exalted"
+      ],
+      [
+        "param" => "total",
+        "condition" => null,
+        "type" => "uint",
+        "desc" => "Total nr of items found"
+      ],
+      [
+        "param" => "daily",
+        "condition" => null,
+        "type" => "uint",
+        "desc" => "Nr of items found per 24h"
+      ],
+      [
+        "param" => "current",
+        "condition" => null,
+        "type" => "uint",
+        "desc" => "Nr of items currently on sale"
+      ],
+      [
+        "param" => "accepted",
+        "condition" => null,
+        "type" => "uint",
+        "desc" => "Nr of items accepted for price calculation"
+      ],
     ]
   ],
   // item api
@@ -475,88 +558,6 @@ $APIColumns = [
         "condition" => null,
         "type" => "float",
         "desc" => "Mode average price"
-      ],
-      [
-        "param" => "daily",
-        "condition" => null,
-        "type" => "uint",
-        "desc" => "Nr of items found per 24h"
-      ],
-      [
-        "param" => "current",
-        "condition" => null,
-        "type" => "uint",
-        "desc" => "Nr of items currently on sale"
-      ],
-      [
-        "param" => "accepted",
-        "condition" => null,
-        "type" => "uint",
-        "desc" => "Nr of items accepted for price calculation"
-      ],
-    ]
-  ],
-  // compact api
-  [
-    "href" => "https://api.poe.watch/compact?league=Standard",
-    "name" => "compact",
-    "desc" => "Return price data (id, mean, median, mode, min, max, total, daily, exalted) 
-      of all items of the provided active league. IDs can be found in itemdata API described above.",
-    "request" => [
-      [
-        "param" => "league",
-        "required" => true,
-        "desc" => "Valid league name"
-      ]
-    ],
-    "reply" => [
-      [
-        "param" => "id",
-        "condition" => null,
-        "type" => "uint",
-        "desc" => "Unique id of the item (see itemdata api)"
-      ],
-      [
-        "param" => "mean",
-        "condition" => null,
-        "type" => "float",
-        "desc" => "Mean average price"
-      ],
-      [
-        "param" => "median",
-        "condition" => null,
-        "type" => "float",
-        "desc" => "Median average price"
-      ],
-      [
-        "param" => "mode",
-        "condition" => null,
-        "type" => "float",
-        "desc" => "Mode average price"
-      ],
-      [
-        "param" => "min",
-        "condition" => null,
-        "type" => "float",
-        "desc" => "Min accepted average price"
-      ],
-      [
-        "param" => "max",
-        "condition" => null,
-        "type" => "float",
-        "desc" => "Max accepted average price"
-      ],
-      [
-        "param" => "exalted",
-        "condition" => null,
-        "type" => "float",
-        "desc" => "Mean price in exalted"
-      ],
-      [
-        "param" => "total",
-        "condition" => null,
-        "type" => "uint",
-        "desc" => "Total nr of items found"
       ],
       [
         "param" => "daily",

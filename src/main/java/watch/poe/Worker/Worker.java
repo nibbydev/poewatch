@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
 public class Worker extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(Worker.class);
     private static final Pattern changeIdPattern = Pattern.compile("\\d+(-\\d+){4}");
+    private static final Pattern exceptionPattern5xx = Pattern.compile("^.+ 5\\d\\d .+$");
+    private static final Pattern exceptionPattern4xx = Pattern.compile("^.+ 4\\d\\d .+$");
+
     private static long lastPullTime;
     private final WorkerManager workerManager;
     private final StatisticsManager statisticsManager;
@@ -178,9 +181,9 @@ public class Worker extends Thread {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT, null);
             } else if (ex.getMessage().contains("Connection reset")) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONN_RESET, null);
-            } else if (ex.getMessage().contains("502") || ex.getMessage().contains("503")) {
+            } else if (exceptionPattern5xx.matcher(ex.getMessage()).matches()) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_5XX, null);
-            } else if (ex.getMessage().contains("429")) {
+            } else if (exceptionPattern4xx.matcher(ex.getMessage()).matches()) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_429, null);
             }
 

@@ -137,7 +137,13 @@ input.form-control,select.form-control {
 .btn-outline-dark {
   color: #ddd;
   border-color: rgba(255,255,255,.2);
-  background-color: rgba(0,0,0,.15);
+  background-color: rgba(0,0,0,.3);
+}
+
+.btn-outline-light {
+  color: #ddd;
+  border-color: rgba(255,255,255,.2);
+  background-color: rgba(255,255,255,.05);
 }
 
 .btn-outline-dark:hover {
@@ -150,10 +156,11 @@ input.form-control,select.form-control {
   box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0);
 }
 
-.btn-outline-dark:not(:disabled):not(.disabled):active, .btn-outline-dark:not(:disabled):not(.disabled).active,
+.btn-outline-dark:not(:disabled):not(.disabled):active,
+.btn-outline-dark:not(:disabled):not(.disabled).active,
 .show > .btn-outline-dark.dropdown-toggle {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: #333;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255,255,255, .1);
 }
 
 .form-group input,
@@ -294,6 +301,9 @@ footer {
 .item-shaper {color: #aaafdd}
 .item-elder {color: #c2aadd}
 
+.item-unique-secondary {color: #7d5f47}
+.item-foil-secondary {color: #46694a}
+
 /*------------------------------------------------------------------------------------------------------------
 // Colors
 //----------------------------------------------------------------------------------------------------------*/
@@ -363,7 +373,8 @@ footer {
 
 .paragraph-text         {color: #bbb}
 
-.color-patron {color: rgb(249, 108, 84) !important}
+.pw-subtext-1 {font-size: 75%}
+.pw-subtext-2 {font-size: 85%}
 
 pre {
   color: inherit;
@@ -391,7 +402,7 @@ pre {
 }
 
 .sort-column,
-.cursor-pointer { cursor: pointer; }
+.cursor-pointer {cursor: pointer}
 
 /*------------------------------------------------------------------------------------------------------------
 // Manual Bootstrap
@@ -435,26 +446,36 @@ canvas {
 }
 
 /* graph grid */
-.ct-grids line {
-  stroke: rgba(255,255,255,.2);
-}
-
+.ct-grids line {stroke: rgba(255,255,255,.2)}
 /* graph labels*/
-.ct-labels span {
-  color: rgba(255,255,255,.5);
+.ct-labels span {color: rgba(255,255,255,.5)}
+
+/* line thickness */
+.ct-line {stroke-width: .15em !important}
+/* point size */
+.ct-point {stroke-width: 4px !important}
+
+/* a-series color override */
+.ct-series.ct-series-a .ct-point,
+.ct-series.ct-series-a .ct-line,
+.ct-series.ct-series-a .ct-bar {
+  stroke: #70ca5a;
 }
 
-/* graph line */
-.ct-series.ct-series-a .ct-line {
-  stroke: rgb(112, 202, 90);
-  stroke-width: .15em;
+/* f-series color override */
+.ct-series.ct-series-e .ct-point,
+.ct-series.ct-series-e .ct-line,
+.ct-series.ct-series-e .ct-bar {
+  stroke: #962e3e;
 }
 
-/* hide points by default */
-.ct-series.ct-series-a .ct-point {
-  stroke-width: 0;
-  stroke: rgb(112, 202, 90);
-}
+/* series text colors */
+.ct-series-a-text {color: #70ca5a}
+.ct-series-b-text {color: #f05b4f}
+.ct-series-c-text {color: #f4c63d}
+.ct-series-d-text {color: #d17905}
+.ct-series-e-text {color: #962e3e}
+.ct-series-f-text {color: #59922b}
 
 .chartist-tooltip {
   position: absolute;
@@ -462,15 +483,14 @@ canvas {
   top: 0;
   z-index: 1100;
   display: inline-block;
-  padding: .2em .8em;
+  padding: .2em .4em;
   visibility: hidden;
   transform: translateY(3em);
   opacity: 0;
   border-radius: 0.25em;
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(25,25,25,0.9);
   box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease-in-out;
-  color: rgba(0, 0, 0, 0.9);
 }
 
 .chartist-tooltip:not([hidden]) {
@@ -487,10 +507,9 @@ canvas {
   left: calc(50% - .5em);
   top: 100%;
   z-index: -1;
-  font-size: 1.3em;
-  line-height: .5em;
+  font-size: 1em;
   font-family: Arial, sans-serif;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(25,25,25,0.9);
   transform: scaleY(0.7);
   text-shadow: 0 0.25em 0.35em rgba(0, 0, 0, 0.1);
 }
