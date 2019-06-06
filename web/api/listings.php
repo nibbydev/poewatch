@@ -64,8 +64,9 @@ function get_data($pdo, $league, $account, $onlyPriced)
   join data_itemData as did on le.id_d = did.id
   left join data_categories as dc on dc.id = did.id_cat
   left join data_groups as dg on dg.id = did.id_grp
+  join league_accounts as la on le.id_a = la.id
   where dl.name = ?
-    and le.account_crc = crc32(?)
+    and la.name = ?
     and le.stash_crc is not null
     and (le.price is not null or ?)
   group by le.id_d";
