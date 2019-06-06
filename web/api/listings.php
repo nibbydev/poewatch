@@ -43,10 +43,9 @@ function check_errors()
  * @param $pdo PDO Open database connection
  * @param $league string League name, case-insensitive
  * @param $account string Account name, case-sensitive
- * @param $onlyPriced bool Filter out entries without a price
  * @return array containing the aggregated items and prices
  */
-function get_data($pdo, $league, $account, $onlyPriced)
+function get_data($pdo, $league, $account)
 {
   $query = "select 
     le.id_d as id,
@@ -68,11 +67,10 @@ function get_data($pdo, $league, $account, $onlyPriced)
   where dl.name = ?
     and la.name = ?
     and le.stash_crc is not null
-    and (le.price is not null or ?)
   group by le.id_d";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$league, $account, $onlyPriced ? 0 : 1]);
+  $stmt->execute([$league, $account]);
   $payload = [];
 
   while ($row = $stmt->fetch()) {
@@ -166,6 +164,5 @@ header("Content-Type: application/json");
 check_errors();
 include_once("../details/pdo.php");
 
-$onlyPriced = isset($_GET["onlyPriced"]) ? true : false;
-$payload = get_data($pdo, $_GET["league"], $_GET["account"], $onlyPriced);
+$payload = get_data($pdo, $_GET["league"], $_GET["account"]);
 echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);

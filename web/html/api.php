@@ -597,11 +597,6 @@ $APIColumns = [
         "required" => true,
         "desc" => "Case sensitive account name"
       ],
-      [
-        "param" => "onlyPriced",
-        "required" => false,
-        "desc" => "If present, listings with no price will be excluded"
-      ],
     ],
     "reply" => [
       [
@@ -614,7 +609,7 @@ $APIColumns = [
         "param" => "discovered",
         "condition" => null,
         "type" => "ISO 8601 UTC time",
-        "desc" => "Time the item was discovered"
+        "desc" => "Time the item was first discovered"
       ],
       [
         "param" => "updated",
@@ -643,6 +638,14 @@ include "assets/php/templates/navbar.php";
 include "assets/php/templates/priceNav.php";
 genBodyHeader();
 ?>
+
+<div class="col-12 d-flex justify-content-center">
+  <p class="pw-subtext-2 mb-4">
+    For updates and general questions feel free to join the server at
+    <a class="custom-text-green" href="https://discord.gg/YTt2AdG">https://discord.gg/YTt2AdG</a>.
+  </p>
+</div>
+
 <?php foreach ($APIColumns as $API) { ?>
   <div class="col-12">
     <div class="card custom-card mb-3">
