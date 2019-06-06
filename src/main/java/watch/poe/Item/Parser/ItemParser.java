@@ -100,7 +100,11 @@ public class ItemParser {
 
             // Create user (character name can be null here)
             User user = new User(id_l, stash.accountName, stash.lastCharacterName);
-            users.add(user);
+            if (users.contains(user)) {
+                user = users.get(users.indexOf(user));
+            } else {
+                users.add(user);
+            }
 
             boolean hasValidItems = false;
 

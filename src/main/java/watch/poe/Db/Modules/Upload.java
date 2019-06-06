@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -245,18 +246,19 @@ public class Upload {
             }
 
             try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                for (User user : users) {
+                // Create list so ordering would be persistent
+                List<User> userList = new ArrayList<>(users);
+
+                for (User user : userList) {
                     statement.setString(1, user.accountName);
                     statement.addBatch();
                 }
 
                 statement.executeBatch();
-
                 ResultSet keys = statement.getGeneratedKeys();
-                Iterator<User> userIterator = users.iterator();
 
-                while (keys.next() && userIterator.hasNext()) {
-                    User user = userIterator.next();
+                for (User user : userList) {
+                    keys.next();
                     user.accountId = keys.getLong(1);
                 }
             }
