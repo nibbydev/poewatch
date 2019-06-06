@@ -118,12 +118,11 @@ public class Calc {
     public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle) {
         String query = "select le.price, le.id_price " +
                 "from league_entries as le " +
-                "join ( " +
-                "  select distinct account_crc from league_accounts " +
-                "  where seen > date_sub(now(), interval 8 hour) " +
-                ") as foo2 on le.account_crc = foo2.account_crc " +
+                "join league_accounts as la " +
+                "  on le.id_a = la.id " +
                 "where le.id_l = ? " +
                 "  and le.id_d = ? " +
+                "  and la.seen > date_sub(now(), interval 8 hour) " +
                 "  and le.stash_crc is not null " +
                 "  and le.price is not null ";
 

@@ -168,14 +168,33 @@ CREATE TABLE league_items (
 --
 
 CREATE TABLE league_accounts (
-    account_crc  INT            UNSIGNED PRIMARY KEY,
-    updates      INT            UNSIGNED NOT NULL DEFAULT 1,
+     id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
 
-    found        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+     name   VARCHAR(32)  NOT NULL UNIQUE,
+     found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+     INDEX seen (seen)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Table structure league_characters
+--
+
+CREATE TABLE league_characters (
+    id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id_l   SMALLINT     UNSIGNED NOT NULL,
+    id_a   BIGINT       UNSIGNED NOT NULL,
+
+    name   VARCHAR(32)  NOT NULL UNIQUE,
+    found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (id_l) REFERENCES data_leagues    (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_a) REFERENCES league_accounts (id) ON DELETE CASCADE,
 
     INDEX seen (seen)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Table structure league_entries
@@ -184,8 +203,8 @@ CREATE TABLE league_accounts (
 CREATE TABLE league_entries (
     id_l         SMALLINT       UNSIGNED NOT NULL,
     id_d         INT            UNSIGNED NOT NULL,
+    id_a         BIGINT         UNSIGNED NOT NULL,
 
-    account_crc  INT            UNSIGNED NOT NULL,
     stash_crc    INT            UNSIGNED DEFAULT NULL,
     item_crc     INT            UNSIGNED NOT NULL,
 
@@ -199,13 +218,12 @@ CREATE TABLE league_entries (
 
     FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
-    FOREIGN KEY (account_crc) REFERENCES league_accounts (account_crc) ON DELETE CASCADE,
+    FOREIGN KEY (id_a) REFERENCES league_accounts (id) ON DELETE CASCADE,
     FOREIGN KEY (id_price) REFERENCES data_itemData (id) ON DELETE CASCADE,
-    CONSTRAINT pk PRIMARY KEY (id_l, id_d, account_crc, item_crc),
+    CONSTRAINT pk PRIMARY KEY (id_l, id_d, id_a, item_crc),
 
     INDEX discovered (discovered),
     INDEX updated (updated),
-    INDEX account_crc (account_crc),
     INDEX del (stash_crc, updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -233,43 +251,6 @@ CREATE TABLE league_history_daily (
 
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------------------------------------------------------------------
--- Account tables
--- --------------------------------------------------------------------------------------------------------------------
-
---
--- Table structure account_accounts
---
-
-CREATE TABLE account_accounts (
-    id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-
-    name   VARCHAR(32)  NOT NULL UNIQUE,
-    found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    INDEX seen (seen)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Table structure account_characters
---
-
-CREATE TABLE account_characters (
-    id     BIGINT       UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_l   SMALLINT     UNSIGNED NOT NULL,
-    id_a   BIGINT       UNSIGNED NOT NULL,
-
-    name   VARCHAR(32)  NOT NULL UNIQUE,
-    found  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    seen   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (id_l) REFERENCES data_leagues     (id) ON DELETE CASCADE,
-    FOREIGN KEY (id_a) REFERENCES account_accounts (id) ON DELETE CASCADE,
-
-    INDEX seen (seen)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Web tables

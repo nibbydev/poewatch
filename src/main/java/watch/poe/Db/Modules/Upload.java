@@ -4,12 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
 import poe.Item.Parser.DbItemEntry;
-import poe.Item.Parser.RawUsernameEntry;
+import poe.Item.Parser.User;
 import poe.Managers.League.BaseLeague;
 import poe.Managers.Price.Bundles.ResultBundle;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -28,7 +31,7 @@ public class Upload {
      * @return True on success
      */
     public boolean uploadEntries(Set<DbItemEntry> set) {
-        String query = "INSERT INTO league_entries (id_l, id_d, account_crc, stash_crc, item_crc, stack, price, id_price) " +
+        String query = "INSERT INTO league_entries (id_l, id_d, id_a, stash_crc, item_crc, stack, price, id_price) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
                 "  updates = IF(price <=> VALUES(price) && stack <=> VALUES(stack) && id_price <=> VALUES(id_price), updates, updates + 1)," +
@@ -48,7 +51,7 @@ public class Upload {
                 for (DbItemEntry raw : set) {
                     statement.setInt(1, raw.id_l);
                     statement.setInt(2, raw.id_d);
-                    statement.setLong(3, raw.account_crc);
+                    statement.setLong(3, raw.user.accountId);
                     statement.setLong(4, raw.stash_crc);
                     statement.setLong(5, raw.item_crc);
 
@@ -110,41 +113,6 @@ public class Upload {
                 statement.setInt(7, result.getIdBundle().getLeagueId());
                 statement.setInt(8, result.getIdBundle().getItemId());
                 statement.execute();
-            }
-
-            database.connection.commit();
-            return true;
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-            return false;
-        }
-    }
-
-    /**
-     * Uploads account hashes to database
-     *
-     * @param set Set of hashes
-     * @return True on success
-     */
-    public boolean uploadAccounts(Set<Long> set) {
-        String query = "INSERT INTO league_accounts (account_crc) " +
-                "VALUES (?) " +
-                "ON DUPLICATE KEY UPDATE " +
-                "  updates = updates + 1 ";
-
-        try {
-            if (database.connection.isClosed()) {
-                logger.error("Database connection was closed");
-                return false;
-            }
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                for (Long crc : set) {
-                    statement.setLong(1, crc);
-                    statement.addBatch();
-                }
-
-                statement.executeBatch();
             }
 
             database.connection.commit();
@@ -261,16 +229,14 @@ public class Upload {
     }
 
     /**
-     * Uploads gathered account and character names to the account database
+     * Uploads gathered account names to the database
      *
-     * @param usernameSet Contains account, character and league name
+     * @param users
      * @return True on success
      */
-    public boolean uploadUsernames(Set<RawUsernameEntry> usernameSet) {
-        String query1 = "INSERT INTO account_accounts (name) VALUES (?) ON DUPLICATE KEY UPDATE seen = VALUES(seen) ";
-        String query2 = "INSERT INTO account_characters (id_l, name, id_a) " +
-                "select ?, ?, (select id from account_accounts where name = ? limit 1) " +
-                "ON DUPLICATE KEY UPDATE id = id";
+    public boolean uploadAccountNames(List<User> users) {
+        String query = "INSERT INTO league_accounts (name) VALUES (?) " +
+                        "ON DUPLICATE KEY UPDATE seen = now();";
 
         try {
             if (database.connection.isClosed()) {
@@ -278,32 +244,59 @@ public class Upload {
                 return false;
             }
 
-            int counter;
-
-            try (PreparedStatement statement = database.connection.prepareStatement(query1)) {
-                counter = 0;
-
-                for (RawUsernameEntry rawUsernameEntry : usernameSet) {
-                    statement.setString(1, rawUsernameEntry.account);
+            try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+                for (User user : users) {
+                    statement.setString(1, user.accountName);
                     statement.addBatch();
-
-                    if (++counter % 500 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();
+
+                ResultSet keys = statement.getGeneratedKeys();
+                Iterator<User> userIterator = users.iterator();
+
+                while (keys.next() && userIterator.hasNext()) {
+                    User user = userIterator.next();
+                    user.accountId = keys.getLong(1);
+                }
             }
 
+            database.connection.commit();
+            return true;
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+            return false;
+        }
+    }
 
-            try (PreparedStatement statement = database.connection.prepareStatement(query2)) {
-                counter = 0;
 
-                for (RawUsernameEntry rawUsernameEntry : usernameSet) {
-                    statement.setInt(1, rawUsernameEntry.league);
-                    statement.setString(2, rawUsernameEntry.character);
-                    statement.setString(3, rawUsernameEntry.account);
+    /**
+     * Uploads gathered character names to the database
+     *
+     * @param users
+     * @return True on success
+     */
+    public boolean uploadCharacterNames(List<User> users) {
+        String query = "INSERT INTO league_characters (id_l, id_a, name) VALUES (?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE seen = now();";
+
+        try {
+            if (database.connection.isClosed()) {
+                logger.error("Database connection was closed");
+                return false;
+            }
+
+            try (PreparedStatement statement = database.connection.prepareStatement(query)) {
+                for (User user : users) {
+                    // If for some reason we didn't get a key
+                    if (user.accountId == 0) continue;
+                    // Some char names can be null in the api
+                    if (user.characterName == null) continue;
+
+                    statement.setInt(1, user.leagueId);
+                    statement.setLong(2, user.accountId);
+                    statement.setString(3, user.characterName);
                     statement.addBatch();
-
-                    if (++counter % 500 == 0) statement.executeBatch();
                 }
 
                 statement.executeBatch();

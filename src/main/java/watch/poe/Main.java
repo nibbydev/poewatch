@@ -66,8 +66,7 @@ public class Main {
 
             // Get category, item and currency data
             RelationManager rm = new RelationManager(db);
-            success = rm.init();
-            if (!success) {
+            if (!rm.init()) {
                 logger.error("Could not get relations");
                 return;
             }
@@ -76,14 +75,12 @@ public class Main {
             Price.setRelationManager(rm);
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
-            wm = new WorkerManager(cnf, im, db, sm, lm, ip);
-
-            // Get all distinct stash ids that are in the db
-            success = db.init.getStashIds(ip.getStashCrcSet());
-            if (!success) {
-                logger.error("Could not get active stash IDs");
+            if (!ip.init()) {
+                logger.error("Could not initialize item parser");
                 return;
             }
+
+            wm = new WorkerManager(cnf, im, db, sm, lm, ip);
 
             // Parse CLI parameters
             success = parseCommandParameters(args);

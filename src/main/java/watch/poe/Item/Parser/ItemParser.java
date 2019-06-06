@@ -16,6 +16,7 @@ import poe.Managers.StatisticsManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.CRC32;
 
@@ -39,9 +40,19 @@ public class ItemParser {
         crc = new CRC32();
     }
 
+    /**
+     * Class instance initializer
+     *
+     * @return True on success
+     */
+    public boolean init() {
+        // Get *all* stash ids
+        boolean success = database.init.getStashIds(dbStashes);
+        if (!success) {
+            return false;
+        }
 
-    public Set<Long> getStashCrcSet() {
-        return dbStashes;
+        return true;
     }
 
     private long calcCrc(String str) {
@@ -54,17 +65,14 @@ public class ItemParser {
         }
     }
 
-
     /**
      * Parses the raw items found on the stash api
      */
     public void processApiReply(Reply reply) {
-        // Set of account names and items extracted from the API call
-        Set<Long> accounts = new HashSet<>();
+        List<User> users = new ArrayList<>();
+
         Set<Long> nullStashes = new HashSet<>();
         Set<DbItemEntry> dbItems = new HashSet<>();
-        // Separate set for collecting account and character names
-        Set<RawUsernameEntry> usernames = new HashSet<>();
         int totalItemCount = 0;
 
         for (Stash stash : reply.stashes) {
@@ -77,7 +85,6 @@ public class ItemParser {
             }
 
             // Calculate CRCs
-            long account_crc = calcCrc(stash.accountName);
             long stash_crc = calcCrc(stash.id);
 
             // If the stash is in use somewhere in the database
@@ -90,6 +97,10 @@ public class ItemParser {
             if (stash.accountName == null || !stash.isPublic) {
                 continue;
             }
+
+            // Create user (character name can be null here)
+            User user = new User(id_l, stash.accountName, stash.lastCharacterName);
+            users.add(user);
 
             boolean hasValidItems = false;
 
@@ -112,8 +123,11 @@ public class ItemParser {
                     Integer id_d = relationManager.index(item, id_l);
                     if (id_d == null) continue;
 
-                    DbItemEntry entry = new DbItemEntry(id_l, id_d, account_crc, stash_crc, calcCrc(apiItem.getId()),
-                            item.getStackSize(), price);
+                    // Find crc of item's ID
+                    long itemCrc = calcCrc(apiItem.getId());
+
+                    // Create DB entry object
+                    DbItemEntry entry = new DbItemEntry(id_l, id_d, stash_crc, itemCrc, item.getStackSize(), price, user);
                     dbItems.add(entry);
 
                     // Set flag to indicate the stash contained at least 1 valid item
@@ -124,12 +138,6 @@ public class ItemParser {
             // If stash contained at least 1 valid item, save the account
             if (hasValidItems) {
                 dbStashes.add(stash_crc);
-                accounts.add(account_crc);
-            }
-
-            // As this is a completely separate service, collect all character and account names separately
-            if (stash.lastCharacterName != null) {
-                usernames.add(new RawUsernameEntry(stash.accountName, stash.lastCharacterName, id_l));
             }
         }
 
@@ -139,10 +147,10 @@ public class ItemParser {
         statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
 
         // Shovel everything to db
-        database.upload.uploadAccounts(accounts);
+        database.upload.uploadAccountNames(users);
+        database.upload.uploadCharacterNames(users);
         database.flag.resetStashReferences(nullStashes);
         database.upload.uploadEntries(dbItems);
-        database.upload.uploadUsernames(usernames);
     }
 
 
