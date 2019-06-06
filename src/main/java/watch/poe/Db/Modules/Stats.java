@@ -152,7 +152,7 @@ public class Stats {
 
 
     public boolean countActiveAccounts(StatisticsManager statisticsManager) {
-        String query =  "select count(*) from account_accounts where seen > date_sub(now(), interval 1 hour)  ";
+        String query =  "select count(*) from league_accounts where seen > date_sub(now(), interval 1 hour)  ";
 
         try {
             if (database.connection.isClosed()) {

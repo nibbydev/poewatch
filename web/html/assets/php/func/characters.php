@@ -10,8 +10,8 @@ function GetTotalCounts($pdo) {
   SELECT  TABLE_NAME, TABLE_ROWS 
   FROM    information_schema.TABLES 
   WHERE   table_schema = 'pw'
-    AND  (table_name = 'account_characters'
-    OR    table_name = 'account_accounts')
+    AND  (table_name = 'league_characters'
+    OR    table_name = 'league_accounts')
   ";
 
   $stmt = $pdo->query($query);
@@ -21,9 +21,9 @@ function GetTotalCounts($pdo) {
   ];
   
   while ($row = $stmt->fetch()) {
-    if ($row['TABLE_NAME'] === 'account_characters') {
+    if ($row['TABLE_NAME'] === 'league_characters') {
       $payload["totalChars"] = $row["TABLE_ROWS"];
-    } elseif ($row['TABLE_NAME'] === 'account_accounts') {
+    } elseif ($row['TABLE_NAME'] === 'league_accounts') {
       $payload["totalAccs"] = $row["TABLE_ROWS"];
     }
   }

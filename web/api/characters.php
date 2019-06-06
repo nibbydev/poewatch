@@ -25,10 +25,10 @@ function get_characters_by_account($pdo, $name) {
     l.name AS league, 
     DATE_FORMAT(ac.found, '%Y-%m-%dT%TZ') AS found,
     DATE_FORMAT(ac.seen, '%Y-%m-%dT%TZ') AS seen
-  from account_characters as ac
+  from league_characters as ac
   join data_leagues as l 
     on ac.id_l = l.id
-  where id_a = (select id from account_accounts where name = ? limit 1)
+  where id_a = (select id from league_accounts where name = ? limit 1)
   order by seen desc
   limit 128
   ";
