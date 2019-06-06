@@ -2,11 +2,11 @@
 function get_data($pdo) {
   $query = "SELECT 
     did.id, did.name, did.type, did.frame, did.stack, 
-    did.tier, did.lvl, did.tier, did.series, did.shaper, did.elder, 
-    did.enchantMin, did.enchantMax ,did.quality, did.corrupted, 
-    did.links, did.ilvl, did.var, did.icon, 
+    did.map_tier, did.map_series, did.base_shaper, did.base_elder, did.base_level, 
+    did.enchant_min, did.enchant_max ,did.gem_lvl, did.gem_quality, did.gem_corrupted, 
+    did.links, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`
-  FROM data_itemData AS did 
+  FROM data_item_data AS did 
   LEFT JOIN data_categories AS dc ON dc.id = did.id_cat
   LEFT JOIN data_groups     AS dg ON dg.id = did.id_grp";
 
@@ -25,18 +25,18 @@ function parse_data($stmt) {
       'group'           =>        $row['group'],
       'frame'           => (int)  $row['frame'],
 
-      'mapSeries'       =>        $row['series']     === null ? null : (int)    $row['series'],
-      'mapTier'         =>        $row['tier']       === null ? null : (int)    $row['tier'],
-      'baseIsShaper'    =>        $row['shaper']     === null ? null : (bool)   $row['shaper'],
-      'baseIsElder'     =>        $row['elder']      === null ? null : (bool)   $row['elder'],
-      'baseItemLevel'   =>        $row['ilvl']       === null ? null : (int)    $row['ilvl'],
-      'gemLevel'        =>        $row['lvl']        === null ? null : (int)    $row['lvl'],
-      'gemQuality'      =>        $row['quality']    === null ? null : (int)    $row['quality'],
-      'gemIsCorrupted'  =>        $row['corrupted']  === null ? null : (bool)   $row['corrupted'],
-      'enchantMin'      =>        $row['enchantMin'] === null ? null : (float)  $row['enchantMin'],
-      'enchantMax'      =>        $row['enchantMax'] === null ? null : (float)  $row['enchantMax'],
-      'stackSize'       =>        $row['stack']      === null ? null : (int)    $row['stack'],
-      'linkCount'       =>        $row['links']      === null ? null : (int)    $row['links'],
+      'mapSeries'       =>        $row['map_series']    === null ? null : (int)    $row['map_series'],
+      'mapTier'         =>        $row['map_tier']      === null ? null : (int)    $row['map_tier'],
+      'baseIsShaper'    =>        $row['base_shaper']   === null ? null : (bool)   $row['base_shaper'],
+      'baseIsElder'     =>        $row['base_elder']    === null ? null : (bool)   $row['base_elder'],
+      'baseItemLevel'   =>        $row['base_level']    === null ? null : (int)    $row['base_level'],
+      'gemLevel'        =>        $row['gem_lvl']       === null ? null : (int)    $row['gem_lvl'],
+      'gemQuality'      =>        $row['gem_quality']   === null ? null : (int)    $row['gem_quality'],
+      'gemIsCorrupted'  =>        $row['gem_corrupted'] === null ? null : (bool)   $row['gem_corrupted'],
+      'enchantMin'      =>        $row['enchant_min']   === null ? null : (float)  $row['enchant_min'],
+      'enchantMax'      =>        $row['enchant_max']   === null ? null : (float)  $row['enchant_max'],
+      'stackSize'       =>        $row['stack']         === null ? null : (int)    $row['stack'],
+      'linkCount'       =>        $row['links']         === null ? null : (int)    $row['links'],
 
       'variation'       =>        $row['var'],
       'icon'            =>        $row['icon']

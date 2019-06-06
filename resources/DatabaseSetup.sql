@@ -93,41 +93,51 @@ CREATE TABLE data_statistics_tmp (
 -- --------------------------------------------------------------------------------------------------------------------
 
 --
--- Table structure data_itemData
+-- Table structure data_item_data
 --
 
-CREATE TABLE data_itemData (
-    id         INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    id_cat     INT           UNSIGNED NOT NULL,
-    id_grp     INT           UNSIGNED DEFAULT NULL,
-    reindex    BIT(1)        NOT NULL DEFAULT 0,
-    name       VARCHAR(128)  NOT NULL,
-    type       VARCHAR(64)   DEFAULT NULL,
-    frame      TINYINT(1)    NOT NULL,
-    found      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    stack      SMALLINT      DEFAULT NULL,
-    tier       TINYINT(1)    UNSIGNED DEFAULT NULL,
-    series     TINYINT(1)    UNSIGNED DEFAULT NULL,
-    shaper     BIT(1)        DEFAULT NULL,
-    elder      BIT(1)        DEFAULT NULL,
-    enchantMin DECIMAL(4,1)  DEFAULT NULL,
-    enchantMax DECIMAL(4,1)  DEFAULT NULL,
-    lvl        TINYINT(1)    UNSIGNED DEFAULT NULL,
-    quality    TINYINT(1)    UNSIGNED DEFAULT NULL,
-    corrupted  TINYINT(1)    UNSIGNED DEFAULT NULL,
-    links      TINYINT(1)    UNSIGNED DEFAULT NULL,
-    ilvl       TINYINT(1)    UNSIGNED DEFAULT NULL,
-    var        VARCHAR(32)   DEFAULT NULL,
-    icon       VARCHAR(256)  NOT NULL,
+CREATE TABLE data_item_data (
+    id              INT           UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id_cat          INT           UNSIGNED NOT NULL,
+    id_grp          INT           UNSIGNED DEFAULT NULL,
+    reindex         BIT(1)        NOT NULL DEFAULT 0,
+    name            VARCHAR(128)  NOT NULL,
+    type            VARCHAR(64)   DEFAULT NULL,
+    frame           TINYINT(1)    NOT NULL,
+    found           TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stack           SMALLINT      DEFAULT NULL,
+
+    map_tier        TINYINT(1)    UNSIGNED DEFAULT NULL,
+    map_series      TINYINT(1)    UNSIGNED DEFAULT NULL,
+
+    base_shaper     BIT(1)        DEFAULT NULL,
+    base_elder      BIT(1)        DEFAULT NULL,
+    base_level      TINYINT(1)    UNSIGNED DEFAULT NULL,
+
+    enchant_min     DECIMAL(4,1)  DEFAULT NULL,
+    enchant_max     DECIMAL(4,1)  DEFAULT NULL,
+
+    gem_lvl         TINYINT(1)    UNSIGNED DEFAULT NULL,
+    gem_quality     TINYINT(1)    UNSIGNED DEFAULT NULL,
+    gem_corrupted   TINYINT(1)    UNSIGNED DEFAULT NULL,
+
+    links           TINYINT(1)    UNSIGNED DEFAULT NULL,
+    var             VARCHAR(32)   DEFAULT NULL,
+    icon            VARCHAR(256)  NOT NULL,
 
     FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
     FOREIGN KEY (id_grp) REFERENCES data_groups     (id) ON DELETE CASCADE,
 
-    CONSTRAINT idx_unique UNIQUE (name, type, frame, tier, lvl, quality, corrupted, links, ilvl, var, shaper, elder, enchantMin, enchantMax),
+    CONSTRAINT idx_unique UNIQUE (
+          name, type, frame, map_tier, map_series,
+          base_shaper, base_elder, base_level,
+          enchant_min, enchant_max, gem_lvl,
+          gem_quality, gem_corrupted, var
+    ),
 
     INDEX reindex (reindex),
-    INDEX frame   (frame),
-    INDEX name    (name)
+    INDEX frame (frame),
+    INDEX name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -155,8 +165,8 @@ CREATE TABLE league_items (
     accepted INT(8)         UNSIGNED NOT NULL DEFAULT 0,
     spark    VARCHAR(128)   DEFAULT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_item_data (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d),
 
     INDEX total    (total),
@@ -217,9 +227,9 @@ CREATE TABLE league_entries (
     id_price     INT            UNSIGNED DEFAULT NULL,
 
     FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_d) REFERENCES data_item_data (id) ON DELETE CASCADE,
     FOREIGN KEY (id_a) REFERENCES league_accounts (id) ON DELETE CASCADE,
-    FOREIGN KEY (id_price) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_price) REFERENCES data_item_data (id) ON DELETE CASCADE,
     CONSTRAINT pk PRIMARY KEY (id_l, id_d, id_a, item_crc),
 
     INDEX discovered (discovered),
@@ -246,8 +256,8 @@ CREATE TABLE league_history_daily (
     current  INT(8)         UNSIGNED NOT NULL,
     accepted INT(8)         UNSIGNED NOT NULL,
 
-    FOREIGN KEY (id_l) REFERENCES data_leagues  (id) ON DELETE RESTRICT,
-    FOREIGN KEY (id_d) REFERENCES data_itemData (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_l) REFERENCES data_leagues (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_d) REFERENCES data_item_data (id) ON DELETE CASCADE,
 
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -63,7 +63,7 @@ public class Init {
      * @return True on success
      */
     public boolean getItemData(Map<Key, Integer> keyToId, Set<Integer> reindexSet) {
-        String query = "SELECT * FROM data_itemData; ";
+        String query = "SELECT * FROM data_item_data; ";
 
         logger.info("Getting item data from database");
 

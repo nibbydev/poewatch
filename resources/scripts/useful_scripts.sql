@@ -8,14 +8,14 @@
 
 -- Select all entries from database related to every item that should have a variant but for some reason don't
 select did.*
-from data_itemData as did
+from data_item_data as did
          join (
     select `name`, `type`, frame
-    from data_itemData
+    from data_item_data
     where var is not null
       and id_cat != 12
       and id_cat != 5
-    order by data_itemData.id desc
+    order by data_item_data.id desc
 ) as tmp on tmp.name = did.name and tmp.type = did.type and tmp.frame = did.frame
 where did.var is null
 order by id desc;
@@ -54,6 +54,6 @@ alter table league_entries
 -- recreate foreign keys
 alter table league_entries
     add foreign key (id_l) references data_leagues (id),
-    add foreign key (id_d) references data_itemData (id),
+    add foreign key (id_d) references data_item_data (id),
     add foreign key (id_a) references league_accounts (id),
-    add foreign key (id_price) references data_itemData (id);
+    add foreign key (id_price) references data_item_data (id);

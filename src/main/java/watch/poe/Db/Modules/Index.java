@@ -50,15 +50,15 @@ public class Index {
     }
 
     /**
-     * Creates an item data entry in table `data_itemData`
+     * Creates an item data entry
      *
      * @param item Item object to index
      * @return ID of created item data entry on success, null on failure
      */
     public Integer indexItemData(Item item) {
-        String query = "INSERT INTO data_itemData (" +
-                "  id_cat, id_grp, `name`, `type`, frame, stack, tier, series, shaper, elder, " +
-                "  enchantMin, enchantMax, lvl, quality, corrupted, links, ilvl, var, icon) " +
+        String query = "INSERT INTO data_item_data (" +
+                "  id_cat, id_grp, `name`, `type`, frame, stack, map_tier, map_series, base_shaper, base_elder, " +
+                "  enchant_min, enchant_max, gem_lvl, gem_quality, gem_corrupted, links, base_level, var, icon) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE id = id; ; ";
 
@@ -146,11 +146,11 @@ public class Index {
      * Updates item data entry in database. Only immutable field is the id
      */
     public boolean reindexItemData(int id_d, Item item) {
-        String query = "update data_itemData set " +
+        String query = "update data_item_data set " +
                 "  id_cat = ?, id_grp = ?, name = ?, type = ?, reindex = 0, " +
-                "  frame = ?, stack = ?, tier = ?, series = ?, shaper = ?, elder = ?," +
-                "  enchantMin = ?, enchantMax = ?, lvl = ?, quality = ?," +
-                "  corrupted = ?, links = ?, ilvl = ?, var = ?, icon = ? " +
+                "  frame = ?, stack = ?, map_tier = ?, map_series = ?, base_shaper = ?, base_elder = ?," +
+                "  enchant_min = ?, enchant_max = ?, gem_lvl = ?, gem_quality = ?," +
+                "  gem_corrupted = ?, links = ?, base_level = ?, var = ?, icon = ? " +
                 "where id = ? " +
                 "limit 1 ";
 

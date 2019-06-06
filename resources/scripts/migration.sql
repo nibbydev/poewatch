@@ -1,7 +1,7 @@
---
+-- ------------------------------------------------------------------------------------------------------
 -- Migration script to remove redundant account table and to replace account_crc with id_a in league_entries
 -- I should really look into database versioning, huh
---
+-- ------------------------------------------------------------------------------------------------------
 
 -- create computed crc column (15 sec)
 alter table account_accounts
@@ -50,9 +50,9 @@ rename table account_accounts to league_accounts;
 rename table account_characters to league_characters;
 
 
---
+-- ------------------------------------------------------------------------------------------------------
 -- Migration script to fix stats camelCase to camel_case
---
+-- ------------------------------------------------------------------------------------------------------
 
 -- rename invalid casing
 alter table data_statistics
@@ -63,9 +63,9 @@ alter table data_statistics_tmp
     change statType type varchar(32) not null;
 
 
---
+-- ------------------------------------------------------------------------------------------------------
 -- Migration script to fix change_id camelCase to camel_case
---
+-- ------------------------------------------------------------------------------------------------------
 
 -- rename table
 rename table data_changeId to data_change_id;
@@ -73,3 +73,28 @@ rename table data_changeId to data_change_id;
 -- rename column
 alter table data_change_id
     change changeId change_id varchar(64) not null unique;
+
+
+-- ------------------------------------------------------------------------------------------------------
+-- Migration script to fix data_item_data camelCase to camel_case
+-- ------------------------------------------------------------------------------------------------------
+
+-- rename table
+rename table data_itemData to data_item_data;
+
+-- change cases
+alter table data_item_data
+    change tier map_tier TINYINT(1) UNSIGNED DEFAULT NULL after stack,
+    change series map_series TINYINT(1) UNSIGNED DEFAULT NULL after map_tier,
+
+    change shaper base_shaper BIT(1) DEFAULT NULL after map_series,
+    change elder base_elder BIT(1) DEFAULT NULL after base_shaper,
+    change ilvl base_level TINYINT(1) UNSIGNED DEFAULT NULL after base_elder,
+
+    change enchantMin enchant_min DECIMAL(4,1) DEFAULT NULL after base_level,
+    change enchantMax enchant_max DECIMAL(4,1) DEFAULT NULL after enchant_min,
+
+    change lvl gem_lvl TINYINT(1) UNSIGNED DEFAULT NULL after enchant_max,
+    change quality gem_quality TINYINT(1) UNSIGNED DEFAULT NULL after gem_lvl,
+    change corrupted gem_corrupted TINYINT(1) UNSIGNED DEFAULT NULL after gem_quality;
+

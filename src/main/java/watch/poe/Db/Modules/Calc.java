@@ -79,7 +79,7 @@ public class Calc {
     public boolean getPriceBundles(List<PriceBundle> priceBundles) {
         String query = "select li.id_l, li.id_d, li.mean " +
                 "from league_items as li " +
-                "join data_itemData as did on li.id_d = did.id " +
+                "join data_item_data as did on li.id_d = did.id " +
                 "where did.id_cat = 4 " +
                 "  and did.id_grp = 11 " +
                 "  and did.frame = 5 " +
@@ -165,7 +165,7 @@ public class Calc {
                 "JOIN ( " +
                 "  SELECT i.id_l, i.mean " +
                 "  FROM league_items AS i " +
-                "  JOIN data_itemData AS did ON i.id_d = did.id " +
+                "  JOIN data_item_data AS did ON i.id_d = did.id " +
                 "  WHERE did.name = 'Exalted Orb' " +
                 ") AS ex ON i.id_l = ex.id_l " +
                 "SET i.exalted = i.mean / ex.mean " +

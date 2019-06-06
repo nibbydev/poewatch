@@ -44,37 +44,37 @@ public class Key {
 
         frameType = resultSet.getInt("frame");
 
-        iLvl = resultSet.getInt("ilvl");
+        iLvl = resultSet.getInt("base_level");
         if (resultSet.wasNull()) iLvl = null;
 
         links = resultSet.getInt("links");
         if (resultSet.wasNull()) links = null;
 
-        tier = resultSet.getInt("tier");
+        tier = resultSet.getInt("map_tier");
         if (resultSet.wasNull()) tier = null;
 
-        series = resultSet.getInt("series");
+        series = resultSet.getInt("map_series");
         if (resultSet.wasNull()) series = null;
 
-        level = resultSet.getInt("lvl");
+        level = resultSet.getInt("gem_lvl");
         if (resultSet.wasNull()) level = null;
 
-        quality = resultSet.getInt("quality");
+        quality = resultSet.getInt("gem_quality");
         if (resultSet.wasNull()) quality = null;
 
-        corrupted = resultSet.getBoolean("corrupted");
+        corrupted = resultSet.getBoolean("gem_corrupted");
         if (resultSet.wasNull()) corrupted = null;
 
-        shaper = resultSet.getBoolean("shaper");
+        shaper = resultSet.getBoolean("base_shaper");
         if (resultSet.wasNull()) shaper = null;
 
-        elder = resultSet.getBoolean("elder");
+        elder = resultSet.getBoolean("base_elder");
         if (resultSet.wasNull()) elder = null;
 
-        enchantMin = resultSet.getFloat("enchantMin");
+        enchantMin = resultSet.getFloat("enchant_min");
         if (resultSet.wasNull()) enchantMin = null;
 
-        enchantMax = resultSet.getFloat("enchantMax");
+        enchantMax = resultSet.getFloat("enchant_max");
         if (resultSet.wasNull()) enchantMax = null;
     }
 

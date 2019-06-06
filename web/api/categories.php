@@ -7,7 +7,7 @@ function get_data($pdo) {
     group_concat(groups.id) as memberIds,
     group_concat(groups.name) as memberNames,
     group_concat(IFNULL(groups.display, '')) as memberDisplays
-  from (select distinct id_cat, id_grp from data_itemData) as did
+  from (select distinct id_cat, id_grp from data_item_data) as did
   join data_categories as categories on did.id_cat = categories.id
   join data_groups as groups on did.id_grp = groups.id
   group by categories.id

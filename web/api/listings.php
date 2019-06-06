@@ -57,10 +57,10 @@ function get_data($pdo, $league, $account)
     group_concat(if(le.price is null, null, round(ifnull(li.mean, 1) * le.price, 2))) as chaos,
     did.*, dc.name AS category, dg.name AS `group`
   from league_entries as le
-  left join data_itemData as did1 on le.id_price = did1.id
+  left join data_item_data as did1 on le.id_price = did1.id
   left join league_items as li on le.id_l = li.id_l and le.id_price = li.id_d
   join data_leagues as dl on dl.id = le.id_l
-  join data_itemData as did on le.id_d = did.id
+  join data_item_data as did on le.id_d = did.id
   left join data_categories as dc on dc.id = did.id_cat
   left join data_groups as dg on dg.id = did.id_grp
   join league_accounts as la on le.id_a = la.id

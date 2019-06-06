@@ -13,6 +13,6 @@ with open("gemMap.json", "r") as f:
   data = load(f)
 
 for key, item in data.items():
-  printf("update data_itemData set icon = \"%s\" where name = \"%s\";\n", item["gem"], key)
+  printf("update data_item_data set icon = \"%s\" where name = \"%s\";\n", item["gem"], key)
   
 input("\nPress any key to continue...")
