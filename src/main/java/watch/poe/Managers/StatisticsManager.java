@@ -51,7 +51,7 @@ public class StatisticsManager {
                 .filter(Collector::isRecorded)
                 .filter(Collector::hasValues)
                 .filter(Collector::isExpired)
-                .peek(i -> logger.info(String.format("Found expired collector [%s]", i.getStatType().name())))
+                .peek(i -> logger.info(String.format("Found expired collector [%s]", i.getType().name())))
                 .collect(Collectors.toSet());
 
         // Delete them from the database, if any
@@ -65,30 +65,30 @@ public class StatisticsManager {
     /**
      * Initiates a timer with the specified type
      *
-     * @param statType Stat identifier
+     * @param type Stat identifier
      */
-    public void startTimer(StatType statType) {
+    public void startTimer(StatType type) {
         synchronized (threadTimers) {
             Set<StatTimer> statTimerList = threadTimers.getOrDefault(Thread.currentThread(), new HashSet<>());
             threadTimers.putIfAbsent(Thread.currentThread(), statTimerList);
 
             // If there was no entry, create a new one and add it to the list
-            if (statTimerList.stream().anyMatch(i -> i.getStatType().equals(statType))) {
+            if (statTimerList.stream().anyMatch(i -> i.getType().equals(type))) {
                 logger.error("Stat timer already exists");
                 throw new RuntimeException();
             }
 
-            statTimerList.add(new StatTimer(statType));
+            statTimerList.add(new StatTimer(type));
         }
     }
 
     /**
      * Stops the timer instance associated with the provided type and notes the delay
      *
-     * @param statType Stat identifier
+     * @param type Stat identifier
      * @return Delay in MS
      */
-    public int clkTimer(StatType statType) {
+    public int clkTimer(StatType type) {
         int delay;
 
         synchronized (threadTimers) {
@@ -101,7 +101,7 @@ public class StatisticsManager {
 
             // Find first timer
             StatTimer statTimer = statEntryList.stream()
-                    .filter(i -> i.getStatType().equals(statType))
+                    .filter(i -> i.getType().equals(type))
                     .findFirst()
                     .orElse(null);
 
@@ -119,7 +119,7 @@ public class StatisticsManager {
         }
 
         // Add value to the collector
-        addValue(statType, delay);
+        addValue(type, delay);
 
         // Return value isn't even used anywhere
         return delay;
@@ -128,14 +128,14 @@ public class StatisticsManager {
     /**
      * Add a value directly to a collector
      *
-     * @param statType Stat identifier
+     * @param type Stat identifier
      * @param val Value to save
      */
-    public void addValue(StatType statType, Integer val) {
+    public void addValue(StatType type, Integer val) {
         synchronized (collectors) {
             // Find first collector
             Collector collector = Arrays.stream(collectors)
-                    .filter(i -> i.getStatType().equals(statType))
+                    .filter(i -> i.getType().equals(type))
                     .findFirst()
                     .orElse(null);
 
@@ -182,18 +182,18 @@ public class StatisticsManager {
     /**
      * Gets latest value with the specified type
      *
-     * @param statType Stat identifier
+     * @param type Stat identifier
      * @return The value or 0
      */
-    public int getLast(StatType statType) {
-        if (statType == null) {
+    public int getLast(StatType type) {
+        if (type == null) {
             logger.error("StatType cannot be null");
             throw new RuntimeException();
         }
 
         // Find first collector
         Collector collector = Arrays.stream(collectors)
-                .filter(i -> i.getStatType().equals(statType))
+                .filter(i -> i.getType().equals(type))
                 .findFirst()
                 .orElse(null);
 

@@ -48,3 +48,17 @@ drop table league_accounts;
 -- rename tables
 rename table account_accounts to league_accounts;
 rename table account_characters to league_characters;
+
+
+--
+-- Migration script to fix stats camelCase to camel_case
+--
+
+-- rename invalid casing
+alter table data_statistics
+    change statType type varchar(32) not null,
+    drop index statType,
+    add index type (type);
+alter table data_statistics_tmp
+    change statType type varchar(32) not null;
+

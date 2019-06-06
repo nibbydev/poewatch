@@ -10,7 +10,7 @@ public class Collector {
     private static final Logger logger = LoggerFactory.getLogger(Collector.class);
     private final GroupType groupType;
     private final TimeFrame collectionPeriod;
-    private final StatType statType;
+    private final StatType type;
 
     private long creationTime, insertTime;
     private Integer historySize;
@@ -19,15 +19,15 @@ public class Collector {
     private int count = 0;
     private long sum = 0L;
 
-    public Collector(StatType statType, GroupType groupType, TimeFrame collectionPeriod, Integer historySize) {
-        this.statType = statType;
+    public Collector(StatType type, GroupType groupType, TimeFrame collectionPeriod, Integer historySize) {
+        this.type = type;
         this.groupType = groupType;
 
         // Either can be null
         this.collectionPeriod = collectionPeriod;
         this.historySize = historySize;
 
-        if (statType == null || groupType == null) {
+        if (type == null || groupType == null) {
             logger.error("Timer types cannot be null");
             throw new RuntimeException();
         }
@@ -106,8 +106,8 @@ public class Collector {
         return count;
     }
 
-    public StatType getStatType() {
-        return statType;
+    public StatType getType() {
+        return type;
     }
 
     public int getLatestValue() {

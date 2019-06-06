@@ -26,7 +26,7 @@ public class Stats {
      * @return True on success
      */
     public boolean deleteTmpStatistics(Set<Collector> collectors) {
-        String query = "delete from data_statistics_tmp where statType = ?; ";
+        String query = "delete from data_statistics_tmp where type = ?; ";
 
         if (collectors == null) {
             logger.error("Invalid list provided");
@@ -41,7 +41,7 @@ public class Stats {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (Collector collector : collectors) {
-                    statement.setString(1, collector.getStatType().name());
+                    statement.setString(1, collector.getType().name());
                     statement.addBatch();
                 }
 
@@ -64,7 +64,7 @@ public class Stats {
      * @return True on success
      */
     public boolean uploadStatistics(Set<Collector> collectors) {
-        String query =  "INSERT INTO data_statistics (statType, time, value) VALUES (?, ?, ?); ";
+        String query =  "INSERT INTO data_statistics (type, time, value) VALUES (?, ?, ?); ";
 
         if (collectors == null) {
             logger.error("Invalid list provided");
@@ -79,7 +79,7 @@ public class Stats {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (Collector collector : collectors) {
-                    statement.setString(1, collector.getStatType().name());
+                    statement.setString(1, collector.getType().name());
                     statement.setTimestamp(2, new Timestamp(collector.getInsertTime()));
 
                     if (collector.getValue() == null) {
@@ -107,7 +107,7 @@ public class Stats {
      * @return True on success
      */
     public boolean uploadTempStatistics(Set<Collector> collectors) {
-        String query =  "INSERT INTO data_statistics_tmp (statType, created, sum, count) " +
+        String query =  "INSERT INTO data_statistics_tmp (type, created, sum, count) " +
                         "VALUES (?, ?, ?, ?) " +
                         "ON DUPLICATE KEY UPDATE " +
                         "  created = VALUES(created), " +
@@ -127,7 +127,7 @@ public class Stats {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (Collector collector : collectors) {
-                    statement.setString(1, collector.getStatType().name());
+                    statement.setString(1, collector.getType().name());
                     statement.setTimestamp(2, new Timestamp(collector.getCreationTime()));
 
                     if (collector.isValueNull()) {
@@ -187,12 +187,12 @@ public class Stats {
     public boolean trimStatHistory(Collector[] collectors) {
         String query =  "delete foo from data_statistics as foo " +
                         "join ( " +
-                        "  select statType, time " +
+                        "  select type, time " +
                         "  from data_statistics " +
-                        "  where statType = ? " +
+                        "  where type = ? " +
                         "  order by time desc " +
                         "  limit ?, 1 " +
-                        ") as bar on foo.statType = bar.statType " +
+                        ") as bar on foo.type = bar.type " +
                         "where foo.time <= bar.time ";
 
         if (collectors == null) {
@@ -212,7 +212,7 @@ public class Stats {
                         continue;
                     }
 
-                    statement.setString(1, collector.getStatType().name());
+                    statement.setString(1, collector.getType().name());
                     statement.setInt(2, collector.getHistorySize());
                     statement.addBatch();
                 }
@@ -249,11 +249,11 @@ public class Stats {
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    String key = resultSet.getString("statType");
-                    StatType statType;
+                    String key = resultSet.getString("type");
+                    StatType type;
 
                     try {
-                        statType = StatType.valueOf(resultSet.getString("statType"));
+                        type = StatType.valueOf(resultSet.getString("type"));
                     } catch (IllegalArgumentException ex) {
                         logger.error(String.format("Could not parse stat '%s'", key));
                         continue;
@@ -261,7 +261,7 @@ public class Stats {
 
                     // Find first collector
                     Collector collector = Arrays.stream(collectors)
-                            .filter(i -> i.getStatType().equals(statType))
+                            .filter(i -> i.getType().equals(type))
                             .findFirst()
                             .orElse(null);
 

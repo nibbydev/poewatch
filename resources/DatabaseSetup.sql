@@ -69,11 +69,11 @@ CREATE TABLE data_changeId (
 --
 
 CREATE TABLE data_statistics (
-    statType  VARCHAR(32)  NOT NULL,
+    type      VARCHAR(32)  NOT NULL,
     time      TIMESTAMP    NOT NULL,
     value     INT          DEFAULT NULL,
 
-    INDEX statType (statType),
+    INDEX type (type),
     INDEX time (time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -82,7 +82,7 @@ CREATE TABLE data_statistics (
 --
 
 CREATE TABLE data_statistics_tmp (
-    statType    VARCHAR(32)  NOT NULL PRIMARY KEY,
+    type        VARCHAR(32)  NOT NULL PRIMARY KEY,
     created     TIMESTAMP    NOT NULL,
     sum         BIGINT       DEFAULT NULL,
     count       INT          NOT NULL

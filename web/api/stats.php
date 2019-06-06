@@ -10,7 +10,7 @@ function getStats($pdo, $types) {
   $query = "SELECT * from (
       select DATE_FORMAT(time, '%Y-%m-%dT%TZ') as time, value
       from data_statistics
-      where statType = ? and time >= ?
+      where type = ? and time >= ?
       order by time desc
     ) foo
     order by foo.time asc
