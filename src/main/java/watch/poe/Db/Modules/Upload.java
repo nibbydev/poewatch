@@ -50,6 +50,11 @@ public class Upload {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 for (DbItemEntry raw : set) {
+                    if (raw.user.accountId == 0) {
+                        logger.warn("No ID found for account " + raw.user.accountName);
+                        continue;
+                    }
+
                     statement.setInt(1, raw.id_l);
                     statement.setInt(2, raw.id_d);
                     statement.setLong(3, raw.user.accountId);
@@ -258,8 +263,11 @@ public class Upload {
                 ResultSet keys = statement.getGeneratedKeys();
 
                 for (User user : userList) {
-                    keys.next();
-                    user.accountId = keys.getLong(1);
+                    if (keys.next()) {
+                        user.accountId = keys.getLong(1);
+                    } else {
+                        logger.warn("No ID returned for account " + user.accountName);
+                    }
                 }
             }
 
