@@ -1,8 +1,8 @@
 <?php
 function get_data($pdo) {
-  $query = "SELECT changeId AS id, 
+  $query = "SELECT change_id AS id, 
     DATE_FORMAT(time, '%Y-%m-%dT%TZ') AS time
-  FROM data_changeId";
+  FROM data_change_id";
 
   $stmt = $pdo->query($query);
   $payload = $stmt->fetch();

@@ -201,13 +201,13 @@ public class Upload {
     }
 
     /**
-     * Updates the change ID in table `data_changeId`
+     * Updates the change ID
      *
      * @param id Change ID to upload
      * @return True on success
      */
     public boolean updateChangeID(String id) {
-        String query = "UPDATE data_changeId SET changeId = ?; ";
+        String query = "UPDATE data_change_id SET change_id = ?; ";
 
         try {
             if (database.connection.isClosed()) {

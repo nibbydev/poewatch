@@ -1,6 +1,6 @@
 <?php
 function getTimeSinceLastRequest($pdo) {
-  $query = "SELECT timediff(now(), time) as diff from data_changeId";
+  $query = "SELECT timediff(now(), time) as diff from data_change_id";
 
   $stmt = $pdo->query($query);
   return $stmt->fetch()["diff"];

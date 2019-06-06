@@ -56,11 +56,11 @@ CREATE TABLE data_leagues (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure data_changeId
+-- Table structure data_change_id
 --
 
-CREATE TABLE data_changeId (
-    changeId  VARCHAR(64)  NOT NULL UNIQUE,
+CREATE TABLE data_change_id (
+    change_id VARCHAR(64)  NOT NULL UNIQUE,
     time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -307,11 +307,11 @@ VALUES
     (22, 0, 0, 'Synthesis',                     'Synthesis'         );
 
 --
--- Base value for data_changeId
+-- Base value for data_change_id
 --
 
-INSERT INTO data_changeId
-    (changeId)
+INSERT INTO data_change_id
+    (change_id)
 VALUES
     ('0-0-0-0-0');
 

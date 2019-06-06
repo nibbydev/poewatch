@@ -62,3 +62,14 @@ alter table data_statistics
 alter table data_statistics_tmp
     change statType type varchar(32) not null;
 
+
+--
+-- Migration script to fix change_id camelCase to camel_case
+--
+
+-- rename table
+rename table data_changeId to data_change_id;
+
+-- rename column
+alter table data_change_id
+    change changeId change_id varchar(64) not null unique;
