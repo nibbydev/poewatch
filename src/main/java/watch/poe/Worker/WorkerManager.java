@@ -173,9 +173,9 @@ public class WorkerManager extends Thread {
     /**
      * Prints out all active workers and their active jobs
      */
-    public void printAllWorkers() {
-        for (Worker workerObject : workerList) {
-            logger.info("    " + workerObject.getWorkerId() + ": " + workerObject.getJob());
+    public void printWorkers() {
+        for (Worker worker : workerList) {
+            logger.info(worker.toString());
         }
     }
 
@@ -257,10 +257,6 @@ public class WorkerManager extends Thread {
         return null;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and setters
-    //------------------------------------------------------------------------------------------------------------
-
     /**
      * Sets the next change ID in the variable. If the variable has no value, set it to the newChangeID's one,
      * otherwise compare the two and set the newest
@@ -276,8 +272,14 @@ public class WorkerManager extends Thread {
         }
     }
 
-    private void setWorkerSleepState(boolean state, boolean wait) {
-        System.out.println(state ? "Pausing workers.." : "Resuming workers..");
+    /**
+     * Pauses or resumes workers
+     *
+     * @param state True for pause
+     * @param wait True for waiting until paused
+     */
+    public void setWorkerSleepState(boolean state, boolean wait) {
+        logger.info(state ? "Pausing all workers.." : "Resuming all workers..");
 
         for (Worker worker : workerList) {
             worker.setPauseFlag(state);

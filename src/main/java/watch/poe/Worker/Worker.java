@@ -81,7 +81,7 @@ public class Worker extends Thread {
             job = null;
         }
 
-        logger.info(String.format("Worker (%d) stopped", workerId));
+        logger.info("Worker ({}) stopped", workerId);
         readyToExit = true;
     }
 
@@ -250,17 +250,17 @@ public class Worker extends Thread {
         isPaused = true;
 
         synchronized (pauseMonitor) {
-            System.out.printf("- worker %d paused\n", workerId);
+            logger.debug("Worker {} paused", workerId);
 
             while (pauseFlag) {
                 try {
-                    pauseMonitor.wait(100);
+                    pauseMonitor.wait(200);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
             }
 
-            System.out.printf("- worker %d resumed\n", workerId);
+            logger.debug("Worker {} resumed", workerId);
         }
 
         isPaused = false;
@@ -295,5 +295,27 @@ public class Worker extends Thread {
 
     public boolean isReadyToExit() {
         return readyToExit;
+    }
+
+    /**
+     * Generates an info string about the worker, including its id, states and current job
+     *
+     * @return Info string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Worker ");
+        sb.append(workerId);
+
+        if (isPaused) sb.append(" (paused)");
+        else if (pauseFlag) sb.append(" (pausing)");
+
+        if (readyToExit) sb.append(" (stopped)");
+        else if (!flagLocalRun) sb.append(" (stopping)");
+
+        sb.append(": ");
+        sb.append(job);
+
+        return sb.toString();
     }
 }

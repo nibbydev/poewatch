@@ -53,9 +53,6 @@ public class Main {
             sm = new StatisticsManager(db);
             sm.addValue(StatType.APP_STARTUP, null);
 
-            // Instantiate a price manager
-            pm = new PriceManager(db, cnf);
-
             // Init league manager
             LeagueManager lm = new LeagueManager(db, cnf);
             success = lm.cycle();
@@ -81,6 +78,9 @@ public class Main {
             }
 
             wm = new WorkerManager(cnf, im, db, sm, lm, ip);
+
+            // Instantiate a price manager
+            pm = new PriceManager(db, cnf, wm);
 
             // Parse CLI parameters
             success = parseCommandParameters(args);
@@ -231,7 +231,7 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            wm.printAllWorkers();
+            wm.printWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
             wm.fireWorkers(Integer.parseInt(userInput[2]));
