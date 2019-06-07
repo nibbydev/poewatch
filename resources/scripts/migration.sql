@@ -104,3 +104,10 @@ alter table data_item_data
 
 alter table league_accounts
     add updates int unsigned not null default 0 after name;
+
+-- ------------------------------------------------------------------------------------------------------
+-- Rename stats in database
+-- ------------------------------------------------------------------------------------------------------
+
+update data_statistics set type = "COUNT_API_ERRORS_4XX" where type = "COUNT_API_ERRORS_429";
+update data_statistics_tmp set type = "COUNT_API_ERRORS_4XX" where type = "COUNT_API_ERRORS_429";

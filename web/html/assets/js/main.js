@@ -422,7 +422,7 @@ function timeSince(timeStamp) {
     let day = timeStamp.getDate();
     let month = timeStamp.toDateString().match(/ [a-zA-Z]*/)[0].replace(' ', '');
     let year = timeStamp.getFullYear() == now.getFullYear() ? '' : ' ' + timeStamp.getFullYear();
-    return `${day} ${month}${year}`;
+    return day + ' ' + month + year;
   }
 }
 
@@ -1295,7 +1295,7 @@ class StatsPage {
                 name: 'Connection resets',
                 description: 'Nr of reset connections in the past hour'
               }, {
-                type: 'COUNT_API_ERRORS_429',
+                type: 'COUNT_API_ERRORS_4XX',
                 name: '400 errors',
                 description: 'Nr of HTTP 4xx errors in the past hour'
               }, {
@@ -3133,7 +3133,7 @@ class PricesPage {
       if (response.status) {
         msg = `<div class='buffering-msg align-self-center mb-2'>${response.responseJSON.error}</div>`;
       } else {
-        msg = '<div class=\'buffering-msg align-self-center mb-2\'>Too many requests, please wait a bit</div>';
+        msg = "<div class='buffering-msg align-self-center mb-2'>Too many requests, please wait a bit</div>";
       }
 
       buffering.after(msg);

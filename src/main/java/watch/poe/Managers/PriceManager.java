@@ -71,7 +71,7 @@ public class PriceManager extends Thread {
      * @return True if should run
      */
     private boolean checkIfRun() {
-        if (lastCycleTime + config.getInt("calculation.minCycleInterval") > System.currentTimeMillis()) {
+        if (System.currentTimeMillis() - lastCycleTime > config.getInt("calculation.minCycleInterval")) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ex) {

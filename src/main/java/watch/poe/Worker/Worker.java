@@ -184,7 +184,7 @@ public class Worker extends Thread {
             } else if (exceptionPattern5xx.matcher(ex.getMessage()).matches()) {
                 statisticsManager.addValue(StatType.COUNT_API_ERRORS_5XX, null);
             } else if (exceptionPattern4xx.matcher(ex.getMessage()).matches()) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_429, null);
+                statisticsManager.addValue(StatType.COUNT_API_ERRORS_4XX, null);
             }
 
             logger.error("Caught worker download error: " + ex.getMessage());

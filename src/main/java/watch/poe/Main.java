@@ -31,21 +31,18 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        boolean success;
-
-        logger.info("Starting PoeWatch client");
+        logger.info("Starting PoeWatch");
 
         try {
-            im = new IntervalManager();
-
             if (!loadConfig()) {
                 return;
             }
 
+            im = new IntervalManager();
+
             // Initialize database connector
             db = new Database(cnf);
-            success = db.connect();
-            if (!success) {
+            if (!db.connect()) {
                 logger.error("Could not connect to database");
                 return;
             }
@@ -55,8 +52,7 @@ public class Main {
 
             // Init league manager
             LeagueManager lm = new LeagueManager(db, cnf);
-            success = lm.cycle();
-            if (!success) {
+            if (!lm.cycle()) {
                 logger.error("Could not get leagues");
                 return;
             }
@@ -83,8 +79,7 @@ public class Main {
             pm = new PriceManager(db, cnf, wm);
 
             // Parse CLI parameters
-            success = parseCommandParameters(args);
-            if (!success) return;
+            if (!parseCommandParameters(args)) return;
 
             // Start controllers
             wm.start();
