@@ -31,13 +31,7 @@ function check_errors() {
 }
 
 function check_league($pdo, $league) {
-  $query = "SELECT l.id, l.active
-  FROM data_leagues AS l
-  JOIN (
-    SELECT DISTINCT id_l FROM league_items
-  ) AS leagues ON l.id = leagues.id_l
-  WHERE l.name = ?
-  LIMIT 1";
+  $query = "SELECT id, active FROM data_leagues  WHERE name = ? LIMIT 1";
 
   $stmt = $pdo->prepare($query);
   $stmt->execute([$league]);
