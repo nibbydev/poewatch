@@ -25,7 +25,6 @@ genBodyHeader();
     that haven't been touched before then are not in the database.
   </div>
 
-
   <div class="card-body">
 
     <div class="d-flex align-items-center mb-3">
@@ -36,9 +35,7 @@ genBodyHeader();
           } ?>
         </select>
 
-        <input type="text" class="form-control seamless-input" name="search" placeholder="Account name"
-               value="<?php if (isset($_GET["account"])) echo htmlentities($_GET["account"]) ?>"
-               id="search-input">
+        <input type="text" class="form-control seamless-input" name="search" placeholder="Account name" id="search-input">
         <button type="button" id="search-btn" class="btn btn-outline-light">Search</button>
       </div>
 
