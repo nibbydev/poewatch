@@ -98,3 +98,9 @@ alter table data_item_data
     change quality gem_quality TINYINT(1) UNSIGNED DEFAULT NULL after gem_lvl,
     change corrupted gem_corrupted TINYINT(1) UNSIGNED DEFAULT NULL after gem_quality;
 
+-- ------------------------------------------------------------------------------------------------------
+-- Migration script to fix account table not returning IDs
+-- ------------------------------------------------------------------------------------------------------
+
+alter table league_accounts
+    add updates int unsigned not null default 0 after name;

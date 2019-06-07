@@ -242,7 +242,7 @@ public class Upload {
      */
     public boolean uploadAccountNames(List<User> users) {
         String query = "INSERT INTO league_accounts (name) VALUES (?) " +
-                        "ON DUPLICATE KEY UPDATE seen = now();";
+                        "ON DUPLICATE KEY UPDATE seen = now(), updates = updates + 1;";
 
         try {
             if (database.connection.isClosed()) {
@@ -250,7 +250,7 @@ public class Upload {
                 return false;
             }
 
-            try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement statement = database.connection.prepareStatement(query, new String[]{"id"})) {
                 // Create list so ordering would be persistent
                 List<User> userList = new ArrayList<>(users);
 
@@ -259,14 +259,30 @@ public class Upload {
                     statement.addBatch();
                 }
 
-                statement.executeBatch();
+                int[] codes = statement.executeBatch();
                 ResultSet keys = statement.getGeneratedKeys();
 
-                for (User user : userList) {
-                    if (keys.next()) {
-                        user.accountId = keys.getLong(1);
-                    } else {
-                        logger.warn("No ID returned for account " + user.accountName);
+                int failedCount = 0;
+
+
+                for (int i = 0; i < codes.length; i++) {
+                    switch (codes[i]) {
+                        case 0: // no update
+                            logger.error("No ID returned for account {}", userList.get(i).accountName);
+                            failedCount++;
+                            break;
+                        case 1: // insert
+                        case 2: // update
+                            if (keys.next()) userList.get(i).accountId = keys.getLong(1);
+                            break;
+                    }
+                }
+
+                if (failedCount > 0) {
+                    logger.error("Total of {} accounts, failed for {}", userList.size(), failedCount);
+
+                    for (int i = 0; i < userList.size(); i++) {
+                        logger.error("Account {} (code {}) (id {})", userList.get(i).accountName, codes[i], userList.get(i).accountId);
                     }
                 }
             }
