@@ -42,7 +42,7 @@ function check_errors()
  *
  * @param $pdo PDO Open database connection
  * @param $league string League name, case-insensitive
- * @param $account string Account name, case-sensitive
+ * @param $account string Account name, case-insensitive
  * @return array containing the aggregated items and prices
  */
 function get_data($pdo, $league, $account)

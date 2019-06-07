@@ -264,7 +264,7 @@ $APIColumns = [
       [
         "param" => "account",
         "required" => true,
-        "desc" => "Case insensitive account name"
+        "desc" => "Case-insensitive account name"
       ]
     ],
     "reply" => [
@@ -304,7 +304,7 @@ $APIColumns = [
       [
         "param" => "character",
         "required" => true,
-        "desc" => "Case insensitive character name"
+        "desc" => "Case-insensitive character name"
       ]
     ],
     "reply" => [
@@ -595,7 +595,7 @@ $APIColumns = [
       [
         "param" => "account",
         "required" => true,
-        "desc" => "Case sensitive account name"
+        "desc" => "Case-insensitive account name"
       ],
     ],
     "reply" => [
