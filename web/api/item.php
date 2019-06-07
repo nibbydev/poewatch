@@ -124,4 +124,4 @@ header("Content-Type: application/json");
 check_errors();
 include_once ( "../details/pdo.php" );
 $payload = build_payload($pdo, $_GET["id"]);
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);

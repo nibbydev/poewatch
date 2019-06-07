@@ -162,4 +162,4 @@ if ($state === null) {
 
 // Get database entries based on league state
 $data = parse_data(get_data($pdo), $state["active"]);
-echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($data, JSON_PRESERVE_ZERO_FRACTION);

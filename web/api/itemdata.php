@@ -55,4 +55,4 @@ header("Content-Type: application/json");
 include_once ( "../details/pdo.php" );
 
 $payload = parse_data(get_data($pdo));
-echo json_encode($payload, JSON_PRETTY_PRINT);
+echo json_encode($payload);

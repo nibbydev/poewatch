@@ -165,4 +165,4 @@ check_errors();
 include_once("../details/pdo.php");
 
 $payload = get_data($pdo, $_GET["league"], $_GET["account"]);
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);
