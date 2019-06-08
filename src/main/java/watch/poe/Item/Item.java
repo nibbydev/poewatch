@@ -195,25 +195,26 @@ public class Item {
                 group = GroupEnum.currency;
             } else if (iconCategory.equals("essence")) {
                 group = GroupEnum.essence;
-            } else if ("piece".equals(apiGroup)) {
+            } else if ("piece".equals(apiGroup)) { // harbinger pieces
                 group = GroupEnum.piece;
-            } else if (name.startsWith("Vial of ")) {
+            } else if (name.startsWith("Vial of ")) { // vials
                 group = GroupEnum.vial;
-            } else if ("resonator".equals(apiGroup)) { // todo: verify
+            } else if ("resonator".equals(apiGroup)) {
                 group = GroupEnum.resonator;
             } else if ("fossil".equals(apiGroup)) {
                 group = GroupEnum.fossil;
-            } else if (iconCategory.equals("breach")) {
-                // breach splinters
-                group = GroupEnum.currency;
-            } else if (iconCategory.equals("divination")) {
-                // stacked deck
+            } else if (iconCategory.equals("breach")) { // breach splinters
+                group = GroupEnum.splinter;
+            } else if (name.startsWith("Timeless") && name.endsWith("Splinter")) { // legion splinters
+                group = GroupEnum.splinter;
+            } else if ("incubator".equals(apiGroup)) {
+                group = GroupEnum.incubator;
+            } else if (iconCategory.equals("divination")) { // stacked deck
                 group = GroupEnum.currency;
             }
 
             return;
         }
-
 
         if (apiCategory.equals("gems")) {
             category = CategoryEnum.gem;
@@ -222,7 +223,7 @@ public class Item {
                 group = GroupEnum.vaal;
             } else if ("activegem".equals(apiGroup)) {
                 group = GroupEnum.skill;
-            } else if ("supportgem".equals(apiGroup)) { // todo: verify
+            } else if ("supportgem".equals(apiGroup)) {
                 group = GroupEnum.support;
             }
 
