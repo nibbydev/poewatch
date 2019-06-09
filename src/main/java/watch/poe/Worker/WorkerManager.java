@@ -5,15 +5,13 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.Deserializers.ChangeID;
 import poe.Item.Parser.ItemParser;
 import poe.Managers.Interval.TimeFrame;
 import poe.Managers.IntervalManager;
 import poe.Managers.LeagueManager;
 import poe.Managers.StatisticsManager;
 
-import java.io.InputStream;
-import java.net.URL;
+
 import java.util.ArrayList;
 
 /**
@@ -224,44 +222,10 @@ public class WorkerManager extends Thread {
     }
 
     /**
-     * Get a changeID that's close to the stack top
-     *
-     * @return ChangeID as string
-     */
-    public String getLatestChangeID() {
-        return downloadChangeID("http://api.pathofexile.com/trade/data/change-ids");
-    }
-
-    /**
-     * Downloads content of ChangeID url and returns it
-     *
-     * @param url Link to ChangeID resource
-     * @return ChangeID as string or null on failure
-     */
-    private String downloadChangeID(String url) {
-        try {
-            URL request = new URL(url);
-            InputStream input = request.openStream();
-
-            String response = new String(input.readAllBytes());
-
-            try {
-                return gson.fromJson(response, ChangeID.class).get();
-            } catch (Exception ex) {
-                logger.error(ex.toString());
-            }
-        } catch (Exception ex) {
-            logger.error(ex.toString());
-        }
-
-        return null;
-    }
-
-    /**
      * Sets the next change ID in the variable. If the variable has no value, set it to the newChangeID's one,
      * otherwise compare the two and set the newest
      *
-     * @param newChangeID ChangeID to be added
+     * @param newChangeID Change ID to be added
      */
     public void setNextChangeID(String newChangeID) {
         if (nextChangeID == null) {
@@ -276,7 +240,7 @@ public class WorkerManager extends Thread {
      * Pauses or resumes workers
      *
      * @param state True for pause
-     * @param wait True for waiting until paused
+     * @param wait  True for waiting until paused
      */
     public void setWorkerSleepState(boolean state, boolean wait) {
         logger.info(state ? "Pausing all workers.." : "Resuming all workers..");

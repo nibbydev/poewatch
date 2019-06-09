@@ -118,17 +118,12 @@ public class Main {
             String changeId = db.init.getChangeID();
 
             if (changeId == null) {
-                System.out.println("[ERROR] Local ChangeID not found");
-                changeId = wm.getLatestChangeID();
-            }
-
-            if (changeId == null) {
                 System.out.println("[ERROR] Could not get a change id");
                 return false;
             }
 
             wm.setNextChangeID(changeId);
-            System.out.printf("[INFO] ChangeID (%s) added%n", changeId);
+            System.out.printf("[INFO] Change ID (%s) added%n", changeId);
         }
 
         for (String arg : newArgs) {
@@ -144,7 +139,7 @@ public class Main {
                 case "id":
                     String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 2);
                     wm.setNextChangeID(changeId);
-                    System.out.printf("[INFO] New ChangeID (%s) added%n", changeId);
+                    System.out.printf("[INFO] New Change ID (%s) added%n", changeId);
                     break;
 
                 default:
