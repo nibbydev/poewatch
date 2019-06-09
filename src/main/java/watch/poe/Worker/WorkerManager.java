@@ -1,6 +1,5 @@
 package poe.Worker;
 
-import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +26,12 @@ public class WorkerManager extends Thread {
     private final ItemParser itemParser;
 
     private final IntervalManager intervalManager;
-    private final Gson gson = new Gson();
 
     private final ArrayList<Worker> workerList = new ArrayList<>();
     private volatile boolean flagRun = true;
     private volatile boolean readyToExit = false;
+
+    private long lastPullTime;
     private String nextChangeID;
 
     public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, ItemParser ip) {
@@ -147,7 +147,7 @@ public class WorkerManager extends Thread {
 
             boolean allStopped = true;
             for (Worker worker : workerList) {
-                if (!worker.isReadyToExit()) {
+                if (worker.isRunning()) {
                     allStopped = false;
                     break;
                 }
@@ -188,7 +188,7 @@ public class WorkerManager extends Thread {
 
         // Loop through creation
         for (int i = nextWorkerIndex; i < nextWorkerIndex + workerCount; i++) {
-            Worker worker = new Worker(this, statisticsManager, database, config, i, itemParser);
+            Worker worker = new Worker(i, this, statisticsManager, itemParser, database, config);
             worker.start();
 
             // Add worker to local list
@@ -246,7 +246,7 @@ public class WorkerManager extends Thread {
         logger.info(state ? "Pausing all workers.." : "Resuming all workers..");
 
         for (Worker worker : workerList) {
-            worker.setPauseFlag(state);
+            worker.setPause(state);
         }
 
         // User wants to wait until all workers are paused/resumed
@@ -271,5 +271,14 @@ public class WorkerManager extends Thread {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+
+    public long getLastPullTime() {
+        return lastPullTime;
+    }
+
+    public void setLastPullTime() {
+        this.lastPullTime = System.currentTimeMillis();
     }
 }

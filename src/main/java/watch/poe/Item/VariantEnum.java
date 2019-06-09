@@ -86,9 +86,9 @@ public enum VariantEnum {
                 }
             }
 
-            // Go though all the item's explicit modifiers and the current variant's mods
             int matches = 0;
 
+            // Go though all the item's explicit modifiers and the current variant's mods
             for (String variantMod : variation.itemMods) {
                 for (String itemMod : item.getExplicitMods()) {
                     if (itemMod.contains(variantMod)) {

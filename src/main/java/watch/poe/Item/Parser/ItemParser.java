@@ -21,93 +21,118 @@ import java.util.Set;
 import java.util.zip.CRC32;
 
 public class ItemParser {
-    private final Set<Long> dbStashes;
-    private final LeagueManager leagueManager;
-    private final RelationManager relationManager;
-    private final StatisticsManager statisticsManager;
-    private final Database database;
-    private final Config config;
-    private final CRC32 crc;
+    private final LeagueManager lm;
+    private final RelationManager rm;
+    private final StatisticsManager sm;
+    private final Database db;
+    private final Config cf;
 
-    public ItemParser(LeagueManager lm, RelationManager rm, Config cnf, StatisticsManager sm, Database db) {
-        this.leagueManager = lm;
-        this.relationManager = rm;
-        this.config = cnf;
-        this.statisticsManager = sm;
-        this.database = db;
+    private final Set<Long> dbStashes = new HashSet<>(100000);
+    private final CRC32 crc = new CRC32();
 
-        dbStashes = new HashSet<>(100000);
-        crc = new CRC32();
+    /**
+     * Default constructor
+     *
+     * @param lm
+     * @param rm
+     * @param cf
+     * @param sm
+     * @param db
+     */
+    public ItemParser(LeagueManager lm, RelationManager rm, Config cf, StatisticsManager sm, Database db) {
+        this.lm = lm;
+        this.rm = rm;
+        this.cf = cf;
+        this.sm = sm;
+        this.db = db;
     }
 
     /**
-     * Class instance initializer
+     * Instance initializer
      *
      * @return True on success
      */
     public boolean init() {
-        // Get *all* stash ids
-        boolean success = database.init.getStashIds(dbStashes);
-        if (!success) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private long calcCrc(String str) {
-        if (str == null) {
-            return 0;
-        } else {
-            crc.reset();
-            crc.update(str.getBytes());
-            return crc.getValue();
-        }
+        // Get all stash ids
+        return db.init.getStashIds(dbStashes);
     }
 
     /**
-     * Parses the raw items found on the stash api
+     * Processes items found though the public stash api
      */
-    public void processApiReply(Reply reply) {
+    public void process(Reply reply) {
+        // All users in the reply
         List<User> users = new ArrayList<>();
-
-        Set<Long> nullStashes = new HashSet<>();
+        // All stash IDs in the reply
+        Set<Long> stashIdsToReset = new HashSet<>();
+        // All items in the reply
         Set<DbItemEntry> dbItems = new HashSet<>();
+
+        // Loop though all stashes in the reply
+        int totalItemCount = processStashes(reply.stashes, users, stashIdsToReset, dbItems);
+
+        // Collect some statistics
+        sm.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
+        sm.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
+        sm.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
+
+        // Shovel everything to db
+        db.upload.uploadAccountNames(users);
+        db.upload.uploadCharacterNames(users);
+        db.flag.resetStashReferences(stashIdsToReset);
+        db.upload.uploadEntries(dbItems);
+    }
+
+    /**
+     * Goes through all stashes and all items and processes them
+     *
+     * @param users
+     * @param stashIds
+     * @param dbItems
+     * @return Number of items in the reply
+     */
+    private int processStashes(List<Stash> stashes, List<User> users, Set<Long> stashIds, Set<DbItemEntry> dbItems) {
+        // Number of items in the reply
         int totalItemCount = 0;
 
-        for (Stash stash : reply.stashes) {
+        // Loop though all stashes in the reply
+        for (Stash stash : stashes) {
+            // Add up the total items
             totalItemCount += stash.items.size();
 
-            // Get league ID. If it's an unknown ID, skip this stash
-            Integer id_l = leagueManager.getLeagueId(stash.league);
-            if (id_l == null) {
-                continue;
-            }
+            // Get league ID. If it's an unknown league (eg private or SSF), skip this stash
+            Integer id_l = lm.getLeagueId(stash.league);
+            if (id_l == null) continue;
 
-            // Calculate CRCs
+            // Calculate CRC for the stash
             long stash_crc = calcCrc(stash.id);
 
             // If the stash is in use somewhere in the database
             synchronized (dbStashes) {
                 if (dbStashes.contains(stash_crc)) {
-                    nullStashes.add(stash_crc);
+                    stashIds.add(stash_crc);
                 }
             }
 
+            // Skip if missing data
             if (stash.accountName == null || !stash.isPublic) {
                 continue;
             }
 
             // Create user (character name can be null here)
             User user = new User(id_l, stash.accountName, stash.lastCharacterName);
+
+            // If the user already existed
             if (users.contains(user)) {
                 user = users.get(users.indexOf(user));
             } else {
                 users.add(user);
             }
 
+            // If the stash contained any items that would be added to db
             boolean hasValidItems = false;
 
+            // Loop through the items
             for (ApiItem apiItem : stash.items) {
                 // Convert api items to poewatch items
                 ArrayList<Item> pwItems = convertApiItem(apiItem);
@@ -117,17 +142,17 @@ public class ItemParser {
                 Price price = new Price(apiItem.getNote(), stash.stashName);
 
                 // If item didn't have a valid price
-                if (!price.hasPrice() && !config.getBoolean("entry.acceptNullPrice")) {
+                if (!price.hasPrice() && !cf.getBoolean("entry.acceptNullPrice")) {
                     continue;
                 }
 
                 // Parse branched items and create objects for db upload
                 for (Item item : pwItems) {
                     // Get item's ID (if missing, index it)
-                    Integer id_d = relationManager.index(item, id_l);
+                    Integer id_d = rm.index(item, id_l);
                     if (id_d == null) continue;
 
-                    // Find crc of item's ID
+                    // Calculate crc of item's ID
                     long itemCrc = calcCrc(apiItem.getId());
 
                     // Create DB entry object
@@ -139,22 +164,13 @@ public class ItemParser {
                 }
             }
 
-            // If stash contained at least 1 valid item, save the account
+            // If stash contained at least 1 valid item, save the stash id
             if (hasValidItems) {
                 dbStashes.add(stash_crc);
             }
         }
 
-        // Collect some statistics
-        statisticsManager.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
-        statisticsManager.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
-        statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
-
-        // Shovel everything to db
-        database.upload.uploadAccountNames(users);
-        database.upload.uploadCharacterNames(users);
-        database.flag.resetStashReferences(nullStashes);
-        database.upload.uploadEntries(dbItems);
+        return totalItemCount;
     }
 
 
@@ -212,4 +228,16 @@ public class ItemParser {
 
         return branches;
     }
+
+
+    private long calcCrc(String str) {
+        if (str == null) {
+            return 0;
+        } else {
+            crc.reset();
+            crc.update(str.getBytes());
+            return crc.getValue();
+        }
+    }
+
 }
