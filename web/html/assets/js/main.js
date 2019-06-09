@@ -2937,7 +2937,7 @@ class PricesPage {
   genericListener(self, e) {
     switch (e.currentTarget.id) {
       case 'search-league': {
-        QueryAccessor.updateQueryParam('league', e.target.value);
+        this.queryParamFilter('league', e.target.value);
 
         // Get data associated with the league
         const leagueData = SERVICE_leagues.find(league => league.name === e.target.value);
@@ -2953,7 +2953,7 @@ class PricesPage {
         return;
       }
       case 'search-group': {
-        QueryAccessor.updateQueryParam('group', self.filter.group);
+        this.queryParamFilter('group', self.filter.group);
 
         self.filter.group = e.target.value;
         console.log(`Selected group: ${self.filter.group}`);
@@ -2969,7 +2969,7 @@ class PricesPage {
         break;
       }
       case 'search-searchbar': {
-        QueryAccessor.updateQueryParam('search', self.filter.search);
+        this.queryParamFilter('search', self.filter.search);
 
         self.filter.search = e.target.value.toLowerCase().trim();
         console.log(`Search: ${self.filter.search}`);
@@ -2978,7 +2978,7 @@ class PricesPage {
       }
       case 'radio-confidence': {
         self.filter.showLowConfidence = (e.target.value === 'true');
-        QueryAccessor.updateQueryParam('confidence', self.filter.showLowConfidence);
+        this.queryParamFilter('confidence', self.filter.showLowConfidence);
 
         console.log(`Show low daily: ${self.filter.showLowConfidence}`);
 
@@ -2986,7 +2986,7 @@ class PricesPage {
       }
       case 'radio-rarity': {
         console.log(`Rarity filter: ${e.target.value}`);
-        QueryAccessor.updateQueryParam('rarity', e.target.value);
+        this.queryParamFilter('rarity', e.target.value);
 
         switch (e.target.value) {
           case 'all':
@@ -3006,7 +3006,7 @@ class PricesPage {
         break;
       }
       case 'radio-links': {
-        QueryAccessor.updateQueryParam('links', e.target.value);
+        this.queryParamFilter('links', e.target.value);
         console.log(`Link filter: ${e.target.value}`);
 
         switch (e.target.value) {
@@ -3024,7 +3024,7 @@ class PricesPage {
         break;
       }
       case 'select-tier': {
-        QueryAccessor.updateQueryParam('tier', e.target.value);
+        this.queryParamFilter('tier', e.target.value);
         console.log(`Map tier filter: ${e.target.value}`);
 
         switch (e.target.value) {
@@ -3042,7 +3042,7 @@ class PricesPage {
         break;
       }
       case 'select-level': {
-        QueryAccessor.updateQueryParam('lvl', e.target.value);
+        this.queryParamFilter('lvl', e.target.value);
         console.log(`Gem lvl filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3054,7 +3054,7 @@ class PricesPage {
         break;
       }
       case 'select-quality': {
-        QueryAccessor.updateQueryParam('quality', e.target.value);
+        this.queryParamFilter('quality', e.target.value);
         console.log(`Gem quality filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3066,7 +3066,7 @@ class PricesPage {
         break;
       }
       case 'radio-corrupted': {
-        QueryAccessor.updateQueryParam('corrupted', e.target.value);
+        this.queryParamFilter('corrupted', e.target.value);
         console.log(`Gem corruption filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3078,7 +3078,7 @@ class PricesPage {
         break;
       }
       case 'select-ilvl': {
-        QueryAccessor.updateQueryParam('ilvl', e.target.value);
+        this.queryParamFilter('ilvl', e.target.value);
         console.log(`Base iLvl filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3090,7 +3090,7 @@ class PricesPage {
         break;
       }
       case 'select-influence': {
-        QueryAccessor.updateQueryParam('influence', e.target.value);
+        this.queryParamFilter('influence', e.target.value);
         console.log(`Influence filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
