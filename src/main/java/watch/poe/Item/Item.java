@@ -3,11 +3,10 @@ package poe.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Item.ApiDeserializers.ApiItem;
-import poe.Item.Branches.BaseBranch;
+import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Category.CategoryEnum;
 import poe.Item.Category.GroupEnum;
-import poe.Main;
 import poe.Managers.RelationManager;
 
 import java.util.List;
@@ -164,7 +163,7 @@ public class Item {
         }
 
         // Override for item bases
-        if (this.getClass().equals(BaseBranch.class)) {
+        if (this.getClass().equals(CraftingBaseBranch.class)) {
             category = CategoryEnum.base;
 
             // Check all groups and find matching one

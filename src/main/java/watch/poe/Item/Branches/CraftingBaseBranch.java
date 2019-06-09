@@ -3,11 +3,11 @@ package poe.Item.Branches;
 import poe.Item.ApiDeserializers.ApiItem;
 import poe.Item.Item;
 
-public class BaseBranch extends Item {
+public class CraftingBaseBranch extends Item {
     /**
      * Base constructor
      */
-    public BaseBranch(ApiItem apiItem) {
+    public CraftingBaseBranch(ApiItem apiItem) {
         this.apiItem = apiItem;
 
         process();

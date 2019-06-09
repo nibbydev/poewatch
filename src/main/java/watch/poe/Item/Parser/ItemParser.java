@@ -5,7 +5,7 @@ import poe.Db.Database;
 import poe.Item.ApiDeserializers.ApiItem;
 import poe.Item.ApiDeserializers.Reply;
 import poe.Item.ApiDeserializers.Stash;
-import poe.Item.Branches.BaseBranch;
+import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.DefaultBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Item;
@@ -207,7 +207,7 @@ public class ItemParser {
 
         // If item is a crafting base
         if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68 && !apiItem.getTypeLine().endsWith(" Incubator")) {
-            branches.add(new BaseBranch(apiItem));
+            branches.add(new CraftingBaseBranch(apiItem));
         }
 
         return branches;
