@@ -222,7 +222,7 @@ public class ItemParser {
         }
 
         // If item is a crafting base
-        if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68 && !apiItem.getTypeLine().endsWith(" Incubator")) {
+        if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68) {
             branches.add(new CraftingBaseBranch(apiItem));
         }
 

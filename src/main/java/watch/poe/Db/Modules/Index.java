@@ -68,66 +68,8 @@ public class Index {
                 return null;
             }
 
-            Key key = item.getKey();
-
             try (PreparedStatement statement = database.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                statement.setInt(1, item.getCategory().getId());
-                statement.setInt(2, item.getGroup().getId());
-
-                statement.setString(3, key.getName());
-                statement.setString(4, key.getTypeLine());
-                statement.setInt(5, key.getFrameType());
-
-                if (item.getMaxStackSize() == null) {
-                    statement.setNull(6, 0);
-                } else statement.setInt(6, item.getMaxStackSize());
-
-                if (key.getTier() == null) {
-                    statement.setNull(7, 0);
-                } else statement.setInt(7, key.getTier());
-
-                if (key.getSeries() == null) {
-                    statement.setNull(8, 0);
-                } else statement.setInt(8, key.getSeries());
-
-                if (key.getShaper() == null) {
-                    statement.setNull(9, 0);
-                } else statement.setBoolean(9, key.getShaper());
-
-                if (key.getElder() == null) {
-                    statement.setNull(10, 0);
-                } else statement.setBoolean(10, key.getElder());
-
-                if (key.getEnchantMin() == null) {
-                    statement.setNull(11, 0);
-                } else statement.setFloat(11, key.getEnchantMin());
-
-                if (key.getEnchantMax() == null) {
-                    statement.setNull(12, 0);
-                } else statement.setFloat(12, key.getEnchantMax());
-
-                if (key.getLevel() == null) {
-                    statement.setNull(13, 0);
-                } else statement.setInt(13, key.getLevel());
-
-                if (key.getQuality() == null) {
-                    statement.setNull(14, 0);
-                } else statement.setInt(14, key.getQuality());
-
-                if (key.getCorrupted() == null) {
-                    statement.setNull(15, 0);
-                } else statement.setBoolean(15, key.getCorrupted());
-
-                if (key.getLinks() == null) {
-                    statement.setNull(16, 0);
-                } else statement.setInt(16, key.getLinks());
-
-                if (key.getiLvl() == null) {
-                    statement.setNull(17, 0);
-                } else statement.setInt(17, key.getiLvl());
-
-                statement.setString(18, key.getVariation());
-                statement.setString(19, item.formatIconURL());
+                fillItemDataStatement(statement, item);
 
                 statement.executeUpdate();
                 database.connection.commit();
@@ -160,65 +102,8 @@ public class Index {
                 return false;
             }
 
-            Key key = item.getKey();
-
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
-                statement.setInt(1, item.getCategory().getId());
-                statement.setInt(2, item.getGroup().getId());
-                statement.setString(3, key.getName());
-                statement.setString(4, key.getTypeLine());
-                statement.setInt(5, key.getFrameType());
-
-                if (item.getMaxStackSize() == null) {
-                    statement.setNull(6, 0);
-                } else statement.setInt(6, item.getMaxStackSize());
-
-                if (key.getTier() == null) {
-                    statement.setNull(7, 0);
-                } else statement.setInt(7, key.getTier());
-
-                if (key.getSeries() == null) {
-                    statement.setNull(8, 0);
-                } else statement.setInt(8, key.getSeries());
-
-                if (key.getShaper() == null) {
-                    statement.setNull(9, 0);
-                } else statement.setBoolean(9, key.getShaper());
-
-                if (key.getElder() == null) {
-                    statement.setNull(10, 0);
-                } else statement.setBoolean(10, key.getElder());
-
-                if (key.getEnchantMin() == null) {
-                    statement.setNull(11, 0);
-                } else statement.setFloat(11, key.getEnchantMin());
-
-                if (key.getEnchantMax() == null) {
-                    statement.setNull(12, 0);
-                } else statement.setFloat(12, key.getEnchantMax());
-
-                if (key.getLevel() == null) {
-                    statement.setNull(13, 0);
-                } else statement.setInt(13, key.getLevel());
-
-                if (key.getQuality() == null) {
-                    statement.setNull(14, 0);
-                } else statement.setInt(14, key.getQuality());
-
-                if (key.getCorrupted() == null) {
-                    statement.setNull(15, 0);
-                } else statement.setBoolean(15, key.getCorrupted());
-
-                if (key.getLinks() == null) {
-                    statement.setNull(16, 0);
-                } else statement.setInt(16, key.getLinks());
-
-                if (key.getiLvl() == null) {
-                    statement.setNull(17, 0);
-                } else statement.setInt(17, key.getiLvl());
-
-                statement.setString(18, key.getVariation());
-                statement.setString(19, item.formatIconURL());
+                fillItemDataStatement(statement, item);
                 statement.setInt(20, id_d);
 
                 statement.executeUpdate();
@@ -230,5 +115,66 @@ public class Index {
             logger.error(ex.getMessage(), ex);
             return false;
         }
+    }
+
+    private void fillItemDataStatement(PreparedStatement statement, Item item) throws SQLException {
+        Key key = item.getKey();
+
+        statement.setInt(1, item.getCategory().getId());
+        statement.setInt(2, item.getGroup().getId());
+        statement.setString(3, key.name);
+        statement.setString(4, key.type);
+        statement.setInt(5, key.frame);
+
+        if (item.getMaxStackSize() == null) {
+            statement.setNull(6, 0);
+        } else statement.setInt(6, item.getMaxStackSize());
+
+        if (key.mapTier == null) {
+            statement.setNull(7, 0);
+        } else statement.setInt(7, key.mapTier);
+
+        if (key.mapSeries == null) {
+            statement.setNull(8, 0);
+        } else statement.setInt(8, key.mapSeries);
+
+        if (key.baseShaper == null) {
+            statement.setNull(9, 0);
+        } else statement.setBoolean(9, key.baseShaper);
+
+        if (key.baseElder == null) {
+            statement.setNull(10, 0);
+        } else statement.setBoolean(10, key.baseElder);
+
+        if (key.enchantMin == null) {
+            statement.setNull(11, 0);
+        } else statement.setFloat(11, key.enchantMin);
+
+        if (key.enchantMax == null) {
+            statement.setNull(12, 0);
+        } else statement.setFloat(12, key.enchantMax);
+
+        if (key.gemLevel == null) {
+            statement.setNull(13, 0);
+        } else statement.setInt(13, key.gemLevel);
+
+        if (key.gemQuality == null) {
+            statement.setNull(14, 0);
+        } else statement.setInt(14, key.gemQuality);
+
+        if (key.gemCorrupted == null) {
+            statement.setNull(15, 0);
+        } else statement.setBoolean(15, key.gemCorrupted);
+
+        if (key.links == null) {
+            statement.setNull(16, 0);
+        } else statement.setInt(16, key.links);
+
+        if (key.baseItemLevel == null) {
+            statement.setNull(17, 0);
+        } else statement.setInt(17, key.baseItemLevel);
+
+        statement.setString(18, key.variation.name());
+        statement.setString(19, item.getIcon());
     }
 }
