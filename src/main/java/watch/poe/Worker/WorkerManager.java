@@ -5,7 +5,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.ApiDeserializers.ChangeID;
+import poe.Item.Deserializers.ChangeID;
 import poe.Item.Parser.ItemParser;
 import poe.Managers.Interval.TimeFrame;
 import poe.Managers.IntervalManager;

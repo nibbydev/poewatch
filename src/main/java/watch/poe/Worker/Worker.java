@@ -5,7 +5,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.ApiDeserializers.Reply;
+import poe.Item.Deserializers.Reply;
 import poe.Item.Parser.ItemParser;
 import poe.Managers.Stat.StatType;
 import poe.Managers.StatisticsManager;

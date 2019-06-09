@@ -1,4 +1,4 @@
-package poe.Item.ApiDeserializers;
+package poe.Item.Deserializers;
 
 /**
  * Universal deserializer for poe.ninja, poe.rates and pathofexile.com/api

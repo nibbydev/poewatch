@@ -2,9 +2,9 @@ package poe.Item.Parser;
 
 import com.typesafe.config.Config;
 import poe.Db.Database;
-import poe.Item.ApiDeserializers.ApiItem;
-import poe.Item.ApiDeserializers.Reply;
-import poe.Item.ApiDeserializers.Stash;
+import poe.Item.Deserializers.ApiItem;
+import poe.Item.Deserializers.Reply;
+import poe.Item.Deserializers.Stash;
 import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.DefaultBranch;
 import poe.Item.Branches.EnchantBranch;

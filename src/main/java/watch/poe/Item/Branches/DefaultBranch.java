@@ -2,9 +2,9 @@ package poe.Item.Branches;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Item.ApiDeserializers.ApiItem;
-import poe.Item.ApiDeserializers.Property;
-import poe.Item.ApiDeserializers.Socket;
+import poe.Item.Deserializers.ApiItem;
+import poe.Item.Deserializers.Property;
+import poe.Item.Deserializers.Socket;
 import poe.Item.Category.CategoryEnum;
 import poe.Item.Item;
 import poe.Item.VariantEnum;

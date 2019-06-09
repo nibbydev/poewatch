@@ -1,6 +1,6 @@
 package poe.Item.Branches;
 
-import poe.Item.ApiDeserializers.ApiItem;
+import poe.Item.Deserializers.ApiItem;
 import poe.Item.Item;
 
 public class CraftingBaseBranch extends Item {

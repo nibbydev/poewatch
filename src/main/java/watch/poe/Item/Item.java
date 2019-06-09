@@ -2,7 +2,7 @@ package poe.Item;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Item.ApiDeserializers.ApiItem;
+import poe.Item.Deserializers.ApiItem;
 import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Category.CategoryEnum;
