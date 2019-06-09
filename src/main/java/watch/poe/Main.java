@@ -81,9 +81,13 @@ public class Main {
             // Parse CLI parameters
             if (!parseCommandParameters(args)) return;
 
-            // Start controllers
+            // Start worker manager
             wm.start();
-            pm.start();
+
+            // Enable price calculations dependant on config
+            if (cnf.getBoolean("calculation.enable")) {
+                pm.start();
+            }
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
