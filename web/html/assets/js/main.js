@@ -2953,9 +2953,9 @@ class PricesPage {
         return;
       }
       case 'search-group': {
-        this.queryParamFilter('group', self.filter.group);
-
         self.filter.group = e.target.value;
+
+        this.queryParamFilter('group', self.filter.group);
         console.log(`Selected group: ${self.filter.group}`);
 
         break;
@@ -2969,9 +2969,9 @@ class PricesPage {
         break;
       }
       case 'search-searchbar': {
-        this.queryParamFilter('search', self.filter.search);
-
         self.filter.search = e.target.value.toLowerCase().trim();
+
+        this.queryParamFilter('search', self.filter.search);
         console.log(`Search: ${self.filter.search}`);
 
         break;
