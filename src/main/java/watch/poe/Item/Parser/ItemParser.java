@@ -166,7 +166,7 @@ public class ItemParser {
         ArrayList<Item> branches = createBranches(apiItem);
 
         // Process the branches
-        branches.forEach(Item::process);
+        //branches.forEach(Item::process);
         branches.removeIf(Item::isDiscard);
 
         return branches;
@@ -206,7 +206,7 @@ public class ItemParser {
         }
 
         // If item is a crafting base
-        if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68) {
+        if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68 && !apiItem.getTypeLine().endsWith(" Incubator")) {
             branches.add(new BaseBranch(apiItem));
         }
 
