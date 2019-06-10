@@ -22,7 +22,7 @@ public class PriceManager extends Thread {
     private final WorkerManager workerManager;
 
     private volatile boolean run = true;
-    private volatile boolean readyToExit = false;
+    private volatile boolean readyToExit = true;
     private long lastCycleTime;
     private Timestamp cycleStart;
 
@@ -36,6 +36,8 @@ public class PriceManager extends Thread {
      * Main loop of the thread
      */
     public void run() {
+        readyToExit = false;
+
         // Set last time to now to avoid instant cycle activation
         lastCycleTime = System.currentTimeMillis();
 
