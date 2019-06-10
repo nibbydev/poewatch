@@ -45,7 +45,7 @@ public class Key {
         type = resultSet.getString("type");
         if (resultSet.wasNull()) type = null;
 
-        variation = VariantEnum.valueOf(resultSet.getString("var"));
+        variation = VariantEnum.findByVariation(resultSet.getString("var"));
         if (resultSet.wasNull()) variation = null;
 
         frame = resultSet.getInt("frame");

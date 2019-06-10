@@ -108,6 +108,16 @@ public enum VariantEnum {
         return null;
     }
 
+    public static VariantEnum findByVariation(String variation) {
+        for (VariantEnum value : VariantEnum.values()) {
+            if (value.variation.equals(variation)) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
     public String getVariation() {
         return variation;
     }
