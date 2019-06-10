@@ -4,6 +4,7 @@ import poe.Item.Deserializers.ApiItem;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class Key {
     public String name, type;
@@ -45,7 +46,7 @@ public class Key {
         type = resultSet.getString("type");
         if (resultSet.wasNull()) type = null;
 
-        variation = VariantEnum.findByVariation(resultSet.getString("var"));
+        variation = VariantEnum.findByVariation(name, resultSet.getString("var"));
         if (resultSet.wasNull()) variation = null;
 
         frame = resultSet.getInt("frame");
@@ -85,84 +86,30 @@ public class Key {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-
-        if (!Key.class.isAssignableFrom(obj.getClass())) {
-            return false;
-        }
-
-        final Key other = (Key) obj;
-
-        if (this.frame != other.frame) {
-            return false;
-        }
-
-        if (this.name == null ? (other.name != null) : !this.name.equals(other.name)) {
-            return false;
-        }
-        if (this.type == null ? (other.type != null) : !this.type.equals(other.type)) {
-            return false;
-        }
-        if (this.variation == null ? (other.variation != null) : !this.variation.equals(other.variation)) {
-            return false;
-        }
-        if (this.links == null ? (other.links != null) : !this.links.equals(other.links)) {
-            return false;
-        }
-        if (this.gemLevel == null ? (other.gemLevel != null) : !this.gemLevel.equals(other.gemLevel)) {
-            return false;
-        }
-        if (this.gemQuality == null ? (other.gemQuality != null) : !this.gemQuality.equals(other.gemQuality)) {
-            return false;
-        }
-        if (this.mapTier == null ? (other.mapTier != null) : !this.mapTier.equals(other.mapTier)) {
-            return false;
-        }
-        if (this.mapSeries == null ? (other.mapSeries != null) : !this.mapSeries.equals(other.mapSeries)) {
-            return false;
-        }
-        if (this.gemCorrupted == null ? (other.gemCorrupted != null) : !this.gemCorrupted.equals(other.gemCorrupted)) {
-            return false;
-        }
-        if (this.baseShaper == null ? (other.baseShaper != null) : !this.baseShaper.equals(other.baseShaper)) {
-            return false;
-        }
-        if (this.baseElder == null ? (other.baseElder != null) : !this.baseElder.equals(other.baseElder)) {
-            return false;
-        }
-        if (this.enchantMax == null ? (other.enchantMax != null) : !this.enchantMax.equals(other.enchantMax)) {
-            return false;
-        }
-        if (this.enchantMin == null ? (other.enchantMin != null) : !this.enchantMin.equals(other.enchantMin)) {
-            return false;
-        }
-        return this.baseItemLevel == null ? (other.baseItemLevel == null) : this.baseItemLevel.equals(other.baseItemLevel);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Key key = (Key) o;
+        return frame == key.frame &&
+                name.equals(key.name) &&
+                Objects.equals(type, key.type) &&
+                Objects.equals(links, key.links) &&
+                Objects.equals(gemLevel, key.gemLevel) &&
+                Objects.equals(gemQuality, key.gemQuality) &&
+                Objects.equals(mapTier, key.mapTier) &&
+                Objects.equals(mapSeries, key.mapSeries) &&
+                Objects.equals(baseItemLevel, key.baseItemLevel) &&
+                Objects.equals(enchantMin, key.enchantMin) &&
+                Objects.equals(enchantMax, key.enchantMax) &&
+                Objects.equals(gemCorrupted, key.gemCorrupted) &&
+                Objects.equals(baseShaper, key.baseShaper) &&
+                Objects.equals(baseElder, key.baseElder) &&
+                variation == key.variation;
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-
-        hash = 53 * hash + (this.name != null ? this.name.hashCode() : 0);
-        hash = 53 * hash + (this.type != null ? this.type.hashCode() : 0);
-        hash = 53 * hash + (this.variation != null ? this.variation.hashCode() : 0);
-        hash = 53 * hash + (this.links != null ? this.links.hashCode() : 0);
-        hash = 53 * hash + (this.gemLevel != null ? this.gemLevel.hashCode() : 0);
-        hash = 53 * hash + (this.gemQuality != null ? this.gemQuality.hashCode() : 0);
-        hash = 53 * hash + (this.mapTier != null ? this.mapTier.hashCode() : 0);
-        hash = 53 * hash + (this.mapSeries != null ? this.mapSeries.hashCode() : 0);
-        hash = 53 * hash + (this.gemCorrupted != null ? this.gemCorrupted.hashCode() : 0);
-        hash = 53 * hash + (this.baseShaper != null ? this.baseShaper.hashCode() : 0);
-        hash = 53 * hash + (this.baseElder != null ? this.baseElder.hashCode() : 0);
-        hash = 53 * hash + (this.enchantMin != null ? this.enchantMin.hashCode() : 0);
-        hash = 53 * hash + (this.enchantMax != null ? this.enchantMax.hashCode() : 0);
-        hash = 53 * hash + (this.baseItemLevel != null ? this.baseItemLevel.hashCode() : 0);
-        hash = 53 * hash + this.frame;
-
-        return hash;
+        return Objects.hash(name, type, links, gemLevel, gemQuality, mapTier, mapSeries, baseItemLevel, enchantMin, enchantMax, gemCorrupted, baseShaper, baseElder, variation, frame);
     }
 
     @Override

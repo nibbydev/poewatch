@@ -108,9 +108,9 @@ public enum VariantEnum {
         return null;
     }
 
-    public static VariantEnum findByVariation(String variation) {
+    public static VariantEnum findByVariation(String name, String variation) {
         for (VariantEnum value : VariantEnum.values()) {
-            if (value.variation.equals(variation)) {
+            if (value.itemName.equals(name) && value.variation.equals(variation)) {
                 return value;
             }
         }
