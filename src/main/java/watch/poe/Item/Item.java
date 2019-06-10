@@ -36,6 +36,7 @@ public abstract class Item {
 
         // Find the item's category and group (eg armour/belt/weapon etc)
         determineCategoryGroup();
+        if (discard) return;
 
         if (category == null) {
             logger.error("Unknown category for: " + this);
@@ -81,7 +82,7 @@ public abstract class Item {
                     case "w":
                     case "h":
                     case "mr": // shaped
-                    case "mn": // background
+                    case "mn": // series
                     case "mt": // tier
                     case "relic":
                         paramBuilder.append("&");
@@ -171,6 +172,12 @@ public abstract class Item {
 
         // Override for item bases
         if (this.getClass().equals(CraftingBaseBranch.class)) {
+            // Only collect armours, weapons and jewels for bases
+            if (!apiCategory.equals("armour") && !apiCategory.equals("weapons") && !apiCategory.equals("jewels")) {
+                discard = true;
+                return;
+            }
+
             category = CategoryEnum.base;
 
             // Check all groups and find matching one
@@ -314,11 +321,9 @@ public abstract class Item {
     }
 
 
-
-
     @Override
     public String toString() {
-        return key.toString();
+        return key.toString() + "|icon:" + originalItem.getIcon();
     }
 
 

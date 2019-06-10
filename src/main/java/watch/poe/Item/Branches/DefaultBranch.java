@@ -2,6 +2,7 @@ package poe.Item.Branches;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import poe.Item.Category.GroupEnum;
 import poe.Item.Deserializers.ApiItem;
 import poe.Item.Deserializers.Property;
 import poe.Item.Deserializers.Socket;
@@ -126,6 +127,10 @@ public class DefaultBranch extends Item {
      * Extract map-related data from the item
      */
     private void parseMaps() {
+        if (!group.equals(GroupEnum.map) && !group.equals(GroupEnum.unique)) {
+            return;
+        }
+
         // "Superior Ashen Wood" = "Ashen Wood"
         if (key.name.startsWith("Superior ")) {
             key.name = key.name.replace("Superior ", "");
@@ -342,9 +347,9 @@ public class DefaultBranch extends Item {
             key.mapSeries = 2;
         } else if (iconCategory.equalsIgnoreCase("New") && seriesNumber > 0) {
             key.mapSeries = seriesNumber + 2;
+        } else {
+            logger.error("Couldn't determine series of map with icon: " + originalItem.getIcon());
+            discard = true;
         }
-
-        logger.error("Couldn't determine series of map with icon: " + originalItem.getIcon());
-        discard = true;
     }
 }

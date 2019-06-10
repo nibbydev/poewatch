@@ -69,11 +69,10 @@ public class ItemParser {
         Set<DbItemEntry> dbItems = new HashSet<>();
 
         // Loop though all stashes in the reply
-        int totalItemCount = processStashes(reply.stashes, users, stashIdsToReset, dbItems);
+        processStashes(reply.stashes, users, stashIdsToReset, dbItems);
 
         // Collect some statistics
         sm.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
-        sm.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
         sm.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
 
         // Shovel everything to db
@@ -89,9 +88,8 @@ public class ItemParser {
      * @param users
      * @param stashIds
      * @param dbItems
-     * @return Number of items in the reply
      */
-    private int processStashes(List<Stash> stashes, List<User> users, Set<Long> stashIds, Set<DbItemEntry> dbItems) {
+    private void processStashes(List<Stash> stashes, List<User> users, Set<Long> stashIds, Set<DbItemEntry> dbItems) {
         // Number of items in the reply
         int totalItemCount = 0;
 
@@ -134,9 +132,13 @@ public class ItemParser {
 
             // Loop through the items
             for (ApiItem apiItem : stash.items) {
-                // Convert api items to poewatch items
-                ArrayList<Item> pwItems = convertApiItem(apiItem);
-                if (pwItems == null) continue;
+                // Do a few checks on the league and etc
+                if (checkDiscard(apiItem)) continue;
+
+                // Branch the item, if necessary
+                ArrayList<Item> branches = createBranches(apiItem);
+                branches.removeIf(Item::isDiscard);
+
 
                 // Attempt to determine the price of the item
                 Price price = new Price(apiItem.getNote(), stash.stashName);
@@ -147,7 +149,7 @@ public class ItemParser {
                 }
 
                 // Parse branched items and create objects for db upload
-                for (Item item : pwItems) {
+                for (Item item : branches) {
                     // Get item's ID (if missing, index it)
                     Integer id_d = rm.index(item, id_l);
                     if (id_d == null) continue;
@@ -170,28 +172,13 @@ public class ItemParser {
             }
         }
 
-        return totalItemCount;
-    }
-
-
-    private ArrayList<Item> convertApiItem(ApiItem apiItem) {
-        // Do a few checks on the league, note and etc
-        if (checkIfDiscardApiItem(apiItem)) return null;
-
-        // Branch item
-        ArrayList<Item> branches = createBranches(apiItem);
-
-        // Process the branches
-        //branches.forEach(Item::process);
-        branches.removeIf(Item::isDiscard);
-
-        return branches;
+        sm.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
     }
 
     /**
      * Check if the item should be discarded immediately.
      */
-    private boolean checkIfDiscardApiItem(ApiItem apiItem) {
+    private boolean checkDiscard(ApiItem apiItem) {
         // Filter out items posted on the SSF leagues
         if (apiItem.getLeague().contains("SSF")) {
             return true;
@@ -239,5 +226,6 @@ public class ItemParser {
             return crc.getValue();
         }
     }
+
 
 }
