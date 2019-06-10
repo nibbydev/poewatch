@@ -174,7 +174,10 @@ public class Index {
             statement.setNull(17, 0);
         } else statement.setInt(17, key.baseItemLevel);
 
-        statement.setString(18, key.variation.name());
+        if (key.variation == null) {
+            statement.setNull(18, 0);
+        } else statement.setString(18, key.variation.getVariation());
+
         statement.setString(19, item.getIcon());
     }
 }
