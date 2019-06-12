@@ -1907,7 +1907,7 @@ class SparkLine {
     for (let i = 0; i < 7; i++) {
       if (history[i] > 0) {
         changes[i] = Math.round((1 - (lastPrice / history[i])) * 100);
-      }
+      } else changes[i] = null;
     }
 
     return changes;
