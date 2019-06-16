@@ -67,7 +67,7 @@ public class Calculation {
 
         // If no entries were left, skip the item
         if (prices.isEmpty()) {
-            logger.warn(String.format("Zero remaining entries for %d in %d", ib.getLeagueId(), ib.getItemId()));
+            logger.warn(String.format("No entries for %d in %d", ib.getItemId(), ib.getLeagueId()));
             return null;
         }
 
@@ -100,6 +100,10 @@ public class Calculation {
 
         // Trim according to standard deviation
         for (int i = 0; i < 6; i++) {
+            if (eb.isEmpty()) {
+                break;
+            }
+
             // Find averages
             final double mad = calcMAD(eb);
             final double mean = calcMean(eb);
@@ -163,7 +167,7 @@ public class Calculation {
      * @param eb List of prices
      * @return Median Absolute Deviation
      */
-    static double calcMAD(List<Double> eb) {
+    private static double calcMAD(List<Double> eb) {
         List<Double> buffer = new ArrayList<>(eb.size());
         final double median = calcMedian(eb);
 
@@ -175,9 +179,8 @@ public class Calculation {
         return newMedian == 0 ? median : newMedian;
     }
 
-    static double calcMean(List<Double> list) {
+    private static double calcMean(List<Double> list) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to mean");
             return 0;
         }
 
@@ -190,9 +193,8 @@ public class Calculation {
         return sum / list.size();
     }
 
-    static double calcStdDev(List<Double> list, double mean) {
+    private static double calcStdDev(List<Double> list, double mean) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to standard deviation");
             return 0;
         }
 
@@ -207,7 +209,6 @@ public class Calculation {
 
     private static double calcMedian(List<Double> list) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to median");
             return 0;
         }
 
@@ -216,42 +217,31 @@ public class Calculation {
     }
 
     private static double calcMin(List<Double> list) {
-        if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to min");
-            return 0;
-        }
-
-        double min = list.get(0);
-
-        for (Double entry : list) {
-            if (entry < min) {
-                min = entry;
-            }
-        }
-
-        return min;
+        return calcMinMax(list, false);
     }
 
     private static double calcMax(List<Double> list) {
+        return calcMinMax(list, true);
+    }
+
+    private static double calcMinMax(List<Double> list, boolean calcMax) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to max");
             return 0;
         }
 
-        double max = list.get(0);
+        double val = list.get(0);
 
         for (Double entry : list) {
-            if (entry > max) {
-                max = entry;
-            }
+            if (calcMax) {
+                if (entry > val) val = entry;
+            } else if (entry < val) val = entry;
         }
 
-        return max;
+        return val;
     }
 
     private static double calcMode(List<Double> list) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to mode");
             return 0;
         }
 
