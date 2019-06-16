@@ -21,8 +21,11 @@ public class PriceManager extends Thread {
     private final Config config;
     private final WorkerManager workerManager;
 
-    private volatile boolean run = true;
-    private volatile boolean readyToExit = true;
+    // should the manager be running
+    private boolean run = true;
+    // is the manager currently running
+    private boolean readyToExit = true;
+
     private long lastCycleTime;
     private Timestamp cycleStart;
 

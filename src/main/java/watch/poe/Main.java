@@ -92,8 +92,8 @@ public class Main {
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
-            if (wm != null) wm.stopController();
             if (pm != null) pm.stopController();
+            if (wm != null) wm.stopController();
 
             if (sm != null) {
                 sm.addValue(StatType.APP_SHUTDOWN, null);
