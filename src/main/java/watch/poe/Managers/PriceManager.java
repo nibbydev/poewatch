@@ -206,15 +206,27 @@ public class PriceManager extends Thread {
             // Update item in database
             database.upload.updateItem(rb);
 
-            // Just a status string, not worth logging
-            System.out.printf("[%2d|%5d] %4d\\%4d\n",
-                    idBundles.get(i).getLeagueId(), idBundles.get(i).getItemId(), i, idBundles.size());
-
+            statusMessage(i, idBundles.size());
             try {
                 Thread.sleep(config.getInt("calculation.itemDelay"));
             } catch (InterruptedException ex) {
                 logger.error(ex.toString());
             }
+        }
+    }
+
+    /**
+     * Displays a status message every n-th item
+     *
+     * @param current Current item index
+     * @param total Total number of items this cycle
+     */
+    private void statusMessage(int current, int total) {
+        int frequency = total / config.getInt("calculation.statusMsgCount");
+
+        if (current % frequency == 0) {
+            int percentage = (int) Math.ceil((float) current / total * 100f);
+            logger.debug("{}% done ({} out of {})", percentage, current, total);
         }
     }
 
