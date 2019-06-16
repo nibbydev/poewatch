@@ -24,7 +24,6 @@ public class WorkerManager extends Thread {
     private final LeagueManager leagueManager;
     private final StatisticsManager statisticsManager;
     private final ItemParser itemParser;
-
     private final IntervalManager intervalManager;
 
     private final ArrayList<Worker> workerList = new ArrayList<>();
@@ -33,6 +32,7 @@ public class WorkerManager extends Thread {
 
     private long lastPullTime;
     private String nextChangeID;
+    private int jobCounter;
 
     public WorkerManager(Config cnf, IntervalManager se, Database db, StatisticsManager sm, LeagueManager lm, ItemParser ip) {
         this.statisticsManager = sm;
@@ -47,13 +47,13 @@ public class WorkerManager extends Thread {
      * Contains main loop. Checks for open jobs and assigns them to workers
      */
     public void run() {
-        logger.info(String.format("Starting %s", WorkerManager.class.getName()));
-        logger.info(String.format("Loaded params: [1m: %2d sec][10m: %2d min][60m: %2d min][24h: %2d h]",
+        logger.info("Starting WorkerManager");
+        logger.info("Loaded params: [1m: {} sec][10m: {} min][60m: {} min][24h: {} h]",
                 TimeFrame.M_1.getRemaining() / 1000,
                 TimeFrame.M_10.getRemaining() / 60000,
                 TimeFrame.M_60.getRemaining() / 60000,
                 TimeFrame.H_24.getRemaining() / 3600000
-        ));
+        );
 
         while (flagRun) {
             intervalManager.checkFlagStates();
@@ -70,7 +70,7 @@ public class WorkerManager extends Thread {
                         continue;
                     }
 
-                    worker.setJob(nextChangeID);
+                    worker.setJob(++jobCounter, nextChangeID);
                     nextChangeID = null;
                 }
             }

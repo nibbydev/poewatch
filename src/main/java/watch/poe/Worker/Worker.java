@@ -37,6 +37,7 @@ public class Worker extends Thread {
     private final Gson gson = new Gson();
 
     private String job;
+    private int currentJobNr;
     private int workerId;
 
     // should the worker be running
@@ -76,6 +77,8 @@ public class Worker extends Thread {
             // Wait on monitor until notified and a new job is given
             waitForJob();
 
+            logger.debug("Worker {} starting job {} ({})", workerId, currentJobNr, job);
+
             // Increment api call counter
             sm.addValue(StatType.COUNT_API_CALLS, null);
 
@@ -97,6 +100,7 @@ public class Worker extends Thread {
             if (pause) waitOnPause();
 
             // Clear current job
+            logger.debug("Worker {} finished job {}", workerId, currentJobNr);
             job = null;
         }
 
@@ -312,7 +316,8 @@ public class Worker extends Thread {
         return job;
     }
 
-    public void setJob(String job) {
+    public void setJob(int jobNr, String job) {
+        this.currentJobNr = jobNr;
         this.job = job;
 
         // Notify job monitor
