@@ -1,14 +1,14 @@
 package poe.Managers.Price.Bundles;
 
 public class EntryBundle {
+    private long accountId;
     private double price;
     private Integer currencyId;
 
-    public EntryBundle(double price) {
-        this.price = price;
-    }
+    public EntryBundle(){}
 
-    public EntryBundle(Integer currencyId, double price) {
+    public EntryBundle(long accountId, Integer currencyId, double price) {
+        this.accountId = accountId;
         this.currencyId = currencyId;
         this.price = price;
     }
@@ -27,5 +27,13 @@ public class EntryBundle {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(long accountId) {
+        this.accountId = accountId;
     }
 }

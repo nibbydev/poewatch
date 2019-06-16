@@ -128,6 +128,8 @@ public class PriceManager extends Thread {
             return false;
         }
 
+        logger.debug("Got {} currency items", priceBundles.size());
+
         return true;
     }
 
@@ -196,8 +198,44 @@ public class PriceManager extends Thread {
                 continue;
             }
 
-            // Convert all entry prices to chaos for this item
+            int entryCount = entryBundles.size();
+
+            // Limit duplicate entries per account
+            Calculation.limitDuplicateEntries(entryBundles);
+
+            // Send a warning message if too many were removed from duplicate accounts
+            int percentRemoved = Math.round(100 - (float) entryBundles.size() / entryCount * 100f);
+            if (percentRemoved >= 50 && entryCount > 10) {
+                logger.warn("[{}| {}] duplicate accounts - {}/{} removed ({}%)",
+                        idBundles.get(i).getLeagueId(),
+                        idBundles.get(i).getItemId(),
+                        entryCount - entryBundles.size(),
+                        entryCount,
+                        percentRemoved);
+            }
+
+            // Convert all entry prices to chaos value
             List<Double> prices = Calculation.convertToChaos(idBundles.get(i), entryBundles, priceBundles);
+
+            if (prices.isEmpty()) {
+                logger.warn("[{}| {}] price conversion - all removed ({})",
+                        idBundles.get(i).getLeagueId(),
+                        idBundles.get(i).getItemId(),
+                        entryCount);
+                continue;
+            }
+
+            // Remove outliers
+            Calculation.filterEntries(prices);
+
+            // If no entries were left, skip the item
+            if (prices.isEmpty()) {
+                logger.warn("[{}| {}] filter - all removed ({})",
+                        idBundles.get(i).getLeagueId(),
+                        idBundles.get(i).getItemId(),
+                        entryCount);
+                continue;
+            }
 
             // Calculate the prices for this item
             ResultBundle rb = Calculation.calculateResult(idBundles.get(i), prices);
@@ -219,7 +257,7 @@ public class PriceManager extends Thread {
      * Displays a status message every n-th item
      *
      * @param current Current item index
-     * @param total Total number of items this cycle
+     * @param total   Total number of items this cycle
      */
     private void statusMessage(int current, int total) {
         int frequency = (int) Math.ceil((float) total / config.getInt("calculation.statusMsgCount"));

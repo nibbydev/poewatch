@@ -10,6 +10,7 @@ import poe.Managers.Price.Bundles.PriceBundle;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Calc {
     private static Logger logger = LoggerFactory.getLogger(Calc.class);
@@ -116,7 +117,7 @@ public class Calc {
      * @return True on success
      */
     public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle) {
-        String query = "select le.price, le.id_price " +
+        String query = "select le.id_a, le.price, le.id_price " +
                 "from league_entries as le " +
                 "join league_accounts as la " +
                 "  on le.id_a = la.id " +
@@ -124,7 +125,7 @@ public class Calc {
                 "  and le.id_d = ? " +
                 "  and la.seen > date_sub(now(), interval 8 hour) " +
                 "  and le.stash_crc is not null " +
-                "  and le.price is not null ";
+                "  and le.price is not null";
 
         try {
             if (database.connection.isClosed()) {
@@ -138,13 +139,14 @@ public class Calc {
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
-                    EntryBundle eb = new EntryBundle(resultSet.getDouble(1));
-                    entryBundles.add(eb);
+                    EntryBundle eb = new EntryBundle();
 
-                    eb.setCurrencyId(resultSet.getInt(2));
-                    if (resultSet.wasNull()) {
-                        eb.setCurrencyId(null);
-                    }
+                    eb.setAccountId(resultSet.getLong("id_a"));
+                    eb.setPrice(resultSet.getDouble("price"));
+                    eb.setCurrencyId(resultSet.getInt("id_price"));
+                    if (resultSet.wasNull()) eb.setCurrencyId(null);
+
+                    entryBundles.add(eb);
                 }
             }
 
