@@ -1,237 +1,133 @@
 package poe.Item;
 
+import poe.Item.Deserializers.ApiItem;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class Key {
-    private String name, typeLine, variation;
-    private Integer links, level, quality, tier, series, iLvl;
-    private Float enchantMin, enchantMax;
-    private Boolean corrupted, shaper, elder;
-    private int frameType;
+    public String name, type;
+    public Integer links, gemLevel, gemQuality, mapTier, mapSeries, baseItemLevel;
+    public Float enchantMin, enchantMax;
+    public Boolean gemCorrupted, baseShaper, baseElder;
+    public VariantEnum variation;
+    public int frame;
 
-    //------------------------------------------------------------------------------------------------------------
-    // Loaders
-    //------------------------------------------------------------------------------------------------------------
+    /**
+     * Default constructor
+     */
+    public Key(ApiItem original) {
+        name = original.getName();
+        type = original.getTypeLine();
+        frame = original.getFrameType();
 
-    public Key(Item item) {
-        name = item.name;
-        typeLine = item.typeLine;
-        frameType = item.frameType;
-        iLvl = item.itemLevel;
-        links = item.links;
-        tier = item.mapTier;
-        series = item.series;
-        shaper = item.shaper;
-        elder = item.elder;
-        enchantMin = item.enchantMin;
-        enchantMax = item.enchantMax;
-        variation = item.variation == null ? null : item.variation.getVariation();
+        // Use typeLine as name if name is missing
+        if (name == null || name.equals("") || frame == 2) {
+            name = type;
+            type = null;
+        }
 
-        level = item.gemLevel;
-        quality = item.gemQuality;
-        corrupted = item.gemCorrupted;
+        // Remove formatting strings from name
+        if (name.contains(">")) {
+            name = name.substring(name.lastIndexOf(">") + 1);
+        }
     }
 
+    /**
+     * Database constructor
+     *
+     * @param resultSet
+     * @throws SQLException
+     */
     public Key(ResultSet resultSet) throws SQLException {
         name = resultSet.getString("name");
 
-        typeLine = resultSet.getString("type");
-        if (resultSet.wasNull()) typeLine = null;
+        type = resultSet.getString("type");
+        if (resultSet.wasNull()) type = null;
 
-        variation = resultSet.getString("var");
+        variation = VariantEnum.findByVariation(name, resultSet.getString("var"));
         if (resultSet.wasNull()) variation = null;
 
-        frameType = resultSet.getInt("frame");
+        frame = resultSet.getInt("frame");
 
-        iLvl = resultSet.getInt("ilvl");
-        if (resultSet.wasNull()) iLvl = null;
+        baseItemLevel = resultSet.getInt("base_level");
+        if (resultSet.wasNull()) baseItemLevel = null;
 
         links = resultSet.getInt("links");
         if (resultSet.wasNull()) links = null;
 
-        tier = resultSet.getInt("tier");
-        if (resultSet.wasNull()) tier = null;
+        mapTier = resultSet.getInt("map_tier");
+        if (resultSet.wasNull()) mapTier = null;
 
-        series = resultSet.getInt("series");
-        if (resultSet.wasNull()) series = null;
+        mapSeries = resultSet.getInt("map_series");
+        if (resultSet.wasNull()) mapSeries = null;
 
-        level = resultSet.getInt("lvl");
-        if (resultSet.wasNull()) level = null;
+        gemLevel = resultSet.getInt("gem_lvl");
+        if (resultSet.wasNull()) gemLevel = null;
 
-        quality = resultSet.getInt("quality");
-        if (resultSet.wasNull()) quality = null;
+        gemQuality = resultSet.getInt("gem_quality");
+        if (resultSet.wasNull()) gemQuality = null;
 
-        corrupted = resultSet.getBoolean("corrupted");
-        if (resultSet.wasNull()) corrupted = null;
+        gemCorrupted = resultSet.getBoolean("gem_corrupted");
+        if (resultSet.wasNull()) gemCorrupted = null;
 
-        shaper = resultSet.getBoolean("shaper");
-        if (resultSet.wasNull()) shaper = null;
+        baseShaper = resultSet.getBoolean("base_shaper");
+        if (resultSet.wasNull()) baseShaper = null;
 
-        elder = resultSet.getBoolean("elder");
-        if (resultSet.wasNull()) elder = null;
+        baseElder = resultSet.getBoolean("base_elder");
+        if (resultSet.wasNull()) baseElder = null;
 
-        enchantMin = resultSet.getFloat("enchantMin");
+        enchantMin = resultSet.getFloat("enchant_min");
         if (resultSet.wasNull()) enchantMin = null;
 
-        enchantMax = resultSet.getFloat("enchantMax");
+        enchantMax = resultSet.getFloat("enchant_max");
         if (resultSet.wasNull()) enchantMax = null;
     }
 
-    //------------------------------------------------------------------------------------------------------------
-    // Equality
-    //------------------------------------------------------------------------------------------------------------
-
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-
-        if (!Key.class.isAssignableFrom(obj.getClass())) {
-            return false;
-        }
-
-        final Key other = (Key) obj;
-
-        if (this.frameType != other.frameType) {
-            return false;
-        }
-
-        if (this.name == null ? (other.name != null) : !this.name.equals(other.name)) {
-            return false;
-        }
-        if (this.typeLine == null ? (other.typeLine != null) : !this.typeLine.equals(other.typeLine)) {
-            return false;
-        }
-        if (this.variation == null ? (other.variation != null) : !this.variation.equals(other.variation)) {
-            return false;
-        }
-        if (this.links == null ? (other.links != null) : !this.links.equals(other.links)) {
-            return false;
-        }
-        if (this.level == null ? (other.level != null) : !this.level.equals(other.level)) {
-            return false;
-        }
-        if (this.quality == null ? (other.quality != null) : !this.quality.equals(other.quality)) {
-            return false;
-        }
-        if (this.tier == null ? (other.tier != null) : !this.tier.equals(other.tier)) {
-            return false;
-        }
-        if (this.series == null ? (other.series != null) : !this.series.equals(other.series)) {
-            return false;
-        }
-        if (this.corrupted == null ? (other.corrupted != null) : !this.corrupted.equals(other.corrupted)) {
-            return false;
-        }
-        if (this.shaper == null ? (other.shaper != null) : !this.shaper.equals(other.shaper)) {
-            return false;
-        }
-        if (this.elder == null ? (other.elder != null) : !this.elder.equals(other.elder)) {
-            return false;
-        }
-        if (this.enchantMax == null ? (other.enchantMax != null) : !this.enchantMax.equals(other.enchantMax)) {
-            return false;
-        }
-        if (this.enchantMin == null ? (other.enchantMin != null) : !this.enchantMin.equals(other.enchantMin)) {
-            return false;
-        }
-        return this.iLvl == null ? (other.iLvl == null) : this.iLvl.equals(other.iLvl);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Key key = (Key) o;
+        return frame == key.frame &&
+                name.equals(key.name) &&
+                Objects.equals(type, key.type) &&
+                Objects.equals(links, key.links) &&
+                Objects.equals(gemLevel, key.gemLevel) &&
+                Objects.equals(gemQuality, key.gemQuality) &&
+                Objects.equals(mapTier, key.mapTier) &&
+                Objects.equals(mapSeries, key.mapSeries) &&
+                Objects.equals(baseItemLevel, key.baseItemLevel) &&
+                Objects.equals(enchantMin, key.enchantMin) &&
+                Objects.equals(enchantMax, key.enchantMax) &&
+                Objects.equals(gemCorrupted, key.gemCorrupted) &&
+                Objects.equals(baseShaper, key.baseShaper) &&
+                Objects.equals(baseElder, key.baseElder) &&
+                variation == key.variation;
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-
-        hash = 53 * hash + (this.name != null ? this.name.hashCode() : 0);
-        hash = 53 * hash + (this.typeLine != null ? this.typeLine.hashCode() : 0);
-        hash = 53 * hash + (this.variation != null ? this.variation.hashCode() : 0);
-        hash = 53 * hash + (this.links != null ? this.links.hashCode() : 0);
-        hash = 53 * hash + (this.level != null ? this.level.hashCode() : 0);
-        hash = 53 * hash + (this.quality != null ? this.quality.hashCode() : 0);
-        hash = 53 * hash + (this.tier != null ? this.tier.hashCode() : 0);
-        hash = 53 * hash + (this.series != null ? this.series.hashCode() : 0);
-        hash = 53 * hash + (this.corrupted != null ? this.corrupted.hashCode() : 0);
-        hash = 53 * hash + (this.shaper != null ? this.shaper.hashCode() : 0);
-        hash = 53 * hash + (this.elder != null ? this.elder.hashCode() : 0);
-        hash = 53 * hash + (this.enchantMin != null ? this.enchantMin.hashCode() : 0);
-        hash = 53 * hash + (this.enchantMax != null ? this.enchantMax.hashCode() : 0);
-        hash = 53 * hash + (this.iLvl != null ? this.iLvl.hashCode() : 0);
-        hash = 53 * hash + this.frameType;
-
-        return hash;
+        return Objects.hash(name, type, links, gemLevel, gemQuality, mapTier, mapSeries, baseItemLevel, enchantMin, enchantMax, gemCorrupted, baseShaper, baseElder, variation, frame);
     }
 
     @Override
     public String toString() {
-        return "name:" + name + "|type:" + typeLine + "|frame:" + frameType + "|ilvl:" + iLvl + "|links:" + links
-                + "|tier:" + tier + "|series:" + series + "|var:" + variation + "|lvl:" + level + "|qual:" + quality + "|corr:" + corrupted
-                + "|shaper:" + shaper + "|elder:" + elder + "|enchantBottomRange:" + enchantMin
-                + "|enchantTopRange:" + enchantMax;
-    }
-
-    //------------------------------------------------------------------------------------------------------------
-    // Getters and Setters
-    //------------------------------------------------------------------------------------------------------------
-
-    public String getName() {
-        return name;
-    }
-
-    public String getTypeLine() {
-        return typeLine;
-    }
-
-    public Integer getTier() {
-        return tier;
-    }
-
-    public Integer getQuality() {
-        return quality;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public Integer getLinks() {
-        return links;
-    }
-
-    public String getVariation() {
-        return variation;
-    }
-
-    public int getFrameType() {
-        return frameType;
-    }
-
-    public Boolean getCorrupted() {
-        return corrupted;
-    }
-
-    public Integer getiLvl() {
-        return iLvl;
-    }
-
-    public Float getEnchantMax() {
-        return enchantMax;
-    }
-
-    public Boolean getShaper() {
-        return shaper;
-    }
-
-    public Boolean getElder() {
-        return elder;
-    }
-
-    public Float getEnchantMin() {
-        return enchantMin;
-    }
-
-    public Integer getSeries() {
-        return series;
+        return "name:" + name +
+                "|type:" + type +
+                "|frame:" + frame +
+                "|ilvl:" + baseItemLevel +
+                "|links:" + links +
+                "|tier:" + mapTier +
+                "|series:" + mapSeries +
+                "|var:" + variation +
+                "|lvl:" + gemLevel +
+                "|qual:" + gemQuality +
+                "|corr:" + gemCorrupted +
+                "|shaper:" + baseShaper +
+                "|elder:" + baseElder +
+                "|enchantBottomRange:" + enchantMin +
+                "|enchantTopRange:" + enchantMax;
     }
 }

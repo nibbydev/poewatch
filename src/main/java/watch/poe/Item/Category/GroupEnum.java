@@ -49,7 +49,9 @@ public enum GroupEnum {
     twoaxe("twoaxe", "2H Axes"),
     twomace("twomace", "2H Maces"),
     twosword("twosword", "2H Swords"),
-    wand("wand", "Wands"); //40
+    wand("wand", "Wands"), //40
+    incubator("incubator", "Incubators"),
+    splinter("splinter", "Splinters");
 
     private String name, display;
 

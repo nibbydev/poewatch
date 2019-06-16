@@ -422,7 +422,7 @@ function timeSince(timeStamp) {
     let day = timeStamp.getDate();
     let month = timeStamp.toDateString().match(/ [a-zA-Z]*/)[0].replace(' ', '');
     let year = timeStamp.getFullYear() == now.getFullYear() ? '' : ' ' + timeStamp.getFullYear();
-    return `${day} ${month}${year}`;
+    return day + ' ' + month + year;
   }
 }
 
@@ -1238,15 +1238,18 @@ class StatsPage {
               {
                 type: 'COUNT_TOTAL_ITEMS',
                 name: 'Total items',
-                description: 'Total nr of items listed per hour'
+                description: 'Total nr of items listed per hour',
+                unit: null
               }, {
                 type: 'COUNT_ACCEPTED_ITEMS',
                 name: 'Accepted items',
-                description: 'Nr of items listed per hour that have been accepted for price calculation'
+                description: 'Nr of items listed per hour that have been accepted for price calculation',
+                unit: null
               }, {
                 type: 'COUNT_REPLY_SIZE',
                 name: 'API reply size',
-                description: 'Stash API reply size in bytes'
+                description: 'Stash API reply size in bytes',
+                unit: null
               }
             ]
           }, {
@@ -1256,11 +1259,13 @@ class StatsPage {
               {
                 type: 'COUNT_TOTAL_STASHES',
                 name: 'Total stashes',
-                description: 'Total nr of stashes found in the past one hour'
+                description: 'Total nr of stashes found in the past one hour',
+                unit: null
               }, {
                 type: 'COUNT_ACTIVE_ACCOUNTS',
                 name: 'Active accounts',
-                description: 'Nr of accounts that have listed something for sale in the past one hour'
+                description: 'Nr of accounts that have listed something for sale in the past one hour',
+                unit: null
               }
             ]
           }, {
@@ -1270,7 +1275,8 @@ class StatsPage {
               {
                 type: 'COUNT_API_CALLS',
                 name: 'API calls',
-                description: 'Nr of stash API calls per hour'
+                description: 'Nr of stash API calls per hour',
+                unit: null
               }
             ]
           }
@@ -1280,32 +1286,38 @@ class StatsPage {
         groups: [
           {
             name: 'Group 1',
-            type: 'bar',
+            type: 'line',
             members: [
               {
                 type: 'COUNT_API_ERRORS_READ_TIMEOUT',
                 name: 'Read timeouts',
-                description: 'Nr of read timeouts in the past hour'
+                description: 'Nr of read timeouts in the past hour',
+                unit: null
               }, {
                 type: 'COUNT_API_ERRORS_CONNECT_TIMEOUT',
                 name: 'Connect timeouts',
-                description: 'Nr of connection timeouts in the past hour'
+                description: 'Nr of connection timeouts in the past hour',
+                unit: null
               }, {
                 type: 'COUNT_API_ERRORS_CONNECTION_RESET',
                 name: 'Connection resets',
-                description: 'Nr of reset connections in the past hour'
+                description: 'Nr of reset connections in the past hour',
+                unit: null
               }, {
-                type: 'COUNT_API_ERRORS_429',
+                type: 'COUNT_API_ERRORS_4XX',
                 name: '400 errors',
-                description: 'Nr of HTTP 4xx errors in the past hour'
+                description: 'Nr of HTTP 4xx errors in the past hour',
+                unit: null
               }, {
                 type: 'COUNT_API_ERRORS_5XX',
                 name: '500 errors',
-                description: 'Nr of HTTP 5xx errors in the past hour'
+                description: 'Nr of HTTP 5xx errors in the past hour',
+                unit: null
               }, {
                 type: 'COUNT_API_ERRORS_DUPLICATE',
                 name: 'Duplicate requests',
-                description: 'Nr of duplicate requests in the past hour (higher means closer to the peak of the river)'
+                description: 'Nr of duplicate requests in the past hour (higher means closer to the peak of the river)',
+                unit: null
               }
             ]
           }
@@ -1320,15 +1332,18 @@ class StatsPage {
               {
                 type: 'TIME_API_REPLY_DOWNLOAD',
                 name: 'API download',
-                description: 'Stash API reply download time in milliseconds'
+                description: 'Stash API reply download time in milliseconds',
+                unit: 'ms'
               }, {
                 type: 'TIME_PARSE_REPLY',
                 name: 'API process',
-                description: 'Stash API reply processing time in milliseconds'
+                description: 'Stash API reply processing time in milliseconds',
+                unit: 'ms'
               }, {
                 type: 'TIME_API_TTFB',
                 name: 'TTFB',
-                description: 'Stash API reply TTFB in milliseconds'
+                description: 'Stash API reply TTFB in milliseconds',
+                unit: 'ms'
               }
             ]
           }
@@ -1432,7 +1447,8 @@ class StatsPage {
       const payload = {
         series: [],
         labels: [],
-        titles: []
+        titles: [],
+        units: []
       };
 
       // Create labels
@@ -1444,6 +1460,7 @@ class StatsPage {
       for (let j = 0; j < structureGroup.members.length; j++) {
         const structureMember = structureGroup.members[j];
         payload.titles.push(structureMember.name);
+        payload.units.push(structureMember.unit);
 
         // Find index of the series in the JSON
         const seriesIndex = json.types.indexOf(structureMember.type);
@@ -1516,7 +1533,7 @@ class StatsPage {
     for (let i = 0; i < data.series.length; i++) {
       // code as in 'a' or 'b' or etc
       const seriesCode = String.fromCharCode(65 + i).toLowerCase();
-      const displayVal = roundPrice(data.series[i][valueIndex]);
+      const displayVal = roundPrice(data.series[i][valueIndex]) + (data.units[i] ? data.units[i] : '');
 
       seriesBuilder += `
       <tr>
@@ -1890,7 +1907,7 @@ class SparkLine {
     for (let i = 0; i < 7; i++) {
       if (history[i] > 0) {
         changes[i] = Math.round((1 - (lastPrice / history[i])) * 100);
-      }
+      } else changes[i] = null;
     }
 
     return changes;
@@ -2920,7 +2937,7 @@ class PricesPage {
   genericListener(self, e) {
     switch (e.currentTarget.id) {
       case 'search-league': {
-        QueryAccessor.updateQueryParam('league', e.target.value);
+        this.queryParamFilter('league', e.target.value);
 
         // Get data associated with the league
         const leagueData = SERVICE_leagues.find(league => league.name === e.target.value);
@@ -2936,9 +2953,9 @@ class PricesPage {
         return;
       }
       case 'search-group': {
-        QueryAccessor.updateQueryParam('group', self.filter.group);
-
         self.filter.group = e.target.value;
+
+        this.queryParamFilter('group', self.filter.group);
         console.log(`Selected group: ${self.filter.group}`);
 
         break;
@@ -2952,16 +2969,16 @@ class PricesPage {
         break;
       }
       case 'search-searchbar': {
-        QueryAccessor.updateQueryParam('search', self.filter.search);
-
         self.filter.search = e.target.value.toLowerCase().trim();
+
+        this.queryParamFilter('search', self.filter.search);
         console.log(`Search: ${self.filter.search}`);
 
         break;
       }
       case 'radio-confidence': {
         self.filter.showLowConfidence = (e.target.value === 'true');
-        QueryAccessor.updateQueryParam('confidence', self.filter.showLowConfidence);
+        this.queryParamFilter('confidence', self.filter.showLowConfidence);
 
         console.log(`Show low daily: ${self.filter.showLowConfidence}`);
 
@@ -2969,7 +2986,7 @@ class PricesPage {
       }
       case 'radio-rarity': {
         console.log(`Rarity filter: ${e.target.value}`);
-        QueryAccessor.updateQueryParam('rarity', e.target.value);
+        this.queryParamFilter('rarity', e.target.value);
 
         switch (e.target.value) {
           case 'all':
@@ -2989,7 +3006,7 @@ class PricesPage {
         break;
       }
       case 'radio-links': {
-        QueryAccessor.updateQueryParam('links', e.target.value);
+        this.queryParamFilter('links', e.target.value);
         console.log(`Link filter: ${e.target.value}`);
 
         switch (e.target.value) {
@@ -3007,7 +3024,7 @@ class PricesPage {
         break;
       }
       case 'select-tier': {
-        QueryAccessor.updateQueryParam('tier', e.target.value);
+        this.queryParamFilter('tier', e.target.value);
         console.log(`Map tier filter: ${e.target.value}`);
 
         switch (e.target.value) {
@@ -3025,7 +3042,7 @@ class PricesPage {
         break;
       }
       case 'select-level': {
-        QueryAccessor.updateQueryParam('lvl', e.target.value);
+        this.queryParamFilter('lvl', e.target.value);
         console.log(`Gem lvl filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3037,7 +3054,7 @@ class PricesPage {
         break;
       }
       case 'select-quality': {
-        QueryAccessor.updateQueryParam('quality', e.target.value);
+        this.queryParamFilter('quality', e.target.value);
         console.log(`Gem quality filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3049,7 +3066,7 @@ class PricesPage {
         break;
       }
       case 'radio-corrupted': {
-        QueryAccessor.updateQueryParam('corrupted', e.target.value);
+        this.queryParamFilter('corrupted', e.target.value);
         console.log(`Gem corruption filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3061,7 +3078,7 @@ class PricesPage {
         break;
       }
       case 'select-ilvl': {
-        QueryAccessor.updateQueryParam('ilvl', e.target.value);
+        this.queryParamFilter('ilvl', e.target.value);
         console.log(`Base iLvl filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3073,7 +3090,7 @@ class PricesPage {
         break;
       }
       case 'select-influence': {
-        QueryAccessor.updateQueryParam('influence', e.target.value);
+        this.queryParamFilter('influence', e.target.value);
         console.log(`Influence filter: ${e.target.value}`);
 
         if (e.target.value === 'all') {
@@ -3133,7 +3150,7 @@ class PricesPage {
       if (response.status) {
         msg = `<div class='buffering-msg align-self-center mb-2'>${response.responseJSON.error}</div>`;
       } else {
-        msg = '<div class=\'buffering-msg align-self-center mb-2\'>Too many requests, please wait a bit</div>';
+        msg = "<div class='buffering-msg align-self-center mb-2'>Too many requests, please wait a bit</div>";
       }
 
       buffering.after(msg);
@@ -3280,7 +3297,7 @@ class PricesPage {
 /**
  * Logic for about
  */
-class AboutPage{
+class AboutPage {
   /**
    * Initial page configuration
    */

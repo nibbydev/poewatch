@@ -10,6 +10,7 @@ import poe.Managers.Price.Bundles.PriceBundle;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Calc {
     private static Logger logger = LoggerFactory.getLogger(Calc.class);
@@ -79,7 +80,7 @@ public class Calc {
     public boolean getPriceBundles(List<PriceBundle> priceBundles) {
         String query = "select li.id_l, li.id_d, li.mean " +
                 "from league_items as li " +
-                "join data_itemData as did on li.id_d = did.id " +
+                "join data_item_data as did on li.id_d = did.id " +
                 "where did.id_cat = 4 " +
                 "  and did.id_grp = 11 " +
                 "  and did.frame = 5 " +
@@ -116,16 +117,15 @@ public class Calc {
      * @return True on success
      */
     public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle) {
-        String query = "select le.price, le.id_price " +
+        String query = "select le.id_a, le.price, le.id_price " +
                 "from league_entries as le " +
-                "join ( " +
-                "  select distinct account_crc from league_accounts " +
-                "  where seen > date_sub(now(), interval 8 hour) " +
-                ") as foo2 on le.account_crc = foo2.account_crc " +
+                "join league_accounts as la " +
+                "  on le.id_a = la.id " +
                 "where le.id_l = ? " +
                 "  and le.id_d = ? " +
+                "  and la.seen > date_sub(now(), interval 8 hour) " +
                 "  and le.stash_crc is not null " +
-                "  and le.price is not null ";
+                "  and le.price is not null";
 
         try {
             if (database.connection.isClosed()) {
@@ -139,13 +139,14 @@ public class Calc {
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
-                    EntryBundle eb = new EntryBundle(resultSet.getDouble(1));
-                    entryBundles.add(eb);
+                    EntryBundle eb = new EntryBundle();
 
-                    eb.setCurrencyId(resultSet.getInt(2));
-                    if (resultSet.wasNull()) {
-                        eb.setCurrencyId(null);
-                    }
+                    eb.setAccountId(resultSet.getLong("id_a"));
+                    eb.setPrice(resultSet.getDouble("price"));
+                    eb.setCurrencyId(resultSet.getInt("id_price"));
+                    if (resultSet.wasNull()) eb.setCurrencyId(null);
+
+                    entryBundles.add(eb);
                 }
             }
 
@@ -166,7 +167,7 @@ public class Calc {
                 "JOIN ( " +
                 "  SELECT i.id_l, i.mean " +
                 "  FROM league_items AS i " +
-                "  JOIN data_itemData AS did ON i.id_d = did.id " +
+                "  JOIN data_item_data AS did ON i.id_d = did.id " +
                 "  WHERE did.name = 'Exalted Orb' " +
                 ") AS ex ON i.id_l = ex.id_l " +
                 "SET i.exalted = i.mean / ex.mean " +

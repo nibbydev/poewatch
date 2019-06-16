@@ -63,7 +63,7 @@ public class Init {
      * @return True on success
      */
     public boolean getItemData(Map<Key, Integer> keyToId, Set<Integer> reindexSet) {
-        String query = "SELECT * FROM data_itemData; ";
+        String query = "SELECT * FROM data_item_data; ";
 
         logger.info("Getting item data from database");
 
@@ -153,12 +153,12 @@ public class Init {
     }
 
     /**
-     * Gets the local changeId
+     * Gets the local change id
      *
-     * @return Local changeId or null on error
+     * @return Local change id or null on error
      */
     public String getChangeID() {
-        String query = "SELECT changeId FROM data_changeId; ";
+        String query = "SELECT change_id FROM data_change_id; ";
 
         try {
             if (database.connection.isClosed()) {
@@ -169,7 +169,7 @@ public class Init {
             try (Statement statement = database.connection.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
                 resultSet.next();
-                return resultSet.getString("changeId");
+                return resultSet.getString(1);
             }
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);

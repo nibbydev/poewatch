@@ -11,12 +11,12 @@ $PAGE_DATA["cssIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chart
 $PAGE_DATA["jsIncludes"][] = "https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js";
 $PAGE_DATA["jsIncludes"][] = "chartist-plugin-tooltip2.js";
 
-$statType = "count";
+$page = "count";
 if (isset($_GET['type'])) {
   if ($_GET['type'] === "error") {
-    $statType = "error";
+    $page = "error";
   } elseif ($_GET['type'] === "time") {
-    $statType = "time";
+    $page = "time";
   }
 }
 
@@ -40,19 +40,19 @@ include "assets/php/templates/priceNav.php";
       <div class="row">
         <div class="col-4 d-flex justify-content-center">
           <button value="count"
-                  class="btn btn-block btn-outline-dark <?php if ($statType === "count") echo "active" ?> statSelect">
+                  class="btn btn-block btn-outline-dark <?php if ($page === "count") echo "active" ?> statSelect">
             Count
           </button>
         </div>
         <div class="col-4 d-flex justify-content-center">
           <button value="error"
-                  class="btn btn-block btn-outline-dark <?php if ($statType === "error") echo "active" ?> statSelect">
+                  class="btn btn-block btn-outline-dark <?php if ($page === "error") echo "active" ?> statSelect">
             Error
           </button>
         </div>
         <div class="col-4 d-flex justify-content-center">
           <button value="time"
-                  class="btn btn-block btn-outline-dark <?php if ($statType === "time") echo "active" ?> statSelect">
+                  class="btn btn-block btn-outline-dark <?php if ($page === "time") echo "active" ?> statSelect">
             Time
           </button>
         </div>

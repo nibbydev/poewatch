@@ -2,67 +2,59 @@ package poe.Item.Branches;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Item.ApiDeserializers.ApiItem;
-import poe.Item.ApiDeserializers.Property;
-import poe.Item.ApiDeserializers.Socket;
+import poe.Item.Category.GroupEnum;
+import poe.Item.Deserializers.ApiItem;
+import poe.Item.Deserializers.Property;
+import poe.Item.Deserializers.Socket;
 import poe.Item.Category.CategoryEnum;
 import poe.Item.Item;
 import poe.Item.VariantEnum;
 
 public class DefaultBranch extends Item {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(DefaultBranch.class);
 
     /**
-     * Enchantment constructor
+     * Default constructor
+     *
+     * @param apiItem Item as it appears in the stash api
      */
     public DefaultBranch(ApiItem apiItem) {
-        this.apiItem = apiItem;
-
-        process();
-        if (discard) {
-            return;
-        }
-
-        if (category == null) {
-            logger.error("Null category for: " + apiItem.getName() + " " + apiItem.getTypeLine() + " " + apiItem.getFrameType());
-        }
-
-        parse();
-        buildKey();
+        super(apiItem);
     }
 
     /**
-     * Parses item as default
+     * Branch-specific parse method that will be called in superclass constructor
      */
-    private void parse() {
+    @Override
+    public void parse() {
         // Maps can be unidentified, corrupted, and any frame type
         if (category.equals(CategoryEnum.map)) {
             parseMaps();
         } else {
-            if (!apiItem.isIdentified()) {
+            if (!originalItem.isIdentified()) {
                 discard = true;
                 return;
             }
 
             // Don't allow any normal/magic/rare items
-            if (apiItem.getFrameType() < 3) {
+            if (originalItem.getFrameType() < 3 && category != CategoryEnum.currency) {
                 discard = true;
                 return;
             }
         }
 
-        // Remove Synthesised prefix
-        if (apiItem.getSynthesised() != null) {
-            if (name != null && name.startsWith("Synthesised ")) {
-                name = name.replace("Synthesised ", "");
-            } else if (typeLine != null && typeLine.startsWith("Synthesised ")) {
-                typeLine = typeLine.replace("Synthesised ", "");
+        // Remove Synthesised prefix from item bases
+        if (originalItem.getSynthesised() != null) {
+            if (key.name != null && key.name.startsWith("Synthesised ")) {
+                key.name = key.name.replace("Synthesised ", "");
+            } else if (key.type != null && key.type.startsWith("Synthesised ")) {
+                key.type = key.type.replace("Synthesised ", "");
             }
         }
 
         // Some corrupted relics do not turn into rares and retain their relic frametypes
-        if (frameType == 9) {
-            if (apiItem.getCorrupted() != null && apiItem.getCorrupted()) {
+        if (key.frame == 9) {
+            if (originalItem.getCorrupted() != null && originalItem.getCorrupted()) {
                 discard = true;
                 return;
             }
@@ -71,7 +63,7 @@ public class DefaultBranch extends Item {
         if (category.equals(CategoryEnum.gem)) {
             extractGemData();
         } else if (category.equals(CategoryEnum.currency)) {
-            discard = relationManager.isInCurrencyBlacklist(name);
+            discard = relationManager.isInCurrencyBlacklist(key.name);
         }
 
         if (discard) {
@@ -82,18 +74,18 @@ public class DefaultBranch extends Item {
         extractItemLinks();
 
         // If present, string variation, otherwise null
-        variation = VariantEnum.findVariant(this);
+        key.variation = VariantEnum.findVariant(this);
     }
 
     /**
      * Get the current stack and max stack sizes, if present
      */
     private void extractStackSize() {
-        if (!apiItem.isStackable() || apiItem.getProperties() == null) {
+        if (!originalItem.isStackable() || originalItem.getProperties() == null) {
             return;
         }
 
-        stackSize = apiItem.getStackSize();
+        stackSize = originalItem.getStackSize();
 
         /*
         This is what it looks like as JSON:
@@ -106,7 +98,7 @@ public class DefaultBranch extends Item {
          */
 
         // Find first stacks size property
-        Property property = apiItem.getProperties().stream()
+        Property property = originalItem.getProperties().stream()
                 .filter(i -> i.name.equals("Stack Size"))
                 .findFirst()
                 .orElse(null);
@@ -135,41 +127,45 @@ public class DefaultBranch extends Item {
      * Extract map-related data from the item
      */
     private void parseMaps() {
+        if (!group.equals(GroupEnum.map) && !group.equals(GroupEnum.unique)) {
+            return;
+        }
+
         // "Superior Ashen Wood" = "Ashen Wood"
-        if (name.startsWith("Superior ")) {
-            name = name.replace("Superior ", "");
+        if (key.name.startsWith("Superior ")) {
+            key.name = key.name.replace("Superior ", "");
         }
 
         // Find name for unidentified unique maps
-        if (frameType >= 3 && !apiItem.isIdentified()) {
-            typeLine = name;
-            name = relationManager.findUnidUniqueMapName(name, frameType);
+        if (key.frame >= 3 && !originalItem.isIdentified()) {
+            key.type = key.name;
+            key.name = relationManager.findUnidUniqueMapName(key.name, key.frame);
 
-            if (name == null) {
+            if (key.name == null) {
                 discard = true;
                 return;
             }
         }
 
         // Extract name from magic and rare maps
-        if (frameType == 1 || frameType == 2) {
-            name = relationManager.extractMapBaseName(name);
+        if (key.frame == 1 || key.frame == 2) {
+            key.name = relationManager.extractMapBaseName(key.name);
 
             // Map was not in the list
-            if (name == null) {
+            if (key.name == null) {
                 discard = true;
                 return;
             }
         }
 
         // Attempt to find map tier from properties
-        if (apiItem.getProperties() != null) {
-            for (Property prop : apiItem.getProperties()) {
+        if (originalItem.getProperties() != null) {
+            for (Property prop : originalItem.getProperties()) {
                 if (prop.name.equals("Map Tier")) {
                     if (!prop.values.isEmpty()) {
                         if (!prop.values.get(0).isEmpty()) {
                             String tmpTier = prop.values.get(0).get(0);
-                            mapTier = Integer.parseInt(tmpTier);
+                            key.mapTier = Integer.parseInt(tmpTier);
                         }
                     }
                     break;
@@ -177,18 +173,15 @@ public class DefaultBranch extends Item {
             }
         }
 
-        if (mapTier == null) {
+        if (key.mapTier == null) {
             discard = true;
             return;
         }
 
-        series = extractMapSeries();
-        if (discard) return;
+        extractMapSeries();
 
         // Set frame to 0 for all non-uniques (and non-relics)
-        if (frameType < 3) {
-            frameType = 0;
-        }
+        if (key.frame < 3) key.frame = 0;
     }
 
     /**
@@ -216,13 +209,13 @@ public class DefaultBranch extends Item {
         }
 
         // This was an error somehow, somewhere
-        if (apiItem.getSockets() == null) {
+        if (originalItem.getSockets() == null) {
             return;
         }
 
         // Group links together
         Integer[] linkArray = new Integer[]{0, 0, 0, 0, 0, 0};
-        for (Socket socket : apiItem.getSockets()) {
+        for (Socket socket : originalItem.getSockets()) {
             linkArray[socket.group]++;
         }
 
@@ -235,7 +228,7 @@ public class DefaultBranch extends Item {
         }
 
         if (largestLink > 4) {
-            links = largestLink;
+            key.links = largestLink;
         }
     }
 
@@ -248,7 +241,7 @@ public class DefaultBranch extends Item {
         boolean corrupted = false;
 
         // Attempt to extract lvl and quality from item info
-        for (Property prop : apiItem.getProperties()) {
+        for (Property prop : originalItem.getProperties()) {
             if (prop.name.equals("Level")) {
                 level = Integer.parseInt(prop.values.get(0).get(0).split(" ")[0]);
             } else if (prop.name.equals("Quality")) {
@@ -273,10 +266,10 @@ public class DefaultBranch extends Item {
         }
 
         // Begin the long block that filters out gems based on a number of properties
-        if (apiItem.getTypeLine().equals("Empower Support") || apiItem.getTypeLine().equals("Enlighten Support") || apiItem.getTypeLine().equals("Enhance Support")) {
+        if (originalItem.getTypeLine().equals("Empower Support") || originalItem.getTypeLine().equals("Enlighten Support") || originalItem.getTypeLine().equals("Enhance Support")) {
             // Quality doesn't matter for lvl 3 and 4
             if (level > 2) quality = 0;
-        } else if (apiItem.getTypeLine().equals("Brand Recall")) {
+        } else if (originalItem.getTypeLine().equals("Brand Recall")) {
             if (level <= 2) {
                 level = 1;
             } else if (level < 5) {
@@ -293,8 +286,8 @@ public class DefaultBranch extends Item {
             }
         }
 
-        if (apiItem.getCorrupted() != null) {
-            corrupted = apiItem.getCorrupted();
+        if (originalItem.getCorrupted() != null) {
+            corrupted = originalItem.getCorrupted();
         }
 
         // Api bug?
@@ -303,16 +296,15 @@ public class DefaultBranch extends Item {
             return;
         }
 
-        gemLevel = level;
-        gemQuality = quality;
-        gemCorrupted = corrupted;
+        key.gemLevel = level;
+        key.gemQuality = quality;
+        key.gemCorrupted = corrupted;
     }
-
 
     /**
      * Attempt to find the series a map belongs to
      */
-    private Integer extractMapSeries() {
+    private void extractMapSeries() {
         /* Currently the series are as such:
          http://web.poecdn.com/image/Art/2DItems/Maps/Map45.png?scale=1&w=1&h=1
          http://web.poecdn.com/image/Art/2DItems/Maps/act4maps/Map76.png?scale=1&w=1&h=1
@@ -323,17 +315,17 @@ public class DefaultBranch extends Item {
         */
 
         // Ignore unique and relic maps
-        if (apiItem.getFrameType() > 2) {
-            return null;
+        if (originalItem.getFrameType() > 2) {
+            return;
         }
 
-        String[] splitItemType = apiItem.getIcon().split("/");
+        String[] splitItemType = originalItem.getIcon().split("/");
         String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
         int seriesNumber = 0;
 
         // Attempt to find series number for newer maps
         try {
-            String[] iconParams = apiItem.getIcon().split("\\?", 2)[1].split("&");
+            String[] iconParams = originalItem.getIcon().split("\\?", 2)[1].split("&");
 
             for (String param : iconParams) {
                 String[] splitParam = param.split("=");
@@ -348,18 +340,16 @@ public class DefaultBranch extends Item {
         }
 
         if (iconCategory.equalsIgnoreCase("Maps")) {
-            return 0;
+            key.mapSeries = 0;
         } else if (iconCategory.equalsIgnoreCase("act4maps")) {
-            return 1;
+            key.mapSeries = 1;
         } else if (iconCategory.equalsIgnoreCase("AtlasMaps")) {
-            return 2;
+            key.mapSeries = 2;
         } else if (iconCategory.equalsIgnoreCase("New") && seriesNumber > 0) {
-            return seriesNumber + 2;
+            key.mapSeries = seriesNumber + 2;
+        } else {
+            logger.error("Couldn't determine series of map with icon: " + originalItem.getIcon());
+            discard = true;
         }
-
-        logger.error("Couldn't determine series of map with icon: " + apiItem.getIcon());
-
-        discard = true;
-        return null;
     }
 }

@@ -19,7 +19,6 @@ function get_data($pdo, $league) {
     ON      l.id = i.id_l 
   WHERE     l.name   = ?
     AND     l.active = 1 
-    AND     i.total  > 1 
   ORDER BY  id ASC";
 
   $stmt = $pdo->prepare($query1);

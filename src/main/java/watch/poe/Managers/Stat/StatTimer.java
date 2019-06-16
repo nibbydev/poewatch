@@ -2,14 +2,14 @@ package poe.Managers.Stat;
 
 public class StatTimer {
     private long startTime = System.currentTimeMillis();
-    private StatType statType;
+    private StatType type;
 
-    public StatTimer(StatType statType) {
-        this.statType = statType;
+    public StatTimer(StatType type) {
+        this.type = type;
     }
 
-    public StatType getStatType() {
-        return statType;
+    public StatType getType() {
+        return type;
     }
 
     public long getStartTime() {

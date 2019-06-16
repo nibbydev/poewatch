@@ -1,6 +1,6 @@
 <?php
 function getTimeSinceLastRequest($pdo) {
-  $query = "SELECT timediff(now(), time) as diff from data_changeId";
+  $query = "SELECT timediff(now(), time) as diff from data_change_id";
 
   $stmt = $pdo->query($query);
   return $stmt->fetch()["diff"];
@@ -10,7 +10,7 @@ function getStats($pdo, $types) {
   $query = "SELECT * from (
       select DATE_FORMAT(time, '%Y-%m-%dT%TZ') as time, value
       from data_statistics
-      where statType = ? and time >= ?
+      where type = ? and time >= ?
       order by time desc
     ) foo
     order by foo.time asc
@@ -83,7 +83,7 @@ $types = array(
     "COUNT_API_ERRORS_CONNECT_TIMEOUT",
     "COUNT_API_ERRORS_CONNECTION_RESET",
     "COUNT_API_ERRORS_5XX",
-    "COUNT_API_ERRORS_429",
+    "COUNT_API_ERRORS_4XX",
     "COUNT_API_ERRORS_DUPLICATE"
   ),
 );

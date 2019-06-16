@@ -2,10 +2,10 @@ package poe.Item.Parser;
 
 import com.typesafe.config.Config;
 import poe.Db.Database;
-import poe.Item.ApiDeserializers.ApiItem;
-import poe.Item.ApiDeserializers.Reply;
-import poe.Item.ApiDeserializers.Stash;
-import poe.Item.Branches.BaseBranch;
+import poe.Item.Deserializers.ApiItem;
+import poe.Item.Deserializers.Reply;
+import poe.Item.Deserializers.Stash;
+import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.DefaultBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Item;
@@ -16,104 +16,149 @@ import poe.Managers.StatisticsManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.CRC32;
 
 public class ItemParser {
-    private final Set<Long> dbStashes;
-    private final LeagueManager leagueManager;
-    private final RelationManager relationManager;
-    private final StatisticsManager statisticsManager;
-    private final Database database;
-    private final Config config;
-    private final CRC32 crc;
+    private final LeagueManager lm;
+    private final RelationManager rm;
+    private final StatisticsManager sm;
+    private final Database db;
+    private final Config cf;
 
-    public ItemParser(LeagueManager lm, RelationManager rm, Config cnf, StatisticsManager sm, Database db) {
-        this.leagueManager = lm;
-        this.relationManager = rm;
-        this.config = cnf;
-        this.statisticsManager = sm;
-        this.database = db;
-
-        dbStashes = new HashSet<>(100000);
-        crc = new CRC32();
-    }
-
-
-    public Set<Long> getStashCrcSet() {
-        return dbStashes;
-    }
-
-    private long calcCrc(String str) {
-        if (str == null) {
-            return 0;
-        } else {
-            crc.reset();
-            crc.update(str.getBytes());
-            return crc.getValue();
-        }
-    }
-
+    private final Set<Long> dbStashes = new HashSet<>(100000);
+    private final CRC32 crc = new CRC32();
 
     /**
-     * Parses the raw items found on the stash api
+     * Default constructor
+     *
+     * @param lm
+     * @param rm
+     * @param cf
+     * @param sm
+     * @param db
      */
-    public void processApiReply(Reply reply) {
-        // Set of account names and items extracted from the API call
-        Set<Long> accounts = new HashSet<>();
-        Set<Long> nullStashes = new HashSet<>();
+    public ItemParser(LeagueManager lm, RelationManager rm, Config cf, StatisticsManager sm, Database db) {
+        this.lm = lm;
+        this.rm = rm;
+        this.cf = cf;
+        this.sm = sm;
+        this.db = db;
+    }
+
+    /**
+     * Instance initializer
+     *
+     * @return True on success
+     */
+    public boolean init() {
+        // Get all stash ids
+        return db.init.getStashIds(dbStashes);
+    }
+
+    /**
+     * Processes items found though the public stash api
+     */
+    public void process(Reply reply) {
+        // All users in the reply
+        List<User> users = new ArrayList<>();
+        // All stash IDs in the reply
+        Set<Long> stashIdsToReset = new HashSet<>();
+        // All items in the reply
         Set<DbItemEntry> dbItems = new HashSet<>();
-        // Separate set for collecting account and character names
-        Set<RawUsernameEntry> usernames = new HashSet<>();
+
+        // Loop though all stashes in the reply
+        processStashes(reply.stashes, users, stashIdsToReset, dbItems);
+
+        // Collect some statistics
+        sm.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
+        sm.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
+
+        // Shovel everything to db
+        db.upload.uploadAccountNames(users);
+        db.upload.uploadCharacterNames(users);
+        db.flag.resetStashReferences(stashIdsToReset);
+        db.upload.uploadEntries(dbItems);
+    }
+
+    /**
+     * Goes through all stashes and all items and processes them
+     *
+     * @param users
+     * @param stashIds
+     * @param dbItems
+     */
+    private void processStashes(List<Stash> stashes, List<User> users, Set<Long> stashIds, Set<DbItemEntry> dbItems) {
+        // Number of items in the reply
         int totalItemCount = 0;
 
-        for (Stash stash : reply.stashes) {
+        // Loop though all stashes in the reply
+        for (Stash stash : stashes) {
+            // Add up the total items
             totalItemCount += stash.items.size();
 
-            // Get league ID. If it's an unknown ID, skip this stash
-            Integer id_l = leagueManager.getLeagueId(stash.league);
-            if (id_l == null) {
-                continue;
-            }
+            // Get league ID. If it's an unknown league (eg private or SSF), skip this stash
+            Integer id_l = lm.getLeagueId(stash.league);
+            if (id_l == null) continue;
 
-            // Calculate CRCs
-            long account_crc = calcCrc(stash.accountName);
+            // Calculate CRC for the stash
             long stash_crc = calcCrc(stash.id);
 
             // If the stash is in use somewhere in the database
             synchronized (dbStashes) {
                 if (dbStashes.contains(stash_crc)) {
-                    nullStashes.add(stash_crc);
+                    stashIds.add(stash_crc);
                 }
             }
 
+            // Skip if missing data
             if (stash.accountName == null || !stash.isPublic) {
                 continue;
             }
 
+            // Create user (character name can be null here)
+            User user = new User(id_l, stash.accountName, stash.lastCharacterName);
+
+            // If the user already existed
+            if (users.contains(user)) {
+                user = users.get(users.indexOf(user));
+            } else {
+                users.add(user);
+            }
+
+            // If the stash contained any items that would be added to db
             boolean hasValidItems = false;
 
+            // Loop through the items
             for (ApiItem apiItem : stash.items) {
-                // Convert api items to poewatch items
-                ArrayList<Item> pwItems = convertApiItem(apiItem);
-                if (pwItems == null) continue;
+                // Do a few checks on the league and etc
+                if (checkDiscard(apiItem)) continue;
+
+                // Branch the item, if necessary
+                ArrayList<Item> branches = createBranches(apiItem);
+                branches.removeIf(Item::isDiscard);
+
 
                 // Attempt to determine the price of the item
                 Price price = new Price(apiItem.getNote(), stash.stashName);
 
                 // If item didn't have a valid price
-                if (!price.hasPrice() && !config.getBoolean("entry.acceptNullPrice")) {
+                if (!price.hasPrice() && !cf.getBoolean("entry.acceptNullPrice")) {
                     continue;
                 }
 
                 // Parse branched items and create objects for db upload
-                for (Item item : pwItems) {
+                for (Item item : branches) {
                     // Get item's ID (if missing, index it)
-                    Integer id_d = relationManager.index(item, id_l);
+                    Integer id_d = rm.index(item, id_l);
                     if (id_d == null) continue;
 
-                    DbItemEntry entry = new DbItemEntry(id_l, id_d, account_crc, stash_crc, calcCrc(apiItem.getId()),
-                            item.getStackSize(), price);
+                    // Calculate crc of item's ID
+                    long itemCrc = calcCrc(apiItem.getId());
+
+                    // Create DB entry object
+                    DbItemEntry entry = new DbItemEntry(id_l, id_d, stash_crc, itemCrc, item.getStackSize(), price, user);
                     dbItems.add(entry);
 
                     // Set flag to indicate the stash contained at least 1 valid item
@@ -121,49 +166,19 @@ public class ItemParser {
                 }
             }
 
-            // If stash contained at least 1 valid item, save the account
+            // If stash contained at least 1 valid item, save the stash id
             if (hasValidItems) {
                 dbStashes.add(stash_crc);
-                accounts.add(account_crc);
-            }
-
-            // As this is a completely separate service, collect all character and account names separately
-            if (stash.lastCharacterName != null) {
-                usernames.add(new RawUsernameEntry(stash.accountName, stash.lastCharacterName, id_l));
             }
         }
 
-        // Collect some statistics
-        statisticsManager.addValue(StatType.COUNT_TOTAL_STASHES, reply.stashes.size());
-        statisticsManager.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
-        statisticsManager.addValue(StatType.COUNT_ACCEPTED_ITEMS, dbItems.size());
-
-        // Shovel everything to db
-        database.upload.uploadAccounts(accounts);
-        database.flag.resetStashReferences(nullStashes);
-        database.upload.uploadEntries(dbItems);
-        database.upload.uploadUsernames(usernames);
-    }
-
-
-    private ArrayList<Item> convertApiItem(ApiItem apiItem) {
-        // Do a few checks on the league, note and etc
-        if (checkIfDiscardApiItem(apiItem)) return null;
-
-        // Branch item
-        ArrayList<Item> branches = createBranches(apiItem);
-
-        // Process the branches
-        branches.forEach(Item::process);
-        branches.removeIf(Item::isDiscard);
-
-        return branches;
+        sm.addValue(StatType.COUNT_TOTAL_ITEMS, totalItemCount);
     }
 
     /**
      * Check if the item should be discarded immediately.
      */
-    private boolean checkIfDiscardApiItem(ApiItem apiItem) {
+    private boolean checkDiscard(ApiItem apiItem) {
         // Filter out items posted on the SSF leagues
         if (apiItem.getLeague().contains("SSF")) {
             return true;
@@ -195,9 +210,22 @@ public class ItemParser {
 
         // If item is a crafting base
         if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68) {
-            branches.add(new BaseBranch(apiItem));
+            branches.add(new CraftingBaseBranch(apiItem));
         }
 
         return branches;
     }
+
+
+    private long calcCrc(String str) {
+        if (str == null) {
+            return 0;
+        } else {
+            crc.reset();
+            crc.update(str.getBytes());
+            return crc.getValue();
+        }
+    }
+
+
 }

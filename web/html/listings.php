@@ -18,11 +18,12 @@ genBodyHeader();
 ?>
 <div class="card custom-card w-100">
   <div class="card-header">
-    Find all items on sale from a user. Type in a <span class='custom-text-green'>case sensitive</span> account name
-    and click search. Note that only items tracked by the site are returned. This means most rare/magic/normal items
-    are excluded. This is also available as an API.
+    Find all items on sale from a user. Type in a case-insensitive account name
+    and click search. Note that only items tracked by the site are returned. This
+    means most rare/magic/normal items are excluded. This is also available as an API.
+    Also, Standard league items have been collected for about half a year. Stashes
+    that haven't been touched before then are not in the database.
   </div>
-
 
   <div class="card-body">
 
@@ -34,9 +35,7 @@ genBodyHeader();
           } ?>
         </select>
 
-        <input type="text" class="form-control seamless-input" name="search" placeholder="Account name"
-               value="<?php if (isset($_GET["account"])) echo htmlentities($_GET["account"]) ?>"
-               id="search-input">
+        <input type="text" class="form-control seamless-input" name="search" placeholder="Account name" id="search-input">
         <button type="button" id="search-btn" class="btn btn-outline-light">Search</button>
       </div>
 

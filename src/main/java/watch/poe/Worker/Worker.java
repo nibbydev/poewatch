@@ -5,7 +5,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Db.Database;
-import poe.Item.ApiDeserializers.Reply;
+import poe.Item.Deserializers.Reply;
 import poe.Item.Parser.ItemParser;
 import poe.Managers.Stat.StatType;
 import poe.Managers.StatisticsManager;
@@ -26,148 +26,175 @@ public class Worker extends Thread {
     private static final Pattern exceptionPattern5xx = Pattern.compile("^.+ 5\\d\\d .+$");
     private static final Pattern exceptionPattern4xx = Pattern.compile("^.+ 4\\d\\d .+$");
 
-    private static long lastPullTime;
-    private final WorkerManager workerManager;
-    private final StatisticsManager statisticsManager;
-    private final Database database;
-    private final Config config;
-    private final Gson gson;
-    private final Object jobMonitor = new Object();
+    private final StatisticsManager sm;
+    private final WorkerManager wm;
+    private final ItemParser ip;
+    private final Database db;
+    private final Config cf;
+
     private final Object pauseMonitor = new Object();
-    private ItemParser itemParser;
-    private volatile boolean flagLocalRun = true;
-    private volatile boolean readyToExit = false;
+    private final Object jobMonitor = new Object();
+    private final Gson gson = new Gson();
+
     private String job;
+    private int currentJobNr;
     private int workerId;
-    private boolean pauseFlag = false;
+
+    // should the worker be running
+    private boolean run = true;
+    // is the worker currently running
+    private boolean isRunning = true;
+    // should the worker be paused
+    private boolean pause = false;
+    // is the worker currently paused
     private boolean isPaused = false;
 
-    public Worker(WorkerManager wm, StatisticsManager sm, Database db, Config cnf, int id, ItemParser ip) {
-        this.itemParser = ip;
-        this.workerManager = wm;
-        this.statisticsManager = sm;
-        this.database = db;
-        this.config = cnf;
+    /**
+     * Default constructor
+     *
+     * @param id The worker's id
+     * @param wm
+     * @param sm
+     * @param ip
+     * @param db
+     * @param cf
+     */
+    public Worker(int id, WorkerManager wm, StatisticsManager sm, ItemParser ip, Database db, Config cf) {
         this.workerId = id;
-
-        gson = new Gson();
+        this.wm = wm;
+        this.sm = sm;
+        this.ip = ip;
+        this.db = db;
+        this.cf = cf;
     }
 
-
     /**
-     * Contains main loop. Checks for new jobs and processes them
+     * Main loop of the worker.
+     * Checks for new jobs and processes them.
      */
     public void run() {
-        while (flagLocalRun) {
+        while (run) {
+            // Wait on monitor until notified and a new job is given
             waitForJob();
 
-            String replyString = download();
-            statisticsManager.addValue(StatType.COUNT_API_CALLS, null);
+            logger.debug("Worker {} starting job {} ({})", workerId, currentJobNr, job);
 
-            if (replyString != null) {
-                Reply reply = gson.fromJson(replyString, Reply.class);
+            // Increment api call counter
+            sm.addValue(StatType.COUNT_API_CALLS, null);
 
-                if (pauseFlag) {
-                    pauseWorker();
-                }
+            // Download JSON reply from stash API
+            Reply reply = download();
 
-                if (reply != null && reply.next_change_id != null) {
-                    statisticsManager.startTimer(StatType.TIME_PARSE_REPLY);
-                    itemParser.processApiReply(reply);
-                    statisticsManager.clkTimer(StatType.TIME_PARSE_REPLY);
-                }
+            if (reply != null) {
+                // Start a timer for total process time
+                sm.startTimer(StatType.TIME_PARSE_REPLY);
+
+                // Hand it over to item parser to deal with
+                ip.process(reply);
+
+                // End the timer
+                sm.clkTimer(StatType.TIME_PARSE_REPLY);
             }
 
+            // If worker should be paused
+            if (pause) waitOnPause();
+
+            // Clear current job
+            logger.debug("Worker {} finished job {}", workerId, currentJobNr);
             job = null;
         }
 
-        logger.info(String.format("Worker (%d) stopped", workerId));
-        readyToExit = true;
+        logger.info("Worker {} stopped", workerId);
+        isRunning = false;
     }
 
     /**
      * Requests the worker to stop
      */
     public void requestStop() {
-        flagLocalRun = false;
-        wakeLocalMonitor();
+        run = false;
+
+        // Notify job monitor
+        synchronized (jobMonitor) {
+            jobMonitor.notify();
+        }
     }
 
     /**
-     * Downloads data from the API
+     * Beefy method for downloading data from the stash API.
      *
-     * @return Whole stash batch as a string
+     * @return Valid stash api reply or null
      */
-    private String download() {
-        StringBuilder stringBuilderBuffer = new StringBuilder();
-        byte[] byteBuffer = new byte[config.getInt("worker.bufferSize")];
+    private Reply download() {
+        StringBuilder jsonBuffer = new StringBuilder();
+        byte[] byteBuffer = new byte[cf.getInt("worker.bufferSize")];
         boolean regexLock = true;
         boolean gotFirstByte = false;
         InputStream stream = null;
         int byteCount, totalByteCount = 0;
 
         // Sleep for x milliseconds
-        while (System.currentTimeMillis() - Worker.lastPullTime < config.getInt("worker.downloadDelay")) {
-            sleepFor((int) (config.getInt("worker.downloadDelay") - System.currentTimeMillis() + Worker.lastPullTime));
+        while (System.currentTimeMillis() - wm.getLastPullTime() < cf.getInt("worker.downloadDelay")) {
+            sleepFor((int) (cf.getInt("worker.downloadDelay") - System.currentTimeMillis() + wm.getLastPullTime()));
         }
 
-        Worker.lastPullTime = System.currentTimeMillis();
+        wm.setLastPullTime();
 
         try {
-            statisticsManager.startTimer(StatType.TIME_API_REPLY_DOWNLOAD);
+            sm.startTimer(StatType.TIME_API_REPLY_DOWNLOAD);
 
             // Define the request
             URL request = new URL("http://www.pathofexile.com/api/public-stash-tabs?id=" + this.job);
             HttpURLConnection connection = (HttpURLConnection) request.openConnection();
 
             // Define timeouts: 3 sec for connecting, 10 sec for ongoing connection
-            connection.setReadTimeout(config.getInt("worker.readTimeout"));
-            connection.setConnectTimeout(config.getInt("worker.connectTimeout"));
+            connection.setReadTimeout(cf.getInt("worker.readTimeout"));
+            connection.setConnectTimeout(cf.getInt("worker.connectTimeout"));
 
-            statisticsManager.startTimer(StatType.TIME_API_TTFB);
+            sm.startTimer(StatType.TIME_API_TTFB);
 
             // Define the streamer (used for reading in chunks)
             stream = connection.getInputStream();
 
             // Stream data and count bytes
-            while ((byteCount = stream.read(byteBuffer, 0, config.getInt("worker.bufferSize"))) != -1) {
+            while ((byteCount = stream.read(byteBuffer, 0, cf.getInt("worker.bufferSize"))) != -1) {
                 if (!gotFirstByte) {
-                    statisticsManager.clkTimer(StatType.TIME_API_TTFB);
+                    sm.clkTimer(StatType.TIME_API_TTFB);
                     gotFirstByte = true;
                 }
 
                 // Check if run flag is lowered
-                if (!flagLocalRun) return null;
+                if (!run) return null;
 
                 totalByteCount += byteCount;
 
                 // Check if byte has <CHUNK_SIZE> amount of elements (the first request does not)
-                if (byteCount != config.getInt("worker.bufferSize")) {
+                if (byteCount != cf.getInt("worker.bufferSize")) {
                     byte[] trimmedByteBuffer = new byte[byteCount];
                     System.arraycopy(byteBuffer, 0, trimmedByteBuffer, 0, byteCount);
 
                     // Trim byteBuffer, convert it into string and add to string buffer
-                    stringBuilderBuffer.append(new String(trimmedByteBuffer));
+                    jsonBuffer.append(new String(trimmedByteBuffer));
                 } else {
-                    stringBuilderBuffer.append(new String(byteBuffer));
+                    jsonBuffer.append(new String(byteBuffer));
                 }
 
                 // Try to find new job number using regex
                 if (regexLock) {
-                    Matcher matcher = changeIdPattern.matcher(stringBuilderBuffer.toString());
+                    Matcher matcher = changeIdPattern.matcher(jsonBuffer.toString());
 
                     if (matcher.find()) {
                         regexLock = false;
 
                         // Add new-found job to queue
-                        workerManager.setNextChangeID(matcher.group());
+                        wm.setNextChangeID(matcher.group());
 
                         // Update db change id entry
-                        database.upload.updateChangeID(matcher.group());
+                        db.upload.updateChangeID(matcher.group());
 
                         // If new changeID is equal to the previous changeID, it has already been downloaded
                         if (matcher.group().equals(job)) {
-                            statisticsManager.addValue(StatType.COUNT_API_ERRORS_DUPLICATE, 1);
+                            sm.addValue(StatType.COUNT_API_ERRORS_DUPLICATE, 1);
                             return null;
                         }
                     }
@@ -176,23 +203,23 @@ public class Worker extends Thread {
         } catch (Exception ex) {
             // Very professional exception logging
             if (ex.getMessage().contains("Read timed out")) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_READ_TIMEOUT, null);
+                sm.addValue(StatType.COUNT_API_ERRORS_READ_TIMEOUT, null);
             } else if (ex.getMessage().contains("connect timed out")) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT, null);
+                sm.addValue(StatType.COUNT_API_ERRORS_CONNECT_TIMEOUT, null);
             } else if (ex.getMessage().contains("Connection reset")) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_CONN_RESET, null);
+                sm.addValue(StatType.COUNT_API_ERRORS_CONN_RESET, null);
             } else if (exceptionPattern5xx.matcher(ex.getMessage()).matches()) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_5XX, null);
+                sm.addValue(StatType.COUNT_API_ERRORS_5XX, null);
             } else if (exceptionPattern4xx.matcher(ex.getMessage()).matches()) {
-                statisticsManager.addValue(StatType.COUNT_API_ERRORS_429, null);
+                sm.addValue(StatType.COUNT_API_ERRORS_4XX, null);
             }
 
             logger.error("Caught worker download error: " + ex.getMessage());
 
-            // Add old changeID to the pool only if a new one hasn't been found
+            // Add old change id back to the pool only if a new one hasn't been found
             if (regexLock) {
-                sleepFor(config.getInt("worker.lockTimeout"));
-                workerManager.setNextChangeID(job);
+                sleepFor(cf.getInt("worker.lockTimeout"));
+                wm.setNextChangeID(job);
             }
 
             return null;
@@ -206,15 +233,23 @@ public class Worker extends Thread {
             }
 
             if (!gotFirstByte) {
-                statisticsManager.clkTimer(StatType.TIME_API_TTFB);
+                sm.clkTimer(StatType.TIME_API_TTFB);
             }
 
-            statisticsManager.clkTimer(StatType.TIME_API_REPLY_DOWNLOAD);
-            statisticsManager.addValue(StatType.COUNT_REPLY_SIZE, totalByteCount);
+            sm.clkTimer(StatType.TIME_API_REPLY_DOWNLOAD);
+            sm.addValue(StatType.COUNT_REPLY_SIZE, totalByteCount);
         }
 
-        // Return the downloaded mess of a JSON string
-        return stringBuilderBuffer.toString();
+        // Now at this point we got the whole reply JSON as a ~3MB string
+        // and should convert it to an object before returning
+        Reply reply = gson.fromJson(jsonBuffer.toString(), Reply.class);
+
+        // In the case the reply's invalid
+        if (reply == null || reply.next_change_id == null) {
+            return null;
+        }
+
+        return reply;
     }
 
     /**
@@ -230,29 +265,35 @@ public class Worker extends Thread {
         }
     }
 
+    /**
+     * Wait on monitor until notified and a new job is given
+     */
     private void waitForJob() {
         synchronized (jobMonitor) {
-            while (flagLocalRun && job == null) {
+            // While worker should run and no job is given
+            while (run && job == null) {
                 try {
                     jobMonitor.wait(100);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
 
-                if (pauseFlag) {
-                    pauseWorker();
-                }
+                // If worker should pause
+                if (pause) waitOnPause();
             }
         }
     }
 
-    private void pauseWorker() {
+    /**
+     * Wait on pause monitor
+     */
+    private void waitOnPause() {
         isPaused = true;
 
         synchronized (pauseMonitor) {
-            System.out.printf("- worker %d paused\n", workerId);
+            logger.debug("Worker {} paused", workerId);
 
-            while (pauseFlag) {
+            while (pause) {
                 try {
                     pauseMonitor.wait(100);
                 } catch (InterruptedException ex) {
@@ -260,17 +301,12 @@ public class Worker extends Thread {
                 }
             }
 
-            System.out.printf("- worker %d resumed\n", workerId);
+            logger.debug("Worker {} resumed", workerId);
         }
 
         isPaused = false;
     }
 
-    private void wakeLocalMonitor() {
-        synchronized (jobMonitor) {
-            jobMonitor.notify();
-        }
-    }
 
     public int getWorkerId() {
         return workerId;
@@ -280,20 +316,47 @@ public class Worker extends Thread {
         return job;
     }
 
-    public void setJob(String job) {
+    public void setJob(int jobNr, String job) {
+        this.currentJobNr = jobNr;
         this.job = job;
-        wakeLocalMonitor();
+
+        // Notify job monitor
+        synchronized (jobMonitor) {
+            jobMonitor.notify();
+        }
     }
 
     public boolean isPaused() {
         return isPaused;
     }
 
-    public void setPauseFlag(boolean pauseFlag) {
-        this.pauseFlag = pauseFlag;
+    public void setPause(boolean pause) {
+        this.pause = pause;
     }
 
-    public boolean isReadyToExit() {
-        return readyToExit;
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    /**
+     * Generates an info string about the worker, including its id, states and current job
+     *
+     * @return Info string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Worker ");
+        sb.append(workerId);
+
+        if (isPaused) sb.append(" (paused)");
+        else if (pause) sb.append(" (pausing)");
+
+        if (isRunning) sb.append(" (stopped)");
+        else if (!run) sb.append(" (stopping)");
+
+        sb.append(": ");
+        sb.append(job);
+
+        return sb.toString();
     }
 }

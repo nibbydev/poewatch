@@ -1,4 +1,4 @@
-package poe.Item.ApiDeserializers;
+package poe.Item.Deserializers;
 
 import java.util.List;
 

@@ -31,21 +31,18 @@ public class Main {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        boolean success;
-
-        logger.info("Starting PoeWatch client");
+        logger.info("Starting PoeWatch");
 
         try {
-            im = new IntervalManager();
-
             if (!loadConfig()) {
                 return;
             }
 
+            im = new IntervalManager();
+
             // Initialize database connector
             db = new Database(cnf);
-            success = db.connect();
-            if (!success) {
+            if (!db.connect()) {
                 logger.error("Could not connect to database");
                 return;
             }
@@ -53,21 +50,16 @@ public class Main {
             sm = new StatisticsManager(db);
             sm.addValue(StatType.APP_STARTUP, null);
 
-            // Instantiate a price manager
-            pm = new PriceManager(db, cnf);
-
             // Init league manager
             LeagueManager lm = new LeagueManager(db, cnf);
-            success = lm.cycle();
-            if (!success) {
+            if (!lm.cycle()) {
                 logger.error("Could not get leagues");
                 return;
             }
 
             // Get category, item and currency data
             RelationManager rm = new RelationManager(db);
-            success = rm.init();
-            if (!success) {
+            if (!rm.init()) {
                 logger.error("Could not get relations");
                 return;
             }
@@ -76,28 +68,32 @@ public class Main {
             Price.setRelationManager(rm);
 
             ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
-            wm = new WorkerManager(cnf, im, db, sm, lm, ip);
-
-            // Get all distinct stash ids that are in the db
-            success = db.init.getStashIds(ip.getStashCrcSet());
-            if (!success) {
-                logger.error("Could not get active stash IDs");
+            if (!ip.init()) {
+                logger.error("Could not initialize item parser");
                 return;
             }
 
-            // Parse CLI parameters
-            success = parseCommandParameters(args);
-            if (!success) return;
+            wm = new WorkerManager(cnf, im, db, sm, lm, ip);
 
-            // Start controllers
+            // Instantiate a price manager
+            pm = new PriceManager(db, cnf, wm);
+
+            // Parse CLI parameters
+            if (!parseCommandParameters(args)) return;
+
+            // Start worker manager
             wm.start();
-            pm.start();
+
+            // Enable price calculations dependant on config
+            if (cnf.getBoolean("calculation.enable")) {
+                pm.start();
+            }
 
             // Initiate main command loop, allowing user some control over the program
             commandLoop();
         } finally {
-            if (wm != null) wm.stopController();
             if (pm != null) pm.stopController();
+            if (wm != null) wm.stopController();
 
             if (sm != null) {
                 sm.addValue(StatType.APP_SHUTDOWN, null);
@@ -126,17 +122,12 @@ public class Main {
             String changeId = db.init.getChangeID();
 
             if (changeId == null) {
-                System.out.println("[ERROR] Local ChangeID not found");
-                changeId = wm.getLatestChangeID();
-            }
-
-            if (changeId == null) {
                 System.out.println("[ERROR] Could not get a change id");
                 return false;
             }
 
             wm.setNextChangeID(changeId);
-            System.out.printf("[INFO] ChangeID (%s) added%n", changeId);
+            System.out.printf("[INFO] Change ID (%s) added%n", changeId);
         }
 
         for (String arg : newArgs) {
@@ -152,7 +143,7 @@ public class Main {
                 case "id":
                     String changeId = newArgs.get(newArgs.lastIndexOf(arg) + 2);
                     wm.setNextChangeID(changeId);
-                    System.out.printf("[INFO] New ChangeID (%s) added%n", changeId);
+                    System.out.printf("[INFO] New Change ID (%s) added%n", changeId);
                     break;
 
                 default:
@@ -234,7 +225,7 @@ public class Main {
 
         if (userInput[1].equalsIgnoreCase("list")) {
             System.out.println("[INFO] List of active Workers:");
-            wm.printAllWorkers();
+            wm.printWorkers();
         } else if (userInput[1].equalsIgnoreCase("del")) {
             System.out.println("[INFO] Removing " + userInput[2] + " worker..");
             wm.fireWorkers(Integer.parseInt(userInput[2]));

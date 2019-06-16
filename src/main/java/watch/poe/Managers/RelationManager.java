@@ -82,7 +82,7 @@ public class RelationManager {
         // For every alias, find a matching currency item's id
         for (CurrencyAliases.AliasEntry aliasEntry : CurrencyAliases.getAliases()) {
             for (Key key : itemData.keySet()) {
-                if (key.getFrameType() == 5 && key.getName().equals(aliasEntry.getName())) {
+                if (key.frame == 5 && key.name.equals(aliasEntry.getName())) {
                     int id = itemData.get(key);
 
                     for (String alias : aliasEntry.getAliases()) {
@@ -203,7 +203,7 @@ public class RelationManager {
      * Eg 'Blasting Corsair Sword of Needling' -> 'Corsair Sword'
      *
      * @param group Group the item belongs to
-     * @param name Item name
+     * @param name  Item name
      * @return Extracted name or null on failure
      */
     public String extractItemBaseName(GroupEnum group, String name) {

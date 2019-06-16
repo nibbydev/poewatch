@@ -73,22 +73,22 @@ public enum VariantEnum {
         // Go through all variations
         for (VariantEnum variation : VariantEnum.values()) {
             // Check if the item name matches
-            if (!item.name.equals(variation.itemName)) {
+            if (!item.key.name.equals(variation.itemName)) {
                 continue;
             }
 
             // Bit of spaghetti for prophecies
-            if (item.frameType == 8) {
-                if (item.apiItem.getProphecyText().contains(variation.itemMods[0])) {
+            if (item.key.frame == 8) {
+                if (item.originalItem.getProphecyText().contains(variation.itemMods[0])) {
                     return variation;
                 } else {
                     continue;
                 }
             }
 
-            // Go though all the item's explicit modifiers and the current variant's mods
             int matches = 0;
 
+            // Go though all the item's explicit modifiers and the current variant's mods
             for (String variantMod : variation.itemMods) {
                 for (String itemMod : item.getExplicitMods()) {
                     if (itemMod.contains(variantMod)) {
@@ -102,6 +102,16 @@ public enum VariantEnum {
             // If all the variant's mods were present in the item then this item will take this variant's variation
             if (matches == variation.itemMods.length) {
                 return variation;
+            }
+        }
+
+        return null;
+    }
+
+    public static VariantEnum findByVariation(String name, String variation) {
+        for (VariantEnum value : VariantEnum.values()) {
+            if (value.itemName.equals(name) && value.variation.equals(variation)) {
+                return value;
             }
         }
 

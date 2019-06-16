@@ -42,11 +42,10 @@ function check_errors()
  *
  * @param $pdo PDO Open database connection
  * @param $league string League name, case-insensitive
- * @param $account string Account name, case-sensitive
- * @param $onlyPriced bool Filter out entries without a price
+ * @param $account string Account name, case-insensitive
  * @return array containing the aggregated items and prices
  */
-function get_data($pdo, $league, $account, $onlyPriced)
+function get_data($pdo, $league, $account)
 {
   $query = "select 
     le.id_d as id,
@@ -58,20 +57,20 @@ function get_data($pdo, $league, $account, $onlyPriced)
     group_concat(if(le.price is null, null, round(ifnull(li.mean, 1) * le.price, 2))) as chaos,
     did.*, dc.name AS category, dg.name AS `group`
   from league_entries as le
-  left join data_itemData as did1 on le.id_price = did1.id
+  left join data_item_data as did1 on le.id_price = did1.id
   left join league_items as li on le.id_l = li.id_l and le.id_price = li.id_d
   join data_leagues as dl on dl.id = le.id_l
-  join data_itemData as did on le.id_d = did.id
+  join data_item_data as did on le.id_d = did.id
   left join data_categories as dc on dc.id = did.id_cat
   left join data_groups as dg on dg.id = did.id_grp
+  join league_accounts as la on le.id_a = la.id
   where dl.name = ?
-    and le.account_crc = crc32(?)
+    and la.name = ?
     and le.stash_crc is not null
-    and (le.price is not null or ?)
   group by le.id_d";
 
   $stmt = $pdo->prepare($query);
-  $stmt->execute([$league, $account, $onlyPriced ? 0 : 1]);
+  $stmt->execute([$league, $account]);
   $payload = [];
 
   while ($row = $stmt->fetch()) {
@@ -83,18 +82,18 @@ function get_data($pdo, $league, $account, $onlyPriced)
       'group'           =>        $row['group'],
       'frame'           => (int)  $row['frame'],
 
-      'mapSeries'       =>        $row['series']     === null ? null : (int)    $row['series'],
-      'mapTier'         =>        $row['tier']       === null ? null : (int)    $row['tier'],
-      'baseIsShaper'    =>        $row['shaper']     === null ? null : (bool)   $row['shaper'],
-      'baseIsElder'     =>        $row['elder']      === null ? null : (bool)   $row['elder'],
-      'baseItemLevel'   =>        $row['ilvl']       === null ? null : (int)    $row['ilvl'],
-      'gemLevel'        =>        $row['lvl']        === null ? null : (int)    $row['lvl'],
-      'gemQuality'      =>        $row['quality']    === null ? null : (int)    $row['quality'],
-      'gemIsCorrupted'  =>        $row['corrupted']  === null ? null : (bool)   $row['corrupted'],
-      'enchantMin'      =>        $row['enchantMin'] === null ? null : (float)  $row['enchantMin'],
-      'enchantMax'      =>        $row['enchantMax'] === null ? null : (float)  $row['enchantMax'],
-      'stackSize'       =>        $row['stack']      === null ? null : (int)    $row['stack'],
-      'linkCount'       =>        $row['links']      === null ? null : (int)    $row['links'],
+      'mapSeries'       =>        $row['map_series']    === null ? null : (int)    $row['map_series'],
+      'mapTier'         =>        $row['map_tier']      === null ? null : (int)    $row['map_tier'],
+      'baseIsShaper'    =>        $row['base_shaper']   === null ? null : (bool)   $row['base_shaper'],
+      'baseIsElder'     =>        $row['base_elder']    === null ? null : (bool)   $row['base_elder'],
+      'baseItemLevel'   =>        $row['base_level']    === null ? null : (int)    $row['base_level'],
+      'gemLevel'        =>        $row['gem_lvl']       === null ? null : (int)    $row['gem_lvl'],
+      'gemQuality'      =>        $row['gem_quality']   === null ? null : (int)    $row['gem_quality'],
+      'gemIsCorrupted'  =>        $row['gem_corrupted'] === null ? null : (bool)   $row['gem_corrupted'],
+      'enchantMin'      =>        $row['enchant_min']   === null ? null : (float)  $row['enchant_min'],
+      'enchantMax'      =>        $row['enchant_max']   === null ? null : (float)  $row['enchant_max'],
+      'stackSize'       =>        $row['stack']         === null ? null : (int)    $row['stack'],
+      'linkCount'       =>        $row['links']         === null ? null : (int)    $row['links'],
 
       'variation'       =>        $row['var'],
       'icon'            =>        $row['icon']
@@ -165,6 +164,5 @@ header("Content-Type: application/json");
 check_errors();
 include_once("../details/pdo.php");
 
-$onlyPriced = isset($_GET["onlyPriced"]) ? true : false;
-$payload = get_data($pdo, $_GET["league"], $_GET["account"], $onlyPriced);
-echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT);
+$payload = get_data($pdo, $_GET["league"], $_GET["account"]);
+echo json_encode($payload, JSON_PRESERVE_ZERO_FRACTION);

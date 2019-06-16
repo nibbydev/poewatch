@@ -15,6 +15,7 @@ public class Calculation {
     private static final double zScoreUpper = 0.5;
     private static final int trimLower = 5;
     private static final int trimUpper = 80;
+    private static final int entryLimitPerAccount = 5;
 
     /**
      * Converts entry prices to chaos
@@ -24,12 +25,9 @@ public class Calculation {
      * @param pb Prices to source from
      */
     public static List<Double> convertToChaos(IdBundle ib, List<EntryBundle> eb, List<PriceBundle> pb) {
-        List<Double> buffer = new ArrayList<>(eb.size());
+        List<Double> buffer = new ArrayList<>();
 
-        Iterator<EntryBundle> entryBundleIterator = eb.iterator();
-        while (entryBundleIterator.hasNext()) {
-            EntryBundle entryBundle = entryBundleIterator.next();
-
+        for (EntryBundle entryBundle : eb) {
             // Already in chaos
             if (entryBundle.getCurrencyId() == null) {
                 buffer.add(entryBundle.getPrice());
@@ -44,15 +42,37 @@ public class Calculation {
                     .orElse(null);
 
             // No match, remove entry
-            if (priceBundle == null) {
-                entryBundleIterator.remove();
-                continue;
+            if (priceBundle != null) {
+                buffer.add(entryBundle.getPrice() * priceBundle.getMean());
             }
-
-            buffer.add(entryBundle.getPrice() * priceBundle.getMean());
         }
 
         return buffer;
+    }
+
+    /**
+     * Some accounts love to list 120 separate transmutation orbs for 10 chaos each.
+     * This method limits the number of allowed entries for all distinct accounts
+     *
+     * @param eb Entries to filter
+     */
+    public static void limitDuplicateEntries(List<EntryBundle> eb) {
+        Map<Long, Integer> accountCount = new HashMap<>();
+        Iterator<EntryBundle> iterator = eb.iterator();
+
+        while (iterator.hasNext()) {
+            EntryBundle bundle = iterator.next();
+
+            // Get matches so far for account
+            int currentCount = accountCount.getOrDefault(bundle.getAccountId(), 0);
+            // Increment and store new value
+            accountCount.put(bundle.getAccountId(), ++currentCount);
+
+            // Remove entry if account exceeded limit
+            if (currentCount > entryLimitPerAccount) {
+                iterator.remove();
+            }
+        }
     }
 
     /**
@@ -63,14 +83,6 @@ public class Calculation {
      * @return The calculated result
      */
     public static ResultBundle calculateResult(IdBundle ib, List<Double> prices) {
-        filterEntries(prices);
-
-        // If no entries were left, skip the item
-        if (prices.isEmpty()) {
-            logger.warn(String.format("Zero remaining entries for %d in %d", ib.getLeagueId(), ib.getItemId()));
-            return null;
-        }
-
         ResultBundle result = new ResultBundle(
                 ib,
                 calcMean(prices),
@@ -94,19 +106,23 @@ public class Calculation {
      *
      * @param eb List of item entries
      */
-    static List<Double> filterEntries(List<Double> eb) {
+    public static List<Double> filterEntries(List<Double> eb) {
         // Trim the list to remove potential outliers
         //eb = hardTrim(eb, trimLower, trimUpper);
 
         // Trim according to standard deviation
         for (int i = 0; i < 6; i++) {
+            if (eb.isEmpty()) {
+                break;
+            }
+
             // Find averages
             final double mad = calcMAD(eb);
             final double mean = calcMean(eb);
 
-            // If we've done at least two iterations AND the
+            // If we've done at least one iteration AND the
             // mean of the set falls around the MAD then stop
-            if (i > 2 && mean < 1.8f * mad && mean > mad / 1.8f) {
+            if (i > 1 && mean < mad * 2f && mean > mad / 2f) {
                 break;
             }
 
@@ -163,7 +179,7 @@ public class Calculation {
      * @param eb List of prices
      * @return Median Absolute Deviation
      */
-    static double calcMAD(List<Double> eb) {
+    public static double calcMAD(List<Double> eb) {
         List<Double> buffer = new ArrayList<>(eb.size());
         final double median = calcMedian(eb);
 
@@ -175,10 +191,11 @@ public class Calculation {
         return newMedian == 0 ? median : newMedian;
     }
 
-    static double calcMean(List<Double> list) {
+    private static double calcMean(List<Double> list) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to mean");
             return 0;
+        } else if (list.size() == 1) {
+            return list.get(0);
         }
 
         double sum = 0;
@@ -190,9 +207,8 @@ public class Calculation {
         return sum / list.size();
     }
 
-    static double calcStdDev(List<Double> list, double mean) {
+    private static double calcStdDev(List<Double> list, double mean) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to standard deviation");
             return 0;
         }
 
@@ -207,7 +223,6 @@ public class Calculation {
 
     private static double calcMedian(List<Double> list) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to median");
             return 0;
         }
 
@@ -216,42 +231,31 @@ public class Calculation {
     }
 
     private static double calcMin(List<Double> list) {
-        if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to min");
-            return 0;
-        }
-
-        double min = list.get(0);
-
-        for (Double entry : list) {
-            if (entry < min) {
-                min = entry;
-            }
-        }
-
-        return min;
+        return calcMinMax(list, false);
     }
 
     private static double calcMax(List<Double> list) {
+        return calcMinMax(list, true);
+    }
+
+    private static double calcMinMax(List<Double> list, boolean calcMax) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to max");
             return 0;
         }
 
-        double max = list.get(0);
+        double val = list.get(0);
 
         for (Double entry : list) {
-            if (entry > max) {
-                max = entry;
-            }
+            if (calcMax) {
+                if (entry > val) val = entry;
+            } else if (entry < val) val = entry;
         }
 
-        return max;
+        return val;
     }
 
     private static double calcMode(List<Double> list) {
         if (list == null || list.isEmpty()) {
-            logger.warn("Null/empty list passed to mode");
             return 0;
         }
 

@@ -23,8 +23,8 @@ function get_accounts_by_character($pdo, $name) {
   select name AS `account`, 
     DATE_FORMAT(found, '%Y-%m-%dT%TZ') AS found,
     DATE_FORMAT(seen, '%Y-%m-%dT%TZ') AS seen
-  from account_accounts
-  where id = (select id_a from account_characters where name = ? limit 1)
+  from league_accounts
+  where id = (select id_a from league_characters where name = ? limit 1)
   limit 1
   ";
 
