@@ -222,10 +222,10 @@ public class PriceManager extends Thread {
      * @param total Total number of items this cycle
      */
     private void statusMessage(int current, int total) {
-        int frequency = total / config.getInt("calculation.statusMsgCount");
+        int frequency = (int) Math.ceil((float) total / config.getInt("calculation.statusMsgCount"));
 
         if (current % frequency == 0) {
-            int percentage = (int) Math.ceil((float) current / total * 100f);
+            int percentage = (int) Math.floor((float) current / total * 100f);
             logger.debug("{}% done ({} out of {})", percentage, current, total);
         }
     }
