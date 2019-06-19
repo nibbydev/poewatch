@@ -57,11 +57,13 @@ public class PriceManager extends Thread {
             if (!checkIfRun()) continue;
 
             logger.info("Starting cycle");
-            workerManager.setWorkerSleepState(true, true);
+            if (config.getBoolean("calculation.pauseWorkers"))
+                workerManager.setWorkerSleepState(true, true);
 
             runCycle();
 
-            workerManager.setWorkerSleepState(false, true);
+            if (config.getBoolean("calculation.pauseWorkers"))
+                workerManager.setWorkerSleepState(false, true);
             logger.info("Finished cycle");
 
             lastCycleTime = System.currentTimeMillis();
