@@ -206,7 +206,9 @@ public class PriceManager extends Thread {
             int entryCount = entryBundles.size();
 
             // Limit duplicate entries per account
-            Calculation.limitDuplicateEntries(entryBundles);
+            if (config.getBoolean("calculation.enableAccountLimit")) {
+                Calculation.limitDuplicateEntries(entryBundles, config.getInt("calculation.accountLimit"));
+            }
 
             // Send a warning message if too many were removed from duplicate accounts
             int percentRemoved = Math.round(100 - (float) entryBundles.size() / entryCount * 100f);
@@ -232,6 +234,14 @@ public class PriceManager extends Thread {
 
             // Remove outliers
             Calculation.filterEntries(prices);
+
+            // Hard trim entries
+            if (config.getBoolean("calculation.enableHardTrim")) {
+                prices = Calculation.hardTrim(prices,
+                        config.getInt("calculation.hardTrimLower"),
+                        config.getInt("calculation.hardTrimUpper"));
+            }
+
 
             // If no entries were left, skip the item
             if (prices.isEmpty()) {

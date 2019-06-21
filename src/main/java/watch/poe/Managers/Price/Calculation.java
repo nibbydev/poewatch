@@ -13,9 +13,6 @@ public class Calculation {
     private static final Logger logger = LoggerFactory.getLogger(Calculation.class);
     private static final double zScoreLower = 2.5;
     private static final double zScoreUpper = 0.5;
-    private static final int trimLower = 5;
-    private static final int trimUpper = 80;
-    private static final int entryLimitPerAccount = 5;
 
     /**
      * Converts entry prices to chaos
@@ -54,9 +51,10 @@ public class Calculation {
      * Some accounts love to list 120 separate transmutation orbs for 10 chaos each.
      * This method limits the number of allowed entries for all distinct accounts
      *
+     * @param entryLimitPerAccount Max number of entries to keep per account
      * @param eb Entries to filter
      */
-    public static void limitDuplicateEntries(List<EntryBundle> eb) {
+    public static void limitDuplicateEntries(List<EntryBundle> eb, int entryLimitPerAccount) {
         Map<Long, Integer> accountCount = new HashMap<>();
         Iterator<EntryBundle> iterator = eb.iterator();
 
@@ -146,7 +144,7 @@ public class Calculation {
      * @param upper Upper bound as percentage (0-100)
      * @return Trimmed list
      */
-    private static List<Double> hardTrim(List<Double> eb, int lower, int upper) {
+    public static List<Double> hardTrim(List<Double> eb, int lower, int upper) {
         // Sort by price ascending
         eb.sort(Double::compareTo);
 
