@@ -2974,7 +2974,7 @@ class PricesPage {
         self.filter.showLowConfidence = (e.target.value === 'true');
         this.queryParamFilter('confidence', self.filter.showLowConfidence);
 
-        console.log(`Show low daily: ${self.filter.showLowConfidence}`);
+        console.log(`Show low confidence: ${self.filter.showLowConfidence}`);
 
         break;
       }
@@ -3209,8 +3209,10 @@ class PricesPage {
    */
   checkHideItem(item) {
     // Hide low confidence items
-    if (!this.filter.showLowConfidence && this.filter.league.active && item.daily < 5) {
-      return true;
+    if (!this.filter.showLowConfidence && this.filter.league.active) {
+      if (item.daily < 10 || item.current < 10) {
+        return true;
+      }
     }
 
     // String search
