@@ -1708,27 +1708,21 @@ class SparkLine {
    * @returns {string} SVG path
    */
   buildPath() {
-    let maxElement = Math.max(...this.elements);
-    let minElement = Math.min(...this.elements);
-
-    // If there has been no change in the past week
-    if (maxElement === minElement && minElement === 0) {
-      maxElement = 1;
-    }
+    let pointBuilder = 'M ';
 
     // Find step sizes in pixels
-    let stepX = this.options.width / (this.elements.length - 1);
-    let stepY = (this.options.height - this.options.pad_y * 2) / (maxElement - minElement);
+    let stepX = this.options.width / 6;
+    let stepY = (this.options.height - this.options.pad_y * 2) / 100;
 
-    // Create point array
-    let pointBuilder = 'M ';
-    for (let i = 0; i < this.elements.length; i++) {
-      if (this.elements[i] !== null) {
-        let x = stepX * i;
-        let y = (this.options.height - this.elements[i] * stepY + minElement * stepY - this.options.pad_y / 2).toFixed(3);
+    let min = Math.min(...this.elements);
+    let max = Math.max(...this.elements);
 
-        pointBuilder += x + ' ' + y + ' L ';
-      }
+
+    for (let i = 0; i < 7; i++) {
+      const x = Math.floor(i * stepX);
+      const y = this.options.height - Math.floor((this.elements[i] - min) / (max - min) * 100 * stepY) - this.options.pad_y;
+
+      pointBuilder += x + ' ' + y + ' L ';
     }
 
     // Remove trailing character and return
