@@ -119,8 +119,5 @@ class CalculationTest {
         }};
 
 
-
-
-
     }
 }

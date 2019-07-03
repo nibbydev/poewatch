@@ -139,7 +139,6 @@ public class ItemParser {
                 ArrayList<Item> branches = createBranches(apiItem);
                 branches.removeIf(Item::isDiscard);
 
-
                 // Attempt to determine the price of the item
                 Price price = new Price(apiItem.getNote(), stash.stashName);
 

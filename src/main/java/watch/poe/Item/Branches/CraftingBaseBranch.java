@@ -24,7 +24,7 @@ public class CraftingBaseBranch extends Item {
     @Override
     public void parse() {
         // Rares are generally sold for their mods, not bases
-        if (originalItem.getFrameType() == 2) {
+        if (originalItem.isIdentified() && originalItem.getFrameType() == 2) {
             discard = true;
             return;
         }
