@@ -113,7 +113,7 @@ public class Setup {
 
         // If there were any missing categories
         if (!missingCategories.isEmpty()) {
-            missingCategories.forEach(t -> logger.warn("Database was missing group '" + t.getName() + "'"));
+            missingCategories.forEach(t -> logger.warn("Database was missing category '" + t.getName() + "'"));
         }
 
         String query = "INSERT INTO data_categories (id, name, display) VALUES (?, ?, ?); ";
