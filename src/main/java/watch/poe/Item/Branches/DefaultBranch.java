@@ -60,6 +60,11 @@ public class DefaultBranch extends Item {
             }
         }
 
+        // Unique helmets with enchants are generally more expensive
+        if (GroupEnum.helmet.equals(group) && originalItem.getEnchantMods() != null) {
+            clearPrice = true;
+        }
+
         if (category.equals(CategoryEnum.gem)) {
             extractGemData();
         } else if (category.equals(CategoryEnum.currency)) {

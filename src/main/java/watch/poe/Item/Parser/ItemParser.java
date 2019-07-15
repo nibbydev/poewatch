@@ -156,6 +156,11 @@ public class ItemParser {
                     // Calculate crc of item's ID
                     long itemCrc = calcCrc(apiItem.getId());
 
+                    // If item should be recorded but should not have a price
+                    if (item.isClearPrice() && cf.getBoolean("entry.allowEnchantedHelmPrices")) {
+                        price = null;
+                    }
+
                     // Create DB entry object
                     DbItemEntry entry = new DbItemEntry(id_l, id_d, stash_crc, itemCrc, item.getStackSize(), price, user);
                     dbItems.add(entry);

@@ -15,7 +15,7 @@ public class DbItemEntry {
         this.stackSize = stackSize;
         this.user = user;
 
-        if (price.hasPrice()) {
+        if (price != null && price.hasPrice()) {
             this.price = price.getPrice();
             this.id_price = price.getCurrencyId();
         }
