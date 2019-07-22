@@ -56,10 +56,23 @@ function get_item_data($pdo, $id) {
       'icon'            =>        $row['icon']
     ];
 
+    // Add false fields
+    if ($payload['category'] === 'base') {
+      if (!$payload['baseIsShaper']) {
+        $payload['baseIsShaper'] = false;
+      }
+
+      if (!$payload['baseIsElder']) {
+        $payload['baseIsElder'] = false;
+      }
+    }
+
     // Filter out null values
-    return array_filter($payload, function($value) {
+    $payload = array_filter($payload, function($value) {
       return $value !== null;
     });
+
+    return $payload;
   }
 
   return null;
