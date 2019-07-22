@@ -57,7 +57,11 @@ public enum VariantEnum {
     prophecy_master_einar("A Master Seeks Help", "einhar", "You will find Einhar"),
     prophecy_master_jun("A Master Seeks Help", "jun", "You will find Jun"),
     prophecy_master_niko("A Master Seeks Help", "niko", "You will find Niko"),
-    prophecy_master_alva("A Master Seeks Help", "alva", "You will find Alva");
+    prophecy_master_alva("A Master Seeks Help", "alva", "You will find Alva"),
+
+    seer_es_li("The Dark Seer", "es/li", "Shield per Level", "Life per Level"),
+    seer_es_ma("The Dark Seer", "es/ma", "Shield per Level", "Mana per Level"),
+    seer_ma_li("The Dark Seer", "ma/li", "Mana per Level", "Life per Level");
 
     private String itemName;
     private String variation;
