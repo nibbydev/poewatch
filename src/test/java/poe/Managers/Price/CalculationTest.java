@@ -11,6 +11,8 @@ import poe.Managers.Price.Bundles.PriceBundle;
 import java.util.*;
 
 class CalculationTest {
+    private Calculation calculation = new Calculation(null);
+
     @Test
     void currencyConversionTest() {
         // Listings
@@ -36,7 +38,7 @@ class CalculationTest {
         ib.setLeagueId(1);
 
         // Convert all to base currency
-        List<Double> prices = Calculation.convertToChaos(ib, eb, pb);
+        List<Double> prices = calculation.convertToChaos(ib, eb, pb);
         List<Double> expected = new ArrayList<>(Arrays.asList(1d, 0d, 49d, 99999d, 3.19096d, 159548d, 0d));
 
         // Unknown currency was removed
@@ -57,7 +59,7 @@ class CalculationTest {
         double med1 = 12d;
 
         List<Double> eb = new ArrayList<>(Arrays.asList(1d, 1d, 1d, 2d, med1, big1, big2, big2));
-        List<Double> result = Calculation.filterEntries(eb);
+        List<Double> result = calculation.filterEntries(eb);
 
         assertEquals(4, result.size());
         assertFalse(result.contains(big1));
@@ -68,7 +70,7 @@ class CalculationTest {
     @Test
     void filterTestOneElement() {
         List<Double> eb = new ArrayList<>(Collections.singletonList(0d));
-        List<Double> result = Calculation.filterEntries(eb);
+        List<Double> result = calculation.filterEntries(eb);
 
         System.out.println(result);
 
@@ -119,5 +121,46 @@ class CalculationTest {
         }};
 
 
+    }
+
+    @Test
+    void limitDuplicateEntries() {
+        // Listings
+        List<EntryBundle> eb = new ArrayList<>() {{
+            add(new EntryBundle(0, null, 0));
+            add(new EntryBundle(0, null, 0));
+            add(new EntryBundle(0, null, 0));
+
+            add(new EntryBundle(1, null, 0));
+            add(new EntryBundle(1, null, 0));
+
+            add(new EntryBundle(2, null, 0));
+            add(new EntryBundle(2, null, 0));
+            add(new EntryBundle(2, null, 0));
+            add(new EntryBundle(2, null, 0));
+            add(new EntryBundle(2, null, 0));
+            add(new EntryBundle(2, null, 0));
+
+            add(new EntryBundle(3, null, 0));
+            add(new EntryBundle(3, null, 0));
+
+            add(new EntryBundle(4, null, 0));
+
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+            add(new EntryBundle(5, null, 0));
+        }};
+
+        calculation.limitDuplicateEntries(eb, 3);
+
+        assertEquals(14, eb.size());
     }
 }

@@ -20,6 +20,7 @@ public class PriceManager extends Thread {
     private final Database database;
     private final Config config;
     private final WorkerManager workerManager;
+    private final Calculation calculator;
 
     // should the manager be running
     private boolean run = true;
@@ -33,6 +34,8 @@ public class PriceManager extends Thread {
         this.database = db;
         this.config = cnf;
         this.workerManager = wm;
+
+        this.calculator = new Calculation(cnf);
     }
 
     /**
@@ -191,7 +194,8 @@ public class PriceManager extends Thread {
         for (int i = 0; run && i < idBundles.size(); i++) {
             // Query entries from the database for this item
             List<EntryBundle> entryBundles = new ArrayList<>();
-            boolean success = database.calc.getEntryBundles(entryBundles, idBundles.get(i));
+            boolean success = database.calc.getEntryBundles(entryBundles, idBundles.get(i),
+                    config.getInt("calculation.lastAccountActivity"));
 
             if (!success) {
                 logger.error(String.format("Could not query entries for %d %d",
@@ -207,22 +211,22 @@ public class PriceManager extends Thread {
 
             // Limit duplicate entries per account
             if (config.getBoolean("calculation.enableAccountLimit")) {
-                Calculation.limitDuplicateEntries(entryBundles, config.getInt("calculation.accountLimit"));
-            }
+                calculator.limitDuplicateEntries(entryBundles, config.getInt("calculation.accountLimit"));
 
-            // Send a warning message if too many were removed from duplicate accounts
-            int percentRemoved = Math.round(100 - (float) entryBundles.size() / entryCount * 100f);
-            if (percentRemoved >= 50 && entryCount > 10) {
-                logger.warn("[{}| {}] duplicate accounts - {}/{} removed ({}%)",
-                        idBundles.get(i).getLeagueId(),
-                        idBundles.get(i).getItemId(),
-                        entryCount - entryBundles.size(),
-                        entryCount,
-                        percentRemoved);
+                // Send a warning message if too many were removed from duplicate accounts
+                int percentRemoved = Math.round(100 - (float) entryBundles.size() / entryCount * 100f);
+                if (percentRemoved >= 50 && entryCount > 10) {
+                    logger.warn("[{}| {}] duplicate accounts - {}/{} removed ({}%)",
+                            idBundles.get(i).getLeagueId(),
+                            idBundles.get(i).getItemId(),
+                            entryCount - entryBundles.size(),
+                            entryCount,
+                            percentRemoved);
+                }
             }
 
             // Convert all entry prices to chaos value
-            List<Double> prices = Calculation.convertToChaos(idBundles.get(i), entryBundles, priceBundles);
+            List<Double> prices = calculator.convertToChaos(idBundles.get(i), entryBundles, priceBundles);
 
             if (prices.isEmpty()) {
                 logger.warn("[{}| {}] price conversion - all removed ({})",
@@ -233,11 +237,11 @@ public class PriceManager extends Thread {
             }
 
             // Remove outliers
-            Calculation.filterEntries(prices);
+            calculator.filterEntries(prices);
 
             // Hard trim entries
             if (config.getBoolean("calculation.enableHardTrim")) {
-                prices = Calculation.hardTrim(prices,
+                prices = calculator.hardTrim(prices,
                         config.getInt("calculation.hardTrimLower"),
                         config.getInt("calculation.hardTrimUpper"));
             }
@@ -253,7 +257,7 @@ public class PriceManager extends Thread {
             }
 
             // Calculate the prices for this item
-            ResultBundle rb = Calculation.calculateResult(idBundles.get(i), prices);
+            ResultBundle rb = calculator.calculateResult(idBundles.get(i), prices);
             if (rb == null) continue;
 
             // Update item in database

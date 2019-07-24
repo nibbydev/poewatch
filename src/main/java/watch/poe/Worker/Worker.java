@@ -77,7 +77,7 @@ public class Worker extends Thread {
             // Wait on monitor until notified and a new job is given
             waitForJob();
 
-            logger.debug("Worker {} starting job {} ({})", workerId, currentJobNr, job);
+            //logger.debug("Worker {} starting job {} ({})", workerId, currentJobNr, job);
 
             // Increment api call counter
             sm.addValue(StatType.COUNT_API_CALLS, null);
@@ -100,7 +100,7 @@ public class Worker extends Thread {
             if (pause) waitOnPause();
 
             // Clear current job
-            logger.debug("Worker {} finished job {}", workerId, currentJobNr);
+            //logger.debug("Worker {} finished job {}", workerId, currentJobNr);
             job = null;
         }
 

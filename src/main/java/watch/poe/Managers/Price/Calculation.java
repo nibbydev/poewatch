@@ -1,5 +1,6 @@
 package poe.Managers.Price;
 
+import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Managers.Price.Bundles.EntryBundle;
@@ -11,8 +12,21 @@ import java.util.*;
 
 public class Calculation {
     private static final Logger logger = LoggerFactory.getLogger(Calculation.class);
-    private static final double zScoreLower = 2.5;
-    private static final double zScoreUpper = 0.5;
+    private final Config config;
+
+    private double zScoreLower, zScoreUpper, MADModifier;
+    private int minStDevCycles, maxStDevCycles;
+
+    public Calculation(Config cf) {
+        this.config = cf;
+
+        this.zScoreLower = config.getInt("calculation.zScoreLower");
+        this.zScoreUpper = config.getInt("calculation.zScoreUpper");
+        this.MADModifier = config.getInt("calculation.MADModifier");
+
+        this.minStDevCycles = config.getInt("calculation.minStDevCycles");
+        this.maxStDevCycles = config.getInt("calculation.maxStDevCycles");
+    }
 
     /**
      * Converts entry prices to chaos
@@ -21,7 +35,7 @@ public class Calculation {
      * @param eb Entries to convert
      * @param pb Prices to source from
      */
-    public static List<Double> convertToChaos(IdBundle ib, List<EntryBundle> eb, List<PriceBundle> pb) {
+    public List<Double> convertToChaos(IdBundle ib, List<EntryBundle> eb, List<PriceBundle> pb) {
         List<Double> buffer = new ArrayList<>();
 
         for (EntryBundle entryBundle : eb) {
@@ -52,9 +66,9 @@ public class Calculation {
      * This method limits the number of allowed entries for all distinct accounts
      *
      * @param entryLimitPerAccount Max number of entries to keep per account
-     * @param eb Entries to filter
+     * @param eb                   Entries to filter
      */
-    public static void limitDuplicateEntries(List<EntryBundle> eb, int entryLimitPerAccount) {
+    public void limitDuplicateEntries(List<EntryBundle> eb, int entryLimitPerAccount) {
         Map<Long, Integer> accountCount = new HashMap<>();
         Iterator<EntryBundle> iterator = eb.iterator();
 
@@ -80,7 +94,7 @@ public class Calculation {
      * @param prices Item prices
      * @return The calculated result
      */
-    public static ResultBundle calculateResult(IdBundle ib, List<Double> prices) {
+    public ResultBundle calculateResult(IdBundle ib, List<Double> prices) {
         ResultBundle result = new ResultBundle(
                 ib,
                 calcMean(prices),
@@ -104,12 +118,8 @@ public class Calculation {
      *
      * @param eb List of item entries
      */
-    public static List<Double> filterEntries(List<Double> eb) {
-        // Trim the list to remove potential outliers
-        //eb = hardTrim(eb, trimLower, trimUpper);
-
-        // Trim according to standard deviation
-        for (int i = 0; i < 6; i++) {
+    public List<Double> filterEntries(List<Double> eb) {
+        for (int i = 0; i < maxStDevCycles; i++) {
             if (eb.isEmpty()) {
                 break;
             }
@@ -118,9 +128,9 @@ public class Calculation {
             final double mad = calcMAD(eb);
             final double mean = calcMean(eb);
 
-            // If we've done at least one iteration AND the
-            // mean of the set falls around the MAD then stop
-            if (i > 1 && mean < mad * 2f && mean > mad / 2f) {
+            // If we've done the minimum number of iterations AND the mean of the set falls around the MAD then stop
+            // trimming
+            if (i >= minStDevCycles && mean < mad * MADModifier && mean > mad / MADModifier) {
                 break;
             }
 
@@ -144,7 +154,7 @@ public class Calculation {
      * @param upper Upper bound as percentage (0-100)
      * @return Trimmed list
      */
-    public static List<Double> hardTrim(List<Double> eb, int lower, int upper) {
+    public List<Double> hardTrim(List<Double> eb, int lower, int upper) {
         // Sort by price ascending
         eb.sort(Double::compareTo);
 
@@ -160,7 +170,7 @@ public class Calculation {
      *
      * @param eb List of prices
      */
-    static void stdDevTrim(List<Double> eb) {
+    public void stdDevTrim(List<Double> eb) {
         // Find standard deviation and bounds
         final double mean = calcMean(eb);
         final double stdDev = calcStdDev(eb, mean);
@@ -177,7 +187,7 @@ public class Calculation {
      * @param eb List of prices
      * @return Median Absolute Deviation
      */
-    public static double calcMAD(List<Double> eb) {
+    static double calcMAD(List<Double> eb) {
         List<Double> buffer = new ArrayList<>(eb.size());
         final double median = calcMedian(eb);
 

@@ -116,14 +116,14 @@ public class Calc {
      *
      * @return True on success
      */
-    public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle) {
+    public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle, int maxAge) {
         String query = "select le.id_a, le.price, le.id_price " +
                 "from league_entries as le " +
                 "join league_accounts as la " +
                 "  on le.id_a = la.id " +
                 "where le.id_l = ? " +
                 "  and le.id_d = ? " +
-                "  and la.seen > date_sub(now(), interval 8 hour) " +
+                "  and la.seen > date_sub(now(), interval ? hour) " +
                 "  and le.stash_crc is not null " +
                 "  and le.price is not null";
 
@@ -136,6 +136,7 @@ public class Calc {
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 statement.setInt(1, idBundle.getLeagueId());
                 statement.setInt(2, idBundle.getItemId());
+                statement.setInt(3, maxAge);
                 ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
@@ -143,8 +144,11 @@ public class Calc {
 
                     eb.setAccountId(resultSet.getLong("id_a"));
                     eb.setPrice(resultSet.getDouble("price"));
+
                     eb.setCurrencyId(resultSet.getInt("id_price"));
-                    if (resultSet.wasNull()) eb.setCurrencyId(null);
+                    if (resultSet.wasNull()) {
+                        eb.setCurrencyId(null);
+                    }
 
                     entryBundles.add(eb);
                 }
