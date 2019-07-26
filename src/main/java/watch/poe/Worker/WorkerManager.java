@@ -3,12 +3,12 @@ package poe.Worker;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Db.Database;
+import poe.Database.Database;
 import poe.Item.Parser.ItemParser;
-import poe.Managers.Interval.TimeFrame;
-import poe.Managers.IntervalManager;
-import poe.Managers.LeagueManager;
-import poe.Managers.StatisticsManager;
+import poe.Interval.TimeFrame;
+import poe.Interval.IntervalManager;
+import poe.League.LeagueManager;
+import poe.Statistics.StatisticsManager;
 
 
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package poe.Item.Parser;
 
-import poe.Managers.RelationManager;
+import poe.Relation.RelationManager;
 
 public class Price {
     private static RelationManager relationManager;

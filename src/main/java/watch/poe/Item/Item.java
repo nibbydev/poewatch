@@ -7,7 +7,7 @@ import poe.Item.Category.GroupEnum;
 import poe.Item.Deserializers.ApiItem;
 import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.EnchantBranch;
-import poe.Managers.RelationManager;
+import poe.Relation.RelationManager;
 
 import java.util.List;
 

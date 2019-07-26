@@ -1,7 +1,7 @@
 package poe.Item.Parser;
 
 import com.typesafe.config.Config;
-import poe.Db.Database;
+import poe.Database.Database;
 import poe.Item.Deserializers.ApiItem;
 import poe.Item.Deserializers.Reply;
 import poe.Item.Deserializers.Stash;
@@ -9,10 +9,10 @@ import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.DefaultBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Item;
-import poe.Managers.LeagueManager;
-import poe.Managers.RelationManager;
-import poe.Managers.Stat.StatType;
-import poe.Managers.StatisticsManager;
+import poe.League.LeagueManager;
+import poe.Relation.RelationManager;
+import poe.Statistics.StatType;
+import poe.Statistics.StatisticsManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
