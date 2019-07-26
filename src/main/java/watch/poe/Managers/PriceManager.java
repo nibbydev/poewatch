@@ -8,7 +8,7 @@ import poe.Managers.Price.Bundles.EntryBundle;
 import poe.Managers.Price.Bundles.IdBundle;
 import poe.Managers.Price.Bundles.PriceBundle;
 import poe.Managers.Price.Bundles.ResultBundle;
-import poe.Managers.Price.Calculation;
+import poe.Managers.Price.Calculator;
 import poe.Worker.WorkerManager;
 
 import java.sql.Timestamp;
@@ -20,7 +20,7 @@ public class PriceManager extends Thread {
     private final Database database;
     private final Config config;
     private final WorkerManager workerManager;
-    private final Calculation calculator;
+    private final Calculator calculator;
 
     // should the manager be running
     private boolean run = true;
@@ -35,7 +35,7 @@ public class PriceManager extends Thread {
         this.config = cnf;
         this.workerManager = wm;
 
-        this.calculator = new Calculation(cnf);
+        this.calculator = new Calculator(cnf);
     }
 
     /**

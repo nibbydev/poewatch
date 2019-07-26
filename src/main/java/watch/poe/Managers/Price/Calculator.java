@@ -10,14 +10,14 @@ import poe.Managers.Price.Bundles.ResultBundle;
 
 import java.util.*;
 
-public class Calculation {
-    private static final Logger logger = LoggerFactory.getLogger(Calculation.class);
+public class Calculator {
+    private static final Logger logger = LoggerFactory.getLogger(Calculator.class);
     private final Config config;
 
     private double zScoreLower, zScoreUpper, MADModifier;
     private int minStDevCycles, maxStDevCycles;
 
-    public Calculation(Config cf) {
+    public Calculator(Config cf) {
         this.config = cf;
 
         this.zScoreLower = config.getInt("calculation.zScoreLower");

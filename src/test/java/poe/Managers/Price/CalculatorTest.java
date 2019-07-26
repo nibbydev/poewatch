@@ -2,7 +2,6 @@ package poe.Managers.Price;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import poe.Managers.Price.Bundles.EntryBundle;
 import poe.Managers.Price.Bundles.IdBundle;
@@ -10,8 +9,8 @@ import poe.Managers.Price.Bundles.PriceBundle;
 
 import java.util.*;
 
-class CalculationTest {
-    private Calculation calculation = new Calculation(null);
+class CalculatorTest {
+    private Calculator calculator = new Calculator(null);
 
     @Test
     void currencyConversionTest() {
@@ -38,7 +37,7 @@ class CalculationTest {
         ib.setLeagueId(1);
 
         // Convert all to base currency
-        List<Double> prices = calculation.convertToChaos(ib, eb, pb);
+        List<Double> prices = calculator.convertToChaos(ib, eb, pb);
         List<Double> expected = new ArrayList<>(Arrays.asList(1d, 0d, 49d, 99999d, 3.19096d, 159548d, 0d));
 
         // Unknown currency was removed
@@ -59,7 +58,7 @@ class CalculationTest {
         double med1 = 12d;
 
         List<Double> eb = new ArrayList<>(Arrays.asList(1d, 1d, 1d, 2d, med1, big1, big2, big2));
-        List<Double> result = calculation.filterEntries(eb);
+        List<Double> result = calculator.filterEntries(eb);
 
         assertEquals(4, result.size());
         assertFalse(result.contains(big1));
@@ -70,7 +69,7 @@ class CalculationTest {
     @Test
     void filterTestOneElement() {
         List<Double> eb = new ArrayList<>(Collections.singletonList(0d));
-        List<Double> result = calculation.filterEntries(eb);
+        List<Double> result = calculator.filterEntries(eb);
 
         System.out.println(result);
 
@@ -84,10 +83,10 @@ class CalculationTest {
         double med1 = 12d;
         List<Double> eb = new ArrayList<>(Arrays.asList(1d, 1d, 1d, 2d, med1, big1, big2, big2));
 
-        double result1 = Calculation.calcMAD(eb);
+        double result1 = Calculator.calcMAD(eb);
         assertEquals(1d, result1);
 
-        double result2 = Calculation.calcMAD(new ArrayList<>(Collections.singletonList(med1)));
+        double result2 = Calculator.calcMAD(new ArrayList<>(Collections.singletonList(med1)));
         assertEquals(med1, result2);
     }
 
@@ -159,7 +158,7 @@ class CalculationTest {
             add(new EntryBundle(5, null, 0));
         }};
 
-        calculation.limitDuplicateEntries(eb, 3);
+        calculator.limitDuplicateEntries(eb, 3);
 
         assertEquals(14, eb.size());
     }
