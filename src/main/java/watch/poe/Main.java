@@ -10,7 +10,13 @@ public class Main {
         App app = new App(args);
 
         try {
-            app.run();
+            boolean success = app.init();
+
+            if (!success) {
+                return;
+            }
+
+            app.mainLoop();
         } catch (Exception ex) {
             logger.error("Exception in app", ex);
         } finally {

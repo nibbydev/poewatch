@@ -1,14 +1,16 @@
 package poe.Relation;
 
+import java.util.List;
+
 public class BaseItems {
     private String group;
-    private String[] bases;
+    private List<String > bases;
 
     public String getGroup() {
         return group;
     }
 
-    public String[] getBases() {
+    public List<String> getBases() {
         return bases;
     }
 }

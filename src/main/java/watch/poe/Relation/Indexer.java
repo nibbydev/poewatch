@@ -3,72 +3,34 @@ package poe.Relation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Database.Database;
-import poe.Item.Category.GroupEnum;
 import poe.Item.Item;
 import poe.Item.Key;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-/**
- * maps indexes and shorthands to currency names and vice versa
- */
-public class RelationManager {
-    private final Logger logger = LoggerFactory.getLogger(RelationManager.class);
+public class Indexer {
+    private final Logger logger = LoggerFactory.getLogger(Indexer.class);
     private final Database database;
 
-    private final Set<Integer> reindexSet = new HashSet<>();
     private final Set<Key> inProgress = new HashSet<>();
     private final Map<Key, Integer> itemData = new HashMap<>();
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
-    public final RelationResources relationResources = new RelationResources();
+    private final Set<Integer> reindexSet = new HashSet<>();
 
-    public RelationManager(Database db) {
+    public Indexer(Database db) {
         this.database = db;
     }
 
-
     /**
-     * Reads currency and item data from file on object prep
+     * Initializes the indexer
+     *
+     * @return
      */
     public boolean init() {
         boolean success;
-
-        logger.info("Initializing relations");
-
-        success = loadRelations();
-        if (!success) {
-            logger.error("Failed to initialize relations");
-            return false;
-        }
-
-        logger.info("Relations initialized successfully");
-        logger.info("Loading resource files");
-
-        success = relationResources.load(itemData);
-        if (!success) {
-            logger.error("Failed to load resource files");
-            return false;
-        }
-
-        logger.info("Resource files loaded successfully");
-
-        return true;
-    }
-
-    private boolean loadRelations() {
-        boolean success;
-
-        success = database.setup.verifyCategories();
-        if (!success) {
-            logger.error("Failed to verify database category integrity. Shutting down...");
-            return false;
-        }
-
-        success = database.setup.verifyGroups();
-        if (!success) {
-            logger.error("Failed to verify database group integrity. Shutting down...");
-            return false;
-        }
 
         success = database.init.getItemData(itemData, reindexSet);
         if (!success) {
@@ -89,7 +51,13 @@ public class RelationManager {
         return true;
     }
 
-
+    /**
+     * Indexes an item's data
+     *
+     * @param item
+     * @param id_l
+     * @return
+     */
     public Integer index(Item item, int id_l) {
         Integer id_d;
 
@@ -184,63 +152,7 @@ public class RelationManager {
         return id_d;
     }
 
-    /**
-     * Extracts item's base class from its name
-     * Eg 'Blasting Corsair Sword of Needling' -> 'Corsair Sword'
-     *
-     * @param group Group the item belongs to
-     * @param name  Item name
-     * @return Extracted name or null on failure
-     */
-    public String extractItemBaseName(GroupEnum group, String name) {
-        if (name == null) {
-            return null;
-        }
-
-        Set<String> baseSet = relationResources.getBaseItems().get(group);
-
-        if (baseSet == null) {
-            return null;
-        }
-
-        for (String base : baseSet) {
-            if (name.contains(base)) {
-                return base;
-            }
-        }
-
-        return null;
-    }
-
-    public String extractMapBaseName(String name) {
-        if (name == null) {
-            return null;
-        }
-
-        return relationResources.getDefaultMaps().stream()
-                .filter(name::contains)
-                .findFirst()
-                .orElse(null);
-    }
-
-    public boolean isInCurrencyBlacklist(String name) {
-        if (name == null) {
-            return false;
-        }
-
-        return relationResources.getCurrencyBlackList().stream().anyMatch(name::equalsIgnoreCase);
-    }
-
-    public String findUnidentifiedUniqueMapName(String type, int frame) {
-        UniqueMap uniqueMap = relationResources.getUniqueMaps().stream()
-                .filter(i -> i.getFrame() == frame && i.getType().equals(type))
-                .findFirst()
-                .orElse(null);
-
-        if (uniqueMap == null) {
-            return null;
-        }
-
-        return uniqueMap.getName();
+    public Map<Key, Integer> getItemData() {
+        return itemData;
     }
 }

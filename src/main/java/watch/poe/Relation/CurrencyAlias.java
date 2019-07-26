@@ -1,14 +1,16 @@
 package poe.Relation;
 
+import java.util.List;
+
 public class CurrencyAlias {
     private String name;
-    private String[] aliases;
+    private List<String> aliases;
 
     public String getName() {
         return name;
     }
 
-    public String[] getAliases() {
+    public List<String> getAliases() {
         return aliases;
     }
 }

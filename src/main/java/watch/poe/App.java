@@ -10,7 +10,8 @@ import poe.Item.Parser.ItemParser;
 import poe.Item.Parser.Price;
 import poe.Interval.IntervalManager;
 import poe.League.LeagueManager;
-import poe.Relation.RelationManager;
+import poe.Relation.Indexer;
+import poe.Relation.RelationResources;
 import poe.Statistics.StatisticsManager;
 import poe.Price.PriceManager;
 import poe.Statistics.StatType;
@@ -26,10 +27,12 @@ public class App {
     private static final String configName = "config.conf";
 
     private StatisticsManager sm;
+    private RelationResources rr;
     private IntervalManager im;
     private WorkerManager wm;
     private PriceManager pm;
     private Database db;
+    private Indexer ix;
     private Config cnf;
 
     private String[] args;
@@ -38,39 +41,45 @@ public class App {
         this.args = launchArgs;
     }
 
-    public void run() {
+    /**
+     * Initialises the application. Main loop must be called separately
+     */
+    public boolean init() {
         logger.info("Starting application");
 
         String configString = Utility.loadFile(configName);
-        // If the config did not exist then exit the app to allow initial configurations
         if (configString == null) {
-            return;
+            // If the config did not exist then exit the app to allow initial configurations
+            logger.info("Edit \"" + configName + "\" and try again. Exiting...");
+            return false;
         } else {
             cnf = ConfigFactory.parseString(configString);
+            logger.info("Config \"" + configName + "\" loaded");
         }
 
         // Initialize the controllers
         boolean success = setupControllers();
         if (!success) {
-            return;
+            logger.error("Could not start controllers. Exiting...");
+            return false;
         }
 
         // Parse CLI parameters
         success = parseCommandParameters(args);
         if (!success) {
-            return;
+            logger.error("Could not parse application parameters. Exiting...");
+            return false;
         }
 
         // Start worker manager
         wm.start();
 
-        // Enable price calculations
+        // Start price calculators
         if (cnf.getBoolean("calculation.enable")) {
             pm.start();
         }
 
-        // Initiate main command loop, allowing user some control over the program
-        commandLoop();
+        return true;
     }
 
     /**
@@ -122,17 +131,24 @@ public class App {
             return false;
         }
 
-        // Get category, item and currency data
-        RelationManager rm = new RelationManager(db);
-        if (!rm.init()) {
-            logger.error("Could not get relations");
+        // Setup item data indexer
+        ix = new Indexer(db);
+        if (!ix.init()) {
+            logger.error("Could not initialize indexer");
             return false;
         }
 
-        Item.setRelationManager(rm);
-        Price.setRelationManager(rm);
+        rr = new RelationResources(db, ix);
+        if (!rr.init()) {
+            logger.error("Could not initialize relation resources");
+            return false;
+        }
 
-        ItemParser ip = new ItemParser(lm, rm, cnf, sm, db);
+        Item.setIndexer(ix);
+        Item.setRelationResources(rr);
+        Price.setRelationResources(rr);
+
+        ItemParser ip = new ItemParser(lm, ix, cnf, sm, db);
         if (!ip.init()) {
             logger.error("Could not initialize item parser");
             return false;
@@ -201,7 +217,7 @@ public class App {
     /**
      * Main loop. Allows for some primitive command input through the console
      */
-    private void commandLoop() {
+    public void mainLoop() {
         String helpString = "[INFO] Available commands include:\n"
                 + "    help - display this help page\n"
                 + "    exit - exit the script safely\n"

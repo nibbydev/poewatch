@@ -68,7 +68,7 @@ public class DefaultBranch extends Item {
         if (category.equals(CategoryEnum.gem)) {
             extractGemData();
         } else if (category.equals(CategoryEnum.currency)) {
-            discard = relationManager.isInCurrencyBlacklist(key.name);
+            discard = relationResources.isInCurrencyBlacklist(key.name);
         }
 
         if (discard) {
@@ -144,7 +144,7 @@ public class DefaultBranch extends Item {
         // Find name for unidentified unique maps
         if (key.frame >= 3 && !originalItem.isIdentified()) {
             key.type = key.name;
-            key.name = relationManager.findUnidentifiedUniqueMapName(key.name, key.frame);
+            key.name = relationResources.findUnidentifiedUniqueMapName(key.name, key.frame);
 
             if (key.name == null) {
                 discard = true;
@@ -154,7 +154,7 @@ public class DefaultBranch extends Item {
 
         // Extract name from magic and rare maps
         if (key.frame == 1 || key.frame == 2) {
-            key.name = relationManager.extractMapBaseName(key.name);
+            key.name = relationResources.extractMapBaseName(key.name);
 
             // Map was not in the list
             if (key.name == null) {

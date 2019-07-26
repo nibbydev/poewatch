@@ -1,9 +1,9 @@
 package poe.Item.Parser;
 
-import poe.Relation.RelationManager;
+import poe.Relation.RelationResources;
 
 public class Price {
-    private static RelationManager relationManager;
+    private static RelationResources relationResources;
     private boolean hasPrice;
     private Integer currencyId;
     private double price;
@@ -16,8 +16,8 @@ public class Price {
         }
     }
 
-    public static void setRelationManager(RelationManager relationManager) {
-        Price.relationManager = relationManager;
+    public static void setRelationResources(RelationResources relationResources) {
+        Price.relationResources = relationResources;
     }
 
     public double getPrice() {
@@ -66,7 +66,7 @@ public class Price {
         }
 
         // Is the listed currency alias valid?
-        if (!relationManager.relationResources.hasCurrencyAlias(noteList[2])) {
+        if (!relationResources.hasCurrencyAlias(noteList[2])) {
             return;
         }
 
@@ -76,7 +76,7 @@ public class Price {
         }
 
         // Get id of the currency the item was listed for
-        currencyId = relationManager.relationResources.getCurrencyAlias(noteList[2]);
+        currencyId = relationResources.getCurrencyAlias(noteList[2]);
 
         // Mark that we were able to get a valid price from the buyout note
         hasPrice = true;

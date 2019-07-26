@@ -1,7 +1,5 @@
 package poe.Utility;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Main;
@@ -10,7 +8,6 @@ import java.io.*;
 
 public class Utility {
     private static final Logger logger = LoggerFactory.getLogger(Utility.class);
-    private static final Gson gson = new Gson();
 
     /**
      * Attempts to load a data file. If the operation fails, the default resource file is exported to the expected
@@ -87,14 +84,5 @@ public class Utility {
         }
 
         return jarFolder + resourceName;
-    }
-
-    public static <T> T loadResource(String file) {
-        String jsonString = loadFile(file);
-        if (jsonString == null) {
-            return null;
-        }
-
-        return gson.fromJson(jsonString, new TypeToken<T>() {}.getType());
     }
 }
