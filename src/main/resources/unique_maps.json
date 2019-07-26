@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Vaults of Atziri",
+    "type": "Vaal Pyramid Map",
+    "frame": 3
+  },
+  {
+    "name": "Oba's Cursed Trove",
+    "type": "Underground Sea Map",
+    "frame": 3
+  },
+  {
+    "name": "Caer Blaidd, Wolfpack's Den",
+    "type": "Underground River Map",
+    "frame": 3
+  },
+  {
+    "name": "Oba's Cursed Trove",
+    "type": "Torture Chamber Map",
+    "frame": 3
+  },
+  {
+    "name": "Poorjoy's Asylum",
+    "type": "Temple Map",
+    "frame": 3
+  },
+  {
+    "name": "Whakawairua Tuahu",
+    "type": "Strand Map",
+    "frame": 3
+  },
+  {
+    "name": "Mao Kun",
+    "type": "Shore Map",
+    "frame": 3
+  },
+  {
+    "name": "Mao Kun",
+    "type": "Reef Map",
+    "frame": 3
+  },
+  {
+    "name": "Hall of Grandmasters",
+    "type": "Promenade Map",
+    "frame": 3
+  },
+  {
+    "name": "Oba's Cursed Trove",
+    "type": "Primordial Blocks Map",
+    "frame": 3
+  },
+  {
+    "name": "Acton's Nightmare",
+    "type": "Overgrown Shrine Map",
+    "frame": 3
+  },
+  {
+    "name": "Death and Taxes",
+    "type": "Necropolis Map",
+    "frame": 3
+  },
+  {
+    "name": "The Putrid Cloister",
+    "type": "Museum Map",
+    "frame": 3
+  },
+  {
+    "name": "The Twilight Temple",
+    "type": "Moon Temple Map",
+    "frame": 3
+  },
+  {
+    "name": "Doryani's Machinarium",
+    "type": "Maze Map",
+    "frame": 3
+  },
+  {
+    "name": "Olmec's Sanctum",
+    "type": "Maze Map",
+    "frame": 3
+  },
+  {
+    "name": "The Beachhead",
+    "type": "Harbinger Map",
+    "frame": 3
+  },
+  {
+    "name": "Hallowed Ground",
+    "type": "Graveyard Map",
+    "frame": 3
+  },
+  {
+    "name": "Pillars of Arun",
+    "type": "Dunes Map",
+    "frame": 3
+  },
+  {
+    "name": "The Coward's Trial",
+    "type": "Cursed Crypt Map",
+    "frame": 3
+  },
+  {
+    "name": "The Vinktar Square",
+    "type": "Courtyard Map",
+    "frame": 3
+  },
+  {
+    "name": "The Perandus Manor",
+    "type": "Chateau Map",
+    "frame": 3
+  },
+  {
+    "name": "The Perandus Manor",
+    "type": "Chateau Map",
+    "frame": 9
+  },
+  {
+    "name": "Hallowed Ground",
+    "type": "Cemetery Map",
+    "frame": 3
+  },
+  {
+    "name": "Olmec's Sanctum",
+    "type": "Bone Crypt Map",
+    "frame": 3
+  },
+  {
+    "name": "Maelström of Chaos",
+    "type": "Atoll Map",
+    "frame": 3
+  }
+]

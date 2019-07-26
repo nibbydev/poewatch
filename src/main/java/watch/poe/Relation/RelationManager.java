@@ -20,13 +20,12 @@ public class RelationManager {
     private final Set<Key> inProgress = new HashSet<>();
     private final Map<Key, Integer> itemData = new HashMap<>();
     private final Map<Integer, Set<Integer>> leagueItems = new HashMap<>();
-
-    private final Map<GroupEnum, Set<String>> baseItems = BaseItems.GenBaseMap();
-    private final Map<String, Integer> currencyAliases = new HashMap<>();
+    public final RelationResources relationResources = new RelationResources();
 
     public RelationManager(Database db) {
         this.database = db;
     }
+
 
     /**
      * Reads currency and item data from file on object prep
@@ -35,6 +34,29 @@ public class RelationManager {
         boolean success;
 
         logger.info("Initializing relations");
+
+        success = loadRelations();
+        if (!success) {
+            logger.error("Failed to initialize relations");
+            return false;
+        }
+
+        logger.info("Relations initialized successfully");
+        logger.info("Loading resource files");
+
+        success = relationResources.load(itemData);
+        if (!success) {
+            logger.error("Failed to load resource files");
+            return false;
+        }
+
+        logger.info("Resource files loaded successfully");
+
+        return true;
+    }
+
+    private boolean loadRelations() {
+        boolean success;
 
         success = database.setup.verifyCategories();
         if (!success) {
@@ -56,9 +78,6 @@ public class RelationManager {
             logger.warn("Database did not contain any item id information");
         }
 
-        // Create mappings of buyout note shorthand to item id based on itemData
-        createCurrencyAliasMap();
-
         success = database.init.getLeagueItemIds(leagueItems);
         if (!success) {
             logger.error("Failed to query league item IDs from database. Shutting down...");
@@ -67,41 +86,9 @@ public class RelationManager {
             logger.warn("Database did not contain any league item id information");
         }
 
-        logger.info("Relations initialized successfully");
-
         return true;
     }
 
-    /**
-     * Creates mappings of buyout note shorthand to item id
-     */
-    private void createCurrencyAliasMap() {
-        currencyAliases.clear();
-
-        // For every alias, find a matching currency item's id
-        for (CurrencyAliases.AliasEntry aliasEntry : CurrencyAliases.getAliases()) {
-            for (Key key : itemData.keySet()) {
-                if (key.frame == 5 && key.name.equals(aliasEntry.getName())) {
-                    int id = itemData.get(key);
-
-                    for (String alias : aliasEntry.getAliases()) {
-                        currencyAliases.put(alias, id);
-                    }
-                }
-            }
-        }
-
-        // Since chaos Chaos Orb doesn't actually exist as an item in the database
-        for (CurrencyAliases.AliasEntry aliasEntry : CurrencyAliases.getAliases()) {
-            if (aliasEntry.getName().equals("Chaos Orb")) {
-                for (String alias : aliasEntry.getAliases()) {
-                    currencyAliases.put(alias, null);
-                }
-
-                break;
-            }
-        }
-    }
 
     public Integer index(Item item, int id_l) {
         Integer id_d;
@@ -210,7 +197,7 @@ public class RelationManager {
             return null;
         }
 
-        Set<String> baseSet = baseItems.get(group);
+        Set<String> baseSet = relationResources.getBaseItems().get(group);
 
         if (baseSet == null) {
             return null;
@@ -230,7 +217,7 @@ public class RelationManager {
             return null;
         }
 
-        return Arrays.stream(BaseMaps.maps)
+        return relationResources.getDefaultMaps().stream()
                 .filter(name::contains)
                 .findFirst()
                 .orElse(null);
@@ -241,23 +228,19 @@ public class RelationManager {
             return false;
         }
 
-        return Arrays.stream(CurrencyBlacklist.currency).anyMatch(name::equalsIgnoreCase);
+        return relationResources.getCurrencyBlackList().stream().anyMatch(name::equalsIgnoreCase);
     }
 
-    public String findUnidUniqueMapName(String type, int frame) {
-        BaseMaps.UniqueBaseMap uniqueBaseMap = Arrays.stream(BaseMaps.uniqueBaseMaps)
-                .filter(i -> i.frame == frame && i.type.equals(type))
+    public String findUnidentifiedUniqueMapName(String type, int frame) {
+        UniqueMap uniqueMap = relationResources.getUniqueMaps().stream()
+                .filter(i -> i.getFrame() == frame && i.getType().equals(type))
                 .findFirst()
                 .orElse(null);
 
-        if (uniqueBaseMap == null) {
+        if (uniqueMap == null) {
             return null;
         }
 
-        return uniqueBaseMap.name;
-    }
-
-    public Map<String, Integer> getCurrencyAliases() {
-        return currencyAliases;
+        return uniqueMap.getName();
     }
 }

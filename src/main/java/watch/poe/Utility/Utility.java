@@ -1,47 +1,60 @@
 package poe.Utility;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Main;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class Utility {
     private static final Logger logger = LoggerFactory.getLogger(Utility.class);
+    private static final Gson gson = new Gson();
 
     /**
-     * Attempts to load a config or create it if it does not exist
+     * Attempts to load a data file. If the operation fails, the default resource file is exported to the expected
+     * directory
      *
      * @param fileName Name of the config without leading slashes
-     * @return Loaded config or null if config did not exist
+     * @return Valid file
      */
-    public static Config loadConfig(String fileName) {
+    public static String loadFile(String fileName) {
         if (fileName.startsWith("/")) {
             fileName = fileName.substring(1);
         }
 
-        File confFile = new File(fileName);
+        File file = new File(fileName);
 
-        if (!confFile.exists() || !confFile.isFile()) {
-            logger.warn("Could not find config");
+        if (!file.exists() || !file.isFile()) {
+            logger.warn("Could not find file \"" + fileName + "\"");
 
             try {
                 String path = exportResource("/" + fileName);
-                logger.info("Config '" + path + "' has been created");
+                logger.info("File \"" + fileName + "\" has been created at \"" + path + "\"");
             } catch (Exception ex) {
-                ex.printStackTrace();
-                logger.error("Could not create config");
+                logger.error("Could not create file \"" + fileName + "\"", ex);
             }
 
             return null;
         }
 
-        return ConfigFactory.parseFile(confFile);
+        // Read in the file
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+
+            return sb.toString();
+        } catch (IOException ex) {
+            logger.error("Could not load file \"" + fileName + "\"", ex);
+            return null;
+        }
     }
 
     /**
@@ -74,5 +87,14 @@ public class Utility {
         }
 
         return jarFolder + resourceName;
+    }
+
+    public static <T> T loadResource(String file) {
+        String jsonString = loadFile(file);
+        if (jsonString == null) {
+            return null;
+        }
+
+        return gson.fromJson(jsonString, new TypeToken<T>() {}.getType());
     }
 }

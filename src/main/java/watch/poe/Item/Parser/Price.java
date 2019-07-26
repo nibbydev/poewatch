@@ -65,8 +65,8 @@ public class Price {
             return;
         }
 
-        // Is the listed currency valid?
-        if (!relationManager.getCurrencyAliases().containsKey(noteList[2])) {
+        // Is the listed currency alias valid?
+        if (!relationManager.relationResources.hasCurrencyAlias(noteList[2])) {
             return;
         }
 
@@ -76,7 +76,7 @@ public class Price {
         }
 
         // Get id of the currency the item was listed for
-        currencyId = relationManager.getCurrencyAliases().get(noteList[2]);
+        currencyId = relationManager.relationResources.getCurrencyAlias(noteList[2]);
 
         // Mark that we were able to get a valid price from the buyout note
         hasPrice = true;

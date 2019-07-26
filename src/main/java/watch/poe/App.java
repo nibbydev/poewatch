@@ -1,6 +1,7 @@
 package poe;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Database.Database;
@@ -22,7 +23,7 @@ import java.util.Arrays;
 
 public class App {
     private static final Logger logger = LoggerFactory.getLogger(App.class);
-    private static final String confName = "config.conf";
+    private static final String configName = "config.conf";
 
     private StatisticsManager sm;
     private IntervalManager im;
@@ -40,10 +41,12 @@ public class App {
     public void run() {
         logger.info("Starting application");
 
-        cnf = Utility.loadConfig(confName);
+        String configString = Utility.loadFile(configName);
         // If the config did not exist then exit the app to allow initial configurations
-        if (cnf == null) {
+        if (configString == null) {
             return;
+        } else {
+            cnf = ConfigFactory.parseString(configString);
         }
 
         // Initialize the controllers

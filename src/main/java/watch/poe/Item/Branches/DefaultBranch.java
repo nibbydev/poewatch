@@ -144,7 +144,7 @@ public class DefaultBranch extends Item {
         // Find name for unidentified unique maps
         if (key.frame >= 3 && !originalItem.isIdentified()) {
             key.type = key.name;
-            key.name = relationManager.findUnidUniqueMapName(key.name, key.frame);
+            key.name = relationManager.findUnidentifiedUniqueMapName(key.name, key.frame);
 
             if (key.name == null) {
                 discard = true;
