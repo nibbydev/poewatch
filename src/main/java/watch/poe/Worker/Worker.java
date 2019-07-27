@@ -4,11 +4,11 @@ import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poe.Db.Database;
+import poe.Database.Database;
 import poe.Item.Deserializers.Reply;
 import poe.Item.Parser.ItemParser;
-import poe.Managers.Stat.StatType;
-import poe.Managers.StatisticsManager;
+import poe.Statistics.StatType;
+import poe.Statistics.StatisticsManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +77,7 @@ public class Worker extends Thread {
             // Wait on monitor until notified and a new job is given
             waitForJob();
 
-            logger.debug("Worker {} starting job {} ({})", workerId, currentJobNr, job);
+            //logger.debug("Worker {} starting job {} ({})", workerId, currentJobNr, job);
 
             // Increment api call counter
             sm.addValue(StatType.COUNT_API_CALLS, null);
@@ -100,7 +100,7 @@ public class Worker extends Thread {
             if (pause) waitOnPause();
 
             // Clear current job
-            logger.debug("Worker {} finished job {}", workerId, currentJobNr);
+            //logger.debug("Worker {} finished job {}", workerId, currentJobNr);
             job = null;
         }
 

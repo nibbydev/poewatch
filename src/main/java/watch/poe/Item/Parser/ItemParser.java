@@ -1,7 +1,7 @@
 package poe.Item.Parser;
 
 import com.typesafe.config.Config;
-import poe.Db.Database;
+import poe.Database.Database;
 import poe.Item.Deserializers.ApiItem;
 import poe.Item.Deserializers.Reply;
 import poe.Item.Deserializers.Stash;
@@ -9,10 +9,10 @@ import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.DefaultBranch;
 import poe.Item.Branches.EnchantBranch;
 import poe.Item.Item;
-import poe.Managers.LeagueManager;
-import poe.Managers.RelationManager;
-import poe.Managers.Stat.StatType;
-import poe.Managers.StatisticsManager;
+import poe.League.LeagueManager;
+import poe.Relation.Indexer;
+import poe.Statistics.StatType;
+import poe.Statistics.StatisticsManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,9 +22,9 @@ import java.util.zip.CRC32;
 
 public class ItemParser {
     private final LeagueManager lm;
-    private final RelationManager rm;
     private final StatisticsManager sm;
     private final Database db;
+    private final Indexer ix;
     private final Config cf;
 
     private final Set<Long> dbStashes = new HashSet<>(100000);
@@ -34,14 +34,14 @@ public class ItemParser {
      * Default constructor
      *
      * @param lm
-     * @param rm
+     * @param ix
      * @param cf
      * @param sm
      * @param db
      */
-    public ItemParser(LeagueManager lm, RelationManager rm, Config cf, StatisticsManager sm, Database db) {
+    public ItemParser(LeagueManager lm, Indexer ix, Config cf, StatisticsManager sm, Database db) {
         this.lm = lm;
-        this.rm = rm;
+        this.ix = ix;
         this.cf = cf;
         this.sm = sm;
         this.db = db;
@@ -150,11 +150,16 @@ public class ItemParser {
                 // Parse branched items and create objects for db upload
                 for (Item item : branches) {
                     // Get item's ID (if missing, index it)
-                    Integer id_d = rm.index(item, id_l);
+                    Integer id_d = ix.index(item, id_l);
                     if (id_d == null) continue;
 
                     // Calculate crc of item's ID
                     long itemCrc = calcCrc(apiItem.getId());
+
+                    // If item should be recorded but should not have a price
+                    if (item.isClearPrice() && cf.getBoolean("entry.allowEnchantedHelmPrices")) {
+                        price = null;
+                    }
 
                     // Create DB entry object
                     DbItemEntry entry = new DbItemEntry(id_l, id_d, stash_crc, itemCrc, item.getStackSize(), price, user);

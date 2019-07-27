@@ -47,7 +47,7 @@ public class CraftingBaseBranch extends Item {
         }
 
         // Attempt to extract item's base name
-        key.name = relationManager.extractItemBaseName(group, key.name);
+        key.name = relationResources.extractItemBaseName(group, key.name);
         if (key.name == null) {
             discard = true;
             return;

@@ -2,18 +2,20 @@ package poe.Item;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import poe.Item.Category.CategoryEnum;
+import poe.Item.Category.GroupEnum;
 import poe.Item.Deserializers.ApiItem;
 import poe.Item.Branches.CraftingBaseBranch;
 import poe.Item.Branches.EnchantBranch;
-import poe.Item.Category.CategoryEnum;
-import poe.Item.Category.GroupEnum;
-import poe.Managers.RelationManager;
+import poe.Relation.Indexer;
+import poe.Relation.RelationResources;
 
 import java.util.List;
 
 public abstract class Item {
     private static final Logger logger = LoggerFactory.getLogger(Item.class);
-    protected static RelationManager relationManager;
+    protected static RelationResources relationResources;
+    protected static Indexer indexer;
 
     protected final ApiItem originalItem;
     protected final Key key;
@@ -22,7 +24,7 @@ public abstract class Item {
     protected Integer stackSize, maxStackSize;
     protected CategoryEnum category;
     protected GroupEnum group;
-    protected boolean discard;
+    protected boolean discard, clearPrice;
 
     /**
      * Default constructor
@@ -327,8 +329,12 @@ public abstract class Item {
     }
 
 
-    public static void setRelationManager(RelationManager relationManager) {
-        Item.relationManager = relationManager;
+    public static void setIndexer(Indexer indexer) {
+        Item.indexer = indexer;
+    }
+
+    public static void setRelationResources(RelationResources relationResources) {
+        Item.relationResources = relationResources;
     }
 
     public boolean isDiscard() {
@@ -361,5 +367,9 @@ public abstract class Item {
 
     public String getIcon() {
         return icon;
+    }
+
+    public boolean isClearPrice() {
+        return clearPrice;
     }
 }

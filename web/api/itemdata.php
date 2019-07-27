@@ -42,10 +42,23 @@ function parse_data($stmt) {
       'icon'            =>        $row['icon']
     ];
 
+    // Add false fields
+    if ($itemData['category'] === 'base') {
+      if (!$itemData['baseIsShaper']) {
+        $itemData['baseIsShaper'] = false;
+      }
+
+      if (!$itemData['baseIsElder']) {
+        $itemData['baseIsElder'] = false;
+      }
+    }
+
     // Filter out null values
-    $payload[] = array_filter($itemData, function($value) {
+    $itemData = array_filter($itemData, function($value) {
       return $value !== null;
     });
+
+    $payload[] = $itemData;
   }
 
   return $payload;
