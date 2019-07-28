@@ -162,7 +162,7 @@ public abstract class Item {
 
             // Check all groups and find matching one
             for (GroupEnum groupEnum : category.getGroups()) {
-                if (groupEnum.getName().equals(apiGroup)) {
+                if (groupEnum.toString().equals(apiGroup)) {
                     group = groupEnum;
                     return;
                 }
@@ -184,7 +184,7 @@ public abstract class Item {
 
             // Check all groups and find matching one
             for (GroupEnum groupEnum : category.getGroups()) {
-                if (groupEnum.getName().equals(apiGroup)) {
+                if (groupEnum.toString().equals(apiGroup)) {
                     group = groupEnum;
                     return;
                 }
@@ -286,7 +286,7 @@ public abstract class Item {
 
             // Check all groups and find matching one
             for (GroupEnum groupEnum : category.getGroups()) {
-                if (groupEnum.getName().equals(apiGroup)) {
+                if (groupEnum.toString().equals(apiGroup)) {
                     group = groupEnum;
                     return;
                 }
@@ -300,7 +300,7 @@ public abstract class Item {
 
             // Check all groups and find matching one
             for (GroupEnum groupEnum : category.getGroups()) {
-                if (groupEnum.getName().equals(apiGroup)) {
+                if (groupEnum.toString().equals(apiGroup)) {
                     group = groupEnum;
                     return;
                 }
@@ -314,7 +314,7 @@ public abstract class Item {
 
             // Check all groups and find matching one
             for (GroupEnum groupEnum : category.getGroups()) {
-                if (groupEnum.getName().equals(apiGroup)) {
+                if (groupEnum.toString().equals(apiGroup)) {
                     group = groupEnum;
                     return;
                 }

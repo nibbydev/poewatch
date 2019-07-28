@@ -20,7 +20,6 @@ public class Database {
     public Flag flag = new Flag(this);
     public Init init = new Init(this);
     public Calc calc = new Calc(this);
-    public Setup setup = new Setup(this);
     public Connection connection;
     private Config config;
 

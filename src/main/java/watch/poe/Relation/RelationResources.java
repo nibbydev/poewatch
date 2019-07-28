@@ -29,30 +29,11 @@ public class RelationResources {
     }
 
     /**
-     * Loads in resource files and creates mappings
-     *
-     * @return
-     */
-    public boolean init() {
-        boolean success = loadResourceFiles();
-        if (!success) {
-            return false;
-        }
-
-        success = verifyDatabase();
-        if (!success) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Attempt to load resource files from the application's context path
      *
      * @return True if all loaded successfully
      */
-    private boolean loadResourceFiles() {
+    public boolean init() {
         logger.info("Loading resource files");
 
         // Allow this method to create multiple files, before returning an error
@@ -111,28 +92,6 @@ public class RelationResources {
             logger.info("Finished loading resource files");
             return true;
         }
-    }
-
-    /**
-     * Checks whether the database contains the correct categories and groups
-     *
-     * @return
-     */
-    private boolean verifyDatabase() {
-        logger.info("Verifying categories");
-
-        boolean success = database.setup.verifyCategories();
-        if (!success) {
-            return false;
-        }
-
-        success = database.setup.verifyGroups();
-        if (!success) {
-            return false;
-        }
-
-        logger.info("Finished verifying categories");
-        return true;
     }
 
     /**
