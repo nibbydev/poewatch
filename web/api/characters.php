@@ -9,7 +9,7 @@ function check_errors() {
     error(400, "Missing account");
   }
 
-  if (strlen($_GET["account"]) > 32) {
+  if (strlen($_GET["account"]) > 100) {
     error(400, "Parameter too long");
   }
 
