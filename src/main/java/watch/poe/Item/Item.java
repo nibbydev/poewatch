@@ -109,23 +109,15 @@ public abstract class Item {
     }
 
     /**
-     * Gets api category
-     *
-     * @return api category
-     */
-    private String findApiCategory() {
-        return originalItem.getCategory().keySet().toArray()[0].toString();
-    }
-
-    /**
      * Given the category, gets first group
      *
-     * @param apiCategory api category
      * @return api group
      */
-    private String findApiGroup(String apiCategory) {
-        if (originalItem.getCategory().get(apiCategory).size() > 0) {
-            return originalItem.getCategory().get(apiCategory).get(0).toLowerCase();
+    private String findApiGroup() {
+        List<String> subCategories = originalItem.getExtended().getSubcategories();
+
+        if (subCategories != null && subCategories.size() > 0) {
+            return subCategories.get(0).toLowerCase();
         }
 
         return null;
@@ -148,8 +140,13 @@ public abstract class Item {
      */
     private void determineCategoryGroup() {
         String iconCategory = findIconCategory();
-        String apiCategory = findApiCategory();
-        String apiGroup = findApiGroup(apiCategory);
+        String apiCategory = originalItem.getExtended().getCategory();
+        String apiGroup = findApiGroup();
+
+        if (apiCategory == null) {
+            discard = true;
+            return;
+        }
 
         if (apiCategory.equals("monsters") || apiCategory.equals("leaguestones")) {
             discard = true;
