@@ -19,7 +19,7 @@ public class ApiItem {
     @SerializedName(value = "raceReward", alternate = {"seaRaceReward", "cisRaceReward", "thRaceReward", "RaceReward"})
     private Object raceReward;
 
-    private Map<String, List<String>> category;
+    private Extended extended;
     private List<Property> properties;
     private List<Socket> sockets;
     private List<String> explicitMods;
@@ -56,10 +56,6 @@ public class ApiItem {
 
     public List<String> getEnchantMods() {
         return enchantMods;
-    }
-
-    public Map<String, List<String>> getCategory() {
-        return category;
     }
 
     public List<String> getExplicitMods() {
@@ -112,5 +108,9 @@ public class ApiItem {
 
     public String getProphecyText() {
         return prophecyText;
+    }
+
+    public Extended getExtended() {
+        return extended;
     }
 }

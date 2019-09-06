@@ -29,84 +29,69 @@ public class RelationResources {
     }
 
     /**
-     * Loads in resource files and creates mappings
+     * Attempt to load resource files from the application's context path
      *
-     * @return
+     * @return True if all loaded successfully
      */
     public boolean init() {
-        boolean success = loadResourceFiles();
-        if (!success) {
-            return false;
-        }
-
-        success = verifyDatabase();
-        if (!success) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean loadResourceFiles() {
         logger.info("Loading resource files");
 
+        // Allow this method to create multiple files, before returning an error
+        boolean failedLoad = false;
+
+        // load currency_aliases
         String json = Utility.loadFile("currency_aliases.json");
-        Type type = new TypeToken<List<CurrencyAlias>>() {}.getType();
-        List<CurrencyAlias> aliasList = gson.fromJson(json, type);
-        if (aliasList == null) {
-            return false;
+        if (json == null) {
+            failedLoad = true;
+        } else {
+            Type type = new TypeToken<List<CurrencyAlias>>() {}.getType();
+            List<CurrencyAlias> aliasList = gson.fromJson(json, type);
+            buildCurrencyAliasMap(aliasList, indexer.getItemData());
         }
 
+        // load currency_blacklist
         json = Utility.loadFile("currency_blacklist.json");
-        type = new TypeToken<List<String>>() {}.getType();
-        currencyBlackList = gson.fromJson(json, type);
-        if (currencyBlackList == null) {
-            return false;
+        if (json == null) {
+            failedLoad = true;
+        } else {
+            Type type = new TypeToken<List<String>>() {}.getType();
+            currencyBlackList = gson.fromJson(json, type);
         }
 
+        // load default_maps
         json = Utility.loadFile("default_maps.json");
-        type = new TypeToken<List<String>>() {}.getType();
-        defaultMaps = gson.fromJson(json, type);
-        if (defaultMaps == null) {
-            return false;
+        if (json == null) {
+            failedLoad = true;
+        } else {
+            Type type = new TypeToken<List<String>>() {}.getType();
+            defaultMaps = gson.fromJson(json, type);
         }
 
+        // load unique_maps
         json = Utility.loadFile("unique_maps.json");
-        type = new TypeToken<List<UniqueMap>>() {}.getType();
-        uniqueMaps = gson.fromJson(json, type);
-        if (uniqueMaps == null) {
-            return false;
+        if (json == null) {
+            failedLoad = true;
+        } else {
+            Type type = new TypeToken<List<UniqueMap>>() {}.getType();
+            uniqueMaps = gson.fromJson(json, type);
         }
 
+        // load item_bases
         json = Utility.loadFile("item_bases.json");
-        type = new TypeToken<List<BaseItems>>() {}.getType();
-        List<BaseItems> basesList = gson.fromJson(json, type);
-        if (basesList == null) {
-            return false;
+        if (json == null) {
+            failedLoad = true;
+        } else {
+            Type type = new TypeToken<List<BaseItems>>() {}.getType();
+            List<BaseItems> basesList = gson.fromJson(json, type);
+            buildItemBasesMap(basesList);
         }
 
-        buildCurrencyAliasMap(aliasList, indexer.getItemData());
-        buildItemBasesMap(basesList);
-
-        logger.info("Finished loading resource files");
-        return true;
-    }
-
-    private boolean verifyDatabase() {
-        logger.info("Verifying categories");
-
-        boolean success = database.setup.verifyCategories();
-        if (!success) {
+        if (failedLoad) {
             return false;
+        } else {
+            logger.info("Finished loading resource files");
+            return true;
         }
-
-        success = database.setup.verifyGroups();
-        if (!success) {
-            return false;
-        }
-
-        logger.info("Finished verifying categories");
-        return true;
     }
 
     /**

@@ -24,7 +24,7 @@ public class Utility {
         File file = new File(fileName);
 
         if (!file.exists() || !file.isFile()) {
-            logger.warn("Could not find file \"" + fileName + "\"");
+            logger.error("Could not find file \"" + fileName + "\"");
 
             try {
                 String path = exportResource("/" + fileName);

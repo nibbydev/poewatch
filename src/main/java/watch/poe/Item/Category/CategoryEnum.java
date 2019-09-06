@@ -1,56 +1,57 @@
 package poe.Item.Category;
 
 public enum CategoryEnum {
-    accessory("accessory", "Accessories",
+    accessory(
             GroupEnum.amulet,
             GroupEnum.ring,
-            GroupEnum.belt),
-
-    armour("armour", "Armour",
+            GroupEnum.belt
+    ),
+    armour(
             GroupEnum.boots,
             GroupEnum.chest,
             GroupEnum.gloves,
             GroupEnum.helmet,
             GroupEnum.quiver,
-            GroupEnum.shield),
-
-    card("card", "Divination cards",
-            GroupEnum.card),
-
-    currency("currency", "Currency",
+            GroupEnum.shield
+    ),
+    card(
+            GroupEnum.card
+    ),
+    currency(
             GroupEnum.currency,
             GroupEnum.essence,
             GroupEnum.piece,
             GroupEnum.fossil,
             GroupEnum.resonator,
-            GroupEnum.vial),
-
-    enchantment("enchantment", "Enchants",
+            GroupEnum.vial,
+            GroupEnum.oil
+    ),
+    enchantment(
             GroupEnum.helmet,
             GroupEnum.boots,
-            GroupEnum.gloves),
-
-    flask("flask", "Flasks",
-            GroupEnum.flask),
-
-    gem("gem", "Gems",
+            GroupEnum.gloves
+    ),
+    flask(
+            GroupEnum.flask
+    ),
+    gem(
             GroupEnum.skill,
             GroupEnum.support,
-            GroupEnum.vaal),
-
-    jewel("jewel", "Jewels",
-            GroupEnum.jewel),
-
-    map("map", "Maps",
+            GroupEnum.vaal
+    ),
+    jewel(
+            GroupEnum.jewel
+    ),
+    map(
             GroupEnum.map,
             GroupEnum.fragment,
             GroupEnum.unique,
-            GroupEnum.scarab),
-
-    prophecy("prophecy", "Prophecy",
-            GroupEnum.prophecy),
-
-    weapon("weapon", "Weapons",
+            GroupEnum.scarab
+    ),
+    prophecy(
+            GroupEnum.prophecy
+    ),
+    weapon(
             GroupEnum.bow,
             GroupEnum.claw,
             GroupEnum.dagger,
@@ -63,9 +64,11 @@ public enum CategoryEnum {
             GroupEnum.twoaxe,
             GroupEnum.twomace,
             GroupEnum.twosword,
-            GroupEnum.wand),
-
-    base("base", "Crafting Bases",
+            GroupEnum.wand,
+            GroupEnum.runedagger,
+            GroupEnum.warstaff
+    ),
+    base(
             GroupEnum.amulet,
             GroupEnum.ring,
             GroupEnum.belt,
@@ -88,14 +91,14 @@ public enum CategoryEnum {
             GroupEnum.twomace,
             GroupEnum.twosword,
             GroupEnum.wand,
-            GroupEnum.jewel);
+            GroupEnum.jewel,
+            GroupEnum.warstaff,
+            GroupEnum.runedagger
+    );
 
-    private String name, display;
-    private GroupEnum[] groups;
+    private final GroupEnum[] groups;
 
-    CategoryEnum(String name, String display, GroupEnum... groups) {
-        this.name = name;
-        this.display = display;
+    CategoryEnum(GroupEnum... groups) {
         this.groups = groups;
     }
 
@@ -103,13 +106,6 @@ public enum CategoryEnum {
         return groups;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getDisplay() {
-        return display;
-    }
 
     public int getId() {return ordinal() + 1;}
 }
