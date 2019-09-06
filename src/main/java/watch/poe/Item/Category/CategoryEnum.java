@@ -23,7 +23,8 @@ public enum CategoryEnum {
             GroupEnum.piece,
             GroupEnum.fossil,
             GroupEnum.resonator,
-            GroupEnum.vial
+            GroupEnum.vial,
+            GroupEnum.oil
     ),
     enchantment(
             GroupEnum.helmet,
@@ -63,7 +64,9 @@ public enum CategoryEnum {
             GroupEnum.twoaxe,
             GroupEnum.twomace,
             GroupEnum.twosword,
-            GroupEnum.wand
+            GroupEnum.wand,
+            GroupEnum.runedagger,
+            GroupEnum.warstaff
     ),
     base(
             GroupEnum.amulet,
@@ -88,7 +91,9 @@ public enum CategoryEnum {
             GroupEnum.twomace,
             GroupEnum.twosword,
             GroupEnum.wand,
-            GroupEnum.jewel
+            GroupEnum.jewel,
+            GroupEnum.warstaff,
+            GroupEnum.runedagger
     );
 
     private final GroupEnum[] groups;

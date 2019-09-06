@@ -223,6 +223,8 @@ public abstract class Item {
                 group = GroupEnum.incubator;
             } else if (iconCategory.equals("divination")) { // stacked deck
                 group = GroupEnum.currency;
+            } else if (iconCategory.equals("oils")) { // oils
+                group = GroupEnum.oil;
             }
 
             return;

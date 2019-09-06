@@ -51,7 +51,10 @@ public enum GroupEnum {
     twosword,
     wand, 
     incubator,
-    splinter;
+    splinter,
+    runedagger,
+    warstaff,
+    oil;
 
     public int getId() {return ordinal() + 1;}
 }
