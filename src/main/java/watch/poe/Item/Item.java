@@ -86,6 +86,7 @@ public abstract class Item {
                     case "mr": // shaped
                     case "mn": // series
                     case "mt": // tier
+                    case "mb": // blighted
                     case "relic":
                         paramBuilder.append("&");
                         paramBuilder.append(splitParam[0]);
