@@ -113,4 +113,12 @@ public class ApiItem {
     public Extended getExtended() {
         return extended;
     }
+
+    public boolean isEnchantBranch() {
+        return enchantMods != null;
+    }
+
+    public boolean isCraftingBranch() {
+        return (frameType == 0 || frameType == 1 || frameType == 2) && ilvl >= 68;
+    }
 }

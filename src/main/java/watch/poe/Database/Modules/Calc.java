@@ -8,7 +8,7 @@ import poe.Price.Bundles.IdBundle;
 import poe.Price.Bundles.PriceBundle;
 
 import java.sql.*;
-import java.util.List;
+import java.util.Set;
 
 public class Calc {
     private static Logger logger = LoggerFactory.getLogger(Calc.class);
@@ -25,12 +25,12 @@ public class Calc {
      * @param since Timestamp of last query
      * @return True on success
      */
-    public boolean getIdBundles(List<IdBundle> idBundles, Timestamp since) {
+    public boolean getIdBundles(Set<IdBundle> idBundles, Timestamp since) {
         if (idBundles == null || !idBundles.isEmpty()) {
             throw new RuntimeException("Invalid list provided");
         }
 
-        String query =  "select b.id_l, b.id_d, li.mean, li.daily " +
+        String query =  "select b.id_l, b.id_d, li.mean, li.daily, did.id_grp " +
                         "from league_items as li " +
                         "join ( " +
                         "  select distinct id_l, id_d " +
@@ -38,7 +38,8 @@ public class Calc {
                         "  where stash_crc is not null " +
                         "    and price is not null " +
                         "    and updated > ? " +
-                        ") as b on li.id_l = b.id_l and li.id_d = b.id_d;";
+                        ") as b on li.id_l = b.id_l and li.id_d = b.id_d " +
+                        "join data_item_data as did on did.id = b.id_d;";
 
         try {
             if (database.connection.isClosed()) {
@@ -57,6 +58,7 @@ public class Calc {
                     ib.setItemId(resultSet.getInt(2));
                     ib.setPrice(resultSet.getDouble(3));
                     ib.setDaily(resultSet.getInt(4));
+                    ib.setGroup(resultSet.getInt(5));
 
                     idBundles.add(ib);
                 }
@@ -75,14 +77,14 @@ public class Calc {
      *
      * @return True on success
      */
-    public boolean getPriceBundles(List<PriceBundle> priceBundles) {
+    public boolean getPriceBundles(Set<PriceBundle> priceBundles) {
         String query = "select li.id_l, li.id_d, li.mean " +
                 "from league_items as li " +
                 "join data_item_data as did on li.id_d = did.id " +
-                "where did.id_cat = 4 " +
-                "  and did.id_grp = 11 " +
-                "  and did.frame = 5 " +
-                "  and li.mean > 0 ";
+                "where did.id_cat = 4 " + // currency category
+                "  and did.id_grp = 11 " + // currency group
+                "  and did.frame = 5 " + // currency frame type
+                "  and li.mean > 0 "; // actually has a price
 
         try {
             if (database.connection.isClosed()) {
@@ -114,7 +116,7 @@ public class Calc {
      *
      * @return True on success
      */
-    public boolean getEntryBundles(List<EntryBundle> entryBundles, IdBundle idBundle, int maxAge) {
+    public boolean getEntryBundles(Set<EntryBundle> entryBundles, IdBundle idBundle, int maxAge) {
         String query = "select le.id_a, le.price, le.id_price " +
                 "from league_entries as le " +
                 "join league_accounts as la " +

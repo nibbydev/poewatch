@@ -13,12 +13,12 @@ import poe.League.LeagueManager;
 import poe.Relation.Indexer;
 import poe.Statistics.StatType;
 import poe.Statistics.StatisticsManager;
+import poe.Utility.Utility;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.CRC32;
 
 public class ItemParser {
     private final LeagueManager lm;
@@ -27,8 +27,7 @@ public class ItemParser {
     private final Indexer ix;
     private final Config cf;
 
-    private final Set<Long> dbStashes = new HashSet<>(100000);
-    private final CRC32 crc = new CRC32();
+    private final Set<Long> activeStashIds = new HashSet<>(1000000);
 
     /**
      * Default constructor
@@ -54,7 +53,7 @@ public class ItemParser {
      */
     public boolean init() {
         // Get all stash ids
-        return db.init.getStashIds(dbStashes);
+        return db.init.getStashIds(activeStashIds);
     }
 
     /**
@@ -85,9 +84,9 @@ public class ItemParser {
     /**
      * Goes through all stashes and all items and processes them
      *
-     * @param users
-     * @param stashIds
-     * @param dbItems
+     * @param users All users in the reply
+     * @param stashIds  All stash IDs in the reply
+     * @param dbItems All items in the reply
      */
     private void processStashes(List<Stash> stashes, List<User> users, Set<Long> stashIds, Set<DbItemEntry> dbItems) {
         // Number of items in the reply
@@ -103,11 +102,11 @@ public class ItemParser {
             if (id_l == null) continue;
 
             // Calculate CRC for the stash
-            long stash_crc = calcCrc(stash.id);
+            Long stash_crc = Utility.calcCrc(stash.id);
 
             // If the stash is in use somewhere in the database
-            synchronized (dbStashes) {
-                if (dbStashes.contains(stash_crc)) {
+            synchronized (activeStashIds) {
+                if (activeStashIds.contains(stash_crc)) {
                     stashIds.add(stash_crc);
                 }
             }
@@ -132,12 +131,8 @@ public class ItemParser {
 
             // Loop through the items
             for (ApiItem apiItem : stash.items) {
-                // Do a few checks on the league and etc
-                if (checkDiscard(apiItem)) continue;
-
-                // Branch the item, if necessary
+                // Branch the item, if necessary.
                 ArrayList<Item> branches = createBranches(apiItem);
-                branches.removeIf(Item::isDiscard);
 
                 // Attempt to determine the price of the item
                 Price price = new Price(apiItem.getNote(), stash.stashName);
@@ -149,30 +144,34 @@ public class ItemParser {
 
                 // Parse branched items and create objects for db upload
                 for (Item item : branches) {
+                    if (item.isDiscard()) {
+                        continue;
+                    }
+
                     // Get item's ID (if missing, index it)
                     Integer id_d = ix.index(item, id_l);
                     if (id_d == null) continue;
 
                     // Calculate crc of item's ID
-                    long itemCrc = calcCrc(apiItem.getId());
-
-                    // If item should be recorded but should not have a price
-                    if (item.isClearPrice() && cf.getBoolean("entry.allowEnchantedHelmPrices")) {
-                        price = null;
-                    }
+                    long itemCrc = Utility.calcCrc(apiItem.getId());
 
                     // Create DB entry object
                     DbItemEntry entry = new DbItemEntry(id_l, id_d, stash_crc, itemCrc, item.getStackSize(), price, user);
-                    dbItems.add(entry);
+
+                    // If item should be recorded but should not have a price
+                    if (item.isClearPrice() && cf.getBoolean("entry.removeEnchantedHelmetPrices")) {
+                        entry.price = null;
+                    }
 
                     // Set flag to indicate the stash contained at least 1 valid item
                     hasValidItems = true;
+                    dbItems.add(entry);
                 }
             }
 
             // If stash contained at least 1 valid item, save the stash id
             if (hasValidItems) {
-                dbStashes.add(stash_crc);
+                activeStashIds.add(stash_crc);
             }
         }
 
@@ -180,56 +179,24 @@ public class ItemParser {
     }
 
     /**
-     * Check if the item should be discarded immediately.
-     */
-    private boolean checkDiscard(ApiItem apiItem) {
-        // Filter out items posted on the SSF leagues
-        if (apiItem.getLeague().contains("SSF")) {
-            return true;
-        }
-
-        // Filter out a specific bug in the API
-        if (apiItem.getLeague().equals("false")) {
-            return true;
-        }
-
-        // Race rewards usually cost tens of times more than the average for their sweet, succulent altArt
-        return apiItem.isRaceReward() != null && apiItem.isRaceReward();
-
-    }
-
-    /**
      * Check if item should be branched (i.e there could be more than one database entry from that item)
      */
     private ArrayList<Item> createBranches(ApiItem apiItem) {
-        ArrayList<Item> branches = new ArrayList<>();
+        ArrayList<Item> branches = new ArrayList<>(1);
 
         // Default item
         branches.add(new DefaultBranch(apiItem));
 
         // If item is enchanted
-        if (apiItem.getEnchantMods() != null) {
+        if (apiItem.isEnchantBranch()) {
             branches.add(new EnchantBranch(apiItem));
         }
 
         // If item is a crafting base
-        if (apiItem.getFrameType() < 3 && apiItem.getIlvl() >= 68) {
+        if (apiItem.isCraftingBranch()) {
             branches.add(new CraftingBaseBranch(apiItem));
         }
 
         return branches;
     }
-
-
-    private long calcCrc(String str) {
-        if (str == null) {
-            return 0;
-        } else {
-            crc.reset();
-            crc.update(str.getBytes());
-            return crc.getValue();
-        }
-    }
-
-
 }

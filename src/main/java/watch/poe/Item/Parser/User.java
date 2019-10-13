@@ -1,5 +1,7 @@
 package poe.Item.Parser;
 
+import poe.Item.Deserializers.Stash;
+
 import java.util.Objects;
 
 public class User {
@@ -13,6 +15,12 @@ public class User {
         this.leagueId = l;
         this.accountName = a;
         this.characterName = c;
+    }
+
+    public User(int l, Stash stash) {
+        this.leagueId = l;
+        this.accountName = stash.accountName;
+        this.characterName = stash.lastCharacterName;
     }
 
     @Override

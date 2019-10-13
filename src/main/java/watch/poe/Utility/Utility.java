@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory;
 import poe.Main;
 
 import java.io.*;
+import java.util.zip.CRC32;
 
 public class Utility {
     private static final Logger logger = LoggerFactory.getLogger(Utility.class);
+    private static final CRC32 crc = new CRC32();
 
     /**
      * Attempts to load a data file. If the operation fails, the default resource file is exported to the expected
@@ -84,5 +86,22 @@ public class Utility {
         }
 
         return jarFolder + resourceName;
+    }
+
+
+    /**
+     * Given a string, calculates its crc32
+     *
+     * @param str
+     * @return
+     */
+    public static long calcCrc(String str) {
+        if (str == null) {
+            return 0;
+        } else {
+            crc.reset();
+            crc.update(str.getBytes());
+            return crc.getValue();
+        }
     }
 }

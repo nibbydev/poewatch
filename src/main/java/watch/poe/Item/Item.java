@@ -40,6 +40,9 @@ public abstract class Item {
         determineCategoryGroup();
         if (discard) return;
 
+        checkUniversalDiscard();
+        if (discard) return;
+
         if (category == null) {
             logger.error("Unknown category for: " + this);
             discard = true;
@@ -51,6 +54,16 @@ public abstract class Item {
         }
 
         parse();
+    }
+
+    /**
+     * Check if the item should be discarded immediately.
+     */
+    private void checkUniversalDiscard() {
+        // Race rewards usually cost tens of times more than the average for their sweet, succulent altArt
+        if (originalItem.isRaceReward() != null && originalItem.isRaceReward()) {
+            discard = true;
+        }
     }
 
     /**
