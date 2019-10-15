@@ -85,7 +85,11 @@ VALUES (1, 'amulet', 'Amulets'),
        (39, 'twosword', '2H Swords'),
        (40, 'wand', 'Wands'),
        (41, 'incubator', 'Incubators'),
-       (42, 'splinter', 'Splinters');
+       (42, 'splinter', 'Splinters'),
+       (43, 'runedagger', 'Runedaggers'),
+       (44, 'warstaff', 'Warstaves'),
+       (45, 'oil', 'Oils'),
+       (46, 'beast', 'Beasts');
 
 --
 -- Base value for data_categories
@@ -103,7 +107,8 @@ VALUES (1, 'accessory', 'Accessories'),
        (9, 'map', 'Maps'),
        (10, 'prophecy', 'Prophecy'),
        (11, 'weapon', 'Weapons'),
-       (12, 'base', 'Crafting Bases');
+       (12, 'base', 'Crafting Bases'),
+       (13, 'beast', 'Beasts');
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- User accounts

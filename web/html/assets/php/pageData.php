@@ -36,7 +36,7 @@ $PAGE_DATA = [
       'href' => '/characters'
     ],
     [
-      'name' => 'Listings <span class="badge custom-badge-green">New</span>',
+      'name' => 'Listings',
       'href' => '/listings'
     ],
     [
@@ -66,6 +66,12 @@ $PAGE_DATA = [
       "name" => "base",
       "icon" => "https://web.poecdn.com/image/Art/2DItems/Rings/OpalRing.png?scale=1&w=1&h=1",
       "href" => "prices?category=base"
+    ],
+    [
+      "display" => "Beasts",
+      "name" => "beast",
+      "icon" => "http://web.poecdn.com/image/Art/2DItems/Currency/BestiaryOrbFull.png?scale=1&w=1&h=1",
+      "href" => "prices?category=beast"
     ],
     [
       "display" => "Currency",

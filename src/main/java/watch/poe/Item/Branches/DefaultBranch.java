@@ -37,7 +37,7 @@ public class DefaultBranch extends Item {
             }
 
             // Don't allow any normal/magic/rare items
-            if (originalItem.getFrameType() < 3 && category != CategoryEnum.currency) {
+            if (originalItem.getFrameType() < 3 && category != CategoryEnum.currency && category != CategoryEnum.beast) {
                 discard = true;
                 return;
             }

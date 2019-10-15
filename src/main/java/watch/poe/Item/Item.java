@@ -162,13 +162,13 @@ public abstract class Item {
             return;
         }
 
-        if (apiCategory.equals("monsters") || apiCategory.equals("leaguestones")) {
+        if (apiCategory.equals("leaguestones")) {
             discard = true;
             return;
         }
 
         // Override for enchantments
-        if (this.getClass().equals(EnchantBranch.class)) {
+        if (this instanceof EnchantBranch) {
             category = CategoryEnum.enchantment;
 
             // Check all groups and find matching one
@@ -184,7 +184,7 @@ public abstract class Item {
         }
 
         // Override for item bases
-        if (this.getClass().equals(CraftingBaseBranch.class)) {
+        if (this instanceof CraftingBaseBranch) {
             // Only collect armours, weapons and jewels for bases
             if (!apiCategory.equals("armour") && !apiCategory.equals("weapons") && !apiCategory.equals("jewels")) {
                 discard = true;
@@ -291,6 +291,12 @@ public abstract class Item {
         if (apiCategory.equals("jewels")) {
             category = CategoryEnum.jewel;
             group = GroupEnum.jewel;
+            return;
+        }
+
+        if (apiCategory.equals("monsters")) {
+            category = CategoryEnum.beast;
+            group = GroupEnum.beast;
             return;
         }
 

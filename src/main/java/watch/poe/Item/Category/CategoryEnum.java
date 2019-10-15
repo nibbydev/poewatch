@@ -94,6 +94,9 @@ public enum CategoryEnum {
             GroupEnum.jewel,
             GroupEnum.warstaff,
             GroupEnum.runedagger
+    ),
+    beast(
+            GroupEnum.beast
     );
 
     private final GroupEnum[] groups;
@@ -107,5 +110,7 @@ public enum CategoryEnum {
     }
 
 
-    public int getId() {return ordinal() + 1;}
+    public int getId() {
+        return ordinal() + 1;
+    }
 }
