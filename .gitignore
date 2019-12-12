@@ -27,3 +27,8 @@ hs_err_pid*
 
 # dev files
 config.conf
+currency_aliases.json
+currency_blacklist.json
+default_maps.json
+item_bases.json
+unique_maps.json
