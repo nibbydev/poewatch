@@ -41,7 +41,7 @@ function get_item_data($pdo, $id) {
 
       'mapSeries'       =>        $row['map_series']    === null ? null : (int)    $row['map_series'],
       'mapTier'         =>        $row['map_tier']      === null ? null : (int)    $row['map_tier'],
-      'influence'       =>        [],
+      'influences'      =>        [],
       'baseIsShaper'    =>        $row['shaper']        === null ? null : (bool)   $row['shaper'],
       'baseIsElder'     =>        $row['elder']         === null ? null : (bool)   $row['elder'],
       'baseItemLevel'   =>        $row['base_level']    === null ? null : (int)    $row['base_level'],
@@ -70,7 +70,7 @@ function get_item_data($pdo, $id) {
 
     foreach (['shaper', 'elder', 'crusader', 'redeemer', 'hunter', 'warlord'] as $influence) {
       if ($row[$influence]) {
-        $itemData['influence'][] = $influence;
+        $itemData['influences'][] = $influence;
       }
     }
 
