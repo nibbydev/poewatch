@@ -7,18 +7,18 @@ alter table data_item_data
     drop index idx_unique;
 
 alter table data_item_data
-    add column shaper BIT(1) DEFAULT NULL,
-    add column elder BIT(1) DEFAULT NULL,
-    add column crusader BIT(1) DEFAULT NULL,
-    add column redeemer BIT(1) DEFAULT NULL,
-    add column hunter BIT(1) DEFAULT NULL,
-    add column warlord BIT(1) DEFAULT NULL;
+    add column shaper BIT(1) DEFAULT NULL after base_elder,
+    add column elder BIT(1) DEFAULT NULL after shaper,
+    add column crusader BIT(1) DEFAULT NULL after elder,
+    add column redeemer BIT(1) DEFAULT NULL after crusader,
+    add column hunter BIT(1) DEFAULT NULL after redeemer,
+    add column warlord BIT(1) DEFAULT NULL after hunter;
 
 UPDATE data_item_data
 SET shaper = base_shaper,
     elder  = base_elder
-WHERE base_shaper != null
-  and base_elder != null;
+WHERE base_shaper is not null
+  or base_elder is not null;
 
 
 alter table data_item_data
