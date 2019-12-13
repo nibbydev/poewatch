@@ -30,12 +30,6 @@ public class CraftingBaseBranch extends Item {
             return;
         }
 
-        // Incubators get branched here since the have an ilvl
-        if (super.group.equals(GroupEnum.incubator)) {
-            discard = true;
-            return;
-        }
-
         // "Superior Item" = "Item"
         if (key.name.startsWith("Superior ")) {
             key.name = key.name.replace("Superior ", "");
@@ -61,6 +55,7 @@ public class CraftingBaseBranch extends Item {
         // Flatten ilvl rolls
         if (originalItem.getIlvl() < 83) {
             discard = true;
+            return;
         } else if (originalItem.getIlvl() > 86) {
             key.baseItemLevel = 86;
         }
@@ -69,15 +64,6 @@ public class CraftingBaseBranch extends Item {
     }
 
     private void setInfluence() {
-        Boolean legacyShaper = originalItem.getShaper();
-        Boolean legacyElder = originalItem.getElder();
-        if (legacyShaper != null) {
-            key.shaper = legacyShaper;
-        }
-        if (legacyElder != null) {
-            key.elder = legacyElder;
-        }
-
         Influences influences = originalItem.getInfluences();
         if (influences != null) {
             key.shaper = influences.shaper;
