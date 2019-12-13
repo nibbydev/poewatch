@@ -57,9 +57,9 @@ public class Index {
      */
     public Integer indexItemData(Item item) {
         String query = "INSERT INTO data_item_data (" +
-                "  id_cat, id_grp, `name`, `type`, frame, stack, map_tier, map_series, base_shaper, base_elder, " +
+                "  id_cat, id_grp, `name`, `type`, frame, stack, map_tier, map_series, shaper, elder, crusader, redeemer, hunter, warlord, " +
                 "  enchant_min, enchant_max, gem_lvl, gem_quality, gem_corrupted, links, base_level, var, icon) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE id = id; ; ";
 
         try {
@@ -90,7 +90,8 @@ public class Index {
     public boolean reindexItemData(int id_d, Item item) {
         String query = "update data_item_data set " +
                 "  id_cat = ?, id_grp = ?, name = ?, type = ?, reindex = 0, " +
-                "  frame = ?, stack = ?, map_tier = ?, map_series = ?, base_shaper = ?, base_elder = ?," +
+                "  frame = ?, stack = ?, map_tier = ?, map_series = ?, shaper = ?, " +
+                "  elder = ?, crusader = ?, redeemer = ?, hunter = ?, warlord = ?, " +
                 "  enchant_min = ?, enchant_max = ?, gem_lvl = ?, gem_quality = ?," +
                 "  gem_corrupted = ?, links = ?, base_level = ?, var = ?, icon = ? " +
                 "where id = ? " +
@@ -104,7 +105,7 @@ public class Index {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 fillItemDataStatement(statement, item);
-                statement.setInt(20, id_d);
+                statement.setInt(23, id_d);
 
                 statement.executeUpdate();
                 database.connection.commit();
@@ -138,46 +139,62 @@ public class Index {
             statement.setNull(8, 0);
         } else statement.setInt(8, key.mapSeries);
 
-        if (key.baseShaper == null) {
+        if (key.shaper == null) {
             statement.setNull(9, 0);
-        } else statement.setBoolean(9, key.baseShaper);
+        } else statement.setBoolean(9, key.shaper);
 
-        if (key.baseElder == null) {
+        if (key.elder == null) {
             statement.setNull(10, 0);
-        } else statement.setBoolean(10, key.baseElder);
+        } else statement.setBoolean(10, key.elder);
+
+        if (key.crusader == null) {
+            statement.setNull(11, 0);
+        } else statement.setBoolean(11, key.crusader);
+
+        if (key.redeemer == null) {
+            statement.setNull(12, 0);
+        } else statement.setBoolean(12, key.redeemer);
+
+        if (key.hunter == null) {
+            statement.setNull(13, 0);
+        } else statement.setBoolean(13, key.hunter);
+
+        if (key.warlord == null) {
+            statement.setNull(14, 0);
+        } else statement.setBoolean(14, key.warlord);
 
         if (key.enchantMin == null) {
-            statement.setNull(11, 0);
-        } else statement.setFloat(11, key.enchantMin);
+            statement.setNull(15, 0);
+        } else statement.setFloat(15, key.enchantMin);
 
         if (key.enchantMax == null) {
-            statement.setNull(12, 0);
-        } else statement.setFloat(12, key.enchantMax);
+            statement.setNull(16, 0);
+        } else statement.setFloat(16, key.enchantMax);
 
         if (key.gemLevel == null) {
-            statement.setNull(13, 0);
-        } else statement.setInt(13, key.gemLevel);
+            statement.setNull(17, 0);
+        } else statement.setInt(17, key.gemLevel);
 
         if (key.gemQuality == null) {
-            statement.setNull(14, 0);
-        } else statement.setInt(14, key.gemQuality);
+            statement.setNull(18, 0);
+        } else statement.setInt(18, key.gemQuality);
 
         if (key.gemCorrupted == null) {
-            statement.setNull(15, 0);
-        } else statement.setBoolean(15, key.gemCorrupted);
+            statement.setNull(19, 0);
+        } else statement.setBoolean(19, key.gemCorrupted);
 
         if (key.links == null) {
-            statement.setNull(16, 0);
-        } else statement.setInt(16, key.links);
+            statement.setNull(20, 0);
+        } else statement.setInt(20, key.links);
 
         if (key.baseItemLevel == null) {
-            statement.setNull(17, 0);
-        } else statement.setInt(17, key.baseItemLevel);
+            statement.setNull(21, 0);
+        } else statement.setInt(21, key.baseItemLevel);
 
         if (key.variation == null) {
-            statement.setNull(18, 0);
-        } else statement.setString(18, key.variation.getVariation());
+            statement.setNull(22, 0);
+        } else statement.setString(22, key.variation.getVariation());
 
-        statement.setString(19, item.getIcon());
+        statement.setString(23, item.getIcon());
     }
 }

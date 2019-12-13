@@ -19,12 +19,16 @@ public class ApiItem {
     @SerializedName(value = "raceReward", alternate = {"seaRaceReward", "cisRaceReward", "thRaceReward", "RaceReward"})
     private Object raceReward;
 
+    private Influences influences;
     private Extended extended;
     private List<Property> properties;
     private List<Socket> sockets;
     private List<String> explicitMods;
     private List<String> enchantMods;
 
+    public Influences getInfluences() {
+        return influences;
+    }
 
     public Boolean getCorrupted() {
         return corrupted;
