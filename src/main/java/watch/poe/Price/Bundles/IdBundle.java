@@ -1,7 +1,7 @@
 package poe.Price.Bundles;
 
 public class IdBundle {
-    private int leagueId, itemId, daily;
+    private int leagueId, itemId, daily, group;
     private double price;
 
     public IdBundle() {
@@ -37,5 +37,13 @@ public class IdBundle {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public int getGroup() {
+        return group;
+    }
+
+    public void setGroup(int group) {
+        this.group = group;
     }
 }

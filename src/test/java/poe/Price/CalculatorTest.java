@@ -15,7 +15,7 @@ class CalculatorTest {
     @Test
     void currencyConversionTest() {
         // Listings
-        List<EntryBundle> eb = new ArrayList<>() {{
+        Set<EntryBundle> eb = new HashSet<>() {{
             add(new EntryBundle(0, null, 1));
             add(new EntryBundle(1, null, 0));
             add(new EntryBundle(2, 120, 1));
@@ -27,7 +27,7 @@ class CalculatorTest {
         }};
 
         // Currency values
-        List<PriceBundle> pb = new ArrayList<>() {{
+        Set<PriceBundle> pb = new HashSet<>() {{
             add(new PriceBundle(1, 120, 49));
             add(new PriceBundle(1, 142, 159.548));
         }};
@@ -125,7 +125,7 @@ class CalculatorTest {
     @Test
     void limitDuplicateEntries() {
         // Listings
-        List<EntryBundle> eb = new ArrayList<>() {{
+        Set<EntryBundle> eb = new HashSet<>() {{
             add(new EntryBundle(0, null, 0));
             add(new EntryBundle(0, null, 0));
             add(new EntryBundle(0, null, 0));

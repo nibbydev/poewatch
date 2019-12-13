@@ -3,6 +3,8 @@ package poe.Price;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import poe.Item.Category.CategoryEnum;
+import poe.Item.Category.GroupEnum;
 import poe.Price.Bundles.EntryBundle;
 import poe.Price.Bundles.IdBundle;
 import poe.Price.Bundles.PriceBundle;
@@ -10,6 +12,9 @@ import poe.Price.Bundles.ResultBundle;
 
 import java.util.*;
 
+/**
+ * Handles the price calculation equations and logic
+ */
 public class Calculator {
     private static final Logger logger = LoggerFactory.getLogger(Calculator.class);
     private final Config config;
@@ -31,34 +36,42 @@ public class Calculator {
     /**
      * Converts entry prices to chaos
      *
-     * @param ib Valid ID bundle
-     * @param eb Entries to convert
-     * @param pb Prices to source from
+     * @param item Item currently converted
+     * @param listings Item entries to convert
+     * @param prices Prices to source from
      */
-    public List<Double> convertToChaos(IdBundle ib, List<EntryBundle> eb, List<PriceBundle> pb) {
-        List<Double> buffer = new ArrayList<>();
+    public List<Double> convertToChaos(IdBundle item, Set<EntryBundle> listings, Set<PriceBundle> prices) {
+        List<Double> convertedEntries = new ArrayList<>();
 
-        for (EntryBundle entryBundle : eb) {
+        for (EntryBundle entryBundle : listings) {
             // Already in chaos
             if (entryBundle.getCurrencyId() == null) {
-                buffer.add(entryBundle.getPrice());
+                convertedEntries.add(entryBundle.getPrice());
                 continue;
             }
 
-            // Find matching price bundle
-            PriceBundle priceBundle = pb.stream()
-                    .filter(t -> t.getLeagueId() == ib.getLeagueId())
+            // if it's a currency allow only chaos buyouts
+            if (GroupEnum.currency.getId() == item.getGroup()) {
+                continue;
+            }
+
+            // Find currency item the item was listed for
+            PriceBundle priceBundle = prices.stream()
+                    .filter(t -> t.getLeagueId() == item.getLeagueId())
                     .filter(t -> entryBundle.getCurrencyId().equals(t.getItemId()))
                     .findFirst()
                     .orElse(null);
 
-            // No match, remove entry
-            if (priceBundle != null) {
-                buffer.add(entryBundle.getPrice() * priceBundle.getMean());
+            // No match
+            if (priceBundle == null) {
+                continue;
             }
+
+            Double chaosPrice = entryBundle.getPrice() * priceBundle.getMean();
+            convertedEntries.add(chaosPrice);
         }
 
-        return buffer;
+        return convertedEntries;
     }
 
     /**
@@ -68,7 +81,7 @@ public class Calculator {
      * @param entryLimitPerAccount Max number of entries to keep per account
      * @param eb                   Entries to filter
      */
-    public void limitDuplicateEntries(List<EntryBundle> eb, int entryLimitPerAccount) {
+    public void limitDuplicateEntries(Set<EntryBundle> eb, int entryLimitPerAccount) {
         Map<Long, Integer> accountCount = new HashMap<>();
         Iterator<EntryBundle> iterator = eb.iterator();
 

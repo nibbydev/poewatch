@@ -19,12 +19,16 @@ public class ApiItem {
     @SerializedName(value = "raceReward", alternate = {"seaRaceReward", "cisRaceReward", "thRaceReward", "RaceReward"})
     private Object raceReward;
 
+    private Influences influences;
     private Extended extended;
     private List<Property> properties;
     private List<Socket> sockets;
     private List<String> explicitMods;
     private List<String> enchantMods;
 
+    public Influences getInfluences() {
+        return influences;
+    }
 
     public Boolean getCorrupted() {
         return corrupted;
@@ -112,5 +116,13 @@ public class ApiItem {
 
     public Extended getExtended() {
         return extended;
+    }
+
+    public boolean isEnchantBranch() {
+        return enchantMods != null;
+    }
+
+    public boolean isCraftingBranch() {
+        return (frameType == 0 || frameType == 1 || frameType == 2) && ilvl >= 68;
     }
 }

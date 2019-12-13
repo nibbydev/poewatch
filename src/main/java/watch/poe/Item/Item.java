@@ -40,6 +40,9 @@ public abstract class Item {
         determineCategoryGroup();
         if (discard) return;
 
+        checkUniversalDiscard();
+        if (discard) return;
+
         if (category == null) {
             logger.error("Unknown category for: " + this);
             discard = true;
@@ -51,6 +54,16 @@ public abstract class Item {
         }
 
         parse();
+    }
+
+    /**
+     * Check if the item should be discarded immediately.
+     */
+    private void checkUniversalDiscard() {
+        // Race rewards usually cost tens of times more than the average for their sweet, succulent altArt
+        if (originalItem.isRaceReward() != null && originalItem.isRaceReward()) {
+            discard = true;
+        }
     }
 
     /**
@@ -86,6 +99,7 @@ public abstract class Item {
                     case "mr": // shaped
                     case "mn": // series
                     case "mt": // tier
+                    case "mb": // blighted
                     case "relic":
                         paramBuilder.append("&");
                         paramBuilder.append(splitParam[0]);
@@ -148,13 +162,13 @@ public abstract class Item {
             return;
         }
 
-        if (apiCategory.equals("monsters") || apiCategory.equals("leaguestones")) {
+        if (apiCategory.equals("leaguestones")) {
             discard = true;
             return;
         }
 
         // Override for enchantments
-        if (this.getClass().equals(EnchantBranch.class)) {
+        if (this instanceof EnchantBranch) {
             category = CategoryEnum.enchantment;
 
             // Check all groups and find matching one
@@ -170,7 +184,7 @@ public abstract class Item {
         }
 
         // Override for item bases
-        if (this.getClass().equals(CraftingBaseBranch.class)) {
+        if (this instanceof CraftingBaseBranch) {
             // Only collect armours, weapons and jewels for bases
             if (!apiCategory.equals("armour") && !apiCategory.equals("weapons") && !apiCategory.equals("jewels")) {
                 discard = true;
@@ -277,6 +291,12 @@ public abstract class Item {
         if (apiCategory.equals("jewels")) {
             category = CategoryEnum.jewel;
             group = GroupEnum.jewel;
+            return;
+        }
+
+        if (apiCategory.equals("monsters")) {
+            category = CategoryEnum.beast;
+            group = GroupEnum.beast;
             return;
         }
 

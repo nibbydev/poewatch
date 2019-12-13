@@ -12,8 +12,13 @@ import poe.Worker.WorkerManager;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+/**
+ * The class in charge of deciding when to calculate prices and for what items
+ */
 public class PriceManager extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(PriceManager.class);
     private final Database database;
@@ -59,15 +64,17 @@ public class PriceManager extends Thread {
             if (!checkIfRun()) continue;
 
             logger.info("Starting cycle");
-            if (config.getBoolean("calculation.pauseWorkers"))
+            if (config.getBoolean("calculation.pauseWorkers")){
                 workerManager.setWorkerSleepState(true, true);
+            }
 
             runCycle();
 
-            if (config.getBoolean("calculation.pauseWorkers"))
+            if (config.getBoolean("calculation.pauseWorkers")) {
                 workerManager.setWorkerSleepState(false, true);
-            logger.info("Finished cycle");
+            }
 
+            logger.info("Finished cycle");
             lastCycleTime = System.currentTimeMillis();
         }
 
@@ -98,12 +105,17 @@ public class PriceManager extends Thread {
      */
     private void runCycle() {
         // Grab newest currency ratios from the database
-        List<PriceBundle> priceBundles = new ArrayList<>();
-        if (!tryGetPriceBundles(priceBundles)) return;
+        Set<PriceBundle> priceBundles = new HashSet<>();
+        if (!tryGetPriceBundles(priceBundles)) {
+            return;
+        }
 
-        // Get ID bundles from database
-        List<IdBundle> idBundles = new ArrayList<>();
-        if (!tryGetIdBundles(idBundles)) return;
+        // Get ID bundles from database. Or in other words list of items that have had updates since the last cycle and
+        // need to have their prices calculated again
+        Set<IdBundle> idBundles = new HashSet<>();
+        if (!tryGetIdBundles(idBundles)) {
+            return;
+        }
 
         // Record current time for next cycle. Only items that had updated
         // listings after this timestamp will be used in next cycle
@@ -120,7 +132,7 @@ public class PriceManager extends Thread {
      * @param priceBundles Empty list of bundles
      * @return True on success
      */
-    private boolean tryGetPriceBundles(List<PriceBundle> priceBundles) {
+    private boolean tryGetPriceBundles(Set<PriceBundle> priceBundles) {
         logger.debug("Fetching latest currency rates");
 
         if (!database.calc.getPriceBundles(priceBundles)) {
@@ -146,7 +158,7 @@ public class PriceManager extends Thread {
      * @param idBundles Empty list of bundles
      * @return True on success
      */
-    private boolean tryGetIdBundles(List<IdBundle> idBundles) {
+    private boolean tryGetIdBundles(Set<IdBundle> idBundles) {
         logger.debug("Fetching id bundles");
 
         if (!database.calc.getIdBundles(idBundles, cycleStart)) {
@@ -184,25 +196,31 @@ public class PriceManager extends Thread {
      * @param idBundles    Valid list of ids
      * @param priceBundles Valid list of currency rates
      */
-    private void processBundles(List<IdBundle> idBundles, List<PriceBundle> priceBundles) {
+    private void processBundles(Set<IdBundle> idBundles, Set<PriceBundle> priceBundles) {
         if (idBundles == null || idBundles.isEmpty()) {
             throw new RuntimeException("Invalid list provided");
         }
 
+        int counter = 0;
+
         // Loop through all the items we should calculate a price for
-        for (int i = 0; run && i < idBundles.size(); i++) {
+        for (IdBundle idBundle : idBundles) {
+            if (!run) {
+                break;
+            }
+
             // Query entries from the database for this item
-            List<EntryBundle> entryBundles = new ArrayList<>();
-            boolean success = database.calc.getEntryBundles(entryBundles, idBundles.get(i),
+            Set<EntryBundle> entryBundles = new HashSet<>();
+            boolean success = database.calc.getEntryBundles(entryBundles, idBundle,
                     config.getInt("calculation.lastAccountActivity"));
 
             if (!success) {
                 logger.error(String.format("Could not query entries for %d %d",
-                        idBundles.get(i).getLeagueId(), idBundles.get(i).getItemId()));
+                        idBundle.getLeagueId(), idBundle.getItemId()));
                 continue;
             } else if (entryBundles.isEmpty()) {
                 logger.warn(String.format("Empty entry bundle %d %d\n",
-                        idBundles.get(i).getLeagueId(), idBundles.get(i).getItemId()));
+                        idBundle.getLeagueId(), idBundle.getItemId()));
                 continue;
             }
 
@@ -216,8 +234,8 @@ public class PriceManager extends Thread {
                 int percentRemoved = Math.round(100 - (float) entryBundles.size() / entryCount * 100f);
                 if (percentRemoved >= 50 && entryCount > 10) {
                     logger.warn("[{}| {}] duplicate accounts - {}/{} removed ({}%)",
-                            idBundles.get(i).getLeagueId(),
-                            idBundles.get(i).getItemId(),
+                            idBundle.getLeagueId(),
+                            idBundle.getItemId(),
                             entryCount - entryBundles.size(),
                             entryCount,
                             percentRemoved);
@@ -225,12 +243,12 @@ public class PriceManager extends Thread {
             }
 
             // Convert all entry prices to chaos value
-            List<Double> prices = calculator.convertToChaos(idBundles.get(i), entryBundles, priceBundles);
+            List<Double> prices = calculator.convertToChaos(idBundle, entryBundles, priceBundles);
 
             if (prices.isEmpty()) {
                 logger.warn("[{}| {}] price conversion - all removed ({})",
-                        idBundles.get(i).getLeagueId(),
-                        idBundles.get(i).getItemId(),
+                        idBundle.getLeagueId(),
+                        idBundle.getItemId(),
                         entryCount);
                 continue;
             }
@@ -249,20 +267,20 @@ public class PriceManager extends Thread {
             // If no entries were left, skip the item
             if (prices.isEmpty()) {
                 logger.warn("[{}| {}] filter - all removed ({})",
-                        idBundles.get(i).getLeagueId(),
-                        idBundles.get(i).getItemId(),
+                        idBundle.getLeagueId(),
+                        idBundle.getItemId(),
                         entryCount);
                 continue;
             }
 
             // Calculate the prices for this item
-            ResultBundle rb = calculator.calculateResult(idBundles.get(i), prices);
+            ResultBundle rb = calculator.calculateResult(idBundle, prices);
             if (rb == null) continue;
 
             // Update item in database
             database.upload.updateItem(rb);
+            statusMessage(counter++, idBundles.size());
 
-            statusMessage(i, idBundles.size());
             try {
                 Thread.sleep(config.getInt("calculation.itemDelay"));
             } catch (InterruptedException ex) {

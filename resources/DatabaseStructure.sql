@@ -124,8 +124,13 @@ CREATE TABLE data_item_data
     map_tier      TINYINT(1) UNSIGNED   DEFAULT NULL,
     map_series    TINYINT(1) UNSIGNED   DEFAULT NULL,
 
-    base_shaper   BIT(1)                DEFAULT NULL,
-    base_elder    BIT(1)                DEFAULT NULL,
+    shaper        BIT(1)                DEFAULT NULL,
+    elder         BIT(1)                DEFAULT NULL,
+    crusader      BIT(1)                DEFAULT NULL,
+    redeemer      BIT(1)                DEFAULT NULL,
+    hunter        BIT(1)                DEFAULT NULL,
+    warlord       BIT(1)                DEFAULT NULL,
+
     base_level    TINYINT(1) UNSIGNED   DEFAULT NULL,
 
     enchant_min   DECIMAL(4, 1)         DEFAULT NULL,
@@ -142,8 +147,9 @@ CREATE TABLE data_item_data
     FOREIGN KEY (id_cat) REFERENCES data_categories (id) ON DELETE CASCADE,
     FOREIGN KEY (id_grp) REFERENCES data_groups (id) ON DELETE CASCADE,
 
-    CONSTRAINT idx_unique UNIQUE (name, type, frame, map_tier, map_series, base_shaper, base_elder, base_level,
-                                  enchant_min, enchant_max, gem_lvl, gem_quality, gem_corrupted, var),
+#     CONSTRAINT idx_unique UNIQUE (name, type, frame, map_tier, map_series, shaper, elder, crusader, redeemer, hunter,
+#                                   warlord, base_level, enchant_min, enchant_max, gem_lvl, gem_quality, gem_corrupted,
+#                                   var),
 
     INDEX reindex (reindex),
     INDEX frame (frame),

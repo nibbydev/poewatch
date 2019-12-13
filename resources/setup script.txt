@@ -1,0 +1,94 @@
+# install script
+
+timedatectl set-timezone UTC
+apt update && apt upgrade -y
+apt install zip unzip openjdk-11-jre-headless mysql-server apache2 php php-mysql -y
+a2enmod headers rewrite ssl cache cache_disk expires
+
+
+apt-get install software-properties-common
+add-apt-repository universe
+add-apt-repository ppa:certbot/certbot
+apt-get update
+apt-get install certbot python-certbot-apache 
+certbot --apache certonly
+
+
+
+nano /etc/mysql/my.cnf
+
+[client]
+default-character-set = utf8mb4
+[mysql]
+default-character-set = utf8mb4
+[mysqld]
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+innodb_buffer_pool_size=5102M
+innodb_log_file_size=256M
+group_concat_max_len = 1000000
+
+
+
+nano /etc/apache2/sites-available/000-default.conf
+
+<VirtualHost *:8000>
+  DocumentRoot /var/www/html
+
+  <Directory /var/www/html>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+  </Directory>
+
+  ErrorLog ${APACHE_LOG_DIR}/error.log
+  CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:8080>
+  DocumentRoot /var/www/api
+
+  <Directory /var/www/api>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+    Header set Access-Control-Allow-Origin "*"
+  </Directory>
+
+  ErrorLog ${APACHE_LOG_DIR}/api-error.log
+  CustomLog ${APACHE_LOG_DIR}/api-access.log combined
+</VirtualHost>
+
+<VirtualHost *:8088>
+  DocumentRoot /var/www/admin
+
+  <Directory /var/www/admin>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+    Header set Access-Control-Allow-Origin "*"
+  </Directory>
+
+  ErrorLog ${APACHE_LOG_DIR}/admin-error.log
+  CustomLog ${APACHE_LOG_DIR}/admin-access.log combined
+</VirtualHost>
+
+
+nano /etc/apache2/ports.conf
+Listen 8000
+Listen 8080
+Listen 8088
+
+
+#phpmyadmin
+sudo mkdir /var/www/admin && cd /var/www/admin
+sudo wget https://files.phpmyadmin.net/phpMyAdmin/4.8.5/phpMyAdmin-4.8.5-all-languages.zip
+sudo unzip phpMyAdmin-4.8.5-all-languages.zip && rm phpMyAdmin-4.8.5-all-languages.zip
+sudo mv phpMyAdmin-4.8.5-all-languages/* .
+sudo rm -r phpMyAdmin-4.8.5-all-languages
+sudo chown www-data:www-data -R /var/www/admin
+
+
+<db setup>
+<upload web files>
+<set /details password>

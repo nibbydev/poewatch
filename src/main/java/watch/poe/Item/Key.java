@@ -10,7 +10,7 @@ public class Key {
     public String name, type;
     public Integer links, gemLevel, gemQuality, mapTier, mapSeries, baseItemLevel;
     public Float enchantMin, enchantMax;
-    public Boolean gemCorrupted, baseShaper, baseElder;
+    public Boolean gemCorrupted, shaper, elder, crusader, redeemer, hunter, warlord;
     public VariantEnum variation;
     public int frame;
 
@@ -72,11 +72,23 @@ public class Key {
         gemCorrupted = resultSet.getBoolean("gem_corrupted");
         if (resultSet.wasNull()) gemCorrupted = null;
 
-        baseShaper = resultSet.getBoolean("base_shaper");
-        if (resultSet.wasNull()) baseShaper = null;
+        shaper = resultSet.getBoolean("shaper");
+        if (resultSet.wasNull()) shaper = null;
 
-        baseElder = resultSet.getBoolean("base_elder");
-        if (resultSet.wasNull()) baseElder = null;
+        elder = resultSet.getBoolean("elder");
+        if (resultSet.wasNull()) elder = null;
+
+        crusader = resultSet.getBoolean("crusader");
+        if (resultSet.wasNull()) crusader = null;
+
+        redeemer = resultSet.getBoolean("redeemer");
+        if (resultSet.wasNull()) redeemer = null;
+
+        hunter = resultSet.getBoolean("hunter");
+        if (resultSet.wasNull()) hunter = null;
+
+        warlord = resultSet.getBoolean("warlord");
+        if (resultSet.wasNull()) warlord = null;
 
         enchantMin = resultSet.getFloat("enchant_min");
         if (resultSet.wasNull()) enchantMin = null;
@@ -102,14 +114,18 @@ public class Key {
                 Objects.equals(enchantMin, key.enchantMin) &&
                 Objects.equals(enchantMax, key.enchantMax) &&
                 Objects.equals(gemCorrupted, key.gemCorrupted) &&
-                Objects.equals(baseShaper, key.baseShaper) &&
-                Objects.equals(baseElder, key.baseElder) &&
+                Objects.equals(shaper, key.shaper) &&
+                Objects.equals(elder, key.elder) &&
+                Objects.equals(crusader, key.crusader) &&
+                Objects.equals(redeemer, key.redeemer) &&
+                Objects.equals(hunter, key.hunter) &&
+                Objects.equals(warlord, key.warlord) &&
                 variation == key.variation;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, links, gemLevel, gemQuality, mapTier, mapSeries, baseItemLevel, enchantMin, enchantMax, gemCorrupted, baseShaper, baseElder, variation, frame);
+        return Objects.hash(name, type, links, gemLevel, gemQuality, mapTier, mapSeries, baseItemLevel, enchantMin, enchantMax, gemCorrupted, shaper, elder, crusader, redeemer, hunter, warlord, variation, frame);
     }
 
     @Override
@@ -125,8 +141,12 @@ public class Key {
                 "|lvl:" + gemLevel +
                 "|qual:" + gemQuality +
                 "|corr:" + gemCorrupted +
-                "|shaper:" + baseShaper +
-                "|elder:" + baseElder +
+                "|shaper:" + shaper +
+                "|elder:" + elder +
+                "|crusader:" + crusader +
+                "|redeemer:" + redeemer +
+                "|hunter:" + hunter +
+                "|warlord:" + warlord +
                 "|enchantBottomRange:" + enchantMin +
                 "|enchantTopRange:" + enchantMax;
     }
