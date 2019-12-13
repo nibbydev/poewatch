@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poe.Item.Category.GroupEnum;
 import poe.Item.Deserializers.ApiItem;
+import poe.Item.Deserializers.Influences;
 import poe.Item.Item;
 
 public class CraftingBaseBranch extends Item {
@@ -58,19 +59,33 @@ public class CraftingBaseBranch extends Item {
         key.baseItemLevel = originalItem.getIlvl();
 
         // Flatten ilvl rolls
-        if (originalItem.getShaper() == null && originalItem.getElder() == null) {
-            if (originalItem.getIlvl() < 83) discard = true;
-            else key.baseItemLevel = 84;
-        } else {
-            if (originalItem.getIlvl() < 82) discard = true;
-            else if (originalItem.getIlvl() > 86) key.baseItemLevel = 86;
+        if (originalItem.getIlvl() < 83) {
+            discard = true;
+        } else if (originalItem.getIlvl() > 86) {
+            key.baseItemLevel = 86;
         }
 
-        // Set influence
-        if (originalItem.getShaper() != null) {
-            key.baseShaper = true;
-        } else if (originalItem.getElder() != null) {
-            key.baseElder = true;
+        setInfluence();
+    }
+
+    private void setInfluence() {
+        Boolean legacyShaper = originalItem.getShaper();
+        Boolean legacyElder = originalItem.getElder();
+        if (legacyShaper != null) {
+            key.shaper = legacyShaper;
+        }
+        if (legacyElder != null) {
+            key.elder = legacyElder;
+        }
+
+        Influences influences = originalItem.getInfluences();
+        if (influences != null) {
+            key.shaper = influences.shaper;
+            key.elder = influences.elder;
+            key.warlord = influences.warlord;
+            key.hunter = influences.hunter;
+            key.redeemer = influences.redeemer;
+            key.crusader = influences.crusader;
         }
     }
 }

@@ -2,7 +2,7 @@
 function get_data($pdo) {
   $query = "SELECT 
     did.id, did.name, did.type, did.frame, did.stack, 
-    did.map_tier, did.map_series, did.base_shaper, did.base_elder, did.base_level, 
+    did.map_tier, did.map_series, did.shaper, did.elder, did.crusader, did.redeemer, did.hunter, did.warlord, did.base_level, 
     did.enchant_min, did.enchant_max ,did.gem_lvl, did.gem_quality, did.gem_corrupted, 
     did.links, did.var, did.icon, 
     dc.name AS category, dg.name AS `group`
@@ -27,8 +27,9 @@ function parse_data($stmt) {
 
       'mapSeries'       =>        $row['map_series']    === null ? null : (int)    $row['map_series'],
       'mapTier'         =>        $row['map_tier']      === null ? null : (int)    $row['map_tier'],
-      'baseIsShaper'    =>        $row['base_shaper']   === null ? null : (bool)   $row['base_shaper'],
-      'baseIsElder'     =>        $row['base_elder']    === null ? null : (bool)   $row['base_elder'],
+      'influences'      =>        [],
+      'baseIsShaper'    =>        $row['shaper']        === null ? null : (bool)   $row['shaper'],
+      'baseIsElder'     =>        $row['elder']         === null ? null : (bool)   $row['elder'],
       'baseItemLevel'   =>        $row['base_level']    === null ? null : (int)    $row['base_level'],
       'gemLevel'        =>        $row['gem_lvl']       === null ? null : (int)    $row['gem_lvl'],
       'gemQuality'      =>        $row['gem_quality']   === null ? null : (int)    $row['gem_quality'],
@@ -50,6 +51,12 @@ function parse_data($stmt) {
 
       if (!$itemData['baseIsElder']) {
         $itemData['baseIsElder'] = false;
+      }
+    }
+
+    foreach (['shaper', 'elder', 'crusader', 'redeemer', 'hunter', 'warlord'] as $influence) {
+      if ($row[$influence]) {
+        $itemData['influences'][] = $influence;
       }
     }
 

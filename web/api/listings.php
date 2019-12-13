@@ -84,8 +84,9 @@ function get_data($pdo, $league, $account)
 
       'mapSeries'       =>        $row['map_series']    === null ? null : (int)    $row['map_series'],
       'mapTier'         =>        $row['map_tier']      === null ? null : (int)    $row['map_tier'],
-      'baseIsShaper'    =>        $row['base_shaper']   === null ? null : (bool)   $row['base_shaper'],
-      'baseIsElder'     =>        $row['base_elder']    === null ? null : (bool)   $row['base_elder'],
+      'influences'      =>        [],
+      'baseIsShaper'    =>        $row['shaper']        === null ? null : (bool)   $row['shaper'],
+      'baseIsElder'     =>        $row['elder']         === null ? null : (bool)   $row['elder'],
       'baseItemLevel'   =>        $row['base_level']    === null ? null : (int)    $row['base_level'],
       'gemLevel'        =>        $row['gem_lvl']       === null ? null : (int)    $row['gem_lvl'],
       'gemQuality'      =>        $row['gem_quality']   === null ? null : (int)    $row['gem_quality'],
@@ -107,6 +108,12 @@ function get_data($pdo, $league, $account)
 
       if (!$itemData['baseIsElder']) {
         $itemData['baseIsElder'] = false;
+      }
+    }
+
+    foreach (['shaper', 'elder', 'crusader', 'redeemer', 'hunter', 'warlord'] as $influence) {
+      if ($row[$influence]) {
+        $itemData['influences'][] = $influence;
       }
     }
 
