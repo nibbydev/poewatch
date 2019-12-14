@@ -55,7 +55,9 @@ public enum GroupEnum {
     runedagger,
     warstaff,
     oil,
-    beast;
+    beast,
+    sample,
+    catalyst;
 
     public int getId() {return ordinal() + 1;}
 }
