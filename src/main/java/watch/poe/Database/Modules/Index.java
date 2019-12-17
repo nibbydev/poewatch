@@ -105,7 +105,7 @@ public class Index {
 
             try (PreparedStatement statement = database.connection.prepareStatement(query)) {
                 fillItemDataStatement(statement, item);
-                statement.setInt(23, id_d);
+                statement.setInt(24, id_d);
 
                 statement.executeUpdate();
                 database.connection.commit();
