@@ -241,6 +241,8 @@ public abstract class Item {
                 group = GroupEnum.oil;
             } else if ("catalysts".equalsIgnoreCase(iconCategory)) { // catalysts
                 group = GroupEnum.catalyst;
+            } else if ("influence exalts".equalsIgnoreCase(iconCategory)) { // influence currency
+                group = GroupEnum.influence;
             }
 
             return;
