@@ -58,7 +58,8 @@ public enum GroupEnum {
     beast,
     sample,
     catalyst,
-    influence;
+    influence,
+    watchstone;
 
     public int getId() {return ordinal() + 1;}
 }

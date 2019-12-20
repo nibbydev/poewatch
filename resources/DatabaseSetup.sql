@@ -92,7 +92,8 @@ VALUES (1, 'amulet', 'Amulets'),
        (46, 'beast', 'Beasts'),
        (47, 'sample', 'Samples'),
        (48, 'catalyst', 'Catalysts'),
-       (49, 'influence', 'Influence');
+       (49, 'influence', 'Influence'),
+       (50, 'watchstone', 'Watchstones');
 
 --
 -- Base value for data_categories

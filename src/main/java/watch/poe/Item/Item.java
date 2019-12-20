@@ -348,6 +348,11 @@ public abstract class Item {
                 }
             }
         }
+
+        if ("watchstones".equals(apiCategory)) {
+            category = CategoryEnum.map;
+            group = GroupEnum.watchstone;
+        }
     }
 
 
