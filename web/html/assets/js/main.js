@@ -1563,7 +1563,7 @@ class LabPage {
    * Initial configuration for the page
    */
   constructor() {
-    this.urlTemplate = 'https://www.poelab.com/wp-content/uploads/{{yyyy}}/{{mm}}/{{yyyy}}-{{mm}}-{{dd}}_{{lab}}.jpg';
+    this.urlTemplate = 'https://www.poelab.com/wp-content/labfiles/{{yyyy}}-{{mm}}-{{dd}}_{{lab}}.jpg';
     this.labs = ['uber', 'merciless', 'cruel', 'normal'];
     this.tryCount = {};
 
