@@ -239,6 +239,10 @@ public abstract class Item {
                 group = GroupEnum.currency;
             } else if (iconCategory.equals("oils")) { // oils
                 group = GroupEnum.oil;
+            } else if ("catalysts".equalsIgnoreCase(iconCategory)) { // catalysts
+                group = GroupEnum.catalyst;
+            } else if ("influence exalts".equalsIgnoreCase(iconCategory)) { // influence currency
+                group = GroupEnum.influence;
             }
 
             return;
@@ -296,7 +300,12 @@ public abstract class Item {
 
         if (apiCategory.equals("monsters")) {
             category = CategoryEnum.beast;
-            group = GroupEnum.beast;
+            if ("sample".equals(apiGroup)) {
+                group = GroupEnum.sample;
+            } else {
+                group = GroupEnum.beast;
+            }
+
             return;
         }
 
@@ -338,6 +347,11 @@ public abstract class Item {
                     return;
                 }
             }
+        }
+
+        if ("watchstones".equals(apiCategory)) {
+            category = CategoryEnum.map;
+            group = GroupEnum.watchstone;
         }
     }
 

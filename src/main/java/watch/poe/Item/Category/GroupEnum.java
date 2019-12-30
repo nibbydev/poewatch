@@ -55,7 +55,11 @@ public enum GroupEnum {
     runedagger,
     warstaff,
     oil,
-    beast;
+    beast,
+    sample,
+    catalyst,
+    influence,
+    watchstone;
 
     public int getId() {return ordinal() + 1;}
 }

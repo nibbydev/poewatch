@@ -165,18 +165,11 @@ $APIColumns = [
       ],
 
       [
-        "param" => "baseIsShaper",
-        "alwaysPresent" => false,
-        "condition" => "category=base",
-        "type" => "bool",
-        "desc" => "The base has shaper influence"
-      ],
-      [
-        "param" => "baseIsElder",
-        "alwaysPresent" => false,
-        "condition" => "category=base",
-        "type" => "bool",
-        "desc" => "The base has elder influence"
+        "param" => "influences",
+        "alwaysPresent" => true,
+        "condition" => null,
+        "type" => "string[]",
+        "desc" => "All the influence types the item has. ['shaper', 'elder', 'crusader', 'redeemer', 'hunter', 'warlord']. If none are present the array is empty"
       ],
       [
         "param" => "baseItemLevel",

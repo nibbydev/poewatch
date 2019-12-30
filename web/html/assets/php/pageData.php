@@ -70,7 +70,7 @@ $PAGE_DATA = [
     [
       "display" => "Beasts",
       "name" => "beast",
-      "icon" => "http://web.poecdn.com/image/Art/2DItems/Currency/BestiaryOrbFull.png?scale=1&w=1&h=1",
+      "icon" => "https://web.poecdn.com/image/Art/2DItems/Currency/BestiaryOrbFull.png?scale=1&w=1&h=1",
       "href" => "prices?category=beast"
     ],
     [

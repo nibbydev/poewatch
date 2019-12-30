@@ -89,7 +89,11 @@ VALUES (1, 'amulet', 'Amulets'),
        (43, 'runedagger', 'Runedaggers'),
        (44, 'warstaff', 'Warstaves'),
        (45, 'oil', 'Oils'),
-       (46, 'beast', 'Beasts');
+       (46, 'beast', 'Beasts'),
+       (47, 'sample', 'Samples'),
+       (48, 'catalyst', 'Catalysts'),
+       (49, 'influence', 'Influence'),
+       (50, 'watchstone', 'Watchstones');
 
 --
 -- Base value for data_categories

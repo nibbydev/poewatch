@@ -11,7 +11,7 @@ import java.util.Map;
 public class ApiItem {
     private boolean identified;
     private int ilvl, frameType;
-    private Boolean corrupted, shaper, elder, synthesised;
+    private Boolean corrupted, synthesised;
     private String icon, league, id, name, typeLine, note;
     private Integer stackSize;
     private String prophecyText;
@@ -32,14 +32,6 @@ public class ApiItem {
 
     public Boolean getCorrupted() {
         return corrupted;
-    }
-
-    public Boolean getElder() {
-        return elder;
-    }
-
-    public Boolean getShaper() {
-        return shaper;
     }
 
     public int getFrameType() {
@@ -123,6 +115,13 @@ public class ApiItem {
     }
 
     public boolean isCraftingBranch() {
-        return (frameType == 0 || frameType == 1 || frameType == 2) && ilvl >= 68;
+        return influences != null
+                && (frameType == 0 || frameType == 1 || frameType == 2)
+                && (influences.shaper != null && influences.shaper
+                || influences.elder != null && influences.elder
+                || influences.crusader != null && influences.crusader
+                || influences.redeemer != null && influences.redeemer
+                || influences.hunter != null && influences.hunter
+                || influences.warlord != null && influences.warlord);
     }
 }
