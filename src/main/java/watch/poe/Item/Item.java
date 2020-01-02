@@ -186,7 +186,8 @@ public abstract class Item {
         // Override for item bases
         if (this instanceof CraftingBaseBranch) {
             // Only collect armours, weapons and jewels for bases
-            if (!apiCategory.equals("armour") && !apiCategory.equals("weapons") && !apiCategory.equals("jewels")) {
+            if (!apiCategory.equals("armour") && !apiCategory.equals("weapons") && !apiCategory.equals("jewels")
+                    && !apiCategory.equals("accessories")) {
                 discard = true;
                 return;
             }
