@@ -209,6 +209,8 @@ public class PriceManager extends Thread {
                 break;
             }
 
+            long startTime = System.currentTimeMillis();
+
             // Query entries from the database for this item
             Set<EntryBundle> entryBundles = new HashSet<>();
             boolean success = database.calc.getEntryBundles(entryBundles, idBundle,
@@ -222,6 +224,11 @@ public class PriceManager extends Thread {
                 logger.warn(String.format("Empty entry bundle %d %d\n",
                         idBundle.getLeagueId(), idBundle.getItemId()));
                 continue;
+            }
+
+            if (idBundle.getLeagueId() == 30) {
+                logger.debug("got {} entries for {}. took {} s", entryBundles.size(), idBundle.getItemId(), System.currentTimeMillis() / startTime / 1000);
+                startTime = System.currentTimeMillis();
             }
 
             int entryCount = entryBundles.size();
@@ -240,6 +247,11 @@ public class PriceManager extends Thread {
                             entryCount,
                             percentRemoved);
                 }
+
+                if (idBundle.getLeagueId() == 30) {
+                    logger.debug("removing duplicates took {} s", System.currentTimeMillis() / startTime / 1000);
+                    startTime = System.currentTimeMillis();
+                }
             }
 
             // Convert all entry prices to chaos value
@@ -253,6 +265,11 @@ public class PriceManager extends Thread {
                 continue;
             }
 
+            if (idBundle.getLeagueId() == 30) {
+                logger.debug("chaos conversion took {} s", System.currentTimeMillis() / startTime / 1000);
+                startTime = System.currentTimeMillis();
+            }
+
             // Remove outliers
             calculator.filterEntries(prices);
 
@@ -263,6 +280,10 @@ public class PriceManager extends Thread {
                         config.getInt("calculation.hardTrimUpper"));
             }
 
+            if (idBundle.getLeagueId() == 30) {
+                logger.debug("filtering took {} s", System.currentTimeMillis() / startTime / 1000);
+                startTime = System.currentTimeMillis();
+            }
 
             // If no entries were left, skip the item
             if (prices.isEmpty()) {
@@ -280,6 +301,10 @@ public class PriceManager extends Thread {
             // Update item in database
             database.upload.updateItem(rb);
             statusMessage(counter++, idBundles.size());
+
+            if (idBundle.getLeagueId() == 30) {
+                logger.debug("update took {} s", System.currentTimeMillis() / startTime / 1000);
+            }
 
             try {
                 Thread.sleep(config.getInt("calculation.itemDelay"));
