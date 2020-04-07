@@ -246,6 +246,8 @@ public abstract class Item {
                 group = GroupEnum.influence;
             } else if ("Delirium".equalsIgnoreCase(iconCategory)) { // Delirium orb
                 group = GroupEnum.deliriumorb;
+            } else if (key.name.equalsIgnoreCase("Simulacrum Splinter")) { // Simulacrum Splinter
+                group = GroupEnum.splinter;
             }
 
             return;
