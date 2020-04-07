@@ -42,7 +42,7 @@ public class MapIconParser {
 
   private static Map<String, String> extractParams(String base64) {
     String paramJson = base64.substring(base64.indexOf('{'), base64.indexOf('}') + 1);
-    return gson.fromJson(base64, new TypeToken<Map<String, String>>() {
+    return gson.fromJson(paramJson, new TypeToken<Map<String, String>>() {
     }.getType());
   }
 
