@@ -8,6 +8,7 @@ import poe.Item.Deserializers.Property;
 import poe.Item.Deserializers.Socket;
 import poe.Item.Category.CategoryEnum;
 import poe.Item.Item;
+import poe.Item.MapIconParser;
 import poe.Item.VariantEnum;
 
 public class DefaultBranch extends Item {
@@ -310,51 +311,11 @@ public class DefaultBranch extends Item {
      * Attempt to find the series a map belongs to
      */
     private void extractMapSeries() {
-        /* Currently the series are as such:
-         http://web.poecdn.com/image/Art/2DItems/Maps/Map45.png?scale=1&w=1&h=1
-         http://web.poecdn.com/image/Art/2DItems/Maps/act4maps/Map76.png?scale=1&w=1&h=1
-         http://web.poecdn.com/image/Art/2DItems/Maps/AtlasMaps/Chimera.png?scale=1&scaleIndex=0&w=1&h=1
-         http://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/New/VaalTempleBase.png?scale=1&w=1&h=1&mn=1&mt=0
-         http://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/New/VaalTempleBase.png?scale=1&w=1&h=1&mn=2&mt=0
-         http://web.poecdn.com/image/Art/2DItems/Maps/Atlas2Maps/New/VaalTempleBase.png?scale=1&w=1&h=1&mn=3&mt=0
-        */
-
         // Ignore unique and relic maps
         if (originalItem.getFrameType() > 2) {
             return;
         }
 
-        String[] splitItemType = originalItem.getIcon().split("/");
-        String iconCategory = splitItemType[splitItemType.length - 2].toLowerCase();
-        int seriesNumber = 0;
-
-        // Attempt to find series number for newer maps
-        try {
-            String[] iconParams = originalItem.getIcon().split("\\?", 2)[1].split("&");
-
-            for (String param : iconParams) {
-                String[] splitParam = param.split("=");
-
-                if (splitParam[0].equals("mn")) {
-                    seriesNumber = Integer.parseInt(splitParam[1]);
-                    break;
-                }
-            }
-        } catch (Exception ex) {
-            // If it failed, it failed. Doesn't really matter.
-        }
-
-        if (iconCategory.equalsIgnoreCase("Maps")) {
-            key.mapSeries = 0;
-        } else if (iconCategory.equalsIgnoreCase("act4maps")) {
-            key.mapSeries = 1;
-        } else if (iconCategory.equalsIgnoreCase("AtlasMaps")) {
-            key.mapSeries = 2;
-        } else if (iconCategory.equalsIgnoreCase("New") && seriesNumber > 0) {
-            key.mapSeries = seriesNumber + 2;
-        } else {
-            logger.error("Couldn't determine series of map with icon: " + originalItem.getIcon());
-            discard = true;
-        }
+        key.mapSeries = MapIconParser.parseSeries(originalItem.getIcon());
     }
 }
