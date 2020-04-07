@@ -24,7 +24,8 @@ public enum CategoryEnum {
             GroupEnum.fossil,
             GroupEnum.resonator,
             GroupEnum.vial,
-            GroupEnum.oil
+            GroupEnum.oil,
+            GroupEnum.deliriumorb
     ),
     enchantment(
             GroupEnum.helmet,

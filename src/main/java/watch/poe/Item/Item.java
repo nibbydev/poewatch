@@ -244,6 +244,8 @@ public abstract class Item {
                 group = GroupEnum.catalyst;
             } else if ("influence exalts".equalsIgnoreCase(iconCategory)) { // influence currency
                 group = GroupEnum.influence;
+            } else if ("Delirium".equalsIgnoreCase(iconCategory)) { // Delirium orb
+                group = GroupEnum.deliriumorb;
             }
 
             return;
