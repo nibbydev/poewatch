@@ -51,7 +51,8 @@ public class Calculator {
             }
 
             // if it's a currency allow only chaos buyouts
-            if (GroupEnum.currency.getId() == item.getGroup()) {
+            // todo: remove hardcoded id
+            if (GroupEnum.currency.getId() == item.getGroup() && entryBundle.getCurrencyId() != 142) {
                 continue;
             }
 
